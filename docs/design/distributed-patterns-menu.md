@@ -16,14 +16,15 @@ streamed values or `!*` pointers. A plan (`plan::T`: `cut`, `route`, `span`) is 
 layout the processor runs:
 
 ```
-start([slave_1, …, slave_k]).select([to(p_1), …, to(p_k)]).merge().<combiner>.<tail>
+branch(p_1 => slave_1, …, p_k => slave_k).<combiner>.<tail>
 ```
 
-`select` pairs slave *i* with route *i*. `to(peer)` — bound at plan time to the target client's own `to` — ships the slave
-unquoted as `start(slave).to(<>)`; the peer evaluates the frame on receipt and replies. `merge()`
-streams the replies and the combiner recombines them. `clstrSpace` is dead code and `RemoteSpace` is going away;
+`branch` keys slave *i* by its place *i* (`<~>` home, a peer's authority); a remote lane ships its slave uncompiled to its
+place's `eval`, bound at run time, and the peer evaluates it and replies. Every lane is a `virtual::T`, and the branch
+gathers the replies for the combiner. (2026-11-10: this replaces the `start([…]).select([to(…)]).merge()` layout the
+entries below were first written against; select/merge remains a legal program.) `clstrSpace` is dead code and `RemoteSpace` is going away;
 neither is part of this path. `RemoteMachine` and `RemoteProcessor` (a frame that stood in a peer and shipped every
-code application made in it) were relics and are removed (2026-10-21): the `law_shard` layout is the distribution
+code application made in it) were relics and are removed (2026-10-21): the `branch` layout is the distribution
 architecture, and every entry here lowers to it. `PeerSpawn` (forking a peer JVM) stays, waiting for its instruction.
 
 **Facts every entry has to respect.**
@@ -89,7 +90,7 @@ map into such a fold recombines through that fold, looked up on its target objec
 
 ```
 slave_i:  start(<part_i>).plus(1).count?hop=0()
-master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().sum()
+master:   branch(p_1 => s_1, …, p_k => s_k).sum()
 ```
 
 The cat graph answers lazily: `|count?int<=#{*}().as(morphism::T)>>analysis>>combiner` gives
@@ -108,7 +109,7 @@ floatable run and the reducer into each summand.
 ```
 source:  */usr/data/+/current.plus(1).sum()
 slave:   from?hop=0(</usr/data/+/current>).plus(1).sum()        [-- the same code to every owner --]
-master:  start([s, s]).select([to(p_1), to(p_2)]).merge().sum()
+master:  branch(p_1 => s, p_2 => s).sum()
 ```
 
 **Needs.**
@@ -129,7 +130,7 @@ a pure chain.
 ```
 source:  *<ws://booger.local:8555/n/+>.plus(1).sum()
 today:   ships from(/n/+); every value crosses; plus·sum run at home
-emit:    start([from?hop=0(</n/+>).plus(1).sum()]).select([to(<ws://booger.local:8555>)]).merge()
+emit:    branch(<ws://booger.local:8555> => from(</n/+>).plus(1).sum?hop=0()).sum()
 ```
 
 **Needs.** `Route.peer` lowered, with the address taken from the seed's authority, and a pushable-span scan that
@@ -152,7 +153,8 @@ the forked-peer suites (`DistributedRewriteTransportTest`, `TreeShardTransportTe
 **Left open.** The `virtual` + `>>rhs` spelling is the "easiest way": it confines the change to the emitter and leaves
 the transport's eager future-resolution (`Processor.Helper.applyFunction`'s `resolveFuture`) untouched. The
 paradigmatic form is an async `eval`/`to` returning a `future::T` with `merge()` as the await — collapsing the layout
-back to `select([eval(p_i)]).merge().<combiner>` and making the thread invisible (see §5). S (the master's own k+1
+back to `branch(p_i => eval…).<combiner>` and making the thread invisible (see §5). (2026-11-10: the branch's lanes
+are `virtual::T`s awaited through `rhs`; entry D in distributed-computing-mtron.md.) S (the master's own k+1
 lane) landed as `?place=[local,peer]` — §S.
 
 ### E. Tree reduction — `?hop=height{arity}` — v1 done (2026-10-21, axes 2026-10-28)
@@ -175,10 +177,9 @@ the rule fires again where the part lands; at a height of zero the part is a lea
 
 ```
 root:      {1,…,8}.plus(1).sum?hop={2}2()                        [-- height 2, at most 2 children per node --]
-        ⇒  start([start({1,…,8}).plus(1).sum?hop={2}1()]).select([to(p_1)]).merge().sum()
-on p_1:    start([start({1,3,5,7}).plus(1).sum?hop={2}0(),
-                  start({2,4,6,8}).plus(1).sum?hop={2}0()])
-             .select([to(p_2), to(p_3)]).merge().sum()                 [-- p_1's own dialed peers --]
+        ⇒  branch(p_1 => start({1,…,8}).plus(1).sum?hop={2}1()).sum()
+on p_1:    branch(p_2 => start({1,3,5,7}).plus(1).sum?hop={2}0(),
+                  p_3 => start({2,4,6,8}).plus(1).sum?hop={2}0()).sum()     [-- p_1's own dialed peers --]
 ```
 
 The axis resolves in chain order — the first statement wins: a `?hop` on any instruction of the chain (the reducer
@@ -221,7 +222,7 @@ priority.
 ```
 combiner(group([k⇒h])) = sum()==[_=>combiner(h)]
 slave_i:  start(<part_i>).group([mod(3)=>sum()])?hop=0                     [-- [1=>1,0=>3,2=>5] --]
-master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=>sum()]   [-- [1=>{1,4},…] → [1=>5,…] --]
+master:   branch(p_1 => s_1, p_2 => s_2).sum()==[_=>sum()]   [-- [1=>{1,4},…] → [1=>5,…] --]
 ```
 
 The rec `sum` is the deep merge: colliding partials append into a bag, and a bulked partial (`merge()` bulks equal

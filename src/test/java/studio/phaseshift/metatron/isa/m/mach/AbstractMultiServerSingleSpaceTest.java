@@ -78,8 +78,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * computes, and the harness pushes the result back to the backend at {@code /usr/data/result/<xyz>/total}. Nothing
  * but an acknowledgement travels home.
  * <p>
- * THE LATCH IS THE GATHER. The workloads ship in the {@code law_shard} layout --
- * {@code start([w_1,w_2,w_3]).select([to(s_1),to(s_2),to(s_3)]).merge()} -- and the master reads the results back from
+ * THE LATCH IS THE GATHER. The workloads ship as a hand-written
+ * {@code start([w_1,w_2,w_3]).select([to(s_1),to(s_2),to(s_3)]).merge()} (a distributed program COMPILES to a
+ * {@code branch(<s_i> => …, …)}; select/merge is still a legal program), and the master reads the results back from
  * the backend only once every satellite has answered. A gather holding a fail is a failed row, never a finished
  * satellite: an uncaught failure on a satellite arrives as a timeout fail in its place, and a count would count it.
  * A satellite that catches its own failure ({@code .catch(...)}) answers its recovery instead.

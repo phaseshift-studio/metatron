@@ -198,12 +198,12 @@ public class catRewrite {
                 // factor with a local partial reduce, and the combiner is applied once more at home:
                 //
                 //   {1,2,3}.plus(2).sum()
-                //     |->  start([start?hop=0({1,3}).plus(2).sum(), start?hop=0({2}).plus(2).sum()])
-                //            .select([to(<a>), to(<b>)]).merge().sum()
+                //     |->  branch(<a> => start({1,3}).plus(2).sum?hop=0(), <b> => start({2}).plus(2).sum?hop=0()).sum()
                 //
-                // select pairs each slave with its route; to(<peer>) ships the slave unquoted, the peer's
-                // evaluation answers its partial, and merge() gathers the partials for the combiner. A peer
-                // with hop budget left re-plans its part over its own peers (the tree).
+                // branch keys each part by the place it runs (<~> home, a peer's authority); a remote lane ships its
+                // program uncompiled to its place's eval, every lane runs on its own virtual thread, and the branch
+                // gathers the partials for the combiner. A peer with hop budget left re-plans its part over its own
+                // peers (the tree).
                 //
                 // POLICY: the guard requires dialed peers and a hop budget (the plan's tree placement, or ?hop=n
                 // on the chain; ?hop=0 opts a fold out), so on a lone machine the rule is the identity and the

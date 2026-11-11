@@ -434,7 +434,7 @@ The edge values are the network's own `peer::T` recs — typed and validated in 
 deployment; a path without `origin` is simply a program that cannot be placed.
 
 ```mtron_pre
-path::[obj    => start([start({1,2,3}).plus(10).sum?hop=0()]).select([to(ws://ginger.local:8555)]).merge().sum(),
+path::[obj    => branch(<ws://ginger.local:8555> => start({1,2,3}).plus(10).sum?hop=0()).sum(),
        origin => place::[obj=>//booger.local, …],
        where  => [[span=>at] => place::[obj=>//ginger.local, …]],
        peer   => {peer::[…]},
@@ -745,7 +745,7 @@ Three observations that make the commingling precise:
 
 A plan's spans are authored in the **pre-lower** chain: `seed`, `pre`, `at` and `post` name regions of the chain the
 cut was found in (`{seed, floatable, reducer}`), and the emitter turns those regions into the post-lower layout
-(`start([…]).select([to(…)]).merge()`). A cut-less plan's span names a boundary in the **current** chain. So a
+(`branch(place => lane, …)`). A cut-less plan's span names a boundary in the **current** chain. So a
 distribution decision is valid only for the code it was authored against:
 
 > **`lower` invalidates `bind`; `bind` does not invalidate `lower`.** Re-routing does not change the code; rewriting
@@ -816,7 +816,7 @@ final Plan lanes = PlanBuilder.plan("law_shard_lanes")
 | today                                                                                                                                            | after                                                                                                                                                                    |
 |--------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `lowerCut(plan, code)` switches on `cut.role()` / `cut.form()`                                                                                   | `locate(plan, code)` keeps that switch (Thm 17 unchanged); a cut-less plan's site is its decision's span                                                                 |
-| `shard(plan, code)` reads `Machine.current().network().peers()`, `hop(plan, code)`, and builds `start([…]).select([to(…)]).merge()` + the retype | `resolve(where, env)` prunes over the declared topology and picks a shape; `emit(shape, regions, targets)` builds the layout — the *same* builder, callable by any shape |
+| `shard(plan, code)` reads `Machine.current().network().peers()`, `hop(plan, code)`, and builds `branch(place => lane, …)` + the retype | `resolve(where, env)` prunes over the declared topology and picks a shape; `emit(shape, regions, targets)` builds the layout — the *same* builder, callable by any shape |
 | a `Route` per plan                                                                                                                               | the decision recs: `span`, `shape`, `target`, `interface`, `hop`, `thread`, `workers`, `law`                                                                             |
 | the peer gate inside `shard`                                                                                                                     | `env.candidates(decision)` — declared liveness (§4), no dial                                                                                                             |
 | the interpreter reads `Machine.current()`                                                                                                        | `apply(plan, env)` takes the snapshot; nothing inside reads the machine                                                                                                  |

@@ -35,7 +35,8 @@ machine ring's `+` is *component-wise* — the operation each component's own ty
 | `processor`| process (runtime)     | branch — run both in parallel, merge                   |
 
 So `+` is *union on the data fibers, branching on the process fiber*. `law_shard` is exactly this `+`: it branches
-the processor (`select([to(p₁), to(p₂)])`) and unions the memory (`merge()`, the deep merge).
+the processor (`branch(p₁ ⇒ …, p₂ ⇒ …)`, a lane per machine) and unions the memory (the lanes' partials come
+back as one bag).
 
 ## `0` and `1`
 
@@ -74,8 +75,8 @@ The stream ring's coefficient `C` is the one parameter that selects what a strea
 multiplicity ("how many copies"); read as $\mathbb{C}$ it is amplitude ("how much" — interference, the quantum case);
 read as the **machine ring** it is *location* ("where it runs"). A stream $\sum_i M_i \cdot f_i$ with machine-ring
 coefficients is a **located stream** — a distributed program, each function weighted by the machine it runs on. That
-is what `law_shard`'s emitted layout already is: `select([to(p₁), to(p₂)])` assigns the coefficient (the machine),
-`merge()` adds them (the machine union, the deep merge). So classical, quantum, and distributed are three values of
+is what `law_shard` emits: `branch(p₁ ⇒ f₁, p₂ ⇒ f₂)` weights each function by the machine it runs on (the
+coefficient), and the branch's gather adds them (the machine union). So classical, quantum, and distributed are three values of
 one parameter — $\mathbb{N}$, $\mathbb{C}$, Machine Ring — and their tensor ($\mathbb{C} \otimes$ Machine Ring) is
 the quantum-distributed case. The `cInt` → `C<?,?>` generalization is exactly this parameter, and the machine ring is
 both an algebra in its own right *and* a value of it.
