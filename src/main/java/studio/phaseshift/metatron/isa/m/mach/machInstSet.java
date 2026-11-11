@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.mach;
 
-import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -35,6 +34,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewr
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.IdentityRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
@@ -223,14 +224,17 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MACHINE_COMPONENT_TID = MACH_ISA_TID.extend(COMPONENT);
     // the processor family — the architecture contract (apply(code)->computer) and the concrete swarm strategy
     public static final fURI MACH_PROCESSOR_TID = MACH_MACHINE_COMPONENT_TID.extend(PROCESSOR);
-    public static final fURI MACH_SWARM_PROCESSOR_TID = MACH_PROCESSOR_TID.extend("swarm");
+    public static final fURI MACH_SWARM_PROCESSOR_TID = MACH_PROCESSOR_TID.extend("swarm_processor");
     public static Type MACH_PROCESSOR_TYPE;
     public static Type MACH_SWARM_PROCESSOR_TYPE;
     // the computer family — the computing instance the architecture mints (a watchdog thread + workers + a cache)
     public static final fURI MACH_COMPUTER_TID = MACH_PROCESSOR_TID.extend(COMPUTER);
-    public static final fURI MACH_SWARM_COMPUTER_TID = MACH_COMPUTER_TID.extend("swarm");
+    public static final fURI MACH_SWARM_COMPUTER_TID = MACH_COMPUTER_TID.extend("swarm_computer");
     public static Type MACH_COMPUTER_TYPE;
     public static Type MACH_SWARM_COMPUTER_TYPE;
+    // the tracer — the processor's diagnostics: stack traces, computational tracing, control of its stack
+    public static final fURI MACH_TRACER_TID = MACH_PROCESSOR_TID.extend(TRACER);
+    public static Type MACH_TRACER_TYPE;
     // the compiler family — structural apply(source)->code contract, then the four stage families it composes
     public static final fURI MACH_COMPILER_TID = MACH_MACHINE_COMPONENT_TID.extend(COMPILER);
     public static Type MACH_COMPILER_TYPE;
@@ -276,9 +280,6 @@ public class machInstSet extends AbstractInstSet {
     // the typer family — structural typer
     public static final fURI MACH_TYPER_TID = MACH_MACHINE_COMPONENT_TID.extend(TYPER);
     public static Type MACH_TYPER_TYPE;
-    // the tracer family — process tracer
-    public static final fURI MACH_TRACER_TID = MACH_MACHINE_COMPONENT_TID.extend(TRACER);
-    public static Type MACH_TRACER_TYPE;
     // memory — the machine's address space: relative bindings plus the index of absolute spaces
     public static final fURI MACH_MEMORY_TID = MACH_MACHINE_COMPONENT_TID.extend(MEMORY);
     public static Type MACH_MEMORY_TYPE;
@@ -312,10 +313,17 @@ public class machInstSet extends AbstractInstSet {
                         // the processor family — structural apply(code)->obj contract, nominal monad marker, concrete swarm strategy
                         MACH_PROCESSOR_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_PROCESSOR_TID)
+                                .vid(MACH_PROCESSOR_TID, "the processor contract of machine::T — a machine's execution axis and the sibling of its compiler: the compiler decides what a program means, the processor runs the code::T the compiler produced. Each evaluation runs in a computer the processor mints, and the processor files every fail no evaluation caught. A pushed machine gets a fresh processor of its parent's architecture, so its computers and fail stacks are its own.")
                                 .isaPredicate(rec(
                                         uri(STATE).maybe().asUri(), union_(uri(STOP), uri(RUN), uri(PAUSE)).tryToInst(),
-                                        uri(RESULT).maybe(), T(ALL.maybeSome())))
+                                        uri(RESULT).maybe(), T(ALL.maybeSome()),
+                                        uri(TRACER).maybe(), T(MACH_TRACER_TID)), Map.of(
+                                        uri(STATE).maybe(), "the run state: stop, run or pause",
+                                        uri(RESULT).maybe(), "the objs the last evaluation produced",
+                                        uri(TRACER).maybe(), "the processor's diagnostics (tracer::T), as the compiler's typer is its type checking: a pushed machine's processor carries a copy of its parent's"))
+                                .slots(mutableMap(
+                                        uri(COMPUTER), "the computers this processor minted, one per evaluation, by number: computer/<n>; an evaluation's uncaught fails are filed in its computer's stack, computer/<n>/fail",
+                                        uri("fail"), "the machine's fail stack: an uncaught fail raised outside any evaluation, keyed by ?incrq; read with @ to keep each fail's address, so that catching it removes it"))
                                 .create(),
                         MACH_SWARM_PROCESSOR_TYPE = TypeBuilder.build()
                                 .tid(MACH_PROCESSOR_TID)
@@ -326,21 +334,36 @@ public class machInstSet extends AbstractInstSet {
                         // the computer family — the computing instance the architecture mints
                         MACH_COMPUTER_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_COMPUTER_TID)
-                                .isaPredicate(rec(uri(CODE), ALL_TYPE, uri(CACHE).maybe().asUri(), REC_TYPE))
+                                .vid(MACH_COMPUTER_TID, "the computing instance a processor mints for one evaluation: the code it runs and the state of the run")
+                                .isaPredicate(rec(uri(CODE), ALL_TYPE, uri(CACHE).maybe().asUri(), REC_TYPE), Map.of(
+                                        uri(CODE), "the code::T the computer runs",
+                                        uri(CACHE).maybe(), "the state of the run"))
                                 .create(),
                         MACH_SWARM_COMPUTER_TYPE = TypeBuilder.build()
                                 .tid(MACH_COMPUTER_TID)
-                                .vid(MACH_SWARM_COMPUTER_TID)
+                                .vid(MACH_SWARM_COMPUTER_TID, "the swarm processor's computer: monads move along the instruction chain independently, a barrier gathers them, and the halted monads are the result")
                                 .isaPredicate(rec(uri(CACHE).maybe().asUri(),
                                         rec(uri(HALTED).maybe().asUri(), T(ALL.maybeSome()),
                                                 uri(RUN).maybe(), T(ALL.maybeSome()),
-                                                uri(BARRIER).maybe(), LST_TYPE)))
-                                /* Map.of(uri(CACHE).maybe(), "three monad streams contain the current state of the computation",
-                                         uri(f(CACHE).extend(RUN)).maybe(), "monads still actively computing (inst x obj)",
-                                         uri(f(CACHE).extend(HALTED)).maybe(), "monads denote the result (inst0 x obj)",
-                                         uri(f(CACHE).extend(BARRIER)).maybe(), "a lst[monad] of the ordered barriers in the code"))*/
+                                                uri(BARRIER).maybe(), LST_TYPE)), Map.of(
+                                        uri(CACHE).maybe(), "the three monad streams that are the state of the computation",
+                                        uri(f(CACHE).extend(RUN)).maybe(), "the monads still computing (inst x obj)",
+                                        uri(f(CACHE).extend(HALTED)).maybe(), "the monads that halted, the result (inst0 x obj)",
+                                        uri(f(CACHE).extend(BARRIER)).maybe(), "the ordered barriers of the code, a lst[monad]"))
                                 .constructor(arg -> new BasicSwarmComputer(arg.asRec().jvm(), MACH_SWARM_COMPUTER_TID, arg.vid()))
+                                .create(),
+                        // the tracer — the processor's diagnostics, in the typer's form: its state is its stack field
+                        MACH_TRACER_TYPE = TypeBuilder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_TRACER_TID, "the processor's diagnostics, in the form of the compiler's typer: stack traces on an uncaught fail::T (mtron's and java's), computational tracing (in development), and control of the processor's stack. Its stages surface the java state an mtron instruction triggers but cannot introspect. The state is its stack field, at ~/processor/tracer/stack, and the boot default is every point off.")
+                                // every slot is optional: a BasicTracer is checked against this type while its rec is
+                                // still empty (MObj's constructor), and an absent point reads the boot default
+                                .isaPredicate(rec(uri(Tracer.STACK).maybe().asUri(), rec(
+                                        uri(Tracer.MTRON_STACK.name()).maybe().asUri(), BOOL_TYPE,
+                                        uri(Tracer.JAVA_STACK.name()).maybe(), BOOL_TYPE)), Map.of(
+                                        uri(Tracer.STACK).maybe(), "the trace points: mtron_stack (render mtron stack traces on an uncaught fail::T), java_stack (render java stack traces on an uncaught fail::T)"))
+                                // the tracer fills in its rec, so it gets a copy, never the caller's
+                                .constructor(arg -> new BasicTracer(mutableMap(arg.asRec().jvm()), MACH_TRACER_TID, arg.vid()))
                                 .create(),
                         // the compiler family — structural apply(source)->code contract holding its four stages
                         MACH_COMPILER_TYPE = TypeBuilder.build()
@@ -522,30 +545,14 @@ public class machInstSet extends AbstractInstSet {
                                 // the typer fills in its rec (check, verify), so it gets a copy, never the caller's
                                 .constructor(arg -> new BasicTyper(mutableMap(arg.asRec().jvm()), MACH_TYPER_TID, arg.vid()))
                                 .create(),
-                        // the tracer family — the stack-trace stages; the boot writes the tracer's state at /sys/tracer
-                        MACH_TRACER_TYPE = TypeBuilder.build()
-                                .tid(REC_TID)
-                                .vid(MACH_TRACER_TID)
-                                .isaPredicate(rec(uri("stack"), rec(
-                                        uri(Tracer.mtron_stack.name()).maybe().asUri(), BOOL_TYPE,
-                                        uri(Tracer.java_stack.name()).maybe(), BOOL_TYPE)))
-                                .constructor(stacks -> rec(uri("stack"), rec(
-                                        uri(Tracer.mtron_stack.name()), stacks.asRec().at(uri(Tracer.mtron_stack.name())).orElse(BOOL_TRUE),
-                                        uri(Tracer.java_stack.name()), stacks.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE))))
-                                .slots(mutableMap(
-                                        uri(Tracer.mtron_stack.name()), "render mtron stack traces on uncaught fail::T",
-                                        uri(Tracer.java_stack.name()), "render java stack traces on uncaught fail::T"))
-                                .desc("""
-                                        diagnostic stages for surfacing internal java state.
-                                        useful for debugging native java issues that mtron instructions
-                                        trigger but cannot introspect.
-                                        """)
-                                .create(),
                         // memory — a machine's address space: its relative bindings are the rec itself, and its
                         // absolute index is the `space` entry inside it, so both are reachable from mtron
                         MACH_MEMORY_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_MEMORY_TID)
+                                .vid(MACH_MEMORY_TID, "the memory contract of machine::T — a machine's data memory, the address space of instances: its relative bindings are the rec itself, and its index of absolute spaces is its space entry. A pushed machine's memory is a level over its parent's: a read falls through to the enclosing level, a write lands in this one. A read asks the network, then memory, then the instruction set when memory misses; memory routes names to addresses, the instruction set answers addresses.")
+                                .slots(mutableMap(
+                                        uri(SPACE), "the absolute spaces mounted at this level, by vid; an instruction set handed to memory is referred into the instset instead",
+                                        uri(REDIRECT), "the redirect table: a short name to its home path, resolved by the nearest declaration (memory's prefix table)"))
                                 .constructor(arg -> new BasicMemory(arg.asRec().jvm(), arg.vid()))
                                 .create(),
                         // THE IDENTITY CLIENT — the identity element of the protocol-client family: its

@@ -24,12 +24,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
@@ -68,28 +72,28 @@ public class MTronExceptionTest extends AbstractMetatronTest {
     // tracer emission — one trace per failure chain
     // ==================================================================
 
-    private boolean mtronStackWasOn;
-    private boolean javaStackWasOn;
+    // each test's own machine is named apart: a class's methods run in parallel in one fork
+    private static final AtomicLong MACHINES = new AtomicLong();
 
+    /**
+     * the tracer is the processor's, so a test that switches a trace point does it in a machine of its own: a fork's
+     * classes share its root, and the root's tracer is theirs too
+     */
     @BeforeEach
-    public void rememberTracerState() {
-        this.mtronStackWasOn = Tracer.mtron_stack.enabled();
-        this.javaStackWasOn = Tracer.java_stack.enabled();
+    public void pushATracingMachine() {
+        Machine.current().push(f("tracing_" + MACHINES.incrementAndGet()));
         ExecutionStack.clear();
     }
 
     @AfterEach
-    public void restoreTracerState() {
-        if (this.mtronStackWasOn) Tracer.enable(Tracer.mtron_stack);
-        else Tracer.disable(Tracer.mtron_stack);
-        if (this.javaStackWasOn) Tracer.enable(Tracer.java_stack);
-        else Tracer.disable(Tracer.java_stack);
+    public void popTheTracingMachine() {
+        Machine.current().pop();
         ExecutionStack.clear();
     }
 
     @Test
     public void testTraceCapturedWhileFramesInFlight() {
-        Tracer.enable(Tracer.mtron_stack);
+        Tracer.Helper.set(Tracer.MTRON_STACK, true);
         final int before = MTronException.mtronTracesEmitted();
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "/m/inst/as?rng=/m/lst&dom=/m/int"));
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst_args, "/m/inst/is?rng=/m/uri{?}&dom=/m/uri{?}"));
@@ -106,7 +110,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
 
     @Test
     public void testBlankStackEmitsNothing() {
-        Tracer.enable(Tracer.mtron_stack);
+        Tracer.Helper.set(Tracer.MTRON_STACK, true);
         final int before = MTronException.mtronTracesEmitted();
         final MTronException e = MTronException.of("no frames in flight");
         assertNull(e.mtronTrace());
@@ -116,7 +120,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
 
     @Test
     public void testRewrappedChainEmitsOnceWithDeepestCapture() {
-        Tracer.enable(Tracer.mtron_stack);
+        Tracer.Helper.set(Tracer.MTRON_STACK, true);
         final int before = MTronException.mtronTracesEmitted();
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "/m/inst/as?rng=/m/lst&dom=/m/int"));
         final MTronException deep = MTronException.of("3 is not a lst::T");
@@ -136,7 +140,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
 
     @Test
     public void testOfCauseLinksInnerAndEmitsOnce() {
-        Tracer.enable(Tracer.mtron_stack);
+        Tracer.Helper.set(Tracer.MTRON_STACK, true);
         final int before = MTronException.mtronTracesEmitted();
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "/m/inst/as?rng=/m/web/mcp/mcp_client&dom=/m/rec"));
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "/m/inst/ctor?rng=/m/web/mcp/mcp_client&dom=#{?}"));
@@ -158,7 +162,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
 
     @Test
     public void testOfThrowableEmitsOnce() {
-        Tracer.enable(Tracer.mtron_stack);
+        Tracer.Helper.set(Tracer.MTRON_STACK, true);
         final int before = MTronException.mtronTracesEmitted();
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "/m/inst/as?rng=/m/lst&dom=/m/int"));
         final MTronException converted = MTronException.of(new RuntimeException("raw failure", new ClassCastException("int cannot be cast to class lst")));
@@ -176,7 +180,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
 
     @Test
     public void testJavaStackEmitsOncePerChain() {
-        Tracer.enable(Tracer.java_stack);
+        Tracer.Helper.set(Tracer.JAVA_STACK, true);
         final int before = MTronException.javaTracesEmitted();
         final MTronException deep = MTronException.of("deep failure");
         final MTronException wrap = MTronException.of(deep, "inst apply failure");
@@ -198,7 +202,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
 
     @Test
     public void testReportedFailureEmitsExactlyOneTrace() {
-        Tracer.enable(Tracer.mtron_stack);
+        Tracer.Helper.set(Tracer.MTRON_STACK, true);
         final int before = MTronException.mtronTracesEmitted();
         final Obj result;
         try {
@@ -259,7 +263,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
 
     @Test
     public void testRetriedPipelineReportsOneTrace() {
-        Tracer.enable(Tracer.mtron_stack);
+        Tracer.Helper.set(Tracer.MTRON_STACK, true);
         final int before = MTronException.mtronTracesEmitted();
         try {
             final Obj result = ObjmtronSerializer.parse("1+ab").apply(noobj());

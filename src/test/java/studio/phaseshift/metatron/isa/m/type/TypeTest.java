@@ -60,8 +60,8 @@ public class TypeTest extends AbstractMetatronTest {
      * Render the mtron execution stack on failures. BootLoader defaults every tracer stage to false
      * (its tracer/stack boot arg), so a type-check failure otherwise reports the message plus a Java
      * frame list — which names the leaf type and says nothing about which level of a predicate stack
-     * rejected the value. Runs after AbstractMetatronTest.begin(), so the Router is live and
-     * Tracer.enable's space write lands.
+     * rejected the value. Runs after AbstractMetatronTest.begin(), so the Router is live and a tracer write
+     * (~/processor/tracer/stack, Tracer.Helper.set) lands.
      */
     @BeforeAll
     public static void enableMtronStackTrace() {

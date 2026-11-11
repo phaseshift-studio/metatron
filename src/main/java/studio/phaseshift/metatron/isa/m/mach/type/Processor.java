@@ -74,6 +74,14 @@ public interface Processor extends Component {
      */
     void close();
 
+    /**
+     * @return the tracer ({@code tracer::T}) — the rec entry, which CARRIES THE STATE ({@code ~/processor/tracer/stack}),
+     * as the compiler's typer carries its check points
+     */
+    default studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer tracer() {
+        return this.at(TRACER).orThrow("processor has no tracer: %s", this);
+    }
+
     // ======================== runtime (computeArgs + apply) ========================
 
     class Helper {

@@ -243,8 +243,9 @@ separate axes of a machine.
 | type                                 | description                                                                                        |
 |--------------------------------------|----------------------------------------------------------------------------------------------------|
 | `processor::T`                       | the runtime contract: executes a `code::T`, reports `state` (`stop`, `run`, `pause`) and `result`  |
-| `processor/swarm::T`                 | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result |
-| `processor/computer::T`, `…/swarm::T` | the computer an evaluation runs in                                                                |
+| `swarm_processor::T`                 | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result |
+| `computer::T`, `swarm_computer::T`   | the computer an evaluation runs in: its code and the state of the run                             |
+| `tracer::T`                          | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's |
 
 Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
 stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
@@ -516,8 +517,9 @@ connects the receiving peer to the same backend:
 The receiver compiles the code before the template is filled, so a database push-down (`SUM` in SQL) cannot fire on a
 templated address; the peer reads the rows and sums them in mtron.
 
-The multiserver fixture (one MariaDB, three satellites forked from one process) ships its workloads as
-`start([w_1,w_2,w_3]).select([to(s_1),to(s_2),to(s_3)]).merge()`. The master creates every table before any satellite
+The multiserver fixture (one MariaDB, three satellites forked from one process) ships its workloads with a
+hand-written `start([w_1,w_2,w_3]).select([to(s_1),to(s_2),to(s_3)]).merge()`, a legal program though not the compiled
+form, which is a `branch`. The master creates every table before any satellite
 exists, a satellite imports `/m/db/tble` and runs no DDL, and the master reads the results from the backend; only
 acknowledgements travel home.
 
@@ -526,7 +528,7 @@ acknowledgements travel home.
 
 ### the gather
 
-`merge()` (`>-`) completes when every route has replied. Equal replies bulk: three replies of `34` arrive as one obj
+The gather completes when every lane, or every route of a `merge()`, has replied. Equal replies bulk: three replies of `34` arrive as one obj
 with coefficient 3, $34\{3\}$, so replies are counted through coefficients:
 
 ```mtron_pre
@@ -555,7 +557,7 @@ service authority.
 
 | under                | types (`::T`)                                                                                                                                                                                                                     |
 |----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `plan_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `tracer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm`, `processor/computer`, `processor/computer/swarm` |
+| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `plan_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer` |
 | `/m/mach`            | `machine`, `component`, `thread`, `thread/core`, `thread/virtual`, `thread_executor`, `peer`, `listener`, `id_client`, `network_supervisor`, `monad`, `plan` (a rewrite rule as a value), `factory`                                |
 | `/m/uri`             | `origin`, `path_encoding`, `authority`                                                                                                                                                                                              |
 

@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.util;
 
-import studio.phaseshift.metatron.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
@@ -178,7 +178,7 @@ public class MTronException extends RuntimeException {
         // when the failure is reported (see emitStackTrace) — discarded
         // retries of a failing pipeline must not each print their own
         // shrink-wrapped trace.
-        if (Tracer.mtron_stack.enabled())
+        if (Tracer.Helper.mtronStack())
             captureIfAbsent(e);
         return e;
     }
@@ -212,9 +212,9 @@ public class MTronException extends RuntimeException {
     public static void emitStackTrace(final Throwable head) {
         if (null == head)
             return;
-        if (Tracer.mtron_stack.enabled())
+        if (Tracer.Helper.mtronStack())
             emitMtronTrace(head);
-        if (Tracer.java_stack.enabled())
+        if (Tracer.Helper.javaStack())
             emitJavaTrace(head);
     }
 
