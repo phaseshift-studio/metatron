@@ -798,12 +798,12 @@ public class catInstSetTest extends AbstractInstSetTest {
         while (done != 0) {
             // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25).
             // The theory laws are the category's rewrites and /m's law rewrites (the unit law, one rewrite per rule, inverse
-            // cancellation and derivation contraction): the theories and laws are /m's
+            // cancellation, derivation contraction and the branch factor): the theories and laws are /m's
             Machine.current().instset().members().stream()
                     .flatMap(isa -> isa.rewrites().stream()
                             .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "form_map_unwrap", "law_involution",
                                     "law_idempotent", "law_monoidic", "law_poset", "law_absorbing", "else_after_count", "range_skip_take",
-                                    "inverse_cancellation", "derivation_contraction").contains(r.tid().basePath().name())))
+                                    "inverse_cancellation", "derivation_contraction", "branch_factor").contains(r.tid().basePath().name())))
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
                         STATIC_LOG.debug(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
@@ -1542,7 +1542,15 @@ public class catInstSetTest extends AbstractInstSetTest {
             "1.branch(plus{0}(2),plus{2}(2))  % start(1).plus{2}(2)  % {2}3",
             // mixed: a code pair and an inst trio each sum their own like terms, the distinct singletons
             // keep their positions, and with four members left the branch stays (no inline)
-            "1.branch(+2.+2,plus{2}(2).+2,plus(2),plus{4}(2),plus(3),plus(2),mult(10))  % start(1).branch(plus{3}(2).plus(2),plus{6}(2),plus(3),mult(10))  % {{3}5,{6}3,4,10}",
+            "1.branch(+2.+2,+2.plus{2}(2),plus(2),plus{4}(2),plus(3),plus(2),mult(10))  % start(1).branch(plus(2).plus{3}(2),plus{6}(2),plus(3),mult(10))  % {{3}5,{6}3,4,10}",
+            // a code member's multiplicity is the point of its LAST inst, on its output: a summed point at the head floated
+            // past the reducer, so plus{2}(1).count() answered 2, not {2}1
+            "5.branch(plus(1).count(),plus(1).count())          % start(5).plus(1).count{2}()                          % {2}1",
+            "1.branch(plus(1).mult{2}(3),plus(1).mult(3))        % start(1).plus(1).mult{3}(3)                          % {3}6",
+            "1.branch(plus(1).mult{2}(3),plus(1).mult{0}(3))     % start(1).plus(1).mult{2}(3)                          % {2}6",
+            // a point ahead of the last inst is part of the function, as a reducer reads it: no like terms
+            "5.branch(plus(1).count(),plus{2}(1).count())       % start(5).branch(plus(1).count(),plus{2}(1).count())  % {1,2}",
+            "1.branch(+2.+2,plus{2}(2).+2)                      % start(1).branch(plus(2).plus(2),plus{2}(2).plus(2))  % {3}5",
     }, delimiter = '%')
     public void testBranchCollapse(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
@@ -1562,10 +1570,38 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .findFirst().orElseThrow();
         // three members with a duplicate pair, collapsed to two
         assertEquals(2, branch.args().count());
-        // the duplicate collapsed to the code carrying the summed coefficient at its head inst
-        assertEquals(ObjmtronSerializer.parse("start(1).branch(map{2}(2).neg(),map(4).neg())").asCode().insts().get(1), branch);
+        // the duplicate collapsed to the code carrying the summed coefficient at its last inst, on its output
+        assertEquals(ObjmtronSerializer.parse("start(1).branch(map(2).neg{2}(),map(4).neg())").asCode().insts().get(1), branch);
         // the collapse is stream-transparent: -2 twice, -4 once
         assertEquals(ObjmtronSerializer.parse("{{2}-2,-4}"), code.apply(noobj()));
+    }
+
+    /**
+     * {@code branch_factor} — the left-distributive normal form (Marko, 2026-11-10: two parallel expressions run as one,
+     * branched where their instructions differ). Members that all start with the same pure instruction share it ahead of
+     * the branch, to the fixpoint. It goes no further than the like-term normal form: the heads are alike to their span and
+     * point, every member keeps a remainder, and an effectful head, which would run once instead of once per member, is
+     * never shared. A branch feeds its members one obj at a time, so neither is a head that gathers the stream.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a shared head is shared ahead of the branch
+            "1.branch(plus(1).mult(2),plus(1).mult(3))         % start(1).plus(1).branch(mult(2),mult(3))                  % {4,6}",
+            // a reducer in a remainder still reads one obj at a time, inside the branch as before
+            "{1,2}.branch(plus(1).count(),plus(1).sum())       % start({1,2}).plus(1).branch(count(),sum())                % {{2}1,2,3}",
+            // a shared reducer is never shared: ahead of the branch it would count the stream, 2, where each member counts 1
+            "{1,2}.branch(count().plus(1),count().plus(2))     % start({1,2}).branch(count().plus(1),count().plus(2))      % {{2}2,{2}3}",
+            // equal instructions under different spans: the shorter run is the prefix, reached through the fixpoint
+            "1.branch({2}plus(1).mult(3),{3}plus(1).mult(4))   % start(1).plus(1).plus(1).branch(mult(3),plus(1).mult(4))  % {9,16}",
+            // unlike heads, heads at different points, and a member with no remainder stay as written
+            "1.branch(plus(1).mult(2),plus(2).mult(3))         % start(1).branch(plus(1).mult(2),plus(2).mult(3))          % {4,9}",
+            "1.branch(plus{2}(1).mult(2),plus(1).mult(3))      % start(1).branch(plus{2}(1).mult(2),plus(1).mult(3))       % {{2}4,6}",
+            "1.branch(plus(1).mult(2),plus(1))                 % start(1).branch(plus(1).mult(2),plus(1))                  % {4,2}",
+            // an effectful head is never shared
+            "1.branch(to(x).plus(1),to(x).plus(2))             % start(1).branch(to(x).plus(1),to(x).plus(2))              % {2,3}",
+    }, delimiter = '%')
+    public void testBranchFactor(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
     }
 
     /**
@@ -1603,16 +1639,16 @@ public class catInstSetTest extends AbstractInstSetTest {
             "1.branch(2)       % start(1).map(2)          % 2",
             // the collapse's single survivor is inlined with its summed coefficient
             "1.branch(+2,+2)   % start(1).plus{2}(2)      % {2}3",
-            // the collapse's chain survivor is inlined with its summed coefficient at the head inst
-            "1.branch(2.neg(),2.neg())  % start(1).map{2}(2).neg()  % {2}-2",
+            // the collapse's chain survivor is inlined with its summed coefficient at the last inst
+            "1.branch(2.neg(),2.neg())  % start(1).map(2).neg{2}()  % {2}-2",
             // two distinct members stay branched
             "1.branch(+2,+4)   % start(1).branch(plus(2),plus(4))   % {3,5}",
             // an inst member and a code member that start the same are distinct — no collapse
             "1.branch(+2,+2.+2)  % start(1).branch(plus(2),plus(2).plus(2))  % {3,5}",
             // a fully-duplicate chain pair collapses, then inlines
-            "1.branch(+2.+2,+2.+2)  % start(1).plus{2}(2).plus(2)  % {2}5",
-            // like chains already carrying head coefficients sum their multiplicities (1 + 10)
-            "1.branch(+2.+2,plus{10}(2).+2)  % start(1).plus{11}(2).plus(2)  % {11}5",
+            "1.branch(+2.+2,+2.+2)  % start(1).plus(2).plus{2}(2)  % {2}5",
+            // like chains already carrying last-inst coefficients sum their multiplicities (1 + 10)
+            "1.branch(+2.+2,+2.plus{10}(2))  % start(1).plus(2).plus{11}(2)  % {11}5",
             // a fully-duplicate scalar pair inlines into the map that emits the summed term
             "1.branch(10,10)      % start(1).map({2}10)  % {2}10",
             "1.branch({2}10,{3}10)  % start(1).map({5}10)  % {5}10",
@@ -1639,6 +1675,13 @@ public class catInstSetTest extends AbstractInstSetTest {
             "1.branch(branch(+2,+2),branch(+2,+2))  % start(1).plus{4}(2)  % {4}3",
             // a lone lane keyed to this machine (<~>) runs where the code stands, so its key drops and it inlines
             "1.branch(<~> => plus(2))               % start(1).plus(2)     % 3",
+            // A MEMBER REWRITTEN TO NOTHING IS THE UNIT, NEVER THE ZERO: neg().neg() and plus(0) pass their obj on, so
+            // the emptied member is id() and keeps its path (it was noobj: {1,-1}, 2 and -1 below), and an id() beside
+            // it is a like term, so the two collapse and bulk (Marko, 2026-11-10: a rewrite also aligns a member with
+            // its parallel branches)
+            "1.branch(id(),neg(),neg().neg())       % start(1).branch(id{2}(),neg())  % {{2}1,-1}",
+            "1.branch(plus(0),plus(1))              % start(1).branch(id(),plus(1))   % {1,2}",
+            "1.branch(neg().neg(),neg())            % start(1).branch(id(),neg())     % {1,-1}",
     }, delimiter = '%')
     public void testBranchFixpoint(final String code, final String expected, final String expectedResult) {
         final Code firstStage = ObjmtronSerializer.parse(code);
@@ -1670,7 +1713,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             // the additive normalizers read the branch's member count: like terms need a pair (whether the two are
             // alike is the value residue, so an unlike pair still licenses the collapse), a lone member inlines
             "start(1).branch(+2,+2)                                    % branch_collapse  % true",
-            "start(1).branch(+2,+4)                                    % branch_collapse  % true",
+            // since 604cfed59 an edge is decided by EVALUATION (catTypes: a rewrite that leaves the code equal is no
+            // edge, with a TODO back to the provable-identity profile), and an unlike pair is left equal by the
+            // collapse. Under the a-priori profile this row was true: the profile cannot see that +2 and +4 differ
+            "start(1).branch(+2,+4)                                    % branch_collapse  % false",
             "start(1).branch(+2)                                       % branch_collapse  % false",
             "start(1).branch(+2)                                       % branch_inline    % true",
             "start(1).branch(+2,+2)                                    % branch_inline    % false",

@@ -31,8 +31,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import static studio.phaseshift.metatron.Tokens.ANALYSIS;
 import static studio.phaseshift.metatron.Tokens.MAX;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_FIXPOINT_REWRITER_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -240,9 +242,15 @@ public class FixPointRewriter extends AbstractRewriter {
             final List<Obj> built = new ArrayList<>(args.size());
             boolean argChanged = false;
             for (final Obj arg : args) {
-                final Obj next = arg.isCall() && 0 < arg.asCall().insts().size()
-                        ? apply(arg).tryToInst()
-                        : arg;
+                // A MEMBER REWRITTEN TO NOTHING IS THE UNIT, NEVER THE ZERO: neg().neg() and plus(0) do nothing to an obj,
+                // so the empty code is 1, the path that passes its obj on, where tryToInst() answers noobj, the 0 that
+                // kills it (1.branch(id(),neg(),neg().neg()) answered {1,-1}). As id() it is a like term of an id()
+                // beside it, so the two collapse and bulk: id{2}() (Marko, 2026-11-10: a rewrite also aligns a
+                // member with its parallel branches)
+                final Code rewritten = arg.isCall() && 0 < arg.asCall().insts().size() ? apply(arg) : null;
+                final Obj next = null == rewritten ? arg
+                        : rewritten.insts().isEmpty() ? instB(ID_INST_TID, lst()).c(rewritten.c())
+                        : rewritten.tryToInst();
                 if (arg != next)
                     argChanged = true;
                 built.add(next);

@@ -58,7 +58,7 @@ public class PlanRewriterTest extends AbstractMetatronTest {
         assertInstanceOf(PlanRewriter.class, rewriter, "plan_rewriter::[=>] mints the plan engine");
         assertEquals(MACH_PLAN_REWRITER_TID, rewriter.tid());
         assertEquals(jnt(3), rewriter.at(uri(MAX)), "a fixpoint_rewriter::T refinement keeps the convergence window");
-        assertIterableEquals(Stream.of("theory_unit_removal", "branch_collapse", "branch_inline", "law_involution",
+        assertIterableEquals(Stream.of("theory_unit_removal", "branch_collapse", "branch_factor", "branch_inline", "law_involution",
                                 "law_idempotent", "law_absorbing", "law_monoidic", "law_poset", "inverse_cancellation",
                                 "form_map_unwrap", "derivation_contraction", "law_shard")
                         .map(name -> MACH_INST_TID.extend(REWRITE).extend(name)).toList(),
@@ -99,7 +99,9 @@ public class PlanRewriterTest extends AbstractMetatronTest {
             "6.plus(3.neg())                  % start(6).minus(3)                 % 3",
             // branch_collapse, then branch_inline on the lone survivor
             "1+2.branch(+2,+2,+2)             % start(1).plus(2).plus{3}(2)       % {3}5",
-            "1.branch(+2.+2,+2.+2)            % start(1).plus{2}(2).plus(2)       % {2}5",
+            "1.branch(+2.+2,+2.+2)            % start(1).plus(2).plus{2}(2)       % {2}5",
+            // a member law_involution empties is the unit, which then collapses with the id() beside it
+            "1.branch(id(),neg(),neg().neg()) % start(1).branch(id{2}(),neg())    % {{2}1,-1}",
             // ONLY THE PLANS RUN: /m's else_after_count is a rewrite of the instset, not a plan, so the else stays
             "{1,2,3}.count().else(0)          % start({1,2,3}).count().else(0)    % 3",
     }, delimiter = '%')

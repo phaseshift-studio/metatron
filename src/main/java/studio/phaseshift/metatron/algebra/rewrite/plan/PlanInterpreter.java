@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -48,6 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -168,6 +170,8 @@ public final class PlanInterpreter {
             return Law.Helper.lawRemoval(code, LAW_MONOIDIC);
         if (cut.declares(Law.poset))
             return Law.Helper.lawRemoval(code, LAW_POSET);
+        if (cut.declares(Law.left_distributive))
+            return branchFactor(code);
         if (cut.declares(Law.absorbing))
             return Law.Helper.lawRemoval(code, LAW_ABSORBING);
         return code;
@@ -749,6 +753,47 @@ public final class PlanInterpreter {
     }
 
     /**
+     * The left-distributive normal form (local): an occurrence of the algebra's additive op whose members all start with
+     * the same pure instruction shares it ahead of the op, {@code branch(a.b, a.c) ↦ a.branch(b, c)}, the ring's
+     * a·b + a·c = a·(b + c) (Marko, 2026-11-10: two parallel expressions run as one, branched where their instructions
+     * differ). It goes as far as the like-term normal form and no further: one shared instruction a pass (the fixpoint
+     * reaches a longer prefix); every member alike in its head, span and point included, so no point moves; every member
+     * keeping a remainder, so no unit is introduced; and the head pure, as it then runs once instead of once per member.
+     * A branch feeds its members one obj at a time, so the head must take one obj at a time too (a mapper, filter or
+     * flatmapper): a shared reducer would gather the whole stream ahead of the branch, and
+     * {@code {1,2}.branch(count().plus(1),count().plus(2))} would count 2 where each member counts 1.
+     */
+    private static Code branchFactor(final Code code) {
+        final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
+        if (null == op)
+            return code;
+        final Predicate<Obj> factorable = m -> m.isCode() && m.c().isOne() && 1 < m.asCode().insts().size();
+        // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch
+        final List<Type> carriers = carriers(code);
+        boolean changed = false;
+        final List<Inst> out = new ArrayList<>(code.insts().size() + 1);
+        for (int i = 0; i < code.insts().size(); i++) {
+            final Inst inst = code.insts().get(i);
+            final List<Obj> members = matches(op, inst, T(CODE_TID)) && !inst.args().isRec() ? inst.args().elements().toList() : List.of();
+            final Inst head = 2 > members.size() || !factorable.test(members.getFirst()) ? null : members.getFirst().asCode().insts().getFirst();
+            final Rec declared = null == head ? noobjRec() : Law.Helper.declared(head.tid().basePath(), carriers.get(i));
+            if (declared.isNoObj()
+                    || !EnumSet.of(Inst.Form.mapper, Inst.Form.filter, Inst.Form.flatmapper).contains(Inst.Form.of(head.tid(declared.atDirect(OBJ).tid())).subring())
+                    || !declares(head, carriers.get(i), Law.pure) || !members.stream().allMatch(m -> factorable.test(m)
+                    && sameMember(m.asCode().insts().getFirst(), head) && m.asCode().insts().getFirst().tid().d().equals(head.tid().d()))) {
+                out.add(inst);
+                continue;
+            }
+            changed = true;
+            out.add(head);
+            out.add(inst.args(lst(members.stream()
+                    .map(m -> (Obj) code(new ArrayList<>(m.asCode().insts().subList(1, m.asCode().insts().size()))).tryToInst())
+                    .toList())));
+        }
+        return changed ? code(out) : code;
+    }
+
+    /**
      * Whether the bare chain instruction is the witness op — a base-path match. The witness here is the
      * n-ary {@code branch} (the code ring's {@code Σ}), which is registered with a generic dom/rng, so the
      * space read's {@code admitted()} (which excludes generic rngs) would drop it; the bare address is unique
@@ -842,15 +887,15 @@ public final class PlanInterpreter {
     /**
      * The frame's own coefficient folded into its single member — an occurrence of coefficient c applied to a
      * single member multiplies that member's multiplicity by c, so the frame unwraps and the member comes out
-     * carrying it. A code member anchors the coefficient at its head inst; an inst or a non-call member takes
-     * the multiplication itself.
+     * carrying it. A code member anchors the coefficient at its last inst, where {@link #multiplicity(Obj)} reads it;
+     * an inst or a non-call member takes the multiplication itself.
      */
     private static Obj absorb(final Obj member, final cInt c) {
         if (cInt.ONE().equals(c))
             return member;
         if (member.isCode()) {
             final List<Inst> insts = new ArrayList<>(member.asCode().insts());
-            insts.set(0, (Inst) insts.get(0).c(o -> o.mult(c)));
+            insts.set(insts.size() - 1, (Inst) insts.getLast().c(o -> o.mult(c)));
             return code(insts);
         }
         return member.c(o -> o.mult(c));
@@ -858,8 +903,10 @@ public final class PlanInterpreter {
 
     /**
      * Two additive members being the same element — {@code same(Inst, Inst)} with the refined endpoints compared
-     * too, minus the positional vid. A code member is the same when its instruction list is pairwise the same;
-     * a non-call member is the same when it is coefficient-less equal (the coefficient is the multiplicity the
+     * too, minus the positional vid. A code member is the same when its instruction list is pairwise the same, the
+     * points included up to the last inst: only the last inst's point is the member's multiplicity, as a point
+     * ahead of a reducer is what the reducer reads ({@code 5.plus(1).count()} is 1 and {@code 5.plus{2}(1).count()} is
+     * 2). A non-call member is the same when it is coefficient-less equal (the coefficient is the multiplicity the
      * law sums, so it is deliberately OUT of the test).
      */
     private static boolean sameMember(final Obj a, final Obj b) {
@@ -877,7 +924,7 @@ public final class PlanInterpreter {
             if (ai.size() != bi.size())
                 return false;
             for (int i = 0; i < ai.size(); i++)
-                if (!sameMember(ai.get(i), bi.get(i)))
+                if (!sameMember(ai.get(i), bi.get(i)) || (i < ai.size() - 1 && !ai.get(i).tid().d().equals(bi.get(i).tid().d())))
                     return false;
             return true;
         }
@@ -888,28 +935,29 @@ public final class PlanInterpreter {
 
     /**
      * The multiplicity an additive member contributes — the coefficient the law sums. For an inst member it is
-     * the inst's own coefficient; for a code member it rides the chain's first inst.
+     * the inst's own point; for a code member it is the point of the chain's last inst, the one on the member's output.
+     * The head is no anchor: a point there floats past a reducer, so {@code 5.branch(plus(1).count(),plus(1).count())}
+     * collapsed to {@code plus{2}(1).count()} and answered 2, not {@code {2}1}.
      */
     private static cInt multiplicity(final Obj member) {
         // an inst's multiplicity is its POINT d, never its whole coefficient b·d: a span is part of the function (like
         // terms share it), so summing it as a point read {?}plus(1) + plus(1) as plus{1,2}(1)
         if (member.isCode() && !member.asCode().insts().isEmpty())
-            return member.asCode().insts().getFirst().tid().d();
+            return member.asCode().insts().getLast().tid().d();
         return member.isInst() ? member.asInst().tid().d() : member.c();
     }
 
     /**
      * The member carrying its summed point, at the anchor {@link #multiplicity(Obj)} reads it from — the inst's tid
-     * (its span untouched), or the head of the chain for a code.
+     * (its span untouched), or the last inst of the chain for a code.
      */
     private static Obj coeff(final Obj member, final cInt c) {
         if (member.isCode() && !member.asCode().insts().isEmpty()) {
-            final List<Inst> insts = member.asCode().insts();
-            final List<Inst> headed = new ArrayList<>(insts);
-            headed.set(0, insts.getFirst().tid(insts.getFirst().tid().d(c)));
-            return code(headed);
+            final List<Inst> insts = new ArrayList<>(member.asCode().insts());
+            insts.set(insts.size() - 1, insts.getLast().d(c).asInst());
+            return code(insts);
         }
-        return member.isInst() ? member.asInst().tid(member.asInst().tid().d(c)) : member.c(c);
+        return member.isInst() ? member.d(c) : member.c(c);
     }
 
     /**
