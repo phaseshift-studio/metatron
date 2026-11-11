@@ -125,7 +125,6 @@ public class mInstSet extends AbstractInstSet {
     public static final Type CODE_TYPE = mTypes.CODE_TYPE;
     public static final Type NOOBJ_TYPE = mTypes.NOOBJ_TYPE;
 
-    public static final fURI LIKE_INST_TID = M_ISA_INST_TID.extend("like");
     public static final fURI CAUSE_INST_TID = M_ISA_INST_TID.extend("cause");
     public static final fURI NATIVE_INST_TID = M_ISA_INST_TID.extend("native");
     public static final fURI SERIALIZE_INST_TID = M_ISA_INST_TID.extend("serialize");
@@ -172,7 +171,6 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI COMPOSE_INST_TID = M_ISA_INST_TID.extend("compose"); // a·b — serial composition (a then b)
     public static final fURI FILL_TID = M_ISA_INST_TID.extend("fill");
     public static final fURI FIND_TID = M_ISA_INST_TID.extend("find");
-    public static final fURI RMERGE_TID = M_ISA_INST_TID.extend("rmerge");
     public static final fURI RANGE_INST_TID = M_ISA_INST_TID.extend("range");
     public static final fURI WITHIN_INST_TID = M_ISA_INST_TID.extend("within");
     public static final fURI AUTO_INST_TID = M_ISA_INST_TID.extend("auto");
@@ -225,7 +223,6 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI GROUP_INST_TID = M_ISA_INST_TID.extend("group");
     public static final fURI ELSE_INST_TID = M_ISA_INST_TID.extend("else");
     public static final fURI END_INST_TID = M_ISA_INST_TID.extend("end");
-    //  public static final fURI THREAD_INST_TID = M_ISA_INST_TID.extend("thread");
     public static final fURI IMPORT_INST_TID = M_ISA_INST_TID.extend("import");
     public static final fURI SOURCE_INST_TID = M_ISA_INST_TID.extend("source");
     public static final fURI SWAP_INST_TID = M_ISA_INST_TID.extend("swap");

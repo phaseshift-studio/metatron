@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.Tokens.*;
  * <ul>
  *   <li>{@link #parser()} — the {@link Parser} (reads source text and emits {@code code::T}; for
  *       what is already parsed it is the identity, lifted into code). This is the language seam: a
- *       parser emitting mtron code IS another language hosted on metatron;</li>
+ *       parser emitting mtron code is another language hosted on metatron;</li>
  *   <li>{@link #rewriter()} — the {@link Rewriter} (fixpoint over the rewrite rules);</li>
  *   <li>{@link #resolver()} — the {@link Resolver} (threads the type, resolves one inst at a
  *       time through its two sub-stages, the {@code selector} and the {@code binder}; binding
@@ -74,9 +74,8 @@ public interface Compiler extends Component, Rec {
 
     /**
      * @return the parse stage component ({@code parser::T}) — {@code mtron_parser::T}, the only
-     * parser metatron ships. This is the language seam of the compiler: a parser that emits mtron
-     * code IS another language on metatron, since the three stages after it and the processor all
-     * take code.
+     * parser metatron ships. This is the language seam of the compiler: a parser that emits
+     * code::T is another language on metatron. All subsequent stages process code::T.
      */
     default Parser parser() {
         return this.at(PARSER).orThrow("compiler has no resolver: %s", this);

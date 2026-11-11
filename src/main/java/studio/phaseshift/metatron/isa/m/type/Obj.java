@@ -1117,6 +1117,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
+            if (obj == other)
+                return true;
             if (!(other instanceof Obj otherObj))
                 return false;
             if (obj.isNoObj() && otherObj.isNoObj())
