@@ -438,6 +438,11 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{2,3}plus(1).count()                   % 2",
             "{1,1}.{2,3}plus(1)                       % {{2}3,{2}4}",
             "{2}1.{2,3}plus{3}(1)                     % {{18}3,{54}4}",
+            // a reducer counts a point as that many objs, and a span on a reducer runs it over the whole stream
+            "0.{0,6}plus{2}(1).sum()                  % 642",
+            "0.{0,6}plus{2}(1).count()                % 127",
+            "{1,2,3}.{0,1}sum()                       % {1,2,3,6}",
+            "{1,2,3}.{2,3}count()                     % {2}1",
     }, delimiter = '%')
     void testApply(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
