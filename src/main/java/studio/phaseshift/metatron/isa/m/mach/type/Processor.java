@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -78,7 +79,7 @@ public interface Processor extends Component {
      * @return the tracer ({@code tracer::T}) — the rec entry, which CARRIES THE STATE ({@code ~/processor/tracer/stack}),
      * as the compiler's typer carries its check points
      */
-    default studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer tracer() {
+    default Tracer tracer() {
         return this.at(TRACER).orThrow("processor has no tracer: %s", this);
     }
 
