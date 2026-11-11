@@ -34,12 +34,14 @@ and its *form* is read off the coefficient pair:
 **Live proof.** A coefficient is not annotation; it is arithmetic. `count()` sums
 the coefficients, and `sum()` lets a merge account for them:
 
-```mtron_pre
-{1,2,3}.count()               [-- 3: sum of coefficients --]
-{1,2,{10}3}.count()           [-- 12: coefficients add (1+1+10) --]
-{int{2}::1,int{3}::2}.sum()   [-- int::8: the merge accounts for the coefficient --]
+```mtron
+mtron> {1,2,3}.count()               [-- 3: sum of coefficients --]
+==>3
+mtron> {1,2,{10}3}.count()           [-- 12: coefficients add (1+1+10) --]
+==>12
+mtron> {int{2}::1,int{3}::2}.sum()   [-- int::8: the merge accounts for the coefficient --]
+==>8
 ```
-
 ## The tree walk is the schedule
 
 Data lives at addresses, and addresses are paths in a tree. Descending a node with
@@ -51,12 +53,15 @@ running machine's own thread tree: each `>>` is a scatter that fans a node out
 into its children, and each `.count()` is the gather that folds them back to a
 single number:
 
-```mtron_pre
-/sys/thread.>>
-/sys/thread.>>.count()
-/sys/thread.>>.>>.count()
+```mtron
+mtron> /sys/thread.>>
+==>/sys/thread/executor
+==>/sys/thread/main
+mtron> /sys/thread.>>.count()
+==>2
+mtron> /sys/thread.>>.>>.count()
+==>8
 ```
-
 The branching factor *is* the coefficient. Descend and the count grows; gather
 and it folds back to one number. The two directions are the two fundamental
 operations:

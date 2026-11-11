@@ -26,6 +26,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -279,24 +280,34 @@ public class MarkdownRunnerTest {
     }
 
     @Test
-    public void testArticleTreeCollectsNoSkillMarkdown(@TempDir final Path tmp) throws IOException {
-        // The theory-articles shape: frontmatter markdown that is neither SKILL.md nor
-        // under references/, so the markdown pass collects none of it. That is exactly
-        // why an --html run over the articles dir must still reach the html pass.
+    public void testArticleTreeCollectsEveryArticle(@TempDir final Path tmp) throws IOException {
+        // The theory-articles source tree (docs/articles): every .md is an article, though
+        // none is a SKILL.md or under references/, and nothing but a .md is one
         final Path articles = tmp.resolve("articles");
-        Files.createDirectories(articles);
+        Files.createDirectories(articles.resolve("drafts"));
         Files.writeString(articles.resolve("stream-ring-theory.md"),
                 "---\nname: Stream Ring Theory\ndescription: d\n---\n\nbody\n");
-        assertTrue(MarkdownRunner.collectMarkdownFiles(articles).isEmpty(),
-                "an articles tree must not enter the markdown pass");
+        Files.writeString(articles.resolve("drafts/span-and-point.md"), "---\nname: Span and Point\n---\n");
+        Files.writeString(articles.resolve("geometry.tex"), "\\section{geometry}\n");
+        assertEquals(List.of(articles.resolve("drafts/span-and-point.md"), articles.resolve("stream-ring-theory.md")),
+                MarkdownRunner.collectMarkdownFiles(articles),
+                "every .md of an articles tree enters the markdown pass, sorted");
+        // one article given alone is that article
+        assertEquals(List.of(articles.resolve("stream-ring-theory.md")),
+                MarkdownRunner.collectMarkdownFiles(articles.resolve("stream-ring-theory.md")));
 
-        // ...while a skill tree does (SKILL.md, and anything under references/)
+        // ...while a skill tree takes SKILL.md and references/*.md only: a stray .md stays
+        // out, even under a directory of the skill that happens to be named articles
         final Path skills = tmp.resolve("skills");
         Files.createDirectories(skills.resolve("mtron/references"));
+        Files.createDirectories(skills.resolve("mtron/articles"));
         Files.writeString(skills.resolve("mtron/SKILL.md"), "---\nname: mtron\n---\n");
         Files.writeString(skills.resolve("mtron/references/type.md"), "---\nname: type\n---\n");
-        assertEquals(2, MarkdownRunner.collectMarkdownFiles(skills).size(),
-                "SKILL.md and references/*.md are the markdown pass's documents");
+        Files.writeString(skills.resolve("mtron/notes.md"), "scratch\n");
+        Files.writeString(skills.resolve("mtron/articles/draft.md"), "scratch\n");
+        assertEquals(List.of(skills.resolve("mtron/SKILL.md"), skills.resolve("mtron/references/type.md")),
+                MarkdownRunner.collectMarkdownFiles(skills),
+                "SKILL.md and references/*.md are a skill tree's documents");
     }
 
     @Test

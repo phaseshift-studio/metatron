@@ -546,9 +546,12 @@ and its <em>form</em> is read off the coefficient pair:</p>
 </table>
 <p><strong>Live proof.</strong> A coefficient is not annotation; it is arithmetic. <code>count()</code> sums
 the coefficients, and <code>sum()</code> lets a merge account for them:</p>
-<pre><code class="language-mtron_pre">{1,2,3}.count()               [-- 3: sum of coefficients --]
-{1,2,{10}3}.count()           [-- 12: coefficients add (1+1+10) --]
-{int{2}::1,int{3}::2}.sum()   [-- int::8: the merge accounts for the coefficient --]
+<pre><code class="language-mtron">mtron&gt; {1,2,3}.count()               [-- 3: sum of coefficients --]
+==&gt;3
+mtron&gt; {1,2,{10}3}.count()           [-- 12: coefficients add (1+1+10) --]
+==&gt;12
+mtron&gt; {int{2}::1,int{3}::2}.sum()   [-- int::8: the merge accounts for the coefficient --]
+==&gt;8
 </code></pre>
 <h3>The tree walk is the schedule</h3>
 <p>Data lives at addresses, and addresses are paths in a tree. Descending a node with
@@ -558,9 +561,13 @@ the coefficients, and <code>sum()</code> lets a merge account for them:</p>
 running machine's own thread tree: each <code>&gt;&gt;</code> is a scatter that fans a node out
 into its children, and each <code>.count()</code> is the gather that folds them back to a
 single number:</p>
-<pre><code class="language-mtron_pre">/sys/thread.&gt;&gt;
-/sys/thread.&gt;&gt;.count()
-/sys/thread.&gt;&gt;.&gt;&gt;.count()
+<pre><code class="language-mtron">mtron&gt; /sys/thread.&gt;&gt;
+==&gt;/sys/thread/executor
+==&gt;/sys/thread/main
+mtron&gt; /sys/thread.&gt;&gt;.count()
+==&gt;2
+mtron&gt; /sys/thread.&gt;&gt;.&gt;&gt;.count()
+==&gt;8
 </code></pre>
 <p>The branching factor <em>is</em> the coefficient. Descend and the count grows; gather
 and it folds back to one number. The two directions are the two fundamental

@@ -18,7 +18,7 @@
 #
 #        bin/metatron-site docs/website/adoc/space.adoc        # AsciiDocRunner
 #        bin/metatron-site docs/skills/mtron/SKILL.md          # MarkdownRunner
-#        bin/metatron-site docs/website/articles/*.md          # -> .metatron/articles
+#        bin/metatron-site docs/articles/*.md                  # -> docs/website/articles
 #
 #      .java names the instset reference, which has no single-file mode: it runs
 #      the whole `instset` stage instead.
@@ -103,7 +103,7 @@ markdown_out_dir() {
             esac
             echo ".metatron/skills${sub:+/$sub}"
             ;;
-        docs/articles/*.md|docs/website/articles/*.md) echo ".metatron/articles" ;;
+        docs/articles/*.md) echo "docs/website/articles" ;;
         *) echo "_probe" ;;
     esac
 }

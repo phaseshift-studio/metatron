@@ -17,7 +17,7 @@ $\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle$ pairs a coefficient
 $c \in \mathcal{C}$ with a function $a \in \mathcal{F}$, and the coefficient
 floats: $ca = a \cdot c$. This is called the *point* coefficient and it denotes the magnitude of the function. Stream
 ring theory finds practical application in its realization in the mtron programming language (the language
-of [metatron](http://metatron/phaseshift.studio)). In mtron the *point* coefficient is written after its corresponding
+of [metatron](https://metatron.phaseshift.studio)). In mtron the *point* coefficient is written after its corresponding
 instruction, `plus{3}(1)` and denotes three parallel evaluations of the `+1`.
 
 The position in front of the instruction holds a second coefficient, the *span*: `{3}plus(1)` is semantically equivalent
@@ -35,42 +35,38 @@ the span exponentiates the point.
 and the point squares to `9`. Thus, $(3a)^2$ and
 
 ```mtron
-mtron> 1..{2}plus{3}(34)
+mtron> 1.{2}plus{3}(34)
 ==>{9}69
 ```
-
 In _branch normal form_, the point expanded, $3a = a + a + a$, so $(3a)^2 = (a + a + a)^2$:
 
 ```mtron
-mtron> 1..{2}{(plus(34),plus(34),plus(34)}
+mtron> 1.{2}{plus(34),plus(34),plus(34)}
 ==>{9}69
 ```
-
 In _compose normal form_, the span expanded, $(3a)^2 = 3a \cdot 3a$:
 
 ```mtron
-mtron> 1..plus{3}(34).plus{3}(34)
+mtron> 1.plus{3}(34).plus{3}(34)
 ==>{9}69
 ```
-
 Finally, in both compose and branch normal form, the sum of the $3^2$ words $a \cdot a$:
 
 ```mtron
-mtron> 1..{plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34)}
+mtron> 1.{plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34)}
 ==>{9}69
 ```
-
 The purpose of this article is to prove that the laws of each coefficient alone and of the two together,
 can be derived solely from the stream ring axioms of [1] as well as to demonstrate practical, utilitarian
-consequences of the interplay of these two coefficients with respects to data compression,
+consequences of the interplay of these two coefficients with respect to data compression,
 process compression, co-located vs. distributed data structures, implications for compiler rewrite engines, and their
 role in mechanical induction.
 
@@ -227,7 +223,6 @@ mtron> 5.plus{3}(1)
 mtron> 5.plus(1).id{3}()
 ==>{3}6
 ```
-
 ::: theorem **Theorem 4** (A zero point annihilates). If $a \in \mathcal{F}$,
 then $0a = 0$.
 :::
@@ -264,7 +259,6 @@ mtron> 5.branch(id{0}(),id())
 mtron> 5.id{0}().count()
 ==>0
 ```
-
 ### The Span Coefficient
 
 ::: theorem **Theorem 5** (Spans add along a chain). If $a \in \mathcal{F}$ and
@@ -312,7 +306,6 @@ mtron> 5.{2}plus(1).mult(2)
 mtron> 5.plus(1).{2}mult(2)
 ==>24
 ```
-
 ::: corollary **Corollary 1** (Inductive generation). If $a (x) = x + 1$, then
 $\langle 0 \rangle a^n = \langle n \rangle$.
 :::
@@ -326,7 +319,6 @@ $\langle 0 \rangle a^{n+1} = \langle 0 \rangle a^n \cdot a = \langle n \rangle a
 mtron> 0.{5}plus(1)
 ==>5
 ```
-
 ::: corollary **Corollary 2** (A constant's run is the constant). If
 $k (x) = v$ for every object $x$, then $k \cdot k = k$, so $k^n = k$ for every
 $n \geq 1$, and $k^0 = 1$.
@@ -358,7 +350,6 @@ mtron> {2}*a
 mtron> *a.*a
 ==>7
 ```
-
 A span on an object lays it out in space: $n$ copies of $x$ at the addresses
 $0, 1, \ldots, n-1$, each copy keeping the point of $x$. In mtron a value
 writes its span after it, `x{n}`, and until an address can be a branched uri
@@ -371,7 +362,6 @@ mtron> 2{3}
 mtron> {2}2{3}
 ==>[{2}2,{2}2,{2}2]
 ```
-
 NOTES: spans on a value. Once branched uris read and write a layout, is
 `2{3}` the one value `2@<{0,1,2}>` rather than the lst `[2,2,2]`? And is a laid
 value one obj or $n$? A ranged value span, `2{?}`, has no layout yet and does
@@ -437,7 +427,6 @@ mtron> 5.{3}id{2}()
 mtron> 5.{0}id{0}()
 ==>5
 ```
-
 ::: theorem **Theorem 8** (A span does not distribute over a branch). If
 $a,b \in \mathcal{F}$, then
 $$
@@ -491,7 +480,6 @@ mtron> 5.{2}branch(plus(1),mult(2))
 ==>11
 ==>20
 ```
-
 ::: theorem **Theorem 9** (A shared prefix factors). If $b,c \in \mathcal{F}$
 and $a \in \mathcal{F}_m \cup \mathcal{F}_f \cup \mathcal{F}_{fm}$ is pure,
 then $a \cdot b + a \cdot c = a \cdot (b + c)$, and for $m \leq n$,
@@ -544,7 +532,6 @@ mtron> {1,2}.count().branch(plus(1),plus(2))
 ==>3
 ==>4
 ```
-
 **NOTES**:
 `{1,2}.branch(plus(1).count(),plus(2).count())` is `{4}1` in mtron, each member
 counting one object, where the split axiom of [1] applied to the whole stream
@@ -553,7 +540,7 @@ reducer member is where the two readings part: is the per-object branch the
 intended $+$? The rewrites agree with the branch as it runs: `branch_factor`
 shares only a map, filter or flatmap.
 
-## Coefficent Ranges
+## Coefficient Ranges
 
 A coefficient may be a range $[m,n]$ with $m \leq n$. In mtron it is written
 `{m,n}`, and `{?}` is $[0,1]$, `{+}` is $[1,\infty)$ and `{*}` is $[0,\infty)$.
@@ -619,7 +606,6 @@ mtron> {2}1.{2,3}plus{3}(1)
 ==>{18}3
 ==>{54}4
 ```
-
 A range on a point is a range of multiplicities: if $b (x) = x + 2$, then
 $\langle 1 \rangle\, [0,1]\, b = \langle ([0,1])3 \rangle$, a three held zero
 or one times.
@@ -628,7 +614,6 @@ or one times.
 mtron> 1.plus{?}(2)
 ==>{?}3
 ```
-
 **Generation.** If $a (x) = x + 1$, then a range from zero counts. By
 Definition 3 and Corollary 1,
 $$
@@ -668,7 +653,6 @@ mtron> 0.{0,6}plus{2}(1)
 ==>{32}5
 ==>{64}6
 ```
-
 An open range is the Kleene star [3],
 $a^{[0,\infty)} = a^* = 1 + a + a^2 + \cdots$. If $a (x) = x + 1$, then
 $\langle 0 \rangle a^* = \langle 0, 1, 2, 3, \ldots \rangle$: every natural at
@@ -695,7 +679,6 @@ mtron> 5.{2}plus{3}(1).type().cc()
 mtron> 5.plus(1).id{3}().type().cc()
 ==>3
 ```
-
 [To be written: the type of a range, and spans of slots in a type (`lst[{n}T]`).]
 
 ## Conclusion
