@@ -22,9 +22,11 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.List;
 import java.util.Set;
@@ -180,7 +182,27 @@ public final class MachineSpace extends memSpace {
         final List<String> segments = vid.qLess().resolve().segments();
         final Obj below = uri(String.join("/", segments.subList(this.depth + 1, segments.size())));
         if (COMPILER.equals(part)) {
-            this.owner.compiler().at(below, obj, MUTABLE);
+            // A COMPILER WRITE IS CHECKED BY THE COMPILER IN FORCE, NEVER BY ITSELF. compiler::T's predicate runs
+            // through the processor, and runtime resolution asks the machine's own resolver, so a write typed IN PLACE
+            // was checked by the stage it was installing: a first-find selector resolved the predicate first-match
+            // and, in a vocabulary wide enough for the first match to be wrong, refused itself. So the write lands in a
+            // CANDIDATE: a copy of the compiler and of every stage along the written path (the other stages shared),
+            // written in place (MUTABLE installs the very obj given, where an IMMUTABLE copy of an equal map answers the
+            // original) and typed at each level while the machine still compiles with the live compiler. Only a
+            // candidate that passed becomes the live compiler's stages.
+            final Compiler live = this.owner.compiler();
+            final Rec candidate = live.clone().asRec();
+            Rec level = candidate;
+            for (final String stage : segments.subList(this.depth + 1, segments.size() - 1)) {
+                final Obj held = level.atDirect(uri(stage));
+                if (!held.isRec())
+                    break;
+                final Rec copy = held.clone().asRec();
+                level.jvm().put(uri(stage), copy);
+                level = copy;
+            }
+            candidate.at(below, obj, MUTABLE);
+            live.self(candidate.jvm(), live.tid(), live.vid());
             return obj;
         }
         return QProc.Layer.write(this, vid, obj, () -> {
