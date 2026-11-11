@@ -163,6 +163,17 @@ public class PlanRewriter extends FixPointRewriter {
             .create();
 
     /**
+     * The shared-prefix plan — cut the left distributive law ({@code law => [left_distributive]}): members of the additive
+     * op that all start with the same pure instruction share it ahead of the op, {@code a·b + a·c ↦ a·(b + c)}, when that
+     * instruction takes one obj at a time (a map, filter or flatmap), as a branch feeds its members.
+     */
+    private static final Cut BRANCH_FACTOR_CUT = Cut.law(Law.left_distributive);
+    public static final Plan BRANCH_FACTOR_PLAN = PlanBuilder.plan("branch_factor")
+            .cut(BRANCH_FACTOR_CUT)
+            .where(Placement.local(Span.at()))
+            .create();
+
+    /**
      * The poset plan — cut a poset comparison ({@code law => [poset]}): adjacent filters on the same comparison
      * compose to the filter on the stricter bound.
      */
@@ -211,6 +222,7 @@ public class PlanRewriter extends FixPointRewriter {
     static {
         PLANS.put(UNIT_PLAN.name(), UNIT_PLAN);
         PLANS.put(BRANCH_COLLAPSE_PLAN.name(), BRANCH_COLLAPSE_PLAN);
+        PLANS.put(BRANCH_FACTOR_PLAN.name(), BRANCH_FACTOR_PLAN);
         PLANS.put(BRANCH_INLINE_PLAN.name(), BRANCH_INLINE_PLAN);
         PLANS.put(INVOLUTION_PLAN.name(), INVOLUTION_PLAN);
         PLANS.put(IDEMPOTENT_PLAN.name(), IDEMPOTENT_PLAN);

@@ -53,6 +53,7 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.BRANCH_FACTOR_PLAN;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.DERIVATION_PLAN;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.INVERSE_PLAN;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.UNIT_PLAN;
@@ -990,6 +991,13 @@ public class mInstSet extends AbstractInstSet {
                         // beside themselves (Law.Helper.derivations), where the derivation's contract runs.
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("derivation_contraction"),
                                 code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
+
+                        // THE LEFT-DISTRIBUTIVE NORMAL FORM (Marko, 2026-11-10: two parallel expressions run as one, branched
+                        // where their instructions differ): members of the code ring's additive op that all start with the same
+                        // pure, one-obj-at-a-time instruction share it ahead of the op, a·b + a·c ⇝ a·(b + c). /m's, as the
+                        // category's rewrites are moving to /m
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_factor"),
+                                code -> PlanInterpreter.lower(BRANCH_FACTOR_PLAN, code)), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their span and point and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
 
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where
