@@ -98,29 +98,14 @@ public interface Type extends Obj {
     // Base types are excluded because they carry coefficient variance ({1}, {2}, …): `test()` and
     // `testObjs()` use isNominal() as a shortcut to the coefficient-blind testNominally(), and base
     // types must instead take the coefficient-aware full path. (testNominally strips coefficients.)
-    // A name over the root is not nominal either: #::T@b is a b that is anything, and nothing is nominally a b. Nor is
-    // an ephemeral T(X): "the baseType is what makes it nominal" (Marko, 2026-11-10), and T(X) is a name over nothing.
+    // A name over the root is not nominal either: #::T@b is a b that is anything, and nothing is nominally a b.
     default boolean isNominal() {
         return !this.hasPredicate() && !this.hasConstructor() && this.hasVID() && !this.isBaseType() && !this.vid().hasPattern() && !this.vid().isGeneric()
-                && !this.tid().basePath().equals(ALL) && !this.isEphemeral();
+                && !this.tid().basePath().equals(ALL);
     }
 
     default boolean isStructural() {
         return this.hasPredicate();
-    }
-
-    /**
-     * A FORWARD REFERENCE (Marko, 2026-11-10): "T(X) is an ephemeral type. It means that it exists only for forward
-     * referencing purposes. Once it's predicate/constructor are stated, does it become a structural type. If no
-     * predicate/constructor is stated, then it is a nominal type." A type built before X keeps the reference: compiler::T
-     * is built before its stages, so its stage slots name them. A test asks {@code T(X)} again and judges the type
-     * stated since; while X is unstated the reference states nothing. X is stated nominal by a name over a base,
-     * {@code rec::T@X} ("the baseType is what makes it nominal"), and structural by a stated predicate or constructor.
-     * A reference is a bare name: a generic and a pattern (the root {@code #} among them) are tid==vid too and name
-     * nothing, and a predicate or a constructor is a statement.
-     */
-    default boolean isForwardReference() {
-        return this.isEphemeral() && !this.hasPredicate() && !this.hasConstructor() && !this.isGeneric() && !this.vid().hasPattern();
     }
 
     /**
@@ -412,17 +397,6 @@ public interface Type extends Obj {
             return false;
         if (this.isFibered() && this.recFibers().stream().anyMatch(fiber -> fiber.test(rhs)))
             return true;
-        // a forward reference is the type stated since, on either side (a type built before X tests X against itself)
-        if (this.isForwardReference()) {
-            final Type stated = T(this.vid());
-            if (!stated.isForwardReference())
-                return stated.test(rhs);
-        }
-        if (rhs.asType().isForwardReference()) {
-            final Type stated = T(rhs.vid());
-            if (!stated.isForwardReference())
-                return this.test(stated);
-        }
         if (rhs.asType().isNominal())
             return this.testNominally(rhs);
         if (null != this.vid() && Objects.equals(this.vid(), rhs.vid()))
@@ -1023,6 +997,10 @@ public interface Type extends Obj {
                 /// //////////////////
                 /// OBJ <=> TYPE ///
                 /// //////////////////
+                /*if (!rhs.asType().isGeneric() && rhs.asType().isEphemeral()) {
+                    Type non = T(rhs.vid());
+                    rhs.self(non.jvm(), non.tid(), non.vid());
+                }*/
                 if (rhs.vid().isGeneric() || rhs.isObjCall())
                     return true;
                 if (!testTypePoly(lhs, rhs.asType()))
