@@ -651,7 +651,9 @@ public class mParser {
     }
 
     public static Parser m_call_prefix(final Parser objParser, final fURI headTID) {
-        return seq(opt(objParser, null), opt(of(".").trim(), '.'),
+        // a dot before a brace is the chain's own, so the brace is read as a branch: 1.{a,b} is 1..{a,b}, and 1.{2}plus(1) stays
+        // a span on its instruction (the chain's instruction element takes its dot optionally)
+        return seq(opt(objParser, null), opt(seq(of(".").trim(), of('{').trim().not()), '.'),
                 opt(labeled(m_code(), "an instruction name after '.' (e.g. plus, map, from)"), null),
                 m_vid_postfix()).map(t -> {
             if (((List) t).get(0) instanceof List) {
@@ -1554,20 +1556,26 @@ public class mParser {
      * a chain, so {@code 1 2} must stay an error rather than becoming {@code start(1).map(2)}.
      */
     private static Parser m_chain_element() {
+        // '.' is the ring's multiplication; '{a,b}' is the ring's addition. A brace after
+        // the dot is therefore a BRANCH, on the same footing as the dot rather than a
+        // sugar: 1.plus(2).{plus(4),plus(10)} is 1.plus(2).branch(plus(4),plus(10)).
+        final Parser branch = seq(of('{').trim(),
+                labeled(m_obj().separatedBy(of(',').trim()),
+                        "a branch — objs separated by ',' inside '{...}'"),
+                of('}').trim())
+                .map(t -> instB(BRANCH_INST_TID, lst(((List<Object>) pick(t, 1)).stream()
+                        .filter(part -> part instanceof Obj)
+                        .filter(part -> !((Obj) part).isNoObj())
+                        .map(part -> (Obj) part)
+                        .toList())));
         return choice(
                 seq(opt(of('.').trim(), null), m_inst()).map(t -> pick(t, 1)),
-                // '.' is the ring's multiplication; '{a,b}' is the ring's addition. A brace after
-                // the dot is therefore a BRANCH, on the same footing as the dot rather than a
-                // sugar: 1.plus(2).{plus(4),plus(10)} is 1.plus(2).branch(plus(4),plus(10)).
-                seq(of('.').trim(), of('{').trim(),
-                        labeled(m_obj().separatedBy(of(',').trim()),
-                                "a branch — objs separated by ',' inside '{...}'"),
-                        of('}').trim())
-                        .map(t -> instB(BRANCH_INST_TID, lst(((List<Object>) pick(t, 2)).stream()
-                                .filter(part -> part instanceof Obj)
-                                .filter(part -> !((Obj) part).isNoObj())
-                                .map(part -> (Obj) part)
-                                .toList()))),
+                // A SPAN ON A BRANCH IS A RUN OF THE BRANCH (Marko, 2026-11-10), as a span on any instruction is its run:
+                // 1.{2}{plus(34),plus(34),plus(34)} is 1.{2}branch(plus(34),plus(34),plus(34)), (a + a + a)^2, {9}69.
+                // Tried before the bare brace, which would read {2} as a branch of the one value 2
+                seq(of('.').trim(), m_furi_coefficient(), branch)
+                        .map(t -> mParser.<Inst>pick(t, 2).tid(mParser.<Inst>pick(t, 2).tid().b(coefficientOrOne(pick(t, 1))))),
+                seq(of('.').trim(), branch).map(t -> pick(t, 1)),
                 seq(of('.').trim(), m_obj(false)).map(t -> {
                     final Obj value = pick(t, 1);
                     // branch one already had its chance: never double-wrap an inst a wider
