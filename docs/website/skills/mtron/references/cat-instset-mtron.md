@@ -344,7 +344,12 @@ carrier derives that inverse. It is `/m`'s rewrite too, and so is `derivation_co
 derivations instructions declare beside themselves: both are data already, so both run on the base path.
 
 The process laws' rules are `/m`'s too, one rewrite per rule (Marko, 2026-11-10), so each can be added to or
-removed from the machine's rewrite pool on its own, and `path::T` draws one edge per rule. A rewrite's declared
+removed from the machine's rewrite pool on its own, and `path::T` draws one edge per rule. A rule is switched off by
+its shadow, `inactive()`: the identity on code under the rule's own tid, listed in the pool in the rule's place, and
+`active()` answers the rule back. The pool is `~/instset/rewrite`, and a rule is written there by name, in the
+machine's own level: `*~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)` switches it
+off for that machine, and writing back `.active()`, or `-> noobj`, switches it on. The rule is written with `to`, since
+an argument that is an instruction is code, applied to the lhs. A rewrite's declared
 argument *is* its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
 place. A law's rule is stated in the name `op`, the instruction that claims the law: `law_involution` carries
 `[involution => [op.op => ]]`, `law_idempotent` `[idempotent => [op.op => op]]` and `law_monoidic`
@@ -611,46 +616,46 @@ and computes its cut/span/where without consulting the code below; the descent (
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==>[abstraction::[obj=>[morphism[start?args=[/m/int]]::[
-                         name=>start,
-                         form=>initial,
-                         src=>!λ#(){<j>},
-                         trgt=>!λ#(){<j>},
-                         analysis=>!λ(){<j>},
-                         obj=>start(5)],
-                        morphism[plus?rng=int&dom=int&args=[/m/int]]::[
-                         name=>plus,
-                         form=>mapper,
-                         class=>[endo],
-                         src=>!λint(){<j>},
-                         trgt=>!λint(){<j>},
-                         analysis=>!λ(){<j>},
-                         obj=>plus(0),
-                         ...(1 more)],
-                        morphism[neg?rng=int&dom=int&args]::[
-                         name=>neg,
-                         form=>mapper,
-                         class=>[
-                          endo,
-                          iso,
-                          auto,
-                          section,
-                          retraction,
-                          mono,
-                          epi],
-                         src=>!λint(){<j>},
-                         trgt=>!λint(){<j>},
-                         analysis=>!λ(){<j>},
-                         obj=>neg(),
-                         ...(1 more)],
-                        morphism[neg?rng=int&dom=int&args]::[
-                         name=>neg,
-                         form=>mapper,
-                         class=>[
-                          endo,
-                          iso,
-                          auto,
-                          section,
+==>[abstraction::[obj=>[
+                   morphism[start?args=[/m/int]]::[
+                    name=>start,
+                    form=>initial,
+                    src=>!λ#(){<j>},
+                    trgt=>!λ#(){<j>},
+                    analysis=>!λ(){<j>},
+                    obj=>start(5)],
+                   morphism[plus?rng=int&dom=int&args=[/m/int]]::[
+                    name=>plus,
+                    form=>mapper,
+                    class=>[endo],
+                    src=>!λint(){<j>},
+                    trgt=>!λint(){<j>},
+                    analysis=>!λ(){<j>},
+                    obj=>plus(0),
+                    ...(1 more)],
+                   morphism[neg?rng=int&dom=int&args]::[
+                    name=>neg,
+                    form=>mapper,
+                    class=>[
+                     endo,
+                     iso,
+                     auto,
+                     section,
+                     retraction,
+                     mono,
+                     epi],
+                    src=>!λint(){<j>},
+                    trgt=>!λint(){<j>},
+                    analysis=>!λ(){<j>},
+                    obj=>neg(),
+                    ...(1 more)],
+                   morphism[neg?rng=int&dom=int&args]::[
+                    name=>neg,
+                    form=>mapper,
+                    class=>[
+                     endo,
+                     iso,
+                     auto,
    ...
 ```
 ### `plan::T` — a rewrite rule as a value
@@ -705,16 +710,16 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>[host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    on_message=>print('received ${_}')]
+==>ws_client::[host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               on_message=>print('received ${_}')]
 mtron> */network
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
@@ -723,7 +728,27 @@ now holding that `peer::T`, the `path::T` lists the distribution plan among its 
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum()]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+           law_shard=>plan::[
+            name=>law_shard,
+            cut=>[
+             form=>reducer,
+             law=>[monoidic,commutative]],
+            where=>[
+             [
+              place=>[local],
+              hop=>0,
+              split=>stream,
+              span=>[[span=>at],[span=>post]]],
+             [
+              place=>[peer],
+              hop=>1,
+              split=>stream,
+              span=>[
+               [span=>seed,flags=>[partition]],
+               [span=>pre,flags=>[floatable,no_seed]],
+               [span=>at]],
+              inst=>[/m/inst/eval]]]]]]
 ```
 `law_shard` is Theorem 19 of the stream-ring algebra ([Stream Ring Theory](../../../articles/stream-ring-theory.html)):
 monoidic reducers are **semi-right distributive**,
@@ -747,7 +772,8 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum()]]
+==>[path::[obj=>branch?<={0}&split=part(ws://localhost:8555=>/m/inst/start({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum?hop=0()).sum(),
+           where=>[[span=>at]=>[//localhost:8555=>1]]]]
 ```
 A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial
 recs and
@@ -755,7 +781,8 @@ recs and
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()])]]
+==>[path::[obj=>branch?<={0}&split=part(ws://localhost:8555=>/m/inst/start({1,2,3,4,5,6})./m/inst/group?hop=0([/m/inst/mod(3)=>/m/inst/sum()])).sum?rec<=rec{*}().select([id()=>sum()]),
+           where=>[[span=>at]=>[//localhost:8555=>1]]]]
 ```
 ### may / must — the fiber modality
 
@@ -792,7 +819,9 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 ```mtron
 mtron> <//localhost>.as(place::T)
 ==>place::[obj=>//localhost,
-           authority=>[ws://localhost:8555],
+           authority=>[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=>!λ(){<j>},
            linked_from=>!λ(){<j>},
            status=>!λ(){<j>}]

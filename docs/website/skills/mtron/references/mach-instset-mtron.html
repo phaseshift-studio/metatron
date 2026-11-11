@@ -421,6 +421,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -820,13 +829,13 @@ read back from a stack is still uncaught, so <code>catch(_)</code> it to use it 
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           {?}result=&gt;'the last result produced by the th...',
            {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            code=&gt;&quot;the thread's executing code&quot;,
            {?}time=&gt;'the datetime::T when the thread wa...',
            {?}loop=&gt;'delay to repeat code evaluation (d...',
            {?}timeout=&gt;'how long a read of rhs waits for t...',
-           {?}state=&gt;'current state of the thread'],
+           {?}state=&gt;'current state of the thread',
+           {?}result=&gt;'the last result produced by the th...'],
           desc=&gt;'the thread base type']
 </code></pre>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), <code>rec::T</code>s with a lifecycle:</p>
@@ -1259,7 +1268,7 @@ sum of the round trips. The direction is a virtual thread per route,
 <p><strong>Where am I.</strong> <code>*~/network/host</code> answers the host the current machine runs on — for a result that says where it was
 computed:</p>
 <pre><code class="language-mtron">mtron&gt; *~/network/host       [-- localhost --]
-==&gt;&lt;26869ffd3b00&gt;
+==&gt;booger
 </code></pre>
 <p>Peers forked on one host share it; telling them apart takes their service authority.</p>
 <h3>appendix — the registered types</h3>

@@ -421,6 +421,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -508,7 +517,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">7</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">rewrites</span></div><div class="instset-stat"><span class="instset-stat-n">5</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 9, 2026</span>
+            <span class="instset-built">built November 10, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -843,11 +852,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> code as a categorical path incident to iso-semantic rewritten forms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#uri{?}::T" class="text-light">uri{?}::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\), keyed by the rule's name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none"" class="text-info">&quot;one out-edge per live rewrite \(r\), keyed by the rule&#39;s name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none&quot;</a>
-  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
   <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
   <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
   <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
+  <a href="#uri{?}::T" class="text-light">uri{?}::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\), keyed by the rule's name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none"" class="text-info">&quot;one out-edge per live rewrite \(r\), keyed by the rule&#39;s name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__place">
@@ -1111,9 +1120,13 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         });
     });
     hljs.highlightAll();
-    /*document.querySelectorAll('code').forEach(block => {
-        hljs.highlightBlock(block);
-    });*/
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

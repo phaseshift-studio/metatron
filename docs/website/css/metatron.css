@@ -444,7 +444,7 @@ table {
 }
 
 code.hljs {
-    font-size: 1.0rem;
+    font-size: 0.9rem;
     line-height: 1.3rem;
     display: inline;
     /*width: 90%;*/
@@ -1266,11 +1266,6 @@ pre.highlight > code[data-lang] {
         font-size: 1rem !important;
     }
 
-    .hljs {
-        background: #f8f9fa !important;
-        color: #FFF !important;
-    }
-
     /* Reset syntax highlighting for a more academic look */
     .hljs-comment, .hljs-quote {
         color: #666 !important;
@@ -1630,8 +1625,9 @@ th {
 }
 
 .hljs {
-    background: var(--secondarycolor);
-    font-size: 100%;
+    background: transparent !important;
+    color: #FFF !important;
+    font-size: 0.85rem;
     display: block;
     padding: 0;
     overflow-y: scroll;

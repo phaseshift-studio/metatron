@@ -1,0 +1,1359 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>A Span and Point Coefficient Algebra for Stream Rings · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
+         (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
+         downloading it on every page view. Page-specific MathJax config scripts (e.g. the
+         theory articles) run during parse, before this loader fires. -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var content = document.querySelector('main') || document.body;
+            var text = content.textContent || '';
+            if (text.indexOf('\\(') === -1 && text.indexOf('\\[') === -1) return;
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js';
+            mathjax.async = true;
+            document.head.appendChild(mathjax);
+        });
+    </script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+        <link href="../css/theory-article.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                                src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                                src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                                src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="article-doc">
+        <h1 class="article-title mb-1">A Span and Point Coefficient Algebra for Stream Rings</h1>
+        <small class="article-subtitle">An algebra concerning functions and objects where a point has magnitude and a span has a linear extension in space.</small>
+        <div class="article-author">Dr. Marko A. Rodriguez<br>Dr. Stynx</div>
+    </div>
+    <div class="article-body">
+<p><strong>DRAFT</strong>: This article is currently being developed. As of November 10, 2026, the algebra has been fully specified, but
+the entailments of the presented theory have yet to be sufficiently explored.</p>
+<h2>Introduction</h2>
+<p>Stream Ring Theory <a href="./stream-ring-theory.html">[1]</a> gave every function a
+coefficient. A term \(ca\) of the stream ring
+\(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\) pairs a coefficient
+\(c \in \mathcal{C}\) with a function \(a \in \mathcal{F}\), and the coefficient
+floats: \(ca = a \cdot c\). This is called the <em>point</em> coefficient and it denotes the magnitude of the function. Stream
+ring theory finds practical application in its realization in the mtron programming language (the language
+of <a href="http://metatron/phaseshift.studio">metatron</a>). In mtron the <em>point</em> coefficient is written after its corresponding
+instruction, <code>plus{3}(1)</code> and denotes three parallel evaluations of the <code>+1</code>.</p>
+<p>The position in front of the instruction holds a second coefficient, the <em>span</em>: <code>{3}plus(1)</code> is semantically equivalent
+to <code>plus(1).plus(1).plus(1)</code>, three steps laid one after
+another. The two coefficients form a compression of the two ring operations of stream ring theory: branch (\(+\)) and
+compose (\(\cdot\)). For a natural number \(n \in \mathbb{N}\), the point counts additions, \(na = a + \cdots + a\), and the
+span counts multiplications, \(a^n = a \cdot \cdots \cdot a\). A point can be understood as the <em>mass</em> at a single
+memory address. The span is the <em>extent</em> along a sequential series of addresses.</p>
+<p>Stream ring theory holds the bridge between them: the third equality of
+Theorem 6: \((ca)^n = c^n a^n\). In mtron, <code>{n}a{c}</code> is \((ca)^n = c^n a^n\):
+the span exponentiates the point.</p>
+<p><strong>Live proof.</strong> Two steps of <code>plus{3}(34)</code> from <code>1</code>: the value climbs to <code>69</code>,
+and the point squares to <code>9</code>. Thus, \((3a)^2\) and</p>
+<pre><code class="language-mtron">mtron&gt; 1..{2}plus{3}(34)
+==&gt;{9}69
+</code></pre>
+<p>In <em>branch normal form</em>, the point expanded, \(3a = a + a + a\), so \((3a)^2 = (a + a + a)^2\):</p>
+<pre><code class="language-mtron">mtron&gt; 1..{2}{(plus(34),plus(34),plus(34)}
+==&gt;{9}69
+</code></pre>
+<p>In <em>compose normal form</em>, the span expanded, \((3a)^2 = 3a \cdot 3a\):</p>
+<pre><code class="language-mtron">mtron&gt; 1..plus{3}(34).plus{3}(34)
+==&gt;{9}69
+</code></pre>
+<p>Finally, in both compose and branch normal form, the sum of the \(3^2\) words \(a \cdot a\):</p>
+<pre><code class="language-mtron">mtron&gt; 1..{plus(34).plus(34),
+           plus(34).plus(34),
+           plus(34).plus(34),
+           plus(34).plus(34),
+           plus(34).plus(34),
+           plus(34).plus(34),
+           plus(34).plus(34),
+           plus(34).plus(34),
+           plus(34).plus(34)}
+==&gt;{9}69
+</code></pre>
+<p>The purpose of this article is to prove that the laws of each coefficient alone and of the two together,
+can be derived solely from the stream ring axioms of [1] as well as to demonstrate practical, utilitarian
+consequences of the interplay of these two coefficients with respects to data compression,
+process compression, co-located vs. distributed data structures, implications for compiler rewrite engines, and their
+role in mechanical induction.</p>
+<h3>Two Coefficients</h3>
+<p>The objects, coefficients and functions are those of [1]: \(x, y, z \in X\) are
+objects, \(c, d, e \in \mathcal{C}\) are coefficients of a ring with unity, and
+\(a, b, f \in \mathcal{F}\) are stream functions. The function ring has the zero
+\(0 (x) = \emptyset\) and the unity \(1 (x) = x\), and a stream is written
+\(\langle x, y, z \rangle\), with \(\langle x \rangle a\) the stream \(a\) outputs on
+\(x\). The proofs below cite the stream ring axioms of [1] by name: the <em>apply</em>, <em>split</em>, <em>merge</em> and <em>bulk</em>
+axioms, \(\langle 0x \rangle = \langle\rangle\), and
+the stream multiplication \(ca \cdot db = (c \cdot d)(a \cdot b)\).</p>
+<p>::: definition <strong>Definition 1</strong> (Point). The <em>point</em> of a term
+\(ca \in \mathcal{C}\mathcal{F}\) is its coefficient \(c \in \mathcal{C}\). In mtron
+it is written after the instruction, <code>a{c}</code>. If \(n \in \mathbb{N}\), then by the
+stream ring's addition
+\[
+\begin{equation*}
+na = \underbrace{1a + \cdots + 1a}_{n}.
+\end{equation*}
+\]
+:::</p>
+<p>::: definition <strong>Definition 2</strong> (Span). The <em>span</em> of a term is the exponent
+\(n \in \mathbb{N}\) of its run, where
+\[
+\begin{equation*}
+a^0 = 1 \quad \text{and} \quad a^{n+1} = a^n \cdot a.
+\end{equation*}
+\]
+In mtron it is written before the instruction, <code>{n}a</code>, and the parser lays the
+run out: <code>{3}a</code> is <code>a.a.a</code>, and <code>{0}a</code> is no instruction at all. A term with
+both coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
+:::</p>
+<p>An mtron chain is read as a stream ring expression:</p>
+<table>
+<thead>
+<tr><th>mtron</th><th>stream ring</th></tr>
+</thead>
+<tbody>
+<tr><td><code>x.a</code></td><td>\(\langle x \rangle a\)</td></tr>
+<tr><td><code>a.b</code></td><td>\(a \cdot b\)</td></tr>
+<tr><td><code>branch(a,b)</code></td><td>\(a + b\)</td></tr>
+<tr><td><code>id()</code></td><td>\(1\)</td></tr>
+<tr><td><code>noobj</code></td><td>\(0\)</td></tr>
+<tr><td><code>{c}x</code></td><td>\(cx\)</td></tr>
+<tr><td><code>a{c}</code></td><td>\(ca\)</td></tr>
+<tr><td><code>{n}a</code></td><td>\(a^n\)</td></tr>
+<tr><td><code>{n}a{c}</code></td><td>\((ca)^n\)</td></tr>
+</tbody>
+</table>
+<p>Where a coefficient is written depends on what it is written on:</p>
+<table>
+<thead>
+<tr><th>written on</th><th>prefix</th><th>postfix</th></tr>
+</thead>
+<tbody>
+<tr><td>an instruction</td><td>span: <code>{n}a</code> is \(a^n\)</td><td>point: <code>a{c}</code> is \(ca\)</td></tr>
+<tr><td>a type</td><td>span: <code>{n}T</code> is \(n\) slots of <code>T</code></td><td>point: <code>T{c}</code> is \(c\) copies of <code>T</code></td></tr>
+<tr><td>a value</td><td>point: <code>{c}x</code> is \(cx\)</td><td>span: <code>x{n}</code> lays <code>x</code> along \(n\) slots</td></tr>
+</tbody>
+</table>
+<p>The point coefficient can be understood as the <em>mass</em> at an address, copies compressed into a single point in space.
+The span coefficient can be understood as the <em>extent</em> along a contiguous sequence of points in space. In this way, \(+\)
+is the 0-dimensional operation and \(\cdot\) the 1-dimensional operation, which leads to the realization of the point
+iterating \(+\) and the
+span iterating \(\cdot\). In mtron, extension of instructions is function composition <code>(a.b.c)</code>, where the locality of
+composition is in a uri address space. For example, <code>plus(1).plus(2)</code> compiles to <code>plus(1)@&lt;0&gt;.plus(2)@&lt;1&gt;</code>, where
+<code>&lt;0&gt;</code> and <code>&lt;1&gt;</code> are <em>relative uri addresses</em> in the virtual machine's <em>variable stack</em>. It's important to realize
+that composition is not application. A span lays one instruction
+along the axis of sequential addresses such that: <code>{3}plus(1)</code> is <code>plus(1)@&lt;0&gt;.plus(1)@&lt;1&gt;.plus(1)@&lt;2&gt;</code>.</p>
+<p><strong>NOTES</strong>:</p>
+<ul>
+<li>The mirror: instructions and types write <code>{span}x{point}</code>, values write
+<code>{point}value{span}</code>. <code>{3}2</code> is three 2s at one address; <code>2{3}</code> is 2 laid at
+the uris 0, 1 and 2. Why does the value side flip? (My guess, not settled:
+diagrammatic order, a value being where a chain starts.)</li>
+<li>Caution: the stream notation \(\langle x \rangle\) above is a stream, so the
+positions <code>&lt;0&gt;</code>, <code>&lt;1&gt;</code> stay in code font here, never in math.]</li>
+</ul>
+<h4>The Point Coefficient</h4>
+<p>::: theorem <strong>Theorem 1</strong> (Points add across a branch). If \(a \in \mathcal{F}\)
+and \(c,d \in \mathcal{C}\), then \(ca + da = (c+d)a\).
+:::</p>
+<p>::: proof <em>Proof.</em> If \(a (x) = y\), then
+\[
+\begin{equation*}
+\begin{array}{lclll}
+ca + da &amp;=&amp; (c+d)a &amp;&amp; \\
+\langle x \rangle (ca + da) &amp;=&amp; \langle x \rangle (c+d)a &amp;&amp; [\text{apply $1x$}] \\ (\langle x \rangle ca) + (\langle x \rangle da) &amp;=&amp; \langle (c+d)y \rangle &amp;&amp; [\text{split, apply axioms}] \\
+\langle cy \rangle + \langle dy \rangle &amp;=&amp; \langle (c+d)y \rangle &amp;&amp; [\text{apply axiom}] \\
+\langle cy, dy \rangle &amp;=&amp; \langle (c+d)y \rangle &amp;&amp; [\text{merge axiom}] \\
+\langle (c+d)y \rangle &amp;=&amp; \langle (c+d)y \rangle &amp;&amp; [\text{bulk axiom}].
+\end{array}
+\end{equation*}
+\]
+◻
+:::</p>
+<p>::: theorem <strong>Theorem 2</strong> (Points multiply along a chain). If
+\(a,b \in \mathcal{F}\) and \(c,d \in \mathcal{C}\), then
+\(ca \cdot db = (c \cdot d)(a \cdot b)\).
+:::</p>
+<p>::: proof <em>Proof.</em> If \(a (x) = y\) and \(b (y) = z\), then
+\[
+\begin{equation*}
+\begin{array}{lclll}
+ca \cdot db &amp;=&amp; (c \cdot d)ab &amp;&amp; \\
+\langle x \rangle ca \cdot db &amp;=&amp; \langle x \rangle (c \cdot d)ab &amp;&amp; [\text{apply $1x$}] \\
+\langle cy \rangle db &amp;=&amp; \langle (c \cdot d)z \rangle &amp;&amp; [\text{apply axiom}] \\
+\langle (c \cdot d)z \rangle &amp;=&amp; \langle (c \cdot d)z \rangle &amp;&amp; [\text{apply axiom}].
+\end{array}
+\end{equation*}
+\]
+◻
+:::</p>
+<p>::: theorem <strong>Theorem 3</strong> (Points are central). If
+\(a,b \in \mathcal{F}\setminus \mathcal{F}_r\) and \(c \in \mathcal{C}\), then
+\(ca \cdot b = a \cdot cb = (ab)c\).
+:::</p>
+<p>::: proof <em>Proof.</em>
+\[
+\begin{equation*}
+\begin{array}{lclll}
+ca \cdot b &amp;=&amp; ca \cdot 1b &amp;&amp; [b = 1b] \\
+&amp;=&amp; (c \cdot 1)(a \cdot b) &amp;&amp; [\text{stream mult}] \\
+&amp;=&amp; (1 \cdot c)(a \cdot b) &amp;&amp; [\text{$1$ is unity in $\mathcal{C}$}] \\
+&amp;=&amp; 1a \cdot cb &amp;&amp; [\text{stream mult}] \\
+&amp;=&amp; a \cdot cb &amp;&amp; [a = 1a].
+\end{array}
+\end{equation*}
+\]
+The coefficient of \(c(ab)\) floats to its end, \(c(ab) = (ab)c\), by Theorem 6 of
+[1]. A reducer \(r \in \mathcal{F}_r\) is the exception: a coefficient does not
+float past it (Theorem 17 of [1]). ◻
+:::</p>
+<p><strong>Live proof.</strong></p>
+<pre><code class="language-mtron">mtron&gt; 5.branch(id{2}(),id{3}())
+==&gt;{5}5
+mtron&gt; 5.id{2}().id{3}()
+==&gt;{6}5
+mtron&gt; 5.id{3}().id{2}()
+==&gt;{6}5
+mtron&gt; 5.id{3}().plus(1)
+==&gt;{3}6
+mtron&gt; 5.plus{3}(1)
+==&gt;{3}6
+mtron&gt; 5.plus(1).id{3}()
+==&gt;{3}6
+</code></pre>
+<p>::: theorem <strong>Theorem 4</strong> (A zero point annihilates). If \(a \in \mathcal{F}\),
+then \(0a = 0\).
+:::</p>
+<p>::: proof <em>Proof.</em> The zero of \(\mathcal{C}\mathcal{F}\) is
+\((0,0) \in \mathcal{C}\times \mathcal{F}\) [1]. If \(a (x) = y\), then
+\[
+\begin{equation*}
+\begin{array}{lclll}
+0a &amp;=&amp; 0 &amp;&amp; \\
+\langle x \rangle 0a &amp;=&amp; \langle x \rangle 0 &amp;&amp; [\text{apply $1x$}] \\
+\langle (1 \cdot 0)y \rangle &amp;=&amp; \langle 0\emptyset \rangle &amp;&amp; [\text{apply axiom}] \\
+\langle\rangle &amp;=&amp; \langle\rangle &amp;&amp; [\langle 0x \rangle = \langle 0\emptyset \rangle = \langle\rangle].
+\end{array}
+\end{equation*}
+\]
+◻
+:::</p>
+<p>So a zero point ends the chain it is written in: \(0a \cdot b = 0 \cdot b = 0\),
+since no object reaches \(b\). A reducer \(r \in \mathcal{F}_r\) still runs, on the
+empty stream, by the reduce apply axiom of [1]:
+\(\langle x \rangle 0a \cdot r = \langle\rangle r = \langle r (\langle\rangle) \rangle\).
+For <code>count()</code>, \(r (\langle\rangle) = 0\).</p>
+<p><strong>Live proof.</strong> A zero point leaves nothing for the rest of the chain. A branch
+adds it as it adds any point, and a reducer after it counts nothing.</p>
+<pre><code class="language-mtron">mtron&gt; 5.id{0}()
+mtron&gt; 5.plus{0}(1).plus(1)
+mtron&gt; 5.branch(id{0}(),id())
+==&gt;5
+mtron&gt; 5.id{0}().count()
+==&gt;0
+</code></pre>
+<h4>The Span Coefficient</h4>
+<p>::: theorem <strong>Theorem 5</strong> (Spans add along a chain). If \(a \in \mathcal{F}\) and
+\(m,n \in \mathbb{N}\), then \(a^m \cdot a^n = a^{m+n}\).
+:::</p>
+<p>::: proof <em>Proof.</em> By induction on \(n\).
+\[
+\begin{equation*}
+\begin{array}{lclll}
+a^m \cdot a^0 &amp;=&amp; a^m \cdot 1 = a^m &amp;&amp; [\text{Definition 2}] \\
+a^m \cdot a^{n+1} &amp;=&amp; a^m \cdot (a^n \cdot a) &amp;&amp; [\text{Definition 2}] \\
+&amp;=&amp; (a^m \cdot a^n) \cdot a &amp;&amp; [\text{$\cdot$ is associative}] \\
+&amp;=&amp; a^{m+n} \cdot a &amp;&amp; [\text{induction}] \\
+&amp;=&amp; a^{m+n+1} &amp;&amp; [\text{Definition 2}].
+\end{array}
+\end{equation*}
+\]
+◻
+:::</p>
+<p>::: theorem <strong>Theorem 6</strong> (Spans stay where they are written). In general,
+\(a^n \cdot b \neq a \cdot b^n\).
+:::</p>
+<p>::: proof <em>Proof.</em> A counterexample. If \(a (x) = x + 1\) and \(b (x) = 2x\), then
+\[
+\begin{equation*}
+\langle 5 \rangle a^2 b = \langle 14 \rangle \neq \langle 24 \rangle = \langle 5 \rangle a b^2.
+\end{equation*}
+\]
+A point floats (Theorem 3), but a span is an exponent on its own function, and
+the monoid \(\langle\mathcal{F}, \cdot \rangle\) is not commutative. ◻
+:::</p>
+<p><strong>Live proof.</strong></p>
+<pre><code class="language-mtron">mtron&gt; 5.{2}plus(1).{3}plus(1)
+==&gt;10
+mtron&gt; 5.{0}plus(1)
+==&gt;5
+mtron&gt; 5.{2}plus(1).mult(2)
+==&gt;14
+mtron&gt; 5.plus(1).{2}mult(2)
+==&gt;24
+</code></pre>
+<p>::: corollary <strong>Corollary 1</strong> (Inductive generation). If \(a (x) = x + 1\), then
+\(\langle 0 \rangle a^n = \langle n \rangle\).
+:::</p>
+<p>::: proof <em>Proof.</em> By induction on \(n\):
+\(\langle 0 \rangle a^0 = \langle 0 \rangle 1 = \langle 0 \rangle\), and
+\(\langle 0 \rangle a^{n+1} = \langle 0 \rangle a^n \cdot a = \langle n \rangle a = \langle n + 1 \rangle\). ◻
+:::</p>
+<pre><code class="language-mtron">mtron&gt; 0.{5}plus(1)
+==&gt;5
+</code></pre>
+<p>::: corollary <strong>Corollary 2</strong> (A constant's run is the constant). If
+\(k (x) = v\) for every object \(x\), then \(k \cdot k = k\), so \(k^n = k\) for every
+\(n \geq 1\), and \(k^0 = 1\).
+:::</p>
+<p>::: proof <em>Proof.</em>
+\[
+\begin{equation*}
+\begin{array}{lclll}
+\langle x \rangle k \cdot k &amp;=&amp; \langle v \rangle k &amp;&amp; [k (x) = v] \\
+&amp;=&amp; \langle v \rangle &amp;&amp; [k (v) = v] \\
+&amp;=&amp; \langle x \rangle k &amp;&amp; [k (x) = v].
+\end{array}
+\end{equation*}
+\]
+Then \(k^{n+1} = k^n \cdot k = k \cdot k = k\) by induction, and \(k^0 = 1\) by
+Definition 2. ◻
+:::</p>
+<p><strong>Live proof.</strong> A dereference reads its address, never its input, so <code>*a</code> is
+such a \(k\). Read left to right and greedy, <code>{2}*a</code> is <code>{2}from(a)</code>, the run
+<code>from(a).from(a)</code>.</p>
+<pre><code class="language-mtron">mtron&gt; a -&gt; 7
+==&gt;7
+mtron&gt; {2}*a
+==&gt;7
+mtron&gt; *a.*a
+==&gt;7
+</code></pre>
+<p>A span on an object lays it out in space: \(n\) copies of \(x\) at the addresses
+\(0, 1, \ldots, n-1\), each copy keeping the point of \(x\). In mtron a value
+writes its span after it, <code>x{n}</code>, and until an address can be a branched uri
+the layout is the list of the copies, whose slots are those addresses:
+<code>2{3}</code> is <code>[2,2,2]</code>.</p>
+<pre><code class="language-mtron">mtron&gt; 2{3}
+==&gt;[2,2,2]
+mtron&gt; {2}2{3}
+==&gt;[{2}2,{2}2,{2}2]
+</code></pre>
+<p>NOTES: spans on a value. Once branched uris read and write a layout, is
+<code>2{3}</code> the one value <code>2@&lt;{0,1,2}&gt;</code> rather than the lst <code>[2,2,2]</code>? And is a laid
+value one obj or \(n\)? A ranged value span, <code>2{?}</code>, has no layout yet and does
+not parse. Would <code>2{2,3}</code> be the sum of its layouts, as a span range on an
+instruction is?</p>
+<h3>The Algebra Relating Point and Span Coefficients</h3>
+<p>::: theorem <strong>Theorem 7</strong> (The span exponentiates the point). If
+\(a \in \mathcal{F}\), \(c \in \mathcal{C}\) and \(n \in \mathbb{N}\), then
+\((ca)^n = c^n a^n\).
+:::</p>
+<p>::: proof <em>Proof.</em> This is the third equality of Theorem 6 of [1]. By induction
+on \(n\):
+\[
+\begin{equation*}
+\begin{array}{lclll} (ca)^0 &amp;=&amp; 1 = (1,1) = c^0 a^0 &amp;&amp; [\text{Definition 2}] \\ (ca)^{n+1} &amp;=&amp; (ca)^n \cdot ca &amp;&amp; [\text{Definition 2}] \\
+&amp;=&amp; c^n a^n \cdot ca &amp;&amp; [\text{induction}] \\
+&amp;=&amp; (c^n \cdot c)(a^n \cdot a) &amp;&amp; [\text{stream mult}] \\
+&amp;=&amp; c^{n+1} a^{n+1} &amp;&amp; [\text{Definition 2}].
+\end{array}
+\end{equation*}
+\]
+◻
+:::</p>
+<p>::: corollary <strong>Corollary 3</strong> (Order matters). A point on a run is not a run of
+the point: \(a^n \cdot c1 = c\,a^n\), while \((ca)^n = c^n a^n\).
+:::</p>
+<p>::: proof <em>Proof.</em> \(a^n \cdot c1 = (1 \cdot c)(a^n \cdot 1) = c\,a^n\) by stream
+multiplication, and \((ca)^n = c^n a^n\) by Theorem 7. The two agree only where
+\(c^n = c\). ◻
+:::</p>
+<p>::: corollary <strong>Corollary 4</strong> (Idempotents collapse). If \(e \cdot e = e\), then
+\((ce)^n = c^n e\) for every \(n \geq 1\).
+:::</p>
+<p>::: proof <em>Proof.</em> \(e^n = e\) for \(n \geq 1\), by the induction of Corollary 2, so
+\((ce)^n = c^n e^n = c^n e\) by Theorem 7. The unity is idempotent, so
+\((c1)^n = c^n 1\). ◻
+:::</p>
+<p>::: corollary <strong>Corollary 5</strong> (\(0^0 = 1\)). \((0a)^0 = 1\): a zero run of the
+annihilator is no step at all.
+:::</p>
+<p>::: proof <em>Proof.</em> \(t^0 = 1\) for every term \(t\) by Definition 2, and \(0a = 0\) is
+a term (Theorem 4). ◻
+:::</p>
+<p><strong>Live proof.</strong></p>
+<pre><code class="language-mtron">mtron&gt; 5.{2}id{3}()
+==&gt;{9}5
+mtron&gt; 5.{2}id().id{3}()
+==&gt;{3}5
+mtron&gt; 5.{3}id{2}()
+==&gt;{8}5
+mtron&gt; 5.{0}id{0}()
+==&gt;5
+</code></pre>
+<p>::: theorem <strong>Theorem 8</strong> (A span does not distribute over a branch). If
+\(a,b \in \mathcal{F}\), then
+\[
+\begin{equation*} (a + b)^n = \sum_{w \in \{a,b\}^n} w,
+\end{equation*}
+\]
+the sum of all \(2^n\) words of length \(n\) over \(a\) and \(b\). If \(ab = ba\), then
+\[
+\begin{equation*} (a + b)^n = \sum_{k=0}^{n} \binom{n}{k} a^k b^{n-k},
+\end{equation*}
+\]
+and each binomial coefficient is a point. In general,
+\((a + b)^n \neq a^n + b^n\).
+:::</p>
+<p>::: proof <em>Proof.</em> By induction on \(n\), expanding as [1] expands a multinomial:
+\[
+\begin{equation*}
+\begin{array}{lclll} (a + b)^{n+1} &amp;=&amp; (a + b)^n \cdot (a + b) &amp;&amp; [\text{Definition 2}] \\
+&amp;=&amp; \sum_{w \in \{a,b\}^n} w \cdot (a + b) &amp;&amp; [\text{induction}] \\
+&amp;=&amp; \sum_{w \in \{a,b\}^n} (wa + wb) &amp;&amp; [\text{$\cdot$ is left distributive}] \\
+&amp;=&amp; \sum_{w \in \{a,b\}^{n+1}} w &amp;&amp; [\text{$+$ is associative}].
+\end{array}
+\end{equation*}
+\]
+If \(ab = ba\), then a word with \(k\) copies of \(a\) is \(a^k b^{n-k}\), and there are
+\(\binom{n}{k}\) such words. Their unit points add to the point \(\binom{n}{k}\) by
+Theorem 1. ◻
+:::</p>
+<p><strong>Live proof.</strong> If \(a (x) = x + 1\), then the points of \((a + 1)^4\) are a row of
+Pascal's triangle:
+\(\langle 0 \rangle (a + 1)^4 = \langle 4, (4)3, (6)2, (4)1, 0 \rangle\). If
+\(b (x) = 2x\), then \(ab \neq ba\), and all four words of \((a + b)^2\) survive:
+\(\langle 5 \rangle (a + b)^2 = \langle 7, 12, 11, 20 \rangle\).</p>
+<pre><code class="language-mtron">mtron&gt; 2.{2}branch(plus(1),id())
+==&gt;4
+==&gt;{2}3
+==&gt;2
+mtron&gt; 0.{4}branch(plus(1),id())
+==&gt;4
+==&gt;{4}3
+==&gt;{6}2
+==&gt;{4}1
+==&gt;0
+mtron&gt; 5.{2}branch(plus(1),mult(2))
+==&gt;7
+==&gt;12
+==&gt;11
+==&gt;20
+</code></pre>
+<p>::: theorem <strong>Theorem 9</strong> (A shared prefix factors). If \(b,c \in \mathcal{F}\)
+and \(a \in \mathcal{F}_m \cup \mathcal{F}_f \cup \mathcal{F}_{fm}\) is pure,
+then \(a \cdot b + a \cdot c = a \cdot (b + c)\), and for \(m \leq n\),
+\[
+\begin{equation*}
+a^m \cdot b + a^n \cdot c = a^m \cdot (b + a^{n-m} \cdot c).
+\end{equation*}
+\]
+:::</p>
+<p>::: proof <em>Proof.</em> The first equality is the left distributivity of the function
+ring [1]. The second follows from it and Theorem 5, as \(a^n = a^m \cdot a^{n-m}\).
+The prefix must be pure: on the right it runs once for both members, so an
+effectful \(a\), a write or a print, would change what the expression does. It
+must also take one object at a time, a map, filter or flatmap: an mtron branch
+feeds its members one object at a time, so a reducer heading both members
+reads one object in each, but the whole stream once it is shared. A common
+suffix factors the other way, \(b \cdot a + c \cdot a = (b + c) \cdot a\), by
+right distributivity, but never a reducer \(r \in \mathcal{F}_r\): the reduce
+near-ring is not right distributive [1]. ◻
+:::</p>
+<p><strong>Live proof.</strong> Two parallel expressions are one expression branched where
+their instructions differ. Runs of <code>plus(1)</code> under the spans 2 and 3 share the
+shorter run; a shared suffix merges after the branch; a shared reducer does
+not merge after it, and does not factor ahead of it. The cat instruction set's
+<code>branch_factor</code> rewrite applies the first equality as a normal form.</p>
+<pre><code class="language-mtron">mtron&gt; 1.branch({2}plus(1).mult(3),{3}plus(1).mult(4))
+==&gt;9
+==&gt;16
+mtron&gt; 1.{2}plus(1).branch(mult(3),plus(1).mult(4))
+==&gt;9
+==&gt;16
+mtron&gt; 1.branch(plus(1).mult(2).plus(5),plus(1).mult(3).plus(5))
+==&gt;9
+==&gt;11
+mtron&gt; 1.plus(1).branch(mult(2),mult(3)).plus(5)
+==&gt;9
+==&gt;11
+mtron&gt; 1.branch(plus(1).count(),plus(2).count())
+==&gt;{2}1
+mtron&gt; 1.branch(plus(1),plus(2)).count()
+==&gt;2
+mtron&gt; {1,2}.branch(count().plus(1),count().plus(2))
+==&gt;{2}2
+==&gt;{2}3
+mtron&gt; {1,2}.count().branch(plus(1),plus(2))
+==&gt;3
+==&gt;4
+</code></pre>
+<p><strong>NOTES</strong>:
+<code>{1,2}.branch(plus(1).count(),plus(2).count())</code> is <code>{4}1</code> in mtron, each member
+counting one object, where the split axiom of [1] applied to the whole stream
+gives \(\langle 2,3 \rangle r + \langle 3,4 \rangle r\), which is <code>{2}2</code>. A
+reducer member is where the two readings part: is the per-object branch the
+intended \(+\)? The rewrites agree with the branch as it runs: <code>branch_factor</code>
+shares only a map, filter or flatmap.</p>
+<h3>Coefficent Ranges</h3>
+<p>A coefficient may be a range \([m,n]\) with \(m \leq n\). In mtron it is written
+<code>{m,n}</code>, and <code>{?}</code> is \([0,1]\), <code>{+}</code> is \([1,\infty)\) and <code>{*}</code> is \([0,\infty)\).</p>
+<p>::: definition <strong>Definition 3</strong> (Span range). If \(m \leq n\), then
+\[
+\begin{equation*}
+a^{[m,n]} = \sum_{k=m}^{n} a^k = a^m + a^{m+1} + \cdots + a^n.
+\end{equation*}
+\]
+:::</p>
+<p>The unrolls \(a^k\) are independent terms, and each yields its own results. By
+the split axiom,
+\[
+\begin{equation*}
+\langle x \rangle a^{[m,n]} = \sum_{k=m}^{n} \langle x \rangle a^k,
+\end{equation*}
+\]
+so paths of different lengths meet only in that sum, at the end of every path.
+A range is no uncertainty over its unrolls: every unroll is taken, and the
+multiplicities are not weights that sum to one. The zero-step unroll is the
+unity, \(a^0 = 1\), which passes its object on.</p>
+<p>::: corollary <strong>Corollary 6</strong> (Each unroll carries its own power of the point).
+If \(c \in \mathcal{C}\) and \(m \leq n\), then
+\((ca)^{[m,n]} = \sum_{k=m}^{n} c^k a^k\).
+:::</p>
+<p>::: proof <em>Proof.</em> By Definition 3, \((ca)^{[m,n]} = \sum_{k=m}^{n} (ca)^k\), and
+\((ca)^k = c^k a^k\) by Theorem 7. ◻
+:::</p>
+<p>In mtron, <code>{2,3}a</code> answers what the branch of its unrolls, <code>branch(a.a,a.a.a)</code>,
+answers, and <code>{?}a</code> what <code>branch(id(),a)</code> answers. The sum is computed when the
+instruction applies and is never written into the code: a path ends where its
+monad's instruction pointer reaches noobj, and the objects of the halted monads
+sum there. A monad whose object is noobj is killed instead, the zero point of
+Theorem 4. As the code keeps the span, code read as a pattern still matches
+<code>{?}neg()</code> as a run of none or one <code>neg()</code>.</p>
+<p><strong>Live proof.</strong> If \(a (x) = x + 1\), then
+\(\langle 1 \rangle a^{[2,3]} = \langle 1 \rangle (a^2 + a^3) = \langle 3, 4 \rangle\)
+and \(\langle 1 \rangle a^{[0,1]} = \langle 1, 2 \rangle\). By Corollary 6,
+\(\langle 1 \rangle (3a)^{[2,3]} = \langle (9)3, (27)4 \rangle\), and a
+multiplicity on the input counts once:
+\(\langle (2)1 \rangle (3a)^{[2,3]} = \langle (18)3, (54)4 \rangle\).</p>
+<pre><code class="language-mtron">mtron&gt; 1.{2,3}plus(1)
+==&gt;3
+==&gt;4
+mtron&gt; 1.branch(plus(1).plus(1),plus(1).plus(1).plus(1))
+==&gt;3
+==&gt;4
+mtron&gt; 1.{?}plus(1)
+==&gt;1
+==&gt;2
+mtron&gt; 1.{2,3}plus{3}(1)
+==&gt;{9}3
+==&gt;{27}4
+mtron&gt; {2}1.{2,3}plus{3}(1)
+==&gt;{18}3
+==&gt;{54}4
+</code></pre>
+<p>A range on a point is a range of multiplicities: if \(b (x) = x + 2\), then
+\(\langle 1 \rangle\, [0,1]\, b = \langle ([0,1])3 \rangle\), a three held zero
+or one times.</p>
+<pre><code class="language-mtron">mtron&gt; 1.plus{?}(2)
+==&gt;{?}3
+</code></pre>
+<p><strong>Generation.</strong> If \(a (x) = x + 1\), then a range from zero counts. By
+Definition 3 and Corollary 1,
+\[
+\begin{equation*}
+\langle 0 \rangle a^{[0,n]} = \sum_{k=0}^{n} \langle 0 \rangle a^k = \sum_{k=0}^{n} \langle k \rangle = \langle 0, 1, \ldots, n \rangle.
+\end{equation*}
+\]
+A point on the step weighs the natural \(k\) by its power, by Corollary 6:
+\[
+\begin{equation*}
+\langle 0 \rangle (2a)^{[0,n]} = \sum_{k=0}^{n} 2^k \langle k \rangle = \langle 0, (2)1, (4)2, \ldots, (2^n)n \rangle,
+\end{equation*}
+\]
+a stream of \(\sum_{k=0}^{n} 2^k = 2^{n+1} - 1\) objects. The weights count
+paths: \(2a = a + a\) by Definition 1, so \((2a)^k = (a + a)^k\) is the sum of the
+\(2^k\) words of length \(k\) over two copies of \(a\) (Theorem 8), and every one of
+them lands on \(k\).</p>
+<p><strong>Live proof.</strong> With \(n = 6\): the naturals to six, then the same seven values
+weighted \(1, 2, 4, \ldots, 64\), which is \(2^7 - 1 = 127\) objects.</p>
+<pre><code class="language-mtron">mtron&gt; 0.{0,6}plus(1)
+==&gt;0
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;4
+==&gt;5
+==&gt;6
+mtron&gt; 0.{0,6}plus{2}(1)
+==&gt;0
+==&gt;{2}1
+==&gt;{4}2
+==&gt;{8}3
+==&gt;{16}4
+==&gt;{32}5
+==&gt;{64}6
+</code></pre>
+<p>An open range is the Kleene star [3],
+\(a^{[0,\infty)} = a^* = 1 + a + a^2 + \cdots\). If \(a (x) = x + 1\), then
+\(\langle 0 \rangle a^* = \langle 0, 1, 2, 3, \ldots \rangle\): every natural at
+once, the bounded generations above being its prefixes. A span range is a
+generator. In mtron it is <code>0.{*}plus(1)</code>, which is
+<code>start(0).branch(id(),plus(1),plus(1).plus(1),...)</code>.</p>
+<p><strong>NOTES</strong>: an open range has no last unroll, so <code>0.{*}plus(1)</code> (now <code>{*}1</code>)
+needs its unrolls on demand, \(a^* = 1 + a \cdot a^*\); <code>repeat</code> already runs
+the bounded form. To settle here: how a point range such as <code>{?}3</code> reads now
+that a range is no uncertainty, and the type of a generator.</p>
+<h3>Point and Span Coefficients Type Systems</h3>
+<p>If \(a (x) = y\), then \(\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle\) by
+Theorem 7 and the apply axiom. So the coefficient of the inferred type is
+\(c^n\): <code>type()</code> reads the point of a term off its run, and <code>cc()</code> reads the
+coefficient of that type. In the console, <code>5.{2}plus{3}(1).type()</code> is
+<code>int{9}::T</code>.</p>
+<pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1).type().cc()
+==&gt;9
+mtron&gt; 5.plus(1).id{3}().type().cc()
+==&gt;3
+</code></pre>
+<p>[To be written: the type of a range, and spans of slots in a type (<code>lst[{n}T]</code>).]</p>
+<h3>Conclusion</h3>
+<p><strong>NOTES</strong>:</p>
+<ul>
+<li>Two coefficients, one per ring operation: the point iterates \(+\), the span
+iterates \(\cdot\), and stream ring theory's Theorem 6, \((ca)^n = c^n a^n\),
+binds them.</li>
+<li>Every law here is pinned in metatron's <code>AbstractAlgebraTest</code> on nine carriers
+and proved live in this article.</li>
+<li>The rewriter applies two of them as normal forms: like terms sum their points (<code>branch_collapse</code>), and shared prefixes
+factor (<code>branch_factor</code>).</li>
+<li>Where it leads: a span range as the branch of its unrolls, merging at noobj,
+so <code>{*}</code> is a generator; layouts in space once a vid can be branched; and
+code as paths that sum like branched uris.]</li>
+</ul>
+<h2>References</h2>
+<ol>
+<li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red
+Herring's Ship's Log: Chronicles in the Sea of Cortez, pages 10–40, Mulegé,
+Baja California Sur, México, February 2019.</li>
+<li>Rodriguez, M.A., Claude, &quot;<a href="./parametric-identities-in-ring-theory.html">Parametric Identities in Ring
+Theory</a>.&quot;</li>
+<li>Kleene, S.C., &quot;Representation of Events in Nerve Nets and Finite Automata,&quot;
+Automata Studies, Princeton University Press, 1956.</li>
+</ol>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="bi bi-envelope text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

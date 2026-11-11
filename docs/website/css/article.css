@@ -61,6 +61,7 @@ body, .quoteblock blockquote, .quoteblock p, .mjx-chtml .MJXc-display span {
     background: #cbcbcb;
     padding: 1px;
     border: 1px solid var(--mred);
+    font-size: 0.4rem;
 }
 
 
@@ -92,8 +93,9 @@ th {
 pre .highlight,
 .language-java,
 .hljs {
-    background-color: var(--maincolor);
-    color: #cbcbcb;
+    background: transparent !important;
+    color: #FFF !important;
+    font-size: 0.825rem;
 }
 
 #toc.toc2 {

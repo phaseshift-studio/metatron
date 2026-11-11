@@ -314,7 +314,7 @@ mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']=='[A-Z]{2,3}' [-- ['AX'] (update and sele
 ```mtron
 */path/to/obj              [-- read obj at uri (detached) --]
 @/path/to/obj              [-- real obj at uri (attached) --]
-*local:software/           [-- read with trailing --]
+*local:software/           [-- the relation local:software=>obj --]
 *</pa.th/to/o b .j>        [-- angle-bracket handles special chars --]
 ```
 
@@ -612,6 +612,9 @@ mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) 
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
+==>[name=>'Micky Mouse',role=>architect]
+==>[name=>'Micky Mouse',role=>developer]
+==>[name=>'Micky Mouse',role=>oracle]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 
