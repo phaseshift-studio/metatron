@@ -104,8 +104,11 @@ The distributed rewrite is already instruction-shaped. Applying `law_shard` to a
 lowers to:
 
 ```
-start([start({1,2,3,4,5,6}).plus(1).sum?hop=0()]).select([to(<ws://booger.local:8555>)]).merge().sum()
+branch(<ws://booger.local:8555> => start({1,2,3,4,5,6}).plus(1).sum?hop=0()).sum()
 ```
+
+> 2026-11-10: a distributed program compiles to `branch(place => lane, …)`; a remote lane ships its program to its
+> place's `eval`, the client's own override. The text below predates the branch and is kept as the design record.
 
 Shipping a shard is an *ordinary instruction call* — `to(<peer>)` — composed inside `select(...).merge().sum()`. The
 rewrite already composes capabilities as instructions. What it does **not** yet do is pull `to` *from the peer*: today
@@ -308,10 +311,11 @@ general dispatch, and no longer special.
 The rewrite composes capabilities as instructions:
 
 ```
-start(shards).select([to(<peer>)]).merge().sum()
+branch(<peer> => shard, …).sum()
 ```
 
-`to` has to be an ordinary instruction to sit inside `select`, be mapped over a monad, be merged, be summed. A
+The lane's call has to be an ordinary instruction to sit inside a `branch` lane, be mapped over a monad, be gathered,
+be summed. A
 `transport`-as-special-call cannot compose that way. **The rewrite engine is what forces capability to be instruction
 shaped** — this is the deep reason the override model is not merely cleaner but *necessary* for distribution.
 

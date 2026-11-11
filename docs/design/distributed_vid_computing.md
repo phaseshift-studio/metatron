@@ -189,10 +189,10 @@ Java field shielded from metatron's reflection.
 | `?hop=height{arity}` | how deep / how wide the tree | arity caps the fan-out; `[n,1]` = chain |
 | `?split` | what counts as one share | `stream` (stride) and `copy` lower; `block`/`key`/`owner`/`index` decline |
 
-The emit: `start([slave…]).select([virtual::[code=>eval(p_i)]…]).select([>>rhs…]).merge().<combiner>`. The combiner
-is **computed** (`Law.Helper.combiner`: `count↦sum`, `order(s)↦kmerge(s)`, `group([k⇒h])↦pointwise`), never named. The
-emitted `start([…]).select([…])` **is a `branch` spelled as transport** — the decision (serial/parallel/distributed)
-is *collapsed* into `virtual::[eval(p_i)]` at plan time.
+The emit: `branch(p_i => slave_i, …).<combiner>` — every lane a `virtual::T`, awaited through its `rhs`, a remote
+lane's program shipped to its place's `eval`. The combiner is **computed** (`Law.Helper.combiner`: `count↦sum`,
+`order(s)↦kmerge(s)`, `group([k⇒h])↦pointwise`), never named. The branch is the one distributed primitive (Marko,
+2026-11-05): the place a lane runs is its key, bound at run time.
 
 ### 4.2 `move` / `extractMove` / `cut` — the imperative scatter
 
