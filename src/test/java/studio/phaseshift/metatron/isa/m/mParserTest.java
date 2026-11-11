@@ -372,6 +372,16 @@ public class mParserTest extends AbstractMetatronTest {
             "1.plus(2).{plus(4),plus(10),plus(20)} % 1.plus(2).branch(plus(4),plus(10),plus(20))",
             "1.plus(2).{plus(4)}             % 1.plus(2).branch(plus(4))",
             "1.plus(2).{7,3}                 % 1.plus(2).branch(7,3)",
+            // one dot is enough before a brace (Marko, 2026-11-10): 1.{a,b} is 1..{a,b}, a span on an instruction after a
+            // value keeps its dot, and a span on a brace is a span on the branch, a run of the branch
+            "1.{plus(4),plus(10)}            % 1..{plus(4),plus(10)}",
+            "1.{plus(4),plus(10)}            % 1.branch(plus(4),plus(10))",
+            "1.{7,3}                         % 1.branch(7,3)",
+            "1.{2}plus(1)                    % 1.plus(1).plus(1)",
+            "1.{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
+            "1..{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
+            "1.plus(1).{2}{plus(1),mult(2)}  % 1.plus(1).{2}branch(plus(1),mult(2))",
+            "1.{?}{plus(1),mult(2)}          % 1.{?}branch(plus(1),mult(2))",
             // a deref's leading coefficient is its span, as a named instruction's is (Marko, 2026-11-10: read left to
             // right, greedy until a syntax error), never the point of a bare uri *a
             "{2}*a                           % from(a).from(a)",
@@ -443,6 +453,10 @@ public class mParserTest extends AbstractMetatronTest {
             "0.{0,6}plus{2}(1).count()                % 127",
             "{1,2,3}.{0,1}sum()                       % {1,2,3,6}",
             "{1,2,3}.{2,3}count()                     % {2}1",
+            // (a + a + a)^2 = 9a^2, the point inside the span; the brace with one dot
+            "1.{2}{plus(34),plus(34),plus(34)}        % {9}69",
+            "1.{plus(34),plus(34),plus(34)}           % {3}35",
+            "1.{?}{plus(1),mult(2)}                   % {1,{2}2}",
     }, delimiter = '%')
     void testApply(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
