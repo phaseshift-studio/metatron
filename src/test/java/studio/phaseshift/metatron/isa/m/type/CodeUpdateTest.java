@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -30,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -40,6 +43,24 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  * in that place, reading the names. The plain update rows live with code::T's other operations in mInstSetTest.
  */
 public class CodeUpdateTest extends AbstractMetatronTest {
+
+    // each test's own machine is named apart: a class's methods run in parallel in one fork
+    private static final AtomicLong MACHINES = new AtomicLong();
+
+    /**
+     * EVERY TEST RUNS IN A MACHINE OF ITS OWN (Marko, 2026-11-11: push, run, pop). A name on a typed hole is a type of
+     * the machine ({@code int::T@a} defines {@code a::T}), and a fork's classes share its root, where this class's
+     * {@code a} and {@code b} would be every other test's too.
+     */
+    @BeforeEach
+    protected void pushOwnMachine() {
+        Machine.current().push(f("code_update_" + MACHINES.incrementAndGet()));
+    }
+
+    @AfterEach
+    protected void popOwnMachine() {
+        Machine.current().pop();
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -204,18 +225,19 @@ public class CodeUpdateTest extends AbstractMetatronTest {
     }
 
     /**
-     * THREADS threads, ROUNDS rounds apiece, every round checked against the thread's own answer. With
-     * {@code ownMachine}, each thread pushes a machine of its own first and pops it after.
+     * THREADS threads, ROUNDS rounds apiece, every round checked against the thread's own answer. Every thread starts
+     * in the test's own machine, as a fresh pool thread would otherwise stand in the fork's root; with
+     * {@code ownMachine}, each pushes a machine of its own there first and pops it after.
      */
     private void tenThreads(final boolean ownMachine, final BiFunction<Integer, Integer, String> code,
                             final BiFunction<Integer, Integer, String> expected) throws Exception {
-        final Machine root = Machine.current();
+        final Machine machine = Machine.current();
         final ExecutorService pool = Executors.newFixedThreadPool(THREADS);
         try {
             final List<Future<?>> threads = new ArrayList<>();
             for (int t = 1; t <= THREADS; t++) {
                 final int id = t;
-                threads.add(pool.submit(() -> {
+                threads.add(pool.submit(() -> Machine.Helper.evalAt(machine, () -> {
                     if (ownMachine)
                         Machine.current().push(f("scratch_" + id));
                     try {
@@ -226,13 +248,13 @@ public class CodeUpdateTest extends AbstractMetatronTest {
                             Machine.current().pop();
                     }
                     return null;
-                }));
+                })));
             }
             for (final Future<?> one : threads)
                 one.get(120, TimeUnit.SECONDS);
         } finally {
             pool.shutdownNow();
-            Machine.current(root);
+            Machine.current(machine);
         }
     }
 }

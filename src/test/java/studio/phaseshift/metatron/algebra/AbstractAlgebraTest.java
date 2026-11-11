@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -61,6 +62,16 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class AbstractAlgebraTest extends AbstractObjTest {
+
+    /**
+     * EVERY EQUATION RUNS IN A MACHINE OF ITS OWN (Marko, 2026-11-11: push, run, pop). The probes are written to
+     * {@code a} and {@code b} ({@link #interpret}, and {@code AlgebraTool}'s slots), and a fork's classes share its
+     * root, where one carrier's {@code a} is every other test's {@code a} too. The machine brackets the probe writes
+     * and the evaluation, not the test method: a subclass's one-time {@code @TestData} seeds the method's first row
+     * after {@code @BeforeEach}, and a machine popped after that row would take the seeds with it. Each machine is
+     * named apart, as a class's methods run in parallel in one fork.
+     */
+    private static final AtomicLong MACHINES = new AtomicLong();
 
     /**
      * THE TYPE UNDER TEST — the carrier whose declared algebra the inherited test validates. Any mtron type works: a
@@ -109,7 +120,13 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
 
         AlgebraTool.registerSample(carrier.tid(), this.sample());
         LOG.warn("validating %s: %d instance(s), claims %s", carrier.namedType(), instances.jvm().size(), claims);
-        final AlgebraTool.Report report = AlgebraTool.analyzeType(carrier, claims);
+        final Machine machine = Machine.current().push(f("algebra_" + MACHINES.incrementAndGet()));
+        final AlgebraTool.Report report;
+        try {
+            report = AlgebraTool.analyzeType(carrier, claims);
+        } finally {
+            machine.pop();
+        }
         assertTrue(report.ok(),
                 () -> "carrier " + carrier.namedType() + " FAILS its own declared algebra " + claims + " — report " + report.toRec());
     }
@@ -135,11 +152,16 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
      * Write the probe into {@code *a} and READ the row as the equation it is: the tool's template, by hand.
      */
     protected void interpret(final String lhs, final String rhs) {
-        Machine.current().memory().write(f("a"), this.sample());
-        final Obj left = ObjmtronSerializer.parse(lhs).apply();
-        final Obj right = ObjmtronSerializer.parse(rhs).apply();
-        assertTrue(AlgebraTool.equal(left, right),
-                () -> lhs + " != " + rhs + " (got " + left + " and " + right + " for " + this.carrier().namedType() + ")");
+        final Machine machine = Machine.current().push(f("algebra_" + MACHINES.incrementAndGet()));
+        try {
+            machine.memory().write(f("a"), this.sample());
+            final Obj left = ObjmtronSerializer.parse(lhs).apply();
+            final Obj right = ObjmtronSerializer.parse(rhs).apply();
+            assertTrue(AlgebraTool.equal(left, right),
+                    () -> lhs + " != " + rhs + " (got " + left + " and " + right + " for " + this.carrier().namedType() + ")");
+        } finally {
+            machine.pop();
+        }
     }
 
     /**
