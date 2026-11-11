@@ -32,6 +32,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
@@ -71,7 +73,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -81,7 +82,6 @@ import static studio.phaseshift.metatron.isa.m.mach.machInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -548,12 +548,14 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     InstSet.loadInstSetProvider(ALL)
                             .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
-            /// // SET TRACER STAGES /// ///
+            /// /// SET THE TRACER'S STACK STATE /// ///
+            // the tracer is the processor's, in the typer's form: its `stack` field names the trace points, every one
+            // off by default, and a boot profile names only the points it overrides (`tracer/stack => [java_stack => true]`)
             LOG.info("registering the {{c}}x_ers{{X}}...");
-            final Rec tracer = Tracer.init(rec(uri("stack"),
-                    args.at("tracer/stack").orElse(Stream.of(Tracer.values())
-                            .map(t -> rel(uri(t.name()), BOOL_FALSE))
-                            .collect(new CommonUtil.RecCollector()))).tid(MACH_TRACER_TID).as());
+            Rec tracerStack = rec(new java.util.LinkedHashMap<>(Tracer.defaults().jvm()));
+            for (final java.util.Map.Entry<Obj, Obj> point : args.at("tracer/stack").orElse(rec()).asRec().recValue().entrySet())
+                tracerStack = tracerStack.at(point.getKey(), point.getValue());
+            final Tracer tracer = BasicTracer.of(tracerStack);
             LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
             /// /// INSTRUCTION SIGNATURE ENCODING /// ///
             // the `args` component of an instruction tid is OPT-IN and read from a JVM system property ONCE, at
@@ -628,7 +630,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             final java.util.Map<Obj, Obj> stages = new java.util.LinkedHashMap<>(BasicCompiler.defaultStages());
             stages.put(uri(TYPER), typer);
             ROOT_MACHINE.compiler(new BasicCompiler(stages, MACH_COMPILER_TID, null));
-            Machine.write(f("/sys/tracer"), tracer);
+            // the tracer is the processor's, so its state lives at /processor/tracer, as the typer's at /compiler/typer
+            ROOT_MACHINE.processor().at(uri(TRACER), tracer, MUTABLE);
             Machine.write(f("/sys/rewriter"), rewriter);
             Machine.write(f("/sys/tmp"), str("""
                     
@@ -710,7 +713,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     fsSpace.makeFile(bootPath).vid(f("boot/file"));
                     final long count = Machine.Helper.evaluate(bootPath.toFile(), e -> {
                         LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber() + 1, e.lineString());
-                        if (Tracer.java_stack.enabled())
+                        if (Tracer.Helper.javaStack())
                             e.parseException().printStackTrace(System.err);
                     }).count();
                     LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}out: %d{{/y}}]{{/g}}", args.at(Tokens.BOOT).uriValue(), count);

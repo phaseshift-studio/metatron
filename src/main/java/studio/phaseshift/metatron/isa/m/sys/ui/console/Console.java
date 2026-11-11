@@ -25,7 +25,7 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
@@ -1482,7 +1482,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * {@link #renderTrace} when the user declines.
      */
     void promptTraceForFails(final Obj result) {
-        if (!Tracer.java_stack.enabled()) return;
+        if (!Tracer.Helper.javaStack()) return;
         result.stream().filter(Obj::isFail).forEach(failObj -> {
             terminal.writer().write(Graphitty.string("{{y}}display trace tool? {{g}}[y/N]{{y}} {{X}}"));
             terminal.writer().flush();

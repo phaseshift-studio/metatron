@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -32,6 +33,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.COMPUTER;
 import static studio.phaseshift.metatron.Tokens.PROCESSOR;
+import static studio.phaseshift.metatron.Tokens.TRACER;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -49,6 +51,8 @@ public class BasicSwarmProcessor extends MRec implements Processor {
     public BasicSwarmProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.jvm().putIfAbsent(uri(COMPUTER), rec());
+        // the processor's diagnostics, as a compiler carries its typer: a given tracer is kept, else the boot default
+        this.jvm().putIfAbsent(uri(TRACER), new BasicTracer());
     }
 
     public static BasicSwarmProcessor processor(final Map<Obj, Obj> state, final fURI tid, final fURI vid) {

@@ -29,7 +29,7 @@ import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
@@ -108,7 +108,8 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of(kc("<tab>"), "tabular view of the current code"))
                     .addRow(List.of(cc(":typer [stages]"), "show or enable/disable type checking stages (+stage/-stage)"))
                     .addRow(List.of(kc("<alt>+t") + "  " + cc(":typer-cycle"), "cycle type check activations"))
-                    .addRow(List.of(cc(":tracer [mtron|java]"), "toggle mtron/java stack trace dump on fail"))
+                    .addRow(List.of(cc(":tracer [points]"), "show or enable/disable trace points (+point/-point): mtron_stack, java_stack"))
+                    .addRow(List.of(kc("<alt>+r") + "  " + cc(":tracer-cycle"), "cycle the trace points: mtron, java, java/mtron, nothing"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}console", "{{[g]&w}}"))
                     .addRow(List.of(kc("<ctrl>+q") + "  " + cc(":quit"), "exit the console"))
@@ -302,13 +303,19 @@ public final class CommandPalette extends MRec {
         }), MUTABLE);
 
         // ===== tracer =====
+        // the tracer's trace points, in the form of :typer's check points: a name turns its point on, -name off
         this.at("tracer", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            final String newState = lhs.isStr() && !lhs.strValue().isBlank() ? lhs.strValue().trim() : null;
-            if (null == newState || newState.equals("mtron"))
-                Tracer.toggle(Tracer.mtron_stack);
-            if (null == newState || newState.equals("java"))
-                Tracer.toggle(Tracer.java_stack);
-            this.console.logger().info("tracer {{b}}mtron:{{g}}%s{{/g}} java:{{g}}%s{{X}}", Tracer.getEnabled().contains(Tracer.mtron_stack), Tracer.getEnabled().contains(Tracer.java_stack));
+            if (lhs.isStr() && !lhs.strValue().isBlank()) {
+                Arrays.stream(lhs.strValue().split(" ")).forEach(s -> {
+                    if (!s.trim().isEmpty()) {
+                        if (s.startsWith("-"))
+                            Tracer.Helper.flag(s.substring(1)).ifPresent(flag -> Tracer.Helper.set(flag, false));
+                        else
+                            Tracer.Helper.flag(s).ifPresent(flag -> Tracer.Helper.set(flag, true));
+                    }
+                });
+            }
+            this.console.logger().info("tracer points {{c}}%s{{X}}", Tracer.Helper.enabled());
             return noobj();
         }), MUTABLE);
 
@@ -626,6 +633,13 @@ public final class CommandPalette extends MRec {
         }), MUTABLE);
         bindKey("typer-cycle", alt('t'));
 
+        // ===== tracer-cycle (Alt+R) =====
+        this.at("tracer-cycle", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            CommandPalette.cycleTracer();
+            return noobj();
+        }), MUTABLE);
+        bindKey("tracer-cycle", alt('r'));
+
         // ===== editor (Ctrl+Y) =====
         this.at("editor", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             Editor.of(console, console.getReader().getBuffer().toString());
@@ -678,6 +692,23 @@ public final class CommandPalette extends MRec {
         else
             Typer.Helper.enabled().stream().findFirst().ifPresent(flag -> Typer.Helper.set(flag, false));
         StatusLine.message(str("typer: " + Typer.Helper.enabled()));
+    }
+
+    /**
+     * Cycle the tracer through its four states (Marko, 2026-11-10): {@code mtron}, {@code java}, {@code java/mtron},
+     * and nothing. The states are a binary counter over the trace points, {@code mtron_stack} the low bit, so each
+     * press visits the next combination. The banner names the state.
+     */
+    public static void cycleTracer() {
+        final int points = Tracer.STACKS.size();
+        final int state = java.util.stream.IntStream.range(0, points)
+                .filter(i -> Tracer.Helper.traces(Tracer.STACKS.get(i))).map(i -> 1 << i).sum();
+        final int next = (state + 1) % (1 << points);
+        for (int i = 0; i < points; i++)
+            Tracer.Helper.set(Tracer.STACKS.get(i), 0 != (next & (1 << i)));
+        final List<String> on = new ArrayList<>(Tracer.Helper.enabled().stream().map(flag -> flag.name().replace("_stack", "")).toList());
+        Collections.reverse(on);
+        StatusLine.message(str("tracer: " + (on.isEmpty() ? "<nothing>" : String.join("/", on))));
     }
 
     /**

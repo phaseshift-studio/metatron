@@ -282,7 +282,7 @@ public interface Machine extends Rec, AutoCloseable {
     /**
      * APPLY a program to a lhs <em>in this machine</em>: the single place a {@link Code} hands off to a machine, and
      * what makes the machine the unit of execution. Code reaches ANOTHER machine by being shipped there in a plan
-     * ({@code law_shard}: {@code start([code]).select([to(<peer>)]).merge()}), never by a frame here that stands in it.
+     * ({@code law_shard}: {@code branch(<peer> => code, …)}), never by a frame here that stands in it.
      * <p>
      * The lhs is the program's START value, and the MONAD is part of it: a monadic lhs rides {@code start} unchanged
      * so its loop/state context survives into the processor, while a value lhs is prepended as {@code start(value)}.
@@ -474,8 +474,14 @@ public interface Machine extends Rec, AutoCloseable {
         // and holds that machine's fail stacks (~/processor/computer/<n>, ~/processor/fail), so the instance the clone
         // shares with this machine filed the child's evaluations, and their fails, in this machine's. Minted once the
         // child's space is mounted, so its write at <child>/processor is the child's.
+        // Its TRACER is a copy of this machine's, the fork the compiler's typer gets below: the child traces as this
+        // machine did at the push, and a later change on either side stays on that side.
         final Processor processor = this.processor();
-        child.jvm().put(uri(PROCESSOR), processor.clone(new LinkedHashMap<>(), processor.tid(), childVID.extend(PROCESSOR)).parent(child));
+        final java.util.Map<Obj, Obj> fresh = new LinkedHashMap<>();
+        final Obj tracer = processor.atDirect(uri(TRACER));
+        if (!tracer.isNoObj())
+            fresh.put(uri(TRACER), Obj.Helper.deepClone(tracer));
+        child.jvm().put(uri(PROCESSOR), processor.clone(fresh, processor.tid(), childVID.extend(PROCESSOR)).parent(child));
         // ... and its own COMPILER (Marko, 2026-11-10): a deep clone of this machine's, stages and all, so a write under
         // the child's ~/compiler (its selector, a typer check) is the child's alone, and a write this machine makes after
         // the push stays this machine's. The child compiles as this machine did at the push. Through the setter, which
