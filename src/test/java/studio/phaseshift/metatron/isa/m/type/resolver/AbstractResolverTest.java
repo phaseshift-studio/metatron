@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -34,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,8 +61,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  */
 public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
+    // each test's own machine is named apart: a class's methods run in parallel in one fork
+    private static final AtomicLong MACHINES = new AtomicLong();
+
     protected final Supplier<Selector> resolverSupplier;
-    private Selector previousSelector;
 
     protected AbstractResolverTest(final Supplier<Selector> resolverSupplier) {
         this.resolverSupplier = resolverSupplier;
@@ -70,17 +72,16 @@ public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
     @BeforeEach
     protected void setupResolver() {
-        // the selector under test goes into the machine's own resolver, which compile time and run time both resolve
-        // through; the resolve cache is keyed by code and type alone, so each swap starts it empty
-        this.previousSelector = Machine.current().compiler().resolver().selector();
+        // the selector under test goes into the resolver of a machine of the test's OWN, which compile time and run
+        // time both resolve through. Never the root's: a fork's classes share its root, and a root resolving
+        // first-match would resolve their code first-match too
+        Machine.current().push(f("resolver_" + MACHINES.incrementAndGet()));
         Machine.write(f("~/compiler/resolver/selector"), this.resolverSupplier.get());
-        Resolver.Helper.RESOLVE_CACHE.clear();
     }
 
     @AfterEach
     protected void restoreResolver() {
-        Machine.write(f("~/compiler/resolver/selector"), this.previousSelector);
-        Resolver.Helper.RESOLVE_CACHE.clear();
+        Machine.current().pop();
     }
 
     // ========================================================================

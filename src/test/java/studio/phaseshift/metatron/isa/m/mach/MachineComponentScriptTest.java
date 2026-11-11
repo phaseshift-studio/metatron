@@ -19,19 +19,15 @@
 package studio.phaseshift.metatron.isa.m.mach;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.StatefulCSVSource;
 import studio.phaseshift.metatron.StatefulParametrizedTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -76,17 +72,8 @@ public class MachineComponentScriptTest extends AbstractMetatronTest {
     // the compiler's stages that carry state a write can reach
     private static final List<String> STAGES = List.of(REWRITER, RESOLVER, TYPER);
 
-    // the root's typer state, put back whatever a script left behind
-    private Map<Obj, Obj> check;
-
-    @BeforeEach
-    public void snapshotTheRootsCompiler() {
-        this.check = new LinkedHashMap<>(Machine.root().compiler().typer().<Rec>at("check").recValue());
-    }
-
     @AfterEach
-    public void restoreTheRoot() {
-        this.check.forEach((flag, value) -> Machine.root().compiler().typer().at("check/" + flag.uriValue(), value, Poly.MUTABLE));
+    public void retractTheRootsDeclaration() {
         Machine.root().instset().write(f("type/live"), noobj());
     }
 
@@ -105,7 +92,8 @@ public class MachineComponentScriptTest extends AbstractMetatronTest {
                 "DECLARE", args -> Machine.current().instset().write(f(args[0]), T(f(args[0]))),
                 "DECLARE_ROOT", args -> Machine.root().instset().write(f(args[0]), T(f(args[0]))),
                 "HAS_TYPE", args -> this.probe("has_type", jnt(Machine.current().instset().types().stream()
-                        .anyMatch(type -> f(args[0]).equals(type.vid())) ? 1 : 0)));
+                        .anyMatch(type -> f(args[0]).equals(type.vid())) ? 1 : 0)),
+                "IMPORT", args -> InstSet.importInstSet(f(args[0])));
     }
 
     private void probe(final String name, final Obj value) {
@@ -201,36 +189,40 @@ public class MachineComponentScriptTest extends AbstractMetatronTest {
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
-            "*~/compiler/typer/check/inst_rng % true                  [-- the root's, as booted --]",
-            "[STATE] ~/compiler/typer/check/inst_rng -> false         [-- the root, before the push --]",
+            "[STATE] *~.push(fork_root)                               [-- a parent of the test's own: a fork shares its root --]",
+            "*~/compiler/typer/check/inst_rng % true                  [-- forked from the root, as booted --]",
+            "[STATE] ~/compiler/typer/check/inst_rng -> false         [-- the parent, before the push --]",
             "[STATE] *~.push(fork_a)",
             "*~/compiler/typer/check/inst_rng % false                 [-- INHERIT: the clone carries it --]",
             "[STATE] ~/compiler/typer/check/inst_rng -> true          [-- OWN --]",
             "*~/compiler/typer/check/inst_rng % true",
-            "*/fork_a/compiler/typer/check/inst_rng % true            [-- one address, spelled absolutely --]",
-            "*/compiler/typer/check/inst_rng % false                  [-- NO LEAK UP --]",
+            "*/fork_root/fork_a/compiler/typer/check/inst_rng % true  [-- one address, spelled absolutely --]",
+            "*/fork_root/compiler/typer/check/inst_rng % false        [-- NO LEAK UP --]",
             "[STATE] @~/compiler/typer/check >>= [obj_write=>false]   [-- an update is a write too --]",
             "*~/compiler/typer/check/obj_write % false",
-            "*/compiler/typer/check/obj_write % true",
-            "[STATE] /compiler/typer/check/type_pred -> false         [-- the root writes after the push --]",
-            "*/compiler/typer/check/type_pred % false",
-            "*~/compiler/typer/check/type_pred % true                 [-- FORK: the child compiles as the root did --]",
+            "*/fork_root/compiler/typer/check/obj_write % true",
+            "[STATE] /fork_root/compiler/typer/check/type_pred -> false   [-- the parent writes after the push --]",
+            "*/fork_root/compiler/typer/check/type_pred % false",
+            "*~/compiler/typer/check/type_pred % true                 [-- FORK: the child compiles as its parent did --]",
             "[STATE] *~.push(fork_b)",
             "*~/compiler/typer/check/inst_rng % true                  [-- a grandchild forks its parent --]",
             "*~/compiler/typer/check/obj_write % false",
             "*~/compiler/typer/check/type_pred % true",
             "[STATE] *~.pop(_)",
-            "[STATE] move(/.)",
+            "[STATE] move(/fork_root)",
             "[STATE] *~.push(fork_c)",
-            "*~/compiler/typer/check/inst_rng % false                 [-- NO LEAK ACROSS: a sibling forks the root --]",
+            "*~/compiler/typer/check/inst_rng % false                 [-- NO LEAK ACROSS: a sibling forks the parent --]",
             "*~/compiler/typer/check/obj_write % true",
-            "*~/compiler/typer/check/type_pred % false                [-- and was pushed after the root's write --]",
+            "*~/compiler/typer/check/type_pred % false                [-- and was pushed after the parent's write --]",
             "[STATE] *~.pop(_)",
-            "[STATE] move(/fork_a)",
+            "[STATE] move(/fork_root/fork_a)",
             "*~/compiler/typer/check/inst_rng % true                  [-- fork_a kept its own across the moves --]",
             "[STATE] *~.pop(_)",
-            "*~/compiler/typer/check/inst_rng % false                 [-- the root kept its own --]",
-            "*~/compiler/typer/check/type_pred % false"
+            "*~/compiler/typer/check/inst_rng % false                 [-- the parent kept its own --]",
+            "*~/compiler/typer/check/type_pred % false",
+            "[STATE] *~.pop(_)",
+            "*~/compiler/typer/check/inst_rng % true                  [-- and the root never saw any of it --]",
+            "*~/compiler/typer/check/type_pred % true"
     })
     void testTheCompilerIsForkedAtThePush() {
     }
@@ -242,35 +234,33 @@ public class MachineComponentScriptTest extends AbstractMetatronTest {
      * to code), so like an instruction it is written blocked, {@code addr -> |stage}: unblocked, the argument is applied
      * to the address and the write is refused, leaving the stage as it was.
      * <p>
-     * DISABLED for a defect it found (2026-11-10): {@code compiler::T} checks its stage slots by type reference
-     * ({@code resolver => T(resolver)}), and in any machine after the first of a reused surefire fork it refuses a
-     * {@code firstfind_resolver} ({@code TypeMismatchException: obj does not match /m/mach/component/compiler::T}),
-     * while in a fresh JVM it passes, and even admits an {@code MCode}. The script passes run alone.
+     * A STAGE WRITE IS CHECKED BY THE COMPILER IN FORCE: compiler::T's predicate runs through the processor, so typed
+     * in place it ran with the stage being installed. A first-find selector then resolved the predicate first-match and,
+     * in a vocabulary wide enough for the first match to be wrong (/m/math and cat imported, as a shared fork has them),
+     * refused itself.
      */
-    @Disabled("compiler::T refuses firstfind_resolver in every later machine of a reused fork; passes alone")
     @StatefulParametrizedTest
     @StatefulCSVSource({
+            "[IMPORT /m/math]",
+            "[IMPORT /m/math/cat]                                      [-- a vocabulary where first-match order matters --]",
             "[NAME resolver]",
             "*/sys/component/probe/name % 'scoring_resolver'          [-- the root's, as booted --]",
             "[STATE] *~.push(stage_a)",
-            "*~.vid() % /stage_a",
             "~/compiler/resolver -> firstfind_resolver::[=>] % <ERROR>   [-- unblocked, the stage is applied to the address --]",
             "[NAME resolver]",
             "*/sys/component/probe/name % 'scoring_resolver'",
             // each write answers the stage it wrote, so a refused write fails here rather than at the read after it
-            "~/compiler/resolver -> |firstfind_resolver::[=>] % firstfind_resolver::[=>]",
-            "*~.vid() % /stage_a",
+            "~/compiler/resolver -> |firstfind_resolver::[selector=>specificity_selector::[=>]] % firstfind_resolver::[selector=>specificity_selector::[=>]]",
             "[NAME resolver]",
             "*/sys/component/probe/name % 'firstfind_resolver'",
-            "[NAME resolver/selector]",
-            "*/sys/component/probe/name % 'firstfind_selector'",
             "[STATE] ~/compiler/rewriter -> |plan_rewriter::[=>]       [-- a rewriter's rule entry is a lambda: checked by name --]",
             "[NAME rewriter]",
             "*/sys/component/probe/name % 'plan_rewriter'",
             "1.plus(2).plus(0) % 3                                     [-- the child still computes --]",
-            "~/compiler/resolver/selector -> |specificity_selector::[=>] % specificity_selector::[=>]",
+            // a first-find selector, written last: the compiler in force (specificity's) checks it, not the selector itself
+            "~/compiler/resolver/selector -> |firstfind_selector::[=>] % firstfind_selector::[=>]",
             "[NAME resolver/selector]",
-            "*/sys/component/probe/name % 'specificity_selector'     [-- a nested write into the replaced stage --]",
+            "*/sys/component/probe/name % 'firstfind_selector'       [-- a nested write into the replaced stage --]",
             "[NAME resolver]",
             "*/sys/component/probe/name % 'firstfind_resolver'",
             "[STATE] *~.push(stage_b)",

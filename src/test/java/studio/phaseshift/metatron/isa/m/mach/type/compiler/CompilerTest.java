@@ -46,31 +46,35 @@ public class CompilerTest extends AbstractMetatronTest {
 
     @Test
     public void testAPushedMachineOwnsItsCompiler() {
-        final Machine parent = Machine.current();
-        final Selector selector = parent.compiler().resolver().selector();
-        // a check point the parent turns off before the push, which the child's clone carries
-        parent.compiler().typer().at("check/inst_dom", BOOL_FALSE, Poly.MUTABLE);
-        final Machine child = parent.push(f("own_compiler"));
+        // a parent of the test's own: a fork's classes share its root, and a root whose typer this test turned off
+        // would type their code too
+        final Machine parent = Machine.current().push(f("own_parent"));
         try {
-            final Compiler own = child.compiler();
-            assertNotSame(parent.compiler().resolver(), own.resolver(), "the child's resolver is its own");
-            assertNotSame(parent.compiler().typer(), own.typer(), "and so is its typer");
-            assertFalse(Typer.Helper.instDom(), "both start as the parent's were at the push");
+            final Selector selector = parent.compiler().resolver().selector();
+            // a check point the parent turns off before the push, which the child's clone carries
+            parent.compiler().typer().at("check/inst_dom", BOOL_FALSE, Poly.MUTABLE);
+            final Machine child = parent.push(f("own_compiler"));
+            try {
+                final Compiler own = child.compiler();
+                assertNotSame(parent.compiler().resolver(), own.resolver(), "the child's resolver is its own");
+                assertNotSame(parent.compiler().typer(), own.typer(), "and so is its typer");
+                assertFalse(Typer.Helper.instDom(), "both start as the parent's were at the push");
 
-            Machine.write(f("~/compiler/resolver/selector"), new FirstFindSelector());
-            Machine.write(f("~/compiler/typer/check/inst_dom"), BOOL_TRUE);
-            assertInstanceOf(FirstFindSelector.class, child.compiler().resolver().selector(), "the child's write is the child's");
-            assertTrue(Typer.Helper.instDom(), "its typer's included");
-            assertSame(selector, parent.compiler().resolver().selector(), "the parent keeps its selector");
-            assertEquals(BOOL_FALSE, parent.compiler().typer().at("check/inst_dom"), "and its check point");
+                // the typer first: a first-find selector, once in force, checks every later compiler write first-match
+                Machine.write(f("~/compiler/typer/check/inst_dom"), BOOL_TRUE);
+                Machine.write(f("~/compiler/resolver/selector"), new FirstFindSelector());
+                assertInstanceOf(FirstFindSelector.class, child.compiler().resolver().selector(), "the child's write is the child's");
+                assertTrue(Typer.Helper.instDom(), "its typer's included");
+                assertSame(selector, parent.compiler().resolver().selector(), "the parent keeps its selector");
+                assertEquals(BOOL_FALSE, parent.compiler().typer().at("check/inst_dom"), "and its check point");
 
-            parent.compiler().typer().at("check/type_pred", BOOL_FALSE, Poly.MUTABLE);
-            assertTrue(Typer.Helper.typePred(), "a write the parent makes after the push never reaches the child");
+                parent.compiler().typer().at("check/type_pred", BOOL_FALSE, Poly.MUTABLE);
+                assertTrue(Typer.Helper.typePred(), "a write the parent makes after the push never reaches the child");
+            } finally {
+                child.pop();
+            }
         } finally {
-            child.pop();
-            parent.compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
-            parent.compiler().typer().at("check/type_pred", BOOL_TRUE, Poly.MUTABLE);
-            Machine.write(f("~/compiler/resolver/selector"), selector);
+            parent.pop();
         }
     }
 
