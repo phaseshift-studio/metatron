@@ -391,8 +391,9 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
 ## Skills and Docs
 
 * The agent skills live in `docs/skills/` (markdown; `.metatron/skills` links there). The hand-authored doc sources
-  are exactly three: `docs/skills/`, the human-oriented adocs in `docs/website/adoc/`, and the instruction-set API
-  reference derived from the instset source. **Everything else under `docs/website/` is generated and overwritten on
+  are exactly four: `docs/skills/`, the theory articles in `docs/articles/` (compiled into `docs/website/articles/`),
+  the human-oriented adocs in `docs/website/adoc/`, and the instruction-set API reference derived from the instset
+  source. **Everything else under `docs/website/` is generated and overwritten on
   every build — never edit it by hand.**
 * When you create, rename or significantly change a Java class documented in a skill reference, update that
   reference. Every example in a skill doc must pass the docs pipeline (`bin/metatron-docker build docs <file.md>`);

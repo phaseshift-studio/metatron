@@ -522,7 +522,7 @@ coefficient. A term \(ca\) of the stream ring
 \(c \in \mathcal{C}\) with a function \(a \in \mathcal{F}\), and the coefficient
 floats: \(ca = a \cdot c\). This is called the <em>point</em> coefficient and it denotes the magnitude of the function. Stream
 ring theory finds practical application in its realization in the mtron programming language (the language
-of <a href="http://metatron/phaseshift.studio">metatron</a>). In mtron the <em>point</em> coefficient is written after its corresponding
+of <a href="https://metatron.phaseshift.studio">metatron</a>). In mtron the <em>point</em> coefficient is written after its corresponding
 instruction, <code>plus{3}(1)</code> and denotes three parallel evaluations of the <code>+1</code>.</p>
 <p>The position in front of the instruction holds a second coefficient, the <em>span</em>: <code>{3}plus(1)</code> is semantically equivalent
 to <code>plus(1).plus(1).plus(1)</code>, three steps laid one after
@@ -535,32 +535,32 @@ Theorem 6: \((ca)^n = c^n a^n\). In mtron, <code>{n}a{c}</code> is \((ca)^n = c^
 the span exponentiates the point.</p>
 <p><strong>Live proof.</strong> Two steps of <code>plus{3}(34)</code> from <code>1</code>: the value climbs to <code>69</code>,
 and the point squares to <code>9</code>. Thus, \((3a)^2\) and</p>
-<pre><code class="language-mtron">mtron&gt; 1..{2}plus{3}(34)
+<pre><code class="language-mtron">mtron&gt; 1.{2}plus{3}(34)
 ==&gt;{9}69
 </code></pre>
 <p>In <em>branch normal form</em>, the point expanded, \(3a = a + a + a\), so \((3a)^2 = (a + a + a)^2\):</p>
-<pre><code class="language-mtron">mtron&gt; 1..{2}{(plus(34),plus(34),plus(34)}
+<pre><code class="language-mtron">mtron&gt; 1.{2}{plus(34),plus(34),plus(34)}
 ==&gt;{9}69
 </code></pre>
 <p>In <em>compose normal form</em>, the span expanded, \((3a)^2 = 3a \cdot 3a\):</p>
-<pre><code class="language-mtron">mtron&gt; 1..plus{3}(34).plus{3}(34)
+<pre><code class="language-mtron">mtron&gt; 1.plus{3}(34).plus{3}(34)
 ==&gt;{9}69
 </code></pre>
 <p>Finally, in both compose and branch normal form, the sum of the \(3^2\) words \(a \cdot a\):</p>
-<pre><code class="language-mtron">mtron&gt; 1..{plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34),
-           plus(34).plus(34)}
+<pre><code class="language-mtron">mtron&gt; 1.{plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34),
+          plus(34).plus(34)}
 ==&gt;{9}69
 </code></pre>
 <p>The purpose of this article is to prove that the laws of each coefficient alone and of the two together,
 can be derived solely from the stream ring axioms of [1] as well as to demonstrate practical, utilitarian
-consequences of the interplay of these two coefficients with respects to data compression,
+consequences of the interplay of these two coefficients with respect to data compression,
 process compression, co-located vs. distributed data structures, implications for compiler rewrite engines, and their
 role in mechanical induction.</p>
 <h3>Two Coefficients</h3>
@@ -983,7 +983,7 @@ gives \(\langle 2,3 \rangle r + \langle 3,4 \rangle r\), which is <code>{2}2</co
 reducer member is where the two readings part: is the per-object branch the
 intended \(+\)? The rewrites agree with the branch as it runs: <code>branch_factor</code>
 shares only a map, filter or flatmap.</p>
-<h3>Coefficent Ranges</h3>
+<h3>Coefficient Ranges</h3>
 <p>A coefficient may be a range \([m,n]\) with \(m \leq n\). In mtron it is written
 <code>{m,n}</code>, and <code>{?}</code> is \([0,1]\), <code>{+}</code> is \([1,\infty)\) and <code>{*}</code> is \([0,\infty)\).</p>
 <p>::: definition <strong>Definition 3</strong> (Span range). If \(m \leq n\), then

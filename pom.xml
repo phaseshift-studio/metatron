@@ -851,20 +851,15 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <!-- The theory articles, same runner, articles container. A directory
-                             walk collects no *skill* docs there (an article is neither
-                             SKILL.md nor under references/), so this goes straight to the
-                             article-html pass: every frontmatter .md under docs/website/
-                             articles becomes a sibling .html: frontmatter title and
-                             subtitle, the theory stylesheet, and its images/ references
-                             left relative so the tree beside it resolves. The markdown
-                             itself is never rewritten, so the author's .md stays as
-                             written. Must run after run-header-generator: the pages
-                             embed the shared header (pre-site rewrites it).
-                             -o must be the .metatron/articles alias (not the articles dir
-                             itself): the runner refuses an input/output pair that
-                             resolves to the same path, and the alias is what tells the
-                             html pass which container to render (symlinks are followed). -->
+                        <!-- The theory articles, same runner, compiled as the skills are:
+                             the sources are docs/articles, where every .md is an article,
+                             and their mtron_pre blocks are evaluated into docs/website/
+                             articles. The article-html pass then renders every frontmatter
+                             .md there to a sibling .html: frontmatter title and subtitle,
+                             the theory stylesheet, and its images/ references left
+                             relative so the tree beside it resolves. Must run after
+                             run-header-generator: the pages embed the shared header
+                             (pre-site rewrites it). -->
                         <id>run-article-runner</id>
                         <phase>site</phase>
                         <goals>
@@ -901,9 +896,9 @@
                                 <argument>-Dmtron.reverse=${mtron.reverse}</argument>
                                 <argument>studio.phaseshift.metatron.docs.MarkdownRunner</argument>
                                 <argument>--html</argument>
-                                <argument>${project.basedir}/docs/website/articles</argument>
+                                <argument>${project.basedir}/docs/articles</argument>
                                 <argument>-o</argument>
-                                <argument>${project.basedir}/.metatron/articles</argument>
+                                <argument>${project.basedir}/docs/website/articles</argument>
                             </arguments>
                         </configuration>
                     </execution>

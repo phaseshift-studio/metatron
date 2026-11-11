@@ -70,14 +70,13 @@ import java.util.regex.Pattern;
  * Outputs outside a website skills tree (probe dirs like {@code target/temp})
  * skip the html pass with a note.</p>
  *
- * <p>The same pass renders the theory <em>articles</em> when {@code -o} resolves
- * into an {@code articles} container instead ({@code .metatron/articles} is the
- * repo's symlink to {@code docs/website/articles}): every {@code .md} carrying YAML
- * frontmatter becomes a sibling {@code .html} — frontmatter title and subtitle, the
- * theory stylesheet, and image sources left relative so the {@code images/} tree
- * beside it resolves. A directory input collects no <em>skill</em> docs there (an
- * article is neither {@code SKILL.md} nor under {@code references/}), so an articles
- * run reaches the html pass directly, booting no VM.</p>
+ * <p>The theory <em>articles</em> are compiled the way the skills are: their
+ * sources live in {@code docs/articles}, where every {@code .md} is an article, and
+ * {@code -o docs/website/articles} receives the processed copies. The same pass then
+ * renders the {@code articles} container {@code -o} resolves into: every {@code .md}
+ * carrying YAML frontmatter becomes a sibling {@code .html} — frontmatter title and
+ * subtitle, the theory stylesheet, and image sources left relative so the
+ * {@code images/} tree beside it resolves.</p>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -146,16 +145,15 @@ public class MarkdownRunner {
         }
         Files.createDirectories(out);
 
-        // ── Collect: a single probe .md, or a skill dir's SKILL.md + references/*.md
+        // ── Collect: a single probe .md, a skill dir's SKILL.md + references/*.md, or an
+        //    articles tree's every .md
         final List<Path> files = castOut == null
                 ? collectMarkdownFiles(skillDir) : collectAnyMarkdown(skillDir);
         if (files.isEmpty()) {
             LOG.info("no skill markdown files found in " + skillDir);
-            // An --html run over a container holding no skill docs is still a valid
-            // request: the theory articles are markdown files a directory walk filters
-            // out (neither SKILL.md nor under references/), and the html pass below
-            // renders them from the articles container the output resolves into. That
-            // pass needs no VM, so returning here skips boot *and* teardown.
+            // An --html run with nothing to process still renders the pages already in
+            // the container the output resolves into. That pass needs no VM, so
+            // returning here skips boot *and* teardown.
             if (html && pages) {
                 renderHtmlPass(out);
             }
@@ -226,13 +224,13 @@ public class MarkdownRunner {
     }
 
     /**
-     * The markdown files the pass processes: the single probe file, or every skill doc
-     * under a directory ({@code SKILL.md}, or anything under a {@code references/}
-     * directory). A directory holding neither — the theory-articles tree, whose
-     * frontmatter markdown is a different kind of document — yields an empty list, which
-     * is why an {@code --html} run over it must still reach the html pass.
+     * The markdown files the pass processes: the single probe file, every {@code .md}
+     * of an articles tree ({@code docs/articles}, where each one is an article), or
+     * every skill doc under a directory ({@code SKILL.md}, or anything under a
+     * {@code references/} directory).
      */
     static List<Path> collectMarkdownFiles(final Path skillDir) throws IOException {
+        if (articlesContainer(skillDir) != null) return collectAnyMarkdown(skillDir);
         if (Files.isRegularFile(skillDir)) return List.of(skillDir);
         final List<Path> files = new ArrayList<>();
         try (var stream = Files.walk(skillDir)) {
@@ -264,7 +262,7 @@ public class MarkdownRunner {
     /**
      * The site-html pass: render whichever canonical website container {@code out}
      * resolves into — the skills tree, else the articles tree. Both passes write their
-     * pages into that container (symlinks followed), so {@code -o .metatron/articles}
+     * pages into that container (symlinks followed), so {@code -o docs/website/articles}
      * renders next to the article markdown.
      */
     private static void renderHtmlPass(final Path out) throws IOException {

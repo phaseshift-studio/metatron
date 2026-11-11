@@ -49,9 +49,10 @@ corresponding file:
    with the user first.
 
 **IMPORTANT**: everything under `docs/website/` — **except `docs/website/adoc/`** — is generated on build and
-overwritten each run; never edit it by hand. The hand-authored sources are exactly three: the human-oriented adocs at
-`docs/website/adoc/`, the metatron API reference (`instset`) derived from source-code instruction sets, and the
-agent-oriented skills at `docs/skills/` (markdown). So `docs/website/skills/` is built from `docs/skills/`; edit the
+overwritten each run; never edit it by hand. The hand-authored sources are exactly four: the human-oriented adocs at
+`docs/website/adoc/`, the metatron API reference (`instset`) derived from source-code instruction sets, the
+agent-oriented skills at `docs/skills/` (markdown), and the theory articles at `docs/articles/` (markdown). So
+`docs/website/skills/` is built from `docs/skills/` and `docs/website/articles/` from `docs/articles/`; edit the
 source, not the website copy. (`docs/skills` is also symlinked via `.metatron/skills`.)
 
 ### Existing Docs

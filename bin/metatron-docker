@@ -300,12 +300,11 @@ cmd_build() {
                             esac
                             out_dir=".metatron/skills${sub:+/$sub}"
                             ;;
-                        docs/articles/*.md|docs/website/articles/*.md)
-                            # the theory articles: the markdown copy goes to the
-                            # .metatron/articles alias (as .metatron/skills does for
-                            # skills) so --html, which walks up from the OUTPUT, finds
-                            # the website articles container and renders the pages there
-                            out_dir=".metatron/articles"
+                        docs/articles/*.md)
+                            # a theory article: compiled into the website articles
+                            # tree (as a skill doc is into the website skills tree), so
+                            # --html, which walks up from the OUTPUT, renders it there
+                            out_dir="docs/website/articles"
                             ;;
                         docs/asciinema/*.md)
                             # a CAST-ONLY source: evaluate the tagged blocks and emit
@@ -318,8 +317,8 @@ cmd_build() {
                             ;;
                     esac
                     ;;
-                docs/website/articles|docs/website/articles/)
-                    out_dir=".metatron/articles"
+                docs/articles|docs/articles/)
+                    out_dir="docs/website/articles"
                     ;;
                 *)
                     out_dir=".metatron/skills/$(basename "$target")"
