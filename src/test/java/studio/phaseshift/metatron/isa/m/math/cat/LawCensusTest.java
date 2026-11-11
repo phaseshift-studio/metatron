@@ -18,7 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -33,6 +35,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.LAW;
@@ -123,6 +126,25 @@ public class LawCensusTest extends AbstractMetatronTest {
     public static void importAllInstSets() {
         InstSet.importInstSet(f("#"));
         InstSet.importInstSet(f("/m/math"));
+    }
+
+    // each test's own machine is named apart: a class's methods run in parallel in one fork
+    private static final AtomicLong MACHINES = new AtomicLong();
+
+    /**
+     * EVERY TEST RUNS IN A MACHINE OF ITS OWN (Marko, 2026-11-11: push, run, pop). The census drives
+     * {@link AlgebraTool}, which writes its probes to {@code a} and {@code b} in the current machine, and a fork's
+     * classes share its root. The imports above stay the root's: a machine pushed per test reads them through its
+     * parent.
+     */
+    @BeforeEach
+    protected void pushOwnMachine() {
+        Machine.current().push(f("law_census_" + MACHINES.incrementAndGet()));
+    }
+
+    @AfterEach
+    protected void popOwnMachine() {
+        Machine.current().pop();
     }
 
     /**
