@@ -138,8 +138,11 @@ public interface Processor extends Component {
                 Obj result = noobj();
                 for (long i = span.min(); i <= span.max(); i++) {
                     Obj current = lhs;
+                    // a step that gathers, the swarm's barrier, reduces the whole stream: {1,2,3}.{0,1}sum() is {1,2,3,6}.
+                    // Any other step maps over it obj by obj, as the swarm runs it, so a flatmap's stream feeds the next
+                    // step one obj at a time
                     for (long j = 0; j < i; j++)
-                        current = current.stream().map(o -> apply(o, step)).reduce(noobj(), Obj::append);
+                        current = step.isGather() ? apply(current, step) : current.stream().map(o -> apply(o, step)).reduce(noobj(), Obj::append);
                     result = result.append(current);
                 }
                 return result;
