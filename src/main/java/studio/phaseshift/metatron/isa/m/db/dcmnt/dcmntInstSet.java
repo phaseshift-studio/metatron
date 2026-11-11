@@ -46,8 +46,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -109,7 +108,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                         uri(HOST), URI_TYPE,
                                         uri(SERIALIZER).maybe(), URI_TYPE,
                                         uri(ROUTE), rec(URI_TYPE, URI_TYPE),
-                                        uri(ROOT).maybe(), T(TYPE_TID),
+                                        uri(ROOT).maybe(), ALL_TYPE,
                                         uri(SCHEMA).maybe(), T(INSTSET_TID)
                                 ))
                                 .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
