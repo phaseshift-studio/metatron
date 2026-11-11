@@ -1,5 +1,5 @@
 ---
-name: A Span and Point Coefficient Algebra for Functional Rings
+name: A Span and Point Coefficient Algebra for Stream Rings
 description: two coefficients on every instruction, the point counting copies and the span counting steps, and the laws that bind them
 author: |
   Marko A. Rodriguez
@@ -95,10 +95,21 @@ Where a coefficient is written depends on what it is written on:
 | a type        | span: `{n}T` is $n$ slots of `T` | point: `T{c}` is $c$ copies of `T` |
 | a value       | point: `{c}x` is $cx$          | span: `x{n}` lays `x` along $n$ slots |
 
-[To be written: the geometric reading. A chain is sequential extension in space,
-not application: `plus(1).plus(2)` is `plus(1)@<0>.plus(2)@<1>`, and a span lays
-one instruction along the index axis. Open: why values mirror instructions and
-types. Value spans such as `2{3}` do not parse today.]
+[For Marko: the geometric reading, and why values mirror instructions.
+
+- Your words: "plus(1).plus(2) compiles to plus(1)@<0>.plus(2)@<1>. It's not
+  application, is sequential extension in space." A span lays one instruction
+  along that index axis: `{3}plus(1)` is `plus(1)@<0>.plus(1)@<1>.plus(1)@<2>`.
+- A point is mass at one address, copies stacked in place; a span is extent
+  along a line of addresses. So $+$ is the 0-dimensional operation and $\cdot$
+  the 1-dimensional one, which is why the point is iterated $+$ and the span
+  iterated $\cdot$.
+- The mirror: instructions and types write `{span}x{point}`, values write
+  `{point}value{span}`. `{3}2` is three 2s at one address; `2{3}` is 2 laid at
+  the uris 0, 1 and 2. Why does the value side flip? (My guess, not settled:
+  diagrammatic order, a value being where a chain starts.)
+- Caution: the stream notation $\langle x \rangle$ above is a stream, so the
+  positions `<0>`, `<1>` stay in code font here, never in math.]
 
 # The Point
 
@@ -295,7 +306,20 @@ a -> 7
 *a.*a
 ```
 
-[To be written: spans on a value.]
+A span on a value lays the value out along slots. Until a vid can be a branched
+uri, `2{3}` is the lst of its copies, whose slots are the uris 0, 1 and 2, and
+the copies keep the value's point.
+
+```mtron_pre
+2{3}
+{2}2{3}
+```
+
+[For Marko: spans on a value. Once branched uris read and write a layout, is
+`2{3}` the one value `2@<{0,1,2}>` rather than the lst `[2,2,2]`? And is a laid
+value one obj or $n$? A ranged value span, `2{?}`, has no layout yet and does
+not parse. Would `2{2,3}` be the sum of its layouts, as a span range on an
+instruction is?]
 
 # The Point and the Span
 
@@ -400,55 +424,151 @@ $\langle 5 \rangle (a + b)^2 = \langle 7, 12, 11, 20 \rangle$.
 5.{2}branch(plus(1),mult(2))
 ```
 
+::: theorem **Theorem 9** (A shared prefix factors). If $b,c \in \mathcal{F}$
+and $a \in \mathcal{F}_m \cup \mathcal{F}_f \cup \mathcal{F}_{fm}$ is pure,
+then $a \cdot b + a \cdot c = a \cdot (b + c)$, and for $m \leq n$,
+$$
+\begin{equation*}
+a^m \cdot b + a^n \cdot c = a^m \cdot (b + a^{n-m} \cdot c).
+\end{equation*}
+$$
+:::
+
+::: proof *Proof.* The first equality is the left distributivity of the function
+ring [1]. The second follows from it and Theorem 5, as $a^n = a^m \cdot a^{n-m}$.
+The prefix must be pure: on the right it runs once for both members, so an
+effectful $a$, a write or a print, would change what the expression does. It
+must also take one object at a time, a map, filter or flatmap: an mtron branch
+feeds its members one object at a time, so a reducer heading both members
+reads one object in each, but the whole stream once it is shared. A common
+suffix factors the other way, $b \cdot a + c \cdot a = (b + c) \cdot a$, by
+right distributivity, but never a reducer $r \in \mathcal{F}_r$: the reduce
+near-ring is not right distributive [1]. ◻
+:::
+
+**Live proof.** Two parallel expressions are one expression branched where
+their instructions differ. Runs of `plus(1)` under the spans 2 and 3 share the
+shorter run; a shared suffix merges after the branch; a shared reducer does
+not merge after it, and does not factor ahead of it. The cat instruction set's
+`branch_factor` rewrite applies the first equality as a normal form.
+
+```mtron_pre
+1.branch({2}plus(1).mult(3),{3}plus(1).mult(4))
+1.{2}plus(1).branch(mult(3),plus(1).mult(4))
+1.branch(plus(1).mult(2).plus(5),plus(1).mult(3).plus(5))
+1.plus(1).branch(mult(2),mult(3)).plus(5)
+1.branch(plus(1).count(),plus(2).count())
+1.branch(plus(1),plus(2)).count()
+{1,2}.branch(count().plus(1),count().plus(2))
+{1,2}.count().branch(plus(1),plus(2))
+```
+
+[For Marko: the per-object branch.
+`{1,2}.branch(plus(1).count(),plus(2).count())` is `{4}1` in mtron, each member
+counting one object, where the split axiom of [1] applied to the whole stream
+gives $\langle 2,3 \rangle r + \langle 3,4 \rangle r$, which is `{2}2`. A
+reducer member is where the two readings part: is the per-object branch the
+intended $+$? The rewrites agree with the branch as it runs: `branch_factor`
+shares only a map, filter or flatmap.]
+
 # Ranges
 
 A coefficient may be a range $[m,n]$ with $m \leq n$, written `{m,n}`. The range
 `{?}` is $[0,1]$, `{+}` is $[1,\infty)$, and `{*}` is $[0,\infty)$.
 
-On a point, a range is a superposition of multiplicities: `1.plus{?}(2)` is
-`{?}3`, three held in a point that is zero or one, and it stays in
-superposition.
-
-On a span, a range is a choice of layouts, not a branch:
-
 ::: definition **Definition 3** (Span range). If $m \leq n$, then
 $$
 \begin{equation*}
-a^{[m,n]} = a^m \mid a^{m+1} \mid \cdots \mid a^n,
+a^{[m,n]} = \sum_{k=m}^{n} a^k = a^m + a^{m+1} + \cdots + a^n.
 \end{equation*}
 $$
-where $\mid$ is choice: $\langle x \rangle (a \mid b)$ is one of
-$\langle x \rangle a$ and $\langle x \rangle b$, while
-$\langle x \rangle (a + b)$ is both. So $a^{[0,1]} = 1 \mid a$, and
-$a^{[0,\infty)} = 1 \mid a \mid a^2 \mid \cdots$ is the Kleene star $a^*$ [3].
-mtron reads $[0,\infty)$ greedily, as a regular expression reads its quantifier:
-the last layout.
+In mtron, `{m,n}a` is the branch of its unrolls: `{2,3}a` is
+`branch(a.a,a.a.a)`, and the zero-step unroll is the unity, so `{?}a` is
+`branch(id(),a)`.
 :::
 
-The span range turns the ring's $\cdot$ into a choice, a $+$ from another
-algebra: the stream ring's $+$ keeps every branch, and $\mid$ keeps one.
+The unrolls are independent paths, and each yields its own results. They merge
+at noobj, the end of every path: a monad halts when its instruction pointer is
+noobj, and the results of every halted monad sum there, whatever the length of
+the path that led to it. A monad is killed when its object pointer is noobj,
+which is the zero point of Theorem 4. So a range is no uncertainty over its
+unrolls: every unroll is taken, and their multiplicities are not weights that
+sum to one.
 
-[To be written, scope to be decided. Live proofs pending: today `1.{?}plus(1)`
-answers `{?}2`, where Definition 3 gives $\langle 1 \rangle (1 \mid a)$, one of
-$\langle 1 \rangle$ and $\langle 2 \rangle$, and `1.{2,3}plus(1)` answers
-`{2,3}2`, where it gives one of $\langle 3 \rangle$ and $\langle 4 \rangle$.]
+::: corollary **Corollary 6** (Each unroll carries its own power of the point).
+If $c \in \mathcal{C}$ and $m \leq n$, then
+$(ca)^{[m,n]} = \sum_{k=m}^{n} c^k a^k$.
+:::
+
+::: proof *Proof.* By Definition 3, $(ca)^{[m,n]} = \sum_{k=m}^{n} (ca)^k$, and
+$(ca)^k = c^k a^k$ by Theorem 7. ◻
+:::
+
+The unrolls are computed, never written into the code: applying `{2,3}plus(1)`
+runs its input two steps of `plus(1)` and, separately, three, and appends the
+results. The code keeps the span, so where code is read as a pattern,
+`{?}neg()` stays a run of none or one `neg()`.
+
+**Live proof.** A range answers what its branch of unrolls answers, the
+zero-step unroll passes its input through, each unroll carries its own power of
+the point, and a multiplicity on the input counts once.
+
+```mtron_pre
+1.{2,3}plus(1)
+1.branch(plus(1).plus(1),plus(1).plus(1).plus(1))
+1.{?}plus(1)
+1.{2,3}plus{3}(1)
+{2}1.{2,3}plus{3}(1)
+```
+
+A range on a point is a range of multiplicities at one address:
+`1.plus{?}(2)` is `{?}3`.
+
+```mtron_pre
+1.plus{?}(2)
+```
+
+An open range is the Kleene star [3], $a^{[0,\infty)} = a^* = 1 + a + a^2 +
+\cdots$. If $a (x) = x + 1$, then `0.{*}plus(1)` is
+`start(0).branch(id(),plus(1),plus(1).plus(1),...)`, and as its paths merge at
+noobj, $\langle 0 \rangle a^* = \langle 0, 1, 2, 3, \ldots \rangle$: the
+inductive generation of Corollary 1, every natural at once. A span range on
+running code is a generator.
+
+[For Marko: an open range has no last unroll, so `0.{*}plus(1)` (now `{*}1`)
+needs its unrolls on demand, $a^* = 1 + a \cdot a^*$; `repeat` already runs
+the bounded form. To settle here: how a point range such as `{?}3` reads now
+that a range is no uncertainty, and the type of a generator.]
 
 # Types
 
 If $a (x) = y$, then $\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle$ by
 Theorem 7 and the apply axiom. So the coefficient of the inferred type is
-$c^n$: `type()` reads the point of a term off its run.
+$c^n$: `type()` reads the point of a term off its run, and `cc()` reads the
+coefficient of that type. In the console, `5.{2}plus{3}(1).type()` is
+`int{9}::T`.
 
 ```mtron_pre
-5.{2}plus{3}(1).type()
-5.plus(1).id{3}().type()
+5.{2}plus{3}(1).type().cc()
+5.plus(1).id{3}().type().cc()
 ```
 
 [To be written: the type of a range, and spans of slots in a type (`lst[{n}T]`).]
 
 # Conclusion
 
-[To be written.]
+[For Marko: the conclusion. Context to draw on:
+
+- Two coefficients, one per ring operation: the point iterates $+$, the span
+  iterates $\cdot$, and stream ring theory's Theorem 6, $(ca)^n = c^n a^n$,
+  binds them.
+- Every law here is pinned in metatron's `AbstractAlgebraTest` on nine carriers
+  and proved live in this article.
+- The rewriter applies two of them as normal forms: like terms sum their points
+  (`branch_collapse`), and shared prefixes factor (`branch_factor`).
+- Where it leads: a span range as the branch of its unrolls, merging at noobj,
+  so `{*}` is a generator; layouts in space once a vid can be branched; and
+  code as paths that sum like branched uris.]
 
 # References
 
