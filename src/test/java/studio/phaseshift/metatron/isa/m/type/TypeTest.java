@@ -669,9 +669,11 @@ public class TypeTest extends AbstractMetatronTest {
             "person -> noobj",
             "chicken -> noobj",
             "being -> noobj",
+            "something -> noobj",
             "rec::T[?[name=>str::T,age=>int::T]]@being",
             "being::T@person",
             "being::T@chicken",
+            "rec::T@something",
             "person::[name=>'marko',age=>29]@marko",
             "chicken::[name=>'snowbutt',age=>7]@snowbutt"})
     @CsvSource(value = {
@@ -697,7 +699,7 @@ public class TypeTest extends AbstractMetatronTest {
             "*snowbutt.as(rec::T)                                 | [name=>'snowbutt',age=>7]",
             "*marko.as(chicken::T)                                | <ERROR>",
             "*marko.as(being::T)                                  | being::[name=>'marko',age=>29]",
-            "*marko.as(something::T)                              | <ERROR>", // non-existent types are nominal
+            "*marko.as(something::T)                              | <ERROR>", // something is a name over a base: nominal
             "*marko.as(rec::T)                                    | [name=>'marko',age=>29]",
             "*marko.as(rec::T).as(something::T)                   | something::[name=>'marko',age=>29]",
             "*marko.as(rec::T).as(A::T)                           | <ERROR>", // values shouldn't type generic?
@@ -787,6 +789,30 @@ public class TypeTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testTypeReferenceKeepsTheDefinition(final String reference, final String obj, final String type, final boolean matches) {
         ObjmtronSerializer.parse(reference); // the reference: resolving it must leave every definition as it was
+        AbstractMetatronTest.checkMatches(LOG, obj, type, matches);
+    }
+
+    /**
+     * A FORWARD REFERENCE IS WHAT IT NAMES (Marko, 2026-11-10): "T(X) is an ephemeral type. It means that it exists only
+     * for forward referencing purposes. Once it's predicate/constructor are stated, does it become a structural type. If
+     * no predicate/constructor is stated, then it is a nominal type." bike::T is built while wheel is unstated, so its
+     * slot holds the reference (compiler::T's stage slots are built so, before the stages). A test judges what wheel is
+     * now: stated, its structure is held, so a rec is a wheel by its size and not by the name alone.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "/m/type_test/bike -> noobj",
+            "/m/type_test/wheel -> noobj",
+            "rec::T[?[wheel=>/m/type_test/wheel::T]]@/m/type_test/bike",
+            "rec::T[?[size=>int::T]]@/m/type_test/wheel"})
+    @CsvSource(value = {
+            "[wheel=>[size=>26]]    % /m/type_test/bike::T    % true",
+            "[wheel=>[size=>'big']] % /m/type_test/bike::T    % false",
+            "[wheel=>[rim=>26]]     % /m/type_test/bike::T    % false",
+            "[wheel=>5]             % /m/type_test/bike::T    % false",
+            "[size=>26]             % /m/type_test/wheel::T   % true",
+    }, delimiter = '%')
+    public void testAForwardReferenceIsWhatItNames(final String obj, final String type, final boolean matches) {
         AbstractMetatronTest.checkMatches(LOG, obj, type, matches);
     }
 
