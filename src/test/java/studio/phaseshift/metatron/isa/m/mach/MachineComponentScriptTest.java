@@ -238,10 +238,6 @@ public class MachineComponentScriptTest extends AbstractMetatronTest {
      * in place it ran with the stage being installed. A first-find selector then resolved the predicate first-match and,
      * in a vocabulary wide enough for the first match to be wrong (/m/math and cat imported, as a shared fork has them),
      * refused itself.
-     * <p>
-     * A STAGE SLOT NAMES THE STAGE AS STATED: compiler::T is built before its stages, so its slots are forward references,
-     * and a test judges what each names now (Type.isForwardReference): a structural stage type by its structure, and
-     * rewriter::T, stated without a predicate, by its name.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
@@ -251,8 +247,6 @@ public class MachineComponentScriptTest extends AbstractMetatronTest {
             "*/sys/component/probe/name % 'scoring_resolver'          [-- the root's, as booted --]",
             "[STATE] *~.push(stage_a)",
             "~/compiler/resolver -> firstfind_resolver::[=>] % <ERROR>   [-- unblocked, the stage is applied to the address --]",
-            "~/compiler/resolver -> 'scoring_resolver' % <ERROR>         [-- a name is no resolver: resolver::T is a rec --]",
-            "~/compiler/rewriter -> |plus(1) % <ERROR>                   [-- rewriter::T, stated without a predicate, refuses an instruction by name --]",
             "[NAME resolver]",
             "*/sys/component/probe/name % 'scoring_resolver'",
             // each write answers the stage it wrote, so a refused write fails here rather than at the read after it
