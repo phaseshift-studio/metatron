@@ -148,6 +148,20 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this.c(cInt.of(exact));
     }
 
+    /**
+     * THE POINT, WITH THE SPAN KEPT (Marko, 2026-11-10: an obj is {b}obj{d}). {@link #c(cInt)} writes the count into the
+     * point only when the obj has no span; on a spanned obj it folds the count into the point and drops the span when the
+     * count does not divide. This sets the point and leaves the span alone, so {@code {?}plus(2)} at point 10 is still a
+     * run of {@code {?}}.
+     */
+    default Obj d(final cInt point) {
+        return Objects.equals(this.tid().d(), point) ? this : this.tid(this.tid().d(null == point || point.isOne() ? null : point));
+    }
+
+    default Obj d(final long exact) {
+        return this.d(cInt.of(exact));
+    }
+
     default Pair<Obj, Obj> take(final cInt c) {
         // a take covering every multiplicity there is leaves nothing: x - x is 0, which interval subtraction can't see
         return Pair.with(this.c(c), this.c(c.contains(this.c()) ? cInt.ZERO() : this.c().minus(c)));
@@ -1753,7 +1767,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .create(),
                     InstBuilder.build()
                             .tid(END_INST_TID)
-                            .dom(ALL_STAR, "terminal objs")
+                            .dom(ALL.any(), "terminal objs")
                             .rng(NOOBJ_TID, "noobj")
                             .argLst()
                             .desc("the terminal function \\(f(x) \\mapsto \\emptyset\\)")

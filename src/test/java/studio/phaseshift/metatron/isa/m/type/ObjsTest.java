@@ -25,7 +25,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -142,12 +141,13 @@ public class ObjsTest extends AbstractObjTest {
      */
     @Test
     public void testInstructionsBulkTheirPoints() {
+        assertEquals(plus_(jnt(2)).tryToInst().d(15), objs(plus_(jnt(2)).tryToInst().d(10), plus_(jnt(2)).tryToInst().d(5)));
+        assertEquals(2L, objs(plus_(jnt(2)).tryToInst().d(10), plus_(jnt(3)).tryToInst().d(5)).stream().count(), "plus(2) and plus(3) stay two");
         final Inst plus2 = plus_(jnt(2)).tryToInst().asInst();
-        assertEquals(plus2.c(cInt.of(15)), objs(plus2.c(cInt.of(10)), plus2.c(cInt.of(5))));
-        assertEquals(2L, objs(plus2.c(cInt.of(10)), plus_(jnt(3)).tryToInst().c(cInt.of(5))).stream().count(), "plus(2) and plus(3) stay two");
-        final fURI run = plus2.tid().b(cInt.MAYBE());
-        assertEquals(2L, objs(plus2.tid(run.d(cInt.of(10))), plus2.c(cInt.of(5))).stream().count(), "{?}plus(2) and plus(2) stay two");
-        assertEquals(plus2.tid(run.d(cInt.of(15))), objs(plus2.tid(run.d(cInt.of(10))), plus2.tid(run.d(cInt.of(5)))), "two {?}plus(2) bulk their points and keep their span");
+        final Inst run = plus2.tid(plus2.tid().b(cInt.MAYBE()));
+        assertEquals(cInt.MAYBE(), run.d(10).tid().b(), "d sets the point and keeps the span");
+        assertEquals(2L, objs(run.d(10), plus2.d(5)).stream().count(), "{?}plus(2) and plus(2) stay two");
+        assertEquals(run.d(15), objs(run.d(10), run.d(5)), "two {?}plus(2) bulk their points and keep their span");
     }
 
     @ParameterizedTest
