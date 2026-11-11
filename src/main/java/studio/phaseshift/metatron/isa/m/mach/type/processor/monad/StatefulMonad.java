@@ -315,7 +315,13 @@ public interface StatefulMonad extends Monad<Lst> {
         final fURI in = tid.hasQ(MONAD_IN) ? f(tid.q(MONAD_IN)) : null;
         final Obj input = null == in ? this.obj() : this.component(in);
         final long t0 = System.nanoTime();
-        final Obj result = Processor.Helper.apply(input, this.inst());
+        // A SPAN IS A RUN, NOT A POINT: inst() writes the monad's multiplicity into the inst's coefficient with c(count),
+        // which folds a span into the point. A spanned inst runs as written, on the obj at the monad's multiplicity, so
+        // the multiplicity counts once and never once a step (Processor.Helper.apply lays the run out)
+        final Inst written = this.jvm().asLst().jvm().get(1).as();
+        final Obj result = written.tid().b().isOne()
+                ? Processor.Helper.apply(input, this.inst())
+                : Processor.Helper.apply(this.c().isOne() ? input : input.c(c -> c.mult(this.c())), written);
         final long t1 = System.nanoTime();
         T_APPLY.addAndGet(t1 - t0);
         final fURI vid = this.inst().vid();

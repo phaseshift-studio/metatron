@@ -126,6 +126,24 @@ public interface Processor extends Component {
             // lhs, so the inst is neither resolved nor run
             if (inst.isNoObj())
                 return noobj();
+            // A SPAN IS A RUN, COMPUTED, NEVER WRITTEN INTO THE CODE (Marko, 2026-11-10): for each length i the span admits,
+            // the lhs runs i steps of the inst without its span, and the runs' results append. {2,3}plus(1) at 1 is the
+            // branch of its unrolls, plus(1).plus(1) and plus(1).plus(1).plus(1), merging at noobj: {3,4}. Each step keeps
+            // the inst's point, as {2}plus{3}(34) is plus{3}(34).plus{3}(34) (Theorem 7), and the zero-step run is the lhs.
+            // The code keeps the span, so a code pattern still reads {?}neg() as a run of none or one. An open span
+            // ({+}, {*}) has no last run and still applies once
+            final cInt span = inst.tid().b();
+            if (!span.isOne() && null != span.min() && null != span.max() && 0 <= span.min()) {
+                final Inst step = inst.tid(inst.tid().b(null));
+                Obj result = noobj();
+                for (long i = span.min(); i <= span.max(); i++) {
+                    Obj current = lhs;
+                    for (long j = 0; j < i; j++)
+                        current = current.stream().map(o -> apply(o, step)).reduce(noobj(), Obj::append);
+                    result = result.append(current);
+                }
+                return result;
+            }
             // A ONE-MEMBER STREAM IS ITS MEMBER. `objs()` collapses a single element everywhere else, but a BARRIER
             // (a reducer/gather) accumulates its input into a stream, so a single upstream value arrives wrapped in a
             // one-member objs. Unwrap it, so the call is resolved against the value the reducer gathered rather than

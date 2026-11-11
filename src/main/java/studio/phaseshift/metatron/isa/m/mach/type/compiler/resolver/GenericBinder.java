@@ -97,7 +97,9 @@ public class GenericBinder extends MRec implements Binder {
             // answers what its lanes answer — a branch of seeded lanes, branch?<={0}(<p> => start(…)…) — which no single
             // argument states, so its declared range stands
             bound = bound.isInitial() && bound.args().isLst() ? bound.rng(bound.arg(0).type()) : bound;
-            bound = bound.c(userInst.c());
+            // THE CALL'S COEFFICIENT RIDES ON AS WRITTEN, {b}inst{d}: c(count) writes the whole count into the point and
+            // drops a span it does not divide, so {2,3}plus(1) ran once at the point {2,3} instead of as its run
+            bound = bound.tid(bound.tid().b(userInst.tid().b()).d(userInst.tid().d()));
             // THE RESOLVED CONTRACT IS THE CALL'S. The candidate's tid states its DECLARED argument types — `args=[#]`
             // for the generic cast, since it admits any target — while the inst now carries the arguments this call
             // actually resolved (`lst::T`). Complete the signature so the tid agrees with the args poly: the parser

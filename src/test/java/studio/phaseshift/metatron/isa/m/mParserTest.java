@@ -381,6 +381,17 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{2}*a.plus(1)                 % 1.from(a).from(a).plus(1)",
             "{2}!*a                          % auto_from(a).auto_from(a)",
             "{0}*a                           % {0}from(a)",
+            // a value is {point}value{span} (Marko, 2026-11-10): 2{3} is 2 laid in space at the uris 0, 1 and 2, the
+            // slots of a lst until branched uris read and write a layout; the copies keep the value's point
+            "2{3}                            % [2,2,2]",
+            "{2}2{3}                         % [{2}2,{2}2,{2}2]",
+            "2.5{2}                          % [2.5,2.5]",
+            "true{2}                         % [true,true]",
+            "\"abc\"{2}                      % [\"abc\",\"abc\"]",
+            "0x0102{2}                       % [0x0102,0x0102]",
+            "2{1}                            % 2",
+            // a zero span lays the value at no uri: the empty lst, not noobj (a zero POINT annihilates)
+            "2{0}                            % []",
     }, delimiter = '%')
     void testParsesToTheSameObjAs(final String code, final String equivalent) {
         checkEquality(LOG, mParser.parse(code), mParser.parse(equivalent), true);
@@ -409,6 +420,24 @@ public class mParserTest extends AbstractMetatronTest {
             "{1,2,3,4}.map(+2)                        % {3,4,5,6}",
             "1.445                                    % 1.445",
             "1.5                                      % 1.5",
+            // a laid value is its lst of copies, and a ranged value span has no layout yet
+            "2{3}                                     % [2,2,2]",
+            "2{3}.count()                             % 1",
+            "2{?}                                     % <ERROR>",
+            "2{-1}                                    % <ERROR>",
+            // a span is a run, computed when it applies (Marko, 2026-11-10): 1.{2,3}plus(1) runs as its unrolls,
+            // plus(1).plus(1) and plus(1).plus(1).plus(1), which merge at noobj; the zero-step run is the lhs, each step
+            // keeps the point (Theorem 7), and a monad's multiplicity counts once, never once a step
+            "1.{2,3}plus(1)                           % {3,4}",
+            "1.branch(plus(1).plus(1),plus(1).plus(1).plus(1)) % {3,4}",
+            "1.{?}plus(1)                             % {1,2}",
+            "1.{?}neg()                               % {1,-1}",
+            "1.{0,2}neg()                             % {{2}1,-1}",
+            "1.{2,3}plus{3}(1)                        % {{9}3,{27}4}",
+            "1.{0,2}plus(1).mult(10)                  % {10,20,30}",
+            "1.{2,3}plus(1).count()                   % 2",
+            "{1,1}.{2,3}plus(1)                       % {{2}3,{2}4}",
+            "{2}1.{2,3}plus{3}(1)                     % {{18}3,{54}4}",
     }, delimiter = '%')
     void testApply(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
