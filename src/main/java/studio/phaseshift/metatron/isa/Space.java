@@ -85,13 +85,7 @@ public interface Space extends Addressable, Rec, Closeable {
      * space implementations should override for native bulk pattern support.
      */
     default Stream<IdObj> readStream(final fURI pattern) {
-        final Obj result = this.read(pattern);
-        if (result.isNoObj())
-            return Stream.empty();
-        if (result.isObjs())
-            return IteratorUtil.stream(result.iterator()).map(o ->
-                    IdObj.of(null != o.vid() ? o.vid() : pattern, o));
-        return Stream.of(IdObj.of(pattern, result));
+        return Space.Helper.readStream(this, pattern);
     }
 
     /**
@@ -155,6 +149,23 @@ public interface Space extends Addressable, Rec, Closeable {
 
         public static Iterator<IdObj> attachVIDs(final Iterator<IdObj> iterator) {
             return IteratorUtil.map(iterator, kv -> kv.obj().vid() != null ? kv : new IdObj(kv.furi(), kv.obj().selfVID(kv.furi())));
+        }
+
+        public static Stream<IdObj> readStream(final Space space, final fURI pattern) {
+            QProc.Helper.checkQProcs(space, pattern);
+            final java.util.Optional<Obj> preRead = QProc.Helper.processPreRead(space.qs(), pattern);
+            if (preRead.isPresent())
+                return Stream.of(IdObj.of(pattern, preRead.get()));
+            final Obj result = Space.Helper.resolveRead(space, pattern, space.directReader());
+            final Obj postResult = QProc.Helper.processPostRead(space.qs(), pattern, result);
+            if (postResult.isNoObj())
+                return Stream.empty();
+            if (postResult.isObjs())
+                return IteratorUtil.stream(postResult.objsValue().iterator())
+                        .map(o -> o.isRel()
+                                ? IdObj.of(o.asRel().first().uriValue(), o.asRel().second())
+                                : IdObj.of(null != o.vid() ? o.vid() : pattern, o));
+            return Stream.of(IdObj.of(pattern, postResult));
         }
 
         public static void recursivelyStripVID(final Obj obj, final boolean root) {
@@ -290,8 +301,8 @@ public interface Space extends Addressable, Rec, Closeable {
                             final fURI key = polyvid.extend(f(r.jvm().get0().jvm().toString()));
                             if (!r.jvm().get1().isPoly() || key.test(pattern))
                                 results.add(IdObj.of(key, r.jvm().get1()));
-                            // a poly is unrolled only where the pattern can still match beneath it: a component's
-                            // pattern read must not walk every computer's code and its running monads
+                                // a poly is unrolled only where the pattern can still match beneath it: a component's
+                                // pattern read must not walk every computer's code and its running monads
                             else if (pattern.hasPattern("#") || (key.segmentLength() < pattern.segmentLength()
                                     && key.test(pattern.asNode().head(key.segmentLength()))))
                                 results.addAll(unrollPoly(key, r.jvm().get1().as(), pattern));

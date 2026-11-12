@@ -26,7 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.Tokens.QPROC;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -84,7 +86,7 @@ public interface Addressable {
      * Does this source declare the given q-proc, matched by its pattern?
      */
     default boolean hasQ(final fURI qPattern) {
-        return this.qs().lstValue().stream().anyMatch(q -> qPattern.test(q.<QProc>as().pattern()));
+        return qPattern.equals(ALL) || this.qs().lstValue().stream().anyMatch(q -> qPattern.test(q.<QProc>as().pattern()));
     }
 
     /**
@@ -112,19 +114,7 @@ public interface Addressable {
      * method must never be load-bearing for the obj's own validity. Default: this source does not index.
      */
     default Obj index(final Obj member) {
-        return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
-    }
-
-    /**
-     * Does this source declare ANY q-proc? The layer's fast path.
-     * <p>
-     * This is one map lookup and NO allocation, which is why it is separate from {@link #qs()} (which
-     * materializes an empty list when nothing is declared). The layer sits on {@code Machine.read}/{@code write} —
-     * the hottest path in the VM — and the overwhelming majority of sources declare nothing, so the common case
-     * must not allocate on the way to being left alone.
-     */
-    default boolean hasQProcs() {
-        return this instanceof Rec rec && !rec.at(uri(QPROC)).isNoObj();
+        return noobj();
     }
 
     /**
@@ -134,7 +124,7 @@ public interface Addressable {
      * dropped, or {@code noobj} when the address held nothing here. Default: this source drops nothing.
      */
     default Obj drop(final fURI address) {
-        return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
+        return noobj();
     }
 
     /**

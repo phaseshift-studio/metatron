@@ -25,9 +25,9 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -445,7 +445,7 @@ public interface QProc extends Rec {
          * @return the q-proc's answer, or the source's post-processed read
          */
         public static Obj read(final Addressable source, final fURI vid, final Supplier<Obj> read) {
-            if (!source.hasQProcs())
+            if (!source.hasQ(ALL))
                 return read.get();             // the hot path: one map lookup, no list, straight to the source
             final Lst qs = source.qs();
             return Helper.processPreRead(qs, vid).orElseGet(() -> Helper.processPostRead(qs, vid, read.get()));
@@ -469,7 +469,7 @@ public interface QProc extends Rec {
          * @return the q-proc's answer, or the source's post-processed write
          */
         public static Obj write(final Addressable source, final fURI vid, final Obj obj, final Supplier<Obj> write) {
-            if (!source.hasQProcs())
+            if (!source.hasQ(ALL))
                 return write.get();            // the hot path: one map lookup, no list, straight to the source
             final Lst qs = source.qs();
             return Helper.processPreWrite(qs, vid, obj)
