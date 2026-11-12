@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -136,7 +137,7 @@ public class NetworkPanelTool extends AccordionWidget {
 
     public NetworkPanelTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid, false);
-        this.title(Machine.current().network().at(HOST).orElse(uri(LOCALHOST)) + " network");
+        this.title(Machine.current().network().read(f(HOST)).orElse(uri(LOCALHOST)) + " network");
         // the defaults apply only when the creator wrote no style of their own — a creator's style is their write
         // and must survive the re-hydration every .display() performs, not be overwritten by the panel's defaults
         if (!Stylable.Style.isStyle(this.at(uri(studio.phaseshift.metatron.Tokens.STYLE)))) {

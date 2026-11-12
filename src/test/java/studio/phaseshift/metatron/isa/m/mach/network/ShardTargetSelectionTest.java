@@ -138,7 +138,8 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
         Network.Helper.index(client(EVALER, EVAL_INST_TID));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
-        assertEquals(List.of(SERVANT, EVALER), DistributedSweep.layout(compiled).routes(),
+        // the lanes come in the order the network reads its members: by key, not by dial (its store keeps no order)
+        assertEquals(List.of(EVALER, SERVANT), DistributedSweep.layout(compiled).routes(),
                 "the shard fans out over the peers that serve eval, and only those: " + compiled);
         // and NO route is bound in the compiled code: a lane is keyed by its place, and the branch binds that place's
         // own eval when the lane runs (BranchInst#remote), so a lane ships its program and carries no eval of its own

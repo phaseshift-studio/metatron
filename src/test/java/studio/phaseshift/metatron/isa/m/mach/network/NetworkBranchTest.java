@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,17 +35,18 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * THE NETWORK BRANCH IS THE COMPONENT. A machine's {@code <vid>/network/#} is answered by its network itself — handed
- * there by the machine's own space (MachineSpace, mounted in memory; the network is no space there) — so a field written
- * there lands on the network the machine holds
- * (never a rebuilt copy), the root's {@code /network/roster} is the root network's own roster, and the component itself
- * is not a value an address can overwrite. An address under no network branch is still the authority dispatch's.
+ * THE NETWORK BRANCH IS THE NETWORK'S OWN SPACE. A machine's {@code <vid>/network/#} is answered by its network — handed
+ * there by the machine's own space (MachineSpace, mounted in memory; the network is no space in memory) — from the
+ * memSpace cache behind it, so a field written there lands in the network the machine holds (never a rebuilt copy), the
+ * root's {@code /network/roster} is the root network's own roster, and the component itself is not a value an address
+ * can overwrite. An address under no network branch is still the authority dispatch's.
  */
 //@Isolated
 //@Execution(ExecutionMode.SAME_THREAD)
@@ -82,11 +85,11 @@ public class NetworkBranchTest extends AbstractMetatronTest {
             // host is a DECLARED field of network::T and nothing here reads it, so it is a safe probe; the branch
             // gate (pattern) is untouched, so reads keep answering through the network itself
             this.script("[STATE] <~/network/host> -> <ws://lab.example:8555>");
-            assertEquals(host, child.network().atDirect(uri(HOST)).uriValue(),
+            assertEquals(host, child.network().read(f(HOST)).uriValue(),
                     "the write lands on the network the machine holds");
             this.script("*<~/network/host> % <ws://lab.example:8555>");
             this.script("[STATE] <~/network/host> -> noobj");
-            assertTrue(child.network().atDirect(uri(HOST)).isNoObj(), "a noobj write is the field's deletion");
+            assertTrue(child.network().read(f(HOST)).isNoObj(), "a noobj write is the field's deletion");
         } finally {
             child.pop();
         }
@@ -97,8 +100,8 @@ public class NetworkBranchTest extends AbstractMetatronTest {
         final Obj declared = Machine.read(Network.ROOT_ROSTER);
         try {
             Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(uri("lab"), uri("ws://10.0.0.9:8555/"))))));
-            final Obj field = Machine.root().network().atDirect(uri(ROSTER));
-            assertTrue(field.isRec(), "the roster is a field of the root network, not an entry beside it: " + field);
+            final Obj field = Machine.root().network().read(f(ROSTER));
+            assertTrue(field.isRec(), "the roster is the root network's own, not an entry beside it: " + field);
             checkEquality(LOG, field.asRec().at(uri(MACHINE)), rec(uri("lab"), uri("ws://10.0.0.9:8555/")), true);
             this.script("[STATE] </network/roster/machine/lab> -> <ws://10.0.0.9:8777/>");
             checkEquality(LOG, Machine.current().network().machines().at(uri("lab")), uri("ws://10.0.0.9:8777/"), true);
@@ -112,12 +115,12 @@ public class NetworkBranchTest extends AbstractMetatronTest {
         final Machine child = Machine.current().push(f("branch_child"));
         try {
             final Network network = child.network();
-            final Obj host = network.atDirect(uri(HOST));
+            final Obj host = network.read(f(HOST));
             this.script("[STATE] <~/network> -> noobj");
             this.script("[STATE] <~/network> -> 5");
             assertSame(network, child.network());
             assertFalse(host.isNoObj());
-            checkEquality(LOG, network.atDirect(uri(HOST)), host, true);
+            checkEquality(LOG, network.read(f(HOST)), host, true);
             assertSame(network, Machine.read(f("~/network")), "the component still answers its branch");
         } finally {
             child.pop();
@@ -131,5 +134,35 @@ public class NetworkBranchTest extends AbstractMetatronTest {
         assertTrue(network.read(f("ws://localhost:1/network/peer")).isNoObj());
         assertTrue(network.read(f("/elsewhere/host")).isNoObj(), "a path off the branch is the dispatch's, and it answers no hostless address");
         assertFalse(network.read(f("/network/host")).isNoObj(), "a path on the branch is the space's");
+    }
+
+    /**
+     * A LEVEL'S OWN ADDRESSES ARE TWO SPELLINGS OF ONE ENTRY: relative, as its own methods write it, or below its
+     * branch, as its machine's space hands it. Any other spelling is the authority dispatch's, which files nothing here:
+     * another level's branch, a {@code ~} path (the machine's address, not the component's) and another machine's
+     * address all answer noobj and leave the entry as it was.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // address                       % lands
+            "host                            % true",
+            "/branch_child/network/host      % true",
+            "/network/host                   % false",
+            "~/network/host                  % false",
+            "~                               % false",
+            "ws://localhost:1/host           % false",
+    }, delimiter = '%')
+    void testALevelAnswersAtItsRelativeAndItsBranchAddresses(final String address, final boolean lands) {
+        final Machine child = Machine.current().push(f("branch_child"));
+        final Obj probe = uri("ws://door.example:8555");
+        try {
+            final Network network = child.network();
+            final Obj before = network.read(f(HOST));
+            checkEquality(LOG, network.write(f(address), probe), lands ? probe : noobj(), true);
+            checkEquality(LOG, network.read(f(HOST)), lands ? probe : before, true);
+            checkEquality(LOG, network.read(child.vid().resolve().extend("network").extend(HOST)), lands ? probe : before, true);
+        } finally {
+            child.pop();
+        }
     }
 }

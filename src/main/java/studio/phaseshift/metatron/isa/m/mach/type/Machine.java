@@ -647,9 +647,9 @@ public interface Machine extends Rec, AutoCloseable {
                 // fails for the child's stacks).
                 final MachineSpace space = new MachineSpace(machine);
                 machine.memory().addSpace(space);
-                // THE NETWORK ANSWERS ITS OWN BRANCH, through the machine's space: the component answers <vid>/network/#
-                // from its rec — every field at its own address, a peer or a listener at its key's path, and a noobj
-                // write on a member that member's retraction. mount stamps the branch; the network is not a space.
+                // THE NETWORK ANSWERS BELOW ITS BRANCH, through the machine's space: every field at its own address and a
+                // peer or a listener at its key's path, held in the network's cache, and a noobj write on a member that
+                // member's retraction. mount stamps the branch; the network is not a space in memory.
                 if (machine.network() instanceof BasicNetwork network)
                     network.mount(machine);
                 // this machine's log sink, in its space's ~/sys: a machine with none answers noobj, and

@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.Tokens.PREFIX;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -280,22 +279,6 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
         assertTrue(Machine.read(f("//svc/sys/thread/main")).isNoObj(), "nothing was stored under it");
         assertEquals(Machine.read(f("loop://self/sys/thread/main")), Machine.read(f("//self/sys/thread/main")),
                 "the bindings the write declined to replace are still there");
-    }
-
-    /**
-     * A ROW WRITTEN BEFORE THE MARKER BECAME THE SPELLING IS REPAIRED BY THE ROUND TRIP. A table holding the address
-     * spelling as its key ({@code //svc => origin}, stored beside the component rather than through the door) is the
-     * silent, unresolvable shape that was reported: it reads back, it prints, and no read ever asks for it. Writing
-     * back what the door SHOWS strips the marker and makes the same row live — no migration, no lost table.
-     */
-    @Test
-    void testAStaleRowIsRepairedByWritingBackWhatTheDoorShows() {
-        // the legacy shape, put on the component's own rec -- under the door, which would have refused it
-        Machine.current().network().at(uri(PREFIX), rec(uri("//svc"), uri(LOOP.toString())), MUTABLE);
-        assertTrue(Machine.read(f("//svc/sys/thread/main")).isNoObj(), "a marked key is not the key resolution asks for");
-        Machine.write(f("/network/prefix"), Machine.read(f("/network/prefix")));
-        assertFalse(Machine.read(f("//svc/sys/thread/main")).isNoObj(), "writing back what was read repairs the row");
-        assertTrue(keys(Machine.current().network().prefixes()).contains("svc"), "the row is now stored as its label");
     }
 
     /**

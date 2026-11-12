@@ -1507,7 +1507,7 @@ public class mInstSet extends AbstractInstSet {
         final fURI vid = machine.vid();
         if (null == vid)
             return noobj();
-        final Obj host = machine.network().at(uri(HOST));
+        final Obj host = machine.network().read(f(HOST));
         final Obj composed = host.isUri() ? uri(host.uriValue().extend(vid)) : uri(vid);
         // THE PROCESS ID IS PART OF THE IDENTITY, because host+frame is a PLACE, not a VM. Every peer forked on
         // one host is a root machine on the same OS host, so they all answer `<host>/.` -- a collated profile

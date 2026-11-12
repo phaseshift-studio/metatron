@@ -50,9 +50,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * wins its own addresses, as the most specific space always does. What it answers itself:
  * <ul>
  *     <li>{@code <vid>} — the machine itself, live;</li>
- *     <li>{@code <vid>/network/…} — the network's own branch: the component answers from its rec as it stands, a field
- *     is written in place, and a member (a peer, a listener) is constructed, never written — {@code -> noobj} retracts
- *     it ({@link studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork});</li>
+ *     <li>{@code <vid>/network/…} — handed to the network, a space of its own (a memSpace cache behind it): its fields
+ *     and its members at their keys' paths are read as any memSpace's data, a member (a peer, a listener) is
+ *     constructed, never written, and {@code -> noobj} retracts it
+ *     ({@link studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork}). The component itself, at
+ *     {@code <vid>/network}, is read live as every component is;</li>
  *     <li>{@code <vid>/processor/…} — the processor, read live and written in place: the computers it indexes
  *     ({@code computer/<n>}) and the fail stacks, the machine's ({@code fail}) and each evaluation's under the computer
  *     that ran it ({@code computer/<n>/fail}), whose {@code ?incrq} keys this space's q-processors mint;</li>
@@ -134,8 +136,9 @@ public final class MachineSpace extends memSpace {
         if (null == this.owner || !this.covers(vid))
             return super.read(vid);
         final String part = this.part(vid);
-        // the network answers its own branch: fields, and members at their keys' paths (and the q-procs it speaks)
-        if (NETWORK.equals(part))
+        // the network answers below itself, a space of its own: fields, and members at their keys' paths (and the
+        // q-procs it speaks); the component's own address is read live, as every component's is
+        if (NETWORK.equals(part) && this.below(vid))
             return this.owner.network().read(vid);
         // ~/sys, and a query on the machine or a component, are the store's: the component itself is no doc
         if (SYS.equals(part) || vid.hasQ())
@@ -159,11 +162,19 @@ public final class MachineSpace extends memSpace {
         return live.isNoObj() ? super.read(vid) : live;
     }
 
+    /**
+     * whether an address it covers lies below the part it names, rather than naming the part itself
+     */
+    private boolean below(final fURI vid) {
+        return vid.qLess().resolve().segments().size() > this.depth + 1;
+    }
+
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final String part = null == this.owner || !this.covers(vid) ? null : this.part(vid);
-        // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
-        if (NETWORK.equals(part))
+        // the network writes below itself: a field into its cache, a member's deletion its retraction, a value at a
+        // member refused (BasicNetwork); the component's own address is the store's, as every component's is
+        if (NETWORK.equals(part) && this.below(vid))
             return this.owner.network().write(vid, obj);
         // the instset writes its table doors, ~/instset/<table>/<name>, into this machine's own level (BasicInstSet)
         if (INSTSET.equals(part) && !vid.hasQ()) {

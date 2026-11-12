@@ -62,7 +62,7 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
     @BeforeEach
     public void clearNetwork() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
-        Machine.current().network().at(uri(PEER), noobj(), MUTABLE);
+        Machine.current().network().write(f(PEER), noobj());
     }
 
     /**
