@@ -27,6 +27,12 @@ a           [-- uri (bare name — no angle brackets if alphanumeric) --]
 noobj       [-- "no obj" (empty, none) --]
 ```
 
+A `'…'` or `"…"` str decodes exactly three escapes — `\\`, `\'` and `\"` — and keeps every other `\x` as written
+(`'\s'` is backslash-s, a regex; `'C:\temp'` keeps its backslash). The writer uses them only when no delimiter is
+safe: it quotes with the character the value does NOT hold, and falls back to escaped `'…'` when the value holds both
+quote kinds and its own `"""` run would close the triple-quoted form early. `"""…"""` is raw, the form for code and
+documents, which carry backslashes by the dozen.
+
 ### the four ways a spelling becomes an address
 
 They are distinct, and knowing which is which is most of the uri grammar:

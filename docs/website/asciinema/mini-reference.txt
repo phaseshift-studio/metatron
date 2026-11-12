@@ -1,0 +1,12 @@
+[== clone vs. anchor references ==];
+5.to(a);
+from(a).plus(2);
+from(a);
+at(a).plus(2);
+from(a);
+[== sugar coated ==];
+a -> 5;
+*a + 2;
+*a;
+@a + 2;
+*a;

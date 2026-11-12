@@ -231,9 +231,40 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         final String string = str.jvm();
         if (null == string)
             return null;
-        boolean doubleQuote = string.contains("\n") || (string.contains("\"") && string.contains("'"));
-        final String quotes = doubleQuote ? "\"\"\"" : (string.contains("'") || string.contains("`") ? "\"" : "'");
-        return handleIds(str, quotes + string + quotes);
+        // QUOTING CARRIES THE VALUE; escaping is the fallback. A form is safe when the value cannot spell its own
+        // closing delimiter, so the delimiter is the one the value does NOT hold, and triple quotes — for a value
+        // carrying both quote kinds or spanning lines — only when the value cannot close that either (its own `"""`
+        // run, or a quote at the very end, which would leave the render unbalanced).
+        final boolean hasSingle = string.contains("'");
+        final boolean hasDouble = string.contains("\"");
+        if ((string.contains("\n") || (hasSingle && hasDouble))
+                && !string.contains("\"\"\"") && !string.endsWith("\""))
+            return handleIds(str, "\"\"\"" + string + "\"\"\"");
+        final char quote = hasSingle ? '"' : '\'';
+        return handleIds(str, quote + escaped(string, quote) + quote);
+    }
+
+    /**
+     * The value with the two characters the reader decodes made unambiguous: the delimiter it would close early and
+     * the escape character itself. A backslash is left alone unless the next character is one of those (or the value
+     * ends on it), so a regex's {@code \s} and a path's {@code C:\temp} keep the spelling their author wrote.
+     */
+    private static String escaped(final String string, final char quote) {
+        final StringBuilder sb = new StringBuilder(string.length() + 2);
+        for (int i = 0; i < string.length(); i++) {
+            final char c = string.charAt(i);
+            if ('\\' == c) {
+                final char next = i + 1 < string.length() ? string.charAt(i + 1) : 0;
+                sb.append('\\');
+                if (0 == next || '\\' == next || '\'' == next || '"' == next)
+                    sb.append('\\');
+            } else {
+                if (quote == c)
+                    sb.append('\\');
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     @Override

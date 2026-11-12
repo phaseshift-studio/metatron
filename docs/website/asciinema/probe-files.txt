@@ -1,0 +1,9 @@
+move(//1).import(/m/sys,fs);
+move(//2).import(/m/sys,fs);
+move(//1).start([pattern=>/tmp]).as(fsspace::T);
+move(//2).start([pattern=>/tmp]).as(fsspace::T);
+<ws://localhost:1211/tmp/a1> -> 'one two three four five';
+<ws://localhost:1212/tmp/a2> -> 'six seven eight nine ten eleven';
+*<ws://localhost:1211/tmp/a1>;
+*<ws://localhost:1212/tmp/a2>;
+[/tmp/a1,/tmp/a2].branch(//1 => >>0.*_.-<'\s'>-.count(), //2 => >>1.*_-<'\s'>-.count()).sum();

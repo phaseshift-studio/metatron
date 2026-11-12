@@ -1,0 +1,7 @@
+[== the same two peers ==];
+spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>];
+spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>];
+[== move the frame of reference, not the data ==];
+{1,2,3}.plus(5).move(//0).plus(2).to(/store/moved).sum();
+[== the write landed on the peer, not here ==];
+*//0/store/moved;
