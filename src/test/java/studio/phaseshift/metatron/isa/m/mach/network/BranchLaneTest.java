@@ -36,10 +36,8 @@ import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -160,7 +158,7 @@ public class BranchLaneTest extends AbstractMetatronTest {
         })));
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slow?timeout=1> => plus(1))", "<ERROR>");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slow?timeout=2> => plus(1))", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slow?timeout=20> => plus(1))", "2");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slow?timeout=soon> => plus(1))", "<ERROR>");
             // a timeout on the branch itself is every key's, and a key's own overrides it
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(<loop://slow> => plus(1))", "<ERROR>");

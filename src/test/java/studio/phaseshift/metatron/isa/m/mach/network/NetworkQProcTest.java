@@ -25,19 +25,16 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.CODE;
-import static studio.phaseshift.metatron.Tokens.OBJ;
-import static studio.phaseshift.metatron.Tokens.TARGET;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -65,7 +62,9 @@ public class NetworkQProcTest extends AbstractMetatronTest {
      */
     private static final String UNREACHABLE = "ws://unreachable.invalid:1";
 
-    /** the value a fired subscription writes, so "did it run" is a read */
+    /**
+     * the value a fired subscription writes, so "did it run" is a read
+     */
     private static final fURI FIRED = f("/t/net/fired");
 
     /**
@@ -111,7 +110,7 @@ public class NetworkQProcTest extends AbstractMetatronTest {
     void shouldDeclareSubqOnTheNetwork() {
         final Network network = Machine.current().network();
         assertTrue(network.hasQ(f("subq")), "the network declares the processor a peer subscription needs");
-        assertTrue(network.hasQProcs(), "and the layer's fast path sees it");
+        assertTrue(network.hasQ(ALL), "and the layer's fast path sees it");
     }
 
     /**

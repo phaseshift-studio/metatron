@@ -32,12 +32,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetAddress;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -45,9 +40,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TYPE;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_NETWORK_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PEER_TYPE;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -198,6 +191,12 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
         // read-then-write a no-op by dropping inherited rows.
         if (f(PREFIX).equals(at))
             return Network.Helper.markedTable(Component.Prefix.Helper.effectivePrefixes(this));
+        if (at.hasPrefix(f(PEER))) {
+            if (at.pathLength() == 1)
+                return this.peers();
+            else
+                return this.peers().at(at.pretract(1));
+        }
         final Obj read = this.cache.read(at);
         // a branch read answers rels at the cache's addresses: they are named where the caller asked (what @ anchors with)
         return vid.isBranch() && !vid.isRelative()
