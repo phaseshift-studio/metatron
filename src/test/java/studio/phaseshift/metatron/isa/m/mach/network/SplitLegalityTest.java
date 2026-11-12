@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -220,7 +219,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
     void testAnUnreadablePartitionIsRefused(final String stated, final String expected) {
         final Code code = ObjmtronSerializer.parse("start?split=" + stated + "({1,2,3,4}).plus(1).sum()").asCode();
         final MTronException refused = assertThrows(MTronException.class,
-                () -> PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), code, env()),
+                () -> PlanInterpreter.apply(PlanInterpreter.SHARD_PLAN, code, env()),
                 "a partition that cannot be read must be refused, not defaulted: " + stated);
         assertTrue(refused.getMessage().contains(expected),
                 "the refusal names the key and the text it could not read: " + refused.getMessage());
@@ -259,7 +258,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
      */
     private static void declines(final String source) {
         final Code original = ObjmtronSerializer.parse(source).asCode();
-        final Code emitted = PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), original, env());
+        final Code emitted = PlanInterpreter.apply(PlanInterpreter.SHARD_PLAN, original, env());
         assertEquals(original.toString(), emitted.toString(), "a decline is the unchanged chain: " + source);
         assertTrue(DistributedSweep.layout(emitted).lanes().isEmpty(), "and nothing ships: " + source);
     }
@@ -275,7 +274,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
      * The same lowering of an already-built chain.
      */
     private static Code lower(final Code source) {
-        return PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), source, env());
+        return PlanInterpreter.apply(PlanInterpreter.SHARD_PLAN, source, env());
     }
 
     /**

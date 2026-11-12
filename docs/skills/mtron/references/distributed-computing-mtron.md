@@ -152,7 +152,7 @@ are placeholders — the schemas below are motifs, not literal runs.
 | **F** ordered fold                 | $a \cdot (b \cdot c) = (a \cdot b) \cdot c$ (associativity alone)                                                                  | a `lst`-partitioned fold (streams never shard)                     | pipeline — carry the running total, neighbor-to-neighbor                                      |
 | **G** keyed reduce ✅              | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$ | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `branch?<={0}(<p_i> => start(part_i).group([mod(3)=>sum()])?hop=0(),…).sum()==[_=>sum()]`     |
 | **H** redundant / hedged shards    | $x \oplus x = x$                                                                                                                   | a partition shipped to r peers                                     | every reply folds (at-least-once); non-idempotent → hedge, first reply wins                   |
-| **I** span/route interpreter       | $\mathrm{plan} \mapsto \mathrm{layout}$ (infrastructure)                                                                           | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | `PlanInterpreter` lowers `plan.routes()` + a real span `[(lo, hi, role)]`                     |
+| **I** span/route interpreter       | $\mathrm{plan} \mapsto \mathrm{layout}$ (infrastructure)                                                                           | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[>>law_shard>>result]` | `PlanInterpreter` lowers `plan.routes()` + a real span `[(lo, hi, role)]`                     |
 | **J** algebraic aggregates         | $\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}$                                                           | `{...}.mean()`                                                     | pointwise tuple partials; the finalizer runs once at the master                               |
 | **K** limit / top-k push-down      | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | `{...}.order(s).take(k)`                                           | slaves `order(s).take(k)`; master `kmerge(s).take(k)`                                         |
 | **L** mergeable sketches           | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | `{...}.hll()` (a sketch fold)                                      | A / E / H once the sketch declares its monoid theory                                          |
@@ -350,16 +350,16 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    `<combiner>.<tail>`, no SEED span — a tail, never a lane), and the fan-out is `.place(PlaceSet.peer())
    .hop(1, cInt.ANY()).split(Partition.stream())` over `tree(1, seed.partition(), pre.withoutSeed(), at)`.
    `create()` validates the axes' obligations and writes no derived `shape`/`target`.
-4. **Register it.** The plan joins `PlanRewriter`'s registry — the rule set of `plan_rewriter::T`, which runs the
-   plans without the category — and `catRewrite.rules()`, wired into `catInstSet`'s `REWRITE` key — a `plan::T` out-edge
-   on every `path::T` it can move.
+4. **Register it.** A rewrite in `catRewrite.rules()`, wired into `catInstSet`'s `REWRITE` key, lowers the plan
+   (`code -> PlanInterpreter.lower(plan, code)`), so the compiler's rewriter applies it, and `path::T` draws it as an
+   out-edge wherever it moves the code.
 5. **The interpreter lowers it.** `PlanInterpreter.shard` matches the one-cut shape
    `[initial, {*}home, {*}floatable, blocked(reducer ∧ laws), {*}tail]`. The cut is the first fold that recombines,
    the floatable run before it ships, and everything before the run stays home. It emits one branch keyed by place:
    seeded lanes under `branch?<={0}` for a literal seed, and `<prefix>.branch?<=T{*}&split=part(<p_i> => <run>.<fold>,
    …).<combiner>` for a computed bag, which the branch deals when it runs.
-6. **Liveness gates it.** The plan is a live out-edge only over reach (`Places.reachable()` — roster ∪ dialed peers) and
-   ships only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
+6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
+   place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's
    insts). An outage *shrinks* the fan-out; it never poisons the reduction.
 

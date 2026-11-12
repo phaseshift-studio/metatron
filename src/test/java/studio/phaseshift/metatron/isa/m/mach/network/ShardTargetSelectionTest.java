@@ -25,13 +25,13 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Span;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -103,7 +103,7 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
 
     @Test
     void testLawShardsPlanStatesWhatItsTargetMustServe() {
-        final Plan shard = PlanRewriter.planOf("law_shard");
+        final Plan shard = PlanInterpreter.SHARD_PLAN;
         final Placement route = shard.where().stream().filter(p -> p.shape().distributes()).findFirst().orElseThrow();
         assertEquals(lst(uri(EVAL_INST_TID)), route.asRec().at(uri(INST)),
                 "the plan says it: inst=>[</m/inst/eval>] on its tree placement");

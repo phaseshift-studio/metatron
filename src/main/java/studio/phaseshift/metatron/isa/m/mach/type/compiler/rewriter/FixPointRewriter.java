@@ -99,8 +99,8 @@ public class FixPointRewriter extends AbstractRewriter {
             // THE RULES ARE THIS REWRITER'S OWN (rewrites()): by default they come from INSTRUCTION MEMORY, not from
             // the data index — the machine's own instset is the union of every ISA this frame uses (own level, its
             // imports, the enclosing machine's), so a rewrite declared in a child applies in that child and dies with
-            // its frame, and an ISA no longer has to be a registered space for its rules to fire. A refinement names
-            // another set (plan_rewriter::T: the law-driven plans).
+            // its frame, and an ISA no longer has to be a registered space for its rules to fire. A refinement may name
+            // another set.
             //
             // ANALYSIS RULES RUN LAST, and the order is stated here rather than inherited from the mount order.
             // An analysis rule (profile_analysis, explain_analysis) CAPTURES the code before its marker and

@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
-import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -53,10 +52,6 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
-import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.BRANCH_FACTOR_PLAN;
-import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.DERIVATION_PLAN;
-import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.INVERSE_PLAN;
-import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.UNIT_PLAN;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
@@ -421,7 +416,7 @@ public class mInstSet extends AbstractInstSet {
     /*
      * /m's REWRITES, ONE PER RULE (Marko, 2026-11-10) — a rewrite is a simple, semantically specific alteration, turned
      * on and off by adding it to or removing it from the machine's rewrite pool, so the pool is the table: each rule is
-     * its own rewrite, named after its plan (PlanRewriter), and path::T draws one edge per rule. A rewrite's declared
+     * its own rewrite, its body a Law.Helper method, and path::T draws one edge per rule. A row rewrite's declared
      * ARGUMENT is its rules, a rec of ROWS: a value, not a type, so it resolves with its rules already bound and no type
      * resolution takes place. Every one applies its rows with Law.Helper.lawRemoval, where a row's key picks its gate:
      * - a LAW row states its rule in the name op, the instruction whose claim states the law, and the law's claimants
@@ -942,12 +937,12 @@ public class mInstSet extends AbstractInstSet {
                                 }), "rewrites a().b().c().profile() to profile_analysis(a().b().c()): \\(\\mathrm{profile} \\leadsto \\mathrm{profile\\_analysis}(\\ldots)\\)"),
 
                         // THE UNIT LAW (Marko, 2026-11-08): monoid_theory states op(id) ⇝ ε, every monoid instance a carrier
-                        // declares binds it (Law.Helper.rules), and the plan drops each bound unit from a chain. The
-                        // theories are /m's, so the law runs on the base path, the category imported or not: it is the
+                        // declares binds it (Law.Helper.rules), and Law.Helper.unitRemoval drops each bound unit from a chain.
+                        // The theories are /m's, so the law runs on the base path, the category imported or not: it is the
                         // id_removal and the plus_zero / mult_one this table once spelled syntactically, now read off the
                         // declared algebras (code's mul_monoid binds id(), since composition is adjacency).
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("theory_unit_removal"),
-                                code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\)"),
+                                Law.Helper::unitRemoval), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\)"),
 
                         // ONE REWRITE PER RULE (Marko, 2026-11-10): each carries its rules as its declared argument, a value
                         // rather than a type, so it resolves with its rules bound, and applies them with Law.Helper.lawRemoval:
@@ -978,23 +973,28 @@ public class mInstSet extends AbstractInstSet {
                                 "a window is a skip and a take, its bounds literal ints: \\(\\mathrm{range}(i, n) \\leadsto \\mathrm{skip}(i) \\cdot \\mathrm{take}(n - i)\\)"),
 
                         // THE INVERSE LAW: group_theory states op(a)·op(inv(a)) ⇝ ε and op(inv(a))·op(a) ⇝ ε, every group
-                        // instance a carrier declares binds them (Law.Helper.rules), and the plan cancels an adjacent pair
-                        // with equal operands where the chain's carrier derives that inverse. The theories are /m's.
+                        // instance a carrier declares binds them (Law.Helper.rules), and Law.Helper.inverseCancellation
+                        // cancels an adjacent pair with equal operands where the chain's carrier derives that inverse. The
+                        // theories are /m's.
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("inverse_cancellation"),
-                                code -> PlanInterpreter.lower(INVERSE_PLAN, code)), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
+                                Law.Helper::inverseCancellation), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
 
                         // DERIVATION CONTRACTION: a derived instruction's primitive composition folds back to the derived
                         // operation (plus . neg |-> minus, mult . inv |-> div), read off the derivations instructions declare
                         // beside themselves (Law.Helper.derivations), where the derivation's contract runs.
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("derivation_contraction"),
-                                code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
+                                Law.Helper::derivationContraction), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
 
-                        // THE LEFT-DISTRIBUTIVE NORMAL FORM (Marko, 2026-11-10: two parallel expressions run as one, branched
-                        // where their instructions differ): members of the code ring's additive op that all start with the same
-                        // pure, one-obj-at-a-time instruction share it ahead of the op, a·b + a·c ⇝ a·(b + c). /m's, as the
-                        // category's rewrites are moving to /m
+                        // THE CODE RING'S NORMAL FORMS, read off the additive op its theory declares (branch): the
+                        // left-distributive form (Marko, 2026-11-10: two parallel expressions run as one, branched where their
+                        // instructions differ), a·b + a·c ⇝ a·(b + c); like terms, x + x ⇝ x{2}; and the one-term sum, S(x) ⇝ x.
+                        // The category registered the last two until 2026-11-12: its rewrites are /m's now
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_factor"),
-                                code -> PlanInterpreter.lower(BRANCH_FACTOR_PLAN, code)), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their span and point and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
+                                Law.Helper::branchFactor), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their span and point and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_collapse"),
+                                Law.Helper::branchCollapse), "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[\\mathrm{code}].\\mathrm{law}\\), \\(S = \\mathrm{branch}\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_inline"),
+                                Law.Helper::branchInline), "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
 
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where
@@ -1337,7 +1337,7 @@ public class mInstSet extends AbstractInstSet {
 
     /**
      * Lift a repeat's until/emit predicate out of its filter wrapper when it is {@code is(cmp(int))} (or
-     * {@code filter(cmp(int))}): {@link PlanInterpreter#comparisonOf} answers {@code cmp}, and the repeat body's
+     * {@code filter(cmp(int))}), the wrapper's one argument being the one comparison instruction: the repeat body's
      * single-inst apply then runs the native {@code intValue() OP arg(0).intValue()} directly — no monadic walk,
      * no nested processor, no per-iteration re-resolve. A predicate that is not that shape leaves the inst unchanged.
      */
@@ -1345,12 +1345,16 @@ public class mInstSet extends AbstractInstSet {
         final Obj predicate = repeat.arg(key, 0);
         if (predicate.isNoObj() || !predicate.isInst())
             return repeat;
-        final Inst comparison = PlanInterpreter.comparisonOf(predicate.asInst());
-        if (null == comparison || !comparison.test(instB(INT_CMP_TID, lst(INT_TYPE))))
+        final Inst filter = predicate.asInst();
+        final fURI wrapper = filter.tid().basePath();
+        if ((!IS_INST_TID.equals(wrapper) && !FILTER_INST_TID.equals(wrapper)) || 1 != filter.args().count() || !filter.arg(0).isCall())
+            return repeat;
+        final List<Inst> tested = filter.arg(0).<Call>as().asCode().insts();
+        if (1 != tested.size() || !tested.getFirst().test(instB(INT_CMP_TID, lst(INT_TYPE))))
             return repeat;
         // resolve to the native int overload so the repeat body's apply runs intValue() OP arg(0).intValue()
         // directly — a resolved inst carries its f, so resolve() short-circuits and no processor is spawned.
-        final Inst nativeComparison = comparison.resolve(jnt(0));
+        final Inst nativeComparison = tested.getFirst().resolve(jnt(0));
         return repeat.args(repeat.args().asRec().at(uri(key), nativeComparison));
     }
 

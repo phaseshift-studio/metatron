@@ -264,8 +264,8 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `inverse_cancellation` (/m) | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
 | `form_map_unwrap` (/m)   | `form = mapper` declared by the operation `map` wraps                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` (/m) | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
-| `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
-| `branch_inline`          | the additive role — `cut => [role => zero]`                                                 | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
+| `branch_collapse` (/m)   | the additive op of the code ring's theory (`branch`)                                        | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
+| `branch_inline` (/m)     | the additive op of the code ring's theory, with a single member                             | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
 | `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
@@ -477,26 +477,24 @@ every instruction replaced by its `morphism::T`, i.e. **value code below, type c
 | `origin`      | (optional) where the code starts — the machine's own `place::T`, attached on lift when the machine answers; absent means not placeable (`bind` requires it)                       |
 | `where`       | (optional) the realized placement — span → place, written by the pass that applied a distribution rule: `{[span=>at] => [place…]}` lists the places the shard actually shipped to |
 | `peer`        | (reserved — declared in the type, not yet written by the distribution pass)                                                                                                       |
-| `<rule name>` | one edge per **live** rewrite — the edge holds the `plan::T` (see below); `lower(plan)` applies it and re-lifts                                                                   |
+| `<rule name>` | one edge per **live** rewrite of the machine's pool — the edge holds the rule's `name` and its `result`, the vertex the rule reaches (`>>rule>>result`)                          |
 
-Only live edges are materialized (see *a-priori pruning*): a vertex lists exactly the rules that can move it, and a
-**normal form prints as its own certificate** — `[path::[obj=>...]]`, no out-edges, zero matches attempted. A
+Only live edges are materialized (see *liveness*): a vertex lists exactly the rules that move it, and a
+**normal form prints as its own certificate** — `[path::[obj=>...]]`, no out-edges. A
 traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).
-The `==` between segments is a structural `select` — each segment names the step, a lift or a lower, applied to the
-previous segment's result, so a descent `[seed] == [lift] == [lower₁] == [lower₂]` reads as a chain of witnesses. The
+The `==` between segments is a structural `select` — each segment names the step, a lift or an edge's result, applied
+to the previous segment's result, so a descent `[seed] == [lift] == [r₁] == [r₂]` reads as a chain of witnesses. The
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:
 
 ```mtron_pre
 [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-[start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>law_involution)]
-[start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>law_involution)]==[lower(>>theory_unit_removal)]
+[start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>law_involution>>result]
+[start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>law_involution>>result]==[>>theory_unit_removal>>result]
 ```
 
-**A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
-rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand
-equality, literal values); the pruner tests only the type-part, a **necessary** condition, so pruning a rule is a
-*proof* of identity ("no match in the abstraction, no match in the concrete") while keeping one merely licenses the
-real match. A rule the pruner does not know is never pruned.
+**Liveness.** An edge is live iff its rule changes the code: the lift applies each rewrite of the machine's pool
+(`*~/instset/rewrite`) once, and a rule that leaves the code as it is draws no edge. The edges are the pool, so a rule
+switched off with `inactive()` draws none.
 
 ### `abstraction::T` — the α-word
 
@@ -519,23 +517,22 @@ and computes its cut/span/where without consulting the code below; the descent (
 
 ### `plan::T` — a rewrite rule as a value
 
-A `path::T` out-edge is not a bare rule name — it is a **plan**: the rewrite rule itself, lifted to a first-class
-value. `plan::T` is the morphism of the rewrite category (`path → path`), and it is *data*, never a closure: a plan
-is introspectable and applicable wherever it is supplied.
+A **plan** is a rewrite rule lifted to a first-class value. `plan::T` is the morphism of the rewrite category
+(`path → path`), and it is *data*, never a closure: a plan is introspectable and applicable wherever it is supplied.
+A `path::T` out-edge is a `plan::T` too, the plainest kind: the rule's `name` and its `result`.
 
 <!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
 <img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
 
-A plan is always the rec `[name, cut, where]`; what distinguishes a local plan from a distribution is what its `cut`
-names and where its `where` sends it:
+A plan that states its rule is the rec `[name, cut, where]`: its `cut` names the anchor and its `where` sends it. The
+local rules are no plans (each is a rewrite of `/m`, its body a `Law.Helper` method), so one such plan is live today:
 
-| shape            | the `cut` reads                                                                | the `where`                                            | example                                                                                          |
-|------------------|--------------------------------------------------------------------------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]` | stays local (`target => none` / `local`)               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
-| **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare                 | ships to `peers`, with the combiner re-applied locally | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`                         |
+| shape            | the `cut` reads                                                | the `where`                                            | example                                                                  |
+|------------------|----------------------------------------------------------------|--------------------------------------------------------|--------------------------------------------------------------------------|
+| **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare | ships to `peers`, with the combiner re-applied locally | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]` |
 
-A third kind — the **cut-less** distribution rule — has no `cut` at all: its one placement names a `target`, and
-`bind` (not `lower`) applies it. None is registered yet, so the two rows above are the only live plans today.
+A second kind — the **cut-less** distribution rule — has no `cut` at all: its one placement names a `target`, and
+`bind` (not `lower`) applies it. None is registered yet.
 
 The application is a **type method**, not a field: `lower(plan::T)` is one instruction registered in
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
@@ -574,7 +571,7 @@ ws_client::[host=>ws://localhost:8555/mtron]
 
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
 `machine::T`
-now holding that `peer::T`, the `path::T` lists the distribution plan among its out-edges.
+now holding that `peer::T`, the `path::T` lists `law_shard` among its out-edges.
 
 ```mtron_pre
 [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
@@ -590,26 +587,23 @@ object fans out across branches and merges back, and Thm 19 is the one reduce la
 same algebra that says $x + 0 \leadsto x$ (a time rewrite) says $(a+b)\cdot r \leadsto (a\cdot r + b\cdot r)\cdot r$
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.
 
-Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
-`>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: one `branch` keyed by place,
+Finally, the `law_shard` edge reaches the same chain distributed — the examples read `>>law_shard>>result`, a
+`path::T` whose `obj` is the distributed layout and whose `where` lists the places it shipped to: one `branch` keyed by place,
 whose lanes carry their part of the seed (`start(part)`), the floatable run and a fold stating the remaining hop budget
 (`sum?hop=0` at a leaf — the depth rides the fold, never the seed). Each lane runs at its roster member, and the lanes'
 partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it
 again over its own peers, so the shards
-form a tree. The plan — not its
-application — is data, so the rewrite *schedule* and the out-edge
-that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
+form a tree. Every rewrite of the machine's pool is an edge, so the rewrite table is the category itself.
 
 ```mtron_pre
-[start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
+[start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[>>law_shard>>result]
 ```
 
-A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial
-recs and
-`select([_=>sum()])` folds each key (see *the deep merge*).
+A keyed fold distributes the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the
+partial recs and `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron_pre
-[start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
+[start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[>>law_shard>>result]
 ```
 
 ### may / must — the fiber modality

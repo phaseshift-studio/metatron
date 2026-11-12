@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.*;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.IdentityRewriter;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
@@ -248,12 +247,10 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_REWRITER_TID = MACH_MACHINE_COMPONENT_TID.extend(REWRITER);
     public static final fURI MACH_FIXPOINT_REWRITER_TID = MACH_REWRITER_TID.extend("fixpoint_rewriter");
     public static final fURI MACH_IDENTITY_REWRITER_TID = MACH_REWRITER_TID.extend("identity_rewriter");
-    public static final fURI MACH_PLAN_REWRITER_TID = MACH_REWRITER_TID.extend("plan_rewriter");
     public static Type MACH_REWRITER_TYPE;
     public static Type MACH_FIXPOINT_REWRITER_TYPE;
     public static Type MACH_IDENTITY_REWRITER_TYPE;
-    public static Type MACH_PLAN_REWRITER_TYPE;
-    // the plan rewriter's rule format — a rewrite rule as a first-class value, the morphism path → path
+    // a rewrite rule as a first-class value, the morphism path → path: a path::T out-edge, or law_shard's plan
     public static final fURI MACH_PLAN_TID = MACH_ISA_TID.extend("plan");
     public static Type MACH_PLAN_TYPE;
     // the resolver family — structural resolve(code)->code contract, concrete scoring + firstfind strategies
@@ -410,13 +407,7 @@ public class machInstSet extends AbstractInstSet {
                                 .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
                                 .example("fixpoint_rewriter::[max=>3]   [-- accept the fixpoint after three stable passes --]")
                                 .create(),
-                        MACH_PLAN_REWRITER_TYPE = TypeBuilder.build()
-                                .tid(MACH_FIXPOINT_REWRITER_TID)
-                                .vid(MACH_PLAN_REWRITER_TID, "at the rewrite stage of compiler::T, plan_rewriter::T is a fixpoint_rewriter::T whose rules are the law-driven plans (plan::T) rather than the rewrites the machine's instsets register: each plan reads the algebra the instructions and types declare (?decq) — a theory role, a process law, or a form and the laws its combiner needs — so a declared algebra is optimized, and over live peers distributed (law_shard), with no rule naming an instruction. Only the plans run")
-                                .constructor(arg -> new PlanRewriter(arg.asRec().jvm(), MACH_PLAN_REWRITER_TID, arg.vid()))
-                                .example("plan_rewriter::[=>]   [-- rewrite with the law-driven plans alone --]")
-                                .create(),
-                        // the plan rewriter's rule format
+                        // a rewrite rule as a first-class value
                         MACH_PLAN_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)
                                 .vid(MACH_PLAN_TID, "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)")
