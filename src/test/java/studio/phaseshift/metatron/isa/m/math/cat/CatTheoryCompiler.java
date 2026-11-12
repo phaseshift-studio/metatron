@@ -26,14 +26,19 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_COMPILER_TID;
 
-/*
+/**
+ * The category suites' compiler: it resolves before it rewrites, so a rule reads resolved instructions. A compiler
+ * carries its typer's checks ({@code Typer.Helper.set} writes them into it), so a suite that isolates itself takes an
+ * instance of its own; {@link #single()} is the one the distributed suites share on the root, whose loop peers
+ * evaluate a shipped lane there.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class CatTheoryCompiler extends BasicCompiler {
 
     private static final CatTheoryCompiler INSTANCE = new CatTheoryCompiler();
 
-    private CatTheoryCompiler() {
+    public CatTheoryCompiler() {
         super(MACH_COMPILER_TID, null);
     }
 

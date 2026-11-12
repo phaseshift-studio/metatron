@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
@@ -41,10 +42,12 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.COMPOSE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MONOID_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LAW_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.THEORY_FORM_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.sum_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -1381,6 +1384,266 @@ public enum Law {
                 final Inst.Form form = Inst.Form.of(scanned.insts().get(i).tid(tid));
                 return Inst.Form.mapper == form || (Inst.Form.filter == form && (null == least || 0L >= least));
             });
+        }
+
+        /**
+         * THE UNIT LAW, /m's {@code theory_unit_removal}: an operation applied to its own theory identity drops out, and a
+         * bare identity operation is the identity morphism — monoid_theory's rule as every monoid instance binds it
+         * ({@link #rules}), so the one rule covers every declared monoid.
+         * <p>
+         * THE IDENTITY IS A VALUE, SO THE OPERAND IS COMPARED, one rule at a time: a match is a type test, under which a
+         * computed operand passes by its range ({@code plus(map(3).neg())} would pass as {@code plus(0)}, and
+         * {@code derivation_contraction} would never see it), so the run's operands must equal the unit's. Only
+         * composition's identity is one: the additive group's {@code id} is end, composition's zero, and taking it for the
+         * identity turned {@code 5.end()} into {@code 5}. A lone instruction is a selector (a payload), not a morphism to
+         * collapse, so the bare identity stays alone; a sole unit such as {@code [plus(0)]} still drops.
+         */
+        public static Code unitRemoval(final Code code) {
+            Code out = code;
+            for (final Rec unit : rules(MONOID_THEORY_TID)) {
+                final Inst term = unit.elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
+                out = rewrite(out, List.of(unit), (scanned, start, length) -> term.args().equals(scanned.insts().get(start).args())
+                        && (!term.args().isEmpty() || 1 < scanned.insts().size()));
+            }
+            return out;
+        }
+
+        /**
+         * THE INVERSE LAW, /m's {@code inverse_cancellation}: an adjacent declared inverse pair with equal operands cancels
+         * to the identity — {@code f·f⁻¹ ↦ ε} and {@code f⁻¹·f ↦ ε}, group_theory's two rules as every group instance binds
+         * them ({@link #rules}), cancelled only where the second instruction is the inverse the first declares at the
+         * chain's carrier, in that direction. A declared inverse is one-sided: {@code inverse(f) = g} claims
+         * {@code x.f().g() = x} (f a section, g its retraction), never {@code x.g().f() = x} — on int, {@code x.mult(2).div(2)}
+         * is {@code x} but {@code 5.div(2).mult(2)} is 4. Endpoints are unavailable before resolution, so the operand type
+         * that selected the declaration is the type guard. An operand that is its type's declared {@code zero} never
+         * cancels: the zero annihilates under {@code mult} ({@code mult(0)} has no inverse), and under {@code plus} it is
+         * the unit law's anyway. An involution's pair is the involution law's ({@code law_involution}). Its terms are
+         * unscaled as every local equation's are ({@link #rewrite}).
+         */
+        public static Code inverseCancellation(final Code code) {
+            return rewrite(code, rules(GROUP_THEORY_TID), (scanned, start, length) -> {
+                final Inst a = scanned.insts().get(start);
+                final Inst b = scanned.insts().get(start + 1);
+                final fURI inverse = TheoryHelper.roleAddress(declared(a.tid().basePath(), carriers(scanned).get(start)), INVERSE);
+                return null != inverse && b.tid().basePath().equals(inverse.basePath())
+                        && a.args().equals(b.args())
+                        && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
+                        .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
+            });
+        }
+
+        /**
+         * DERIVATION CONTRACTION, /m's {@code derivation_contraction}: a derived instruction's primitive composition folds
+         * back to the derived operation — {@code plus·neg ↦ minus}, {@code mult·inv ↦ div}, from the instruction's declared
+         * {@code derivation} ({@link #derivations}). Each equation runs backward as an {@code update()} rule
+         * ({@link Call.Helper#update}): every contiguous run of the chain that tests the rhs becomes the lhs, its holes
+         * reading what the rhs's holes matched. The rhs is matched as a whole WINDOW: a one-instruction rhs nests its
+         * composition in that instruction's args ({@code plus(map(#::T@b).neg())}), a longer one spans several, and
+         * matching only the rhs's last instruction would contract every {@code sum} to {@code count}.
+         * <p>
+         * AN EQUATION SPEAKS WHERE ITS CONTRACT RUNS (carrier selection, Marko 2026-11-08): a run is contracted only where
+         * the carrier flowing into it dispatches the derived op to the contract that declares the equation
+         * ({@link #selects}). Real's {@code div ≡ mult·inv} once contracted an int's {@code 7.mult(2.inv())} to a truncating
+         * {@code div}, and int's {@code minus ≡ plus·neg} a lst's {@code plus} into the lst {@code minus} that removes
+         * slots: two chains that fail as written (int has no {@code inv}, lst no {@code neg}) answered another op.
+         */
+        public static Code derivationContraction(final Code code) {
+            Code out = code;
+            for (final Map.Entry<fURI, Rec> d : derivations().entrySet())
+                out = rewrite(out, List.of(rec(d.getValue().atDirect(uri(RHS)).asCode(), d.getValue().atDirect(uri(LHS)).asCode())),
+                        (scanned, start, length) -> selects(carriers(scanned).get(start), d.getKey()));
+            return out;
+        }
+
+        /**
+         * THE ADDITIVE LIKE-TERM LAW, /m's {@code branch_collapse}: equal members of any occurrence of the code ring's
+         * additive op collapse to the member that first appeared, carrying the summed multiplicities,
+         * {@code S(x,x,…,x) ↦ S(x{n})}. The op is read off the code ring's declared theory at rewrite time (branch), so the
+         * body knows nothing of branch, and a code ring that declares no additive op is the identity. The op is matched
+         * by its base path: it is registered generic, so a space read's admitted() would drop it, and the bare address is
+         * unique to the code ring.
+         * <p>
+         * A REC ARGUMENT LIST IS A ROUTE TABLE: its members are SCHEDULED (each runs at its key's place), not free additive
+         * terms. Equal lanes under ONE key are already summed by the rec itself ({@code a => x, a => x} is {@code a => x{2}}),
+         * and lanes under different keys run at different places, so they never collapse. A member's multiplicity is the
+         * point of its output ({@link #multiplicity}), and the summed point is written back there, its span untouched.
+         */
+        public static Code branchCollapse(final Code code) {
+            final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
+            if (null == op)
+                return code;
+            boolean changed = false;
+            final List<Inst> out = new ArrayList<>(code.insts().size());
+            for (final Inst inst : code.insts()) {
+                if (!op.basePath().equals(inst.tid().basePath()) || inst.args().isRec() || 2 > inst.args().count()) {
+                    out.add(inst);
+                    continue;
+                }
+                final List<Obj> reps = new ArrayList<>();
+                final List<cInt> sums = new ArrayList<>();
+                for (final Obj arg : inst.args().elements().toList()) {
+                    int slot = -1;
+                    for (int j = 0; j < reps.size(); j++) {
+                        if (sameMember(reps.get(j), arg)) {
+                            slot = j;
+                            break;
+                        }
+                    }
+                    if (-1 == slot) {
+                        reps.add(arg);
+                        sums.add(multiplicity(arg));
+                    } else
+                        sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
+                }
+                if (reps.size() < inst.args().count()) {
+                    changed = true;
+                    final List<Obj> merged = new ArrayList<>(reps.size());
+                    // a representative is kept as written only when it already carries the sum: the first member may be
+                    // zero-pointed (branch(id{0}(),id()) sums to 1 on id{0}()), so a sum of 1 is no proof of an unpointed rep
+                    for (int i = 0; i < reps.size(); i++) {
+                        final Obj rep = reps.get(i);
+                        final cInt sum = sums.get(i);
+                        if (multiplicity(rep).equals(sum))
+                            merged.add(rep);
+                        else if (rep.isCode() && !rep.asCode().insts().isEmpty()) {
+                            final List<Inst> insts = new ArrayList<>(rep.asCode().insts());
+                            insts.set(insts.size() - 1, insts.getLast().d(sum).asInst());
+                            merged.add(code(insts));
+                        } else
+                            merged.add(rep.isInst() ? rep.d(sum) : rep.c(sum));
+                    }
+                    out.add(inst.args(lst(merged)));
+                } else
+                    out.add(inst);
+            }
+            return changed ? code(out) : code;
+        }
+
+        /**
+         * THE ONE-TERM SUM LAW, /m's {@code branch_inline}: an occurrence of the code ring's additive op whose members have
+         * come to one is that member, added to nothing, {@code S(x) ↦ x}. The frame unwraps and its own coefficient folds
+         * into the member, {@code branch{c}(b) ↦ b{c}}: a code member takes it on its last inst, where its multiplicity is
+         * read, and any other member takes the multiplication itself. A call member splices in by its insts, a non-call
+         * member lifts to the map that emits it, stream-transparent either way.
+         * <p>
+         * A REMOTE LANE IS NOT A ONE-TERM SUM: inlining a lane keyed to another host would drop the place and run the
+         * program here. A lone addressless lane runs here anyway, so it inlines as a positional one does.
+         */
+        public static Code branchInline(final Code code) {
+            final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
+            if (null == op)
+                return code;
+            boolean changed = false;
+            final List<Inst> out = new ArrayList<>(code.insts().size());
+            for (final Inst inst : code.insts()) {
+                if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && !Inst.Helper.hasRemoteLane(inst)) {
+                    final Obj lone = inst.args().isRec() ? inst.args().asRec().recValue().values().iterator().next() : inst.arg(0);
+                    final cInt c = inst.c();
+                    final Obj member;
+                    if (cInt.ONE().equals(c))
+                        member = lone;
+                    else if (lone.isCode()) {
+                        final List<Inst> insts = new ArrayList<>(lone.asCode().insts());
+                        insts.set(insts.size() - 1, (Inst) insts.getLast().c(o -> o.mult(c)));
+                        member = code(insts);
+                    } else
+                        member = lone.c(o -> o.mult(c));
+                    changed = true;
+                    if (member.isCall())
+                        out.addAll(member.asCall().insts());
+                    else
+                        out.add((Inst) map_(member).tryToInst());
+                } else
+                    out.add(inst);
+            }
+            return changed ? code(out) : code;
+        }
+
+        /**
+         * THE LEFT-DISTRIBUTIVE NORMAL FORM, /m's {@code branch_factor}: an occurrence of the code ring's additive op whose
+         * members all start with the same pure instruction shares it ahead of the op, {@code branch(a.b, a.c) ↦
+         * a.branch(b, c)}, the ring's a·b + a·c = a·(b + c) (Marko, 2026-11-10: two parallel expressions run as one,
+         * branched where their instructions differ). It goes as far as the like-term normal form and no further: one shared
+         * instruction a pass (the fixpoint reaches a longer prefix); every member alike in its head, span and point
+         * included, so no point moves; every member keeping a remainder, so no unit is introduced; and the head pure, as it
+         * then runs once instead of once per member. A branch feeds its members one obj at a time, so the head must take
+         * one obj at a time too (a mapper, filter or flatmapper): a shared reducer would gather the whole stream ahead of
+         * the branch, and {@code {1,2}.branch(count().plus(1),count().plus(2))} would count 2 where each member counts 1.
+         */
+        public static Code branchFactor(final Code code) {
+            final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
+            if (null == op)
+                return code;
+            final Predicate<Obj> factorable = m -> m.isCode() && m.c().isOne() && 1 < m.asCode().insts().size();
+            // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch
+            final List<Type> carriers = carriers(code);
+            boolean changed = false;
+            final List<Inst> out = new ArrayList<>(code.insts().size() + 1);
+            for (int i = 0; i < code.insts().size(); i++) {
+                final Inst inst = code.insts().get(i);
+                final List<Obj> members = op.basePath().equals(inst.tid().basePath()) && !inst.args().isRec() ? inst.args().elements().toList() : List.of();
+                final Inst head = 2 > members.size() || !factorable.test(members.getFirst()) ? null : members.getFirst().asCode().insts().getFirst();
+                final Rec declared = null == head ? noobjRec() : declared(head.tid().basePath(), carriers.get(i));
+                if (declared.isNoObj()
+                        || !EnumSet.of(Inst.Form.mapper, Inst.Form.filter, Inst.Form.flatmapper).contains(Inst.Form.of(head.tid(declared.atDirect(OBJ).tid())).subring())
+                        || !declares(head, carriers.get(i), Law.pure) || !members.stream().allMatch(m -> factorable.test(m)
+                        && sameMember(m.asCode().insts().getFirst(), head) && m.asCode().insts().getFirst().tid().d().equals(head.tid().d()))) {
+                    out.add(inst);
+                    continue;
+                }
+                changed = true;
+                out.add(head);
+                out.add(inst.args(lst(members.stream()
+                        .map(m -> (Obj) code(new ArrayList<>(m.asCode().insts().subList(1, m.asCode().insts().size()))).tryToInst())
+                        .toList())));
+            }
+            return changed ? code(out) : code;
+        }
+
+        /**
+         * Two additive members being the same element — {@link Inst.Helper#same} with the refined endpoints compared too,
+         * minus the positional vid. A code member is the same when its instruction list is pairwise the same, the points
+         * included up to the last inst: only the last inst's point is the member's multiplicity, as a point ahead of a
+         * reducer is what the reducer reads ({@code 5.plus(1).count()} is 1 and {@code 5.plus{2}(1).count()} is 2). A
+         * non-call member is the same when it is coefficient-less equal (the coefficient is the multiplicity the law sums,
+         * so it is deliberately OUT of the test).
+         */
+        private static boolean sameMember(final Obj a, final Obj b) {
+            if (a.isInst() && b.isInst()) {
+                final Inst ai = a.asInst();
+                final Inst bi = b.asInst();
+                return Inst.Helper.same(ai, bi)
+                        && ai.dom().equals(bi.dom())
+                        && ai.rng().equals(bi.rng())
+                        && Objects.equals(ai.f(), bi.f());
+            }
+            if (a.isCode() && b.isCode()) {
+                final List<Inst> ai = a.asCode().insts();
+                final List<Inst> bi = b.asCode().insts();
+                if (ai.size() != bi.size())
+                    return false;
+                for (int i = 0; i < ai.size(); i++)
+                    if (!sameMember(ai.get(i), bi.get(i)) || (i < ai.size() - 1 && !ai.get(i).tid().d().equals(bi.get(i).tid().d())))
+                        return false;
+                return true;
+            }
+            if (a instanceof Inst || b instanceof Inst || a instanceof Code || b instanceof Code)
+                return false;
+            return a.clessEquals(b);
+        }
+
+        /**
+         * The multiplicity an additive member contributes — the coefficient the law sums. For an inst member it is the
+         * inst's own point; for a code member it is the point of the chain's last inst, the one on the member's output. The
+         * head is no anchor: a point there floats past a reducer, so {@code 5.branch(plus(1).count(),plus(1).count())}
+         * collapsed to {@code plus{2}(1).count()} and answered 2, not {@code {2}1}. An inst's multiplicity is its POINT d,
+         * never its whole coefficient b·d: a span is part of the function (like terms share it), so summing it as a point
+         * read {@code {?}plus(1) + plus(1)} as {@code plus{1,2}(1)}.
+         */
+        private static cInt multiplicity(final Obj member) {
+            if (member.isCode() && !member.asCode().insts().isEmpty())
+                return member.asCode().insts().getLast().tid().d();
+            return member.isInst() ? member.asInst().tid().d() : member.c();
         }
 
         /**

@@ -173,14 +173,12 @@ The rewrite stage precedes resolution, so a rule sees generic dom/rng.
 |------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `fixpoint_rewriter::T` | apply every rewrite of every instset over the code until the code hash $h$ satisfies $h(c_{k+1}) = h(c_k)$ for `max` consecutive passes (default `2`); a rule must be idempotent |
 | `identity_rewriter::T` | return the code unchanged                                                                                                                                                       |
-| `plan_rewriter::T`     | a fixpoint over the law-driven plans (`plan::T`) only; each reads the algebra declared at `?decq`, so a declared algebra is optimized and, over live peers, distributed (`law_shard`) |
 
 A rewrite is switched off per frame through its door (*the table doors*).
 
 ```mtron_pre
 fixpoint_rewriter::[=>]
 fixpoint_rewriter::[max=>3]
-plan_rewriter::[=>]
 ```
 
 ### resolve
@@ -557,7 +555,7 @@ service authority.
 
 | under                | types (`::T`)                                                                                                                                                                                                                     |
 |----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `plan_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer` |
+| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer` |
 | `/m/mach`            | `machine`, `component`, `thread`, `thread/core`, `thread/virtual`, `thread_executor`, `peer`, `listener`, `id_client`, `network_supervisor`, `monad`, `plan` (a rewrite rule as a value), `factory`                                |
 | `/m/uri`             | `origin`, `path_encoding`, `authority`                                                                                                                                                                                              |
 

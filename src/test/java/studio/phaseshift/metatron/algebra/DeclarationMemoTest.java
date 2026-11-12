@@ -19,9 +19,6 @@
 package studio.phaseshift.metatron.algebra;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
-import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
@@ -44,6 +41,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECS_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LAW_IDEMPOTENT;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MOD_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -69,9 +67,8 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
         // restored claimants are the ones they were, in their order
         final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID)).addQ(DECQ);
         final Obj original = Machine.read(address);
-        final Plan idempotent = PlanRewriter.planOf("law_idempotent");
         final Code chain = ObjmtronSerializer.parse("5.mod(3).mod(3)").asCode();
-        assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "mod declares no idempotent law");
+        assertEquals(chain, Law.Helper.lawRemoval(chain, LAW_IDEMPOTENT), "mod declares no idempotent law");
         final List<Inst> idempotents = Law.Helper.claimants(Law.idempotent);
         final List<Inst> involutions = Law.Helper.claimants(Law.involution);
         final Map<Obj, Obj> claim = mutableMap(original.asRec().jvm());
@@ -79,7 +76,7 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
         try {
             Machine.write(address, noobj());
             Machine.write(address, rec(claim, DECS_TID, null));
-            assertEquals(ObjmtronSerializer.parse("5.mod(3)").asCode(), PlanInterpreter.lower(idempotent, chain),
+            assertEquals(ObjmtronSerializer.parse("5.mod(3)").asCode(), Law.Helper.lawRemoval(chain, LAW_IDEMPOTENT),
                     "the declared law licenses its rule, got the claimants " + Law.Helper.claimants(Law.idempotent));
             final List<Inst> declared = Law.Helper.claimants(Law.idempotent);
             assertEquals(idempotents.size() + 1, declared.size(), "mod joins the law's claimants alone, got " + declared);
@@ -89,7 +86,7 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
             Machine.write(address, noobj());
             Machine.write(address, original);
         }
-        assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "the restored claim takes the rule away");
+        assertEquals(chain, Law.Helper.lawRemoval(chain, LAW_IDEMPOTENT), "the restored claim takes the rule away");
         assertEquals(idempotents, Law.Helper.claimants(Law.idempotent), "the restored claimants are the ones they were, in their order");
     }
 

@@ -27,39 +27,34 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
-import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
-import static studio.phaseshift.metatron.algebra.Law.Helper.rewrite;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
-import static studio.phaseshift.metatron.isa.m.type.Inst.Helper.same;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * PlanInterpreter — lowers a {@link Plan} to code: the engine the plan value is handed to — a categorical
- * match over {@link InstPattern}'s form/law alphabet in place of a hand-rolled form scan.
+ * PlanInterpreter — law_shard, the one rewrite still stated as a {@link Plan}: its plan ({@link #SHARD_PLAN}) and the
+ * emitter that lowers it to a distributed layout. Every local rule is a rewrite of /m whose body is a
+ * {@link Law.Helper} method; distribution is the last plan, until its endpoints bind at run time (distributor::T).
  *
- * <p>The one-cut distribution milestone (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer
+ * <p>The one-cut distribution (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer
  * roster, match the chain shape {@code [seed, {*}floatable, blocked cut, {*}tail]}, locate the cut, then
  * emit the {@code <seed>.branch?dom=T{*}&split=part(<place> => <run>.<fold>, …).<combiner>.<tail>} layout the processor
  * runs.
@@ -78,14 +73,38 @@ public final class PlanInterpreter {
 
     private static final Logger log = LoggerFactory.getLogger(PlanInterpreter.class);
 
+    /**
+     * The one-cut distribution plan — {@code law_shard}, Thm 19 {@code (a+b)·c = (a·c+b·c)·c}: the anchor is a
+     * blocked reducer whose partials recombine through a fold declaring {@code monoidic} (partials regroup) and
+     * {@code commutative} (order-free merge) — its COMBINER, computed rather than declared
+     * ({@link Law.Helper#combiner}): {@code sum} and {@code prod} recombine through themselves, {@code count} through
+     * {@code sum}, {@code order(s)} through {@code kmerge(s)}, and a keyed {@code group([k⇒h])} pointwise — the rec
+     * {@code sum} merges its partials by key, then each key folds through {@code h}'s combiner. The master recombines
+     * behind the barrier and runs the tail at home; each peer takes one factor of the seed bulk with the floatable run
+     * replicated and a local partial reduce.
+     * <p>
+     * The placement is a TREE: a peer re-plans the part it is handed over its own dialed peers while budget remains, and
+     * recombines its children's partials through the same combiner. The budget is the plan's {@code hop} unless the
+     * chain states one ({@code ?hop=n}); the default of one level is the star — the master's peers fold their parts
+     * where they stand.
+     */
+    public static final Plan SHARD_PLAN = PlanBuilder.plan("law_shard")
+            .cut(Cut.reducer(Law.monoidic, Law.commutative))
+            // THE ORIGIN'S TAIL, stated in the axes: the home place alone, no depth, strided — so nothing ships and the
+            // cut is re-applied in place. It stays a TAIL (the AT/POST spans, no SEED span and no regrouping set), which
+            // is what keeps the plan's gather from becoming a lane.
+            .place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())
+            .where(Placement.local(Span.at(), Span.after()))
+            // THE FAN-OUT that factors the seed: the dialed set, one level deep, strided
+            .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
+            .where(Placement.tree(1, Span.seed().partition(), Span.before().floatable().withoutSeed(), Span.at()))
+            .create();
+
     private PlanInterpreter() {
     }
 
     /**
-     * Lower the plan onto {@code code} — the single application point. Every plan is {@code [name, cut, route]},
-     * and what its cut names picks the transform ({@link #lowerCut}): a form cut distributes through
-     * {@link #shard}, a theory role or a process law selects a local fold. A plan whose cut names nothing
-     * known is the identity.
+     * Lower the plan onto {@code code} — the single application point, over this machine's {@link Env} snapshot.
      */
     public static Code lower(final Plan plan, final Code code) {
         return apply(plan, code, Env.snapshot());
@@ -93,13 +112,13 @@ public final class PlanInterpreter {
 
     /**
      * The one body (§12.1): {@code apply(plan, env) = locate → resolve → emit → retype → re-lift}, over one immutable
-     * {@link Env} snapshot — nothing inside reads the machine. {@link #lower} is the cut-plan convenience for the
-     * rewriter; {@link #bind} is the cut-less sibling (Phase 4).
+     * {@link Env} snapshot — nothing inside reads the machine. A plan with a form cut distributes ({@link #shard}); a
+     * cut-less plan relocates ({@link #relocate}, the {@link #bind} sibling); a cut that names no form is the identity.
      */
     public static Code apply(final Plan plan, final Code code, final Env env) {
         if (null == plan.cut())
             return relocate(plan, code, env);
-        return lowerCut(plan, code, env);
+        return null == plan.cut().formOrNull() ? code : shard(plan, code, env);
     }
 
     /**
@@ -133,48 +152,6 @@ public final class PlanInterpreter {
         final List<Inst> insts = new ArrayList<>(code.insts());
         insts.add(to_(decision.target()).tryToInst().asInst());
         return code(insts);
-    }
-
-    /**
-     * The cut/route plan — the structural form: match the cut, isolate the span, route to the target. A
-     * {@code none} target deletes the isolated span (the unit law's transform); a form-classified cut
-     * distributes through {@link #shard}; a role/law-classified cut selects the local fold — the ring's own
-     * operation, read off the theory rather than a transform name.
-     */
-    private static Code lowerCut(final Plan plan, final Code code, final Env env) {
-        final Cut cut = plan.cut();
-        // the unit law: a none target deletes the identity (and unwraps the single addend)
-        for (final Placement placement : plan.where())
-            if (Placement.Shape.NONE == placement.shape())
-                return ID.equals(cut.role()) ? unitRemoval(code) : code;
-        // the distribution plan: a form-classified cut (reducer/join/gather)
-        if (null != cut.formOrNull())
-            return shard(plan, code, env);
-        // the role-classified folds: add (sum like terms), zero (unwrap the single addend), inverse (cancel),
-        // map (unwrap the stream lift)
-        final String role = cut.role();
-        if (null != role)
-            return ADD.equals(role) ? branchCollapse(code)
-                    : ZERO.equals(role) ? branchInline(code)
-                    : INVERSE.equals(role) ? inverseCancellation(code)
-                    : MAP_INST_TID.name().equals(role) ? Law.Helper.lawRemoval(code, FORM_MAP_UNWRAP)
-                    : DERIVATION.equals(role) ? derivationContraction(code)
-                    : code;
-        // the law-classified folds: involution (drop), idempotent/monoidic (keep), poset (compose),
-        // absorbing (swallow the prefix)
-        if (cut.declares(Law.involution))
-            return Law.Helper.lawRemoval(code, LAW_INVOLUTION);
-        if (cut.declares(Law.idempotent))
-            return Law.Helper.lawRemoval(code, LAW_IDEMPOTENT);
-        if (cut.declares(Law.monoidic))
-            return Law.Helper.lawRemoval(code, LAW_MONOIDIC);
-        if (cut.declares(Law.poset))
-            return Law.Helper.lawRemoval(code, LAW_POSET);
-        if (cut.declares(Law.left_distributive))
-            return branchFactor(code);
-        if (cut.declares(Law.absorbing))
-            return Law.Helper.lawRemoval(code, LAW_ABSORBING);
-        return code;
     }
 
     /**
@@ -659,318 +636,5 @@ public final class PlanInterpreter {
         if (null == asked)
             return Integer.MAX_VALUE == cap ? 1 : cap;
         return (int) Math.min(asked, cap);
-    }
-
-    /**
-     * The unit law (local, no distribution): an operation applied to its own theory identity drops out, and a
-     * bare identity operation is the identity morphism — monoid_theory's rule as every monoid instance binds it
-     * ({@link Law.Helper#rules}), so the one rule covers every declared monoid
-     * <p>
-     * THE IDENTITY IS A VALUE, SO THE OPERAND IS COMPARED, one rule at a time: a match is a type test, under which a
-     * computed operand passes by its range ({@code plus(map(3).neg())} would pass as {@code plus(0)}, and
-     * {@code derivation_contraction} would never see it), so the run's operands must equal the unit's. Only
-     * composition's identity is one: the additive group's {@code id} is end, composition's zero, and taking it for the
-     * identity turned {@code 5.end()} into {@code 5}. A lone instruction is a selector (a payload), not a morphism to
-     * collapse, so the bare identity stays alone; a sole unit such as {@code [plus(0)]} still drops.
-     */
-    private static Code unitRemoval(final Code code) {
-        Code out = code;
-        for (final Rec unit : Law.Helper.rules(MONOID_THEORY_TID)) {
-            final Inst term = unit.elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
-            out = rewrite(out, List.of(unit), (scanned, start, length) -> term.args().equals(scanned.insts().get(start).args())
-                    && (!term.args().isEmpty() || 1 < scanned.insts().size()));
-        }
-        return out;
-    }
-
-    /**
-     * The inverse law (local): an adjacent declared inverse pair with equal operands cancels to the identity —
-     * {@code f·f⁻¹ ↦ ε} and {@code f⁻¹·f ↦ ε}, group_theory's two rules as every group instance binds them
-     * ({@link Law.Helper#rules}), cancelled only where the chain's carrier derives that inverse ({@link #isInverseOf}).
-     * An involution's pair is the involution law's ({@code law_involution}). Its terms are unscaled as every local
-     * equation's are ({@link Law.Helper#rewrite}).
-     */
-    private static Code inverseCancellation(final Code code) {
-        return rewrite(code, Law.Helper.rules(GROUP_THEORY_TID),
-                (scanned, start, length) -> isInverseOf(scanned.insts().get(start), scanned.insts().get(start + 1), carriers(scanned).get(start)));
-    }
-
-    /**
-     * Whether {@code b} is the declared inverse of {@code a} with equal operands — {@code x.a().b() ↦ x} — read off
-     * {@code a}'s declared {@code inverse}, in that direction only. A declared inverse is one-sided: {@code inverse(f) = g}
-     * claims {@code x.f().g() = x} (f a section, g its retraction), never {@code x.g().f() = x} — on int,
-     * {@code x.mult(2).div(2)} is {@code x} but {@code 5.div(2).mult(2)} is 4. Endpoints are unavailable before
-     * resolution, so the operand type that selected the declaration is the type guard. An operand that is its type's
-     * declared {@code zero} never cancels: the zero annihilates under {@code mult} ({@code mult(0)} has no inverse), and
-     * under {@code plus} it is the unit law's anyway.
-     */
-    private static boolean isInverseOf(final Inst a, final Inst b, final Type carrier) {
-        final fURI inverse = TheoryHelper.roleAddress(Law.Helper.declared(a.tid().basePath(), carrier), INVERSE);
-        return null != inverse && b.tid().basePath().equals(inverse.basePath())
-                && a.args().equals(b.args())
-                && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
-                .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
-    }
-
-    /**
-     * Derivation contraction (local): fold a derived instruction's primitive composition back to the derived
-     * operation — {@code plus·neg ↦ minus}, {@code mult·inv ↦ div}, from the instruction's declared {@code derivation}.
-     * Each equation runs backward as an {@code update()} rule ({@link Call.Helper#update}): every contiguous run of the
-     * chain that tests the rhs becomes the lhs, its holes reading what the rhs's holes matched. The rhs is matched as a
-     * whole WINDOW: a one-instruction rhs nests its composition in that instruction's args ({@code plus(map(#::T@b).neg())}),
-     * a longer one spans several, and matching only the rhs's last instruction would contract every {@code sum} to
-     * {@code count}.
-     * <p>
-     * AN EQUATION SPEAKS WHERE ITS CONTRACT RUNS (carrier selection, Marko 2026-11-08): a run is contracted only where
-     * the carrier flowing into it dispatches the derived op to the contract that declares the equation
-     * ({@link Law.Helper#selects}). Real's {@code div ≡ mult·inv} once contracted an int's {@code 7.mult(2.inv())} to
-     * a truncating {@code div}, and int's {@code minus ≡ plus·neg} a lst's {@code plus} into the lst {@code minus} that
-     * removes slots: two chains that fail as written (int has no {@code inv}, lst no {@code neg}) answered another op.
-     */
-    private static Code derivationContraction(final Code code) {
-        Code out = code;
-        for (final Map.Entry<fURI, Rec> d : Law.Helper.derivations().entrySet())
-            out = rewrite(out, List.of(rec(d.getValue().atDirect(uri(RHS)).asCode(), d.getValue().atDirect(uri(LHS)).asCode())),
-                    (scanned, start, length) -> Law.Helper.selects(carriers(scanned).get(start), d.getKey()));
-        return out;
-    }
-
-    /**
-     * The additive like-term law (local): equal members of any occurrence of the algebra's additive op collapse
-     * to the member that first appeared, carrying the summed multiplicities — {@code S(x,x,…,x) ↦ S(x{n})}. The
-     * witness is read off object[code].theory at rewrite time (for the code ring: branch).
-     */
-    private static Code branchCollapse(final Code code) {
-        return repeatedTerms(TheoryHelper.additiveWitness(T(CODE_TID)), T(CODE_TID), code);
-    }
-
-    /**
-     * The one-term sum law (local): an occurrence of the algebra's additive op with a single member is that
-     * member — {@code S(x) ↦ x}, the frame's own coefficient folded into it.
-     */
-    private static Code branchInline(final Code code) {
-        return oneTerm(TheoryHelper.additiveWitness(T(CODE_TID)), T(CODE_TID), code);
-    }
-
-    /**
-     * The left-distributive normal form (local): an occurrence of the algebra's additive op whose members all start with
-     * the same pure instruction shares it ahead of the op, {@code branch(a.b, a.c) ↦ a.branch(b, c)}, the ring's
-     * a·b + a·c = a·(b + c) (Marko, 2026-11-10: two parallel expressions run as one, branched where their instructions
-     * differ). It goes as far as the like-term normal form and no further: one shared instruction a pass (the fixpoint
-     * reaches a longer prefix); every member alike in its head, span and point included, so no point moves; every member
-     * keeping a remainder, so no unit is introduced; and the head pure, as it then runs once instead of once per member.
-     * A branch feeds its members one obj at a time, so the head must take one obj at a time too (a mapper, filter or
-     * flatmapper): a shared reducer would gather the whole stream ahead of the branch, and
-     * {@code {1,2}.branch(count().plus(1),count().plus(2))} would count 2 where each member counts 1.
-     */
-    private static Code branchFactor(final Code code) {
-        final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
-        if (null == op)
-            return code;
-        final Predicate<Obj> factorable = m -> m.isCode() && m.c().isOne() && 1 < m.asCode().insts().size();
-        // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch
-        final List<Type> carriers = carriers(code);
-        boolean changed = false;
-        final List<Inst> out = new ArrayList<>(code.insts().size() + 1);
-        for (int i = 0; i < code.insts().size(); i++) {
-            final Inst inst = code.insts().get(i);
-            final List<Obj> members = matches(op, inst, T(CODE_TID)) && !inst.args().isRec() ? inst.args().elements().toList() : List.of();
-            final Inst head = 2 > members.size() || !factorable.test(members.getFirst()) ? null : members.getFirst().asCode().insts().getFirst();
-            final Rec declared = null == head ? noobjRec() : Law.Helper.declared(head.tid().basePath(), carriers.get(i));
-            if (declared.isNoObj()
-                    || !EnumSet.of(Inst.Form.mapper, Inst.Form.filter, Inst.Form.flatmapper).contains(Inst.Form.of(head.tid(declared.atDirect(OBJ).tid())).subring())
-                    || !declares(head, carriers.get(i), Law.pure) || !members.stream().allMatch(m -> factorable.test(m)
-                    && sameMember(m.asCode().insts().getFirst(), head) && m.asCode().insts().getFirst().tid().d().equals(head.tid().d()))) {
-                out.add(inst);
-                continue;
-            }
-            changed = true;
-            out.add(head);
-            out.add(inst.args(lst(members.stream()
-                    .map(m -> (Obj) code(new ArrayList<>(m.asCode().insts().subList(1, m.asCode().insts().size()))).tryToInst())
-                    .toList())));
-        }
-        return changed ? code(out) : code;
-    }
-
-    /**
-     * Whether the bare chain instruction is the witness op — a base-path match. The witness here is the
-     * n-ary {@code branch} (the code ring's {@code Σ}), which is registered with a generic dom/rng, so the
-     * space read's {@code admitted()} (which excludes generic rngs) would drop it; the bare address is unique
-     * to the code ring, so the base-path check is exact. A concrete-rng op (like {@code plus}) would instead
-     * resolve by space read for type inheritance ({@code nat} → {@code int}).
-     */
-    private static boolean matches(final fURI witness, final Inst inst, final Type carrier) {
-        return witness.basePath().equals(inst.tid().basePath());
-    }
-
-    /**
-     * The repeated-term normalizer, law-indexed: every occurrence of {@code op} — the algebra's additive op —
-     * with two or more like terms consolidates them into the member that first appeared, carrying the summed
-     * multiplicities as the coefficient. The body is inst-agnostic: for the code ring {@code op} is
-     * {@code branch}, for the int ring the same body would point at {@code plus}. A null witness — the algebra
-     * declares no additive op — is the identity.
-     */
-    private static Code repeatedTerms(final fURI op, final Type carrier, final Code code) {
-        if (null == op)
-            return code;
-        boolean changed = false;
-        final List<Inst> out = new ArrayList<>(code.insts().size());
-        for (final Inst inst : code.insts()) {
-            // A REC ARGUMENT LIST IS A ROUTE TABLE: its members are SCHEDULED (each runs at its key's place),
-            // not free additive terms. Equal lanes under ONE key are already summed by the rec itself (a => x,
-            // a => x is a => x{2}), and lanes under different keys run at different places, so they never collapse.
-            if (!matches(op, inst, carrier) || inst.args().isRec() || 2 > inst.args().count()) {
-                out.add(inst);
-                continue;
-            }
-            final List<Obj> reps = new ArrayList<>();
-            final List<cInt> sums = new ArrayList<>();
-            for (final Obj arg : inst.args().elements().toList()) {
-                int slot = -1;
-                for (int j = 0; j < reps.size(); j++) {
-                    if (sameMember(reps.get(j), arg)) {
-                        slot = j;
-                        break;
-                    }
-                }
-                if (-1 == slot) {
-                    reps.add(arg);
-                    sums.add(multiplicity(arg));
-                } else
-                    sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
-            }
-            if (reps.size() < inst.args().count()) {
-                changed = true;
-                final List<Obj> merged = new ArrayList<>(reps.size());
-                // a representative is kept as written only when it already carries the sum: the first member may be
-                // zero-pointed (branch(id{0}(),id()) sums to 1 on id{0}()), so a sum of 1 is no proof of an unpointed rep
-                for (int i = 0; i < reps.size(); i++)
-                    merged.add(multiplicity(reps.get(i)).equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
-                out.add(inst.args(lst(merged)));
-            } else
-                out.add(inst);
-        }
-        return changed ? code(out) : code;
-    }
-
-    /**
-     * The one-term normalizer, law-indexed: an occurrence of {@code op} — the algebra's additive op — whose
-     * members have come to one is that member, added to nothing, so the frame unwraps and the frame's own
-     * coefficient folds into the member ({@code branch{c}(b) |-> b{c}}); a call member splices in by its
-     * insts, a non-call member lifts to the map that emits it — stream-transparent either way. A null witness
-     * is the identity, as in {@link #repeatedTerms}.
-     */
-    private static Code oneTerm(final fURI op, final Type carrier, final Code code) {
-        if (null == op)
-            return code;
-        boolean changed = false;
-        final List<Inst> out = new ArrayList<>(code.insts().size());
-        for (final Inst inst : code.insts()) {
-            // A REMOTE LANE IS NOT A ONE-TERM SUM: inlining a lane keyed to another host would drop the place and
-            // run the program here. A lone addressless lane runs here anyway, so it inlines as a positional one does.
-            if (matches(op, inst, carrier) && 1 == inst.args().count() && !Inst.Helper.hasRemoteLane(inst)) {
-                final Obj member = absorb(inst.args().isRec()
-                        ? inst.args().asRec().recValue().values().iterator().next()
-                        : inst.arg(0), inst.c());
-                changed = true;
-                if (member.isCall())
-                    out.addAll(member.asCall().insts());
-                else
-                    out.add((Inst) map_(member).tryToInst());
-            } else
-                out.add(inst);
-        }
-        return changed ? code(out) : code;
-    }
-
-    /**
-     * The frame's own coefficient folded into its single member — an occurrence of coefficient c applied to a
-     * single member multiplies that member's multiplicity by c, so the frame unwraps and the member comes out
-     * carrying it. A code member anchors the coefficient at its last inst, where {@link #multiplicity(Obj)} reads it;
-     * an inst or a non-call member takes the multiplication itself.
-     */
-    private static Obj absorb(final Obj member, final cInt c) {
-        if (cInt.ONE().equals(c))
-            return member;
-        if (member.isCode()) {
-            final List<Inst> insts = new ArrayList<>(member.asCode().insts());
-            insts.set(insts.size() - 1, (Inst) insts.getLast().c(o -> o.mult(c)));
-            return code(insts);
-        }
-        return member.c(o -> o.mult(c));
-    }
-
-    /**
-     * Two additive members being the same element — {@code same(Inst, Inst)} with the refined endpoints compared
-     * too, minus the positional vid. A code member is the same when its instruction list is pairwise the same, the
-     * points included up to the last inst: only the last inst's point is the member's multiplicity, as a point
-     * ahead of a reducer is what the reducer reads ({@code 5.plus(1).count()} is 1 and {@code 5.plus{2}(1).count()} is
-     * 2). A non-call member is the same when it is coefficient-less equal (the coefficient is the multiplicity the
-     * law sums, so it is deliberately OUT of the test).
-     */
-    private static boolean sameMember(final Obj a, final Obj b) {
-        if (a.isInst() && b.isInst()) {
-            final Inst ai = a.asInst();
-            final Inst bi = b.asInst();
-            return same(ai, bi)
-                    && ai.dom().equals(bi.dom())
-                    && ai.rng().equals(bi.rng())
-                    && Objects.equals(ai.f(), bi.f());
-        }
-        if (a.isCode() && b.isCode()) {
-            final List<Inst> ai = a.asCode().insts();
-            final List<Inst> bi = b.asCode().insts();
-            if (ai.size() != bi.size())
-                return false;
-            for (int i = 0; i < ai.size(); i++)
-                if (!sameMember(ai.get(i), bi.get(i)) || (i < ai.size() - 1 && !ai.get(i).tid().d().equals(bi.get(i).tid().d())))
-                    return false;
-            return true;
-        }
-        if (a instanceof Inst || b instanceof Inst || a instanceof Code || b instanceof Code)
-            return false;
-        return a.clessEquals(b);
-    }
-
-    /**
-     * The multiplicity an additive member contributes — the coefficient the law sums. For an inst member it is
-     * the inst's own point; for a code member it is the point of the chain's last inst, the one on the member's output.
-     * The head is no anchor: a point there floats past a reducer, so {@code 5.branch(plus(1).count(),plus(1).count())}
-     * collapsed to {@code plus{2}(1).count()} and answered 2, not {@code {2}1}.
-     */
-    private static cInt multiplicity(final Obj member) {
-        // an inst's multiplicity is its POINT d, never its whole coefficient b·d: a span is part of the function (like
-        // terms share it), so summing it as a point read {?}plus(1) + plus(1) as plus{1,2}(1)
-        if (member.isCode() && !member.asCode().insts().isEmpty())
-            return member.asCode().insts().getLast().tid().d();
-        return member.isInst() ? member.asInst().tid().d() : member.c();
-    }
-
-    /**
-     * The member carrying its summed point, at the anchor {@link #multiplicity(Obj)} reads it from — the inst's tid
-     * (its span untouched), or the last inst of the chain for a code.
-     */
-    private static Obj coeff(final Obj member, final cInt c) {
-        if (member.isCode() && !member.asCode().insts().isEmpty()) {
-            final List<Inst> insts = new ArrayList<>(member.asCode().insts());
-            insts.set(insts.size() - 1, insts.getLast().d(c).asInst());
-            return code(insts);
-        }
-        return member.isInst() ? member.d(c) : member.c(c);
-    }
-
-    /**
-     * The one instruction a filter tests — {@code is(gt(a))} or {@code filter(gt(a))}, whose one argument is
-     * {@code gt(a)} (an instruction, or a one-instruction code) — or null when the instruction is no filter of one
-     * instruction. Whether that instruction is a COMPARISON is its declaration's to say, never its name's: the callers
-     * gate on {@code poset}. A bare {@code gt(a)} is no filter: it answers a bool, which is why only filters compose.
-     */
-    public static Inst comparisonOf(final Inst filter) {
-        final fURI op = filter.tid().basePath();
-        if ((!IS_INST_TID.equals(op) && !FILTER_INST_TID.equals(op)) || 1 != filter.args().count() || !filter.arg(0).isCall())
-            return null;
-        final List<Inst> insts = filter.arg(0).<Call>as().asCode().insts();
-        return 1 == insts.size() ? insts.getFirst() : null;
     }
 }

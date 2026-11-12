@@ -283,8 +283,14 @@ public class DBRewriteBuilder<S extends Space> {
     protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
         return map -> {
             final List<Inst> matched = map.values().stream().toList();
+            // ONLY A SPACE'S SOURCE IS REWRITTEN (Marko, 2026-11-12): a rewrite whose space has no native instruction to
+            // call (sql(), gremlin()) is the identity. A match whose first instruction reads no uri -- a seed such as
+            // start({1,2,3}) or a filter, which a wildcard first position also matches -- is left as it stands, never
+            // dereferenced into a fail; the space type and the match predicate below decide the rest.
+            if (!matched.getFirst().arg(0).isUri())
+                return matched;
             // Extract fURI from the first instruction (FROM/AT instruction)
-            fURI oldfURI = matched.getFirst().arg(0).asUri().uriValue();
+            fURI oldfURI = matched.getFirst().arg(0).uriValue();
             // Fold a field access (>>field / rshift) into the source URI so DataPath resolves the
             // column: from(x) >> field  →  from(x/field).
             for (final Inst m : matched) {

@@ -18,40 +18,28 @@
 
 package studio.phaseshift.metatron.algebra.rewrite.plan;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
-import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 
 /**
  * The one-rule contract ({@code plan::T = [name, cut?, where]}): a plan with a {@code cut} is a semantic rule, a
  * plan with no {@code cut} is a distribution rule. {@link PlanBuilder#create()} accepts a cut-less plan with exactly
- * one {@link Placement} (the distribution rule), keeps {@code cut.laws ⊇ obligations} when a cut is present, and the
- * {@code route → where} rename is inert — the emitted code is byte-for-byte the code the pre-rename plans lowered to.
+ * one {@link Placement} (the distribution rule), keeps {@code cut.laws ⊇ obligations} when a cut is present, and reads
+ * a decision back from its axes. The plan vocabulary alone: what law_shard does with its plan, and what every other
+ * rule does, is mInstSetRewriteTest's.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -59,16 +47,6 @@ public class PlanBuilderTest extends AbstractInstSetTest {
 
     public PlanBuilderTest() {
         super(catInstSet::new);
-    }
-
-    @BeforeAll
-    public static void importAllInstSets() {
-        InstSet.importInstSet(f("#"));
-    }
-
-    @BeforeEach
-    public void installCategoryCompiler() {
-        Machine.current().compiler(CatTheoryCompiler.single());
     }
 
     /**
@@ -126,84 +104,6 @@ public class PlanBuilderTest extends AbstractInstSetTest {
     }
 
     /**
-     * THE KEY'S TWO SPELLINGS — {@code ?hop} is canonical and {@code ?hops} is its deprecated read-only alias for
-     * one cycle. The scan walks the chain once and answers the first instruction that states either, so the earliest
-     * statement wins ({@code ?hops} earlier beats {@code ?hop} later) and the new spelling is preferred at the same
-     * position (both keys on one instruction answer 2). A chain that states neither falls through to the plan's tree
-     * route ({@code law_shard}'s one level, the star). The counted spelling is the LEADING coefficient
-     * ({@code {2}4}), which the object grammar reads as the int 4 carrying {@code c = 2}; the coefficient is a later
-     * chunk's arity, so the head is the budget and {@code ?hop=4}, {@code ?hop={2}4} and {@code ?hops={2}4} all
-     * answer 4. Each row: the chain % its hop budget.
-     */
-    @ParameterizedTest
-    @CsvSource(value = {
-            "start?hop=2({1,2,3,4}).plus(1).sum()            % 2",
-            "start?hops=2({1,2,3,4}).plus(1).sum()           % 2",
-            "start?hop=2&hops=3({1,2,3,4}).plus(1).sum()     % 2",
-            "start?hops=2({1,2,3,4}).plus(1).sum?hop=3()     % 2",
-            "start?hop=4({1,2,3,4}).plus(1).sum()            % 4",
-            "start?hop=0({1,2,3,4}).plus(1).sum()            % 0",
-            "start?hop={2}4({1,2,3,4}).plus(1).sum()         % 4",
-            "start?hops={2}4({1,2,3,4}).plus(1).sum()        % 4",
-            "{1,2,3,4}.plus(1).sum()                          % 1",
-    }, delimiter = '%')
-    public void testHopKeyAndItsDeprecatedAlias(final String source, final int expected) {
-        final Plan shard = PlanRewriter.planOf("law_shard");
-        assertNotNull(shard, "no plan registered under law_shard");
-        Assertions.assertEquals(expected, PlanInterpreter.hop(shard, ObjmtronSerializer.parse(source).asCode()),
-                "the hop budget of " + source);
-    }
-
-    /**
-     * A HOP BUDGET THAT CANNOT BE READ IS REFUSED, LOUDLY — never answered {@code 0}, because {@link
-     * PlanInterpreter#hop} is the tree's height and a silent zero plans no distribution at all (the old {@code
-     * Integer.parseInt} catch). The value is read through {@code fURI.qValue}, so these are the shapes the object
-     * grammar leaves behind: a bare non-numeric uri ({@code abc}), a list that is not the pair form
-     * ({@code [1,2,3]} — the pair {@code [height, arity]} IS a hop, the two arities the coefficient cannot render),
-     * a quoted str where a value was required ({@code "ab"}), a backslash value the parser cannot read ({@code \x}),
-     * and a TRAILING range on a number ({@code 4{1,2}}) — a number's trailing coefficient is its span (Marko,
-     * 2026-11-10: a value is {point}value{span}), a layout of an exact length, so {@code 4{2}} reads as the pair
-     * {@code [4,4]} until a vid can be a branched uri, and a range there reads as nothing: the projection answers a
-     * {@code fail}. The leading {@code {2}4} is the spelling that reads (the row above). Each row: the chain % the text
-     * the refusal must name.
-     */
-    @ParameterizedTest
-    @CsvSource(value = {
-            "start?hop=abc({1,2,3,4}).plus(1).sum()          % ?hop=abc",
-            "start?hop=[1,2,3]({1,2,3,4}).plus(1).sum()      % ?hop=[1,2,3]",
-            "start?hop=\"ab\"({1,2,3,4}).plus(1).sum()       % ?hop=\"ab\"",
-            "start?hop=\\x({1,2,3,4}).plus(1).sum()          % ?hop=\\x",
-            "start?hop=4{1,2}({1,2,3,4}).plus(1).sum()       % ?hop=4{1,2}",
-    }, delimiter = '%')
-    public void testHopRefusesAnUnreadableBudget(final String source, final String stated) {
-        final Plan shard = PlanRewriter.planOf("law_shard");
-        assertNotNull(shard, "no plan registered under law_shard");
-        final MTronException refused = assertThrows(MTronException.class,
-                () -> PlanInterpreter.hop(shard, ObjmtronSerializer.parse(source).asCode()),
-                "a hop budget that cannot be read must be refused, not answered 0");
-        assertTrue(refused.getMessage().contains(stated),
-                "the refusal names the key and the text it could not read: " + refused.getMessage());
-    }
-
-    /**
-     * AN EMPTY STATED BUDGET IS REFUSED TOO — the shape the source grammar cannot spell, since {@code ?hop=} is a
-     * pair with no value. The key is stated on the instruction directly, so the projection answers {@code noobj} and
-     * the read refuses instead of answering 0.
-     */
-    @Test
-    public void testHopRefusesAnEmptyStatedBudget() {
-        final Plan shard = PlanRewriter.planOf("law_shard");
-        assertNotNull(shard, "no plan registered under law_shard");
-        final ArrayList<Inst> insts = new ArrayList<>(ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode().insts());
-        insts.set(0, insts.getFirst().tid(insts.getFirst().tid().q(HOP, "")));
-        final MTronException refused = assertThrows(MTronException.class,
-                () -> PlanInterpreter.hop(shard, code(insts)),
-                "an empty stated hop budget must be refused, not answered 0");
-        assertTrue(refused.getMessage().contains("?hop="),
-                "the refusal names the key and the text it could not read: " + refused.getMessage());
-    }
-
-    /**
      * A plan rec written before the singular spelling carries {@code hops} in its decision; {@link Placement#of}
      * migrates it to {@code hop} on read — the same compat read the old {@code target/url} keys get — so an old plan
      * still states its budget.
@@ -231,42 +131,12 @@ public class PlanBuilderTest extends AbstractInstSetTest {
     }
 
     /**
-     * THE EMITTED-CODE SNAPSHOT — the rename is inert. Each row lowers one of {@code catRewrite}'s migrated plans
-     * (built through the new {@code where}/{@code Placement} vocabulary) over a representative chain and asserts the
-     * emitted code is byte-for-byte the code the pre-rename plan lowered to. {@code law_shard} is the peer-gated
-     * exception, covered by {@code DistributedRewriteTransportTest}/{@code TreeShardTransportTest}; the two branch
-     * normalizers reach their snapshot at fixpoint in {@code catInstSetTest}. Each row: the rule % the chain % the
-     * lowered chain.
-     */
-    @ParameterizedTest
-    @CsvSource(value = {
-            "theory_unit_removal     % 5.plus(0)                          % start(5)",
-            "law_involution          % 5.neg().neg()                       % start(5)",
-            "law_idempotent          % \"ab\".ucase().ucase()                % start(\"ab\").ucase()",
-            "law_absorbing           % 5.plus(3).zero()                    % start(5).zero()",
-            "law_monoidic            % {1,2,3}.sum().sum()                 % start({1,2,3}).sum()",
-            "inverse_cancellation    % 5.plus(3).minus(3)                  % start(5)",
-            "form_map_unwrap         % 5.map(neg)                          % start(5).neg()",
-            "derivation_contraction  % 6.plus(3.neg())                     % start(6).minus(3)",
-            "law_poset               % {1,2,3,4,5}.is(gt(1)).is(gt(3))     % start({1,2,3,4,5}).is(gt(3))",
-            "branch_inline           % 1.branch(+2)                        % start(1).plus(2)",
-            "branch_collapse         % 1.branch(+2,+2)                     % start(1).branch(plus{2}(2))",
-    }, delimiter = '%')
-    public void testEmittedCodeIsUnchangedByRename(final String rule, final String source, final String expected) {
-        final Plan plan = PlanRewriter.planOf(rule);
-        assertNotNull(plan, "no plan registered under " + rule);
-        final Code rewritten = PlanInterpreter.lower(plan, ObjmtronSerializer.parse(source).asCode());
-        assertEquals(ObjmtronSerializer.parse(expected).asCode(), rewritten,
-                "the rename changed the emitted code of " + rule);
-    }
-
-    /**
      * {@code bind} is the cut-less operator: a plan with a cut is {@code lower}'s, so {@code bind} declines it — the
      * code passes through unchanged.
      */
     @Test
     public void testBindDeclinesCutPlan() {
-        final Plan shard = PlanRewriter.planOf("law_shard");
+        final Plan shard = PlanInterpreter.SHARD_PLAN;
         assertNotNull(shard);
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
         assertEquals(code, PlanInterpreter.bind(shard, code), "bind declines a plan with a cut");
@@ -396,7 +266,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
      */
     @Test
     public void testLawShardSpeaksTheAxesAlone() {
-        final Plan shard = PlanRewriter.planOf("law_shard");
+        final Plan shard = PlanInterpreter.SHARD_PLAN;
         assertNotNull(shard, "no plan registered under law_shard");
         assertTrue(shard.test(machInstSet.MACH_PLAN_TYPE), "a plan stated in the axes is a plan::T: " + shard);
         final String rec = shard.toString();

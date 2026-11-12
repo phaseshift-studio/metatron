@@ -20,15 +20,12 @@ package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.plan.*;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.util.MTronException;
@@ -57,11 +54,6 @@ public class ObligationsTest extends AbstractInstSetTest {
     public static void importAllInstSets() {
         InstSet.importInstSet(f("#"));
         InstSet.importInstSet(f("/m/math"));
-    }
-
-    @BeforeEach
-    public void installCategoryCompiler() {
-        Machine.current().compiler(CatTheoryCompiler.single());
     }
 
     /**

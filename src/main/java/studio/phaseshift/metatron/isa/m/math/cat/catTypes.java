@@ -20,13 +20,10 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
-import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
-import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
@@ -204,7 +201,7 @@ public class catTypes {
                                 uri(ORIGIN).maybe(), "where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)",
                                 uri(WHERE).maybe(), "the realized placement — span → place, written by the pass that applied a distribution rule",
                                 uri(PEER).maybe(), "the peer recs the deployment used",
-                                T(URI_TID).maybe(), "one out-edge per live rewrite \\(r\\), keyed by the rule's name and holding its \\(\\mathrm{plan}\\): \\(\\mathrm{lower}(\\mathrm{plan}_r)(p) = r(p)\\); a rule the abstraction proves the identity on \\(p\\) is no edge, so a normal form has none"))
+                                T(URI_TID).maybe(), "one out-edge per live rewrite \\(r\\) of the machine's rewrite pool, keyed by the rule's name and holding its \\(\\mathrm{name}\\) and its \\(\\mathrm{result}\\), the vertex \\(r(p)\\); a rule is live on \\(p\\) iff \\(r(p) \\neq p\\), so a normal form has no edge"))
                         .constructor(arg -> {
                             final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                             final Code code = path.atDirect(OBJ);
@@ -217,25 +214,18 @@ public class catTypes {
                                 if (!origin.isNoObj())
                                     path.at(ORIGIN, origin, MUTABLE);
                             }
-                            // the plan-driven liveness reads the abstraction, not the code: lift ONCE, then
-                            // each rewrite's out-edge is materialized iff its selector matches the morphism
-                            // list's form/law/name fields — decided endogenously (the abstraction already
-                            // computed them), so it is type-checking-independent.
-                            final Obj abstraction = ABSTRACTION_TYPE.constructor().apply(code);
-                            final List<Obj> morphisms = abstraction.isNoObj() ? List.of() : abstraction.asRec().at(OBJ).asLst().elements().toList();
-                            final Obj reach = Places.reachable();   // the distribution candidates, read once per lift
+                            // ONE OUT-EDGE PER LIVE REWRITE (Marko, 2026-11-12): the edges are the machine's rewrite pool,
+                            // and a rule is live on this vertex iff applying it changes the code, code != rewrite(code). A rule
+                            // that refuses the chain answers a fail, no code, so it moves the vertex nowhere. The edge names the
+                            // rule and holds the vertex it reaches, lifted only when it is read, with the placement a
+                            // distribution rule realized (its where)
                             for (final Inst rewrite : Machine.current().instset().rewrites()) {
                                 try {
-                                    if (rewrite.apply(code).equals(code)) // TODO: move back to provable identity (for now, exact determination of identity through evaluation)
+                                    final Obj rewritten = rewrite.apply(code);
+                                    if (!rewritten.isCode() || rewritten.equals(code))
                                         continue;
-                                    //if (!maybeNotIdentity(morphisms, rewrite))
-                                    //    continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
-                                    final Plan plan = PlanRewriter.planOf(rewrite.tid().name());
-                                    if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hop(plan, code)))
-                                        continue; // a distribution rule needs reach AND a hop budget: no peers or ?hop=0 → identity
-                                    final Obj result = auto_(instLambda(_ -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
-                                    final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), MACH_PLAN_TID, null) : plan;
-                                    path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
+                                    path.at(uri(rewrite.tid().name()), rec(mutableMap(uri(NAME), uri(rewrite.tid().name()),
+                                            uri(RESULT), auto_(instLambda(_ -> PATH_TYPE.constructor().apply(realized(rewritten.asCode())))).tryToInst()), MACH_PLAN_TID, null), MUTABLE);
                                 } catch (final Exception e) {
                                     //do nothing
                                 }

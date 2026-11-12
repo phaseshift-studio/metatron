@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -43,12 +44,14 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,14 +80,27 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
  */
 public class catInstSetTest extends AbstractInstSetTest {
 
+    /**
+     * The cat suite's own pipeline (it resolves, then rewrites, the cat insts' bodies; removing it costs testBranchInline),
+     * an instance of the suite's own: a compiler carries its typer's checks, and the shared one carries the distributed
+     * suites' (all off).
+     */
+    private static final CatTheoryCompiler COMPILER = new CatTheoryCompiler();
+    private static final AtomicInteger MACHINES = new AtomicInteger();
+
     public catInstSetTest() {
         super(catInstSet::new);
     }
 
     @BeforeEach
     public void installCategoryCompiler() {
-        // the cat suite's own pipeline: it resolves/rewrites the cat insts' bodies (removing it costs testBranchInline)
-        Machine.current().compiler(CatTheoryCompiler.single());
+        // in a machine of the test's own: a fork's classes share the root, and run at once
+        Machine.current().push(f("cat_suite_" + MACHINES.incrementAndGet())).compiler(COMPILER);
+    }
+
+    @AfterEach
+    public void popCategoryMachine() {
+        Machine.current().pop();
     }
 
     @BeforeAll
@@ -798,12 +814,13 @@ public class catInstSetTest extends AbstractInstSetTest {
         while (done != 0) {
             // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25).
             // The theory laws are the category's rewrites and /m's law rewrites (the unit law, one rewrite per rule, inverse
-            // cancellation, derivation contraction and the branch factor): the theories and laws are /m's
+            // cancellation, derivation contraction and the code ring's normal forms): the theories and laws are /m's
             Machine.current().instset().members().stream()
                     .flatMap(isa -> isa.rewrites().stream()
                             .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "form_map_unwrap", "law_involution",
                                     "law_idempotent", "law_monoidic", "law_poset", "law_absorbing", "else_after_count", "range_skip_take",
-                                    "inverse_cancellation", "derivation_contraction", "branch_factor").contains(r.tid().basePath().name())))
+                                    "inverse_cancellation", "derivation_contraction", "branch_factor", "branch_collapse",
+                                    "branch_inline").contains(r.tid().basePath().name())))
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
                         STATIC_LOG.debug(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
@@ -1714,8 +1731,8 @@ public class catInstSetTest extends AbstractInstSetTest {
             // alike is the value residue, so an unlike pair still licenses the collapse), a lone member inlines
             "start(1).branch(+2,+2)                                    % branch_collapse  % true",
             // since 604cfed59 an edge is decided by EVALUATION (catTypes: a rewrite that leaves the code equal is no
-            // edge, with a TODO back to the provable-identity profile), and an unlike pair is left equal by the
-            // collapse. Under the a-priori profile this row was true: the profile cannot see that +2 and +4 differ
+            // edge), and an unlike pair is left equal by the collapse. Under the a-priori profile this row was true:
+            // the profile cannot see that +2 and +4 differ
             "start(1).branch(+2,+4)                                    % branch_collapse  % false",
             "start(1).branch(+2)                                       % branch_collapse  % false",
             "start(1).branch(+2)                                       % branch_inline    % true",
@@ -1734,6 +1751,76 @@ public class catInstSetTest extends AbstractInstSetTest {
     void testAprioriPruning(final String code, final String rule, final boolean live) {
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code));
         checkEquality(LOG, bool(path.asRec().has(uri(rule))), bool(live), true);
+    }
+
+    /**
+     * AN OUT-EDGE IS A LIVE REWRITE OF THE POOL (Marko, 2026-11-12) — {@code path::T} draws one edge per rewrite of the
+     * machine's pool that changes the chain, keyed by the rule's name, and the edge holds the vertex the rule reaches. A
+     * rule no plan ever named ({@code else_after_count}, {@code range_skip_take}) is an edge like any other, and a rule
+     * that leaves the chain as it is, is none. Each row: the chain % a rule % the chain at the vertex its edge reaches
+     * ({@code noobj} when the rule is no edge).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start(5).plus(0).neg().neg()      % law_involution          % start(5).plus(0)",
+            "start(5).plus(0).neg().neg()      % theory_unit_removal     % start(5).neg().neg()",
+            "start(5).plus(3).minus(3)         % inverse_cancellation    % start(5)",
+            "start(6).plus(3.neg())            % derivation_contraction  % start(6).minus(3)",
+            "start({1,2,3}).count().else(0)    % else_after_count        % start({1,2,3}).count()",
+            "start({1,2,3,4,5}).range(1,4)     % range_skip_take         % start({1,2,3,4,5}).skip(1).take(3)",
+            "start(1).branch(+2,+2)            % branch_collapse         % start(1).branch(plus{2}(2))",
+            // a rule that leaves the chain as it is, is no edge
+            "start(5).plus(1)                  % theory_unit_removal     % noobj",
+            "start(5).div(2).mult(2)           % inverse_cancellation    % noobj",
+            "start({1,2,3}).count()            % else_after_count        % noobj",
+    }, delimiter = '%')
+    void testAnEdgeReachesItsRulesVertex(final String code, final String rule, final String reached) {
+        final Obj edge = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code)).asRec().at(uri(rule));
+        checkEquality(LOG, ObjmtronSerializer.parse(reached),
+                edge.isNoObj() ? edge : edge.asRec().at(uri(RESULT)).asRec().atDirect(OBJ).asCode().tryToInst(), true);
+    }
+
+    /**
+     * THE EDGES ARE THE LIVE POOL, not a list of plans: a rewrite switched off through the instset door
+     * ({@code inactive()}) is no edge of the chain it would have moved, in the machine that switched it off, and it is an
+     * edge again once its override is cleared. The mtron write is parsed first: this suite's compiler has no parse stage.
+     */
+    @Test
+    void testASwitchedOffRewriteIsNoEdge() {
+        final Code code = ObjmtronSerializer.parse("start(5).neg().neg()");
+        final Machine child = Machine.current().push(f("path_edges"));
+        try {
+            assertTrue(catInstSet.PATH_TYPE.constructor().apply(code).asRec().has(uri("law_involution")), "a live rewrite is an edge");
+            Machine.evaluate(ObjmtronSerializer.<Code>parse("*~/instset/rewrite/law_involution.inactive().to(~/instset/rewrite/law_involution)"));
+            assertFalse(catInstSet.PATH_TYPE.constructor().apply(code).asRec().has(uri("law_involution")), "a rewrite switched off is no edge");
+            Machine.write(f("~/instset/rewrite/law_involution"), noobj());
+            assertTrue(catInstSet.PATH_TYPE.constructor().apply(code).asRec().has(uri("law_involution")), "back on, it is an edge again");
+        } finally {
+            child.pop();
+        }
+    }
+
+    /**
+     * A RULE THAT REFUSES THE CHAIN MOVES IT NOWHERE: the processor answers a rewrite's exception as a fail, and a fail is
+     * no vertex, so it is no edge. Before, a fail was "not the code" and drew one: tble's sql_count and grph's
+     * gremlin_count, which refuse an in-memory {@code count()}, were edges of {@code {1,2,3}.count()} whose result was the
+     * fail. The refusing rule is written into a machine of its own, through the instset door.
+     */
+    @Test
+    void testARewriteThatRefusesTheChainIsNoEdge() {
+        final Code code = ObjmtronSerializer.parse("start(5).plus(1)");
+        final Machine child = Machine.current().push(f("refusing_edges"));
+        try {
+            Machine.write(f("~/instset/rewrite/refusing_rule"), InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("refusing_rule"),
+                    refused -> {
+                        throw MTronException.of("the rule refuses %s", refused);
+                    }));
+            assertTrue(Machine.current().instset().rewrites().stream().anyMatch(rewrite -> "refusing_rule".equals(rewrite.tid().name())),
+                    "the refusing rule is in the pool");
+            assertFalse(catInstSet.PATH_TYPE.constructor().apply(code).asRec().has(uri("refusing_rule")), "a rule that refuses the chain is no edge");
+        } finally {
+            child.pop();
+        }
     }
 
     private static void rewriteAssert(final String code, final String expected, final String expectedResult) {

@@ -90,7 +90,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <tr><td>F</td><td>ordered fold</td><td>a·(b·c) = (a·b)·c</td><td>an lst-partitioned fold (streams never shard)</td><td></td></tr>
  *   <tr><td>G</td><td>keyed reduce</td><td>combiner(group([k⇒h])) = sum·select([_⇒combiner(h)])</td><td>{@code {1,2,3,4,5,6}.group([mod(3)=>sum()])}</td><td>✅</td></tr>
  *   <tr><td>H</td><td>redundant / hedged shards</td><td>x ⊕ x = x</td><td>a partition shipped to r peers</td><td>✅ ({@code ?split=copy})</td></tr>
- *   <tr><td>I</td><td>span/route interpreter</td><td>plan ↦ layout (infrastructure)</td><td>{@code [c]==[as(cat:path::T)]==[lower(>>law_shard)]}</td><td></td></tr>
+ *   <tr><td>I</td><td>span/route interpreter</td><td>plan ↦ layout (infrastructure)</td><td>{@code [c]==[as(cat:path::T)]==[>>law_shard>>result]}</td><td></td></tr>
  *   <tr><td>J</td><td>algebraic aggregates</td><td>mean ≡ (sum, count)·div</td><td>{@code {...}.mean()}</td><td></td></tr>
  *   <tr><td>K</td><td>limit / top-k push-down</td><td>take(k)·⊕ = take(k)·⊕·take(k)</td><td>{@code {...}.order(>>).take(k)}</td><td></td></tr>
  *   <tr><td>L</td><td>mergeable sketches</td><td>ĥ(a ⊎ b) = ĥ(a) ⊕ ĥ(b)</td><td>{@code {...}.hll()}</td><td></td></tr>
