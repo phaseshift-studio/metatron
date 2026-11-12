@@ -47,3 +47,80 @@ human[int,sumo]::[name=>'thunder down under',hp=>100,role=>sumo::[weapon=>self]]
 @marko.no_more_war()                                                                       [-- marko is a human warrior with role being the other fiber --]
 [NO_PROMPT][== marko must find new meaning in life...for his trusty bulldozer is no longer ==]
 ```
+
+```mtron_pre cast=mini-distributed cols=110 rows=32 typing_delay=0.05 speed_rates="0.5,1,1.5,2" speed_default="1"
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the fold, written plainly ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum()                       [-- 44: one machine does all of it --]
+[NO_PROMPT][== and what it compiles to: one chain ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum().explain()>>format     [-- start, then plus, then sum -- no fan-out to be had --]
+[NO_PROMPT][== fork two peers, dialing each as it comes up ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]   [-- a node serving /store, then dial it --]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== the same expression, byte for byte ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum()                       [-- 44 again --]
+[NO_PROMPT][== and now: one lane per peer ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum().explain()>>format     [-- branch, keyed by the two peers; each folds its own part --]
+```
+
+```mtron_pre cast=dist-data-local cols=110 rows=30 typing_delay=0.03
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the same two peers ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== each peer takes its own text, over the wire ==]
+<ws://localhost:1111/store/a1> -> 'one two three four five'
+<ws://localhost:1112/store/a2> -> 'six seven eight nine ten eleven'
+[NO_PROMPT][== and one expression puts each lane where its data stands ==]
+[/store/a1,/store/a2].branch(//0 => >>0.*_.-<'\s'>-.count(), //1 => >>1.*_-<'\s'>-.count()).sum()   [-- 11 --]
+```
+
+```mtron_pre cast=dist-keyed cols=110 rows=30 typing_delay=0.03
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the same two peers ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== a keyed fold: three keys, two peers ==]
+{1,2,3,4,5,6}.group([mod(3)=>sum()])                  [-- each lane groups its part --]
+[NO_PROMPT][== recombined POINTWISE: merge by key, then fold each key ==]
+{1,2,3,4,5,6}.group([mod(3)=>sum()]).explain()>>format   [-- no single combiner op names this --]
+```
+
+```mtron_pre cast=dist-master cols=110 rows=30 typing_delay=0.03
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the same two peers ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== keep a slice home: the master folds too ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum?place=[local,peer]()    [-- 44, with one lane at distance zero --]
+[NO_PROMPT][== and the home lane is keyed <~> ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum?place=[local,peer]().explain()>>format
+```
+
+```mtron_pre cast=dist-move cols=110 rows=30 typing_delay=0.03
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the same two peers ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== move the frame of reference, not the data ==]
+{1,2,3}.plus(5).move(//0).plus(2).to(/store/moved).sum()   [-- 27 --]
+[NO_PROMPT][== the write landed on the peer, not here ==]
+*//0/store/moved                                       [-- 10: the tail ran where the frame went --]
+```
+
+```mtron_pre cast=dist-const cols=110 rows=26 typing_delay=0.03
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the same two peers ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== a constant rides along: plus(10) instead of plus(1) ==]
+{1,2,3,4,5,6}.plus(10).sum()                           [-- 81 --]
+[NO_PROMPT][== and the plan is the SAME plan — the constant needed no plumbing ==]
+{1,2,3,4,5,6}.plus(10).sum().explain()>>format
+```

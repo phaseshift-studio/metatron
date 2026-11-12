@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -1276,46 +1277,59 @@ public class mInstSet extends AbstractInstSet {
 
 
     /**
-     * Build a column-justified text table of the instructions in {@code code}.
-     * Terminal-free — suitable for use in rewrites and non-interactive contexts.
+     * Build a column-justified text table of the instructions in {@code code}. A cell may hold SEVERAL
+     * LINES (the UI serializer breaks a branch's place-keyed args one entry per line), so a row is as
+     * tall as its tallest cell. Terminal-free — suitable for use in rewrites and non-interactive contexts.
      */
     private static String explainTable(final Code code) {
-        final java.util.List<String> headers = java.util.List.of(
+        final List<String> headers = List.of(
                 "op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng");
-        final java.util.List<java.util.List<String>> rows = new java.util.ArrayList<>();
+        final List<List<String>> rows = new ArrayList<>();
         rows.add(headers);
         for (final Inst i : code.insts()) {
-            rows.add(java.util.List.of(
+            rows.add(List.of(
                     i.tid().name() + (i.tid().c().isOne() ? "" : ("{" + i.tid().c() + "}")),
                     i.dom().vid().small() + "::T",
                     i.rng().vid().small() + "::T",
-                    i.args().elements()
-                            .map(o -> o.isCall() ? o.asCall().insts().stream()
-                                    .map(x -> x.tid().name())
-                                    .reduce((a, b) -> a + "." + b).orElse("") : o.toShortString())
-                            .reduce((a, b) -> a + "," + b).orElse(""),
+                    explainArgs(i),
                     i.hasf() ? (i.f().isLambda() ? "<j>" : "<m>") : "<?>",
-                    studio.phaseshift.metatron.isa.m.type.Inst.Form.of(i).toString(),
+                    Inst.Form.of(i).toString(),
                     "{" + i.dom().c() + "}",
                     "{" + i.rng().c() + "}"));
         }
         final int cols = headers.size();
         final int[] widths = new int[cols];
-        for (final java.util.List<String> row : rows) {
-            for (int c = 0; c < cols; c++) {
-                widths[c] = Math.max(widths[c], row.get(c).length());
-            }
-        }
+        for (final List<String> row : rows)
+            for (int c = 0; c < cols; c++)
+                widths[c] = Math.max(widths[c], widestLine(row.get(c)));
         final StringBuilder sb = new StringBuilder("\n");
-        for (int r = 0; r < rows.size(); r++) {
-            final java.util.List<String> row = rows.get(r);
-            for (int c = 0; c < cols; c++) {
-                final String cell = row.get(c);
-                sb.append(String.format(" %-" + widths[c] + "s ", cell));
+        for (final List<String> row : rows) {
+            final List<String[]> cells = row.stream().map(cell -> cell.split("\n", -1)).toList();
+            final int height = cells.stream().mapToInt(lines -> lines.length).max().orElse(1);
+            for (int line = 0; line < height; line++) {
+                for (int c = 0; c < cols; c++)
+                    sb.append(String.format(" %-" + widths[c] + "s ", line < cells.get(c).length ? cells.get(c)[line] : ""));
+                sb.append('\n');
             }
-            sb.append('\n');
         }
         return sb.toString();
+    }
+
+    /**
+     * ONE ARGUMENT LIST, RENDERED BY THE UI SERIALIZER — the same writer the console, the docs pipeline and
+     * a log line use, so a branch's place-keyed args break and clip the way every rec does: an entry per
+     * line once the rec reads wider than {@link ObjmtronUISerializer#NESTED_STRING_THRESHOLD}, and the
+     * serializer's own {@code ...} when the list runs past its clip.
+     */
+    private static String explainArgs(final Inst inst) {
+        return inst.args().isEmpty() ? "" : ObjmtronUISerializer.diagnostic().write(inst.args());
+    }
+
+    /**
+     * The widest physical line of a (possibly multi-line) cell.
+     */
+    private static int widestLine(final String cell) {
+        return Arrays.stream(cell.split("\n", -1)).mapToInt(String::length).max().orElse(0);
     }
 
     /**

@@ -33,8 +33,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.*;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.IdentityRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
@@ -42,6 +40,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
@@ -61,8 +61,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -1081,7 +1079,8 @@ public class machInstSet extends AbstractInstSet {
                                 .dom(ALL.maybeSome(), "the lhs is not consulted: spawn declares a process and a name, it computes nothing from a value")
                                 .rng(URI_TID, "the dial uri the peer answers at, `<origin>/mtron` — an address, so reaching it is still a dial")
                                 .argLst(URI_TYPE, "the authority to serve, path included because the node's store mounts there: `<//localhost/worker>` names a node on this physical machine, so a JVM is forked to serve /worker, while an authority naming another host is only declared. A port that is not named is a free one",
-                                        URI_TYPE, "a name to call the spawned authority by in this machine's network table, `//worker` or `worker`. Absent, the peer is known by its address alone")
+                                        URI_TYPE, "a name to call the spawned authority by in this machine's network table, `//worker` or `worker`. Absent, the peer is known by its address alone",
+                                        URI_TYPE, "a boot file the forked node evaluates before it mounts its store and serves — the instruction sets, spaces and processors the peer should own from the start (a category, an fsspace, a processor), named as a uri: `<boot/peer.mtron>`. A relative path resolves against this machine's working directory. Ignored for a remote authority (nothing is forked) and for an address already declared (one node per address)")
                                 .desc("""
                                         mint a peer process and declare it in the roster. When the authority is this physical
                                         machine a JVM is forked, its READY marker awaited, and the node retracted again when
@@ -1090,12 +1089,14 @@ public class machInstSet extends AbstractInstSet {
                                         rather than forking a twin — and a half-spawn that fails leaves neither an orphan
                                         process nor a roster row claiming an address nothing serves. The answer is where
                                         the node answers, and only a dial reaches it: membership is declared, never
-                                        emergent.""")
+                                        emergent. A boot file makes the forked node more than the bare store: it is
+                                        evaluated first, so whatever it imports and mounts is the peer's own.""")
                                 .example("spawn(<//localhost/worker>)              [-- fork a node here serving /worker; answers ws://localhost:<port>/mtron --]")
                                 .example("spawn(<//localhost/worker>, <//worker>)  [-- and call it //worker: move(<//worker/a>) now reaches that node --]")
+                                .example("spawn(<//localhost/worker>, <//worker>, <boot/peer.mtron>)  [-- fork it, but boot it first: the sets and spaces that file declares are the peer's --]")
                                 .example("spawn(<ws://worker:8555/worker>)         [-- a remote authority: declared in the roster, nothing forked --]")
                                 .body((_, inst) -> {
-                                    final fURI spawn = PeerSpawn.spawn(inst.arg(0).uriValue());
+                                    final fURI spawn = PeerSpawn.spawn(inst.arg(0).uriValue(), inst.arg(2).isNoObj() ? null : inst.arg(2).uriValue());
                                     if (!inst.arg(1).isNoObj())
                                         Machine.current().network().registerPrefix(inst.arg(1).uriValue(), spawn.origin());
                                     return uri(spawn);

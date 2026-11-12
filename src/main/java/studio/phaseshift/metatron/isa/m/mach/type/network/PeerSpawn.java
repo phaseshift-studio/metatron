@@ -98,6 +98,23 @@ public final class PeerSpawn {
      * twin.
      */
     public static fURI spawn(final fURI requested) {
+        return spawn(requested, null);
+    }
+
+    /**
+     * Fork (when the authority is local) and declare a peer, then hand back the address it was declared at — the dial
+     * uri of its mtron endpoint. This is the process half only: the roster row is knowledge, and nothing here dials
+     * the peer or builds anything that stands in it — reaching it is dialing that address.
+     * <p>
+     * IDEMPOTENT BY ADDRESS: asking for an authority that is already declared FINDS the peer rather than forking a
+     * twin.
+     *
+     * @param boot a boot file the forked node evaluates before it mounts its store and serves — the peer's own
+     *             instruction sets and spaces, so a category, an fsspace or a processor can be there from the start.
+     *             A relative path resolves against this process's working directory. Ignored for a remote authority
+     *             (nothing is forked) and for an address that is already declared (one node per address)
+     */
+    public static fURI spawn(final fURI requested, final fURI boot) {
         final fURI authority = resolve(requested);
         final fURI key = authority.origin();
         // A PEER IS DECLARED ONCE. Hand back the address it already has.
@@ -109,14 +126,14 @@ public final class PeerSpawn {
             long pid = -1;
             if (here) {
 
-                final Process process = fork(authority, log);
+                final Process process = fork(authority, log, boot);
                 pid = process.pid();
                 FORKED.put(key, new Forked(process, log));
                 awaitReady(process, log, authority);
             }
             final fURI address = address(authority);
             declare(key, address);
-            LOG.warn("{{g}}spawned{{/g}} node {{b}}%s{{/b}} [pid=%d][log=%s]", key, pid, log.toAbsolutePath());
+            LOG.warn("{{g}}spawned{{/g}} node {{b}}%s{{/b}} [pid=%d][log=%s][boot=%s]", key, pid, log.toAbsolutePath(), boot);
             return address;
         } catch (final IOException | RuntimeException e) {
             // a half-spawned peer must leave nothing behind: no orphan process, and no roster entry claiming an
@@ -217,7 +234,7 @@ public final class PeerSpawn {
     // the process
     // ========================================================================
 
-    private static Process fork(final fURI authority, final Path log) throws IOException {
+    private static Process fork(final fURI authority, final Path log, final fURI boot) throws IOException {
         final List<String> command = new ArrayList<>();
         command.add(Paths.get(System.getProperty("java.home"), "bin", "java").toString());
         // inherit only the VM flags the child cannot boot without — the parent's full arg list can carry agents
@@ -231,6 +248,10 @@ public final class PeerSpawn {
         command.add(String.valueOf(authority.port()));
         // the node's namespace is the LOCALIZED path — what the parent sends over the wire, not the parent's spelling
         command.add(authority.localize().toString());
+        // THE BOOT FILE IS THE PEER'S OWN: the child evaluates it before it mounts its store, so the sets, spaces and
+        // processors it declares are the peer's from the start. Absent, the node boots bare (the default).
+        if (null != boot)
+            command.add(Path.of(boot.pathString()).toAbsolutePath().toString());
         LOG.warn("{{y}}forking{{/y}} node {{b}}%s{{/b}}", authority.origin());
         return new ProcessBuilder(command)
                 .directory(new File(System.getProperty("user.dir")))

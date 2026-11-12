@@ -19,10 +19,14 @@
 package studio.phaseshift.metatron.isa.m.mach.type.network;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.IOException;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -61,6 +65,13 @@ public final class MachNode {
     public static void main(final String[] args) throws Exception {
         final int port = Integer.parseInt(args[0]);
         final String root = args[1];
+        // THE PEER'S OWN BOOT FILE, when the parent named one: the sets, spaces and processors it declares are this
+        // node's from the start, and the store + mtron endpoint below are still mounted after it.
+        final String boot = args.length > 2 ? args[2] : null;
+        // A NAMED BOOT FILE THAT IS NOT THERE IS A FAILURE, not a bare node: silently booting without what the parent
+        // asked for is a peer that answers with capabilities nobody expects.
+        if (null != boot && !java.nio.file.Files.exists(java.nio.file.Path.of(boot)))
+            throw new IllegalStateException("boot file does not exist: " + boot);
         // A node is an ordinary VM, booted the way a test VM is — but it is NOT a test: TESTING is set only to
         // skip load()'s headless park (which would consume the main thread before the store is mounted and READY
         // announced). The node owns its own lifetime and is reaped by the parent that forked it.
@@ -68,7 +79,20 @@ public final class MachNode {
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri("log"), uri("warn")));
         InstSet.importInstSet(f("/m/web"));
-        trace("node: booted (root=%s, port=%d)", root, port);
+        // PROVISION AFTER BOOT, not during it: the node is a normal VM by the time the file runs, so what it imports
+        // and mounts is the peer's for real (a boot-phase import lands on a machine still being assembled).
+        if (null != boot) {
+            try {
+                Machine.Helper.evaluate(java.nio.file.Path.of(boot).toFile(), error -> {
+                    // A BOOT FILE THAT DOES NOT APPLY IS A FAILED SPAWN: the parent asked for a peer with these
+                    // capabilities, and a peer that silently lacks them is worse than no peer.
+                    throw MTronException.of("boot file %s: %s", boot, error);
+                }).count();
+            } catch (final IOException e) {
+                throw MTronException.of(e);
+            }
+        }
+        trace("node: booted (root=%s, port=%d, boot=%s)", root, port, null == boot ? "-" : boot);
         // the namespace this node owns: a store that answers every address under the pushed path
         memSpace.of(rec(uri(PATTERN), uri(root + "/#")), f("/sys/space/mach/store"));
         trace("node: store mounted at %s/#", root);

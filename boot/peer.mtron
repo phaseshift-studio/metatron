@@ -1,0 +1,6 @@
+[== a peer's own boot ==]
+[== the distributed rewrite lives in the category instset, and a bare node imports none of it ==]
+import(/m/math,math);
+import(/m/math/cat,cat);
+[== the space family, so a peer can mount its own fsspace ==]
+import(/m/sys,fs);

@@ -1506,11 +1506,11 @@ public class mParser {
         final Parser singleQuote = labeled(
                 seq(of('\''), sqInner.starLazy(of('\'')), of('\'')).flatten(),
                 "unclosed single-quote — missing closing '''")
-                .map(t -> t.toString().substring(1, t.toString().length() - 1));
+                .map(t -> unescape(t.toString().substring(1, t.toString().length() - 1)));
         final Parser doubleQuote = labeled(
                 seq(of('"'), dqInner.starLazy(of('"')), of('"')).flatten(),
                 "unclosed double-quote — missing closing '\"'")
-                .map(t -> t.toString().substring(1, t.toString().length() - 1));
+                .map(t -> unescape(t.toString().substring(1, t.toString().length() - 1)));
         final Parser tripleQuote = labeled(seq(
                         of('"').repeat(3, 3),
                         any().starLazy(of('"').repeat(3, 3)),
@@ -1519,6 +1519,25 @@ public class mParser {
                 .map(t -> t.toString().substring(3, t.toString().length() - 3));
         return seq(m_type_prefix(Tokens.STR_TID), choice(tripleQuote, singleQuote, doubleQuote), opt(m_value_span(), null), m_vid_postfix())
                 .map(t -> laid(new MStr(mParser.pick(t, 1), pick(t, 0), pick(t, 3)), pick(t, 2)));
+    }
+
+    /**
+     * The escapes a single- or double-quoted string decodes: {@code \\}, {@code \'} and {@code \"} — exactly the
+     * three the writer emits when no delimiter is safe. Any other {@code \x} is kept as the two characters it was
+     * written as, so a regex's {@code \s} and a path's {@code C:\temp} still say what they say. A triple-quoted
+     * string is raw: it is the form for code and documents, which carry backslashes by the dozen.
+     */
+    private static String unescape(final String text) {
+        final StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            final char c = text.charAt(i);
+            if ('\\' == c && i + 1 < text.length()
+                    && ('\\' == text.charAt(i + 1) || '\'' == text.charAt(i + 1) || '"' == text.charAt(i + 1)))
+                sb.append(text.charAt(++i));
+            else
+                sb.append(c);
+        }
+        return sb.toString();
     }
 
     public static Parser m_uri() {

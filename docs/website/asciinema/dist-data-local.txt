@@ -1,0 +1,8 @@
+[== the same two peers ==];
+spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>];
+spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>];
+[== each peer takes its own text, over the wire ==];
+<ws://localhost:1111/store/a1> -> 'one two three four five';
+<ws://localhost:1112/store/a2> -> 'six seven eight nine ten eleven';
+[== and one expression puts each lane where its data stands ==];
+[/store/a1,/store/a2].branch(//0 => >>0.*_.-<'\s'>-.count(), //1 => >>1.*_-<'\s'>-.count()).sum();

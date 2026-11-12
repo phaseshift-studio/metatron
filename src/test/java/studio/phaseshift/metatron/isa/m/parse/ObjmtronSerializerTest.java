@@ -26,7 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
@@ -90,5 +92,62 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         final Obj written = ObjmtronSerializer.parse(expected).apply();
         checkEquality(LOG, uri(f(value)), written, true);
         checkEquality(LOG, uri(f(value)), ObjmtronSerializer.single().read(ObjmtronSerializer.single().write(uri(f(value)))), true);
+    }
+
+    /**
+     * STRINGS ON THE WIRE: every quoting shape a str can be written in has to survive {@code write()}→{@code read()}.
+     * <p>
+     * A str is carried by QUOTING, not by escaping, so the whole risk is a value that can spell its own closing
+     * delimiter: {@code """} in the content must not end the render early, and a quote at the very end must not leave
+     * it unbalanced. The corpus is the mtron LITERAL itself — empty, one character, blank space at either end, an
+     * apostrophe, a double quote, both at once, and the wire's own triple-quote delimiter inside the value — because
+     * a row the reader cannot express would be testing the corpus, not the wire.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', quoteCharacter = '`', value = {
+            "''",                                     // empty
+            "'a'",                                    // one character
+            "' '",                                    // one blank
+            "'  x  '",                                // blank space at both ends
+            "'a b c'",                                // spaces inside
+            "\"\"\"abc\"\"\"",                        // triple quoted
+            "\"it's\"",                               // an apostrophe, double quoted
+            "'say \"hi\"'",                           // double quotes, single quoted
+            "\"\"\"it's a \"quoted\" word\"\"\"",     // both quote kinds at once
+            "'\"\"\"'",                               // the value IS the triple-quote delimiter
+            "'a\"\"\"b'",                             // the delimiter inside the value
+            "'ends in a quote\"'",                    // one quote at the very end
+            "'\\\\'",                                 // a backslash
+            "'\\n'",                                  // backslash-n: two characters, as a regex or a path carries
+            "'it\\'s'",                               // the delimiter escaped, as only the fallback form needs
+            "\"say \\\"hi\\\"\"",                     // a double quote escaped
+            "'a\\\\b'",                               // an escaped escape character
+            "'\\\\s'",                                // an unknown escape is NOT decoded: it stays backslash-s
+            "'trailing\\\\'",                         // a backslash at the very end
+            "'{}[](),%#><@!?'",                       // punctuation that doubles as syntax everywhere else
+    })
+    void testAStringKeepsEveryQuotingShapeAcrossTheWire(final String literal) {
+        final Obj parsed = ObjmtronSerializer.parse(literal).apply();
+        assertTrue(parsed.isStr(), () -> "not a str literal: " + literal);
+        final String wire = ObjmtronSerializer.single().write(parsed);
+        LOG.debug("testing {{b}}%s{{/b}} serialized to {{b}}%s{{/b}}", literal, wire);
+        assertEquals(parsed, ObjmtronSerializer.single().read(wire),
+                () -> "wire form '" + wire + "' did not read back as the value it wrote");
+    }
+
+    /**
+     * THE CASE NO LITERAL CAN EXPRESS: a value carrying an apostrophe, a double quote, AND the triple-quote delimiter
+     * — {@code it's """ here}. No single-, double- or triple-quoted literal spells it (that is why it cannot be a CSV
+     * row: the corpus is literals, and this is the value Python's <code>'''</code>/<code>"""</code> problem leaves to
+     * escaping). The writer must still render a value the reader gets back unchanged; if it cannot, this is the row
+     * that says so.
+     */
+    @Test
+    void testAStringWithBothQuoteKindsAndTheWireDelimiter() {
+        final Obj value = str("it's \"\"\" here");
+        final String wire = ObjmtronSerializer.single().write(value);
+        LOG.debug("a mixed-quote string on the wire: %s", wire);
+        assertEquals(value, ObjmtronSerializer.single().read(wire),
+                () -> "wire form '" + wire + "' did not read back as the value it wrote");
     }
 }
