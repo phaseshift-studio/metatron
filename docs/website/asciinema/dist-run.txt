@@ -1,0 +1,7 @@
+[== the same two peers ==];
+spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>];
+spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>];
+[== a seed of one: the only multiplicity is the run's span, the unrolls 0 .. 10 ==];
+start(0).{0,10}plus(1).sum();
+[== the plan factors the UNROLL INDEX, not the seed: one lane per place, a narrowed span ==];
+start(0).{0,10}plus(1).sum().explain()>>format;

@@ -81,13 +81,16 @@ child.instset().write(rule.tid(), noobj());      // on again: the inherited rewr
 An instruction written under the tid of a rewrite the set answers IS that rewrite (`AbstractInstSet.write`). A code dom
 alone makes no rewrite: code's own operations (`end`, `id`, `update`) are instructions.
 
-From mtron, a machine's rewrites are reached at `~/instset/rewrite`. A read there answers the effective pool, and
-`~/instset/rewrite/<name>` a rewrite by its name, walked as a path or projected with `>>` (`AbstractInstSet.at`). A
-write at `~/instset/rewrite/<name>` lands in the machine's own level (`MachineSpace` routes it to `BasicInstSet.write`)
-and declares a difference: a shadow overrides the inherited rewrite, while the inherited rewrite itself, or noobj,
-removes the override, so a rewrite read and written back changes nothing. An instruction is written with `to`, which
-writes the obj flowing in: an argument that is an instruction is code, applied to the lhs, so `addr -> inst` writes
-what the instruction answers, never the instruction:
+From mtron, every table of a machine's instruction set has a door at `~/instset/<table>` (`rewrite`, `inst`, `type`,
+`const`). A read there answers the live table (the effective view, nearer levels shadowing), and `<table>/<name>` its
+entries by name, a rewrite or an instruction by its tid's name and a type or a const by its vid's, walked as a path or
+projected with `>>` (`AbstractInstSet.at`). A write at `~/instset/<table>/<name>` lands in the machine's own level
+(`MachineSpace` routes it to `BasicInstSet.write`) and declares a difference: an entry overrides what the level
+inherits, while the inherited entry itself adds nothing and noobj clears the level's own entries of that name, so a
+read written back changes nothing. An argument that is an instruction is code, applied to the lhs, so a literal
+instruction is written BLOCKED, `addr -> |inst` (`addr.ref(block(inst))`). A block hands its argument over as written,
+an expression unevaluated, so an instruction an expression computes (a shadow) is written with `to`, which writes the
+obj flowing in:
 
 ```text
 *~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)    off here, and listed

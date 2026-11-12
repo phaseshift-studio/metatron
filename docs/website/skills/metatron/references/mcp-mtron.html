@@ -549,19 +549,19 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                   desc=&gt;'Universal tool executor that can i...',
                   arg=&gt;[command=&gt;'Command-line string with tool name...']],
                  analyze_calls=&gt;tool::[
-                  inst=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
-                             analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
+                  inst=&gt;inst(symbolFqn=&gt;'Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.',
+                             analysisKind=&gt;'Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.',
                              depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
                              maxChildren=&gt;'Maximum number of direct children rendered for each node. Default: 50.',
                              maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',
-                             treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,
-                             childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,
+                             treePath=&gt;'Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.',
+                             childOffset=&gt;'Offset for paging direct children of the node addressed by `treePath`. Default: 0.',
                              timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
                   name=&gt;analyze_calls,
                   desc=&gt;'Builds the IDE Call Hierarchy tree...',
                   arg=&gt;[
                    symbolFqn=&gt;'Plain fully qualified symbol name,...',
-                   analysisKind=&gt;&quot;Call analysis direction. Use `INCO...&quot;,
+                   analysisKind=&gt;'Call analysis direction. Use `INCO...',
                    depth=&gt;'Maximum number of call levels to r...',
                    maxChildren=&gt;'Maximum number of direct children ...',
                    maxNodes=&gt;'Maximum total number of rendered c...',
@@ -569,7 +569,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                    childOffset=&gt;'Offset for paging direct children ...',
                    ...(1 more)]],
                  build_project=&gt;tool::[
-                  inst=&gt;inst(rebuild=&gt;&quot;Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.&quot;,
+                  inst=&gt;inst(rebuild=&gt;'Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.',
                              filesToRebuild=&gt;'If specified, only compile files with the specified paths. Paths are relative to the project root.',
                              timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
                   name=&gt;build_project,
@@ -600,26 +600,26 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                   arg=&gt;[=&gt;]],
                  lint_files=&gt;tool::[
                   inst=&gt;inst(files=&gt;'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
-                             min_severity=&gt;&quot;Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.&quot;,
+                             min_severity=&gt;'Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.',
                              timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
                   name=&gt;lint_files,
                   desc=&gt;'Analyzes the specified files for e...',
                   arg=&gt;[
                    files=&gt;'List of project-relative files to ...',
-                   min_severity=&gt;&quot;Minimum severity to include: `warn...&quot;,
+                   min_severity=&gt;'Minimum severity to include: `warn...',
                    timeout=&gt;'Timeout in milliseconds']],
                  ...(7 more)],
                 inst=&gt;[
                  /m/ai/llm/tool/execute_tool=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
-                 /m/ai/llm/tool/analyze_calls=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
-                                                    analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
+                 /m/ai/llm/tool/analyze_calls=&gt;inst(symbolFqn=&gt;'Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.',
+                                                    analysisKind=&gt;'Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.',
                                                     depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
                                                     maxChildren=&gt;'Maximum number of direct children rendered for each node. Default: 50.',
                                                     maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',
-                                                    treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,
-                                                    childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,
+                                                    treePath=&gt;'Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.',
+                                                    childOffset=&gt;'Offset for paging direct children of the node addressed by `treePath`. Default: 0.',
                                                     timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
-                 /m/ai/llm/tool/build_project=&gt;inst(rebuild=&gt;&quot;Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.&quot;,
+                 /m/ai/llm/tool/build_project=&gt;inst(rebuild=&gt;'Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.',
                                                     filesToRebuild=&gt;'If specified, only compile files with the specified paths. Paths are relative to the project root.',
                                                     timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
                  /m/ai/llm/tool/get_file_problems=&gt;inst(filePath=&gt;'Path relative to the project root',
@@ -628,7 +628,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                  /m/ai/llm/tool/get_project_dependencies=&gt;inst(){&lt;j&gt;},
                  /m/ai/llm/tool/get_project_modules=&gt;inst(){&lt;j&gt;},
                  /m/ai/llm/tool/lint_files=&gt;inst(files=&gt;'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
-                                                 min_severity=&gt;&quot;Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.&quot;,
+                                                 min_severity=&gt;'Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.',
                                                  timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
                  ...(7 more)]]
 </code></pre>
@@ -659,118 +659,9 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;mcp_client::[host=&gt;http://localhost:8777/mcp,
-                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-                tool=&gt;[
-                 m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
-                  inst=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_write_memory,
-                  desc=&gt;'(experimental) returns a memory re...',
-                  arg=&gt;[
-                   current_memory=&gt;'the memory to remember -- e.g. a s...',
-                   previous_memory=&gt;'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
-                  inst=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_read_memory,
-                  desc=&gt;'(experimental) returns the result ...',
-                  arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
-                  inst=&gt;inst(code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=&gt;'&lt;no description&gt;',
-                  arg=&gt;[code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;']],
-                 m_web_mcp_mcp_mtron_list_space=&gt;tool::[
-                  inst=&gt;inst(){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_list_space,
-                  desc=&gt;'returns a rec identifying all acti...',
-                  arg=&gt;[=&gt;]],
-                 m_web_mcp_mcp_mtron_machine_info=&gt;tool::[
-                  inst=&gt;inst(){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_machine_info,
-                  desc=&gt;'returns what the running machine i...',
-                  arg=&gt;[=&gt;]],
-                 m_web_mcp_mcp_mtron_find_inst=&gt;tool::[
-                  inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                             dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                             rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_find_inst,
-                  desc=&gt;'returns a lst of all instruction p...',
-                  arg=&gt;[
-                   pattern=&gt;'the inst tid to match',
-                   dom=&gt;'the dom of inst to match (can be a...',
-                   rng=&gt;'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
-                  inst=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                             on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=&gt;'create a websocket client with pro...',
-                  arg=&gt;[
-                   host=&gt;'the full ws:// uri of the websocke...',
-                   on_message=&gt;'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=&gt;[
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                       previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=&gt;inst(code=&gt;'/m/code',
-                                                                     &lt;&gt;=&gt;'&lt;no description&gt;'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=&gt;inst(){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=&gt;inst(){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                                                                    dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                                                                    rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                                                                         on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-                 ...(1 more)]]@a
+==&gt;fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]']['fail']['fail']
+   	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]
 mtron&gt; *a&gt;&gt;tool
-==&gt;[m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
-     inst=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_write_memory,
-     desc=&gt;'(experimental) returns a memory re...',
-     arg=&gt;[
-      current_memory=&gt;'the memory to remember -- e.g. a s...',
-      previous_memory=&gt;'a previous memory vid to chain cur...']],
-    m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
-     inst=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_read_memory,
-     desc=&gt;'(experimental) returns the result ...',
-     arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
-    m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
-     inst=&gt;inst(code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
-     desc=&gt;'&lt;no description&gt;',
-     arg=&gt;[code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;']],
-    m_web_mcp_mcp_mtron_list_space=&gt;tool::[
-     inst=&gt;inst(){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_list_space,
-     desc=&gt;'returns a rec identifying all acti...',
-     arg=&gt;[=&gt;]],
-    m_web_mcp_mcp_mtron_machine_info=&gt;tool::[
-     inst=&gt;inst(){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_machine_info,
-     desc=&gt;'returns what the running machine i...',
-     arg=&gt;[=&gt;]],
-    m_web_mcp_mcp_mtron_find_inst=&gt;tool::[
-     inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_find_inst,
-     desc=&gt;'returns a lst of all instruction p...',
-     arg=&gt;[
-      pattern=&gt;'the inst tid to match',
-      dom=&gt;'the dom of inst to match (can be a...',
-      rng=&gt;'the rng of inst to match (can be a...']],
-    m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
-     inst=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
-     desc=&gt;'create a websocket client with pro...',
-     arg=&gt;[
-      host=&gt;'the full ws:// uri of the websocke...',
-      on_message=&gt;'the function to evaluate on every ...']],
-    ...(1 more)]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
 </code></pre>
 <h4>WebSocket</h4>

@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
@@ -297,6 +298,23 @@ public class mInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testBranchRoutes(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * THE BRANCH'S OWN LAW — the additive operation: monoidic (associative, {@code noobj} its identity) and pure;
+     * NOT commutative. Commutativity is a property of a FOLD's combiner (the shard's cut), never of the branch: its
+     * keys route by place, its split deals in order, and its lanes may have effects. The lanes' laws do not promote
+     * the branch's.
+     */
+    @Test
+    public void testTheBranchDeclaresMonoidicAndPureAndNotCommutative() {
+        final Inst branch = Machine.current().instset().insts().stream()
+                .filter(inst -> mInstSet.BRANCH_INST_TID.equals(inst.tid().basePath()))
+                .findFirst().orElseThrow(() -> new AssertionError("the branch is not in the machine's instset"));
+        assertTrue(Law.Helper.declares(branch.tid(), Law.monoidic), "the branch is the additive monoid: " + branch);
+        assertTrue(Law.Helper.declares(branch.tid(), Law.pure), "the branch act is pure: " + branch);
+        assertFalse(Law.Helper.declares(branch.tid(), Law.commutative),
+                "a branch routes and deals in order; its lanes' laws do not make it commutative: " + branch);
     }
 
     /**

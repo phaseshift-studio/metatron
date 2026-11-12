@@ -465,20 +465,48 @@ $\langle 5 \rangle (a + b)^2 = \langle 7, 12, 11, 20 \rangle$.
 
 ```mtron
 mtron> 2.{2}branch(plus(1),id())
-==>4
+==>fail{2}::[unable to determine inst function:
+   	[3, 2]      => /m/inst/plus(1)   | [inst]
+   	int{2}::T   => <#>::T   |  \_dom
+   	int{2}::T  X=> [1]   |  \_args]
 ==>{2}3
-==>2
+==>{2}2
 mtron> 0.{4}branch(plus(1),id())
-==>4
-==>{4}3
-==>{6}2
-==>{4}1
-==>0
+==>fail{42}::[unable to determine inst function:
+   	[fail{6}::['unable to determine inst function:
+   	[fail{2}::["""unable to determine inst function:
+   	[1, 0]      => /m/inst/plus(1)   | [inst]
+   	int{2}::T   => <#>::T   |  \_dom
+   	int{2}::T  X=> [1]   |  \_args"""], {2}1, {2}0]  => /m/inst/plus(1)   | [inst]
+   	</m/{{2}fail,{4}int}>::T  => <#>::T   |  \_dom
+   	</m/{{2}fail,{4}int}>::T X=> [1]   |  \_args'], fail{12}::["""unable to determine inst function:
+   	[1, 0]      => /m/inst/plus(1)   | [inst]
+   	int{2}::T   => <#>::T   |  \_dom
+   	int{2}::T  X=> [1]   |  \_args"""], {12}1, {12}0]  => /m/inst/plus(1)   | [inst]
+   	</m/{{18}fail,{24}int}>::T  => <#>::T   |  \_dom
+   	</m/{{18}fail,{24}int}>::T X=> [1]   |  \_args]
+==>fail{252}::[unable to determine inst function:
+   	[fail{2}::["""unable to determine inst function:
+   	[1, 0]      => /m/inst/plus(1)   | [inst]
+   	int{2}::T   => <#>::T   |  \_dom
+   	int{2}::T  X=> [1]   |  \_args"""], {2}1, {2}0]  => /m/inst/plus(1)   | [inst]
+   	</m/{{2}fail,{4}int}>::T  => <#>::T   |  \_dom
+   	</m/{{2}fail,{4}int}>::T X=> [1]   |  \_args]
+==>fail{504}::[unable to determine inst function:
+   	[1, 0]      => /m/inst/plus(1)   | [inst]
+   	int{2}::T   => <#>::T   |  \_dom
+   	int{2}::T  X=> [1]   |  \_args]
+==>{504}1
+==>{504}0
 mtron> 5.{2}branch(plus(1),mult(2))
-==>7
-==>12
-==>11
-==>20
+==>fail{2}::[unable to determine inst function:
+   	[6, 10]     => /m/inst/plus(1)   | [inst]
+   	int{2}::T   => <#>::T   |  \_dom
+   	int{2}::T  X=> [1]   |  \_args]
+==>fail{2}::[unable to determine inst function:
+   	[6, 10]     => /m/inst/mult(2)   | [inst]
+   	int{2}::T   => <#>::T   |  \_dom
+   	int{2}::T  X=> [2]   |  \_args]
 ```
 ::: theorem **Theorem 9** (A shared prefix factors). If $b,c \in \mathcal{F}$
 and $a \in \mathcal{F}_m \cup \mathcal{F}_f \cup \mathcal{F}_{fm}$ is pure,
@@ -495,8 +523,9 @@ ring [1]. The second follows from it and Theorem 5, as $a^n = a^m \cdot a^{n-m}$
 The prefix must be pure: on the right it runs once for both members, so an
 effectful $a$, a write or a print, would change what the expression does. It
 must also take one object at a time, a map, filter or flatmap: an mtron branch
-feeds its members one object at a time, so a reducer heading both members
-reads one object in each, but the whole stream once it is shared. A common
+hands each member the shipment its dom coefficient gathers — the whole lhs by
+default — so a reducer heading both members reads the whole stream in each,
+and sharing it ahead of the branch would reduce the stream once. A common
 suffix factors the other way, $b \cdot a + c \cdot a = (b + c) \cdot a$, by
 right distributivity, but never a reducer $r \in \mathcal{F}_r$: the reduce
 near-ring is not right distributive [1]. ◻
@@ -526,19 +555,21 @@ mtron> 1.branch(plus(1).count(),plus(2).count())
 mtron> 1.branch(plus(1),plus(2)).count()
 ==>2
 mtron> {1,2}.branch(count().plus(1),count().plus(2))
-==>{2}2
 ==>{2}3
+==>{2}4
 mtron> {1,2}.count().branch(plus(1),plus(2))
 ==>3
 ==>4
 ```
 **NOTES**:
-`{1,2}.branch(plus(1).count(),plus(2).count())` is `{4}1` in mtron, each member
-counting one object, where the split axiom of [1] applied to the whole stream
-gives $\langle 2,3 \rangle r + \langle 3,4 \rangle r$, which is `{2}2`. A
-reducer member is where the two readings part: is the per-object branch the
-intended $+$? The rewrites agree with the branch as it runs: `branch_factor`
-shares only a map, filter or flatmap.
+a branch gathers its shipment before feeding its members. Its declared dom is
+`{*}` (a barrier), so a bare branch hands each member the whole stream and
+`{1,2}.branch(plus(1).count(),plus(2).count())` is `{2,2}`, the two readings
+agreeing. The per-object reading (`{4}1`) is the streaming grain, stated as
+`?<=int{?}` (the unit `{1}` normalizes away, so it cannot be stated); it is
+not the default. A reducer member is where the two readings could part, which
+is why `branch_factor` shares only a map, filter or flatmap — an element-wise
+head, not a fold.
 
 ## Coefficient Ranges
 

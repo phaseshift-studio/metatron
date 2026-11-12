@@ -773,6 +773,11 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      */
     protected StringBuilder generateInstHead(final StringBuilder sb, final Inst inst) {
         final fURI tid = inst.tid();
+        // THE SPAN IS THE INSTRUCTION'S OWN LEADING COEFFICIENT ({m,n}op), and the parser reads it back into the tid's
+        // span. basePath() carries no coefficient, so a run written {0,10}op printed as op — every narrowed share a
+        // branch lane carries lost its span on the wire, and a re-parse read the whole span again.
+        if (!tid.b().isOne())
+            sb.append("{").append(tid.b().toString()).append("}");
         sb.append(tid.basePath().small());
         // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
         // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side

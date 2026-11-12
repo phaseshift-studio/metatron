@@ -28,8 +28,10 @@
 //     <div class="asciinema-cast" data-cast="asciinema/repl-basics.cast"
 //          data-cols="100" data-rows="24" data-autoplay data-loop></div>
 //
-// `data-cols`/`data-rows` should match the cast header: without them the player
-// paints at 80x24 and resizes once the recording loads.
+// `data-cols`/`data-rows` pre-size the first paint; the recording's own header
+// takes over once it loads. A page can be built before the cast is regenerated,
+// so those copies can lag — the header is read from the fetched text and the
+// dialog is re-sized before mounting, instead of trusting the page's copy.
 //
 // ── mtron syntax highlighting ───────────────────────────────────────────────
 // The player paints terminal CELLS, not DOM text, so highlight.js cannot touch
@@ -153,7 +155,9 @@
     function options(el) {
         var d = el.dataset;
         var opts = {
-            fit: "width",
+            fit: false,           // natural cell size: the dialog grows with the
+                                  // recording (metatron.css) and the wrapper
+                                  // scrolls instead of shrinking a wide table
             controls: false,      // the player's bar reserves ~2.5 rows inside the
                                   // terminal; our own strip controls playback instead
             // pin the family we measure: a late font swap changes cell metrics and
@@ -390,6 +394,53 @@
         el.__speedBar = bar;
     }
 
+    // The page's data-cols/--cols is a snapshot taken when the page was built;
+    // the recording's own header is the truth (a cast regenerated after its page
+    // can be wider). Read it from the text we already fetched and re-size the
+    // dialog before the player mounts, so a wide explain() table is never
+    // clipped by a stale column count.
+    function adoptCastSize(el, opts, text) {
+        var term;
+        try {
+            term = JSON.parse(text.split("\n")[0]).term;
+        } catch (e) {
+            return;                              // malformed header: the player's problem
+        }
+        if (!term || !term.cols) return;
+        el.dataset.cols = String(term.cols);
+        opts.cols = Number(term.cols);
+        if (term.rows) {
+            el.dataset.rows = String(term.rows);
+            opts.rows = Number(term.rows);
+        }
+        var modal = el.closest ? el.closest(".asciinema-modal") : null;
+        if (modal) modal.style.setProperty("--cols", String(term.cols));
+    }
+
+    // Size the dialog from the player's REAL width. The stylesheet can only
+    // estimate it (columns × px-per-cell), and a fraction of a pixel per column
+    // adds up to a permanent scrollbar across the last couple of columns on a
+    // wide recording. The measurement is capped by metatron.css (100vw - 2rem),
+    // so anything wider than the browser still gets its scrollbar.
+    function sizeDialog(el) {
+        var opts = el.__opts;
+        if (opts && opts.fit) return;          // an explicit fit mode scales the player
+        var modal = el.closest ? el.closest(".asciinema-modal") : null;
+        if (!modal) return;
+        var dialog = modal.querySelector(".modal-dialog");
+        var player = el.querySelector(".ap-player");
+        if (!dialog || !player) return;
+        var content = dialog.querySelector(".modal-content");
+        var borders = 0;
+        if (content) {
+            var cs = window.getComputedStyle(content);
+            borders = (parseFloat(cs.borderLeftWidth) || 0)
+                + (parseFloat(cs.borderRightWidth) || 0);
+        }
+        var width = player.getBoundingClientRect().width;
+        if (width > 0) dialog.style.width = Math.ceil(width + borders) + "px";
+    }
+
     function mount(el, player) {
         if (!el.dataset.cast || el.dataset.mounted) return;
         el.dataset.mounted = "1";
@@ -412,10 +463,19 @@
             speedControls(el, instance);
             // the modal's final width lands after `shown`; the player otherwise
             // keeps a wrapper height computed from a pre-layout width, and the
-            // terminal loses rows at the bottom
+            // terminal loses rows at the bottom. The dialog is then sized from
+            // the player itself (not from the stylesheet's per-column guess).
             requestAnimationFrame(function () {
                 window.dispatchEvent(new Event("resize"));
+                sizeDialog(el);
             });
+            // a URL source (no highlight pass) learns its real size only when
+            // the recording's header arrives: size the dialog again then
+            if (instance && instance.addEventListener) {
+                instance.addEventListener("reset", function () {
+                    requestAnimationFrame(function () { sizeDialog(el); });
+                });
+            }
         }
 
         if (!canHighlight(el)) {
@@ -428,7 +488,10 @@
                 if (!r.ok) throw new Error(r.status + " " + r.statusText);
                 return r.text();
             })
-            .then(function (txt) { create({ data: highlightCast(txt) }); })
+            .then(function (txt) {
+                adoptCastSize(el, opts, txt);
+                create({ data: highlightCast(txt) });
+            })
             .catch(function () { create(el.dataset.cast); });
     }
 

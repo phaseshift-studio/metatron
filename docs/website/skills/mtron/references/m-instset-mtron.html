@@ -542,6 +542,11 @@ mtron&gt; 0x0F        [-- bytes (hex literal) --]
 ==&gt;0x0f
 mtron&gt; noobj       [-- &quot;no obj&quot; (empty, none) --]
 </code></pre>
+<p>A <code>'…'</code> or <code>&quot;…&quot;</code> str decodes exactly three escapes — <code>\\</code>, <code>\'</code> and <code>\&quot;</code> — and keeps every other <code>\x</code> as written
+(<code>'\s'</code> is backslash-s, a regex; <code>'C:\temp'</code> keeps its backslash). The writer uses them only when no delimiter is
+safe: it quotes with the character the value does NOT hold, and falls back to escaped <code>'…'</code> when the value holds both
+quote kinds and its own <code>&quot;&quot;&quot;</code> run would close the triple-quoted form early. <code>&quot;&quot;&quot;…&quot;&quot;&quot;</code> is raw, the form for code and
+documents, which carry backslashes by the dozen.</p>
 <h4>the four ways a spelling becomes an address</h4>
 <p>They are distinct, and knowing which is which is most of the uri grammar:</p>
 <table>

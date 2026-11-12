@@ -231,12 +231,12 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
     /**
      * LAW_SHARD RESTATES ITS HOP, ONE HEIGHT DOWN. The budget is read in chain order: {@code ?hop}, or its deprecated
      * read-only alias {@code ?hops}, on any instruction of the fold. The earliest statement wins, and the new spelling is
-     * preferred at one position. A chain that states neither takes the plan's one level, the star. Each lane's fold
-     * restates the budget one height down, so the lane is planned again where it lands, and a height of one leaves the
-     * leaf's bare {@code 0}. The counted spelling's leading coefficient is the arity, and it rides along. A loop peer is
-     * dialed, since a silent machine has no place of its own to shard over. PlanBuilderTest read the budget off the plan
-     * ({@code PlanInterpreter.hop}); here it is read off the code the rewrite emits. Each row: the chain % the budget
-     * every lane's fold states.
+     * preferred at one position. A chain that states neither takes the plan's one level, the star. Each lane's FIRST
+     * instruction restates the budget one height down — the code says where its metadata lives — so the lane is planned
+     * again where it lands, and a height of one leaves the leaf's bare {@code 0}. The counted spelling's leading
+     * coefficient is the arity, and it rides along. A loop peer is dialed, since a silent machine has no place of its
+     * own to shard over. PlanBuilderTest read the budget off the plan ({@code PlanInterpreter.hop}); here it is read off
+     * the code the rewrite emits. Each row: the chain % the budget every lane's head states.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -257,10 +257,10 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("law_shard emitted no branch for " + chain));
         final List<String> folds = branch.args().asRec().<Rel>elements()
-                .map(lane -> lane.second().asCode().insts().getLast().tid().q(HOP))
+                .map(lane -> lane.second().asCode().insts().getFirst().tid().q(HOP))
                 .toList();
         assertFalse(folds.isEmpty(), "the branch has lanes: " + branch);
-        assertEquals(Collections.nCopies(folds.size(), budget), folds, "every lane's fold restates the budget: " + branch);
+        assertEquals(Collections.nCopies(folds.size(), budget), folds, "every lane's head restates the budget: " + branch);
     }
 
     /**

@@ -2151,8 +2151,55 @@ h6:hover .heading-anchor {
 .asciinema-figure .asciinema-cast {
     border: 1px solid #2a2a2a;
     border-radius: 6px 6px 0 0;
-    overflow: hidden;
+    overflow-x: auto;   /* a recording wider than the figure scrolls sideways */
+    overflow-y: hidden;
     background: #000;
+}
+
+/* the player renders at its natural cell size (fit is off in asciinema.js), so
+   the terminal is as wide as the recording needs: the dialog is sized from
+   --cols up to the browser's width, and anything wider scrolls in the wrapper
+   instead of being scaled down. JetBrains Mono's advance is 0.6em, so 16.4px
+   makes one cell ~9.84px. The calc() below is only the pre-mount estimate —
+   asciinema.js then sets the dialog to the player's measured width, because a
+   fraction of a pixel per column would otherwise leave a permanent scrollbar
+   across the last columns. */
+.asciinema-cast div.ap-wrapper {
+    justify-content: flex-start;   /* a too-wide terminal scrolls from its left edge */
+}
+
+.asciinema-cast div.ap-wrapper div.ap-player {
+    flex: 0 0 auto;                /* keep the terminal's natural width */
+    max-width: none;               /* the wrapper scrolls; the player does not clip */
+    font-size: 16.4px;
+}
+
+/* the cast wrapper's scrollbar is the site's slim red one (the dropdown's): a
+   dark-red thumb on a transparent track, so it reads as part of the black
+   terminal instead of a chrome gutter */
+.asciinema-cast {
+    scrollbar-width: thin;                          /* Firefox */
+    scrollbar-color: var(--primary) transparent;    /* Firefox: thumb track */
+}
+
+.asciinema-cast::-webkit-scrollbar {
+    width: 8px;     /* vertical bar */
+    height: 8px;    /* horizontal bar: the recording is wider than the dialog */
+}
+
+.asciinema-cast::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.asciinema-cast::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.asciinema-cast::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mred);
 }
 
 .asciinema-caption {
@@ -2230,6 +2277,8 @@ h6:hover .heading-anchor {
 
 .asciinema-modal .asciinema-cast {
     background: #000;
+    overflow-x: auto;   /* scrollbar when the recording is wider than the dialog */
+    overflow-y: hidden;
 }
 
 .asciinema-modal .asciinema-caption {
@@ -2239,10 +2288,10 @@ h6:hover .heading-anchor {
 }
 
 /* the site sets .modal-content { width: unset }, so a dialog shrink-wraps to
-   its content — give the player dialog an explicit width and centering */
+   its content — give the player dialog an explicit width and centering (its
+   width is sized from --cols further down, and capped by the browser there) */
 .asciinema-modal .modal-dialog {
     width: calc(100% - 2rem);
-    max-width: 984px; /* 120% of the previous 820px: fit:width scales the type */
     margin: 1.75rem auto;
 }
 
@@ -2250,8 +2299,8 @@ h6:hover .heading-anchor {
     width: 100%;
 }
 
-/* fit:width sizes the terminal from the dialog's width; a demo's row count
-   is what keeps it short enough for the caption bar to stay on screen */
+/* the terminal is not scaled to the dialog (fit is off); its row count is what
+   keeps a demo short enough for the caption bar to stay on screen */
 .asciinema-modal .asciinema-cast {
     min-height: 120px;
 }
@@ -2432,12 +2481,15 @@ h6:hover .heading-anchor {
     margin: 0 .25rem 0 0;
 }
 
-/* each recording's dialog is sized from its own column count (--cols, emitted
-   with the modal): the cell is 9.84px at the fit width, so the type size stays
-   constant and only the widget grows/shrinks with the content */
+/* the pre-mount estimate of the dialog width: column count (--cols, emitted
+   with the modal and re-read from the cast header at mount) × the cell width,
+   plus the 2px content border. asciinema.js replaces it with the player's
+   measured width once mounted, so the estimate never becomes the scrollbar
+   threshold; the browser's width is the cap either way, and a recording wider
+   than that scrolls (.asciinema-cast is the scroll container). */
 .asciinema-modal .modal-dialog {
     width: calc(var(--cols, 100) * 9.84px + 2px);
-    max-width: min(984px, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
 }
 
 /* launchers flow side by side (wrapping) instead of defaulting to a stack */

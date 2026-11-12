@@ -924,10 +924,11 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/25
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/29
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/26
+==&gt;[body=&gt;'another one']@tbledoc:note/30
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
+==&gt;27
 ==&gt;24
 ==&gt;12
 ==&gt;21
@@ -945,14 +946,17 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;10
 ==&gt;8
 ==&gt;11
+==&gt;29
 ==&gt;14
 ==&gt;17
 ==&gt;26
 ==&gt;20
 ==&gt;23
+==&gt;28
 ==&gt;22
 ==&gt;2
 ==&gt;25
+==&gt;30
 ==&gt;5
 </code></pre>
 <h3>taking the space down</h3>
@@ -983,12 +987,11 @@ mtron&gt; /sys/space/tbledoc -&gt; noobj                 [-- leave the graph as 
 pattern, and reads of an unmounted scheme fall through to the router's catch-all rather than failing loudly.</p>
 <h3>not available yet</h3>
 <ul>
-<li><strong><code>.explain()</code> on a rewritten read fails.</strong> The rewrite replaces the code with a rewrite inst that is not itself
-callable, so a <code>count()</code> read explains as
-<code>fail::[args do not match inst args: [X=&gt;/m/db/tble/inst/rewrite/sql_count?int&lt;=#{0}(person/+)]]</code>.
+<li><strong><code>.explain()</code> on a rewritten read fails.</strong> The rewrite replaces the code with a rewrite inst
+(<code>/m/db/tble/inst/rewrite/sql_count</code>) that is not itself callable, so explaining a <code>count()</code> read fails.
 Ask the rewrite instead — <code>*/m/db/tble?docq</code> prints the family, and each entry documents its own before/after code:</li>
 </ul>
-<pre><code class="language-mtron">*tbledoc:person/+.count().explain()    [-- fail:: args do not match inst args --]
+<pre><code class="language-mtron">*tbledoc:person/+.count().explain()    [-- fails: the rewrite inst is not callable --]
 </code></pre>
 <ul>
 <li><strong><code>kv_limit</code> is broken on the typed key/value schema.</strong> <code>*tbledoc:kv/+.take(n)</code> compiles to

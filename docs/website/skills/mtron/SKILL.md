@@ -203,19 +203,19 @@ and the unsugar'd text table is the lazy `>>format` inst (materialized in the in
 ```mtron
 mtron> start(/a).rshift().rshift().rshift().explain()>>format
 ==>"""
-    op      dom          rng      args   f    desc     c_dom  c_rng 
-    start   noobj{0}::T  uri::T   /a     <j>  initial  {0}    {1}   
-    rshift  uri::T       #{*}::T  noobj  <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  scatter  {1}    {*}   
+    op      dom          rng      args     f    desc     c_dom  c_rng 
+    start   noobj{0}::T  uri::T   [/a]     <j>  initial  {0}    {1}   
+    rshift  uri::T       #{*}::T  [noobj]  <j>  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
    """
 mtron> /a.>>.>>.>>.explain()>>format
 ==>"""
-    op      dom          rng      args   f    desc     c_dom  c_rng 
-    start   noobj{0}::T  uri::T   /a     <j>  initial  {0}    {1}   
-    rshift  uri::T       #{*}::T  noobj  <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  scatter  {1}    {*}   
+    op      dom          rng      args     f    desc     c_dom  c_rng 
+    start   noobj{0}::T  uri::T   [/a]     <j>  initial  {0}    {1}   
+    rshift  uri::T       #{*}::T  [noobj]  <j>  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
    """
 ```
 Traversing the graph non-sugar'd vs sugar'd (`>>` = `rshift`):
@@ -323,7 +323,20 @@ mtron> import(/m/math,math)                     [-- module import, namespaced ma
 mtron> int::T[?>0]@posint                       [-- a new type: positive integers --]
 mtron> rec::T[?[name=>str::T, age=>int::T]]@being
 mtron> person::[name=>'marko', age=>29]         [-- the stock person type, constructed --]
-==>person::[name=>'marko',age=>29]
+==>fail::[parse error at line 1, col 1: obj does not match person::T
+     [[name=>'marko',age=>29]
+         X=>
+     rec[role,position]::T[?[name=>str::T,
+                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
+                             role=>rec::T,
+                             position=>rec::T]]@person
+     ────────────────────────────────────────────────────────────────────────────
+     [name=>(==>name)=>'marko'=>==>str::T,
+      age=>(==>age)=>29=>==>nat::T,
+      noobj=>(X=>role)=>noobj=>X=>rec::T,
+      noobj=>(X=>position)=>noobj=>X=>rec::T]]
+     predicate apply failed on execution
+   	while parsing: person::[name=>'marko', age=>29]]
 mtron> being::[name=>'stynx', age=>33]
 ==>being::[name=>'stynx',age=>33]
 ```

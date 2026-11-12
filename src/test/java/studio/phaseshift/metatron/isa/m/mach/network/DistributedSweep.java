@@ -87,17 +87,19 @@ public final class DistributedSweep {
 
         /**
          * The lane's hop budget, exactly as the emitter states it, or {@code null} when the lane states none. THE
-         * BUDGET RIDES THE FOLD: the emitter restates the height on the reducer the lane runs (the fold), so a peer
-         * re-plans from its own recombine; a chain written by hand that states it on the seed still answers, which is
-         * the read-compat the reader keeps. The emitted text, not a parsed number: the budget is a q value, and
-         * parsing it here would be a second reading of {@code PlanInterpreter.hopAxis}.
+         * BUDGET IS STATED ON THE FIRST INSTRUCTION: the emitter restates the height on the code's head (the start a
+         * lane carries, or the first run instruction when the branch deals the part), so a peer re-plans from the head
+         * and a human reads the metadata where it lives — {@code ?hop=0} at a leaf. A chain written by hand that
+         * states it on the fold is still answered, which is the read-compat the reader keeps. The emitted text, not a
+         * parsed number: the budget is a q value, and parsing it here would be a second reading of
+         * {@code Shard.hopAxis}.
          */
         public String budget() {
+            final Inst head = this.code.insts().getFirst();
+            if (head.tid().hasQ(HOP))
+                return head.tid().qMap().get(HOP);
             final fURI fold = this.fold().tid();
-            if (fold.hasQ(HOP))
-                return fold.qMap().get(HOP);
-            final fURI seed = this.seed().tid();
-            return seed.hasQ(HOP) ? seed.qMap().get(HOP) : null;
+            return fold.hasQ(HOP) ? fold.qMap().get(HOP) : null;
         }
 
         /**

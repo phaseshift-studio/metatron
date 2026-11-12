@@ -470,7 +470,10 @@ The prefix must be pure: on the right it runs once for both members, so an
 effectful $a$, a write or a print, would change what the expression does. It
 must also take one object at a time, a map, filter or flatmap: an mtron branch
 feeds its members one object at a time, so a reducer heading both members
-reads one object in each, but the whole stream once it is shared. A common
+reads one object in each, but the whole stream once it is shared. (A
+distribution rewrite may state `{*}` on the branch it emits, making the
+shipment whole; that is the plan's optimization, not the instruction's
+default.) A common
 suffix factors the other way, $b \cdot a + c \cdot a = (b + c) \cdot a$, by
 right distributivity, but never a reducer $r \in \mathcal{F}_r$: the reduce
 near-ring is not right distributive [1]. ◻
@@ -499,7 +502,9 @@ counting one object, where the split axiom of [1] applied to the whole stream
 gives $\langle 2,3 \rangle r + \langle 3,4 \rangle r$, which is `{2}2`. A
 reducer member is where the two readings part: is the per-object branch the
 intended $+$? The rewrites agree with the branch as it runs: `branch_factor`
-shares only a map, filter or flatmap.
+shares only a map, filter or flatmap. A distribution rewrite may state `{*}` on
+the branch it emits (the whole stream per member); the instruction's own
+default stays per-object.
 
 ## Coefficient Ranges
 
