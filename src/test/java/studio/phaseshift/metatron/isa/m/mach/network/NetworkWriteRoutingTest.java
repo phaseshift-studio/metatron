@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <tr><th>method</th><th>write path</th><th>routing</th></tr>
  *   <tr>
  *     <td>{@code registerPrefix} / {@code unregisterPrefix}</td>
- *     <td>{@code this.write(Network.Helper.prefixTable(this), …)}</td>
+ *     <td>{@code this.write(<prefix>, …)} — the field's relative address</td>
  *     <td>THIS level, thread-independent ({@link MoveSeamsTest} pins the shadowing)</td>
  *   </tr>
  *   <tr>

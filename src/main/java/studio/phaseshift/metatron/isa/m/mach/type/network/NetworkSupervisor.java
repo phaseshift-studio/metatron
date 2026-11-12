@@ -118,8 +118,8 @@ public final class NetworkSupervisor extends MRec implements Closeable {
         // construction is connection: the constructor STARTS the tick loop — submit the virtual thread to the
         // executor, else the supervisor never ticks and a down peer is never redialed back online.
         this.thread.applyAsync();
-        // construction is connection: file ourselves in the level's supervisor slot
-        network.at(uri(SUPERVISOR), this, MUTABLE);
+        // construction is connection: file ourselves in the level's supervisor slot, through its own door
+        network.write(f(SUPERVISOR), this);
     }
 
     private static Map<Obj, Obj> supervisorMap() {

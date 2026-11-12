@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PEER_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -349,25 +350,25 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     public void testThePeerPlaceIsThePreC4TargetList() {
         final Network network = Machine.current().network();
         final Placement route = Placement.tree(1, Span.at());
-        // the live peer field is process-global, so this test owns it while it runs and hands back exactly what it
-        // found -- not the empty field, which would be a second, quieter change to the machine
-        final Obj prior = network.at(uri(PEER));
+        // the live peer map is process-global, so this test puts its members where a dial puts one -- typed, at its
+        // key's path, through the level's own door -- and takes exactly those back out, leaving what it found
+        final Rec planted = rec(
+                uri("dial/one"), peer(SERVANT, true, true, EVAL_INST_TID),
+                uri("dial/two"), peer(WRITER, true, true, TO_INST_TID),
+                uri("dial/three"), peer(SLEEPER, true, false, EVAL_INST_TID),
+                uri("dial/four"), peer(TWIN, false, true, EVAL_INST_TID));
         try {
-            network.at(uri(PEER), rec(
-                    uri("dial/one"), peer(SERVANT, true, true, EVAL_INST_TID),
-                    uri("dial/two"), peer(WRITER, true, true, TO_INST_TID),
-                    uri("dial/three"), peer(SLEEPER, true, false, EVAL_INST_TID),
-                    uri("dial/four"), peer(TWIN, false, true, EVAL_INST_TID)), MUTABLE);
+            planted.elements().forEach(kv -> network.write(f(PEER).extend(kv.first().uriValue()), kv.second().selfTID(PEER_TID)));
             final Env env = Env.snapshot();
             assertEquals(legacyTargets(env, route), targets(env, route),
                     "the resolver answers the filter chain it replaced: " + env.peers());
             assertEquals(List.of(SERVANT), targets(env, route), "the one dialed peer that serves the route");
             // the empty case: nothing dialed, nothing shipped
-            network.at(uri(PEER), noobj(), MUTABLE);
+            planted.keys().forEach(key -> network.write(f(PEER).extend(key.uriValue()), noobj()));
             assertEquals(List.of(), legacyTargets(Env.snapshot(), route), "nothing dialed, nothing to ship to");
             assertEquals(List.of(), targets(Env.snapshot(), route), "and the resolver agrees");
         } finally {
-            network.at(uri(PEER), prior, MUTABLE);
+            planted.keys().forEach(key -> network.write(f(PEER).extend(key.uriValue()), noobj()));
         }
     }
 

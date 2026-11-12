@@ -135,6 +135,28 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     }
 
     /**
+     * a deletion retracts exactly the members its address names: the exact address one socket, a pattern every key
+     * it matches — none when it matches none — and {@code #} the rest
+     */
+    @Test
+    public void testADeletionRetractsExactlyTheMembersItNames() {
+        final Machine root = Machine.current();
+        final Recorder first = new Recorder(SOCKET, root.network());
+        final Recorder second = new Recorder(CHILD_SOCKET, root.network());
+        Network.Helper.listen(root.network(), first, rec(uri("/mtron"), uri("mtron_ws")));
+        Network.Helper.listen(root.network(), second, rec(uri("/mtron"), uri("mtron_ws")));
+        this.script("[STATE] <~/network/listener/ws/localhost/28556> -> noobj");
+        assertTrue(second.closed(), "the exact address retracts its member");
+        assertFalse(first.closed(), "and only its member");
+        this.script("[STATE] <~/network/listener/http/#> -> noobj");
+        assertFalse(first.closed(), "a pattern that matches no key retracts nothing");
+        this.script("*<~/network/listener/ws/localhost/28555/origin> % <ws://0.0.0.0:28555>");
+        this.script("[STATE] <~/network/listener/#> -> noobj");
+        assertTrue(first.closed(), "# names every key the map holds");
+        checkEquality(LOG, root.network().listener(SOCKET.pathEncoding()), noobj(), true);
+    }
+
+    /**
      * a child that deletes its own entry on an inherited socket withdraws its routes, and only them
      */
     @Test

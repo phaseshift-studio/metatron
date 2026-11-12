@@ -344,12 +344,12 @@ public class NetworkFunnelTest extends AbstractMetatronTest {
         final fURI dial = f("ws://212.7.1.9:28598/mtron");
         network.index(client(dial.toString()));
         network.drop(dial.pathEncoding());
-        assertTrue(network.atDirect(uri(PEER)).isNoObj(), "an emptied peer map is an ABSENT field, not an empty rec");
+        assertTrue(network.read(f("peer/#")).isNoObj(), "an emptied peer map leaves nothing behind, not an empty rec");
         final fURI origin = f("ws://0.0.0.0:28598");
         final Probe server = new Probe(origin, network);
         network.index(listener(server, rec(uri("/m"), uri("m"))));
         network.drop(origin.pathEncoding());
-        assertTrue(network.atDirect(uri(LISTENER)).isNoObj(), "and so is an emptied listener map");
+        assertTrue(network.read(f("listener/#")).isNoObj(), "and neither does an emptied listener map");
     }
 
     // ======================== helpers ========================

@@ -713,7 +713,7 @@ public class machInstSet extends AbstractInstSet {
                                 .constructor(arg -> {
                                     final Network network = Machine.current().network();
                                     NetworkSupervisor.watch(network);
-                                    return network.at(uri(SUPERVISOR));
+                                    return network.read(f(SUPERVISOR));
                                 })
                                 .example("network_supervisor::[=>] [-- start supervising the current machine's network --]")
                                 .create(),

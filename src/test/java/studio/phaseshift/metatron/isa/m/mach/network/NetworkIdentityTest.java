@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.mach.type.*;
@@ -38,7 +39,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -185,7 +186,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     @Test
     public void testPeersAreTheMachinesConnections() throws Exception {
         final Network network = Machine.current().network();
-        final Obj wasConnected = network.atDirect(uri(PEER));
+        final fURI member = f(PEER).extend(f("ws://localhost:21001/n").pathEncoding());
         assertTrue(Network.Helper.peerAuthorities().isEmpty(), "nothing is declared yet: " + Network.Helper.peerAuthorities());
         final PeerCluster cluster = PeerCluster.detached(2, "/n", 21001).connect();
         try {
@@ -195,9 +196,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
                     "but the roster is the known servers, NOT the connections the machine holds: " + Network.Helper.peerAuthorities());
             // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports. A member sits at
             // its dial's own path and carries the service it reaches as its authority.
-            network.at(uri(PEER), rec(mutableMap(
-                    uri(f("ws://localhost:21001/n").pathEncoding()),
-                    rec(mutableMap(uri(ORIGIN), uri("ws://localhost:21001"))))), MUTABLE);
+            network.write(member, rec(mutableMap(uri(ORIGIN), uri("ws://localhost:21001"))).selfTID(machInstSet.PEER_TID));
             assertEquals(Set.of(f("ws://localhost:21001")), Network.Helper.peerAuthorities(),
                     "the members' authorities ARE the peers — declared, not emergent");
             assertTrue(Network.Helper.authorities().stream()
@@ -206,10 +205,8 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
         } finally {
             cluster.close();
             Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
-            // "no connections" is the ABSENT field, not an empty rec: writing [] as the connections map fails the
-            // network's positional predicate (measured — an empty rec's key is noobj, which is not a uri::T), and
-            // `at` with noobj removes the entry, which is the state a machine with nothing dialed is actually in.
-            network.at(uri(PEER), wasConnected, MUTABLE);
+            // the declared member leaves through the same door it came in by
+            network.write(member, noobj());
         }
     }
 

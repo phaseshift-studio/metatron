@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -120,12 +120,6 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
     fURI CURRENT_ROSTER = f("~/network/roster");
     fURI ROOT_ROSTER = f("/network/roster");
 
-    /**
-     * THE NAMES a caller uses for an origin: {@code <label> => <full origin>}. Read at the ROOT, like the roster,
-     * because a name is DENOTATION — scoping decides which peers a frame can reach, never what {@code //ginger} means.
-     */
-    fURI ROOT_PREFIX = f("/network/prefix");
-
     default Rec roster() {
         return Machine.read(ROOT_ROSTER).orElse(rec());
     }
@@ -141,9 +135,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      * member is addressable at {@code ~/network/peer/<key>} — read field by field, deleted to hang it up — and the
      * service it reaches is the {@code origin} it carries, never its key.
      */
-    default Rec peers() {
-        return this.at(PEER).orElse(rec());
-    }
+    Rec peers();
 
     /**
      * The member at a peer KEY, or noobj.
@@ -162,9 +154,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      * {@code ws://0.0.0.0:8555} is {@code ws/localhost/8555}, a wildcard bind being a loopback alias) and so addressable at {@code ~/network/listener/<key>}.
      * The entries are this level's alone; a machine reaches the sockets above it through {@link Helper#listenerFor}.
      */
-    default Rec listeners() {
-        return this.at(LISTENER).orElse(rec());
-    }
+    Rec listeners();
 
     /**
      * The listener::T entry at a KEY, or noobj.
@@ -214,10 +204,8 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      * KNOWS, {@code peer} is what this machine has DIALED, {@code listener} is what it ANSWERS ON, and {@code prefix}
      * is what you CALL it.
      */
-    default Rec prefixes() {
-        final Obj field = this.at(PREFIX);
-        return field.isRec() ? field.asRec() : rec();
-    }
+    @Override
+    Rec prefixes();
 
     /**
      * THE LEVEL ABOVE this network: the enclosing machine's network (or null at the root). Reach is not inherited, but
@@ -281,8 +269,8 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      *   network().registerPrefix(&lt;ginger&gt;, &lt;ws://ginger.local:8555&gt;);      [-- the name --]
      *   ws_client::[pattern= &gt;&lt;ws://ginger.local:8555/mtron&gt;];                [-- the reach --]
      * </pre>
-     * The row lands in THIS level's table ({@link Helper#prefixTable(Network)}), so a declaration made in a frame is that frame's
-     * to shadow, and one made at the root is inherited by every frame below it.
+     * The row lands in THIS level's table, so a declaration made in a frame is that frame's to shadow, and one made at
+     * the root is inherited by every frame below it.
      */
     default Obj registerPrefix(final fURI name, final fURI origin) {
         if (!origin.hasScheme() || !origin.hasHost())
@@ -302,11 +290,11 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             // (and a legacy row the table still holds is repaired by the same pass).
             final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
             rows.put(uri(label), uri(origin.origin()));
-            // WRITTEN THROUGH THIS NETWORK's OWN DOOR, not the machine gatekeeper: the row belongs to the level the
-            // network is mounted at, and Machine.write routes by where the CALLING THREAD stands -- so a caller
-            // holding a frame's network from outside that frame would file the name somewhere else (measured: an
-            // empty child table and a parent's meaning quietly answering). The address is still this level's spelling.
-            return this.write(Helper.prefixTable(this), Helper.markedTable(rec(rows)));
+            // WRITTEN THROUGH THIS NETWORK's OWN DOOR, at the field's RELATIVE address, not the machine gatekeeper:
+            // Machine.write routes by where the CALLING THREAD stands, so a caller holding a frame's network from
+            // outside that frame would file the name somewhere else (measured: an empty child table and a parent's
+            // meaning quietly answering). A relative address names no machine at all.
+            return this.write(f(PREFIX), Helper.markedTable(rec(rows)));
         }
     }
 
@@ -326,7 +314,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             rows.keySet().removeIf(key -> key.isUri() && label.isPresent()
                     && Helper.label(key.uriValue()).filter(label.get()::equals).isPresent());
             // ... and deletion through the same door, for the same reason (see registerPrefix)
-            return this.write(Helper.prefixTable(this), rows.isEmpty() ? noobj() : Helper.markedTable(rec(rows)));
+            return this.write(f(PREFIX), rows.isEmpty() ? noobj() : Helper.markedTable(rec(rows)));
         }
     }
 
@@ -450,28 +438,17 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // by its key ({@code ws/localhost/8555}), which is exactly what {@code unlisten} and a listener's own close
         // pass. A bare origin is REACH too: it hangs up the service's dials and leaves the socket serving.
         final java.util.function.Predicate<Rel> namedListener = kv -> null == address.host() && named.test(kv);
-        final List<Obj> dropped;
-        final List<Obj> stopped;
-        synchronized (this) {
-            dropped = this.peers().elements().filter(kv -> kv.first().isUri() && named.test(kv)).map(Rel::second).toList();
-            if (!dropped.isEmpty()) {
-                // the zero rec is noobj as a value, but a field written with one keeps it: write noobj so the field goes
-                final Rec kept = Helper.without(this.peers(), named);
-                this.at(uri(PEER), kept.isEmpty() ? noobj() : kept, MUTABLE);
-            }
-            stopped = this.listeners().elements().filter(kv -> kv.first().isUri() && namedListener.test(kv)).map(Rel::second).toList();
-            if (!stopped.isEmpty()) {
-                final Rec kept = Helper.without(this.listeners(), namedListener);
-                this.at(uri(LISTENER), kept.isEmpty() ? noobj() : kept, MUTABLE);
-            }
-        }
-        // CLEAR, THEN CLOSE. The members leave the maps under the lock and what they held is closed outside it:
-        // closing a link is its owner's hang-up, and a hang-up retracts -- which would come straight back into
-        // this map. A socket's routes leave it, and a socket this level OPENED is released with them.
-        dropped.forEach(Helper::release);
-        stopped.forEach(entry -> Helper.stopListening(this, entry));
-        final List<Obj> all = Stream.concat(dropped.stream(), stopped.stream()).toList();
-        return all.isEmpty() ? noobj() : objs(all.toArray(Obj[]::new));
+        // EACH MEMBER LEAVES THROUGH THE LEVEL'S OWN DOOR, at its key's path, so a member's deletion is one act however
+        // it is asked for: the entry leaves first and what it held is released after (Helper.release) -- clear, then
+        // close, since closing a link is its owner's hang-up and a hang-up retracts, which would come back here.
+        final List<Rel> members = Stream.concat(
+                        this.peers().elements().filter(kv -> kv.first().isUri() && named.test(kv))
+                                .map(kv -> rel(uri(f(PEER).extend(kv.first().uriValue())), kv.second())),
+                        this.listeners().elements().filter(kv -> kv.first().isUri() && namedListener.test(kv))
+                                .map(kv -> rel(uri(f(LISTENER).extend(kv.first().uriValue())), kv.second())))
+                .toList();
+        members.forEach(member -> this.write(member.first().uriValue(), noobj()));
+        return members.isEmpty() ? noobj() : objs(members.stream().map(Rel::second).toArray(Obj[]::new));
     }
 
     /**
@@ -503,8 +480,9 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      * client's own {@code status}; a roster row is an address, known and never tried (see {@link Helper#probe}).
      */
     default Obj status(final Obj lhs) {
-        final Obj field = lhs.isRec() ? lhs.asRec().at(uri(PEER)) : noobj();
-        final Obj roster = field.isRec() ? field : this.machines();
+        // the members of the level it was asked of, when it holds any; else the roster
+        final Rec members = lhs instanceof Network level ? level.peers() : rec();
+        final Obj roster = !members.isEmpty() ? members : this.machines();
         if (!roster.isRec())
             return noobj(); // nothing declared: an empty cluster, not an error
         return objs(roster.asRec().jvm().entrySet().stream()
@@ -598,10 +576,11 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
     @Override
     default void close() {
         NetworkSupervisor.release(this);
-        this.peers().keys().filter(Obj::isUri).map(Obj::uriValue).toList().forEach(this::drop);
-        // PRESENCE ENDS WITH THE LEVEL: its routes leave every socket it served through, and a socket it opened is
-        // released -- a child's pop never closes the port its parent serves on
-        this.listeners().values().filter(Obj::isRec).toList().forEach(entry -> Helper.stopListening(this, entry));
+        // REACH AND PRESENCE END WITH THE LEVEL, every member retracted by its key: a client hung up, and a socket's
+        // routes withdrawn with the socket itself released when this level opened it -- a child's pop never closes the
+        // port its parent serves on
+        Stream.concat(this.peers().keys(), this.listeners().keys())
+                .filter(Obj::isUri).map(Obj::uriValue).toList().forEach(this::drop);
     }
 
     /**
@@ -867,18 +846,6 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         }
 
         /**
-         * The peer map without the members the predicate names — the zero rec once nothing is left, so the field
-         * reads absent rather than empty: an EMPTY rec is not the same value as an absent one (the component
-         * predicate's map idiom rejects the empty rec's noobj entry — measured).
-         */
-        static Rec without(final Rec peers, final java.util.function.Predicate<Rel> named) {
-            final List<Rel> kept = peers.elements()
-                    .filter(kv -> !kv.first().isUri() || !named.test(kv))
-                    .toList();
-            return kept.isEmpty() ? noobjRec() : rec(kept.stream());
-        }
-
-        /**
          * The origin a member reaches — the service it carries, never its key — or null for a value that is not
          * a member (a roster row's address).
          */
@@ -906,14 +873,21 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         }
 
         /**
-         * Close what a member held — the displaced half of close-before-clear. A member is a rec and a rec is not
-         * closeable: its VALUES hold the closeables (the protocol client), so the values are what the contract
-         * receives, then the member.
+         * RELEASE what a member held — the close half of close-before-clear, once the member has left its level. A
+         * member is a rec and a rec is not closeable, so its VALUES are what the contract receives: a peer's client is
+         * what hangs up. A listener entry is the exception: its server may be a socket other levels share, so this
+         * level's routes leave the socket, and the socket itself closes only with the level that opened it.
          */
-        static void release(final Obj peer) {
-            if (peer.isRec())
-                peer.asRec().values().forEach(value -> Helper.writeComplete(noobj(), value));
-            Helper.writeComplete(noobj(), peer);
+        public static void release(final Network level, final Obj member) {
+            if (member.isRec() && member.asRec().atDirect(uri(SERVER)) instanceof Listener listener) {
+                listener.unshare(level);
+                if (listener.owner() == level)
+                    CommonUtil.close(listener);
+                return;
+            }
+            if (member.isRec())
+                member.asRec().values().forEach(value -> Helper.writeComplete(noobj(), value));
+            Helper.writeComplete(noobj(), member);
         }
 
         /**
@@ -930,20 +904,6 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
                     return listener;
             }
             return null;
-        }
-
-        /**
-         * A level stops serving through a socket: its routing table leaves the socket, and the socket itself is
-         * released when the level is its owner. A sharer's close never touches the port — not {@link #release}, which
-         * would close every value the entry holds, the shared server included.
-         */
-        static void stopListening(final Network level, final Obj entry) {
-            final Obj server = entry.isRec() ? entry.asRec().atDirect(uri(SERVER)) : noobj();
-            if (!(server instanceof Listener listener))
-                return;
-            listener.unshare(level);
-            if (listener.owner() == level)
-                CommonUtil.close(listener);
         }
 
         /**
@@ -982,9 +942,9 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             final fURI key = origin.uriValue().pathEncoding();
             synchronized (server) {
                 server.refuseClaimed(network, routes);
+                // the entry goes in through the level's own door, at its key's path
                 synchronized (network) {
-                    final Rec kept = Helper.without(network.listeners(), kv -> kv.first().uriValue().equals(key));
-                    network.at(uri(LISTENER), kept.isEmpty() ? rec(uri(key), entry) : kept.plus(rec(uri(key), entry)), MUTABLE);
+                    network.write(f(LISTENER).extend(key), entry);
                 }
                 server.share(network);
             }
@@ -1031,11 +991,11 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
                     peer.asRec().at(uri(HOST), uri(host), MUTABLE);
                 peer.asRec().at(uri(CLIENT), client, MUTABLE);
                 peer.selfTID(studio.phaseshift.metatron.isa.m.mach.machInstSet.PEER_TID);
-                final Rec kept = without(level.peers(), kv -> kv.first().uriValue().equals(key));
-                level.at(uri(PEER), kept.isEmpty() ? rec(uri(key), peer) : kept.plus(rec(uri(key), peer)), MUTABLE);
+                // the member goes in through the level's own door, at its key's path
+                level.write(f(PEER).extend(key), peer);
             }
             if (displaced.isRec())
-                release(displaced);
+                release(level, displaced);
             return peer;
         }
 
@@ -1362,19 +1322,6 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
                         .args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(rec(uri(HOST), uri(uri))))
                         .apply(noobj());
             return resolved.isObjInst() ? resolved.asInst().apply(uri(uri)) : noobj();
-        }
-
-        /**
-         * THE TABLE'S ADDRESS AT THIS LEVEL: {@code <machine>/network/prefix}, derived from the LEVEL's machine — never
-         * from the calling thread, because {@code Machine.write} routes by where the caller stands (which is what once
-         * filed a frame's name in its parent). A network with no machine vid falls back to the root address.
-         */
-        public static fURI prefixTable(final Network network) {
-            final Machine machine = network.machine();
-            final fURI vid = null == machine ? null : machine.vid();
-            return null == vid || vid.isEmpty() || !vid.isAbsolute()
-                    ? ROOT_PREFIX
-                    : vid.resolve().extend(NETWORK).extend(PREFIX);
         }
 
         /**

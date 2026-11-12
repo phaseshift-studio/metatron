@@ -151,8 +151,9 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             final Network.Link link = (Network.Link) this.held.get(args[0]);
             this.probe("connected", bool(link.connected()));
             this.probe("hungup", bool(link.hungUp()));
-            // supervised = the level's filed supervisor rec is live (~/network/supervisor), not the static registry
-            this.probe("supervised", bool(this.heldLevels.get(args[0]).at(uri(SUPERVISOR)) instanceof NetworkSupervisor supervisor && supervisor.supervising()));
+            // supervised = the level's filed supervisor rec is live (~/network/supervisor), read through the level's own
+            // door rather than the static registry
+            this.probe("supervised", bool(this.heldLevels.get(args[0]).read(f(SUPERVISOR)) instanceof NetworkSupervisor supervisor && supervisor.supervising()));
         });
         // the status METHOD, applied to this level the way `*/network/status` applies it
         all.put("PROBE_STATUS", args -> {
