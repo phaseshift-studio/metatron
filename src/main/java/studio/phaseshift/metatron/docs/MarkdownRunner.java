@@ -591,8 +591,8 @@ public class MarkdownRunner {
                 throw new IllegalStateException("cast tag '" + name + "' is used by "
                         + owner + " and by " + where + " — a tag names one recording");
             }
-            // the terminal is only as wide as its widest line needs (plus a
-            // little air), capped by the width the block declares
+            // the terminal is as wide as its widest line needs (plus a little air), never narrower than the
+            // width the block declares — a result is often longer than the expression that produced it
             final Asciicast cast = Asciicast.of(contentCols(block, attribute(block, "cols", 100)),
                             attribute(block, "rows", 30))
                     .prompt("mtron> ")
@@ -639,10 +639,11 @@ public class MarkdownRunner {
     }
 
     /**
-     * The narrowest terminal that shows every line unwrapped: the widest visual
-     * line (prompt+input and each rendered result), plus two columns of air, but
-     * never wider than the block asked for. Measured with {@link Highlighter#visualLength}
-     * so ANSI/markup adds no columns.
+     * The narrowest terminal that shows every line unwrapped: the widest visual line — the prompt+input AND each
+     * rendered result (an {@code explain()} table is typically far wider than the one-line expression that produced
+     * it) — plus two columns of air. The block's {@code cols} is the FLOOR, never a cap; a recording grows past it
+     * when its results demand the room. Measured with {@link Highlighter#visualLength} so ANSI/markup adds no
+     * columns.
      */
     static int contentCols(final MtronPreprocessor.Block block, final int declared) {
         int widest = 0;
@@ -656,7 +657,7 @@ public class MarkdownRunner {
                 }
             }
         }
-        return widest == 0 ? declared : Math.max(40, Math.min(declared, widest + 2));
+        return widest == 0 ? declared : Math.max(40, Math.max(declared, widest + 2));
     }
 
     private static int attribute(final MtronPreprocessor.Block block, final String key, final int absent) {

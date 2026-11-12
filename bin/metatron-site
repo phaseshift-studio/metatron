@@ -9,13 +9,19 @@
 #      bundling (skipSiteScripts) is a build-product sync, not a doc stage, so
 #      it is always skipped. `mvn site` compiles first, so JDK 25 must be on PATH.
 #
-#        bin/metatron-site markdown instset asciidoc header   # everything
-#        bin/metatron-site markdown                           # only markdown
-#        bin/metatron-site all                                # == the four stages
+#        bin/metatron-site all                                # == the five stages
+#        bin/metatron-site markdown instset asciidoc header   # every page, no casts
+#        bin/metatron-site asciinema                          # only the casts
+#        bin/metatron-site asciinema markdown                 # casts, then pages
+#
+#      The casts build before the markdown pass in one `mvn site`, because a page
+#      that embeds a recording reads that cast's header for its terminal size —
+#      name both when a cast's cols/rows changed.
 #
 #   2. FILE mode — give a document path and the runner is chosen by extension,
 #      and only that file is built (the jar is rebuilt first when stale):
 #
+#        bin/metatron-site docs/asciinema/mini-tutorials.md    # casts only, no page
 #        bin/metatron-site docs/website/adoc/space.adoc        # AsciiDocRunner
 #        bin/metatron-site docs/skills/mtron/SKILL.md          # MarkdownRunner
 #        bin/metatron-site docs/articles/*.md                  # -> docs/website/articles
@@ -58,16 +64,19 @@ stages (build only what you name; the rest is skipped):
   instset    the instruction-set API reference        (InstSetDocGenerator)
   asciidoc   the adoc pages                           (AsciiDocRunner)
   header     the navigation dropdowns                 (HeaderGenerator)
-  all        == markdown instset asciidoc header
+  asciinema  the terminal recordings in docs/asciinema (MarkdownRunner --cast-out)
+  all        == markdown instset asciidoc header asciinema
 
 files (the runner is chosen by extension; only that file is built):
-  *.md       MarkdownRunner
+  *.md       MarkdownRunner (docs/asciinema/*.md emit recordings only, no page)
   *.adoc     AsciiDocRunner
   *.java     the whole `instset` stage (no single-file mode)
 
 examples:
   bin/metatron-site markdown instset asciidoc header
-  bin/metatron-site markdown
+  bin/metatron-site asciinema
+  bin/metatron-site asciinema markdown
+  bin/metatron-site docs/asciinema/mini-tutorials.md
   bin/metatron-site docs/website/adoc/space.adoc
   bin/metatron-site docs/skills/mtron/SKILL.md
 EOF
@@ -151,8 +160,8 @@ files=()     # single documents to build
 extra=()     # pass-through mvn flags
 for a in "$@"; do
     case "$a" in
-        all) args+=(markdown instset asciidoc header) ;;
-        markdown|instset|asciidoc|header) args+=("$a") ;;
+        all) args+=(markdown instset asciidoc header asciinema) ;;
+        markdown|instset|asciidoc|header|asciinema) args+=("$a") ;;
         -*) extra+=("$a") ;;
         *.java) args+=(instset) ;;                       # no single-file mode
         *.md|*.adoc) files+=("$a") ;;
@@ -187,12 +196,13 @@ declare -A skip_flag=(
     [instset]=-DskipInstSet
     [asciidoc]=-DskipAsciidoc
     [header]=-DskipHeaderMenu
+    [asciinema]=-DskipCasts
 )
 
 # build only what was named; wsplus bundling is never a doc stage
 skip=(-DskipSiteScripts)
 skipped=()
-for stage in markdown instset asciidoc header; do
+for stage in markdown instset asciidoc header asciinema; do
     if [[ " ${args[*]} " == *" $stage "* ]]; then
         :   # named -> build it
     else

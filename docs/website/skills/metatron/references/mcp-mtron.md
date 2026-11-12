@@ -45,19 +45,19 @@ mtron> """
                   desc=>'Universal tool executor that can i...',
                   arg=>[command=>'Command-line string with tool name...']],
                  analyze_calls=>tool::[
-                  inst=>inst(symbolFqn=>"Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.",
-                             analysisKind=>"Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.",
+                  inst=>inst(symbolFqn=>'Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.',
+                             analysisKind=>'Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.',
                              depth=>'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
                              maxChildren=>'Maximum number of direct children rendered for each node. Default: 50.',
                              maxNodes=>'Maximum total number of rendered call nodes. Default: 1000.',
-                             treePath=>"Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.",
-                             childOffset=>"Offset for paging direct children of the node addressed by `treePath`. Default: 0.",
+                             treePath=>'Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.',
+                             childOffset=>'Offset for paging direct children of the node addressed by `treePath`. Default: 0.',
                              timeout=>'Timeout in milliseconds'){<j>},
                   name=>analyze_calls,
                   desc=>'Builds the IDE Call Hierarchy tree...',
                   arg=>[
                    symbolFqn=>'Plain fully qualified symbol name,...',
-                   analysisKind=>"Call analysis direction. Use `INCO...",
+                   analysisKind=>'Call analysis direction. Use `INCO...',
                    depth=>'Maximum number of call levels to r...',
                    maxChildren=>'Maximum number of direct children ...',
                    maxNodes=>'Maximum total number of rendered c...',
@@ -65,7 +65,7 @@ mtron> """
                    childOffset=>'Offset for paging direct children ...',
                    ...(1 more)]],
                  build_project=>tool::[
-                  inst=>inst(rebuild=>"Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.",
+                  inst=>inst(rebuild=>'Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.',
                              filesToRebuild=>'If specified, only compile files with the specified paths. Paths are relative to the project root.',
                              timeout=>'Timeout in milliseconds'){<j>},
                   name=>build_project,
@@ -96,26 +96,26 @@ mtron> """
                   arg=>[=>]],
                  lint_files=>tool::[
                   inst=>inst(files=>'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
-                             min_severity=>"Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.",
+                             min_severity=>'Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.',
                              timeout=>'Timeout in milliseconds'){<j>},
                   name=>lint_files,
                   desc=>'Analyzes the specified files for e...',
                   arg=>[
                    files=>'List of project-relative files to ...',
-                   min_severity=>"Minimum severity to include: `warn...",
+                   min_severity=>'Minimum severity to include: `warn...',
                    timeout=>'Timeout in milliseconds']],
                  ...(7 more)],
                 inst=>[
                  /m/ai/llm/tool/execute_tool=>inst(command=>'Command-line string with tool name and arguments'){<j>},
-                 /m/ai/llm/tool/analyze_calls=>inst(symbolFqn=>"Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.",
-                                                    analysisKind=>"Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.",
+                 /m/ai/llm/tool/analyze_calls=>inst(symbolFqn=>'Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.',
+                                                    analysisKind=>'Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.',
                                                     depth=>'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
                                                     maxChildren=>'Maximum number of direct children rendered for each node. Default: 50.',
                                                     maxNodes=>'Maximum total number of rendered call nodes. Default: 1000.',
-                                                    treePath=>"Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.",
-                                                    childOffset=>"Offset for paging direct children of the node addressed by `treePath`. Default: 0.",
+                                                    treePath=>'Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.',
+                                                    childOffset=>'Offset for paging direct children of the node addressed by `treePath`. Default: 0.',
                                                     timeout=>'Timeout in milliseconds'){<j>},
-                 /m/ai/llm/tool/build_project=>inst(rebuild=>"Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.",
+                 /m/ai/llm/tool/build_project=>inst(rebuild=>'Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.',
                                                     filesToRebuild=>'If specified, only compile files with the specified paths. Paths are relative to the project root.',
                                                     timeout=>'Timeout in milliseconds'){<j>},
                  /m/ai/llm/tool/get_file_problems=>inst(filePath=>'Path relative to the project root',
@@ -124,7 +124,7 @@ mtron> """
                  /m/ai/llm/tool/get_project_dependencies=>inst(){<j>},
                  /m/ai/llm/tool/get_project_modules=>inst(){<j>},
                  /m/ai/llm/tool/lint_files=>inst(files=>'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
-                                                 min_severity=>"Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.",
+                                                 min_severity=>'Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.',
                                                  timeout=>'Timeout in milliseconds'){<j>},
                  ...(7 more)]]
 ```
@@ -162,118 +162,9 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>mcp_client::[host=>http://localhost:8777/mcp,
-                status=>!λstatus?bool<=(){<j>},
-                tool=>[
-                 m_web_mcp_mcp_mtron_write_memory=>tool::[
-                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                  name=>m_web_mcp_mcp_mtron_write_memory,
-                  desc=>'(experimental) returns a memory re...',
-                  arg=>[
-                   current_memory=>'the memory to remember -- e.g. a s...',
-                   previous_memory=>'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=>tool::[
-                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                  name=>m_web_mcp_mcp_mtron_read_memory,
-                  desc=>'(experimental) returns the result ...',
-                  arg=>[memory_vid=>'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-                  inst=>inst(code=>'/m/code',<>=>'<no description>'){<j>},
-                  name=>m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=>'<no description>',
-                  arg=>[code=>'/m/code',<>=>'<no description>']],
-                 m_web_mcp_mcp_mtron_list_space=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_list_space,
-                  desc=>'returns a rec identifying all acti...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_machine_info=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_machine_info,
-                  desc=>'returns what the running machine i...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_find_inst=>tool::[
-                  inst=>inst(pattern=>'the inst tid to match',
-                             dom=>'the dom of inst to match (can be added to pattern arg)',
-                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                  name=>m_web_mcp_mcp_mtron_find_inst,
-                  desc=>'returns a lst of all instruction p...',
-                  arg=>[
-                   pattern=>'the inst tid to match',
-                   dom=>'the dom of inst to match (can be a...',
-                   rng=>'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                             on_message=>'the function to evaluate on every received message'){<j>},
-                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=>'create a websocket client with pro...',
-                  arg=>[
-                   host=>'the full ws:// uri of the websocke...',
-                   on_message=>'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=>[
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                       previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',
-                                                                     <>=>'<no description>'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
-                                                                    dom=>'the dom of inst to match (can be added to pattern arg)',
-                                                                    rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                                                                         on_message=>'the function to evaluate on every received message'){<j>},
-                 ...(1 more)]]@a
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]
 mtron> *a>>tool
-==>[m_web_mcp_mcp_mtron_write_memory=>tool::[
-     inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-     name=>m_web_mcp_mcp_mtron_write_memory,
-     desc=>'(experimental) returns a memory re...',
-     arg=>[
-      current_memory=>'the memory to remember -- e.g. a s...',
-      previous_memory=>'a previous memory vid to chain cur...']],
-    m_web_mcp_mcp_mtron_read_memory=>tool::[
-     inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-     name=>m_web_mcp_mcp_mtron_read_memory,
-     desc=>'(experimental) returns the result ...',
-     arg=>[memory_vid=>'the vid of the memory to read']],
-    m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-     inst=>inst(code=>'/m/code',<>=>'<no description>'){<j>},
-     name=>m_web_mcp_mcp_mtron_eval_mtron,
-     desc=>'<no description>',
-     arg=>[code=>'/m/code',<>=>'<no description>']],
-    m_web_mcp_mcp_mtron_list_space=>tool::[
-     inst=>inst(){<j>},
-     name=>m_web_mcp_mcp_mtron_list_space,
-     desc=>'returns a rec identifying all acti...',
-     arg=>[=>]],
-    m_web_mcp_mcp_mtron_machine_info=>tool::[
-     inst=>inst(){<j>},
-     name=>m_web_mcp_mcp_mtron_machine_info,
-     desc=>'returns what the running machine i...',
-     arg=>[=>]],
-    m_web_mcp_mcp_mtron_find_inst=>tool::[
-     inst=>inst(pattern=>'the inst tid to match',
-                dom=>'the dom of inst to match (can be added to pattern arg)',
-                rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-     name=>m_web_mcp_mcp_mtron_find_inst,
-     desc=>'returns a lst of all instruction p...',
-     arg=>[
-      pattern=>'the inst tid to match',
-      dom=>'the dom of inst to match (can be a...',
-      rng=>'the rng of inst to match (can be a...']],
-    m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-     inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                on_message=>'the function to evaluate on every received message'){<j>},
-     name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-     desc=>'create a websocket client with pro...',
-     arg=>[
-      host=>'the full ws:// uri of the websocke...',
-      on_message=>'the function to evaluate on every ...']],
-    ...(1 more)]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
 ```
 ### WebSocket

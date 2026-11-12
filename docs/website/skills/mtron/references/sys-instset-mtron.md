@@ -74,10 +74,10 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.5M  6.1G  ...',
+    'tmpfs           6.1G  6.9M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
     '/dev/nvme1n1p2  916G  585G  285G  ...',
-    'tmpfs            31G  133M   31G  ...',
+    'tmpfs            31G  109M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -140,11 +140,11 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
    ...
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
 ==>"""
-    op      dom          rng      args                                            f    desc     c_dom  c_rng 
-    start   noobj{0}::T  lst::T   ['ls','whoami']                                 <j>  initial  {0}    {1}   
-    select  lst::T       lst::T   [/m/inst/id()=>/m/sys/inst/bash(/m/inst/id())]  <j>  mapper   {1}    {1}   
-    rshift  lst::T       #{*}::T  noobj                                           <j>  scatter  {1}    {*}   
-    sum     #{*}::T      #::T                                                     <?>  reducer  {*}    {1}   
+    op      dom          rng      args                  f    desc     c_dom  c_rng 
+    start   noobj{0}::T  lst::T   [['ls','whoami']]     <j>  initial  {0}    {1}   
+    select  lst::T       lst::T   [[id()=>bash(id())]]  <j>  mapper   {1}    {1}   
+    rshift  lst::T       #{*}::T  [noobj]               <j>  scatter  {1}    {*}   
+    sum     #{*}::T      #::T                           <?>  reducer  {*}    {1}   
    """
 ```
 ### pipe over the results
@@ -164,10 +164,10 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     ...(17 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 26732     	Blocks: 56     ...',
+    '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-10 16:13:07.855396...',
+    'Access: 2026-11-12 10:50:51.562977...',
    ...
 ```
 ### a shape of its own
@@ -178,7 +178,7 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::26732.0,
+==>[bB::26815.0,
     bB::11430.0,
     bB::4096.0,
     bB::4096.0,
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>73
+==>115
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::648.0,
-    free_mem_jvm=>mB::414.4269,
+==>[total_mem_jvm=>mB::616.0,
+    free_mem_jvm=>mB::174.3526,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::233.5730,
+    used_mem_jvm=>mB::441.6473,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',

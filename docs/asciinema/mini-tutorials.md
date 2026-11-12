@@ -124,3 +124,27 @@ human[int,sumo]::[name=>'thunder down under',hp=>100,role=>sumo::[weapon=>self]]
 [NO_PROMPT][== and the plan is the SAME plan — the constant needed no plumbing ==]
 {1,2,3,4,5,6}.plus(10).sum().explain()>>format
 ```
+
+```mtron_pre cast=dist-tree cols=110 rows=30 typing_delay=0.03 speed_rates="0.5,1,1.5,2" speed_default="1"
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the same two peers ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== the fold, planned as a tree: two levels, two children per node ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2()                     [-- 44 --]
+[NO_PROMPT][== every lane restates the form one height down, ?hop=1, so it re-plans where it lands ==]
+{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>format   [-- the budget rides each lane's first instruction --]
+```
+
+```mtron_pre cast=dist-run cols=110 rows=32 typing_delay=0.03 speed_rates="0.5,1,1.5,2" speed_default="1"
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== the same two peers ==]
+[MAXOUTPUT 2]spawn(<//localhost:1111/store>, <//0>); ws_client::[pattern=><ws://localhost:1111/mtron>]
+[MAXOUTPUT 2]spawn(<//localhost:1112/store>, <//1>); ws_client::[pattern=><ws://localhost:1112/mtron>]
+[NO_PROMPT][== a seed of one: the only multiplicity is the run's span, the unrolls 0 .. 10 ==]
+start(0).{0,10}plus(1).sum()                              [-- 55 --]
+[NO_PROMPT][== the plan factors the UNROLL INDEX, not the seed: one lane per place, a narrowed span ==]
+start(0).{0,10}plus(1).sum().explain()>>format            [-- one lane per place, the unrolls' work split by sqrt --]
+```

@@ -570,10 +570,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.5M  6.1G  ...',
+    'tmpfs           6.1G  6.9M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
     '/dev/nvme1n1p2  916G  585G  285G  ...',
-    'tmpfs            31G  133M   31G  ...',
+    'tmpfs            31G  109M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -629,11 +629,11 @@ applied to each. The glyphs are the actions, and the sugar says so in plain sigh
    ...
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-    op      dom          rng      args                                            f    desc     c_dom  c_rng 
-    start   noobj{0}::T  lst::T   ['ls','whoami']                                 &lt;j&gt;  initial  {0}    {1}   
-    select  lst::T       lst::T   [/m/inst/id()=&gt;/m/sys/inst/bash(/m/inst/id())]  &lt;j&gt;  mapper   {1}    {1}   
-    rshift  lst::T       #{*}::T  noobj                                           &lt;j&gt;  scatter  {1}    {*}   
-    sum     #{*}::T      #::T                                                     &lt;?&gt;  reducer  {*}    {1}   
+    op      dom          rng      args                  f    desc     c_dom  c_rng 
+    start   noobj{0}::T  lst::T   [['ls','whoami']]     &lt;j&gt;  initial  {0}    {1}   
+    select  lst::T       lst::T   [[id()=&gt;bash(id())]]  &lt;j&gt;  mapper   {1}    {1}   
+    rshift  lst::T       #{*}::T  [noobj]               &lt;j&gt;  scatter  {1}    {*}   
+    sum     #{*}::T      #::T                           &lt;?&gt;  reducer  {*}    {1}   
    &quot;&quot;&quot;
 </code></pre>
 <h4>pipe over the results</h4>
@@ -650,10 +650,10 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     ...(17 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
-    '  Size: 26732     	Blocks: 56     ...',
+    '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-10 16:13:07.855396...',
+    'Access: 2026-11-12 10:50:51.562977...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -661,7 +661,7 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
 <code>Size</code>, extracted and typed <code>bB::T</code>, then converted to <code>kB::T</code> — the unit system
 converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
-==&gt;[bB::26732.0,
+==&gt;[bB::26815.0,
     bB::11430.0,
     bB::4096.0,
     bB::4096.0,
@@ -723,12 +723,12 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;73
+==&gt;115
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::648.0,
-    free_mem_jvm=&gt;mB::414.4269,
+==&gt;[total_mem_jvm=&gt;mB::616.0,
+    free_mem_jvm=&gt;mB::174.3526,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::233.5730,
+    used_mem_jvm=&gt;mB::441.6473,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-42-generic',
     arch=&gt;'amd64',

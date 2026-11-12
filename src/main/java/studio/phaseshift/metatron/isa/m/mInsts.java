@@ -1163,7 +1163,11 @@ public final class mInsts {
                         .create(),
                 InstBuilder.build()
                         .tid(BRANCH_INST_TID)
-                        .dom(A.maybe(), "maybe an obj")
+                        // THE DOM IS THE SHIPMENT GRAIN, but the INSTRUCTION'S OWN DEFAULT IS LOCAL: {?} feeds one obj
+                        // at a time. {n} pages it; {*} gathers the whole lhs once (a barrier). A DISTRIBUTION REWRITE
+                        // states the barrier on the branch it emits — this is an optimization of the plan, never a
+                        // property of the instruction.
+                        .dom(A.maybe(), "maybe an obj: one obj at a time (`{n}` pages it, `{*}` gathers the whole lhs)")
                         .rng(B.maybeSome(), "the branch results as objs")
                         // REC ARGS ARE ROUTES — `place => program`. The key is a TYPE (uri::T), not a name: the
                         // declaration states the SHAPE of the caller's keys, so the caller supplies them all and
@@ -1173,6 +1177,10 @@ public final class mInsts {
                         .argDocs(Map.of(T(URI_TID.b(cInt.MAYBESOME())), "the individual branches key'd by evaluation location"))
                         .desc("""
                                 a branching function: the lhs applied to each argument.
+                                the dom coefficient is the SHIPMENT GRAIN: `{?}` (the default) feeds one obj per call;
+                                `{n}` pages it (a buffer of at most n per call); `{*}` gathers the whole lhs once and
+                                passes it to every member — the barrier a DISTRIBUTION REWRITE states on the branch it
+                                emits.
                                 an ordered call is the local branch: each member applied at current machine.
                                 a keyed call routes: `place => program` evaluates the lhs through the program at that
                                 place. a path names a local machine (<~> or <.> this one, <..> its parent, </.> the root,
@@ -1190,6 +1198,11 @@ public final class mInsts {
                         // a clone of it, so the bound call routes its own lhs
                         .inst(BranchInst::new)
                         .body((lhs, inst) -> ((BranchInst) inst).route(lhs))
+                        // THE BRANCH'S OWN LAW — the additive operation: associative with noobj as its identity
+                        // (monoidic) and pure. NOT commutative: its keys route, its split deals in order, and its
+                        // lanes may have effects. The lanes' laws never promote the branch's; the commutativity a
+                        // shard needs is the CUT's combiner.
+                        .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build()
                         .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\)")

@@ -150,4 +150,21 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         assertEquals(value, ObjmtronSerializer.single().read(wire),
                 () -> "wire form '" + wire + "' did not read back as the value it wrote");
     }
+
+    /**
+     * A SPANNED INSTRUCTION KEEPS ITS SPAN ACROSS THE WIRE. The span is the instruction's LEADING coefficient
+     * ({@code {m,n}op}) and the parser reads it back into the tid's span; {@code basePath()} carries no coefficient, so
+     * the writer dropped it — a branch lane's narrowed share printed (and could be re-read) as the whole run. The round
+     * trip is the assertion: the text must carry the span AND read back as the code it wrote.
+     */
+    @Test
+    void testASpannedInstructionKeepsItsSpanAcrossTheWire() {
+        final Obj code = ObjmtronSerializer.parse("start(0).{0,4}plus(1).sum()").asCode();
+        final String wire = ObjmtronSerializer.single().write(code);
+        LOG.debug("a spanned chain on the wire: %s", wire);
+        assertTrue(wire.contains("{0,4}"), () -> "the span is written: " + wire);
+        // READ IS THE WIRE'S OWN READER: a code expression is applied, so the round trip is the parser's code (the
+        // text is a program, and reading it as a value would run it).
+        checkEquality(LOG, code, ObjmtronSerializer.parse(wire).asCode(), true);
+    }
 }

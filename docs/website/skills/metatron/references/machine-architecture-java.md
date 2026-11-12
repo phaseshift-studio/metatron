@@ -44,8 +44,8 @@ isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compile
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
 isa/mach/type/machine/MachineSpace.java     ← the machine's own space, mounted in its memory at <vid>/#: the machine
                                         and its components live; ~/sys and its data in its store
-isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec); answers its branch
-                                        <vid>/network/# when the machine's space hands it an address there
+isa/mach/type/network/BasicNetwork.java     ← one level of network, a space over a memSpace cache (the dckrSpace
+                                        pattern); answers <vid>/network/# when the machine's space hands it an address
 isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
 isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
@@ -156,15 +156,23 @@ it stops, so its clients see `1000` whether it is restarting or gone.
 (`fURI.pathEncoding`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
 label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()` of the
 dial, the loopback alias spelled first), and the service it reaches is the `origin` field — wire dispatch
-(`Network.Helper.isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its
-own branch:
-`BasicNetwork` extends `AbstractSpace`, `Machine.bootstrap()` stamps it as `<vid>/network/#`, and the machine's
-`MachineSpace` hands it every address there — it is not a space in memory. It stores nothing
-beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/origin>` walks a member
-by the space's base-poly read, and a noobj write there is `Network.drop` (at `listener/<key>`,
-`Network.unlisten`) — destruction on deletion from mtron. A value written at a member is refused (a peer is
-constructed, not written); every other field is written onto the live rec in place, so `/network/roster` is the root
-network's own field. An address off the branch is the authority dispatch (`Network.read`/`write`). `index` keeps **no
+(`Network.Helper.isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The network is its own
+space, in the `dckrSpace` pattern: `BasicNetwork` extends `AbstractSpace` and keeps everything the level knows in a
+private, unregistered `memSpace` cache, at addresses RELATIVE to the level (`peer/<key>`, `listener/<key>`, `roster`,
+`prefix`, `host`, `status`, `supervisor`), so a network holds its state before it has a machine. `Machine.bootstrap()`
+stamps the branch `<vid>/network/#`, and the machine's `MachineSpace` hands it every address below the component (the
+component itself, `<vid>/network`, is read live like any component); `BasicNetwork` takes the branch off, and its own
+methods use the relative form. Reads go to the cache, so they are a memSpace's (`locateBasePoly`, `unrollPoly`,
+containers, q-procs): `*</network/peer/ws/localhost/8555/mtron/origin>` walks a member from its entry. Writes are
+intercepted on the way: a member is put at its key LITERALLY (a key is an encoded origin, and the web gateway's is the
+wildcard `http/#`) and only as a typed `peer::T`/`listener::T` — any other value at a member is refused (a peer is
+constructed, not written); a noobj write retracts the member stored at exactly that address, else every member a
+pattern matches (the bare map: all of them), releasing what each held (`Network.Helper.release`: a client hung up, a
+socket's routes withdrawn and the socket closed only by the level that opened it); `prefix` is the name table's door
+(the effective table in its `//name` spelling on read; stripped, refused unmarked and inherited rows dropped on write);
+everything else is the cache's write. `Network.drop`, `index` and `registerPrefix` all go through that door, so Java and
+mtron retract and declare alike. An address naming a host is the authority dispatch (`Network.read`/`write`). `index`
+keeps **no
 two equivalent connections**: a fresh client at a held key closes the member there and takes its place, while indexing
 the same client again is idempotent; `connect` still skips the dial when the surface is held. `drop(address)`
 reads what the address names — a key that member, a wire uri with a route that surface, a bare authority every surface

@@ -61,7 +61,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * definition is minted as a BranchInst ({@code InstBuilder.inst}), and a call bound from it is a clone of it, so the
  * body runs on the bound call itself ({@link #route}).
  * <ul>
- *     <li>An ORDERED call is the local branch: each member applied where the code stands.</li>
+ *     <li>An ORDERED call is the local branch: each member applied where the code stands. The dom coefficient is the
+ *     shipment grain: {@code {?}} (the default) one obj per call; {@code {n}} a page; {@code {*}} the whole lhs — a
+ *     barrier a DISTRIBUTION REWRITE states on the branch it emits, never the instruction's own default.</li>
  *     <li>A KEYED call routes: {@code place => program} runs the lhs through the program at that place: a path at that
  *     local machine ({@code <~>} this one), a host at that peer ({@link #lane}). The key may mark itself
  *     {@code ?split={w}part} to take a weighted share of the lhs ({@link #weight}, {@link #deal}).</li>

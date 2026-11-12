@@ -39,7 +39,26 @@
             background: #000;
             border: 1px solid #2a2a2a;
             border-radius: 6px 6px 0 0;
-            overflow: hidden;
+            overflow-x: auto;      /* a recording wider than the page scrolls */
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--mred) transparent;
+        }
+        .asciinema-cast::-webkit-scrollbar { width: 8px; height: 8px; }
+        .asciinema-cast::-webkit-scrollbar-track { background: transparent; }
+        .asciinema-cast::-webkit-scrollbar-thumb {
+            background-color: var(--mred);
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        /* natural cell size (fit is off in asciinema.js): JetBrains Mono's 0.6em
+           advance → one cell is 9.84px, the docs dialog's cell */
+        .asciinema-cast div.ap-wrapper { justify-content: flex-start; }
+        .asciinema-cast div.ap-wrapper div.ap-player {
+            flex: 0 0 auto;
+            max-width: none;
+            font-size: 16.4px;
         }
         .asciinema-caption {
             display: none;

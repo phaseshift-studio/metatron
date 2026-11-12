@@ -256,21 +256,22 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE BUDGET RIDES THE FOLD — the seed of a lane's code states its part and nothing else, the fold (the reducer
-     * the lane recombines through) states the restated form, and no COPIED instruction carries the level above's
-     * budget. The master, which deals the seed and recombines at home, carries none at all: not on its seed, whose
-     * budget the plan consumed, and not on its branch or combiner.
+     * THE BUDGET IS STATED ON THE LANE'S FIRST INSTRUCTION — the code that ships and re-plans says where its metadata
+     * lives, so a human and a peer read the same place, and a leaf says {@code ?hop=0} instead of hiding the budget.
+     * A copied instruction is not stripped of a budget it carries (the first statement wins); the authored budget here
+     * is on the seed, which the lane rebuilds, so the head is the only statement. The master recombines with none of
+     * its own.
      */
     @Test
-    void testTheBudgetRidesTheFoldAndNoCopiedInstructionCarriesIt() {
+    void testTheBudgetIsStatedOnTheLanesFirstInstruction() {
         connectAll();
         final Code emitted = lower(homeAndPeer(), "start?hop={2}3({1,2,3,4,5,6,7,8}).plus(1).sum()");
         final DistributedSweep.Lane lane = DistributedSweep.layout(emitted).lane(0);
-        assertFalse(lane.code().insts().getFirst().tid().hasQ(HOP), "the seed states the part, never a budget: " + lane.code());
-        assertEquals("{2}2", lane.budget(), "the fold states the restated form: " + lane.code());
-        assertFalse(lane.code().insts().subList(1, lane.code().insts().size() - 1).stream()
+        assertTrue(lane.code().insts().getFirst().tid().hasQ(HOP), "the head states the budget: " + lane.code());
+        assertEquals("{2}2", lane.budget(), "the head states the restated form: " + lane.code());
+        assertFalse(lane.code().insts().subList(1, lane.code().insts().size()).stream()
                         .anyMatch(inst -> inst.tid().hasQ(HOP)),
-                "no copied instruction carries the level above's budget: " + lane.code());
+                "no copied instruction carries a budget: " + lane.code());
         assertFalse(emitted.insts().stream().anyMatch(inst -> inst.tid().hasQ(HOP)),
                 "the master recombines with no budget of its own: " + emitted);
     }
@@ -311,6 +312,90 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         assertEquals(1, next.lanes().size(), "the next node is a link of the same line: " + second);
         assertEquals("[1,1]", next.lane(0).budget(), "the line restates again: " + second);
         checkEquality(LOG, jnt(44), evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /// /////////////////////////////////////////////////////////////////////////////////////
+    /// THE RUN PARTITION — a span range is an index set too
+    /// /////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * THE RUN PARTITION — a span range on an instruction is an index set, and with a singleton seed it is the only
+     * multiplicity there is: each lane carries the whole seed and the run with its span narrowed to a WORK-weighted
+     * subrange of the unroll index ({@code a^[m,n] = Σ a^k}), the branch recombines through the cut's combiner, and the
+     * value is the serial one. Each row: the chain % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start?place=[local,peer](0).{0,4}plus(1).sum()          % 10",    // 0+1+2+3+4
+            "start?place=[local,peer](0).{1,4}plus(1).sum()          % 10",    // 1+2+3+4
+            "start?place=[local,peer](0).{0,4}plus(1).mult(10).sum() % 100",   // 10·(0+…+4)
+    }, delimiter = '%')
+    void testTheRunPartitionFactorsTheUnrollIndex(final String source, final int expected) {
+        Network.Helper.connect(Machine.current().network(), PEER);
+        final Code emitted = lower(homeAndPeer(), source);
+        final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
+        assertEquals(2, layout.lanes().size(), "the unrolls are factored over the two places: " + emitted);
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID), layout.ops(),
+                "the branch recombines through the cut's combiner: " + emitted);
+        assertEquals("0", layout.lane(0).budget(), "a leaf states 0 on its first instruction: " + emitted);
+        checkEquality(LOG, jnt(expected), evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * THE CUTLESS RUN PARTITION — the branch IS the recombination: no combiner, the lanes' narrowed spans are the
+     * additive terms, and the value is the unroll's formal sum.
+     */
+    @Test
+    void testTheCutlessRunPartitionIsTheBranchItself() {
+        Network.Helper.connect(Machine.current().network(), PEER);
+        final Code emitted = lower(homeAndPeer(), "start?place=[local,peer](0).{0,4}plus(1)");
+        final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
+        assertEquals(2, layout.lanes().size(), "the unrolls are factored over the two places: " + emitted);
+        assertEquals(List.of(BRANCH_INST_TID), layout.ops(), "the branch is the sum: " + emitted);
+        checkEquality(LOG, ObjmtronSerializer.parse("{0,1,2,3,4}"),
+                TransportRewriteHarness.evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * THE SEED AXIS WINS WHEN THE SEED HAS MEMBERS — the two multiplicities are one funnel, but v1 factors one axis per
+     * application: a seed of two members is dealt two ways and each lane runs the whole span, so the value is
+     * {@code 2·(0+…+4)}.
+     */
+    @Test
+    void testTheSeedAxisIsFactoredBeforeTheRunAxis() {
+        Network.Helper.connect(Machine.current().network(), PEER);
+        final Code emitted = lower(homeAndPeer(), "start?place=[local,peer]({0,0}).{0,4}plus(1).sum()");
+        final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
+        assertEquals(2, layout.lanes().size(), "the two seed members are two lanes: " + emitted);
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID), layout.ops(), "the fold recombines at home: " + emitted);
+        checkEquality(LOG, jnt(20), evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * WHERE THE RUN PARTITION STANDS STILL: a point span ({@code {3}} is a lone compose chain, not an index set) and an
+     * open range ({@code +}: no last unroll to plan). Each row: the chain, unchanged.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start?place=[local,peer](0).{3}plus(1).sum()",
+            "start?place=[local,peer](0).{+}plus(1).sum()",
+    }, delimiter = '%')
+    void testTheRunPartitionLeavesAPointOrOpenSpanWhereItStands(final String source) {
+        Network.Helper.connect(Machine.current().network(), PEER);
+        final Code original = ObjmtronSerializer.parse(source).asCode();
+        final Code emitted = lower(homeAndPeer(), source);
+        checkEquality(LOG, original.tryToInst(), emitted.tryToInst(), true);
+    }
+
+    /**
+     * A RUN PARTITION NEEDS A SECOND PLACE: one home lane is the code that already stands here, so a singleton place
+     * set declines even when the span is a range.
+     */
+    @Test
+    void testTheRunPartitionNeedsASecondPlace() {
+        final Code original = ObjmtronSerializer.parse("start?place=[local](0).{0,4}plus(1).sum()").asCode();
+        final Code emitted = PlanInterpreter.apply(PlanInterpreter.SHARD_PLAN, original, alone());
+        checkEquality(LOG, original.tryToInst(), emitted.tryToInst(), true);
     }
 
     /// /////////////////////////////////////////////////////////////////////////////////////

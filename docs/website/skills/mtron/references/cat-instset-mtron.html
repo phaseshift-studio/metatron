@@ -810,8 +810,8 @@ code <em>in place</em>: the local laws below (\(\mathrm{op} (\mathrm{id}) \leads
 <tr><td><code>inverse_cancellation</code> (/m)</td><td>every group instance of the operand's type (<code>group_theory</code>'s rules), gated by <code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
 <tr><td><code>form_map_unwrap</code> (/m)</td><td><code>form = mapper</code> declared by the operation <code>map</code> wraps</td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
 <tr><td><code>derivation_contraction</code> (/m)</td><td>the <code>derivation</code> of the contract the carrier dispatches to</td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
-<tr><td><code>branch_collapse</code></td><td>the additive role of the operand's algebra — <code>cut =&gt; [role =&gt; add]</code></td><td>\(\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})\) — equal terms collapse, summing the coefficients</td></tr>
-<tr><td><code>branch_inline</code></td><td>the additive role — <code>cut =&gt; [role =&gt; zero]</code></td><td>\(a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c\), \(\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}\), \(\mathrm{S}(x) \leadsto \mathrm{map}(x)\)</td></tr>
+<tr><td><code>branch_collapse</code> (/m)</td><td>the additive op of the code ring's theory (<code>branch</code>)</td><td>\(\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})\) — equal terms collapse, summing the coefficients</td></tr>
+<tr><td><code>branch_inline</code> (/m)</td><td>the additive op of the code ring's theory, with a single member</td><td>\(a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c\), \(\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}\), \(\mathrm{S}(x) \leadsto \mathrm{map}(x)\)</td></tr>
 <tr><td><code>law_shard</code></td><td><code>form = reducer</code> with a <code>combiner</code> declaring <code>monoidic</code>, <code>commutative</code> + a live peer roster</td><td>the seed partitions, each peer folds its shard, and the master recombines the partials through the <code>combiner</code> (Thm 19) — <code>sum</code>, <code>prod</code>, <code>count</code>, <code>order</code>, rec <code>sum</code> (distributed rec merging), and a keyed <code>group</code> pointwise (see <em>the deep merge</em>)</td></tr>
 </tbody>
 </table>
@@ -844,8 +844,9 @@ removed from the machine's rewrite pool on its own, and <code>path::T</code> dra
 its shadow, <code>inactive()</code>: the identity on code under the rule's own tid, listed in the pool in the rule's place, and
 <code>active()</code> answers the rule back. The pool is <code>~/instset/rewrite</code>, and a rule is written there by name, in the
 machine's own level: <code>*~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)</code> switches it
-off for that machine, and writing back <code>.active()</code>, or <code>-&gt; noobj</code>, switches it on. The rule is written with <code>to</code>, since
-an argument that is an instruction is code, applied to the lhs. A rewrite's declared
+off for that machine, and writing back <code>.active()</code>, or <code>-&gt; noobj</code>, switches it on. The shadow is written with <code>to</code>, the
+obj flowing in: an argument that is an instruction is code, and a block (<code>-&gt; |inst</code>) hands over a literal instruction,
+not the value an expression computes. A rewrite's declared
 argument <em>is</em> its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
 place. A law's rule is stated in the name <code>op</code>, the instruction that claims the law: <code>law_involution</code> carries
 <code>[involution =&gt; [op.op =&gt; ]]</code>, <code>law_idempotent</code> <code>[idempotent =&gt; [op.op =&gt; op]]</code> and <code>law_monoidic</code>
@@ -917,10 +918,10 @@ shape per line — so that every rewrite applied is visible:</p>
 mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
     op     dom          rng     args  f    desc     c_dom  c_rng 
-    start  noobj{0}::T  int::T  6     &lt;j&gt;  initial  {0}    {1}   
-    minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
-    mult   int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
-    div    int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
+    start  noobj{0}::T  int::T  [6]   &lt;j&gt;  initial  {0}    {1}   
+    minus  int::T       int::T  [3]   &lt;j&gt;  mapper   {1}    {1}   
+    mult   int::T       int::T  [2]   &lt;j&gt;  mapper   {1}    {1}   
+    div    int::T       int::T  [2]   &lt;j&gt;  mapper   {1}    {1}   
    &quot;&quot;&quot;
 </code></pre>
 <p>Only two instructions remain in the explain table: the seed and the one operation that survives. The other
@@ -1039,39 +1040,43 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 <tr><td><code>origin</code></td><td>(optional) where the code starts — the machine's own <code>place::T</code>, attached on lift when the machine answers; absent means not placeable (<code>bind</code> requires it)</td></tr>
 <tr><td><code>where</code></td><td>(optional) the realized placement — span → place, written by the pass that applied a distribution rule: <code>{[span=&gt;at] =&gt; [place…]}</code> lists the places the shard actually shipped to</td></tr>
 <tr><td><code>peer</code></td><td>(reserved — declared in the type, not yet written by the distribution pass)</td></tr>
-<tr><td><code>&lt;rule name&gt;</code></td><td>one edge per <strong>live</strong> rewrite — the edge holds the <code>plan::T</code> (see below); <code>lower(plan)</code> applies it and re-lifts</td></tr>
+<tr><td><code>&lt;rule name&gt;</code></td><td>one edge per <strong>live</strong> rewrite of the machine's pool — the edge holds the rule's <code>name</code> and its <code>result</code>, the vertex the rule reaches (<code>&gt;&gt;rule&gt;&gt;result</code>)</td></tr>
 </tbody>
 </table>
-<p>Only live edges are materialized (see <em>a-priori pruning</em>): a vertex lists exactly the rules that can move it, and a
-<strong>normal form prints as its own certificate</strong> — <code>[path::[obj=&gt;...]]</code>, no out-edges, zero matches attempted. A
+<p>Only live edges are materialized (see <em>liveness</em>): a vertex lists exactly the rules that move it, and a
+<strong>normal form prints as its own certificate</strong> — <code>[path::[obj=&gt;...]]</code>, no out-edges. A
 traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).
-The <code>==</code> between segments is a structural <code>select</code> — each segment names the step, a lift or a lower, applied to the
-previous segment's result, so a descent <code>[seed] == [lift] == [lower₁] == [lower₂]</code> reads as a chain of witnesses. The
+The <code>==</code> between segments is a structural <code>select</code> — each segment names the step, a lift or an edge's result, applied
+to the previous segment's result, so a descent <code>[seed] == [lift] == [r₁] == [r₂]</code> reads as a chain of witnesses. The
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           law_involution=&gt;plan::[
-            name=&gt;law_involution,
-            cut=&gt;[law=&gt;[involution]],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
-mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;law_involution)]
+           origin=&gt;place::[
+            obj=&gt;//localhost,
+            authority=&gt;[
+             http://localhost:8777,
+             ws://localhost:8555]],
+           theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,result=&gt;!λ(#{*}::T){&lt;j&gt;}],
+           law_involution=&gt;plan::[name=&gt;law_involution,result=&gt;!λ(#{*}::T){&lt;j&gt;}]]]
+mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;law_involution&gt;&gt;result]
 ==&gt;[path::[obj=&gt;start(5).plus(0),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]]]]
-mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;law_involution)]==[lower(&gt;&gt;theory_unit_removal)]
-==&gt;[path::[obj=&gt;start(5)]]
+           origin=&gt;place::[
+            obj=&gt;//localhost,
+            authority=&gt;[
+             http://localhost:8777,
+             ws://localhost:8555]],
+           theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,result=&gt;!λ(#{*}::T){&lt;j&gt;}]]]
+mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;law_involution&gt;&gt;result]==[&gt;&gt;theory_unit_removal&gt;&gt;result]
+==&gt;[path::[obj=&gt;start(5),
+           origin=&gt;place::[
+            obj=&gt;//localhost,
+            authority=&gt;[
+             http://localhost:8777,
+             ws://localhost:8555]]]]
 </code></pre>
-<p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
-rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
-equality, literal values); the pruner tests only the type-part, a <strong>necessary</strong> condition, so pruning a rule is a
-<em>proof</em> of identity (&quot;no match in the abstraction, no match in the concrete&quot;) while keeping one merely licenses the
-real match. A rule the pruner does not know is never pruned.</p>
+<p><strong>Liveness.</strong> An edge is live iff its rule changes the code: the lift applies each rewrite of the machine's pool
+(<code>*~/instset/rewrite</code>) once, and a rule that leaves the code as it is draws no edge. The edges are the pool, so a rule
+switched off with <code>inactive()</code> draws none.</p>
 <h4><code>abstraction::T</code> — the α-word</h4>
 <table>
 <thead>
@@ -1133,24 +1138,23 @@ and computes its cut/span/where without consulting the code below; the descent (
    ...
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>
-<p>A <code>path::T</code> out-edge is not a bare rule name — it is a <strong>plan</strong>: the rewrite rule itself, lifted to a first-class
-value. <code>plan::T</code> is the morphism of the rewrite category (<code>path → path</code>), and it is <em>data</em>, never a closure: a plan
-is introspectable and applicable wherever it is supplied.</p>
+<p>A <strong>plan</strong> is a rewrite rule lifted to a first-class value. <code>plan::T</code> is the morphism of the rewrite category
+(<code>path → path</code>), and it is <em>data</em>, never a closure: a plan is introspectable and applicable wherever it is supplied.
+A <code>path::T</code> out-edge is a <code>plan::T</code> too, the plainest kind: the rule's <code>name</code> and its <code>result</code>.</p>
 <!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
 <img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
-<p>A plan is always the rec <code>[name, cut, where]</code>; what distinguishes a local plan from a distribution is what its <code>cut</code>
-names and where its <code>where</code> sends it:</p>
+<p>A plan that states its rule is the rec <code>[name, cut, where]</code>: its <code>cut</code> names the anchor and its <code>where</code> sends it. The
+local rules are no plans (each is a rewrite of <code>/m</code>, its body a <code>Law.Helper</code> method), so one such plan is live today:</p>
 <table>
 <thead>
 <tr><th>shape</th><th>the <code>cut</code> reads</th><th>the <code>where</code></th><th>example</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>local</strong></td><td>a declared process law — <code>[law =&gt; [...]]</code> — or a theory role — <code>[role =&gt; ...]</code></td><td>stays local (<code>target =&gt; none</code> / <code>local</code>)</td><td><code>law_idempotent</code> → <code>cut =&gt; [law =&gt; [idempotent]]</code>; <code>theory_unit_removal</code> → <code>cut =&gt; [role =&gt; id]</code></td></tr>
 <tr><td><strong>distribution</strong></td><td>a <code>form</code> + <code>law</code> anchor — the laws its <code>combiner</code> must declare</td><td>ships to <code>peers</code>, with the combiner re-applied locally</td><td><code>law_shard</code> → <code>cut =&gt; [form =&gt; reducer, law =&gt; [monoidic, commutative]]</code></td></tr>
 </tbody>
 </table>
-<p>A third kind — the <strong>cut-less</strong> distribution rule — has no <code>cut</code> at all: its one placement names a <code>target</code>, and
-<code>bind</code> (not <code>lower</code>) applies it. None is registered yet, so the two rows above are the only live plans today.</p>
+<p>A second kind — the <strong>cut-less</strong> distribution rule — has no <code>cut</code> at all: its one placement names a <code>target</code>, and
+<code>bind</code> (not <code>lower</code>) applies it. None is registered yet.</p>
 <p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
 <code>catInstSet.insts()</code>, shared by every plan. It matches the plan's <code>cut</code> against the path's code, applies the rewrite,
 and re-lifts the result to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
@@ -1195,29 +1199,14 @@ mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
-now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
+now holding that <code>peer::T</code>, the <code>path::T</code> lists <code>law_shard</code> among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
-           law_shard=&gt;plan::[
-            name=&gt;law_shard,
-            cut=&gt;[
-             form=&gt;reducer,
-             law=&gt;[monoidic,commutative]],
-            where=&gt;[
-             [
-              place=&gt;[local],
-              hop=&gt;0,
-              split=&gt;stream,
-              span=&gt;[[span=&gt;at],[span=&gt;post]]],
-             [
-              place=&gt;[peer],
-              hop=&gt;1,
-              split=&gt;stream,
-              span=&gt;[
-               [span=&gt;seed,flags=&gt;[partition]],
-               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-               [span=&gt;at]],
-              inst=&gt;[/m/inst/eval]]]]]]
+           origin=&gt;place::[
+            obj=&gt;//localhost,
+            authority=&gt;[
+             http://localhost:8777,
+             ws://localhost:8555]]]]
 </code></pre>
 <p><code>law_shard</code> is Theorem 19 of the stream-ring algebra (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>):
 monoidic reducers are <strong>semi-right distributive</strong>,
@@ -1228,25 +1217,20 @@ latent: the split axiom \(\langle x\rangle (a+b) = \langle x\rangle a + \langle 
 object fans out across branches and merges back, and Thm 19 is the one reduce law that makes the fan-out <em>sound</em>. The
 same algebra that says \(x + 0 \leadsto x\) (a time rewrite) says \((a+b)\cdot r \leadsto (a\cdot r + b\cdot r)\cdot r\)
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.</p>
-<p>Finally, the inst <code>lower?path&lt;=path(plan)</code> applies a plan read off the path's out-edge — the examples read
-<code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: one <code>branch</code> keyed by place,
+<p>Finally, the <code>law_shard</code> edge reaches the same chain distributed — the examples read <code>&gt;&gt;law_shard&gt;&gt;result</code>, a
+<code>path::T</code> whose <code>obj</code> is the distributed layout and whose <code>where</code> lists the places it shipped to: one <code>branch</code> keyed by place,
 whose lanes carry their part of the seed (<code>start(part)</code>), the floatable run and a fold stating the remaining hop budget
 (<code>sum?hop=0</code> at a leaf — the depth rides the fold, never the seed). Each lane runs at its roster member, and the lanes'
 partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it
 again over its own peers, so the shards
-form a tree. The plan — not its
-application — is data, so the rewrite <em>schedule</em> and the out-edge
-that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
-<pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum?hop=0()).sum(),
-           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]]]]
+form a tree. Every rewrite of the machine's pool is an edge, so the rewrite table is the category itself.</p>
+<pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[&gt;&gt;law_shard&gt;&gt;result]
+==&gt;[noobj]
 </code></pre>
-<p>A keyed fold lowers the same way, its master recombining pointwise: the <code>sum()</code> after the branch deep-merges the partial
-recs and
-<code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
-<pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5,6})./m/inst/group?hop=0([/m/inst/mod(3)=&gt;/m/inst/sum()])).sum?rec&lt;=rec{*}().select([id()=&gt;sum()]),
-           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]]]]
+<p>A keyed fold distributes the same way, its master recombining pointwise: the <code>sum()</code> after the branch deep-merges the
+partial recs and <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
+<pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[&gt;&gt;law_shard&gt;&gt;result]
+==&gt;[noobj]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1280,9 +1264,7 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
-           authority=&gt;[
-            http://localhost:8777,
-            ws://localhost:8555],
+           authority=&gt;[ws://localhost:8555],
            linked_to=&gt;!λ(){&lt;j&gt;},
            linked_from=&gt;!λ(){&lt;j&gt;},
            status=&gt;!λ(){&lt;j&gt;}]

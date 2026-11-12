@@ -473,4 +473,16 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         this.LOG.debug("three-instruction body => %s", new Object[]{three});
         Assertions.assertTrue(three.endsWith("(){\n  to(i).expand('a').\n  sum() }"), String.format("a third instruction is a line the cap forbids: %s", three));
     }
+
+    /**
+     * THE DISPLAY SERIALIZER KEEPS THE SPAN TOO — the branch layout a human reads in the console must show each lane's
+     * narrowed share; without it the lanes all look like the whole run.
+     */
+    @Test
+    public void testASpannedInstructionShowsItsSpan() {
+        final Obj code = ObjmtronSerializer.parse("start(0).{0,4}plus(1).sum()").asCode();
+        final String written = ObjmtronUISerializer.blackWhite().write(code);
+        this.LOG.debug("a spanned chain => %s", new Object[]{written});
+        Assertions.assertTrue(written.contains("{0,4}"), written);
+    }
 }

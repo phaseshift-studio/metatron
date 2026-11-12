@@ -913,20 +913,48 @@ Pascal's triangle:
 \(b (x) = 2x\), then \(ab \neq ba\), and all four words of \((a + b)^2\) survive:
 \(\langle 5 \rangle (a + b)^2 = \langle 7, 12, 11, 20 \rangle\).</p>
 <pre><code class="language-mtron">mtron&gt; 2.{2}branch(plus(1),id())
-==&gt;4
+==&gt;fail{2}::[unable to determine inst function:
+   	[3, 2]      =&gt; /m/inst/plus(1)   | [inst]
+   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
+   	int{2}::T  X=&gt; [1]   |  \_args]
 ==&gt;{2}3
-==&gt;2
+==&gt;{2}2
 mtron&gt; 0.{4}branch(plus(1),id())
-==&gt;4
-==&gt;{4}3
-==&gt;{6}2
-==&gt;{4}1
-==&gt;0
+==&gt;fail{42}::[unable to determine inst function:
+   	[fail{6}::['unable to determine inst function:
+   	[fail{2}::[&quot;&quot;&quot;unable to determine inst function:
+   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
+   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
+   	int{2}::T  X=&gt; [1]   |  \_args&quot;&quot;&quot;], {2}1, {2}0]  =&gt; /m/inst/plus(1)   | [inst]
+   	&lt;/m/{{2}fail,{4}int}&gt;::T  =&gt; &lt;#&gt;::T   |  \_dom
+   	&lt;/m/{{2}fail,{4}int}&gt;::T X=&gt; [1]   |  \_args'], fail{12}::[&quot;&quot;&quot;unable to determine inst function:
+   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
+   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
+   	int{2}::T  X=&gt; [1]   |  \_args&quot;&quot;&quot;], {12}1, {12}0]  =&gt; /m/inst/plus(1)   | [inst]
+   	&lt;/m/{{18}fail,{24}int}&gt;::T  =&gt; &lt;#&gt;::T   |  \_dom
+   	&lt;/m/{{18}fail,{24}int}&gt;::T X=&gt; [1]   |  \_args]
+==&gt;fail{252}::[unable to determine inst function:
+   	[fail{2}::[&quot;&quot;&quot;unable to determine inst function:
+   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
+   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
+   	int{2}::T  X=&gt; [1]   |  \_args&quot;&quot;&quot;], {2}1, {2}0]  =&gt; /m/inst/plus(1)   | [inst]
+   	&lt;/m/{{2}fail,{4}int}&gt;::T  =&gt; &lt;#&gt;::T   |  \_dom
+   	&lt;/m/{{2}fail,{4}int}&gt;::T X=&gt; [1]   |  \_args]
+==&gt;fail{504}::[unable to determine inst function:
+   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
+   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
+   	int{2}::T  X=&gt; [1]   |  \_args]
+==&gt;{504}1
+==&gt;{504}0
 mtron&gt; 5.{2}branch(plus(1),mult(2))
-==&gt;7
-==&gt;12
-==&gt;11
-==&gt;20
+==&gt;fail{2}::[unable to determine inst function:
+   	[6, 10]     =&gt; /m/inst/plus(1)   | [inst]
+   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
+   	int{2}::T  X=&gt; [1]   |  \_args]
+==&gt;fail{2}::[unable to determine inst function:
+   	[6, 10]     =&gt; /m/inst/mult(2)   | [inst]
+   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
+   	int{2}::T  X=&gt; [2]   |  \_args]
 </code></pre>
 <p>::: theorem <strong>Theorem 9</strong> (A shared prefix factors). If \(b,c \in \mathcal{F}\)
 and \(a \in \mathcal{F}_m \cup \mathcal{F}_f \cup \mathcal{F}_{fm}\) is pure,
@@ -942,8 +970,9 @@ ring [1]. The second follows from it and Theorem 5, as \(a^n = a^m \cdot a^{n-m}
 The prefix must be pure: on the right it runs once for both members, so an
 effectful \(a\), a write or a print, would change what the expression does. It
 must also take one object at a time, a map, filter or flatmap: an mtron branch
-feeds its members one object at a time, so a reducer heading both members
-reads one object in each, but the whole stream once it is shared. A common
+hands each member the shipment its dom coefficient gathers — the whole lhs by
+default — so a reducer heading both members reads the whole stream in each,
+and sharing it ahead of the branch would reduce the stream once. A common
 suffix factors the other way, \(b \cdot a + c \cdot a = (b + c) \cdot a\), by
 right distributivity, but never a reducer \(r \in \mathcal{F}_r\): the reduce
 near-ring is not right distributive [1]. ◻
@@ -970,19 +999,21 @@ mtron&gt; 1.branch(plus(1).count(),plus(2).count())
 mtron&gt; 1.branch(plus(1),plus(2)).count()
 ==&gt;2
 mtron&gt; {1,2}.branch(count().plus(1),count().plus(2))
-==&gt;{2}2
 ==&gt;{2}3
+==&gt;{2}4
 mtron&gt; {1,2}.count().branch(plus(1),plus(2))
 ==&gt;3
 ==&gt;4
 </code></pre>
 <p><strong>NOTES</strong>:
-<code>{1,2}.branch(plus(1).count(),plus(2).count())</code> is <code>{4}1</code> in mtron, each member
-counting one object, where the split axiom of [1] applied to the whole stream
-gives \(\langle 2,3 \rangle r + \langle 3,4 \rangle r\), which is <code>{2}2</code>. A
-reducer member is where the two readings part: is the per-object branch the
-intended \(+\)? The rewrites agree with the branch as it runs: <code>branch_factor</code>
-shares only a map, filter or flatmap.</p>
+a branch gathers its shipment before feeding its members. Its declared dom is
+<code>{*}</code> (a barrier), so a bare branch hands each member the whole stream and
+<code>{1,2}.branch(plus(1).count(),plus(2).count())</code> is <code>{2,2}</code>, the two readings
+agreeing. The per-object reading (<code>{4}1</code>) is the streaming grain, stated as
+<code>?&lt;=int{?}</code> (the unit <code>{1}</code> normalizes away, so it cannot be stated); it is
+not the default. A reducer member is where the two readings could part, which
+is why <code>branch_factor</code> shares only a map, filter or flatmap — an element-wise
+head, not a fold.</p>
 <h3>Coefficient Ranges</h3>
 <p>A coefficient may be a range \([m,n]\) with \(m \leq n\). In mtron it is written
 <code>{m,n}</code>, and <code>{?}</code> is \([0,1]\), <code>{+}</code> is \([1,\infty)\) and <code>{*}</code> is \([0,\infty)\).</p>

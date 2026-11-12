@@ -1,52 +1,50 @@
 ---
 name: mach-instset
 description: |
-  The machine instruction set at `/m/mach`: a machine is metatron's unit of **process** — a `rec::T` of five
-  components (instruction set, compiler, memory, network, processor), three of which are also prefixed components.
-  Machines nest as frames (`push`, `move`, `pop`) and distribute work by shipping code — workloads of config and
-  code — to their peers.
+  The machine instruction set at `/m/mach`. A machine is a `rec::T` of five components — instruction set, compiler,
+  memory, network, processor — three of which are prefixed (a name table resolved by nearest declaration). Machines nest
+  as frames (`push`, `move`, `pop`); work reaches another process by shipping code to a peer.
 ---
 
 # mach instruction set (`/m/mach`)
 
-A **machine** is metatron's unit of process: everything runs in one, and `/` is the root machine.
+A **machine** is the unit of process: every evaluation runs in one, and `/` is the root machine. `machine::T`
+(`/m/mach/machine`, a `rec::T`) has five optional component slots:
 
-`machine::T` carries exactly five components, each one `rec::T` entry:
-
-| slot        | what it holds                                                       |
-|-------------|---------------------------------------------------------------------|
-| `instset`   | the machine's instruction set architecture (types and insts)        |
-| `compiler`  | the source to `code::T` converter                                   |
-| `processor` | the runtime that executes `code::T` over the metatron graph         |
-| `memory`    | the address space: relative uris (stack) and absolute uris (spaces) |
-| `network`   | the machine's own reach — the peers it dialed or accepted           |
-
-Machines **nest**: a pushed child reads through to its parent's **memory**, so a child is a nested frame of reference
-rather than a copy of the world. Reach does not nest — see *network*: peers are the pushing machine's own, knowledge
-(the roster) is root-shared. *Frames* covers the three instructions that choose where code runs, and *distribution*
-covers how work reaches a machine in another process: by shipping code to it.
+| slot        | holds                                                                     |
+|-------------|---------------------------------------------------------------------------|
+| `instset`   | the visible vocabulary: types, instructions, rewrites, sugars              |
+| `compiler`  | the map from source to `code::T`                                          |
+| `memory`    | the address space: relative bindings and the index of absolute spaces     |
+| `network`   | reach (peers), presence (listeners) and names (prefixes)                  |
+| `processor` | the runtime that executes `code::T`                                       |
 
 ## components
 
-Each slot is a `component::T` (`/m/mach/component`), a `rec::T` that resolves its machine (`>>space`), so all five slots
-are addressable from mtron and together are the whole of a machine's state.
+Each slot holds a `component::T` (`/m/mach/component`), a `rec::T`. A component is reached by its accessor, by the
+machine rec's slot, by `~/<slot>` and by `<vid>/<slot>`; the four views answer one object. `push` gives each component
+its own semantics:
 
-Three of them are **prefixed** components: each keeps a table of short names to values, and the three tables resolve by
-one rule — the nearest declaration wins.
+| component           | in a pushed child                                                                         |
+|---------------------|-------------------------------------------------------------------------------------------|
+| `memory`, `instset` | a level over the parent's: the parent's later writes read through, the child's stay its own |
+| `network`           | a level of its own: peers and listeners are not inherited; names inherit by shadowing      |
+| `processor`         | a fresh processor of the parent's architecture, with its own computers and fail stacks     |
+| `compiler`          | a deep clone of the parent's at the push: a later write on either side stays on that side  |
 
-| component | a name denotes                               | example                                   |
-|-----------|----------------------------------------------|-------------------------------------------|
-| `instset` | a scheme alias for a vocabulary root         | `math:cos` → `/m/math/inst/cos`           |
-| `network` | an authority a peer is called by             | `//ginger/a` → `ws://ginger.local:8555/a` |
-| `memory`  | a short name for a path (the redirect table) | `cos` → `/m/inst/cos`                     |
+Three components are **prefixed**: each keeps a table of names, and the three tables resolve by one rule, the nearest
+declaration wins.
 
-A component's rows are its own address space: `*<~/network/prefix>` is what a frame calls its peers by, memory's rows
-are its redirect table (`*<~/memory/redirect>`), and an ISA's rows are scheme aliases. Declaration and withdrawal are
-writes to that address, so the table answers what a read-back would store. The level chain is each component's
-`previous`: a name declared here outranks an enclosing declaration, and a `pop` gives the shadowed meaning back.
-Resolution has one gate — an address carrying a host is aligned against the network's names, a scheme-less vid
-against the ISA's, and memory's redirects are consulted by the ISA's resolver; the slots cannot collide, so the order
-is unobservable.
+| component | a name denotes                       | example                                   |
+|-----------|--------------------------------------|-------------------------------------------|
+| `instset` | a scheme alias for a vocabulary root | `math:cos` → `/m/math/inst/cos`           |
+| `network` | an authority                         | `//ginger/a` → `ws://ginger.local:8555/a` |
+| `memory`  | a path (the redirect table)          | `cos` → `/m/inst/cos`                     |
+
+A table is an address (`~/network/prefix`, `~/memory/redirect`); declaring and withdrawing a name are writes to it, so
+what the table answers may be written back. A declaration shadows an enclosing one until `pop`. An address carrying a
+host is aligned against the network's names, a scheme-less address against the instset's, and memory's redirects are
+consulted by the instset's resolver; the three slots are disjoint, so the order is unobservable.
 
 ## instset (instruction memory)
 
@@ -71,263 +69,233 @@ mtron> */m/instset?docq
            {?}sugar=>'custom instruction syntax sugars g...'],
           desc=>'an aggregate of consts, types, ins...']
 ```
-`instset` is the frame's **visible vocabulary**: the types, instructions, rewrites and sugars a program compiled here
-can see. It is a union in two directions — this frame's own structure over its **imported** sets, and that whole stack
-over the **enclosing machine's** instset. memory and network are a two-level walk (a frame over its parent); the
-vocabulary is that *and* an ordered list.
+`instset` is a frame's visible vocabulary, the union of
 
-| part          | what it is                                                                                                                                                          |
-|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| own structure | the `type` / `inst` / `rewrite` / `sugar` entries written in this frame                                                                                             |
-| `reference`   | an ORDERED list of the vids of the instruction sets this frame imported — held by reference, never copied                                                           |
-| `previous`    | the enclosing machine's instset — inherited **lazily**, so a child that imported nothing still sees what its parent imported, even an import the parent makes later |
+1. the frame's own `type`, `inst`, `rewrite` and `sugar` entries;
+2. `reference`, an ordered list of the vids of the sets it imported, held by reference, never copied;
+3. `previous`, the enclosing machine's instset, read lazily, so an import the parent makes later is visible.
 
-Two rules are the whole point:
+Resolution is own-first; among the references, import order is precedence. An instruction set is a `space::T` by type
+but belongs to a machine by membership only: memory refers an instruction set handed to it into the instset and never
+enters it in the address index (Marko, 2026-10-25), and an address under an instruction set is routed to it by the
+lookup that weighs the machine's libraries against its data spaces.
 
-* **an import is a reference, never a copy** — the library in space is shared by every machine that imported it, and
-  mutated by none;
-* **resolution is own-first** — a declaration made here outranks a name from any set this one refers to, and among the
-  references **import order is precedence**.
+### the table doors
 
-The membership lives in the rec under `reference` — singular, like `pattern`, `type` and `inst`, holding a list — so
-the vocabulary reads from mtron as itself rather than as an opaque template. Importing is the `import` instruction,
-which takes the ISA's uri.
+Each table is read and written at `~/instset/<table>/<name>`, $\mathit{table} \in \{$`rewrite`, `inst`, `type`,
+`const`$\}$. A read answers the frame's live, effective table. A write declares a **difference** in the frame's own
+level: an entry replaces this level's entry of the same identity, an inherited entry written back adds nothing, and
+`noobj` clears this level's entries of that name. The entry's own name must match the door's. Identity is the
+schema's: an instruction or a rewrite by its tid, a type or a const by its vid.
 
-The rec records **vids**; the frame holds the sets **by object**. That split makes membership reflective *and*
-independent: printing the rec never inlines a library, and resolution reads the objects, so belonging to a machine
-does not depend on the address index at all.
+```mtron
+mtron> *~/instset/type/int.vid()
+==>/m/int
+```
+A literal instruction is written blocked, `addr -> |inst`; one an expression computes is written with `to()`, which
+writes the obj flowing in. A rewrite is thereby switched off in one frame:
 
-### instruction set architecture (machine schema)
+```mtron
+push(rules)
+*~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)
+pop()
+```
+
+### a read
+
+A read of the vocabulary walks the whole union — own entries, the references in import order, the enclosing frame —
+and collects candidates per identity: an identity a nearer level answered is shadowed, and a new identity is added
+alongside, so `plus` is a family rather than a slot.
+
+A read is a query, and its dom/rng are type constraints. A candidate $c$ is admitted by a query domain $d$ iff
+$d \preceq \mathrm{dom}(c)$, where $\preceq$ is refinement: `*plus?nat<=nat` answers the `int` contract, since
+$\mathit{nat} \preceq \mathit{int} \preceq \#$, while `*plus` answers the family. A query that names a domain ranks the
+candidates by distance along the refinement path. A short name is resolved by data memory (`plus` → `/m/inst/plus`),
+after which instruction memory answers the address.
 
 <!-- figure source: assets/tikz/mach-instset.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
 <img src="../assets/mach-instset.png" alt="one machine, two memories, one read, drawn as two boxes headed by their types, memory::T and instset::T. An instruction set joins the machine twice: the machine::T vertex sends membership (solid) into instset::T and registration (dashed) into memory::T. memory::T does two things, one row each — a value at an address (/usr/marko/age, value, 29) and a route (the name plus, route, the address /m/inst/plus) — and a dotted line carries that same address across the gap into instset::T. There the query ?nat<=nat admits the int contract (drawn solid) while the address's other candidates, real and str, sit dotted inside a group bracket labelled off nat's path, because the query's domain only reaches down nat's path. Beneath both boxes one read runs — mtron's *id, then network, then memory, then instset (on a miss) — with dotted lines tying each hop to the box it asks. The tags under each header give the two lenses: INSTANCES / data and SCHEMA / inst" width="100%" style="margin:0.3em 0 0 0"/>
 
-An ISA is also a `space::T`, and that is now down to **one remaining dependency**. Belonging to a machine has two
-halves:
-
-| half         | what it is                                                                                                                                                                   |
-|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| membership   | the ISA is held **by object** in the frame that referred it — this is the vocabulary, and it needs no address space at all                                                   |
-| registration | the ISA is also entered in the machine's **address index** — the only reason it is a `space::T`, and the only reason its content is reached by asking for it *as* an address |
-
-Both halves happen in one place, so neither is had without the other by accident. The union needs only membership: a
-machine can already hold a member that is **not** one of its spaces, and a read reaches it through instruction memory.
-Removing the registration finishes the sentence — it is blocked on three things, each measured rather than assumed:
-
-* **migration writes** — an instruction set's setup hands a declaration that falls outside its own pattern to the set
-  that owns it by writing to an *address*, which only works while the owner can be found in the address index;
-* **declining spaces** — the catch-all space matches every address, so a space must answer `noobj` for a vid it cannot
-  interpret rather than throw, or an odd query string becomes a boot failure;
-* **documentation ownership** — a set's setup wraps each declaration in its documentation, and resolving *which space
-  owns an id* goes through the address index: with the registration gone that resolution falls through to the
-  enclosing space, and a setup goes from ~0.1s to ~4.2s (measured: 4.0s to 200.5s on one suite).
-
-**Not yet**: the vocabulary a frame sees is meant to be the union of the sets it imported *and* the declarations made
-under its own `~` — `~/type/friend`, `~/inst/purchase` — for those same four kinds. `const` is deliberately excluded
-from that projection, and the reason is the point: `~` is the frame's whole address space, so a projection that
-admitted consts would union the frame's **memory** into its instruction set. (A few consts do still sit in the
-instruction sets' own tables; that is the one place the schema/instance split is blurred, and gutting them is a
-separate pass.)
-
-A frame's own declarations are visible from that frame because the read asks data memory before instruction memory;
-moving them into the frame's own ISA structure is the write path that makes the projection real, and it comes first.
-The projection also needs `~` to be the current machine — it resolves to the current machine's vid and does **not**
-fall through to an enclosing frame, so inheriting a parent's `~`-addressed vocabulary has to be *built* (re-bind `~`
-at each level of the walk, or walk frames in the projection); it does not come free with the address walk.
-
-### what a read is
-
-Reading the vocabulary is not a lookup that stops at the first frame that answers. It is a walk of the whole union —
-own structure, then each reference in import order, then the enclosing frame — collecting **candidates**, and the
-rules are per **identity** rather than per name:
-
-* an identity a nearer level already answered is **shadowed** — own-first, and the reason a local redeclaration wins;
-* an identity not yet answered is **added alongside** — a set that overloads a name does not erase the name, so `plus`
-  is a family rather than a slot.
-
-Identity is the schema's own: an **inst or rewrite by its `tid`**, a **type or const by its `vid`**.
-
-Because the union is schema, a read is a **query**. The dom/rng in the pattern are type constraints: a candidate whose
-domain the query's domain refines is admitted, walking the refinement lattice — `*plus?nat<=nat` answers with the
-`int` contract, since nat's path is nat → int → #, while `*plus` answers with the whole family. A query that names a
-dom ranks candidates closest-to-the-token first; one that does not is unranked.
-
-A short name is an address in disguise, and it is **data memory** that resolves it — the small→big tables turn
-`plus` into `/m/inst/plus` — after which instruction memory answers the address. The division is deliberate: a name is
-not something an instruction set resolves about itself.
-
-The vocabulary belongs to the **machine**, so every thread of that machine sees the same one — per-thread state lives
-on the stack, not in a component. Three behaviors in particular are pinned rather than assumed: identity shadowing and
-adding alongside, including a member that is not a space; dom/rng admission down the refinement lattice; and
-isolation — own, inherit, no leak up, no leak across.
-
-`instset::T` is one of the three prefixed components (*components*): its names are scheme aliases, resolved to an
-address under the set's root by the same nearest-declaration walk, not by a per-set algorithm.
-
 ## compiler
 
 ```mtron
-mtron> */m/mach/compiler?docq
-==>docs::[desc=>'no documentation available']
+mtron> */m/mach/component/compiler?docq
+==>docs::[obj=>component::T[?[
+     {?}parser=>parser::T,
+     {?}rewriter=>rewriter::T,
+     {?}resolver=>resolver::T,
+     {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
+          args=>[
+           {?}typer=>'the fourth stage — the per-machine...',
+           {?}parser=>'the first stage — source text to o...',
+           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}resolver=>'the third stage — the walk that th...'],
+          desc=>'the compiler contract of machine::...',
+          example=>[
+           'compiler::[rewriter=>fixpoint_rewr...',
+           'compiler::[parser=>mtron_parser::[...',
+           'compiler::[=>]   [-- the default c...']]
 ```
-`compiler::T` is a **composition**, not an algorithm. Four atomic stages, each an optional rec entry with a default:
-applying a compiler runs them in order — `parse → rewrite → resolve → type` — handing each the whole of what the last
-one produced.
+`compiler::T` composes four optional stages, each a rec entry with a default, each handed the whole output of the last:
+
+$$\mathrm{compile} = \mathrm{type} \circ \mathrm{resolve} \circ \mathrm{rewrite} \circ \mathrm{parse}$$
 
 <!-- figure source: assets/tikz/mach-stages.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
 <img src="../assets/mach-stages.png" alt="the compiler's four stages, and the processor that runs what they produce" width="100%" style="margin:0.3em 0 0 0"/>
 
-Because the stages are *wiring*, the largest compiler and the smallest are the same type: a bare `compiler::[=>]` is
-the default compiler, and naming one entry overrides exactly that one stage.
+| stage   | key        | default                | settles                                         |
+|---------|------------|------------------------|-------------------------------------------------|
+| parse   | `parser`   | `mtron_parser::T`      | the obj the source denotes, hence the language |
+| rewrite | `rewriter` | `fixpoint_rewriter::T` | the instruction chain, before any type is known |
+| resolve | `resolver` | `scoring_resolver::T`  | the concrete instruction each call becomes      |
+| type    | `typer`    | `typer::T`             | the type-check points in force                  |
 
-| stage   | rec key    | default                | what it settles                                                       |
-|---------|------------|------------------------|-----------------------------------------------------------------------|
-| parse   | `parser`   | `mtron_parser::T`      | the obj a program's text denotes — and so the language being compiled |
-| rewrite | `rewriter` | `fixpoint_rewriter::T` | the instruction chain itself, before any type is known                |
-| resolve | `resolver` | `scoring_resolver::T`  | which concrete instruction each call becomes, per element type        |
-| type    | `typer`    | `typer::T`             | the type assertions applied to the result                             |
-
-Only the parser accepts source text (or an already-parsed obj — see *parse*); every stage from there on takes
-`code::T` and returns `code::T`. Naming a stage that is not that stage's own type is refused where it is written, not
-when the compiler is first used:
+`compiler::[=>]` is the default compiler; naming an entry replaces that stage. Only the parser accepts input other than
+code; every later stage maps `code::T` to `code::T`.
 
 ```mtron
 mtron> compiler::[parser=>mtron_parser::[=>]]
 mtron> compiler::[rewriter=>fixpoint_rewriter::[max=>3]]
 ```
-### parse — where a language is hosted
+### a machine's compiler
 
-`parser::T` is the seam where a **language** is hosted: any language can be parsed as long as it generates `code::T`.
-Given the rich type system, the object-oriented and functional-oriented approach, and Turing-completeness, most any
-language can map to mtron `code::T`.
-
-Because the stage emits code, and because the three stages after it, the processor, and the distributed runtime all
-take code, another surface syntax needs no new instruction set, evaluator or type system — only a `parser::T` wired
-into a compiler:
+Every machine owns its compiler, and both compile-time and run-time resolution use the current machine's resolver. A
+stage is replaced through its address. A stage is callable, so it is written blocked, `addr -> |stage`; unblocked, it
+is applied to the address and the write is refused. A compiler write is type-checked by the compiler in force, never
+by the stage being installed:
 
 ```mtron
-compiler::[parser=>a_lang::[=>]]   [-- the shape; a_lang::T is a registered subtype --]
+push(literal)
+~/compiler/rewriter -> |identity_rewriter::[=>]   [-- this frame compiles without rewrites --]
+pop()
 ```
 
-The stage is **total over objs**: an obj that is not a `str` is not source text, so it is not re-read — it is lifted as
-it stands. One compiler therefore takes a program's text or the obj it has already been parsed into.
+**Not yet**: a stage of the wrong kind is refused when written, with one exception. An instruction is admitted into a
+structural stage slot (`~/compiler/resolver -> |plus(1)`), because a call is tested against a structural type by its
+coefficient only; the nominal `rewriter::T` refuses it by name.
 
-A grammar's own result is not always a code. mtron's reads three shapes, and the stage lifts all three:
+### parse
 
-| source      | the grammar yields | lifted to                           |
-|-------------|--------------------|-------------------------------------|
-| `6.plus(1)` | `code::T`          | code as result                      |
-| `plus(1)`   | a lone `inst::T`   | code with one-inst (no start added) |
-| `5`         | `int::5`           | code that starts with it            |
+`parser::T` hosts a language: a parser that emits `code::T` reuses rewriting, resolution, the type system, the
+processor and distribution.
 
-A lone inst deliberately gets **no start**: a head-first call is a fragment relative to its lhs (`plus(1)` applied to
-`noobj` is `noobj`, applied to `6` is `7`), and inventing one would turn a pipeline stage into a program that runs on
-nothing.
+```mtron
+compiler::[parser=>a_lang::[=>]]   [-- a_lang::T, a registered parser::T subtype --]
+```
 
-`mtron_parser::T` is the parser metatron ships — source text written in metatron's mtron language to `code::T`:
+The stage is total over objs: an obj that is not a `str` is lifted as it stands, not re-read. mtron's grammar yields
+three shapes:
 
-### rewrite — the chain, before any type
+| source      | yields       | lifted to                         |
+|-------------|--------------|-----------------------------------|
+| `6.plus(1)` | `code::T`    | itself                            |
+| `plus(1)`   | an `inst::T` | a one-instruction code, no `start` |
+| `5`         | `int::5`     | a code that starts with it        |
 
-The rewrite stage runs **before resolution**, so the rules see generic dom/rng rather than bound ones. This is where
-the shape of the compiled chain is decided: a rule-driven collapse, a native pushdown, and a distributed reduce's
-gather point all enter the compiled form here.
+A lone instruction receives no `start`: it is a fragment relative to its lhs (`plus(1)` maps `6` to `7`, and `noobj` to
+`noobj`).
 
-| rewriter               | the rule                                                                                                                                                                                                                                                                                                                                                                              |
-|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `fixpoint_rewriter::T` | apply every rewrite rule registered by every instset, in turn, over the whole code, and repeat until the code hash is unchanged for `max` consecutive passes (default `2`) — so a rule re-runs on every pass and must be idempotent                                                                                                                                                   |
-| `identity_rewriter::T` | return the code unchanged — for a compiler whose rewriting happens elsewhere                                                                                                                                                                                                                                                                                                          |
-| `plan_rewriter::T`     | a `fixpoint_rewriter::T` whose rules are the law-driven plans (`plan::T`) rather than every instset's rewrites: each reads the algebra the instructions and types declare (`?decq`) — a theory role, a process law, or a form and the laws its combiner needs — so a declared algebra is optimized, and over live peers distributed (`law_shard`), with no rule naming an instruction |
+### rewrite
+
+The rewrite stage precedes resolution, so a rule sees generic dom/rng.
+
+| rewriter               | rule                                                                                                                                                                            |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `fixpoint_rewriter::T` | apply every rewrite of every instset over the code until the code hash $h$ satisfies $h(c_{k+1}) = h(c_k)$ for `max` consecutive passes (default `2`); a rule must be idempotent |
+| `identity_rewriter::T` | return the code unchanged                                                                                                                                                       |
+
+A rewrite is switched off per frame through its door (*the table doors*).
 
 ```mtron
 mtron> fixpoint_rewriter::[=>]
 mtron> fixpoint_rewriter::[max=>3]
-mtron> plan_rewriter::[=>]
 ```
-### resolve — the walk and its two strategies
+### resolve
 
-Resolution is the compiler's widest-reaching stage: it turns a generic instruction chain into a typed one by threading
-each inst's range into the next inst's domain, and **per inst** it asks two questions of two internal components:
+Resolution threads each instruction's range into the next instruction's domain and, per instruction, consults two
+collaborators:
 
-| collaborator | the question                                                  | default                |
-|--------------|---------------------------------------------------------------|------------------------|
-| `selector`   | which candidates may this call resolve to, and in what order? | `specificity_selector` |
-| `binder`     | can this candidate be made concrete?                          | `generic_binder`       |
+| collaborator | question                                     | default                   |
+|--------------|----------------------------------------------|---------------------------|
+| `selector`   | which candidates, and in what order          | `specificity_selector::T` |
+| `binder`     | whether a candidate can be made concrete     | `generic_binder::T`       |
 
-A candidate that cannot be bound must not be selectable, so binding *gates* selection — it runs inside the selector's
-candidate walk. That is why the pair is two rec entries of one stage rather than two stages, and why any selector
-composes with any binder:
+Binding gates selection (it runs inside the selector's candidate walk), so the pair are two entries of one stage, and
+any selector composes with any binder:
 
 ```mtron
 mtron> firstfind_resolver::[=>]
 mtron> scoring_resolver::[selector=>firstfind_selector::[=>]]
 mtron> identity_resolver::[=>]
 ```
-| strategy                  | the rule                                                                                  |
-|---------------------------|-------------------------------------------------------------------------------------------|
-| `specificity_selector::T` | score candidates by how specific their signatures are; take the first the binder can bind |
-| `firstfind_selector::T`   | the first viable candidate in read order, no scoring — selection is order-dependent       |
-| `generic_binder::T`       | bind generics to the lhs, gate on the lhs domain, resolve the call's arguments            |
-| `identity_resolver::T`    | no walk at all — it returns the code unchanged                                            |
+| strategy                  | rule                                                                               |
+|---------------------------|------------------------------------------------------------------------------------|
+| `specificity_selector::T` | rank candidates by signature specificity; take the first the binder binds          |
+| `firstfind_selector::T`   | the first viable candidate in read order; selection is order-dependent             |
+| `generic_binder::T`       | bind generics to the lhs, gate on the lhs domain, resolve the arguments            |
+| `identity_resolver::T`    | no walk; return the code unchanged                                                 |
 
-What the walk settles is what the processor then runs: whether an inst is a **filter** (whose `{0,1}` wing is dropped
-for compile-time typing only), a **gather/barrier**, or an **initial** inst seeding the element type from its own
-argument, and a cast whose range is rebound to the named type. An inst that cannot be resolved is left in place for
-**runtime** resolution: a semi-resolved code, not a failed one.
+The walk also classifies each instruction for the processor — a filter (whose $\{0,1\}$ coefficient is dropped for
+compile-time typing only), a gather or barrier, an initial instruction seeding the element type — and rebinds a cast's
+range to the named type. An instruction that cannot be resolved stays for run-time resolution: the code is
+semi-resolved, not failed.
 
-### type — the fourth stage
+### type
 
-The last stage is the machine's own type assertion. `typer::T` is where a frame holds *how much* checking it wants, in
-the same style as the other three: a rec entry, optional, defaulting.
-
-The typer's state lives in the stage itself — `/compiler/typer/check`, one `bool::T` per check point (`code_resolve`,
-`inst_rng`, `inst_dom`, `type_pred`, `obj_write`), the boot default being every point on except
-`code_resolve`. A boot profile overrides individual points with `typer/check => [code_resolve => true]`.
-
-There are exactly two ways to change it, and both are the same nested write:
+`typer::T` holds the frame's check points at `~/compiler/typer/check`, one `bool::T` each: `code_resolve`, `inst_rng`,
+`inst_dom`, `type_pred`, `obj_write`. The boot default enables every point except `code_resolve`; a boot profile
+overrides points with `typer/check => [code_resolve => true]`. The state is changed by a nested write and, since each
+machine owns its compiler, the change is the frame's own:
 
 ```mtron
-mtron> @/compiler/typer/check >>= [inst_dom => false]
+mtron> push(lenient)
+mtron> @~/compiler/typer/check >>= [inst_dom => false]
 ==>[inst_dom=>false,
     code_resolve=>false,
     inst_rng=>false,
     type_pred=>true,
     obj_write=>true]
-mtron> */compiler/typer/check
+mtron> *~/compiler/typer/check
 ==>[inst_dom=>false,
     code_resolve=>false,
     inst_rng=>false,
     type_pred=>true,
     obj_write=>true]
+mtron> pop()
 ```
-`Typer.Helper` is the Java side of that door, and the one the stages call: the processor asks `instDom()`/`instRng()`
-before invoking, the space asks `objWrite()` before a write, a type-predicate test asks `typePred()`, and the selector
-asks `codeResolve()` before falling back to a dynamic resolution. Because the state is the component's rec, a pushed
-frame inherits the enclosing machine's compiler (it clones the machine rec), so a dialed-down state follows a frame.
+The stages query the state through `Typer.Helper`: the processor before invoking (`instDom`, `instRng`), a space before a
+write (`objWrite`), a predicate test (`typePred`), and the selector before a dynamic resolution (`codeResolve`).
 
 ## processor
 
 ```mtron
 mtron> */m/mach/component/processor?docq
-==>docs::[desc=>'no documentation available',
-          obj=>component::T[?[
-           {?}state=>union(stop,run,pause),
-           {?}result=><#{*}>::T]]@/m/mach/component/processor]
+==>docs::[obj=>component::T[?[
+     {?}state=>union(stop,run,pause),
+     {?}result=><#{*}>::T,
+     {?}tracer=>tracer::T]]@/m/mach/component/processor,
+          args=>[
+           {?}result=>'the objs the last evaluation produ...',
+           {?}state=>'the run state: stop, run or pause',
+           {?}tracer=>"the processor's diagnostics (trace...",
+           computer=>'the computers this processor minte...',
+           fail=>"the machine's fail stack: an uncau..."],
+          desc=>'the processor contract of machine:...']
 ```
-The compiler produces code; the `processor` runs it. The two are siblings rather than stages of one another, which is
-why the compiler's last stage hands off instead of invoking: what a program *means* and how it is *run* are separate
-axes of a machine.
+The processor executes what the compiler produces; the two are siblings, since what a program means and how it runs are
+separate axes of a machine.
 
-| type                 | what it is                                                                                                                                                            |
-|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `processor::T`       | the runtime contract: a machine component that executes a `code::T` and reports a `state` (`stop` / `run` / `pause`) and a `result`                                   |
-| `monad_processor::T` | a processor that carries monadic state                                                                                                                                |
-| `swarm_processor::T` | the default: it schedules independently executing monads across the code's inst chain; barriers synchronize them, and the objects of the halted monads are the result |
+| type                                 | description                                                                                        |
+|--------------------------------------|----------------------------------------------------------------------------------------------------|
+| `processor::T`                       | the runtime contract: executes a `code::T`, reports `state` (`stop`, `run`, `pause`) and `result`  |
+| `swarm_processor::T`                 | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result |
+| `computer::T`, `swarm_computer::T`   | the computer an evaluation runs in: its code and the state of the run                             |
+| `tracer::T`                          | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's |
 
-Each evaluation runs in a **computer** the processor mints, indexed by number at `~/processor/computer/<n>`. The
-processor also holds the machine's **fail stacks**: an evaluation's uncaught fail is filed under the computer that ran
-it (`~/processor/computer/<n>/fail/<k>`), and a fail raised outside any evaluation at `~/processor/fail/<k>`. A fail
-read back from a stack is still uncaught, so `catch(_)` it to use it as a value. Read the stack with `@` to clear it:
-`@` keeps each fail's address, so catching it removes it, while `*` hands back a detached copy.
+Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
+stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
+evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught, so it is used as a value through
+`catch(_)`. A read with `@` keeps each fail's address, so catching it removes it; `*` returns a detached copy.
 
 ### threads
 
@@ -352,46 +320,38 @@ mtron> */m/mach/thread?docq
            {?}result=>'the last result produced by the th...'],
           desc=>'the thread base type']
 ```
-A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
+| key       | value                                    |
+|-----------|------------------------------------------|
+| `code`    | the code executed                        |
+| `time`    | the start time                           |
+| `runtime` | the running time                         |
+| `loop`    | the repeat delay; absent, the code runs once |
+| `state`   | the current state                        |
+| `result`  | the last result                          |
 
-| key       | what it is                                         |
-|-----------|----------------------------------------------------|
-| `code`    | the code the thread is executing                   |
-| `time`    | when the thread was started                        |
-| `runtime` | the thread's current running time                  |
-| `loop`    | a delay to repeat the code (absent: evaluate once) |
-| `state`   | the thread's current state                         |
-| `result`  | the last result the thread produced                |
-
-`thread::T` is the base; `core::T` and `virtual::T` are the two concrete platform strategies
-(`core::[code=>…,loop=>second::1.0]@~/thread/…` runs a platform thread, `virtual::` a virtual one). The default
-machine's work runs on virtual threads.
+`thread::T` is the base, and `core::T` (a platform thread) and `virtual::T` (a virtual thread) are its strategies, e.g.
+`core::[code=>…,loop=>second::1.0]@~/sys/thread/…`. Evaluation runs on virtual threads by default.
 
 ## memory (data memory)
 
 ```mtron
 mtron> */m/mach/component/memory?docq
-==>docs::[desc=>'no documentation available',
-          obj=>component::T[][ctor?memory<=(#{*}::T){<j>}]@/m/mach/component/memory]
+==>docs::[obj=>component::T[][ctor?memory<=(#{*}::T){<j>}]@/m/mach/component/memory,
+          args=>[
+           space=>'the absolute spaces mounted at thi...',
+           redirect=>'the redirect table: a short name t...'],
+          desc=>'the memory contract of machine::T ...']
 ```
-`memory::T` is the machine's **data memory**: the address space of *instances*. Its relative bindings *are* the rec,
-and the index of absolute spaces is the `space` entry inside it, so a memory reads from mtron like any other rec. A
-child machine reads through to its parent's memory; that walk is what makes a machine a frame of reference.
+`memory::T` is the address space of instances. Its relative bindings are the rec itself, and the index of absolute
+spaces is its `space` entry. A child reads through to its parent's memory. Its name table is the redirect table, which
+maps a short name to its home path; the table is per level, and a relative home is not a row.
 
-`memory::T` is also a prefixed component: its name table is the redirect table, whose rows map a short name to its
-preferred home. A name is declared and withdrawn by writing that table, a relative home is not a row — a name denotes a
-path — and a short name resolves to its home. The table is per level, so a child's withdrawal never touches an
-enclosing binding; the same nearest-declaration walk inherits and shadows it (*components*).
+A read of an address $a$ answers the first non-empty of $\mathrm{network}(a)$, $\mathrm{memory}(a)$ and
+$\mathrm{instset}(a)$: the network answers an address carrying an authority a peer declared. Data memory routes names to
+addresses, and instruction memory answers addresses. A read made while answering an instset read (resolving a pattern's
+dom/rng types) is a data read, so instruction memory is not re-entered.
 
-**Two memories, one read.** `memory` holds instances and `instset` holds schema, and a read is the language's single
-way in: a read asks three sources in order — the **network** (an address carrying an authority a peer declared
-is that peer's to answer), then **data memory**, then **instruction memory** if data memory missed. The division of
-labor is clean and worth holding on to: **data memory routes names to addresses** (its small→big tables are what turn
-`plus` into `/m/inst/plus`) and **instruction memory answers addresses**. A read made *from inside* an instruction-set
-read is a data read — answering a schema query resolves the dom/rng types of the pattern, and resolving a type is
-itself a read — so instruction memory is not re-entered from there.
-
-## network — reach, presence and denotation
+## network
 
 ```mtron
 mtron> */m/mach/component/network?docq
@@ -413,168 +373,127 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per...",
            {?}listener=>'the sockets this machine serves th...',
            {?}roster=>'known machines, connectionless: <h...',
-           {?}status=>'the health method — an auto inst c...'],
+           {?}status=>'the health method — an auto inst c...',
+           {?}pattern=>'the branch this network answers as...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
            'network::[peer=>[<ws/localhost/391...']]
 ```
-`network::T` holds three indexes, and their scopes differ by design:
+| index      | holds                                                                 | scope                                     |
+|------------|-----------------------------------------------------------------------|-------------------------------------------|
+| `peer`     | the members this level reaches, keyed by the dial's path encoding      | reach: never inherited                    |
+| `listener` | the sockets this level serves on: origin, server, route table          | presence: a socket is shared with descendants |
+| `prefix`   | the names a peer is called by                                         | denotation: inherited by shadowing        |
 
-| index      | what it holds                                                                  | scope                                |
-|------------|--------------------------------------------------------------------------------|--------------------------------------|
-| `peer`     | the members this level reaches, keyed by the dial's path encoding              | the frame's reach — never inherited  |
-| `listener` | the sockets this level serves on: origin, server, and this level's route table | the frame's presence — socket shared |
-| `prefix`   | the names a peer is called by (`//ginger => ws://ginger.local:8555`)           | a level's denotation                 |
+The **roster** — what the system knows — is one listing at the root, shared by every frame. A `pop` retracts its level's
+reach and presence and restores a shadowed name.
 
-Reach and presence are retracted by a `pop`; a name is denotation, so a frame may bind one and a pop gives a shadowed
-meaning back.
+### reach
 
-### reach — one member per surface
-
-A peer is keyed by the dial's address written as a path: scheme, every label of the host, port and route as path
-segments, and never a `?q`. `ws://localhost:8555/mtron` sits at `ws/localhost/8555/mtron`, so the member is itself an
-address, `~/network/peer/ws/localhost/8555/mtron`. A legal path carries no dot in any segment (a dotted first segment
-reads as a host), so a host is split into its labels: `ws://peer.local:8555/mtron` is `ws/peer/local/8555/mtron` and
-`ws://10.0.0.7:8555/mtron` is `ws/10/0/0/7/8555/mtron`. Two routes of one service (`/mtron` and `/mcp` on one port)
-are two members; a loopback alias is spelled `localhost`, so `127.0.0.1` keys the member `localhost` already holds.
-
-Two positions are shapes rather than conventions, typed by URI refinements owned by this instruction set:
+A peer is keyed by its dial address written as a path — the scheme, each host label, the port and the route as
+segments, no query: `ws://localhost:8555/mtron` ↦ `ws/localhost/8555/mtron`, `ws://peer.local:8555/mtron` ↦
+`ws/peer/local/8555/mtron`. Two routes of one service are two members, and `127.0.0.1` keys as `localhost`.
 
 | type               | predicate                                                          | holds                          |
 |--------------------|--------------------------------------------------------------------|--------------------------------|
-| `origin::T`        | scheme and host, no path, no `?q`                                  | the service a peer reaches     |
-| `path_encoding::T` | scheme, host labels, port and route as path segments; no authority | the peer and listener map keys |
+| `origin::T`        | scheme and host; no path, no query                                 | the service a peer reaches     |
+| `path_encoding::T` | scheme, host labels, port and route as path segments; no authority | the peer and listener keys     |
+| `authority::T`     | host and optional port; no scheme, no path                         | a name for a service           |
 
-A peer entry therefore cannot be keyed by a wire address or carry a route as its origin; the predicate rejects the
-write.
+| `peer::T` field | value                                                              |
+|-----------------|--------------------------------------------------------------------|
+| `origin`        | the service, `scheme://host:port`; required                        |
+| `host`          | the dial, route included                                           |
+| `client`        | the protocol client the dial constructed, released by `drop`       |
 
-| field    | what it is                                                                       |
-|----------|----------------------------------------------------------------------------------|
-| `origin` | the service it reaches (`scheme://host:port`) — the one field a peer cannot lack |
-| `host`   | where it was dialed, route included (`ws://h:p/mtron`)                           |
-| `client` | the protocol client the dial constructed — held so `drop` can hang it up         |
+An origin alone is known but not reachable from here (a peer reference after crossing a wire); with a client it is
+reachable. Status is derived on read, never stored.
 
-One type, **two honest states**: an `origin` alone is *known, not reachable from here* — the form a peer reference
-takes after crossing a wire; an origin with a `client` is reachable. A peer carries no name, status or handler: an
-identity parameter belongs to the client's session, status is derived on read, and the handle is the client.
+### index and drop
 
-### the two doors — index and drop
+`index(m)` enters a thing into the jurisdiction, and `drop(address)` maps an address to `noobj`. No other operation
+writes the network's indexes. `index` dispatches on the handle's nominal type:
 
-A construction is a connection, and the two addressing verbs are the whole lifecycle: `index(m)` — a thing that
-exists enters the jurisdiction — and its dual `drop(address)` — the address maps to `noobj`, the universal close. Both
-network indexes are entered and left by those two verbs; no other door writes them.
+| handle                                                         | effect                                                                                               |
+|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| a protocol client (`ws_client::T`, `http_client::T`, `id_client::T`) | reads the claim from the client, mints a `peer::T` at the claim's path encoding, supervises a link |
+| a `listener::T`                                                | mounts the socket: refuses a route another level serves, shares the server, writes this level's entry |
 
-`index` dispatches on the handle's **nominal type**:
+| `drop` address                                   | retracted                                                                  |
+|--------------------------------------------------|----------------------------------------------------------------------------|
+| a peer key (`ws/localhost/8555/mtron`)           | the member; its client is released                                         |
+| a wire uri with a route (`ws://host:8555/mtron`) | that surface                                                               |
+| a bare origin (`ws://host:8555`)                 | every surface of the service; reach only                                   |
+| a socket key (`ws/localhost/8555`)               | this level's listener entry, and the server when this level owns it       |
 
-| handle                                                                  | what index does                                                                                       |
-|-------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| a protocol client (`ws_client::T`, `http_client::T`, `id_client::T`, …) | reads the claim from the client, mints a `peer::T` at the claim's path encoding, supervises a link    |
-| a `listener::T` entry                                                   | mounts the socket: refuses a route another level serves, shares the server, writes this level's entry |
-
-Nominal, not structural: a listener entry's fields are `maybe()` (a route table is absent while nothing is served), so
-a rec that merely carries those fields is not a socket. The type is the dispatch.
-
-`drop` names a member by any of the addresses it answers to:
-
-| the address                                      | what is retracted                                                              |
-|--------------------------------------------------|--------------------------------------------------------------------------------|
-| a peer's key (`ws/localhost/8555/mtron`)         | that member; the client is released                                            |
-| a wire uri with a route (`ws://host:8555/mtron`) | that surface                                                                   |
-| a bare origin (`ws://host:8555`)                 | every surface of the service — reach only, never a socket                      |
-| a socket's key (`ws/localhost/8555`)             | that listener: this level's entry, the server released when this level owns it |
-
-`unlisten(origin)` is exactly `drop(origin.pathEncoding())`. A `pop` releases each listener in turn (the level's share
-of the socket, and the socket itself when the level owns it) and drops each of its peers. Answers follow the union-bag
-rule: one retraction collapses to the member, several to a bag, none to `noobj`.
+`unlisten(origin)` is `drop(origin.pathEncoding())`. One retraction answers the member, several a bag, none `noobj`.
+Dialing a surface already held closes the old connection, and the new one takes its key.
 
 ```mtron
-mtron> </network/peer/ws/localhost/8555/mtron> -> noobj      [-- hang up: the member leaves the map --]
+mtron> </network/peer/ws/localhost/8555/mtron> -> noobj      [-- hang up one member --]
 mtron> </network/peer/#> -> noobj                            [-- hang up every member --]
 ```
-**No two equivalent connections.** Dialing a surface the machine already holds closes the connection there and the new
-one takes its key; the member's identity is its surface, so a dial announces nothing about itself.
+### presence
 
-### presence — the socket
+A machine's authorities — what mDNS announces and a roster files — are its listening surfaces (`ws_server::T`,
+`http_server::T`). A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
+identity: its host and credentials never leave the machine, and an address carrying userinfo is refused.
 
-A machine's own authorities — what mDNS announces for it and what a roster files under its name — are exactly its
-**listening** surfaces: a `ws_server::T` or `http_server::T` that binds a socket. A backend the machine *dials*
-(`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, never identity, so its host, credentials included, never
-leaves the machine in an announcement, a roster key or a TXT route; an address carrying userinfo is refused outright
-rather than stripped.
-
-A listener entry is a `listener::T` rec:
-
-| field    | what it is                                                                       |
-|----------|----------------------------------------------------------------------------------|
-| `origin` | the socket's service uri as spelled (`scheme://host:port`)                       |
-| `route`  | this level's routing table on the socket, `<path> => target`; absent while empty |
-| `server` | the protocol server holding the socket — held so the owner's drop releases it    |
-
-The key is the origin's path encoding, so one socket has one entry per level even while several levels serve through
-it. A socket is opened by one level (the owner) and shared by its descendants, each keeping its own route table; a
-route a nearer level already serves on that socket is refused to a later level, because a key has one rightful owner.
-Dropping a non-owner's key withdraws that level's rows and leaves the owner's socket bound.
-
-### construction is connection
-
-There is no connect inst, as there is no add-space inst: constructing a protocol client *is* the dial, and indexing is
-a background behavior of a valid construction.
+| `listener::T` field | value                                                       |
+|---------------------|-------------------------------------------------------------|
+| `origin`            | the socket's service uri                                    |
+| `route`             | this level's route table, `<path> => target`; absent when empty |
+| `server`            | the protocol server holding the socket                      |
 
 ```mtron
-mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>[pattern=>ws://localhost:8555/mtron,
-    host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    ...(1 more)]
+listener::[origin=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]
 ```
-The claim (`pattern`, retracted to the dialable address) derives the host; on success the client indexes itself into
-the network exactly as `memspace::[pattern=>xyz/#]` indexes into memory. The lifecycle is one adjoint pair on the
-addressable contract, and both halves name what the address names — a peer key, a wire uri with a route, a bare
-origin, or a socket's key (*the two doors*).
+
+A socket has one entry per level. The level that opens it owns it, and its descendants share it with route tables of
+their own. A route a nearer level serves is refused to a later level, and dropping a non-owner's key withdraws only
+that level's rows.
 
 ### the client is the connection
 
-The client's `inst` is a mini-instset — `{instruction tid => override}` — and nothing else reaches the network through
-a peer. Each override is the native instruction with the client's own body (the same signature, so a call reaches it by
-swapping its function): `from(<uri>)` reads, `obj.to(<uri>)` writes (the obj is the lhs), and `eval(code)` ships a
-program for the far side to run. A `ws_client` declares all three; an `http_client` declares `from` (GET) and `to`
-(POST) — a write that stores what it is sent and evaluates nothing, so it serves no `eval`. A shard target must serve
-both `to` (the route) and `eval` (the routed program must be applied there). `send_recv` remains a `ws_client`'s raw
-wire instruction, not a reach: a block (`|`) defers evaluation so code ships as written,
-`1.plus(2).send_recv(|plus(45))` evaluating `plus(45)` at the far side against the shipped monad. Insts are total,
-$P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a reach never errors — it answers a smaller set, and $\emptyset$ (`noobj`) is
-a legal answer, not an exception.
+There is no connect instruction: constructing a protocol client is the dial, and the client indexes itself into the
+network as `memspace::[pattern=>xyz/#]` indexes into memory.
 
-The identity element, `id_client::T` (`/m/mach/id_client`), is the identity of the protocol-client family, bound to the
-scheme `loop:`. Its constructor is the dial, and its mini-instset (`eval`, `from`, `to`) evaluates what it is sent
-against the local machine; a read through a loop peer therefore *equals* the local read — the self-similarity contract
-in executable form, with no socket.
+```mtron
+mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
+==>ws_client::[pattern=>ws://localhost:8555/mtron,
+               host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               ...(1 more)]
+```
+A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
+its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client`
+declares `from` (GET) and `to` (POST, which stores and evaluates nothing). A shard target serves `to` and `eval`.
+`send_recv` is a `ws_client`'s raw wire instruction: `1.plus(2).send_recv(|plus(45))` evaluates `plus(45)` remotely
+against the shipped monad. Instructions are total, $P(\mathrm{Obj}) \to P(\mathrm{Obj})$: a reach answers a smaller set
+rather than an error, and $\emptyset$ (`noobj`) is a legal answer.
+
+`id_client::T` (`/m/mach/id_client`, scheme `loop:`) is the identity of the client family: its `eval`, `from` and `to`
+evaluate against the local machine, so a read through a loop peer equals the local read.
 
 ### status
 
-Every client and every server answers `status` — a bool, true while it is live, derived each time it is read and never
-stored. A `ws_client` is live while its socket is open, an `http_client` while its host answers a HEAD, a loop client
-always, an `mcp_client` by its health check, an `mcp_server` while its own dispatch answers a ping, and a server while
-its socket is bound. `*~/network/status` reports each dialed peer by its client's `status` — `up` or `down` — and both a
-peer reference
-with no client and a roster address never dialed as `known`. A peer carries no transport of its own: it is talked to
-with its
-client's `inst`. A read never dials: construction connects (`http_client::[host=><http://h:p>]`), destruction hangs
-up, and an address no client was constructed for falls through to memory.
+Every client and server answers `status`, a `bool` derived on each read: a `ws_client` while its socket is open, an
+`http_client` while its host answers `HEAD`, a loop client always, an `mcp_client` by its health check, an `mcp_server`
+while its dispatch answers a ping, a server while its socket is bound. `*~/network/status` reports a dialed peer `up` or
+`down`, and a peer without a client or a roster address never dialed `known`. A read never dials.
 
-### supervision keeps the index true
+### supervision
 
 ```mtron
 mtron> */m/mach/network_supervisor?docq
@@ -583,107 +502,61 @@ mtron> */m/mach/network_supervisor?docq
           desc=>'the per-level reconciler that keep...',
           example=>['network_supervisor::[=>] [-- start...']]
 ```
-Between the index that granted a peer and the drop that retracts it, the network watches every peer whose client holds
-a live connection — a *link*, `ws_client` today — and keeps the listing honest. Connection on creation, destruction on
-deletion, and only the owner deletes:
+The network supervises each peer whose client holds a live connection (a link: `ws_client`):
 
-| what happened                                                              | what the network does                                                                                                  |
-|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| the far side went away — restart, shutdown, crash, refusal                 | a **failure**: the peer stays listed, offline, and is redialed *in place* on a capped backoff (0.5 s doubling to 10 s) |
-| a request needs a peer that is offline                                     | the request redials **on demand** (within its 5 s open wait), so the first request after a restart heals the link      |
-| the owner hung up — the client closed or deleted, `drop`, the frame popped | the one **explicit shutdown**: the peer leaves the map at once and is never redialed                                   |
+| event                                                        | response                                                                                         |
+|--------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| the far side goes away                                       | the peer stays listed, offline, and is redialed in place, backoff $0.5\,\mathrm{s} \cdot 2^k \le 10\,\mathrm{s}$ |
+| a request needs an offline peer                              | the request redials on demand within its $5\,\mathrm{s}$ open wait                               |
+| the owner hangs up (`drop`, the client deleted, a `pop`)     | the peer leaves the map and is not redialed                                                      |
 
-A dial made before its far side is up is a peer too — offline until the far side answers. Deleting the address that
-holds a client is the hang-up, by close-before-clear:
+A dial made before the far side is up is an offline peer. Deleting the address that holds a client is the hang-up:
 
 ```mtron
 /usr/peer/local -> ws_client::[pattern=><ws://localhost:8555/mtron>]   [-- dial, index, supervise --]
-/usr/peer/local -> noobj                                               [-- hang up: the peer leaves the map --]
+/usr/peer/local -> noobj                                               [-- hang up --]
 ```
 
-Redialing in place is the point: the client *is* the connection's identity, so the handle stored at
-`/usr/peer/local` stays the live connection across outages, and deleting it hangs up what is actually connected. While
-a peer is offline, `*~/network/status` reports it `down` without a round trip, a round trip in flight when its link
-dropped is answered at once with a fail rather than waiting out its deadline, and `law_shard` plans only over the peers
-that answer — an outage shrinks the fan-out instead of poisoning the fold.
+While a peer is offline, `*~/network/status` reports it `down` without a round trip, a round trip in flight fails at
+once, and `law_shard` plans over the peers that answer.
 
-### two laws across the frame stack
+### prefix
 
-`push` mints each child its own network level, the same parade as its memory and its instset:
-
-1. **knowledge is shared** — the roster is one listing at the root address (memory's base frame, machine-global): a
-   declaration made standing anywhere is every frame's fact;
-2. **reach and presence are not** — peers are neither inherited (not even shadowed) nor shared with children: a
-   connection belongs to exactly the machine that dialed it, a pop retracts precisely its dials and its listeners —
-   sockets hung up, supervision ended — and a sibling never sees them. A name (denotation) is the exception: it
-   inherits by shadowing, and a pop gives the shadowed meaning back.
-
-### prefix — the name a peer is called by
-
-This component answers four questions: `roster` is what the system *knows*, `peer` is what this machine has *dialed*,
-`listener` is what it *answers on*, and `prefix` is what a peer is *called* by.
+`roster` is what the system knows, `peer` what this level dialed, `listener` what it serves on, and `prefix` what a peer
+is called.
 
 ```mtron
-/network/prefix -> [//ginger => <ws://ginger.local:8555>];  [-- bind: the name, spelled as it is called --]
-</network/prefix/ginger> -> <ws://ginger.local:8555>;       [-- the same row, addressed by its label --]
+/network/prefix -> [//ginger => <ws://ginger.local:8555>];  [-- bind, spelled as called --]
+</network/prefix/ginger> -> <ws://ginger.local:8555>;       [-- the same row, by its label --]
 //ginger/mtron                                              [-- = ws://ginger.local:8555/mtron --]
 /network/prefix -> noobj                                    [-- unbind every name at this level --]
 ```
 
-**A name is spelled `//name` and STORED `name`.** The door reads and writes the spelling a peer is called by, so what
-`*</network/prefix>` answers may be written back; the table itself keeps the **label**
-(`ginger => ws://ginger.local:8555`), because that is the key resolution asks for. The door accepts either spelling of
-one row and refuses a key that is not a single, dot-free label rather than storing it under a spelling no read reaches.
-An entry is addressed by its label — `</network/prefix/ginger>` — since a `//` cannot be a path segment.
-
-**The spelling is the addressed slot**: `//name/a` — a host with **no port and no scheme**. An explicit port is taken
-literally (`//ginger:8555/a` always means that host and port), because *explicit always beats named*; a real scheme is
-never rewritten (`loop://self` already says which transport it means); and a dotted host is a **hostname**, never a
-name a binding may shadow. Resolution strips the marker and queries the label, so the whole tail rides to the far
-side: `//ginger/a/b/c` denotes `ws://ginger.local:8555/a/b/c`.
-
-**The dial is not the declaration.** A connection is reach — per frame, retractable, one member per surface — while a
-name is denotation: it accumulates by shadowing, so a `pop` gives a shadowed meaning back. A name is bound by a write
-and a peer is dialed by a client, one act each:
+A name is spelled `//name` and stored `name`: the door reads and writes the spelling, and the table keeps the label,
+which is the key resolution queries. A key that is not a single dot-free label is refused. A row is addressed by its
+label (`</network/prefix/ginger>`), since `//` is not a path segment. The spelling is the slot `//name/…`, with no port
+and no scheme: an explicit port is literal, a scheme is never rewritten, and a dotted host is a hostname. The tail is
+kept, `//ginger/a/b/c` ↦ `ws://ginger.local:8555/a/b/c`, so `move(<//ginger/a>)` ships to the resolved origin. Binding a
+name and dialing a peer are separate acts:
 
 ```mtron
 </network/prefix/ginger> -> <ws://ginger.local:8555>;
 ws_client::[pattern=><ws://ginger.local:8555/mtron>];
 ```
 
-**Alignment happens once, at the gatekeeper**: the instruction set answers **scheme** prefixes (`math:cos` →
-`/m/math/inst/cos`), the network answers **authority** prefixes (`//ginger/a` → the origin above), and memory's
-redirect table answers a short name (consulted by the ISA resolver). The rule is one — nearest declaration wins — so a
-component's names are its own slot, not a special case in the gatekeeper. The same door is what the compiler's
-move-extractor uses, which is why
-`move(<//ginger/a>)` ships the tail to the *resolved* origin rather than to a name the far side has never heard of.
-
-The frame-stack laws and the wire are pinned by scripted runs over live sockets: wire equalities, value shapes,
-retraction, roster and frame laws, and authority aliasing — as are the loop and ws equalities, the supervision rows (a
-restart redialed, a dial before the far side is up, a deleted handle, a pop's hang-up), the two doors (a client and a
-listener entry indexed by the same verb; a key, a surface, a bare origin and a socket retracted by name), and the
-addressing rows (a member at its dial's path, deleted there, replaced by a redial, two surfaces side by side, a frame's
-members at its own `~`).
-
-The Java-level counterpart — the classes, the package layout, and the load-bearing invariants — lives in
-[machine architecture (Java)](../metatron/references/machine-architecture-java.md).
-
 ## frames — `push`, `move`, `pop`
 
-The machine nest is a tree of **frames**, and three instructions choose where code runs. They speak one address
-dialect, the `..` motif — `~` is the frame in which the code stands, `a` (or `~/a`) its child, `..` its parent,
-`../b` the sibling `b`, and `../../..` walks as far up as asked — and they differ only in what they do with the
-address:
+Three instructions choose where code runs. They share one address dialect — `~` the current frame, `a` (or `~/a`) its
+child, `..` its parent, `../b` a sibling — and differ in what they do with the address:
 
-| instruction | what it does with the address                                                                                                                                                                                        |
-|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `push(t)`   | **mints** the machine at `t` and makes it current. Only the leaf is new: $\mathrm{push}(t) = \mathrm{move}(\mathrm{parent}(t)) \cdot \mathrm{push}(\mathrm{name}(t))$, so a sibling is minted from the shared parent |
-| `move(t)`   | **walks** to the machine at `t` and closes nothing; `move()` is `move(<..>)`                                                                                                                                         |
-| `pop()`     | **discards** the current machine and lands on its `..` — a machine is discarded by the one that holds it                                                                                                             |
+| instruction | effect                                                                                                                                                         |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `push(t)`   | mints the machine at `t` and makes it current; only the leaf is new: $\mathrm{push}(t) = \mathrm{move}(\mathrm{parent}(t)) \cdot \mathrm{push}(\mathrm{name}(t))$ |
+| `move(t)`   | walks to the machine at `t` and closes nothing; `move()` is `move(<..>)`                                                                                       |
+| `pop()`     | discards the current machine — its components and its address — and lands on `..`                                                                             |
 
-A frame is an address, so the tree is walked like any other part of the metatron graph. A `*`-less `>>` walks the **uri
-graph** — a frame's child frames and its component slots, side by side — while `*…>>` walks the **obj graph**:
-the two graphs are linked by `->` and crossed by `*`.
+A frame is an address. A `>>` without `*` walks the uri graph (what is written under an address), and `*…>>` walks the
+obj graph.
 
 ```mtron
 mtron> push(xyz)
@@ -697,44 +570,26 @@ mtron> pop()
 mtron> *~.vid()
 ==></.>
 ```
-Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set, network and processor —
-so it is a clean scope: what it writes, imports and dials, and the fails its evaluations file, are its own, and a pop
-retracts exactly that. Reach in particular starts
-empty: a pushed frame holds **no peers** until it dials one, which makes a frame the natural scope of a mini-cluster.
+A pushed frame is its own scope (*components*): what it writes, imports and dials, and the fails its evaluations file,
+are its own, and a `pop` retracts them, the frame's address included. A frame holds no peers until it dials one. A frame lives in this process:
+`push(<ws://localhost:8555/worker>)` is refused, and code reaches another process by being shipped there.
 
-**The authority boundary.** A frame lives in this process. `push(<ws://localhost:8555/worker>)` names another process,
-and is refused: code reaches a machine in another process by being *shipped* there (see *distribution*), never through
-a frame here that stands in it. Spawning that process is a mechanism still waiting for its instruction.
+**Not yet**: the three instructions answer the whole machine, which over a wire is a large reply rather than a
+reference.
 
-**Not yet**: `pop` retracts the frame but not its registration — the machine is gone, yet its structure stays written
-in the root's memory, so the tree still lists it:
+## distribution
 
-```mtron
-mtron> </.>.>>
-```
-The same root cause makes a frame re-entered by address (`move(<x>)`, or a later evaluation) impossible to pop: the
-registered structure carries no link to its parent, and `pop` answers it unchanged. And all three instructions answer
-the whole machine — over a wire that is a large reply rather than a reference.
+Distribution ships code over a client (`ws`, `http`, `mcp`) and returns values. `law_shard`
+([the category graph](cat-instset-mtron.md)) emits $\mathrm{branch}(p_i \Rightarrow \mathrm{start}(\mathit{part}_i)
+\cdot \mathit{program}, \ldots) \cdot \mathit{combiner}$; each lane runs on its own virtual thread, so the latency is
+$\max_i \mathrm{RTT}_i$ rather than $\sum_i \mathrm{RTT}_i$. The layouts are catalogued in
+[distributed computing](distributed-computing-mtron.md).
 
-## distribution — shipping code to peers
+### workloads
 
-Distribution is code shipped over the wire — `ws`, `http`, `mcp` — with results coming back as values. There is one
-mechanism, the layout `law_shard` emits (see [the category graph](cat-instset-mtron.md)): pair each code with a route,
-and gather the replies.
-
-```mtron
-[w_1,w_2,w_3]==[eval(<s_1>),eval(<s_2>),eval(<s_3>)]>-   [-- zip: code i ships to peer i --]
-[w]-<[eval(<s_1>),eval(<s_2>),eval(<s_3>)]               [-- broadcast: one code to every peer --]
-```
-
-`eval(<peer>)` ships its lhs unevaluated; the peer evaluates it and replies with the value. A select (`==`) zips codes
-with routes, a split (`-<`) broadcasts one code — reach for the zip only when the payload differs per peer.
-
-### workloads — config and code in one closure
-
-A peer must receive *what to do* and *what to do it with* in one message: a binding made by one evaluation lives on
-that thread's frame stack, and is gone by the next message. So the payload is a **workload** — a rec of config and
-code — evaluated in a closure that binds it:
+A peer receives its configuration and its code in one message, since a binding made by one evaluation lives on that
+thread's stack and is gone by the next. A **workload** is a rec of configuration and code, evaluated in a closure that
+binds it:
 
 ```mtron
 mtron> [db=>{4,5,6},code=>|(*workload/db.plus(2))](workload=>_){ !*workload/code.apply() }
@@ -743,9 +598,8 @@ mtron> [db=>{4,5,6},code=>|(*workload/db.plus(2))](workload=>_){ !*workload/code
 ==>8
 ```
 `(workload=>_)` binds the rec on the evaluating frame's stack, and `|(…)` keeps the code inert until
-`!*workload/code.apply()` runs it inside that scope. A uri template in the code reads the workload when the read
-runs, so **one generic code serves every peer** — below, two workloads over one store of the dogs' walks, each pulling
-its own dog's partition, computing, and pushing the result back to the store:
+`!*workload/code.apply()` runs it in that scope. A uri template reads the workload when the read runs, so one code
+serves every peer:
 
 ```mtron
 mtron> /usr/walk/mama/1 -> [trail=>'ridge',km=>12]
@@ -764,9 +618,8 @@ mtron> */usr/walk/total/+
 mtron> */usr/walk/total/+.sum()
 ==>26
 ```
-**Construction is connection.** The config can carry a space. Constructing a space *is* connecting it, so a workload
-whose `db` is a `tblespace::T` rec binds the receiving peer's own connection to the same backend when it is evaluated
-there — as though the master's connection had crossed the wire:
+The configuration may carry a space. Constructing a space connects it, so a workload whose `db` is a `tblespace::T`
+connects the receiving peer to the same backend:
 
 ```mtron
 [db   =>tblespace::[pattern=></usr/data/#>,
@@ -777,36 +630,22 @@ there — as though the master's connection had crossed the wire:
  code =>|(*</usr/data/${*workload/xyz}/+/amount>.sum().to(</usr/data/result/${*workload/xyz}/total>))](workload=>_){ !*workload/code.apply() }
 ```
 
-A runtime template has one cost: the receiver compiles the code before the template is filled, so its compiler sees
-`${*workload/xyz}` where a table name should be, and a database push-down (`SUM` in SQL) cannot fire — the peer reads
-the rows and sums in mtron.
+The receiver compiles the code before the template is filled, so a database push-down (`SUM` in SQL) cannot fire on a
+templated address; the peer reads the rows and sums them in mtron.
 
-A multiserver fixture puts the pieces together: one MariaDB in a container, and three satellites forked from the same
-process.
+The multiserver fixture (one MariaDB, three satellites forked from one process) ships its workloads with a
+hand-written `start([w_1,w_2,w_3]).select([to(s_1),to(s_2),to(s_3)]).merge()`, a legal program though not the compiled
+form, which is a `branch`. The master creates every table before any satellite
+exists, a satellite imports `/m/db/tble` and runs no DDL, and the master reads the results from the backend; only
+acknowledgements travel home.
 
 <!-- figure source: assets/tikz/mach-workload.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
 <img src="../assets/mach-workload.png" alt="one master, three satellites, one shared MariaDB, drawn top to bottom. The master ships a workload to each satellite (solid arrows w1, w2, w3) as start([w1,w2,w3]).select([to(s1),to(s2),to(s3)]).merge(), and the acknowledgements come back up (dashed) into that merge, the latch. Each satellite is labelled with its binding — xyz=>'east', 'west', 'north' — and exchanges with the MariaDB below it (pull xyz/+, push result/xyz). A dotted arc from the master to MariaDB marks the master's own steps: 1. creates every table, 3. reads result/+. The legend: solid — a workload [db, xyz, code] ships, and evaluating it constructs the satellite's own space (construction is connection); dashed — the acknowledgements, merge() is the latch (no fail, counted through coefficients); dotted — the master's own writes and reads" width="100%" style="margin:0.3em 0 0 0"/>
 
-1. **The master sets up everything.** It starts the backend, mounts its own space, and creates every table — the
-   partitions and one result row per partition — before any satellite exists. A satellite boots with nothing but
-   `import(/m/db/tble)`, so it never runs DDL, and its first look at the backend already sees every table it will read.
-2. **One workload per satellite**, shipped in the `law_shard` layout: the backend's space, the satellite's partition,
-   and the row's code. The latch is the gather — no fail in it, three replies counted through coefficients — and
-   provenance is checked rather than assumed: a satellite holds a space only after evaluating its workload.
-3. **The master reads the results back** from the backend. Nothing but an acknowledgement ever travelled home.
+### the gather
 
-Every row of the suite is a computation over one partition — counts, sums, filters, a failure caught on the
-satellites and one left uncaught — so a new pattern is one row, and a new backend one variant.
-
-### the latch — gather, refuse fails, count through coefficients
-
-The master's `merge()` (sugar'd `>-`) is the latch: it completes when every peer has replied. Two properties of the
-gather decide what
-"every peer finished" means.
-
-**Equal replies bulk.** A stream is a bag, so three peers that each answer `34` arrive as *one* obj with coefficient
-
-3. Count through coefficients — mtron's `count()` — never by elements:
+The gather completes when every lane, or every route of a `merge()`, has replied. Equal replies bulk: three replies of `34` arrive as one obj
+with coefficient 3, $34\{3\}$, so replies are counted through coefficients:
 
 ```mtron
 mtron> {34,34,34}
@@ -814,67 +653,50 @@ mtron> {34,34,34}
 mtron> {34,34,34}.count()
 ==>3
 ```
-**A fail in the gather is a failed run, not a finished peer** — and `count()` counts a fail like any other obj, so a
-latch that only counts is fooled. Check the gather for fails before counting. A peer that **catches** its own failure
-answers the recovery instead, and the master never sees the fail:
+A fail in the gather is a failed run, and `count()` counts a fail like any obj, so the gather is checked for fails
+before it is counted. A peer that catches its own failure answers the recovery:
 
 ```mtron
 mtron> 1.plus(a).catch(34)
 ==>34
 ```
-**Not yet**:
+**Not yet**: an uncaught failure does not arrive as itself; the master waits out its $2\,\mathrm{s}$ future and holds a
+timeout fail (`future get timed out after 2000 ms`) in that peer's place.
 
-* an uncaught failure does not arrive as itself — the master waits out its 2 s future and holds a timeout fail
-  (`future get timed out after 2000 ms`) in that peer's place, and the cause is lost;
-* the replies are awaited one at a time: each `to(<peer>)` resolves before the next route is sent, so latency is the
-  sum of the round trips. The direction is a virtual thread per route,
-  `[virtual::[code=>to(ws://s1)],virtual::[code=>to(ws://s2)]]`.
-
-**Where am I.** `*~/network/host` answers the host the current machine runs on — for a result that says where it was
-computed:
+`*~/network/host` answers the host the current machine runs on; peers forked on one host are told apart by their
+service authority.
 
 ```mtron
-mtron> *~/network/host       [-- localhost --]
+mtron> *~/network/host
 ==>booger
 ```
-Peers forked on one host share it; telling them apart takes their service authority.
+## appendix — registered types
 
-## appendix — the registered types
+| under                | types (`::T`)                                                                                                                                                                                                                     |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer` |
+| `/m/mach`            | `machine`, `component`, `thread`, `thread/core`, `thread/virtual`, `thread_executor`, `peer`, `listener`, `id_client`, `network_supervisor`, `monad`, `plan` (a rewrite rule as a value), `factory`                                |
+| `/m/uri`             | `origin`, `path_encoding`, `authority`                                                                                                                                                                                              |
 
-Everything above is a subtype of `component::T` at `/m/mach/component` — except `machine::T` itself and the
-non-component families, which hang directly off `/m/mach`:
+`instset::T` is `/m/instset`, declared by the `m` instruction set.
 
-| family   | types (`::T`)                                                                                                                                                                                                                                                                                   |
-|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `plan_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`           |
-| process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                                                               |
-| state    | `memory`, `network`, `instset` — the three prefixed components (*components*)                                                                                                                                                                                                                   |
-| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                                                                    |
-| the rest | `thread` / `virtual` / `core`, `peer`, `listener`, `id_client`, `cluster`, `monad`, `plan` (a rewrite rule as a value — `plan_rewriter::T`'s rule format), `component` (`/m/mach/component`, the root of every row above), and the URI refinements `origin` / `path_encoding` this set declares |
+## appendix — another language
 
-## appendix — writing another language
+A language is a parser that emits `code::T`:
 
-The whole obligation is a parser that emits `code::T`:
+1. register a `parser::T` subtype with a constructor;
+2. emit mtron code — a value, an instruction or a `code::T`, each of which lifts into a program;
+3. lift a non-`str` obj unchanged, so the compiler accepts what is already parsed;
+4. wire it, `compiler::[parser=>my_lang::[=>]]`, or place it in a machine's `compiler` slot.
 
-1. Register a `parser::T` subtype in the new instruction set — a `rec::T` under that ISA with a constructor that
-   mints the parser. The seam asks for nothing else.
-2. Read the surface syntax and build mtron code — a value, an inst, or a `code::T`; any of the three lifts into a
-   program.
-3. Leave a non-`str` obj alone (the identity case) so the same compiler still accepts what is already parsed.
-4. Wire it: `compiler::[parser=>my_lang::T]`, or put it in a machine's `compiler` slot.
-5. Everything else is inherited: rewriting, resolution against the real instruction sets, the type system, the
-   processor, and distribution.
-
-The smallest possible instance: a two-word syntax (`add 6 to 1`) whose parser emits `6.plus(1)`, wired into a compiler
-and run on mtron's own `plus`. Nothing is added but the parser.
+Rewriting, resolution, the type system, the processor and distribution are inherited. The smallest instance is a
+two-word syntax (`add 6 to 1`) whose parser emits `6.plus(1)`.
 
 ## see also
 
-* [mtron language reference](m-instset-mtron.md) — the surface the default parser reads: sugar, `>>`
-  rshift, `.as(type::T)`, coefficients, `.explain()`.
-* [mtron type system](type-system-mtron.md) — vid/tid, predicates (isa vs non-isa), nominal vs structural, refinement.
-* [the category graph](cat-instset-mtron.md) — the declared rewrites the `rewriter` stage consumes, and the
-  `Law.Helper` reads that bridge an op address to the law it declares (`?decq`).
-* [ui instruction set](ui-instset-mtron.md) — `/m/sys/ui`, the widget family carried by the same ISA.
-* figure sources — `assets/tikz/mach-*.tex` (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
-  `assets/`).
+* [mtron language reference](m-instset-mtron.md) — the surface the default parser reads.
+* [mtron type system](type-system-mtron.md) — vid and tid, predicates, nominal and structural types.
+* [the category graph](cat-instset-mtron.md) — the declared rewrites the rewrite stage consumes, and `?decq`.
+* [distributed computing](distributed-computing-mtron.md) — the shard layouts.
+* [machine architecture (Java)](../../metatron/references/machine-architecture-java.md) — classes and invariants.
+* figure sources — `assets/tikz/mach-*.tex` (TikZ; the PNGs sit beside them in `assets/`).
