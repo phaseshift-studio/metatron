@@ -209,6 +209,10 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>> {
         return this.jvm().get0().isNoObj() && this.jvm().get1().isNoObj();
     }
 
+    default boolean isNoObj() {
+        return this.isZero() || Poly.super.isNoObj();
+    }
+
     /**
      * Relation multiplication: composition of relations.
      * (a=>b).mult(b=>c) = (a=>c) when the range of first matches domain of second.
