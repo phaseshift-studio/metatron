@@ -250,7 +250,9 @@ public final class mqttServer extends Listener {
         try {
             final Map<Obj, Obj> jvm = new LinkedHashMap<>();
             jvm.put(uri(ORIGIN), uri(origin));
-            jvm.put(uri(ROUTE), routes);
+            // a route table is ABSENT rather than empty while the machine serves nothing through it (listener::T)
+            if (!routes.isEmpty())
+                jvm.put(uri(ROUTE), routes);
             server = new mqttServer(jvm, level);
         } catch (final IOException e) {
             throw MTronException.of(e, "unable to bind mqtt server %s", origin);

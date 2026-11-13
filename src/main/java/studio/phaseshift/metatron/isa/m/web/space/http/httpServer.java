@@ -198,8 +198,12 @@ public final class httpServer extends Listener {
         }
         // the certificate is loaded before anything binds, so a keystore that cannot serve never holds the port
         final SSLContext tls = HTTPS.equals(origin.scheme()) ? tls(config) : null;
-        final Map<Obj, Obj> jvm = new LinkedHashMap<>(config.jvm());
-        jvm.put(uri(ROUTE), routes);
+        // the socket's origin and routes, never the config: the keystore and its pass are read at the bind and kept
+        // by no rec, and a route table is ABSENT rather than empty while the machine serves nothing (listener::T)
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        jvm.put(uri(ORIGIN), uri(origin));
+        if (!routes.isEmpty())
+            jvm.put(uri(ROUTE), routes);
         final httpServer server = new httpServer(jvm, level, tls);
         try {
             Network.Helper.listen(level, server, routes);
