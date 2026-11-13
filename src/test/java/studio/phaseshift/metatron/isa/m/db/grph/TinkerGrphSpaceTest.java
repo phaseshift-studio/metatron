@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 
 import java.util.List;
 
@@ -42,6 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.db.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -335,6 +338,22 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
                 "the steps before the span are one call, and the steps after it another");
         assertEquals(3, middle.insts().size(), () -> "the span stays between the calls: " + middle);
         assertEquals(cInt.of("0,1"), middle.insts().get(1).tid().b(), "and keeps its span for the processor to run");
+    }
+
+    /**
+     * THE DOM CHECK COUNTS NOTHING (Marko, 2026-11-13). The live server boots with the typer's dom check off, and there
+     * >>name dropped the walk's {2}lop to one 'lop' (marko, lop, vadas, josh, ripple); the processor now carries the
+     * count with the check on or off.
+     */
+    @Test
+    public void testTheDomCheckOffKeepsTheWalksCount() {
+        try {
+            Machine.current().compiler().typer().at("check/inst_dom", BOOL_FALSE, Poly.MUTABLE);
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/1.{*}out()>>name", "{'marko','vadas','josh','lop','ripple','lop'}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/3.branch(id(),id())>>name", "{2}'lop'");
+        } finally {
+            Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
+        }
     }
 
     /**

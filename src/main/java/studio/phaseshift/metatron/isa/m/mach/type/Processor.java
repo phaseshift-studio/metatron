@@ -204,7 +204,8 @@ public interface Processor extends Component {
                 return noobj();
             Obj clhs = lhs;
             boolean modulateC = false;
-            if (Typer.Helper.instDom() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
+            final boolean domCheck = Typer.Helper.instDom();
+            if (domCheck && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
                     && !Typer.Helper.domRngMatch(clhs, cinst.dom()) && clhs.unique()) {
                 clhs = clhs.c(cInt::one);
                 // bindQ is applied by the compiler (ScoringResolver.resolveInst); the resolved
@@ -215,6 +216,15 @@ public interface Processor extends Component {
                     return unresolved(lhs, original);
                 if (!Typer.Helper.domRngMatch(clhs, cinst.dom()))
                     return transientFail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
+            } else if (!domCheck && !clhs.c().isOne() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
+                    && !clhs.c().within(cinst.dom().c()) && cInt.ONE().within(cinst.dom().c()) && clhs.unique()) {
+                // THE COUNT IS THE PROCESSOR'S, CHECK OR NO CHECK (Marko, 2026-11-13): the dom check decides whether a lhs
+                // the dom does not take fails, never what an answer counts. With it off, a lhs of copies whose count the
+                // dom does not take (a dom of one, never {0}) still runs as one copy and its count goes back on the
+                // answer below, so an inst's body never sees a count it was not built for: >> answers the field as
+                // stored, and {2}[name=>5]>>name was 5, where the check on makes it {2}5
+                clhs = clhs.c(cInt::one);
+                modulateC = true;
             }
             final Obj rhs = applyFunction(clhs, cinst, original, isMonadicInst);
             final cInt cc = cinst.c();
