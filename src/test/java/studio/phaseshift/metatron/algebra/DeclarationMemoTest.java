@@ -41,7 +41,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECS_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LAW_IDEMPOTENT;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MOD_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -68,7 +67,11 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
         final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID)).addQ(DECQ);
         final Obj original = Machine.read(address);
         final Code chain = ObjmtronSerializer.parse("5.mod(3).mod(3)").asCode();
-        assertEquals(chain, Law.Helper.lawRemoval(chain, LAW_IDEMPOTENT), "mod declares no idempotent law");
+        // the pool's own law_idempotent, as the machine registered it
+        final Inst idempotent = Machine.current().instset().rewrites().stream()
+                .filter(rewrite -> "law_idempotent".equals(rewrite.tid().name())).findFirst().orElseThrow();
+        // mod declares no idempotent law
+        checkEquality(LOG, chain.tryToInst(), idempotent.apply(chain).asCode().tryToInst(), true);
         final List<Inst> idempotents = Law.Helper.claimants(Law.idempotent);
         final List<Inst> involutions = Law.Helper.claimants(Law.involution);
         final Map<Obj, Obj> claim = mutableMap(original.asRec().jvm());
@@ -76,8 +79,8 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
         try {
             Machine.write(address, noobj());
             Machine.write(address, rec(claim, DECS_TID, null));
-            assertEquals(ObjmtronSerializer.parse("5.mod(3)").asCode(), Law.Helper.lawRemoval(chain, LAW_IDEMPOTENT),
-                    "the declared law licenses its rule, got the claimants " + Law.Helper.claimants(Law.idempotent));
+            // the declared law licenses its rule
+            checkEquality(LOG, ObjmtronSerializer.parse("5.mod(3)").asCode().tryToInst(), idempotent.apply(chain).asCode().tryToInst(), true);
             final List<Inst> declared = Law.Helper.claimants(Law.idempotent);
             assertEquals(idempotents.size() + 1, declared.size(), "mod joins the law's claimants alone, got " + declared);
             assertTrue(declared.containsAll(idempotents), "every other claimant stays, got " + declared);
@@ -86,7 +89,8 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
             Machine.write(address, noobj());
             Machine.write(address, original);
         }
-        assertEquals(chain, Law.Helper.lawRemoval(chain, LAW_IDEMPOTENT), "the restored claim takes the rule away");
+        // the restored claim takes the rule away
+        checkEquality(LOG, chain.tryToInst(), idempotent.apply(chain).asCode().tryToInst(), true);
         assertEquals(idempotents, Law.Helper.claimants(Law.idempotent), "the restored claimants are the ones they were, in their order");
     }
 

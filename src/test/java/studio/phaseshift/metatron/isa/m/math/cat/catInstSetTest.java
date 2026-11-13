@@ -817,7 +817,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             // cancellation, derivation contraction and the code ring's normal forms): the theories and laws are /m's
             Machine.current().instset().members().stream()
                     .flatMap(isa -> isa.rewrites().stream()
-                            .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "form_map_unwrap", "law_involution",
+                            .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "map_nest", "form_map_unwrap", "law_involution",
                                     "law_idempotent", "law_monoidic", "law_poset", "law_absorbing", "else_after_count", "range_skip_take",
                                     "inverse_cancellation", "derivation_contraction", "branch_factor", "branch_collapse",
                                     "branch_inline").contains(r.tid().basePath().name())))
@@ -977,7 +977,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * /m'S RULES ARE ITS REWRITES, ONE PER RULE (Marko, 2026-11-10) — each rewrite's declared argument is its rules, a value
      * rather than a type, so it resolves with its rules bound, and every rule is a rewrite of the machine's pool. Applied to
      * a chain, a law's rewrite folds where the operation claims the law at the chain's carrier. Applied once here, in the
-     * pool's order: the map unwrap runs first, so an unwrapped pair meets the involution rewrite in the same pass. A pair
+     * pool's order: map_nest and then the map unwrap run first, so an unwrapped pair meets the involution rewrite in the
+     * same pass. A pair
      * that is not adjacent, or not one law's claimant, stays. A PLAIN rule ({@code else_after_count}) applies as it stands:
      * the else after a total count drops whatever its fallback, and only as the run the rule states, so an else before
      * the count, or one apart from it, stays. The absorbing rule's run is a SPANNED element, so it is as long as the gate
@@ -994,9 +995,11 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.count().else(neg())    % start({1,2,3}).count()",
             "{1,2,3}.else(0).count()        % start({1,2,3}).else(0).count()",
             "{1,2,3}.count().plus(1).else(0) % start({1,2,3}).count().plus(1).else(0)",
-            // the map rows come first, so an unwrapped pair meets the involution row in the same pass
+            // the map rewrites come first, so an unwrapped pair meets the involution rewrite in the same pass
             "5.map(neg)                     % start(5).neg()",
             "5.neg().map(neg)               % start(5)",
+            // map_nest runs before form_map_unwrap, so a nested mapping unwraps whole in one pass
+            "5.map(map(neg))                % start(5).neg()",
             "{1,2,3}.map(sum())             % start({1,2,3}).map(sum())",
             // what the hole captured is gated, not whatever else the chain names
             "{1,2,3}.neg().map(sum())       % start({1,2,3}).neg().map(sum())",
@@ -1016,7 +1019,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.plus{2}(3).plus(1).zero()    % start(5).plus{2}(3).zero()",
     }, delimiter = '%')
     void testEachRuleIsARewrite(final String code, final String expected) {
-        final Map<String, Rec> rules = Map.of("form_map_unwrap", FORM_MAP_UNWRAP, "law_involution", LAW_INVOLUTION,
+        final Map<String, Rec> rules = Map.of("map_nest", MAP_NEST, "form_map_unwrap", FORM_MAP_UNWRAP, "law_involution", LAW_INVOLUTION,
                 "law_idempotent", LAW_IDEMPOTENT, "law_monoidic", LAW_MONOIDIC, "law_poset", LAW_POSET, "law_absorbing", LAW_ABSORBING,
                 "else_after_count", ELSE_AFTER_COUNT, "range_skip_take", RANGE_SKIP_TAKE);
         final Set<String> applied = new HashSet<>();
@@ -1041,13 +1044,14 @@ public class catInstSetTest extends AbstractInstSetTest {
      * {@code {+}#} is a spanned element, a run of one or more instructions of any name and arguments. The theories
      * add their rules as each instance binds them ({@link Law.Helper#rules}): monoid_theory's {@code op(id) ⇝ ε}
      * (code's {@code id() ⇝ ε} among them, since composition is adjacency) and group_theory's
-     * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. The {@code mapper} row's {@code map(#::T@f) ⇝ #::T@f}
-     * and the plain {@code map_nest} row are their own rules: ungated, the mapper's hole takes any function, a stream's fold
-     * among them, and only the row's form gate keeps {@code map(sum())} ({@link #testMapUnwrap}). Each row runs one rule's rows over a bare
-     * chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds
-     * here under bool's idempotent plus and {@code mult(2).div(2)} under real's mult group, and only the carrier's law
-     * stops them in a rewrite ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the row % the chain %
-     * the chain the row leaves.
+     * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. {@code form_map_unwrap}'s {@code map(#::T@f) ⇝ #::T@f}
+     * (the {@code mapper} rows) and {@code map_nest}'s plain rule are their own rules: ungated, the mapper's hole takes any
+     * function, a stream's fold among them, and only form_map_unwrap's form gate keeps {@code map(sum())}
+     * ({@link #testMapUnwrap}). Each row runs one rewrite's rules over a bare chain with {@link Call.Helper#update}, in Java
+     * and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds here under bool's idempotent plus and
+     * {@code mult(2).div(2)} under real's mult group, and only the carrier's law stops them in a rewrite
+     * ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the law or rule % the chain % the chain its
+     * rules leave.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -1105,14 +1109,14 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     void testALawsEquationsAreData(final String table, final String chain, final String expected) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
-        // the row, wherever one of /m's rule rewrites carries it
-        final Obj row = Stream.of(FORM_MAP_UNWRAP, LAW_INVOLUTION, LAW_IDEMPOTENT, LAW_MONOIDIC, LAW_POSET, LAW_ABSORBING, ELSE_AFTER_COUNT, RANGE_SKIP_TAKE)
-                .<Obj>map(rewrite -> rewrite.atDirect(uri(table))).filter(Obj::isRec).findFirst().orElse(noobj());
+        // the rules of the /m rewrite that states them, its declared argument: a law's are bound to its claimants
+        final Map<String, Rec> stated = Map.of("involution", LAW_INVOLUTION, "idempotent", LAW_IDEMPOTENT, "monoidic", LAW_MONOIDIC,
+                "poset", LAW_POSET, "absorbing", LAW_ABSORBING, "mapper", FORM_MAP_UNWRAP, "map_nest", MAP_NEST, "range_skip_take", RANGE_SKIP_TAKE);
         final List<Rec> rules = switch (table) {
             case "units" -> Law.Helper.rules(MONOID_THEORY_TID);
             case "inverses" -> Law.Helper.rules(GROUP_THEORY_TID);
-            case "mapper", "map_nest", "range_skip_take" -> List.of(row.asRec());
-            default -> row.isRec() ? Law.Helper.claimed(row.asRec(), Law.valueOf(table)) : List.<Rec>of();
+            case "mapper", "map_nest", "range_skip_take" -> List.of(stated.get(table));
+            default -> stated.containsKey(table) ? Law.Helper.claimed(stated.get(table), Law.valueOf(table)) : List.<Rec>of();
         };
         for (final Rec rule : rules)
             out = Call.Helper.update(out, rule);
@@ -1137,6 +1141,31 @@ public class catInstSetTest extends AbstractInstSetTest {
     void testAnEquationsTermsAreUnscaled(final String code, final String expected, final String expectedResult) {
         checkEquality(LOG, ObjmtronSerializer.parse(expected), catRewrite(ObjmtronSerializer.parse(code)).tryToInst(), true);
         checkCodeParseApply(LOG, code, expectedResult);
+    }
+
+    /**
+     * EACH EQUATION RUNS ON ITS OWN (2026-11-13) — rules may hold several equations, and {@link Law.Helper#rewrite} applies
+     * each over the code the last one left, so its scan, its unscaled check and its gate all read the code that equation
+     * matches. Handed to update() whole, the rules were scanned for their first equation alone, so a chain without a range
+     * kept its dead else, and an equation that lengthened the chain shifted every later match off the code the check
+     * read: {@code range(2,5)} became {@code skip(2).take(3)}, and the check for the {@code count().else(0)} after it read
+     * {@code else(0).plus{2}(1)}, refusing the scaled plus, or read past the end. The rules are range_skip_take's and
+     * else_after_count's in one rec. Each row: the chain % the chain the two equations leave.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "range(2,5).count().else(0)              % skip(2).take(3).count()",
+            "range(2,5).count().else(0).plus{2}(1)   % skip(2).take(3).count().plus{2}(1)",
+            // the unscaled check reads the run its own equation matched: a scaled else stays
+            "range(2,5).count().else{2}(0)           % skip(2).take(3).count().else{2}(0)",
+            // the scan is each equation's own: a chain that holds no range still drops its dead else
+            "count().else(0)                         % count()",
+            "count().else(0).range(2,5)              % count().skip(2).take(3)",
+    }, delimiter = '%')
+    void testEachEquationRunsOnItsOwn(final String chain, final String expected) {
+        final Rec rules = rec(Stream.of(RANGE_SKIP_TAKE, ELSE_AFTER_COUNT).flatMap(rule -> rule.<Rel>elements()));
+        final Code rewritten = Law.Helper.rewrite(code(ObjmtronSerializer.<Call>parse(chain).insts()), List.of(rules), (scanned, start, length) -> true);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), rewritten.tryToInst(), true);
     }
 
     /**

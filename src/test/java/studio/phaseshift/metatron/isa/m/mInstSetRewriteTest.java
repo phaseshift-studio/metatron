@@ -129,8 +129,9 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
      * must not. The unit law compares the operand, and end is composition's zero, never its identity. A declared inverse
      * cancels either way round, but it is one-sided (int's div truncates) and a type's zero never cancels. A derivation
      * folds back only where its contract runs. Rules that no plan ever named are in the pool too. A rule leaves the
-     * instances of other rules as they stand, and law_shard leaves a fold where it stands on a lone machine or under
-     * {@code ?hop=0}. Each row: the rule % the chain % the chain the rule leaves.
+     * instances of other rules as they stand (map_nest and form_map_unwrap are two rules), each gate written beside its
+     * rule refuses what its law does not license at the carrier, and law_shard leaves a fold where it stands on a lone
+     * machine or under {@code ?hop=0}. Each row: the rule % the chain % the chain the rule leaves.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -176,6 +177,9 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "else_after_count        % {1,2,3}.count().else(0)             % start({1,2,3}).count()",
             "range_skip_take         % {1,2,3,4,5}.range(1,4)              % start({1,2,3,4,5}).skip(1).take(3)",
             "branch_factor           % 1.branch(plus(1).mult(2),plus(1).mult(3))  % start(1).plus(1).branch(mult(2),mult(3))",
+            // map_nest: a mapping of a mapping is the mapping, whatever it maps, a stream's fold among them
+            "map_nest                % 5.map(map(plus(2)))                 % start(5).map(plus(2))",
+            "map_nest                % {1,2,3}.map(map(sum()))             % start({1,2,3}).map(sum())",
             // a rule is no other rule: each leaves the others' instances as they stand
             "law_involution          % 5.plus(0)                           % start(5).plus(0)",
             "theory_unit_removal     % 5.neg().neg()                       % start(5).neg().neg()",
@@ -183,6 +187,19 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "derivation_contraction  % 5.plus(3).minus(3)                  % start(5).plus(3).minus(3)",
             "form_map_unwrap         % {1,2,3}.map(sum())                  % start({1,2,3}).map(sum())",
             "branch_collapse         % 1.branch(+2,+4)                     % start(1).branch(plus(2),plus(4))",
+            "map_nest                % 5.map(neg)                          % start(5).map(neg)",
+            // ... and map is no mapper (its {?} => {?} shape is standard), so a nested mapping is map_nest's alone
+            "form_map_unwrap         % 5.map(map(neg))                     % start(5).map(map(neg))",
+            // each gate holds where its law does, read at the carrier, and refuses everywhere else: bool's plus is
+            // idempotent and int's is not, str's plus is monoidic but no fold, a computed bound is not compared, a str
+            // declares no neg, and an effectful instruction stops an absorbed run
+            "law_idempotent          % true.plus(false).plus(false)        % start(true).plus(false)",
+            "law_idempotent          % 5.plus(3).plus(3)                   % start(5).plus(3).plus(3)",
+            "law_monoidic            % \"ab\".plus(\"c\").plus(\"c\")          % start(\"ab\").plus(\"c\").plus(\"c\")",
+            "law_poset               % {1,2,3,4,5}.is(gt(3)).is(gt(1))     % start({1,2,3,4,5}).is(gt(3))",
+            "law_poset               % {1,2,3,4,5}.is(gt(plus(1))).is(gt(3))  % start({1,2,3,4,5}).is(gt(plus(1))).is(gt(3))",
+            "law_involution          % \"ab\".neg().neg()                    % start(\"ab\").neg().neg()",
+            "law_absorbing           % 5.plus(1).side(plus(1)).plus(2).zero()  % start(5).plus(1).side(plus(1)).zero()",
             // law_shard: a lone machine does not fan out
             "law_shard               % {1,2,3,4}.plus(1).sum()             % start({1,2,3,4}).plus(1).sum()",
     }, delimiter = '%')

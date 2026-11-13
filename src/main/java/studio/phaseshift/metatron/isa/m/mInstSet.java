@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -27,6 +28,8 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
@@ -44,6 +47,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -420,69 +424,69 @@ public class mInstSet extends AbstractInstSet {
     /*
      * /m's REWRITES, ONE PER RULE (Marko, 2026-11-10) — a rewrite is a simple, semantically specific alteration, turned
      * on and off by adding it to or removing it from the machine's rewrite pool, so the pool is the table: each rule is
-     * its own rewrite, its body a Law.Helper method, and path::T draws one edge per rule. A row rewrite's declared
-     * ARGUMENT is its rules, a rec of ROWS: a value, not a type, so it resolves with its rules already bound and no type
-     * resolution takes place. Every one applies its rows with Law.Helper.lawRemoval, where a row's key picks its gate:
-     * - a LAW row states its rule in the name op, the instruction whose claim states the law, and the law's claimants
-     *   bind op (Law.Helper.claimed);
-     * - a FORM row states it over a named hole that ranges over the form its operation declares;
-     * - a PLAIN row (any other key) applies as it stands, and a ${...} template in its change computes an argument from
-     *   the names the run bound.
+     * its own rewrite, and path::T draws one edge per rule. A rule rewrite's declared ARGUMENT is its rules alone
+     * (Marko, 2026-11-13: no key): a value, not a type, so it resolves with its rules already bound and no type
+     * resolution takes place (InstSet.Helper.rewriter). Its BODY is where they hold, the gate it hands Law.Helper.rewrite
+     * with them, written beside the rule rather than picked by a key:
+     * - a LAW's rule is stated in the name op, the instruction whose claim states the law, and the law's claimants bind
+     *   op (Law.Helper.claimed); the gate reads the law at the chain's carrier;
+     * - a FORM's rule is stated over a named hole, and the gate asks that the operation of what the hole captured declares
+     *   the form;
+     * - a PLAIN rule applies as it stands, and a ${...} template in its change computes an argument from the names the run
+     *   bound.
      */
 
     /**
-     * {@code form_map_unwrap} — the stream lift unwraps, in two rows.
-     * <ul>
-     *   <li>{@code map_nest}, PLAIN: a map of a map is the map, whatever it maps. map hands each obj to its argument one at
-     *       a time, so the outer map adds nothing: {@code map(map(+2)) ⇝ map(+2)}, and the mapper row unwraps the rest. A
-     *       pattern's map states map's own endpoints, maybe in and maybe out ({@code #{?}}), so a RESOLVED map
-     *       ({@code map?/m/int{?}<=...}) tests it too: an endpoint a pattern leaves out reads as {@code #}, which an
-     *       {@code int{?}} is not.</li>
-     *   <li>{@code mapper}, a FORM row (Marko, 2026-11-09: mapper only): its hole ranges over the form, so {@code map(f)}
-     *       unwraps where the operation of f, an instruction or the op symbol a chain carries before resolution
-     *       ({@code map(neg)}), declares the mapper form. {@code map(neg) ⇝ neg()}, while {@code map(sum())} stays.</li>
-     * </ul>
-     * FOR ANY FUNCTION, not just mapper forms, it is the same rule under a PLAIN key, which no gate reads:
-     * {@code map_unwrap => [map(#::T@f) => #::T@f]}, or in Java
-     * {@code uri("map_unwrap"), rec(MCode.code(List.of(instB(MAP_INST_TID, lst(T(ALL, f("f"), null, null))))), T(ALL, f("f"), null, null))}.
-     * That is the Java fold the mapper row replaced, and it is unsound for a function that consumes the stream:
+     * {@code map_nest} — a PLAIN rule: a map of a map is the map, whatever it maps. map hands each obj to its argument one
+     * at a time, so the outer map adds nothing: {@code map(map(+2)) ⇝ map(+2)}, and {@code form_map_unwrap} unwraps the
+     * rest. A pattern's map states map's own endpoints, maybe in and maybe out ({@code #{?}}), so a RESOLVED map
+     * ({@code map?/m/int{?}<=...}) tests it too: an endpoint a pattern leaves out reads as {@code #}, which an
+     * {@code int{?}} is not. It is its own rule, not the mapper's: map's form is {@code standard}, its {@code {?} ⇒ {?}}
+     * shape no mapper's, since what it hands on is what its argument does ({@code map(is(gt(1)))} filters).
+     */
+    public static final Rec MAP_NEST = rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))))),
+            MCode.code(List.of(instB(MAP_INST_TID, lst(T(ALL, f("f"), null, null))))));
+
+    /**
+     * {@code form_map_unwrap} — a FORM rule (Marko, 2026-11-09: mapper only): a mapping of a mapper is the mapper. Its hole
+     * ranges over the form, so {@code map(f)} unwraps where the operation of f, an instruction or the op symbol a chain
+     * carries before resolution ({@code map(neg)}), declares the mapper form. {@code map(neg) ⇝ neg()}, while
+     * {@code map(sum())} stays.
+     * FOR ANY FUNCTION, not just mapper forms, it is the same rule applied as it stands, with no gate, or in Java
+     * {@code rec(MCode.code(List.of(instB(MAP_INST_TID, lst(T(ALL, f("f"), null, null))))), T(ALL, f("f"), null, null))}.
+     * That is the Java fold the mapper rule replaced, and it is unsound for a function that consumes the stream:
      * {@code {1,2,3}.map(sum())} sums each element alone, {@code {1,2,3}}, while {@code {1,2,3}.sum()} is 6.
      */
-    public static final Rec FORM_MAP_UNWRAP = rec(
-            uri("map_nest"), rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))))),
-                    MCode.code(List.of(instB(MAP_INST_TID, lst(T(ALL, f("f"), null, null)))))),
-            uri(Inst.Form.mapper.name()), rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))),
-                    T(ALL, f("f"), null, null)));
+    public static final Rec FORM_MAP_UNWRAP = rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))),
+            T(ALL, f("f"), null, null));
 
     /**
      * {@code law_involution} — an involution pair drops out, {@code op·op ⇝ ε}, where the operation is an involution at the
      * chain's carrier, or the carrier's additive-group inverse.
      */
-    public static final Rec LAW_INVOLUTION = rec(uri(Law.involution.name()),
-            rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.<Inst>of())));
+    public static final Rec LAW_INVOLUTION = rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.<Inst>of()));
 
     /**
      * {@code law_idempotent} — an idempotent pair is one, {@code op·op ⇝ op}, where the operation is declared idempotent at
      * the chain's carrier. The claimant's term pins the pair's operands equal.
      */
-    public static final Rec LAW_IDEMPOTENT = rec(uri(Law.idempotent.name()),
-            rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))));
+    public static final Rec LAW_IDEMPOTENT = rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst()))));
 
     /**
      * {@code law_monoidic} — a fold of a fold is the fold, {@code op·op ⇝ op}, for a reducer or join declared monoidic at
-     * the chain's carrier.
+     * the chain's carrier. Its rule is idempotent's, {@code op·op ⇝ op}: what tells the two apart is the law whose claimants
+     * bind {@code op} and the gate that reads it.
      */
-    public static final Rec LAW_MONOIDIC = rec(uri(Law.monoidic.name()),
-            rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))));
+    public static final Rec LAW_MONOIDIC = rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst()))));
 
     /**
      * {@code law_poset} — two filters on one comparison are the filter on the stricter bound,
      * {@code x > a ∧ x > b ⇔ x > max(a, b)}. The comparison decides which bound that is, not its name, so the gate
-     * evaluates it (Law.Helper's poset gate): a rule holds where the bound it keeps, b, is ordered past a or equals it.
+     * evaluates it (law_poset's gate): a rule holds where the bound it keeps, b, is ordered past a or equals it.
      * The pair is stated both ways round, so the bound kept is the second (b second) or the first (b first). Only filters
      * compose: a bare comparison answers a bool, and {@code x.gt(a).gt(b)} compares that bool with b.
      */
-    public static final Rec LAW_POSET = rec(uri(Law.poset.name()), rec(
+    public static final Rec LAW_POSET = rec(
             MCode.code(List.of(instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))), instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
             MCode.code(List.of(instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
             MCode.code(List.of(instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))), instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))))),
@@ -490,7 +494,7 @@ public class mInstSet extends AbstractInstSet {
             MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))), instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
             MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
             MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))), instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))))),
-            MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null)))))))));
+            MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))));
 
     /**
      * {@code law_absorbing} — an absorbing op is a constant of the chain, so a run before it that cannot change what it
@@ -498,28 +502,25 @@ public class mInstSet extends AbstractInstSet {
      * {@code {span}inst{point}}), {@code {+}#{*}<=#{*}({*}#::T)}: one or more instructions of any name, endpoints and
      * arguments, laid over the chain as a lst type's entries are laid over its indices. The longest run is tried first,
      * and one the gate refuses (the seed, an effectful instruction, a filter before a strict op) gives way to a shorter
-     * one (Law.Helper's absorbing gate).
+     * one (law_absorbing's gate).
      */
-    public static final Rec LAW_ABSORBING = rec(uri(Law.absorbing.name()),
-            rec(MCode.code(List.of(instB(ALL.b(cInt.SOME()).dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(T(ALL.b(cInt.MAYBESOME()), null, null, null))), instB(f(OP), lst()))),
-                    MCode.code(List.of(instB(f(OP), lst())))));
+    public static final Rec LAW_ABSORBING = rec(MCode.code(List.of(instB(ALL.b(cInt.SOME()).dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(T(ALL.b(cInt.MAYBESOME()), null, null, null))), instB(f(OP), lst()))),
+            MCode.code(List.of(instB(f(OP), lst()))));
 
     /**
-     * {@code else_after_count} — a PLAIN row, keyed by its own name: no claimant to bind and no gate. count is total, so an
-     * else after it is dead code.
+     * {@code else_after_count} — a PLAIN rule: no claimant to bind and no gate. count is total, so an else after it is dead
+     * code.
      */
-    public static final Rec ELSE_AFTER_COUNT = rec(uri("else_after_count"),
-            rec(MCode.code(List.of(instB(COUNT_INST_TID, lst()), instB(ELSE_INST_TID, lst(T(ALL))))),
-                    MCode.code(List.of(instB(COUNT_INST_TID, lst())))));
+    public static final Rec ELSE_AFTER_COUNT = rec(MCode.code(List.of(instB(COUNT_INST_TID, lst()), instB(ELSE_INST_TID, lst(T(ALL))))),
+            MCode.code(List.of(instB(COUNT_INST_TID, lst()))));
 
     /**
-     * {@code range_skip_take} — a PLAIN row whose change is COMPUTED: a {@code ${...}} template is evaluated with the names
+     * {@code range_skip_take} — a PLAIN rule whose change is COMPUTED: a {@code ${...}} template is evaluated with the names
      * the run bound, so a window is a skip and a take, {@code range(i, n) ⇝ skip(i)·take(n - i)}. Only literal bounds match
      * ({@code int::T} refuses an instruction), so a computed range stays range.
      */
-    public static final Rec RANGE_SKIP_TAKE = rec(uri("range_skip_take"),
-            rec(MCode.code(List.of(instB(RANGE_INST_TID, lst(T(INT_TID, f("i"), null, null), T(INT_TID, f("n"), null, null))))),
-                    MCode.code(List.of(instB(SKIP_INST_TID, lst(T(ALL, f("i"), null, null))), instB(TAKE_INST_TID, lst(uri("${*n.minus(*i)}")))))));
+    public static final Rec RANGE_SKIP_TAKE = rec(MCode.code(List.of(instB(RANGE_INST_TID, lst(T(INT_TID, f("i"), null, null), T(INT_TID, f("n"), null, null))))),
+            MCode.code(List.of(instB(SKIP_INST_TID, lst(T(ALL, f("i"), null, null))), instB(TAKE_INST_TID, lst(uri("${*n.minus(*i)}"))))));
 
     /**
      * A theory's law battery as its type states it: the labels, a lst of {@code law::T}.
@@ -941,53 +942,177 @@ public class mInstSet extends AbstractInstSet {
                                 }), "rewrites a().b().c().profile() to profile_analysis(a().b().c()): \\(\\mathrm{profile} \\leadsto \\mathrm{profile\\_analysis}(\\ldots)\\)"),
 
                         // THE UNIT LAW (Marko, 2026-11-08): monoid_theory states op(id) ⇝ ε, every monoid instance a carrier
-                        // declares binds it (Law.Helper.rules), and Law.Helper.unitRemoval drops each bound unit from a chain.
-                        // The theories are /m's, so the law runs on the base path, the category imported or not: it is the
-                        // id_removal and the plus_zero / mult_one this table once spelled syntactically, now read off the
-                        // declared algebras (code's mul_monoid binds id(), since composition is adjacency).
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("theory_unit_removal"),
-                                Law.Helper::unitRemoval), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\)"),
+                        // declares binds it (Law.Helper.rules), and each bound unit drops from a chain. The theories are /m's,
+                        // so the law runs on the base path, the category imported or not: it is the id_removal and the
+                        // plus_zero / mult_one this table once spelled syntactically, now read off the declared algebras
+                        // (code's mul_monoid binds id(), since composition is adjacency). THE IDENTITY IS A VALUE, SO THE
+                        // OPERAND IS COMPARED, one rule at a time: a match only type-tests, and a computed operand passes by
+                        // its range (plus(map(3).neg()) would pass as plus(0), and derivation_contraction would never see it).
+                        // Only composition's identity is one: the additive group's id is end, composition's zero, and taking
+                        // it for the identity turned 5.end() into 5. A lone instruction is a selector (a payload), not a
+                        // morphism to collapse, so the bare identity stays alone; a sole unit such as [plus(0)] still drops.
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("theory_unit_removal"), code -> {
+                            Code out = code;
+                            for (final Rec unit : Law.Helper.rules(MONOID_THEORY_TID)) {
+                                final Inst term = unit.<Rel>elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
+                                out = Law.Helper.rewrite(out, List.of(unit), (scanned, start, length) -> term.args().equals(scanned.insts().get(start).args())
+                                        && (!term.args().isEmpty() || 1 < scanned.insts().size()));
+                            }
+                            return out;
+                        }), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\)"),
 
-                        // ONE REWRITE PER RULE (Marko, 2026-11-10): each carries its rules as its declared argument, a value
-                        // rather than a type, so it resolves with its rules bound, and applies them with Law.Helper.lawRemoval:
-                        // a law's or a form's rule binds op to its claimants and holds where its gate does
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("form_map_unwrap").dom(CODE_TID).rng(CODE_TID.maybe()), lst(FORM_MAP_UNWRAP),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
-                                "the stream lift unwraps: a mapping of a mapping is the mapping, whatever it maps, \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\), and a mapping of a mapper is the mapper, \\(\\mathrm{map}(f) \\leadsto f\\), where the operation of \\(f\\) declares the mapper form. e.g. \\(\\mathrm{map}(\\mathrm{neg}) \\leadsto \\mathrm{neg}\\), while \\(\\mathrm{map}(\\mathrm{sum})\\) stays"),
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("law_involution").dom(CODE_TID).rng(CODE_TID.maybe()), lst(LAW_INVOLUTION),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                        // ONE REWRITE PER RULE (Marko, 2026-11-10; its rules alone, 2026-11-13): each carries its rules as its
+                        // declared argument (InstSet.Helper.rewriter) and hands them to Law.Helper.rewrite under its own gate. A
+                        // law's rule is stated in the name op, which the law's claimants bind (Law.Helper.claimed), and its gate
+                        // reads the law at the carrier flowing into the run (Rewriter.Helper.carriers)
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"), MAP_NEST, (code, rules) ->
+                                        Law.Helper.rewrite(code, List.of(rules), (scanned, start, length) -> true)),
+                                "the stream lift is idempotent: a mapping of a mapping is the mapping, whatever it maps, \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\). e.g. \\(\\mathrm{map}(\\mathrm{map}(\\mathrm{sum})) \\leadsto \\mathrm{map}(\\mathrm{sum})\\)"),
+                        // the hole ranges over the form: a run changes only where the operation of what the hole captured, an
+                        // instruction or the op symbol a chain carries before resolution (map(neg)), declares the mapper form
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("form_map_unwrap"), FORM_MAP_UNWRAP, (code, rules) -> {
+                                    Code out = code;
+                                    for (final Rel rule : rules.<Rel>elements().toList()) {
+                                        final List<Inst> pattern = rule.first().asCall().insts();
+                                        out = Law.Helper.rewrite(out, List.of(rec(rule.first(), rule.second())), (scanned, start, length) -> {
+                                            final Map<fURI, Obj> holes = Code.Helper.bind(scanned.insts().subList(start, start + length), pattern);
+                                            return null != holes && !holes.isEmpty() && holes.values().stream().allMatch(hole -> Inst.Form.mapper == InstBuilder.declaredForm(
+                                                    hole.isInst() ? hole.asInst().tid() : hole.isUri() ? Machine.current().memory().alignPrefix(hole.uriValue()) : null));
+                                        });
+                                    }
+                                    return out;
+                                }),
+                                "the stream lift unwraps: a mapping of a mapper is the mapper, \\(\\mathrm{map}(f) \\leadsto f\\), where the operation of \\(f\\) declares the mapper form. e.g. \\(\\mathrm{map}(\\mathrm{neg}) \\leadsto \\mathrm{neg}\\), while \\(\\mathrm{map}(\\mathrm{sum})\\) stays"),
+                        // an involution at the carrier, by its own declared law or as the carrier's additive-group inverse
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("law_involution"), LAW_INVOLUTION, (code, rules) ->
+                                        Law.Helper.rewrite(code, Law.Helper.claimed(rules, Law.involution), (scanned, start, length) -> {
+                                            final Inst op = scanned.insts().get(start);
+                                            final Type carrier = Rewriter.Helper.carriers(scanned).get(start);
+                                            if (Law.Helper.declares(op, carrier, Law.involution))
+                                                return true;
+                                            final Inst inverse = TheoryHelper.invInst(carrier);
+                                            return !inverse.isNoObj() && inverse.test(op);
+                                        })),
                                 "the involution law: an adjacent pair of an operation that is an involution at the chain's carrier drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), as does a pair of the carrier's additive-group inverse. e.g. \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\)"),
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("law_idempotent").dom(CODE_TID).rng(CODE_TID.maybe()), lst(LAW_IDEMPOTENT),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("law_idempotent"), LAW_IDEMPOTENT, (code, rules) ->
+                                        Law.Helper.rewrite(code, Law.Helper.claimed(rules, Law.idempotent), (scanned, start, length) ->
+                                                Law.Helper.declares(scanned.insts().get(start), Rewriter.Helper.carriers(scanned).get(start), Law.idempotent))),
                                 "the idempotent law: an adjacent pair of an operation declared idempotent at the chain's carrier, its operands equal, is one, \\(f \\cdot f \\leadsto f\\). e.g. \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\)"),
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("law_monoidic").dom(CODE_TID).rng(CODE_TID.maybe()), lst(LAW_MONOIDIC),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                        // a fold: the contract dispatch picks at the carrier gathers many to one (a reducer or a join), and the
+                        // operation is declared monoidic there -- the shape a repeated fold is idempotent on
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("law_monoidic"), LAW_MONOIDIC, (code, rules) ->
+                                        Law.Helper.rewrite(code, Law.Helper.claimed(rules, Law.monoidic), (scanned, start, length) -> {
+                                            final Inst op = scanned.insts().get(start);
+                                            final Rec declared = Law.Helper.declared(op.tid().basePath(), Rewriter.Helper.carriers(scanned).get(start));
+                                            if (declared.isNoObj())
+                                                return false;
+                                            final Inst.Form form = Inst.Form.of(op.tid(declared.atDirect(OBJ).tid()));
+                                            return (Inst.Form.reducer == form || Inst.Form.join == form) && Law.Helper.declares(declared, Law.monoidic);
+                                        })),
                                 "the monoidic law: a fold of a fold is the fold, \\(f \\cdot f \\leadsto f\\), for a reducer or join declared monoidic at the chain's carrier. e.g. \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("law_poset").dom(CODE_TID).rng(CODE_TID.maybe()), lst(LAW_POSET),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                        // THE STRICTER BOUND: the gate reads the bounds a and b its run bound, so each claimed rule runs under
+                        // its own pattern. The bound kept, b, is ordered past a by the comparison itself (b > a under gt, b < a
+                        // under lt), or the two are equal. The comparison is evaluated, so it must be declared pure as well as
+                        // poset at the carrier, and both bounds must be values. A pair the order relates neither way stays
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("law_poset"), LAW_POSET, (code, rules) -> {
+                                    Code out = code;
+                                    for (final Rec rule : Law.Helper.claimed(rules, Law.poset)) {
+                                        final List<Inst> pattern = rule.<Rel>elements().findFirst().orElseThrow().first().asCall().insts();
+                                        out = Law.Helper.rewrite(out, List.of(rule), (scanned, start, length) -> {
+                                            final Map<fURI, Obj> names = Code.Helper.bind(scanned.insts().subList(start, start + length), pattern);
+                                            final Obj a = null == names ? null : names.get(f("a"));
+                                            final Obj b = null == names ? null : names.get(f("b"));
+                                            if (null == a || null == b || a.isCall() || b.isCall())
+                                                return false;
+                                            final Inst comparison = scanned.insts().get(start).arg(0).asCall().insts().getFirst();
+                                            final Rec declared = Law.Helper.declared(comparison.tid().basePath(), Rewriter.Helper.carriers(scanned).get(start));
+                                            return Law.Helper.declares(declared, Law.poset) && Law.Helper.declares(declared, Law.pure)
+                                                    && (a.equals(b) || Processor.Helper.apply(b, comparison.args(lst(a))).booleanCheck());
+                                        });
+                                    }
+                                    return out;
+                                }),
                                 "the poset law: two filters on one comparison are the filter on the stricter bound, the comparison evaluated to tell which, \\(x > a \\wedge x > b \\Leftrightarrow x > \\max(a, b)\\). e.g. \\(\\mathrm{is}(\\mathrm{gt}(1)) \\cdot \\mathrm{is}(\\mathrm{gt}(3)) \\leadsto \\mathrm{is}(\\mathrm{gt}(3))\\)"),
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("law_absorbing").dom(CODE_TID).rng(CODE_TID.maybe()), lst(LAW_ABSORBING),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                        // THE ABSORBED RUN: the rule's {+}#, which a rewrite takes as long as it can and shortens where this
+                        // refuses it, never holds the seed (the chain's initial form, read off the contract its typing resolved
+                        // it to), and the op must be absorbing at the carrier flowing into it. Dropping each instruction of the
+                        // run must not change what the op answers, read off declarations alone, so an undeclared op is never
+                        // dropped. PURE: one that is not is effectful (side, print, to) and stops the run. MULTIPLICITY: a
+                        // terminal op (rng {0}) answers noobj whatever reaches it, so any pure instruction goes; any other answers
+                        // a constant per obj, so the instruction must hand it one obj per obj -- a mapper, or a filter when the op
+                        // is non-strict, its {?} dom firing on the noobj the filter leaves ({1,2,3}.is(gt(1)).zero() is {2}0).
+                        // CARRIER: the op's law was read for the chain's carrier, so the instruction maps its own carrier to
+                        // itself at both ends, since a declaration is found by EITHER end (5.as(str::T).zero() is '', not 0)
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("law_absorbing"), LAW_ABSORBING, (code, rules) ->
+                                        Law.Helper.rewrite(code, Law.Helper.claimed(rules, Law.absorbing), (scanned, start, length) -> {
+                                            final List<Type> carriers = Rewriter.Helper.carriers(scanned);
+                                            final int last = start + length - 1;
+                                            final Inst seed = Rewriter.Helper.contracts(scanned).getFirst();
+                                            if (0 == start && null != seed && seed.isInitial())
+                                                return false;
+                                            final Rec absorbing = Law.Helper.declared(scanned.insts().get(last).tid().basePath(), carriers.get(last));
+                                            if (!Law.Helper.declares(absorbing, Law.absorbing))
+                                                return false;
+                                            final fURI op = absorbing.atDirect(OBJ).tid();
+                                            final Long least = op.dom().c().min();
+                                            return IntStream.range(start, last).allMatch(i -> {
+                                                final Rec prior = Law.Helper.declared(scanned.insts().get(i).tid().basePath(), carriers.get(i));
+                                                if (!Law.Helper.declares(prior, Law.pure))
+                                                    return false;
+                                                if (op.rng().c().isZero())
+                                                    return true;
+                                                final fURI tid = prior.atDirect(OBJ).tid();
+                                                final fURI dom = tid.dom().basePath();
+                                                if (!dom.equals(tid.rng().basePath()) || !(dom.isGeneric() || (null != carriers.get(i).vid() && dom.equals(carriers.get(i).vid().basePath()))))
+                                                    return false;
+                                                final Inst.Form form = Inst.Form.of(scanned.insts().get(i).tid(tid));
+                                                return Inst.Form.mapper == form || (Inst.Form.filter == form && (null == least || 0L >= least));
+                                            });
+                                        })),
                                 "the absorbing law \\(g \\cdot f \\leadsto f\\): an operation declared absorbing at the chain's carrier swallows the run before it that cannot change what it answers -- pure instructions that hand it one obj per obj and keep the carrier, a filter too when its dom is non-strict, any pure instruction when it answers noobj, never the seed. e.g. \\((x + 3) \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("else_after_count").dom(CODE_TID).rng(CODE_TID.maybe()), lst(ELSE_AFTER_COUNT),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"), ELSE_AFTER_COUNT, (code, rules) ->
+                                        Law.Helper.rewrite(code, List.of(rules), (scanned, start, length) -> true)),
                                 "count is total, so an else after it is dead code: \\(\\mathrm{count} \\cdot \\mathrm{else}(x) \\leadsto \\mathrm{count}\\)"),
-                        docWrap(instC(M_ISA_REWRITE_TID.extend("range_skip_take").dom(CODE_TID).rng(CODE_TID.maybe()), lst(RANGE_SKIP_TAKE),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("range_skip_take"), RANGE_SKIP_TAKE, (code, rules) ->
+                                        Law.Helper.rewrite(code, List.of(rules), (scanned, start, length) -> true)),
                                 "a window is a skip and a take, its bounds literal ints: \\(\\mathrm{range}(i, n) \\leadsto \\mathrm{skip}(i) \\cdot \\mathrm{take}(n - i)\\)"),
 
                         // THE INVERSE LAW: group_theory states op(a)·op(inv(a)) ⇝ ε and op(inv(a))·op(a) ⇝ ε, every group
-                        // instance a carrier declares binds them (Law.Helper.rules), and Law.Helper.inverseCancellation
-                        // cancels an adjacent pair with equal operands where the chain's carrier derives that inverse. The
-                        // theories are /m's.
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("inverse_cancellation"),
-                                Law.Helper::inverseCancellation), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
+                        // instance a carrier declares binds them (Law.Helper.rules), and an adjacent pair with equal operands
+                        // cancels where the second is the inverse the first declares at the chain's carrier, in that direction.
+                        // The theories are /m's. A declared inverse is one-sided: inverse(f) = g claims x.f().g() = x (f a
+                        // section, g its retraction), never x.g().f() = x -- on int, x.mult(2).div(2) is x but 5.div(2).mult(2)
+                        // is 4. Endpoints are unavailable before resolution, so the operand type that selected the declaration
+                        // is the type guard. An operand that is its type's declared zero never cancels: the zero annihilates
+                        // under mult (mult(0) has no inverse), and under plus it is the unit law's anyway. An involution's pair
+                        // is law_involution's.
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("inverse_cancellation"), code ->
+                                Law.Helper.rewrite(code, Law.Helper.rules(GROUP_THEORY_TID), (scanned, start, length) -> {
+                                    final Inst a = scanned.insts().get(start);
+                                    final Inst b = scanned.insts().get(start + 1);
+                                    final fURI inverse = TheoryHelper.roleAddress(Law.Helper.declared(a.tid().basePath(), Rewriter.Helper.carriers(scanned).get(start)), INVERSE);
+                                    return null != inverse && b.tid().basePath().equals(inverse.basePath())
+                                            && a.args().equals(b.args())
+                                            && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
+                                            .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
+                                })), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
 
                         // DERIVATION CONTRACTION: a derived instruction's primitive composition folds back to the derived
                         // operation (plus . neg |-> minus, mult . inv |-> div), read off the derivations instructions declare
-                        // beside themselves (Law.Helper.derivations), where the derivation's contract runs.
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("derivation_contraction"),
-                                Law.Helper::derivationContraction), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
+                        // beside themselves (Law.Helper.derivations). Each equation runs backward: every contiguous run that
+                        // tests the rhs becomes the lhs, its holes reading what the rhs's holes matched. The rhs is matched as a
+                        // whole WINDOW (a one-instruction rhs nests its composition in its args, plus(map(#::T@b).neg())), since
+                        // matching only its last instruction would contract every sum to count. AN EQUATION SPEAKS WHERE ITS
+                        // CONTRACT RUNS (Marko, 2026-11-08): only where the carrier flowing into the run dispatches the derived
+                        // op to the contract that declares it (Law.Helper.selects). Real's div ≡ mult·inv once contracted an
+                        // int's 7.mult(2.inv()) to a truncating div, and int's minus ≡ plus·neg a lst's plus into the lst minus.
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("derivation_contraction"), code -> {
+                            Code out = code;
+                            for (final Map.Entry<fURI, Rec> derivation : Law.Helper.derivations().entrySet())
+                                out = Law.Helper.rewrite(out, List.of(rec(derivation.getValue().atDirect(uri(RHS)).asCode(), derivation.getValue().atDirect(uri(LHS)).asCode())),
+                                        (scanned, start, length) -> Law.Helper.selects(Rewriter.Helper.carriers(scanned).get(start), derivation.getKey()));
+                            return out;
+                        }), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
 
                         // THE CODE RING'S NORMAL FORMS, read off the additive op its theory declares (branch): the
                         // left-distributive form (Marko, 2026-11-10: two parallel expressions run as one, branched where their

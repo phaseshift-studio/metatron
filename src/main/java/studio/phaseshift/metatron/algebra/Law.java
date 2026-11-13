@@ -24,13 +24,11 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,7 +40,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.COMPOSE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MONOID_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LAW_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.THEORY_FORM_TYPE;
@@ -113,7 +110,7 @@ public enum Law {
     /**
      * the effect axis: the result is a function of the lhs and args alone, and applying it changes nothing else — no
      * write, no print, no spawn. Declared, never inferred: an instruction that does not declare {@code pure} is
-     * effectful, so a rule that moves, drops or replicates code (the absorbing row's swallowed prefix,
+     * effectful, so a rule that moves, drops or replicates code ({@code law_absorbing}'s swallowed prefix,
      * {@code law_shard}'s floatable run) admits only declared-pure instructions
      */
     pure,
@@ -274,7 +271,7 @@ public enum Law {
             case blocked -> "cannot float past a barrier — a reduce anchors the coefficient in place";
             case pure -> "the effect axis: the result is a function of the lhs and args alone, and applying it changes "
                     + "nothing else — no write, no print, no spawn. Declared, never inferred: an instruction that does not "
-                    + "declare pure is effectful, so a rule that moves, drops or replicates code (the absorbing row's swallowed "
+                    + "declare pure is effectful, so a rule that moves, drops or replicates code (law_absorbing's swallowed "
                     + "prefix, law_shard's floatable run) admits only declared-pure instructions";
             case action -> "a monoid/group acting on a carrier — f(gh)x = f(g)f(h)x";
             case prime -> "an atomic/indecomposable element — no nontrivial factorization";
@@ -657,33 +654,23 @@ public enum Law {
         private static final ThreadLocal<Boolean> DERIVING = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
         /**
-         * THE CLAIM AN INSTRUCTION DECLARED BESIDE ITSELF — one {@code Machine.read} of its {@code ?decq} address. A
-         * claim {@link InstBuilder#create()} staged and nothing has published yet is published by that read (the
-         * q-proc's lazy hook), so the store is the only source.
-         */
-        private static Rec declaredRow(final fURI instTid) {
-            return null == instTid ? noobjRec() : declaredRow(instTid, Machine.read(stagingAddress(instTid)));
-        }
-
-        /**
-         * The claim the store answered at an instruction's staging address, as {@link #declaredRow(fURI)} reads it.
+         * THE CLAIM AN INSTRUCTION DECLARED BESIDE ITSELF — one {@code Machine.read} at the address a declaration is
+         * staged at: the instruction's OPERATION address (its tid with the {@code args} component removed) plus
+         * {@code ?decq}, where {@link InstBuilder#create()} writes and where a later boot reads. A claim that builder
+         * staged and nothing has published yet is published by that read (the q-proc's lazy hook), so the store is the
+         * only source.
+         * <p>
          * THE STORE ANSWERS FOR THE QUERIED CONTRACT ONLY. A read of an address it holds no claim for falls back to
          * subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a claim is inherited
          * through the contract deduce() lands the operand on, never through the store: an ancestor's claim is refused.
          */
-        private static Rec declaredRow(final fURI instTid, final Obj stored) {
+        private static Rec declaredRow(final fURI instTid) {
+            if (null == instTid)
+                return noobjRec();
+            final fURI operation = Inst.Helper.operationTid(instTid);
+            final Obj stored = Machine.read(PendingWrites.decq(operation));
             final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
-            return claimant.isInst() && !Inst.Helper.operationTid(claimant.tid()).equals(Inst.Helper.operationTid(instTid))
-                    ? noobjRec() : declaredEntry(stored);
-        }
-
-        /**
-         * THE ADDRESS A DECLARATION IS STAGED AT — the instruction's OPERATION address (its tid with the {@code args}
-         * component removed) plus {@code ?decq}, which is where {@link InstBuilder#create()} writes and where a later
-         * boot reads. A null address answers null rather than throwing, matching the log's own tolerance.
-         */
-        private static fURI stagingAddress(final fURI instTid) {
-            return null == instTid ? null : PendingWrites.decq(Inst.Helper.operationTid(instTid));
+            return claimant.isInst() && !Inst.Helper.operationTid(claimant.tid()).equals(operation) ? noobjRec() : declaredEntry(stored);
         }
 
         /**
@@ -1220,238 +1207,25 @@ public enum Law {
          * {@link Call.Helper#update} over the chain's Code objects (matched and changed there, nothing evaluated), and a
          * matched run changes only where {@code admits} the code at the run's start, the law read at the carrier there. A
          * run whose instructions carry a coefficient stays: the rule's terms are unscaled, and {@code f{2}·f{2}} is no
-         * {@code f·f}.
+         * {@code f·f}. EACH EQUATION RUNS ON ITS OWN, over the code the last one left, so the scan, the unscaled check and
+         * {@code admits} all index the code that equation matches: a rec of two equations handed to {@code update} whole
+         * was scanned for its first alone and checked against the code before the first had changed it.
          */
         public static Code rewrite(final Code code, final List<Rec> rules, final TriFunction<Code, Integer, Integer, Boolean> admits) {
             Code out = code;
-            for (final Rec rule : rules) {
+            for (final Rel equation : rules.stream().flatMap(rule -> rule.<Rel>elements()).toList()) {
                 final Code scanned = out;
-                final List<Inst> pattern = rule.elements().findFirst().map(lhs -> lhs.first().asCall().insts()).orElse(List.of());
+                final List<Inst> pattern = equation.first().asCall().insts();
                 // a rule naming an op the chain does not hold cannot match it, so it is not scanned at all: every element a
                 // run must take ({+}# takes one at least, {*}# may take none) tests an instruction of the chain
                 if (pattern.isEmpty() || !pattern.stream().allMatch(element -> element.tid().b().isZeroable()
                         || scanned.insts().stream().anyMatch(inst -> inst.tid().basePath().test(element.tid().basePath()))))
                     continue;
-                final List<Inst> next = Call.Helper.update(scanned.insts(), rule, (start, length) ->
+                final List<Inst> next = Call.Helper.update(scanned.insts(), rec(equation.first(), equation.second()), (start, length) ->
                         scanned.insts().subList(start, start + length).stream().allMatch(inst -> cInt.ONE().equals(inst.c()))
                                 && admits.apply(scanned, start, length));
                 out = next.equals(scanned.insts()) ? scanned : code(next);
             }
-            return out;
-        }
-
-        /**
-         * A REWRITE'S RULES (Marko, 2026-11-10: one rewrite per rule) — each of /m's rule rewrites carries its rules as its
-         * declared argument, a rec of ROWS, a key and its rules: a value, not a type, so the rewrite resolves with its rules
-         * already bound. The rows apply in order ({@code form_map_unwrap} has two). A row keyed by a LAW states its rule
-         * in the name {@code op}, bound to every instruction whose claim states the law ({@link #claimed}) and applied under
-         * that law's gate at the chain's carrier:
-         * <ul>
-         *   <li>{@code involution} {@code op·op ⇝ ε}, where the operation is an involution there, or the carrier's
-         *       additive-group inverse ({@link #isInvolution});</li>
-         *   <li>{@code idempotent} {@code op·op ⇝ op}, where it is declared idempotent there;</li>
-         *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold});</li>
-         *   <li>{@code poset} {@code is(op(a))·is(op(b)) ⇝ is(op(b))}, where {@code b} is the stricter bound
-         *       ({@link #isStricter});</li>
-         *   <li>{@code absorbing} {@code {+}#·op ⇝ op}, a run of one or more instructions of any name and arguments before
-         *       the op, where the op absorbs it there ({@link #isAbsorbed}).</li>
-         * </ul>
-         * A law a row names but no gate knows is not applied. A row keyed by a FORM ({@link Inst.Form}) states its rules
-         * over named holes, and its holes range over the form: a matched run changes only where the operation of everything
-         * a hole captured, an instruction or the op symbol a chain carries before resolution, declares that form. A form is
-         * declared per operation ({@code InstBuilder.declaredForm}), so no carrier is read. The {@code mapper} row's
-         * {@code map(#::T@f) ⇝ #::T@f} unwraps {@code map(neg)}, never {@code map(sum())}. A row keyed by anything else is
-         * PLAIN ({@code map_nest}, {@code else_after_count}, {@code range_skip_take}): its rule is stated in the instructions
-         * themselves, so it applies as it stands, with no {@code op} to bind and no gate; a {@code ${...}} template in its
-         * change computes an argument from the names the run bound.
-         */
-        public static Code lawRemoval(final Code code, final Rec table) {
-            Code out = code;
-            for (final Rel entry : table.<Rel>elements().toList()) {
-                if (!entry.second().isRec())
-                    continue;
-                final String key = entry.first().isUri() ? entry.first().uriValue().name() : null;
-                final Law law = Arrays.stream(Law.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
-                final Inst.Form form = Arrays.stream(Inst.Form.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
-                if (null != law) {
-                    // a gate per bound rule, built from the rule's own pattern: the poset gate reads the bounds its run bound
-                    final Function<List<Inst>, TriFunction<Code, Integer, Integer, Boolean>> gate = switch (law) {
-                        case involution -> pattern -> (scanned, start, length) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
-                        case idempotent -> pattern -> (scanned, start, length) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
-                        case monoidic -> pattern -> (scanned, start, length) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
-                        case poset -> pattern -> (scanned, start, length) -> isStricter(Code.Helper.bind(scanned.insts().subList(start, start + length), pattern),
-                                scanned.insts().get(start), carriers(scanned).get(start));
-                        case absorbing -> pattern -> Helper::isAbsorbed;
-                        default -> null;
-                    };
-                    if (null != gate)
-                        for (final Rec bound : claimed(entry.second().asRec(), law))
-                            out = rewrite(out, List.of(bound), gate.apply(bound.<Rel>elements().findFirst().orElseThrow().first().asCall().insts()));
-                } else if (null != form)
-                    for (final Rel rule : entry.second().asRec().<Rel>elements().toList()) {
-                        final List<Inst> pattern = rule.first().asCall().insts();
-                        out = rewrite(out, List.of(rec(rule.first(), rule.second())), (scanned, start, length) -> {
-                            final Map<fURI, Obj> captured = Code.Helper.bind(scanned.insts().subList(start, start + length), pattern);
-                            return null != captured && !captured.isEmpty() && captured.values().stream().allMatch(hole -> form == InstBuilder.declaredForm(
-                                    hole.isInst() ? hole.asInst().tid() : hole.isUri() ? Machine.current().memory().alignPrefix(hole.uriValue()) : null));
-                        });
-                    }
-                else
-                    out = rewrite(out, List.of(entry.second().asRec()), (scanned, start, length) -> true);
-            }
-            return out;
-        }
-
-        /**
-         * THE POSET GATE — the bound a rule keeps, {@code b}, is the stricter of the pair: the comparison itself orders it
-         * past {@code a} ({@code b > a} under {@code gt}, {@code b < a} under {@code lt}), or the two are equal. The
-         * comparison is evaluated, so it must be declared {@code pure} as well as {@code poset} at the carrier, and both
-         * bounds must be values. A pair the order relates neither way (a partial order need not) stays.
-         */
-        private static boolean isStricter(final Map<fURI, Obj> names, final Inst filter, final Type carrier) {
-            final Obj a = null == names ? null : names.get(f("a"));
-            final Obj b = null == names ? null : names.get(f("b"));
-            if (null == a || null == b || a.isCall() || b.isCall())
-                return false;
-            final Inst comparison = filter.arg(0).asCall().insts().getFirst();
-            return declares(comparison, carrier, Law.poset) && declares(comparison, carrier, Law.pure)
-                    && (a.equals(b) || Processor.Helper.apply(b, comparison.args(lst(a))).booleanCheck());
-        }
-
-        /**
-         * The involution test: the operation's own declared {@code involution} law, or the carrier's declared
-         * additive-group inverse.
-         */
-        private static boolean isInvolution(final Inst inst, final Type carrier) {
-            if (declares(inst, carrier, Law.involution))
-                return true;
-            final Inst inv = TheoryHelper.invInst(carrier);
-            return !inv.isNoObj() && inv.test(inst);
-        }
-
-        /**
-         * A fold: the declared coefficient shape gathers many to one ({@code reducer} or {@code join}) and the
-         * operation is declared {@code monoidic} — the shape a repeated fold is idempotent on.
-         */
-        private static boolean isFold(final Inst inst, final Type carrier) {
-            final Rec declared = declared(inst.tid().basePath(), carrier);
-            if (declared.isNoObj())
-                return false;
-            final Inst.Form form = Inst.Form.of(inst.tid(declared.atDirect(OBJ).tid()));
-            return (Inst.Form.reducer == form || Inst.Form.join == form) && declares(inst, carrier, Law.monoidic);
-        }
-
-        /**
-         * THE ABSORBING GATE — an absorbing op is a constant of the chain, so the run before it that cannot change what it
-         * answers is dead code, {@code …·g·zero ⇝ …·zero}. The run is the rule's {@code {+}#}, which a rewrite takes as long
-         * as it can and shortens where this refuses it ({@link Call.Helper#update}), and never holds the seed: the chain's
-         * initial form, read off the contract its typing resolved it to. The op must be absorbing at the carrier flowing
-         * into it, and dropping each instruction of the run must not change what the op answers, read off declarations
-         * alone, so an undeclared op (no legible form) is never dropped:
-         * <ul>
-         *   <li><b>pure</b> — the instruction declares {@link Law#pure}. One that does not is effectful, so an undeclared
-         *       op (side, print, to) stops the run.</li>
-         *   <li><b>multiplicity</b> — a terminal op (rng {@code {0}}) answers noobj whatever reaches it, so any pure
-         *       instruction goes. Any other answers a constant PER OBJ, so the instruction must hand it one obj per obj: a
-         *       {@code mapper}, or a {@code filter} when the op is non-strict — its {@code {?}} dom fires on the noobj the
-         *       filter leaves, while a strict op ({@code {1}}, {@code {+}} dom) never sees it
-         *       ({@code {1,2,3}.is(gt(1)).zero()} is {@code {2}0}, and {@code {1,2,3}.sum().zero()} is {@code 0}).</li>
-         *   <li><b>carrier</b> — the op's law was read for the chain's carrier, so the instruction must map its own carrier
-         *       to itself: dom and rng both the carrier's base type, or both the one generic ({@code A ⇒ A}). Both ends,
-         *       because a declaration is found by EITHER end matching the carrier ({@code as?int<=str} answers an int
-         *       carrier too), and {@code 5.as(str::T).zero()} is str's zero, {@code ''}, not int's.</li>
-         * </ul>
-         * A scaled instruction is no term of a rule ({@link #rewrite}), so a run holding one, or a scaled op, stays.
-         */
-        private static boolean isAbsorbed(final Code scanned, final int start, final int length) {
-            final List<Type> carriers = carriers(scanned);
-            final int last = start + length - 1;
-            final Inst seed = contracts(scanned).getFirst();
-            if ((0 == start && null != seed && seed.isInitial()) || !declares(scanned.insts().get(last), carriers.get(last), Law.absorbing))
-                return false;
-            final fURI op = declared(scanned.insts().get(last).tid().basePath(), carriers.get(last)).atDirect(OBJ).tid();
-            final Long least = op.dom().c().min();
-            return IntStream.range(start, last).allMatch(i -> {
-                final Rec prior = declared(scanned.insts().get(i).tid().basePath(), carriers.get(i));
-                if (!declares(prior, Law.pure))
-                    return false;
-                if (op.rng().c().isZero())
-                    return true;
-                final fURI tid = prior.atDirect(OBJ).tid();
-                final fURI dom = tid.dom().basePath();
-                if (!dom.equals(tid.rng().basePath()) || !(dom.isGeneric() || (null != carriers.get(i).vid() && dom.equals(carriers.get(i).vid().basePath()))))
-                    return false;
-                final Inst.Form form = Inst.Form.of(scanned.insts().get(i).tid(tid));
-                return Inst.Form.mapper == form || (Inst.Form.filter == form && (null == least || 0L >= least));
-            });
-        }
-
-        /**
-         * THE UNIT LAW, /m's {@code theory_unit_removal}: an operation applied to its own theory identity drops out, and a
-         * bare identity operation is the identity morphism — monoid_theory's rule as every monoid instance binds it
-         * ({@link #rules}), so the one rule covers every declared monoid.
-         * <p>
-         * THE IDENTITY IS A VALUE, SO THE OPERAND IS COMPARED, one rule at a time: a match is a type test, under which a
-         * computed operand passes by its range ({@code plus(map(3).neg())} would pass as {@code plus(0)}, and
-         * {@code derivation_contraction} would never see it), so the run's operands must equal the unit's. Only
-         * composition's identity is one: the additive group's {@code id} is end, composition's zero, and taking it for the
-         * identity turned {@code 5.end()} into {@code 5}. A lone instruction is a selector (a payload), not a morphism to
-         * collapse, so the bare identity stays alone; a sole unit such as {@code [plus(0)]} still drops.
-         */
-        public static Code unitRemoval(final Code code) {
-            Code out = code;
-            for (final Rec unit : rules(MONOID_THEORY_TID)) {
-                final Inst term = unit.elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
-                out = rewrite(out, List.of(unit), (scanned, start, length) -> term.args().equals(scanned.insts().get(start).args())
-                        && (!term.args().isEmpty() || 1 < scanned.insts().size()));
-            }
-            return out;
-        }
-
-        /**
-         * THE INVERSE LAW, /m's {@code inverse_cancellation}: an adjacent declared inverse pair with equal operands cancels
-         * to the identity — {@code f·f⁻¹ ↦ ε} and {@code f⁻¹·f ↦ ε}, group_theory's two rules as every group instance binds
-         * them ({@link #rules}), cancelled only where the second instruction is the inverse the first declares at the
-         * chain's carrier, in that direction. A declared inverse is one-sided: {@code inverse(f) = g} claims
-         * {@code x.f().g() = x} (f a section, g its retraction), never {@code x.g().f() = x} — on int, {@code x.mult(2).div(2)}
-         * is {@code x} but {@code 5.div(2).mult(2)} is 4. Endpoints are unavailable before resolution, so the operand type
-         * that selected the declaration is the type guard. An operand that is its type's declared {@code zero} never
-         * cancels: the zero annihilates under {@code mult} ({@code mult(0)} has no inverse), and under {@code plus} it is
-         * the unit law's anyway. An involution's pair is the involution law's ({@code law_involution}). Its terms are
-         * unscaled as every local equation's are ({@link #rewrite}).
-         */
-        public static Code inverseCancellation(final Code code) {
-            return rewrite(code, rules(GROUP_THEORY_TID), (scanned, start, length) -> {
-                final Inst a = scanned.insts().get(start);
-                final Inst b = scanned.insts().get(start + 1);
-                final fURI inverse = TheoryHelper.roleAddress(declared(a.tid().basePath(), carriers(scanned).get(start)), INVERSE);
-                return null != inverse && b.tid().basePath().equals(inverse.basePath())
-                        && a.args().equals(b.args())
-                        && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
-                        .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
-            });
-        }
-
-        /**
-         * DERIVATION CONTRACTION, /m's {@code derivation_contraction}: a derived instruction's primitive composition folds
-         * back to the derived operation — {@code plus·neg ↦ minus}, {@code mult·inv ↦ div}, from the instruction's declared
-         * {@code derivation} ({@link #derivations}). Each equation runs backward as an {@code update()} rule
-         * ({@link Call.Helper#update}): every contiguous run of the chain that tests the rhs becomes the lhs, its holes
-         * reading what the rhs's holes matched. The rhs is matched as a whole WINDOW: a one-instruction rhs nests its
-         * composition in that instruction's args ({@code plus(map(#::T@b).neg())}), a longer one spans several, and
-         * matching only the rhs's last instruction would contract every {@code sum} to {@code count}.
-         * <p>
-         * AN EQUATION SPEAKS WHERE ITS CONTRACT RUNS (carrier selection, Marko 2026-11-08): a run is contracted only where
-         * the carrier flowing into it dispatches the derived op to the contract that declares the equation
-         * ({@link #selects}). Real's {@code div ≡ mult·inv} once contracted an int's {@code 7.mult(2.inv())} to a truncating
-         * {@code div}, and int's {@code minus ≡ plus·neg} a lst's {@code plus} into the lst {@code minus} that removes
-         * slots: two chains that fail as written (int has no {@code inv}, lst no {@code neg}) answered another op.
-         */
-        public static Code derivationContraction(final Code code) {
-            Code out = code;
-            for (final Map.Entry<fURI, Rec> d : derivations().entrySet())
-                out = rewrite(out, List.of(rec(d.getValue().atDirect(uri(RHS)).asCode(), d.getValue().atDirect(uri(LHS)).asCode())),
-                        (scanned, start, length) -> selects(carriers(scanned).get(start), d.getKey()));
             return out;
         }
 
