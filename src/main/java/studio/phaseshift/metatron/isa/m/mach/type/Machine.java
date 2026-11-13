@@ -54,8 +54,10 @@ import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -428,7 +430,6 @@ public interface Machine extends Rec, AutoCloseable {
         final Machine child = (Machine) this.clone(null, this.tid(), childVID);
         if (child == this)
             throw MTronException.of("push(%s) cannot mint a child: clone() returned this machine, so the child would BE the parent", extension);
-        child.at(uri(CHILD), noobj(), MUTABLE);
         child.parent(this);
         // The child's memory is a union over this machine's memory: its own fresh level over the enclosing one.
         // Parent the union to the CHILD (not to the parent machine): Component.machine() walks parent(), and the
@@ -470,7 +471,6 @@ public interface Machine extends Rec, AutoCloseable {
         // read the child back at its vid, which is what `move(<child>)` resolves.
         CURRENT.set(child);
         Helper.bootstrap(child);
-        this.at(CHILD, objs(this.atDirect(CHILD), auto_at_(childVID).tryToInst()), MUTABLE);
         // ... and its own PROCESSOR, of this machine's architecture: a processor indexes the computers its machine mints
         // and holds that machine's fail stacks (~/processor/computer/<n>, ~/processor/fail), so the instance the clone
         // shares with this machine filed the child's evaluations, and their fails, in this machine's. Minted once the
@@ -511,20 +511,11 @@ public interface Machine extends Rec, AutoCloseable {
         final Obj parent = machine.parent();
         if (!(parent instanceof Machine parentMachine))
             return this;
-        final fURI childVID = machine.vid();
         machine.close();
         CURRENT.set(parentMachine);
-        final Obj children = parentMachine.atDirect(CHILD);
-        if (!children.isNoObj()) {
-            if (children.isObjs()) {
-                parentMachine.at(CHILD, objs(children.stream().filter(c -> Obj.Helper.getAutoPointer(c).filter(id -> id.equals(childVID)).isEmpty()).toList()), MUTABLE);
-            } else if (Obj.Helper.getAutoPointer(children).filter(id -> id.equals(childVID)).isPresent())
-                parentMachine.at(CHILD, noobj(), MUTABLE);
-
-        }
-        // POP DISCARDS THE ADDRESS: the two links push wrote go with the frame (the root's registration of its vid, and
-        // the pushing frame's child link), or the closed frame and its components still answer at its vid and the
-        // console's machine tree still lists it. Only a move leaves a frame standing at its address.
+        // POP DISCARDS THE ADDRESS: the one link push wrote goes with the frame, the root's registration of its vid,
+        // which is also its parent's child link (bootstrap's child slot), or the closed frame and its components still
+        // answer at its vid and the machine tree still lists it. Only a move leaves a frame standing at its address.
         Machine.root().memory().write(machine.vid(), noobj());
         return parentMachine;
     }
@@ -656,6 +647,27 @@ public interface Machine extends Rec, AutoCloseable {
                 // fails for the child's stacks).
                 final MachineSpace space = new MachineSpace(machine);
                 machine.memory().addSpace(space);
+                // THE CHILD SLOT IS A WALK, NOT A LIST (Marko, 2026-11-13): a machine's children are the machines the ROOT
+                // registry holds one segment below its address whose parent is this machine. push registers every machine
+                // there (Machine.root().memory().write(childVID, child): the root's MachineSpace store, at the top level
+                // for the root's children and as fields of the parent's entry below that), pop deletes it and move leaves
+                // it standing, so the slot is set once and answers the same on every handle of this machine. A stored list
+                // went stale on the copy a move answers, its read-modify-write raced, and a rec write on a stream-valued key
+                // appends. The registry is read in the store, as rels (<vid>/+/), whose objs come back unfired: a node read
+                // (<vid>/+) autoResolves every obj it lists, this slot among a machine's fields, and the MachineSpace
+                // answers a root pattern from the root's own fields first, so either would fire this walk inside itself
+                // without end. The parent filters the entries: a pushed machine starts with a snapshot of its parent's
+                // keys, its siblings among them. Seeded into the map as push seeds the components: bootstrap runs before
+                // the machine is published, and a rec write on a machine saves it into the current frame.
+                final fURI machineVID = machine.vid();
+                final fURI entries = machineVID.resolve().extend("+/");
+                machine.jvm().put(uri(CHILD), auto_(instC(M_ISA_INST_TID.rng(ALL_STAR), lst(), (lhs, inst) -> {
+                    final Space registry = Machine.root().memory().getSpaceFor(entries);
+                    return objs(Space.Helper.resolveRead(registry, entries, registry.directReader()).stream()
+                            .map(Obj::asRel)
+                            .map(Rel::secondDirect)
+                            .filter(child -> child.isMachine() && machineVID.equals(child.parent().vid())));
+                })).tryToInst());
                 // THE NETWORK ANSWERS BELOW ITS BRANCH, through the machine's space: every field at its own address and a
                 // peer or a listener at its key's path, held in the network's cache, and a noobj write on a member that
                 // member's retraction. mount stamps the branch; the network is not a space in memory.

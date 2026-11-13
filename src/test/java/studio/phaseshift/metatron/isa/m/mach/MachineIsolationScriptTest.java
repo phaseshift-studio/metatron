@@ -150,6 +150,87 @@ public class MachineIsolationScriptTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE TREE IS WALKED BY ITS {@code child} SLOT (Marko, 2026-11-13): every machine holds its children, so
+     * {@code >>child} steps one level down from any machine and {@code count()} counts that level. A pop takes the
+     * frame out of its parent's slot and leaves exactly its siblings, whether it had none, one or two. The tree hangs
+     * off {@code /kin}, a name's length its depth: the root also holds whatever frames the other scripts leave
+     * standing, so the root's own slot is read for {@code /kin} alone.
+     * <pre>
+     *   /kin ── a ── aa ── aaa
+     *        │     └ ab
+     *        ├ b ── ba
+     *        └ c
+     * </pre>
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] move(/.)",
+            "[STATE] *~.push(<kin>)",
+            "[STATE] *~.push(<a>)",
+            "[STATE] *~.push(<aa>)",
+            "[STATE] *~.push(<aaa>)",
+            "[STATE] move(</kin/a>)",
+            "[STATE] *~.push(<ab>)",
+            "[STATE] move(</kin>)",
+            "[STATE] *~.push(<b>)",
+            "[STATE] *~.push(<ba>)",
+            "[STATE] move(</kin>)",
+            "[STATE] *~.push(<c>)",
+            "[STATE] move(/.)",
+            "*</.>.>>child.is(vid().eq(</kin>)).count() % 1",
+            // one level down at a time: kin's three children, their three, and the one below those
+            "*</kin>.>>child.count() % 3",
+            "*</kin>.>>child.>>child.count() % 3",
+            "*</kin>.>>child.>>child.>>child.count() % 1",
+            "*</kin>.>>child.>>child.>>child.>>child.count() % 0",
+            "*</kin/a>.>>child.count() % 2",
+            "*</kin/b>.>>child.count() % 1",
+            "*</kin/c>.>>child.count() % 0",
+            // the frame a move stands in answers as its address does, and c's snapshot of kin's keys (its siblings) is
+            // no child of c
+            "[STATE] move(</kin/a>)",
+            "*~.>>child.count() % 2",
+            // ... and the slot read as an address, the web machine panel's read of a node (mtron-panels.js childrenOf)
+            "@~/child.count() % 2",
+            "[STATE] move(</kin/c>)",
+            "*~.>>child.count() % 0",
+            "[STATE] move(/.)",
+            // a pop takes an only child out of its parent's slot ...
+            "[STATE] move(</kin/a/aa/aaa>)",
+            "[STATE] pop()",
+            "*~.vid() % /kin/a/aa",
+            "*</kin/a/aa>.>>child.count() % 0",
+            "*</kin>.>>child.>>child.>>child.count() % 0",
+            // ... one of two, and its sibling stays
+            "[STATE] move(</kin/a/ab>)",
+            "[STATE] pop()",
+            "*</kin/a>.>>child.count() % 1",
+            "*</kin/a>.>>child.vid() % /kin/a/aa",
+            "*</kin>.>>child.>>child.count() % 2",
+            // ... and one of three, and both its siblings stay
+            "[STATE] move(</kin/c>)",
+            "[STATE] pop()",
+            "*</kin>.>>child.count() % 2",
+            "*</kin>.>>child.>>child.count() % 2",
+            // down to nothing, bottom up, and the root no longer holds /kin
+            "[STATE] move(</kin/a/aa>)",
+            "[STATE] pop()",
+            "[STATE] pop()",
+            "*~.vid() % /kin",
+            "*</kin>.>>child.count() % 1",
+            "[STATE] move(</kin/b/ba>)",
+            "[STATE] pop()",
+            "[STATE] pop()",
+            "*~.>>child.count() % 0",
+            "[STATE] pop()",
+            "*~.vid() % /.",
+            "*</.>.>>child.is(vid().eq(</kin>)).count() % 0",
+            "[STATE] move(/.)"
+    })
+    void testTheTreeIsWalkedByItsChildSlotAndAPopLeavesTheRest() {
+    }
+
+    /**
      * THE ARITHMETIC, at depth: one step up, several steps up, a composed path DOWN in a single instruction, and
      * a {@code ~}-based displacement. The last two are the ones that pin the resolution order — {@code ~} has to
      * be consumed BEFORE the fold, or the fold pops the base itself and {@code ~/../..} collapses instead of

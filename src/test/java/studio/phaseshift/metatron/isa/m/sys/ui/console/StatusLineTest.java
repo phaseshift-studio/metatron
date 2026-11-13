@@ -345,9 +345,9 @@ public class StatusLineTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE TREE IS THE CHILD LINKS, walked here rather than read as one space subtree: each frame's links live in its
-     * OWN space ({@code <vid>/child/...}, written by push), so a grandchild hangs under its parent — not under the
-     * parent's link in the grandparent's table. The walk hands those frames to the tree as its entries.
+     * THE TREE IS THE CHILD SLOT, walked here frame by frame: each frame's slot answers the machines the root registry
+     * holds one segment below its address, so a grandchild hangs under its parent and not under its grandparent. The
+     * walk hands those frames to the tree as its entries.
      */
     @Test
     void shouldWalkTheMachineTreeThroughChildLinks() {
