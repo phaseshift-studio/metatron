@@ -47,6 +47,8 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -65,6 +67,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -1117,13 +1120,148 @@ public class mInstSet extends AbstractInstSet {
                         // THE CODE RING'S NORMAL FORMS, read off the additive op its theory declares (branch): the
                         // left-distributive form (Marko, 2026-11-10: two parallel expressions run as one, branched where their
                         // instructions differ), a·b + a·c ⇝ a·(b + c); like terms, x + x ⇝ x{2}; and the one-term sum, S(x) ⇝ x.
-                        // The category registered the last two until 2026-11-12: its rewrites are /m's now
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_factor"),
-                                Law.Helper::branchFactor), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their span and point and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_collapse"),
-                                Law.Helper::branchCollapse), "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[\\mathrm{code}].\\mathrm{law}\\), \\(S = \\mathrm{branch}\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_inline"),
-                                Law.Helper::branchInline), "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
+                        // The category registered the last two until 2026-11-12: its rewrites are /m's now. Each reads the op
+                        // off the code ring's declared theory at rewrite time, so no body names branch, and a code ring that
+                        // declares no additive op leaves the chain as it is. The op is matched by its base path: it is
+                        // registered generic, so a space read's admitted() would drop it, and the bare address is unique to the
+                        // code ring. Two members are the same term by Law.Helper.sameMember, the one test both laws read.
+                        //
+                        // THE LEFT-DISTRIBUTIVE FORM goes as far as the like-term normal form and no further: one shared
+                        // instruction a pass (the fixpoint reaches a longer prefix); every member alike in its head, span and
+                        // point included, so no point moves; every member keeping a remainder, so no unit is introduced; and the
+                        // head pure, as it then runs once instead of once per member. A branch feeds its members one obj at a
+                        // time, so the head must take one obj at a time too (a mapper, filter or flatmapper): a shared reducer
+                        // would gather the whole stream ahead of the branch, and {1,2}.branch(count().plus(1),count().plus(2))
+                        // would count 2 where each member counts 1
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_factor"), code -> {
+                            final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
+                            if (null == op)
+                                return code;
+                            final Predicate<Obj> factorable = m -> m.isCode() && m.c().isOne() && 1 < m.asCode().insts().size();
+                            // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch
+                            final List<Type> carriers = Rewriter.Helper.carriers(code);
+                            boolean changed = false;
+                            final List<Inst> out = new ArrayList<>(code.insts().size() + 1);
+                            for (int i = 0; i < code.insts().size(); i++) {
+                                final Inst inst = code.insts().get(i);
+                                final List<Obj> members = op.basePath().equals(inst.tid().basePath()) && !inst.args().isRec() ? inst.args().elements().toList() : List.of();
+                                final Inst head = 2 > members.size() || !factorable.test(members.getFirst()) ? null : members.getFirst().asCode().insts().getFirst();
+                                final Rec declared = null == head ? noobjRec() : Law.Helper.declared(head.tid().basePath(), carriers.get(i));
+                                if (declared.isNoObj()
+                                        || !EnumSet.of(Inst.Form.mapper, Inst.Form.filter, Inst.Form.flatmapper).contains(Inst.Form.of(head.tid(declared.atDirect(OBJ).tid())).subring())
+                                        || !Law.Helper.declares(declared, Law.pure) || !members.stream().allMatch(m -> factorable.test(m)
+                                        && Law.Helper.sameMember(m.asCode().insts().getFirst(), head) && m.asCode().insts().getFirst().tid().d().equals(head.tid().d()))) {
+                                    out.add(inst);
+                                    continue;
+                                }
+                                changed = true;
+                                out.add(head);
+                                out.add(inst.args(lst(members.stream()
+                                        .map(m -> (Obj) MCode.code(new ArrayList<>(m.asCode().insts().subList(1, m.asCode().insts().size()))).tryToInst())
+                                        .toList())));
+                            }
+                            return changed ? MCode.code(out) : code;
+                        }), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their span and point and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
+                        // THE LIKE-TERM LAW: equal members of an occurrence of the op collapse to the member that first appeared,
+                        // carrying the summed multiplicities, S(x,x,…,x) ⇝ S(x{n}). A REC ARGUMENT LIST IS A ROUTE TABLE: its
+                        // members are SCHEDULED (each runs at its key's place), not free additive terms. Equal lanes under ONE
+                        // key are already summed by the rec itself (a => x, a => x is a => x{2}), and lanes under different keys
+                        // run at different places, so they never collapse. A MEMBER'S MULTIPLICITY is the coefficient the law
+                        // sums: an inst's own point d, the point of a code's last inst (on the member's output), else the obj's
+                        // coefficient. Never the head's: a point there floats past a reducer, so
+                        // 5.branch(plus(1).count(),plus(1).count()) collapsed to plus{2}(1).count() and answered 2, not {2}1.
+                        // Never the whole coefficient b·d: a span is part of the function (like terms share it), so summing it
+                        // as a point read {?}plus(1) + plus(1) as plus{1,2}(1). The summed point is written back there, its span
+                        // untouched
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_collapse"), code -> {
+                            final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
+                            if (null == op)
+                                return code;
+                            final Function<Obj, cInt> multiplicity = member -> member.isCode() && !member.asCode().insts().isEmpty()
+                                    ? member.asCode().insts().getLast().tid().d()
+                                    : member.isInst() ? member.asInst().tid().d() : member.c();
+                            boolean changed = false;
+                            final List<Inst> out = new ArrayList<>(code.insts().size());
+                            for (final Inst inst : code.insts()) {
+                                if (!op.basePath().equals(inst.tid().basePath()) || inst.args().isRec() || 2 > inst.args().count()) {
+                                    out.add(inst);
+                                    continue;
+                                }
+                                final List<Obj> reps = new ArrayList<>();
+                                final List<cInt> sums = new ArrayList<>();
+                                for (final Obj arg : inst.args().elements().toList()) {
+                                    int slot = -1;
+                                    for (int j = 0; j < reps.size(); j++) {
+                                        if (Law.Helper.sameMember(reps.get(j), arg)) {
+                                            slot = j;
+                                            break;
+                                        }
+                                    }
+                                    if (-1 == slot) {
+                                        reps.add(arg);
+                                        sums.add(multiplicity.apply(arg));
+                                    } else
+                                        sums.set(slot, sums.get(slot).plus(multiplicity.apply(arg)));
+                                }
+                                if (reps.size() < inst.args().count()) {
+                                    changed = true;
+                                    final List<Obj> merged = new ArrayList<>(reps.size());
+                                    // a representative is kept as written only when it already carries the sum: the first member may be
+                                    // zero-pointed (branch(id{0}(),id()) sums to 1 on id{0}()), so a sum of 1 is no proof of an unpointed rep
+                                    for (int i = 0; i < reps.size(); i++) {
+                                        final Obj rep = reps.get(i);
+                                        final cInt sum = sums.get(i);
+                                        if (multiplicity.apply(rep).equals(sum))
+                                            merged.add(rep);
+                                        else if (rep.isCode() && !rep.asCode().insts().isEmpty()) {
+                                            final List<Inst> insts = new ArrayList<>(rep.asCode().insts());
+                                            insts.set(insts.size() - 1, insts.getLast().d(sum).asInst());
+                                            merged.add(MCode.code(insts));
+                                        } else
+                                            merged.add(rep.isInst() ? rep.d(sum) : rep.c(sum));
+                                    }
+                                    out.add(inst.args(lst(merged)));
+                                } else
+                                    out.add(inst);
+                            }
+                            return changed ? MCode.code(out) : code;
+                        }), "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[\\mathrm{code}].\\mathrm{law}\\), \\(S = \\mathrm{branch}\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
+                        // THE ONE-TERM SUM LAW: an occurrence of the op whose members have come to one is that member, added to
+                        // nothing, S(x) ⇝ x. The frame unwraps and its own coefficient folds into the member, branch{c}(b) ⇝ b{c}:
+                        // a code member takes it on its last inst, where its multiplicity is read, and any other member takes the
+                        // multiplication itself. A call member splices in by its insts, a non-call member lifts to the map that
+                        // emits it, stream-transparent either way. A REMOTE LANE IS NOT A ONE-TERM SUM: inlining a lane keyed to
+                        // another host would drop the place and run the program here. A lone addressless lane runs here anyway,
+                        // so it inlines as a positional one does
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_inline"), code -> {
+                            final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
+                            if (null == op)
+                                return code;
+                            boolean changed = false;
+                            final List<Inst> out = new ArrayList<>(code.insts().size());
+                            for (final Inst inst : code.insts()) {
+                                if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && !Inst.Helper.hasRemoteLane(inst)) {
+                                    final Obj lone = inst.args().isRec() ? inst.args().asRec().recValue().values().iterator().next() : inst.arg(0);
+                                    final cInt c = inst.c();
+                                    final Obj member;
+                                    if (cInt.ONE().equals(c))
+                                        member = lone;
+                                    else if (lone.isCode()) {
+                                        final List<Inst> insts = new ArrayList<>(lone.asCode().insts());
+                                        insts.set(insts.size() - 1, (Inst) insts.getLast().c(o -> o.mult(c)));
+                                        member = MCode.code(insts);
+                                    } else
+                                        member = lone.c(o -> o.mult(c));
+                                    changed = true;
+                                    if (member.isCall())
+                                        out.addAll(member.asCall().insts());
+                                    else
+                                        out.add((Inst) map_(member).tryToInst());
+                                } else
+                                    out.add(inst);
+                            }
+                            return changed ? MCode.code(out) : code;
+                        }), "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
 
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where
