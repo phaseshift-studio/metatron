@@ -452,6 +452,7 @@ public final class Tokens {
     public static final fURI OK = f("ok");
     public static final fURI GOT = f("got");
     public static final String INVERSE = "inverse";
+    public static final String CONVERSE = "converse";
     public static final String COMBINER = "combiner";
     public static final String DERIVATION = "derivation";
     public static final String FROM = "from";

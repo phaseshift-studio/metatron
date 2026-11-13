@@ -118,6 +118,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
     private final Map<Obj, String> keyedArgDocs = new LinkedHashMap<>();
     private Obj seed;
     private Inst.Form form;
+    private fURI converse;
     private TriFunction<Triplet<Poly, Inst.f, Obj>, fURI, fURI, Inst> constructor;
 
     private InstBuilder() {
@@ -243,6 +244,18 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
     }
 
     /**
+     * Declare the instruction's CONVERSE (Marko, 2026-11-13): the relation it states, run backward -- its dom and rng
+     * flipped, the same arguments. plus(2) backward is minus(2), out() backward is in(). A negative span runs it
+     * ({-1}plus(2) is minus(2)). It is no INVERSE: an inverse is a one-way retraction the rewriter cancels
+     * ({@code f·g = ε}); a converse is the whole backward relation, which never cancels ({@code out().in()} is not
+     * {@code ε}). The two meet on a bijection, where each names the other. Queued with the other facets at {@code ?decq}.
+     */
+    public InstBuilder converse(final fURI converse) {
+        this.converse = converse;
+        return this;
+    }
+
+    /**
      * Declare an ALREADY-REGISTERED operation's form by its base path — the call a registration site makes when its
      * instructions are built by {@code instC(...)} rather than through this builder (which is how the obj/inst area
      * registers {@code as}, {@code type()}, {@code vid()} and {@code tid()}). The declaration is per OPERATION, so
@@ -261,6 +274,16 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
      */
     public static Inst.Form declaredForm(final fURI instTid) {
         return null == instTid ? null : DECLARED_FORMS.get(instTid.basePath());
+    }
+
+    /**
+     * Declare an ALREADY-BUILT instruction's {@link #converse CONVERSE} -- the call a registration site makes when its
+     * instructions are built by {@code instC(...)} rather than through this builder (the graph's out/in/both), as
+     * {@link #declareForm} is for a form. It answers the instruction, so it wraps the {@code instC(...)} it declares.
+     */
+    public static Inst declareConverse(final Inst inst, final fURI converse) {
+        PendingWrites.write(PendingWrites.decq(Inst.Helper.operationTid(inst.tid())), claimRec(inst, List.of(), null, converse, null, null));
+        return inst;
     }
 
     /**
@@ -291,7 +314,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         // the doc q-proc must not require a value read (which would resolve the inst as a side effect).
         if (!inst.tid().basePath().equals(inst.tid()))
             PendingWrites.write(PendingWrites.docq(inst.tid().basePath()), doc);
-        final Rec claim = claimRec(inst, List.copyOf(this.laws), this.inverse, this.derivation, null == this.form ? Inst.Form.of(inst) : this.form);
+        final Rec claim = claimRec(inst, List.copyOf(this.laws), this.inverse, this.converse, this.derivation, null == this.form ? Inst.Form.of(inst) : this.form);
         if (!claim.isEmpty())
             PendingWrites.write(PendingWrites.decq(Inst.Helper.operationTid(inst.tid())), claim);
         // a FORM is a declaration too, but one made per OPERATION: every specialization of the op is the same typer
@@ -304,17 +327,20 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
 
     /**
      * THE CLAIM REC — what an instruction declares beside itself, composed ONCE so the queued write and the drained
-     * write cannot disagree: the process laws it obeys, the opposing edge it declares, its defining equation and the
-     * form it declared. A facet that was never declared is omitted rather than written as a null or an empty list,
-     * so the rec carries exactly the claims the instruction made; a claim of nothing at all is the empty rec.
+     * write cannot disagree: the process laws it obeys, the opposing edge it declares, the relation it runs backward,
+     * its defining equation and the form it declared. A facet that was never declared is omitted rather than written
+     * as a null or an empty list, so the rec carries exactly the claims the instruction made; a claim of nothing at
+     * all is the empty rec.
      */
-    private static Rec claimRec(final Inst inst, final List<Law> laws, final fURI inverse, final Rec derivation,
-                                final Inst.Form form) {
+    private static Rec claimRec(final Inst inst, final List<Law> laws, final fURI inverse, final fURI converse,
+                                final Rec derivation, final Inst.Form form) {
         final Map<Obj, Obj> facets = new LinkedHashMap<>();
         if (null != laws && !laws.isEmpty())
             facets.put(uri(LAW), lst(laws.stream().map(l -> (Obj) uri(l.name())).toList()));
         if (null != inverse)
             facets.put(uri(INVERSE), uri(inverse));
+        if (null != converse)
+            facets.put(uri(CONVERSE), uri(converse));
         if (null != derivation)
             facets.put(uri(DERIVATION), derivation);
         if (null != form)
