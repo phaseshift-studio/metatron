@@ -98,7 +98,7 @@ public final class mInsts {
                 InstBuilder.build().tid(NEG_INST_TID, "the additive inverse of the int")
                         .dom(INT_TID, "the int to negate").rng(INT_TID, "the negated int").argLst()
                         .body((lhs, inst) -> lhs.asInt().neg())
-                        .converse(NEG_INST_TID)
+                        .converse(NEG_INST_TID.dom(INT_TID).rng(INT_TID))
                         .law(Law.involution, Law.pure)
                         .create(),
                 // NOT mult's inverse. Truncating division is not injective (7.div(2).mult(2) is 6, not 7), so no
@@ -192,7 +192,7 @@ public final class mInsts {
                         .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the subtraction")
                         .argLst(INT_TYPE, "the int to subtract from the lhs")
                         .body((lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue()))
-                        .converse(PLUS_INST_TID)
+                        .converse(PLUS_INST_TID.dom(INT_TID).rng(INT_TID).args(INT_TID))
                         .derivation(minus_(T(ALL, f("b"), null, null)), plus_(map_(T(ALL, f("b"), null, null)).neg_()))
                         .law(Law.action, Law.pure)
                         .create(),
@@ -213,7 +213,7 @@ public final class mInsts {
                         .rng(INT_TID, "the result of the addition")
                         .argLst(INT_TYPE, "the int to add to the lhs")
                         .body((lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue()))
-                        .converse(MINUS_INST_TID)
+                        .converse(MINUS_INST_TID.dom(INT_TID).rng(INT_TID).args(INT_TID))
                         .example("1.plus(2)          [-- 3                    --]",
                                 "1+2                [-- 3 sugar'd form       --]",
                                 "1.plus(plus(1))    [-- 3 nested application --]",
@@ -258,21 +258,21 @@ public final class mInsts {
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the negated lhs real")
                         .argLst()
                         .body((lhs, inst) -> lhs.asReal().neg())
-                        .converse(NEG_INST_TID)
+                        .converse(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID))
                         .law(Law.involution, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "a sum function \\(f(x, y) \\mapsto x + y\\): adds the rhs real to the lhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the sum")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().plus(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
-                        .converse(MINUS_INST_TID)
+                        .converse(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID).args(REAL_TID))
                         .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MULT_INST_TID, "a product function \\(f(x, y) \\mapsto xy\\): multiplies the lhs real by the rhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the product")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().mult(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
-                        .converse(DIV_INST_TID)
+                        .converse(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID).args(REAL_TID))
                         .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
                         .create(),
                 InstBuilder.build().tid(ZERO_INST_TID, "a zero function: the real zero (0.0)")
@@ -325,7 +325,7 @@ public final class mInsts {
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the quotient")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().div(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
-                        .converse(MULT_INST_TID)
+                        .converse(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID).args(REAL_TID))
                         .derivation(div_(T(ALL, f("b"), null, null)), mult_(map_(T(ALL, f("b"), null, null)).inv_()))
                         .law(Law.right_distributive, Law.action, Law.pure)
                         .create(),
@@ -333,7 +333,7 @@ public final class mInsts {
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the difference")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().minus(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
-                        .converse(PLUS_INST_TID)
+                        .converse(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID).args(REAL_TID))
                         .derivation(minus_(T(ALL, f("b"), null, null)), plus_(map_(T(ALL, f("b"), null, null)).neg_()))
                         .law(Law.action, Law.pure)
                         .create(),
