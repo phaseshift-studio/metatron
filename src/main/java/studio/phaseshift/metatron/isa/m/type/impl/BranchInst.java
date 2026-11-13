@@ -104,8 +104,14 @@ public class BranchInst extends MInst {
     public Obj route(final Obj lhs) {
         if (!this.args().isRec())
             // the member's own application already carries its multiplicity (an inst's coefficient, or a code's
-            // head-inst coefficient); the branch contributes its lhs
-            return objs(this.args().elements().map(o -> o.apply(lhs).c(c -> lhs.c().mult(c))));
+            // head-inst coefficient); the branch contributes its lhs. UNDER A BATCHING GRAIN ({n} a page, {*} the whole
+            // lhs) the lhs is a bag, and a member runs over it as a lane does, start(bag).member: the start streams the
+            // bag, so a map meets one obj at a time and a fold the whole bag, and the objs carry their own multiplicity.
+            // Applied to the bag whole, a one-instruction member read it as one lhs (plus(1) against int{2}), and the
+            // bag's count multiplied what its objs already count ({3,2}.branch?<=int{*}(id()) was {{2}3,{2}2})
+            return objs(this.args().elements().map(o -> this.isBatching()
+                    ? start_(lhs).addInsts(o.isCall() ? o.asCall().insts() : List.of((Inst) map_(o).tryToInst())).apply(noobj())
+                    : o.apply(lhs).c(c -> lhs.c().mult(c))));
         final List<Rel> routes = this.routes().elements().toList();
         final long[] weights = routes.stream()
                 .mapToLong(route -> seeded(route) ? 0L : this.weight(route.first().uriValue()))

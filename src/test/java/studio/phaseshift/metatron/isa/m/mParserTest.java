@@ -452,6 +452,9 @@ public class mParserTest extends AbstractMetatronTest {
             "0.{0,6}plus{2}(1).sum()                  % 642",
             "0.{0,6}plus{2}(1).count()                % 127",
             "{1,2,3}.{0,1}sum()                       % {1,2,3,6}",
+            // every run starts from the lhs as it came: the zero-step run is that bag, never the bag the runs grew
+            "{1,2,3}.{0,2}sum()                       % {1,2,3,{2}6}",
+            "{1,2}.{0,2}plus(1)                       % {1,{2}2,{2}3,4}",
             "{1,2,3}.{2,3}count()                     % {2}1",
             // (a + a + a)^2 = 9a^2, the point inside the span; the brace with one dot
             "1.{2}{plus(34),plus(34),plus(34)}        % {9}69",

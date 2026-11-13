@@ -301,6 +301,37 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * THE GRAIN OF AN ORDERED BRANCH: its dom coefficient says how much of the lhs one call holds. Under the default,
+     * {@code {?}}, a call holds one obj and every member applies to it. Under a batching grain ({@code {n}} a page,
+     * {@code {*}} the whole lhs) a call holds a bag, and every member runs over it as a keyed lane does,
+     * {@code start(bag).member}: a map meets one obj at a time, a fold meets the whole bag, and the objs keep their own
+     * multiplicity. So the grain changes how often a fold folds, never what a map makes, and a span runs the same terms
+     * under either grain: {@code 0.{4}branch(plus(1),id())} is the binomial row 1 4 6 4 1, the span-and-point
+     * article's live proof, which a {@code {*}} grain once rendered as {@code fail{42}} (2026-11-13).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{3,2}.branch(id())                               % {3,2}",
+            "{3,2}.branch?<=int{*}(id())                      % {3,2}",
+            "{3,2}.branch?<=int{*}(plus(1))                   % {4,3}",
+            "{3,2}.branch?<=int{*}(plus(1),id())              % {4,{2}3,2}",
+            "{3}5.branch(plus(1))                             % {3}6",
+            "{3}5.branch?<=int{*}(plus(1))                    % {3}6",
+            "{1,2,3}.branch(sum(),count())                    % {{4}1,2,3}",
+            "{1,2,3}.branch?<=int{*}(sum(),count())           % {6,3}",
+            "{1,2,3,4}.branch?<=int{2}(count())               % {1,2,3,4}.branch?<=int{2}(<~> => count())",
+            "noobj.branch?<=int{*}(count())                   % noobj.branch?<=int{*}(<~> => count())",
+            "2.{2}branch(plus(1),id())                        % {4,{2}3,2}",
+            "0.{4}branch(plus(1),id())                        % {4,{4}3,{6}2,{4}1,0}",
+            "5.{2}branch(plus(1),mult(2))                     % {7,12,11,20}",
+            "0.{4}branch?<=int{*}(plus(1),id())               % {4,{4}3,{6}2,{4}1,0}",
+            "0.{0,2}branch?<=int{*}(plus(1),id())             % {{3}0,{3}1,2}",
+    }, delimiter = '%')
+    public void testBranchGrain(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
      * THE BRANCH'S OWN LAW — the additive operation: monoidic (associative, {@code noobj} its identity) and pure;
      * NOT commutative. Commutativity is a property of a FOLD's combiner (the shard's cut), never of the branch: its
      * keys route by place, its split deals in order, and its lanes may have effects. The lanes' laws do not promote
