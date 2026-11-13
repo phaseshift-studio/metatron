@@ -24,7 +24,9 @@ for the diagonal. The unity is *parametric*, $1 : \forall A.\, A \to A$, so the 
 between objects of every type, and parametricity, not a check at each type, guarantees that it is.
 
 This article defines the relation ring and proves that no value is its unity (Theorem 1), that the arrow
-$1 \Rightarrow 1$ is its unity (Theorem 2), and that parametricity makes it the unity at every type (Theorem 3).
+$1 \Rightarrow 1$ is its unity (Theorem 2), and that parametricity makes it the unity at every type (Theorem 3). It
+then finds a second parametric identity, the unit of the product of lsts, which is parametric in the object it
+multiplies rather than in its type (Theorems 4 and 5).
 
 **Live proof.** An arrow composes with an arrow that starts where it ends,
 $(2 \Rightarrow 3) \cdot (3 \Rightarrow 4) = 2 \Rightarrow 4$. The unity of a relation is the arrow between two
@@ -245,13 +247,126 @@ $(1 \Rightarrow 1) \cdot (2 \Rightarrow 3) = 2 \Rightarrow 3$, and the zero aske
 ('a'=>'b').zero().count()
 ```
 
+# A Unit Parametric in its Operand
+
+A lst is a word of slots, $[x_1, \ldots, x_m]$. Lsts add by concatenation,
+$[x_1, \ldots, x_m] + [y_1, \ldots, y_n] = [x_1, \ldots, x_m, y_1, \ldots, y_n]$, and the empty lst $[\,]$ is their
+zero. A product of lsts that distributes over concatenation on the right is fixed by what it does to lsts of one slot,
+and the product that keeps each slot's own algebra multiplies the slots.
+
+::: **Definition 3** (Slot product). If $u = [x_1, \ldots, x_m]$ and $v = [y_1, \ldots, y_n]$, then
+$$
+\begin{equation*}
+u \cdot v = [x_1 \cdot y_1, \ldots, x_1 \cdot y_n, \; \ldots, \; x_m \cdot y_1, \ldots, x_m \cdot y_n],
+\end{equation*}
+$$
+where each $x_i \cdot y_j$ is the product of its slots' type, and a product that yields no object is no slot.
+:::
+
+The slot product distributes over concatenation exactly on the right, $(u + u') \cdot v = u \cdot v + u' \cdot v$, and
+on the left only up to the order of the slots. It is associative wherever the products of the slots are, as the slots
+of $(u \cdot v) \cdot w$ and of $u \cdot (v \cdot w)$ come in the same order. Its unit would be a lst of one slot,
+$[e]$, with $x \cdot e = e \cdot x = x$ for every slot $x$, and no value is that slot.
+
+::: **Theorem 4** (No value is the unit of the slot product). No lst is the unit of the slot product for both the
+lsts of ints and the lsts of bools.
+:::
+
+::: *Proof.* Let $u$ be such a unit. A product of two ints always yields an object, so $[2] \cdot u$ has as many
+slots as $u$, and $[2] \cdot u = [2]$ gives $u$ one slot, $u = [e]$. For its products with ints, $e$ is an int, and
+$[1_{\mathbb{Z}}] \cdot [e] = [1_{\mathbb{Z}}]$ gives $e = 1_{\mathbb{Z}} \cdot e = 1_{\mathbb{Z}}$. For its products
+with bools, $e$ is likewise the bool $1_{\mathbb{B}} = \top$. No value is both. ◻
+:::
+
+So the unit of the slot product is a family again, $\{[1_A]\}_A$, one lst per slot type, and an instruction
+compresses it: the one that answers the one of whatever it meets.
+
+::: **Definition 4** (The parametric one). The instruction $\mathrm{one}$ takes the slot it meets to the one of that
+slot's type: if $x : A$, then $\mathrm{one}(x) = 1_A$. In a slot product it meets the facing slot, on either side:
+$$
+\begin{equation*}
+x \cdot \mathrm{one} = x \cdot \mathrm{one}(x) \quad \text{and} \quad \mathrm{one} \cdot x = \mathrm{one}(x) \cdot x.
+\end{equation*}
+$$
+:::
+
+::: **Theorem 5** (The parametric one is the unit of the slot product). If the slot types of a lst $u$ are monoids
+under their products, then $u \cdot [\mathrm{one}] = [\mathrm{one}] \cdot u = u$.
+:::
+
+::: *Proof.* If $u = [x_1, \ldots, x_m]$ with $x_i : A_i$, then
+$$
+\begin{equation*}
+\begin{array}{lclll}
+u \cdot [\mathrm{one}] &=& [x_1 \cdot \mathrm{one}, \ldots, x_m \cdot \mathrm{one}] && [\text{Definition 3}] \\
+&=& [x_1 \cdot \mathrm{one}(x_1), \ldots, x_m \cdot \mathrm{one}(x_m)] && [\text{Definition 4}] \\
+&=& [x_1 \cdot 1_{A_1}, \ldots, x_m \cdot 1_{A_m}] && [\mathrm{one}(x) = 1_A] \\
+&=& [x_1, \ldots, x_m] && [\text{$1_{A_i}$ is the unity of $A_i$}],
+\end{array}
+\end{equation*}
+$$
+and $[\mathrm{one}] \cdot u = u$ by the same steps on the left. ◻
+:::
+
+The one is parametric in another sense than $1 \Rightarrow 1$. The unity $1$ is parametric in the type: one
+implementation, return the object, serves every type alike, and Theorem 3 makes it the only total term of its type.
+The instruction $\mathrm{one}$ is parametric in its operand: the slot it meets selects the one of its own type. Its
+implementation differs from type to type, $1_{\mathbb{Z}}$, $1_{\mathbb{R}}$, $\top$ and $1 \Rightarrow 1$, ad hoc in
+Strachey's sense [3], while the term is one. This is the polymorphism of type classes [8], whose translation types it
+as $\mathrm{one} : \forall A.\, \mathrm{Monoid}(A) \to A$, a function of the monoid structure that the operand
+supplies. Its correctness is therefore not a free theorem but the unit law of each type, which is what metatron's
+`AbstractAlgebraTest` checks carrier by carrier. The two kinds nest: in a lst of arrows, $\mathrm{one}$ meets an arrow
+and becomes $1 \Rightarrow 1$, the one parametric in the operand handing over to the one parametric in the type.
+
+As a product that yields no object is no slot, a lst of arrows multiplies as a relation:
+$[a \Rightarrow 2, b \Rightarrow 3] \cdot [2 \Rightarrow x, 3 \Rightarrow y] = [a \Rightarrow x, b \Rightarrow y]$, the
+two arrows that do not meet leaving no slot. Its unit is $[\mathrm{one}]$, whose slot is $1 \Rightarrow 1$ wherever it
+meets an arrow.
+
+In mtron, `one()` asked of any lst is `[one()]`, a lst whose one slot holds the `one()` instruction. `mult` returns the
+facing slot wherever a slot holds `one()`, which is what evaluating it against that slot would give, and multiplies
+every other pair of slots by their own `mult`. On its own, `one()` in an argument is evaluated against the lhs, so
+`2.mult(one())` is `2`. A lst of rels is written with each rel in parentheses, `[(a=>2),(b=>3)]`, as `[a=>2,b=>3]` is
+a rec.
+
+**Live proof.** The one meets an int, a bool and an arrow and becomes the one of each:
+$2 \cdot \mathrm{one} = 2$, $\top \cdot \mathrm{one} = \top$ and $(a \Rightarrow 2) \cdot \mathrm{one} = a \Rightarrow 2$.
+
+```mtron_pre
+2.mult(one())
+true.mult(one())
+(a=>2).mult(one())
+```
+
+**Live proof.** The slot product of lsts of ints, its unit on either side, the same unit for a lst of reals, and the
+one asked of a lst of strs: $[2, 3] \cdot [4, 5] = [8, 10, 12, 15]$,
+$[2, 3] \cdot [\mathrm{one}] = [\mathrm{one}] \cdot [2, 3] = [2, 3]$ and $[2.5] \cdot [\mathrm{one}] = [2.5]$.
+
+```mtron_pre
+[2,3].mult([4,5])
+[2,3].mult([one()])
+[one()].mult([2,3])
+[2.5].mult([one()])
+['a','b'].one()
+```
+
+**Live proof.** A lst of arrows composes as a relation, and the parametric one is its unit.
+
+```mtron_pre
+[(a=>2),(b=>3)].mult([(2=>x),(3=>y)])
+[(a=>2)].mult([one()])
+```
+
 # Conclusion
 
 A ring of data need not hold its identities as values. When the unity a ring needs is an infinite value, such as the
 diagonal relation, the unity of the function ring stands for it. The arrow $1 \Rightarrow 1$ is the diagonal written as
 one finite term, and composition evaluates it at one object per arrow, where it is needed (Theorem 2). The unity is
 parametric, so the one term is the unity at every type, and parametricity, not a check at each type, guarantees it
-(Theorem 3). The same compression applies wherever an identity is a family indexed by infinitely many objects or
+(Theorem 3). The same compression gives lsts a unit. The slot product needs the one of every slot type, a family that
+no value holds (Theorem 4), and the lst $[\mathrm{one}]$ supplies it, its instruction becoming the one of whatever slot
+it meets (Theorem 5): a unit parametric in its operand rather than in its type, as the methods of a type class are.
+The same compression applies wherever an identity is a family indexed by infinitely many objects or
 types: the identity rewrite of a term rewriting system, the always-true filter of each type, and the identity morphism
 of each object of a category.
 
@@ -265,9 +380,8 @@ of each object of a category.
   compose as its graph?
 - As a stream function of type $\forall A.\, A \to A^*$, its free theorem, with the one-object type of Theorem 3,
   gives $f_A (x) = \langle x, \ldots, x \rangle$, with the same number $n$ of copies at every type. So the parametric
-  stream
-  functions are the points $n1$ of the unity [2]. The zero is $n = 0$, so both identities of the function ring are
-  points of its unity.
+  stream functions are the points $n1$ of the unity [2]. The zero is $n = 0$, so both identities of the function ring
+  are points of its unity.
 
 # References
 
@@ -285,3 +399,5 @@ of each object of a category.
    North-Holland, 1983.
 7. Wadler, P., "Theorems for Free!," Proceedings of the Fourth International Conference on Functional Programming
    Languages and Computer Architecture (FPCA '89), pages 347–359, 1989.
+8. Wadler, P., Blott, S., "How to Make Ad-Hoc Polymorphism Less Ad Hoc," Proceedings of the 16th ACM SIGPLAN-SIGACT
+   Symposium on Principles of Programming Languages (POPL '89), pages 60–76, 1989.

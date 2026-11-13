@@ -65,11 +65,14 @@ public class LstTest extends AbstractAlgebraTest {
     /// annihilates, and a product that is noobj is no slot: a lst of arrows is a relation, its product composition.
     @ParameterizedTest
     @CsvSource(value = {
-            "[1,2].mult([3,4])                                                            % [3,4,6,8]",
-            "[1,2] * [3,4]                                                                % [3,4,6,8]",
+            "2.mult(one())                                                                % 2",
+            "true.mult(one())                                                             % true",
+            "(a=>2).mult(one())                                                           % (a=>2)",
+            "[2,3].mult([4,5])                                                            % [8,10,12,15]",
+            "[2,3] * [4,5]                                                                % [8,10,12,15]",
             "[true,false].mult([false,true])                                              % [false,true,false,false]",
-            "[1,2].mult([one()])                                                          % [1,2]",
-            "[one()].mult([1,2])                                                          % [1,2]",
+            "[2,3].mult([one()])                                                          % [2,3]",
+            "[one()].mult([2,3])                                                          % [2,3]",
             "[2.5].mult([one()])                                                          % [2.5]",
             "[1,2].mult([])                                                               % [,]",
             "[].mult([1,2])                                                               % [,]",
@@ -77,9 +80,9 @@ public class LstTest extends AbstractAlgebraTest {
             "[1].plus([2]).mult([3,4])                                                    % [1].mult([3,4]).plus([2].mult([3,4]))",
             "[1,2].one()                                                                  % [one()]",
             "['a','b'].one()                                                              % [1,2].one()",
-            "[(a=>1),(b=>2)].mult([(1=>x),(2=>y)])                                        % [(a=>x),(b=>y)]",
-            "[(a=>1)].mult([(id()=>id())])                                                % [(a=>1)]",
-            "[(a=>1)].mult([one()])                                                       % [(a=>1)]",
+            "[(a=>2),(b=>3)].mult([(2=>x),(3=>y)])                                        % [(a=>x),(b=>y)]",
+            "[(a=>2)].mult([(id()=>id())])                                                % [(a=>2)]",
+            "[(a=>2)].mult([one()])                                                       % [(a=>2)]",
     }, delimiter = '%')
     public void testSlotProduct(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
