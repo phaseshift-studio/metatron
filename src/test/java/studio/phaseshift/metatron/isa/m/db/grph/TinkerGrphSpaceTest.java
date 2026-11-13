@@ -29,12 +29,15 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -326,6 +329,49 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
                 "the steps before the span are one call, and the steps after it another");
         assertEquals(3, middle.insts().size(), () -> "the span stays between the calls: " + middle);
         assertEquals(cInt.of("0,1"), middle.insts().get(1).tid().b(), "and keeps its span for the processor to run");
+    }
+
+    /**
+     * THE PUSHDOWN IS SWITCHED OFF AND BACK ON THROUGH THE INSTSET DOOR (Marko, 2026-11-13: "inactive on the rewrite
+     * doesn't work"). gremlin_pushdown declares no arguments, and its shadow, minted with one rec, was signed with
+     * another tid ({@code args=[rec]}): the door filed it beside the rewrite, the pool listed both, and the chain still
+     * compiled to one gremlin call. Off, the walk is mtron's and answers the same names; on, it is one call again.
+     */
+    @Test
+    public void testThePushdownIsSwitchedOffThroughTheInstsetDoor() {
+        final Machine parent = Machine.current();
+        final Inst pushdown = parent.instset().rewrites().stream()
+                .filter(rewrite -> "gremlin_pushdown".equals(rewrite.tid().name())).findFirst().orElseThrow();
+        final String chain = "*/g/V/1.out()>>name";
+        assertEquals("g.V(1).out().values('name')", script(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer
+                .parse(chain).asCode().rewrite()), "on, the chain is one gremlin call");
+
+        final Machine child = parent.push(f("pushdown_door"));
+        try {
+            final Obj off = Machine.evaluate("*~/instset/rewrite/gremlin_pushdown.inactive().to(~/instset/rewrite/gremlin_pushdown)");
+            assertFalse(off.isFail(), () -> "the door takes the shadow: " + off);
+            final Obj listed = Machine.evaluate("*~/instset/rewrite/gremlin_pushdown");
+            assertEquals(1, listed.stream().count(), () -> "the pool lists the pushdown once, never beside its shadow: " + listed);
+            assertEquals(pushdown, Inst.Helper.shadowed(listed.asInst()), "and lists it as off");
+            final Code walk = studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(chain).asCode().rewrite();
+            assertTrue(walk.insts().stream().noneMatch(inst -> inst.tid().name().equals("gremlin")),
+                    () -> "off, no run is pushed down: " + walk);
+            assertTrue(walk.insts().stream().anyMatch(inst -> inst.tid().name().equals("out")),
+                    () -> "and the walk stays mtron's: " + walk);
+            AbstractMetatronTest.checkCodeParseApply(LOG, chain, "{'vadas','josh','lop'}");
+            assertTrue(parent.instset().rewrites().contains(pushdown), "the enclosing machine keeps its pushdown");
+
+            Machine.evaluate("*~/instset/rewrite/gremlin_pushdown.active().to(~/instset/rewrite/gremlin_pushdown)");
+            assertEquals(pushdown, Machine.evaluate("*~/instset/rewrite/gremlin_pushdown"), "writing back the inherited rewrite removes the override");
+            assertEquals("g.V(1).out().values('name')", script(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer
+                    .parse(chain).asCode().rewrite()), "on again, the chain is one gremlin call");
+
+            Machine.evaluate("*~/instset/rewrite/gremlin_pushdown.inactive().to(~/instset/rewrite/gremlin_pushdown)");
+            Machine.evaluate("~/instset/rewrite/gremlin_pushdown -> noobj");
+            assertEquals(pushdown, Machine.evaluate("*~/instset/rewrite/gremlin_pushdown"), "and so does noobj");
+        } finally {
+            child.pop();
+        }
     }
 
     @Disabled("id-based traversal count mismatch over TinkerGraph")

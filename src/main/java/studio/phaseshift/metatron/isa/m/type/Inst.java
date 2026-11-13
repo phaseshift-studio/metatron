@@ -1431,7 +1431,11 @@ public interface Inst extends Call {
                             return rewrite;
                         if (Machine.current().instset().rewrites().stream().noneMatch(pooled -> pooled.tid().equals(rewrite.tid())))
                             throw MTronException.of("only a rewrite of the pool is switched off, not %s", rewrite);
-                        return instC(rewrite.tid(), lst(rec(uri(INACTIVE), rewrite)), (code, shadow) -> code);
+                        // THE SHADOW IS THE REWRITE'S OWN TID, EXACTLY: instC signs a tid with the args it mints
+                        // (MInst.ARGS_IN_TID), so the shadow's one rec read args=[rec], another identity than a rewrite that
+                        // declares none (gremlin_pushdown, branch_collapse), and the door filed it beside the rewrite, which
+                        // kept firing. Only a rewrite that carries one rec of rules (law_absorbing) agreed, by accident
+                        return instC(rewrite.tid(), lst(rec(uri(INACTIVE), rewrite)), (code, shadow) -> code).selfTID(rewrite.tid());
                     }),
                     instC(ACTIVE_INST_TID.dom(INST_TID).rng(INST_TID), lst(), (lhs, inst) -> {
                         final Obj carried = Helper.shadowed(lhs.asInst());
