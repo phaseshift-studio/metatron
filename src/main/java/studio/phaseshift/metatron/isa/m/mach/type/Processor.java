@@ -198,7 +198,17 @@ public interface Processor extends Component {
             }
             final Obj rhs = applyFunction(clhs, cinst, original, isMonadicInst);
             final cInt cc = cinst.c();
-            return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
+            if (!modulateC)
+                return rhs.c(c -> c.mult(cc));
+            // THE LHS'S MULTIPLICITY GOES BACK ON THE ANSWER AS THE LHS HELD IT (Marko, 2026-11-11: a value is
+            // {point}value{span}, its span curled up). The lhs was compressed to one copy, so its point multiplies the
+            // answer's, with the inst's, and a value's span multiplies the answer's span: {3}5{3}.plus(1) is {3}6{3}, as it
+            // is with the typer's dom check off. c(lhs.c()) wrote span x point into the point alone, so it answered {9}6.
+            // An answer that is no mono value (a stream, a poly, a fail) takes the whole count: a lst's span is its slots
+            final cInt span = lhs.tid().b();
+            return span.isOne() || !rhs.isMono()
+                    ? rhs.c(c -> c.mult(lhs.c()).mult(cc))
+                    : rhs.tid(rhs.tid().b(rhs.tid().b().mult(span))).d(rhs.tid().d().mult(lhs.tid().d()).mult(cc));
         }
 
         /**
