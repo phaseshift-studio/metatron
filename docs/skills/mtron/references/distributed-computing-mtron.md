@@ -176,7 +176,11 @@ The instruction's own default is `{?}`: a bare `branch()` feeds one obj at a tim
 at most n per call), `{*}` gathers the whole lhs once — a **barrier** — and a band `{2,5}` keeps its band. The
 distributed rewrite states `{*}` on the branch it emits where it wants a barrier (the computed-bag broadcast); that
 is an optimization of the plan, never a property of the instruction. The branch never combines pages — the chain's
-outer fold does, so the recombination law is still the cut's gate.
+outer fold does, so the recombination law is still the cut's gate. An ORDERED branch's members run over what a call
+holds as a keyed lane does, `start(bag).member`: under a page or the barrier a map still meets one obj at a time and a
+fold meets the whole bag, so `{1,2,3}.branch?<=int{*}(sum(),count())` is `{6,3}` where the per-object default answers
+`{{4}1,2,3}`, and a map's terms are the same under every grain (`0.{4}branch?<=int{*}(plus(1),id())` is still the
+binomial row `{4,{4}3,{6}2,{4}1,0}`).
 
 A split partitions the branch's **shipment**, not the call: under a rewrite's `{*}` branch, `branch?split=part` deals
 the whole lhs across its keys (each lane's program runs once over its part); under the instruction's per-object

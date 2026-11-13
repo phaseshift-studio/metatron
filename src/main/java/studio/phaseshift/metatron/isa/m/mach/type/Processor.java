@@ -154,7 +154,10 @@ public interface Processor extends Component {
                     // step one obj at a time
                     for (long j = 0; j < i; j++)
                         current = step.isGather() ? apply(current, step) : current.stream().map(o -> apply(o, step)).reduce(noobj(), Obj::append);
-                    result = result.append(current);
+                    // the runs gather into a FRESH stream: an Objs appends in place, and the zero-step run is the lhs
+                    // itself, a barrier's bag that every later run starts from again. Appended into, the bag grew by each
+                    // run, and {1,2,3}.{0,2}sum() was {1,2,3,6,12}
+                    result = objs(Stream.of(result, current).flatMap(Obj::stream));
                 }
                 return result;
             }
