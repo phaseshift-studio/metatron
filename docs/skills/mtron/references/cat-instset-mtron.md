@@ -262,6 +262,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `law_monoidic` (/m)      | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_poset` (/m)         | $\mathrm{law} \ni \mathrm{poset}$ + the comparison orders one bound past the other         | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
 | `inverse_cancellation` (/m) | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
+| `map_nest` (/m)          | nothing: a plain rule, whatever the inner mapping maps                                     | $\mathrm{map}(\mathrm{map}(f)) \leadsto \mathrm{map}(f)$                                                                         |
 | `form_map_unwrap` (/m)   | `form = mapper` declared by the operation `map` wraps                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` (/m) | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
 | `branch_collapse` (/m)   | the additive op of the code ring's theory (`branch`)                                        | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
@@ -303,26 +304,28 @@ off for that machine, and writing back `.active()`, or `-> noobj`, switches it o
 obj flowing in: an argument that is an instruction is code, and a block (`-> |inst`) hands over a literal instruction,
 not the value an expression computes. A rewrite's declared
 argument *is* its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
-place. A law's rule is stated in the name `op`, the instruction that claims the law: `law_involution` carries
-`[involution => [op.op => ]]`, `law_idempotent` `[idempotent => [op.op => op]]` and `law_monoidic`
-`[monoidic => [op.op => op]]`. Every claimant binds `op` to
+place, and its body is where they hold: the gate it applies them under is written beside them, not picked by a key. A
+law's rule is stated in the name `op`, the instruction that claims the law: `law_involution` carries
+`[op.op => ]`, and `law_idempotent` and `law_monoidic` both carry `[op.op => op]`, told apart by the law whose
+claimants bind `op` and by the gate that reads it. Every claimant binds `op` to
 its own term (`neg`, `ucase`, `sum`, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
-`conjugate` — not only the additive group's. A row keyed by a *form* states its rule over a named hole, and the hole
-ranges over that form: `form_map_unwrap`'s `mapper => [map(#::T@f) => #::T@f]` unwraps a mapping where the operation `map` wraps
-declares the mapper form (a form is declared per operation). `map` hands each obj to its argument one at a time, so a mapper
+`conjugate` — not only the additive group's. A *form*'s rule is stated over a named hole, and its gate asks that the hole
+range over that form: `form_map_unwrap` carries `[map(#::T@f) => #::T@f]` and unwraps a mapping where the operation `map`
+wraps declares the mapper form (a form is declared per operation). `map` hands each obj to its argument one at a time, so a mapper
 (`map(neg)` is `neg`) unwraps and a stream's fold does not: `{1,2,3}.map(sum())` sums each element alone, where
-`{1,2,3}.sum()` is 6. A row keyed by anything else is *plain*: its rule is stated in the instructions themselves, so it
-applies as it stands, with no `op` to bind and no law to gate it. `else_after_count => [count().else(#::T) => count()]`
-drops the dead `else` after a total `count`, and `form_map_unwrap`'s first row, `map_nest => [map(map(#::T@f)) => map(#::T@f)]`, drops a map of a map,
-whatever it maps. A plain row may compute its change: a `${…}` template is evaluated with the names the run bound, so
-`range_skip_take => [range(int::T@i,int::T@n) => skip(#::T@i).take(${*n.minus(*i)})]` turns a window into a skip
-and a take. The poset law's rewrite, `law_poset`, is stated over the bound each rule keeps:
-`poset => [is(op(#::T@a)).is(op(#::T@b)) => is(op(#::T@b)), …]`. Its gate evaluates the comparison, so the bound
+`{1,2,3}.sum()` is 6. A *plain* rule is stated in the instructions themselves, so it applies as it stands, with no `op`
+to bind and no law to gate it. `else_after_count` carries `[count().else(#::T) => count()]` and drops the dead `else`
+after a total `count`, and `map_nest` carries `[map(map(#::T@f)) => map(#::T@f)]` and drops a map of a map, whatever it
+maps. It runs just before `form_map_unwrap`, and the two are separate rules: `map`'s own form is no mapper, so the unwrap
+never takes a nested mapping on its own. A plain rule may compute its change: a `${…}` template is evaluated with the
+names the run bound, so `range_skip_take`'s `[range(int::T@i,int::T@n) => skip(#::T@i).take(${*n.minus(*i)})]` turns a
+window into a skip and a take. The poset law's rewrite, `law_poset`, is stated over the bound each rule keeps:
+`[is(op(#::T@a)).is(op(#::T@b)) => is(op(#::T@b)), …]`. Its gate evaluates the comparison, so the bound
 kept is the one the comparison orders past the other ($\max$ under `gt`, $\min$ under `lt`), with no comparison
 named in the rule. The pair is also stated the other way round, and for `filter`.
 
-The absorbing law's rewrite, `law_absorbing`, is stated over a *run*, not a pair: `absorbing => [{+}#{*}<=#{*}({*}#::T).op => op]`. Its
+The absorbing law's rewrite, `law_absorbing`, is stated over a *run*, not a pair: `[{+}#{*}<=#{*}({*}#::T).op => op]`. Its
 first element is an instruction with a **span**, `{span}inst{point}`, read as a type's span is read over a lst's slots:
 `{+}#({*}#::T)` is one or more instructions of any name and arguments, laid over the chain as a lst type's entries are
 laid over its indices. A rewrite tries the longest run first and shortens it where the gate refuses it. The run never

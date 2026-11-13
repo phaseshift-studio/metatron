@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -258,8 +259,17 @@ public interface InstSet extends Space, Component.Prefix {
 
     class Helper {
 
-        public static Inst rewriter(final fURI tid, Function<Code, Code> rewrite) {
+        public static Inst rewriter(final fURI tid, final Function<Code, Code> rewrite) {
             return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) -> rewrite.apply(lhs.asCode()));
+        }
+
+        /**
+         * A rewrite that carries its RULES as its declared argument, a value rather than a type, so it resolves with its
+         * rules bound and no type resolution takes place. The body reads them off the instruction it runs as, never off
+         * the value it was built with, so the argument is the one source of its rules.
+         */
+        public static Inst rewriter(final fURI tid, final Rec rules, final BiFunction<Code, Rec, Code> rewrite) {
+            return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(rules), (lhs, inst) -> rewrite.apply(lhs.asCode(), inst.arg(0).asRec()));
         }
     }
 

@@ -122,10 +122,20 @@ InstSet.Helper.rewriter(GEO_REWRITE_TID.extend("native_" + nativeTid.name()), co
 })
 ```
 
-A rewrite whose rule is only instructions needs no Java at all. It is a `[lhs => rhs]` row in the declared argument of
-its own `/m` rewrite (one rewrite per rule), which `Call.Helper.update` matches and applies: `else_after_count`'s
-`[count().else(#::T) => count()]` drops the dead `else` after a total `count`. The rule rewrites and their law rows are
-described in the `cat-instset-mtron` reference.
+A rewrite whose rule is only instructions states it as data: a `[lhs => rhs]` rec, the declared argument of its own `/m`
+rewrite (one rewrite per rule), built with the rules overload of `InstSet.Helper.rewriter`. Its body hands the rules to
+`Law.Helper.rewrite(code, rules, gate)`, which applies each equation with `Call.Helper.update` wherever the gate admits
+the matched run. `else_after_count`'s `[count().else(#::T) => count()]` needs no gate, so it drops the dead `else` after
+a total `count` wherever the rule matches:
+
+```java
+docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"), ELSE_AFTER_COUNT, (code, rules) ->
+        Law.Helper.rewrite(code, List.of(rules), (scanned, start, length) -> true)), "…")
+```
+
+A law's rewrite binds its rules to the law's claimants (`Law.Helper.claimed`) and writes its gate beside them, reading the
+law at the carrier flowing into the run (`Rewriter.Helper.carriers`). The rule rewrites and their gates are described in
+the `cat-instset-mtron` reference.
 
 **`match(List<Inst>)`** — pattern instructions. `instA(tid)` creates a bare match instruction (no args, no f). Matching
 uses `instsMatch()`: TIDs must be compatible via `tid.test()`, args are compared by position, and `?.test(source)` tests
@@ -261,15 +271,22 @@ final Code precedingCode = MCode.of(preceding).resolve(noobj());
 `InstSet.Helper.rewriter()` creates the instruction:
 
 ```java
-public static Inst rewriter(final fURI tid, Function<Code, Code> rewrite) {
+public static Inst rewriter(final fURI tid, final Function<Code, Code> rewrite) {
     return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(),
         (lhs, inst) -> rewrite.apply(lhs.asCode()));
+}
+
+public static Inst rewriter(final fURI tid, final Rec rules, final BiFunction<Code, Rec, Code> rewrite) {
+    return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(rules),
+        (lhs, inst) -> rewrite.apply(lhs.asCode(), inst.arg(0).asRec()));
 }
 ```
 
 - **Domain:** `CODE_TID` — receives a Code
 - **Range:** `CODE_TID.maybe()` — returns an optional Code (noobj = no rewrite)
-- **Body:** calls the provided `Function<Code, Code>`
+- **Body:** calls the provided `Function<Code, Code>`, or the `BiFunction<Code, Rec, Code>` with the rules
+- **Rules:** the second overload declares its rules as the instruction's one argument, a value rather than a type, so
+  it resolves with them bound; the body reads them off `inst.arg(0)`, so the argument is their one source
 
 The returned `Inst` is registered under `uri(REWRITE)` in the instset. During
 `Code.rewrite()`, it's applied with the current code as `lhs`.
