@@ -209,6 +209,20 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     }
 
     @ParameterizedTest
+    @CsvSource(value = {
+            // a value is {point}value{span}: the console shows it as written, never its count ({3}5{3} is not {9}5),
+            // and a real, which has its own display, writes its span where every scalar does
+            "{3}5{3}         % {3}5{3}",
+            "5{3}            % 5{3}",
+            "{3}5            % {3}5",
+            "{2}2.5{2}       % {2}2.5{2}",
+            "true{2}         % true{2}",
+    }, delimiter = '%')
+    public void testValueSpanDisplaysAsWritten(final String code, final String expected) {
+        Assertions.assertEquals(expected, ObjmtronUISerializer.blackWhite().write(ObjmtronSerializer.parse(code).apply()));
+    }
+
+    @ParameterizedTest
     @CsvSource(
             value = {"1.23456789E7    % 1.2345E7", "1.0E-10         % 1.0E-10", "1.23456789E-7   % 1.2345E-7"},
             delimiter = '%'
