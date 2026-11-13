@@ -494,6 +494,15 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{2}{plus(34),plus(34),plus(34)}        % {9}69",
             "1.{plus(34),plus(34),plus(34)}           % {3}35",
             "1.{?}{plus(1),mult(2)}                   % {1,{2}2}",
+            // an open span loops until noobj (Marko, 2026-11-13): {*} is _ + a + aa + ..., {+} is a + aa + ..., each run
+            // one step past the last, so a tree halts where it runs out ([b=>5]>>a is noobj)
+            "[a=>[a=>[b=>5]]].{*}rshift(a)            % {[a=>[a=>[b=>5]]],[a=>[b=>5]],[b=>5]}",
+            "[a=>[a=>[b=>5]]].{+}rshift(a)            % {[a=>[b=>5]],[b=>5]}",
+            "[a=>[a=>[b=>5]]].{2,}rshift(a)           % [b=>5]",
+            "[a=>[a=>[b=>5]]].{0,}rshift(a).count()   % 3",
+            "[a=>[a=>[b=>5]]].{5,}rshift(a)           % noobj",
+            // a fail is no link to follow: stepped again it answers itself, so it ends the walk rather than looping
+            "1.{*}plus('x')                           % <ERROR>",
     }, delimiter = '%')
     void testApply(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
