@@ -58,8 +58,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * v1 factors one axis per application: the seed first (today's layout), the span when the seed is a singleton.
  *
  * <p><b>The lane's budget is stated on its first instruction</b> ({@code ?hop}, {@code 0} at a leaf), so the metadata
- * is where a human and a re-planning peer look for it. A copied instruction is not stripped of a budget it carries:
- * the first statement wins ({@link #hopAxis}), so the head is authoritative and an inner statement is inert.
+ * is where a human and a re-planning peer read it. A copied instruction carries no budget of its own: both spellings
+ * ({@code hop} and the deprecated {@code hops}) are stripped as the lane is written, or a peer handed a lane would
+ * re-plan with the root's height.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -81,11 +82,13 @@ public final class Shard {
         // layout it emitted, so this is also where the shard's own output stops.
         if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
             return code;
-        // A LONE MACHINE DOES NOT FAN OUT -- unless the decision states its own place set, whose HOME lane is the
-        // lanes case (?place=[{4}local]: a peerless machine shards). Read before the hop so the budget's own refusal
-        // stays exactly where it was on a machine with nothing dialed.
+        // A LONE MACHINE DOES NOT FAN OUT -- unless its ROSTER declares a candidate (a declared machine is a
+        // potential peer: the declared half of the liveness test, §4), or the decision states its own place set, whose
+        // HOME lane is the lanes case (?place=[{4}local]: a peerless machine shards). Read before the hop so the
+        // budget's own refusal stays exactly where it was on a machine with nothing reachable.
         final boolean stated = code.insts().stream().anyMatch(inst -> inst.tid().hasQ(PLACE));
-        if (env.peers().isEmpty() && !stated)
+        final boolean dialed = !env.peers().isEmpty();
+        if (!dialed && env.machines().isEmpty() && !stated)
             return code;
         // THE HOP AXIS: how many more levels of the tree may be planned from here, and how many children one level may
         // fan out to. A height of zero is a leaf and an arity of zero is a point: the identity, byte for byte.
@@ -163,9 +166,16 @@ public final class Shard {
         final Placement route = plan.where().stream().filter(placement -> placement.shape().distributes()).findFirst().orElse(null);
         if (null == route)
             return code;
+        // THE CANDIDATES: the plan's distributing place set, except that the peer enum with nothing dialed answers the
+        // ROSTER's machines -- each named as an address (//host), so the resolver reads the row discovery filed and
+        // admits it when its transport's scheme resolves (step 6's declared half of liveness). Planning never dials.
+        final PlaceSet declared = place(plan, code);
+        final PlaceSet candidates = !dialed && !stated
+                && declared.designators().stream().allMatch(designator -> PlaceSet.Form.PEER == designator.form())
+                ? roster(env) : declared;
         // THE SHARES: the place set resolved against the snapshot, one entry per share, the HOME place's shares FIRST.
         // A literal seed clamps the shares; a computed bag's size is the branch's to know; the ARITY caps the window.
-        final List<ResolvedPlace> shares = shares(resolve(env, route, place(plan, code)), members, fanout);
+        final List<ResolvedPlace> shares = shares(resolve(env, route, candidates), members, fanout);
         // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
         // here. Several home shares are the lanes case, a peerless machine sharding.
         final boolean localOnly = 1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal);
@@ -361,16 +371,20 @@ public final class Shard {
     }
 
     /**
-     * THE BUDGET, STATED ON THE LANE'S FIRST INSTRUCTION. A leaf states {@code 0} and an interior lane the decremented
-     * form; no copied instruction is stripped of a budget it carries, because the first statement wins ({@link
-     * #hopAxis}) and the head is the one a human and a peer read. The head is normalized to the current spelling
-     * ({@code ?hop}); the deprecated alias it may carry is superseded there.
+     * THE BUDGET, STATED ON THE LANE'S HEAD. A leaf states {@code 0} and an interior lane the decremented form, on the
+     * first instruction the lane carries ({@code start(part)?hop=n}) — the metadata a human and a re-planning peer read
+     * in the same place, and where the received lane's own {@link #hopAxis} finds it. Every copied instruction is
+     * stripped of both spellings first: the root has already read the level above's budget, and a slave handed to a
+     * peer must not carry it (under either spelling, or the peer would re-plan with the root's height).
      */
     private static void stampHop(final List<Inst> chain, final Obj budget) {
         if (chain.isEmpty())
             return;
-        final Inst head = chain.getFirst();
-        chain.set(0, head.tid(head.tid().removeQ(HOP).removeQ(Placement.HOP_ALIAS).q(HOP, budget)));
+        for (int i = 0; i < chain.size(); i++) {
+            final Inst inst = chain.get(i);
+            final fURI tid = inst.tid().removeQ(HOP).removeQ(Placement.HOP_ALIAS);
+            chain.set(i, inst.tid(0 == i ? tid.q(HOP, budget) : tid));
+        }
     }
 
     /**
@@ -444,6 +458,23 @@ public final class Shard {
         } catch (final MTronException e) {
             throw MTronException.of("?%s=%s cannot be read as a place set: %s", key, tid.q(key), e.getMessage());
         }
+    }
+
+    /**
+     * THE ROSTER AS CANDIDATES — the places a peer enum names when nothing is dialed. Each roster machine is written as
+     * an address ({@code //host}), which {@link PlaceResolver} reads through the roster and admits by the declared half
+     * of liveness (its transport's scheme resolves in the ISA). No dial is attempted here: a candidate is planned, and
+     * the run — the branch's own key — is what connects.
+     */
+    private static PlaceSet roster(final Env env) {
+        final List<fURI> hosts = env.machines().elements()
+                .map(Rel::first)
+                .filter(Obj::isUri)
+                .map(key -> key.uriValue())
+                .map(host -> fURI.Singleton.f("//" + (null == host.host() ? host.toString() : host.host())))
+                .distinct()
+                .toList();
+        return hosts.isEmpty() ? PlaceSet.none() : PlaceSet.of(hosts.toArray(fURI[]::new));
     }
 
     /**

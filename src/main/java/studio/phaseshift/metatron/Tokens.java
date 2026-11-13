@@ -30,6 +30,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  */
 public final class Tokens {
     public static final fURI MACH = f("mach");
+    public static final String CHILD = "child";
 
     private Tokens() {
         // do nothing
@@ -85,6 +86,9 @@ public final class Tokens {
     public static final String OLLAMA = "ollama";
     public static final String RESULT = "result";
     public static final String MACHINE = "machine";
+    public static final String JSON = "json";
+    public static final String PANEL = "panel";
+    public static final String VIEW = "view";
     public static final String CMD = "cmd";
     public static final String ALLOW = "allow";
     public static final String REJECT = "reject";
@@ -488,6 +492,7 @@ public final class Tokens {
     public static final String FLOW = "flow";
     public static final String RULES = "rules";
     public static final String INSTS = "insts";
+    public static final String LAYOUT = "layout";
     public static final String INST_RESOLVE = "inst_resolve";
     public static final String GENERIC_BINDING = "generic_binding";
     public static final String INST_COMPOSITION = "inst_composition";
@@ -540,6 +545,7 @@ public final class Tokens {
     public static final String MCP_SERVERS = "mcpServers";
     public static final String ACTIVE = "active";
     public static final String INACTIVE = "inactive";
+    public static final String COL = "col";
    /* public static final String ACTIVE = "active";
     public static final String DESKTOP = "desktop";
     public static final String LAYOUT = "layout";
@@ -548,7 +554,6 @@ public final class Tokens {
     public static final String VERSION = "version";
     public static final String GRID = "grid";
     public static final String SNAP = "snap";
-    public static final String COLUMNS = "columns";
     public static final String PANEL = "panel";
     public static final String PANEL_TYPE = "panel_type";
     public static final String PANEL_STATE = "panel_state";

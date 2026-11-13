@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -809,11 +812,11 @@ mtron&gt; board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anch
      predicate apply failed on execution (at /m/inst/ctor)&quot;&quot;&quot;]
    	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]
 mtron&gt; @/usr/uidoc/board.display()             [-- pin it once --]
-==&gt;fail::[inst apply failure: Cannot invoke &quot;org.jline.terminal.Terminal.output()&quot; because the return value of &quot;studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()&quot; is null (at /m/sys/ui/inst/display@1) [Widget&lt;102&gt;]][Cannot invoke &quot;org.jline.terminal.Terminal.output()&quot; because the return value of &quot;studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()&quot; is null [Widget&lt;102&gt;]]
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?/m/inst/union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T,{?}wordWrap=&gt;bool::T]][/m/inst/ctor?/m/sys/ui/style&lt;=(&lt;#{*}&gt;::T)]@style]]@widget [/m/sys/ui/inst/display?{0}&lt;=/m/sys/ui/widget()@&lt;1&gt;]]
 mtron&gt; @/usr/uidoc/g10/1/0 &gt;&gt;= '@'             [-- one cell of the REFERENT --]
 ==&gt;'@'
 mtron&gt; @/usr/uidoc/g10/+/0 &gt;&gt;= ''             [-- every row's column 0 --]
-==&gt;{2}''
+==&gt;{10}''
 </code></pre>
 <p>The referent must be an <strong>absolute</strong> uri. A relative uri is a variable frame on the thread that wrote
 it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,

@@ -1,0 +1,9 @@
+splash_page::[
+  title => 'metatron',
+  layout => [
+    splash_card::[tid => </m/mach/machine>,         vid => </.>,                  label => 'machine',     view => panel, span => [col => 4]],
+    splash_card::[tid => </m/web/http/http_server>, vid => </sys/space/web/http>, label => 'http server', view => panel, span => [col => 2, row => 1]],
+    splash_card::[tid => </m/web/ws/ws_server>,     vid => </sys/space/web/ws>,   label => 'ws server',   view => panel, span => [col => 2, row => 1]],
+    splash_card::[tid => </m/sys/ui/console>,       vid => </usr/marko/console>,  label => 'console',     view => panel, span => [col => 4, row => 2]]
+  ]
+]

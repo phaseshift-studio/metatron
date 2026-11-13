@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -619,15 +622,21 @@ after which instruction memory answers the address.</p>
 <h3>compiler</h3>
 <pre><code class="language-mtron">mtron&gt; */m/mach/component/compiler?docq
 ==&gt;docs::[obj=&gt;component::T[?[
-     {?}parser=&gt;parser::T,
-     {?}rewriter=&gt;rewriter::T,
-     {?}resolver=&gt;resolver::T,
-     {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+     {?}parser=&gt;component::T@/m/mach/component/parser,
+     {?}rewriter=&gt;component::T@/m/mach/component/rewriter,
+     {?}resolver=&gt;component::T[?[
+      {?}selector=&gt;component::T@/m/mach/component/selector,
+      {?}binder=&gt;component::T@/m/mach/component/binder]]@/m/mach/component/resolver,
+     {?}typer=&gt;component::T[?[{?}check=&gt;[{?}inst_dom=&gt;bool::T,
+                                         {?}inst_rng=&gt;bool::T,
+                                         {?}type_pred=&gt;bool::T,
+                                         {?}code_resolve=&gt;bool::T,
+                                         {?}obj_write=&gt;bool::T]]][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
+           {?}resolver=&gt;'the third stage — the walk that th...',
            {?}typer=&gt;'the fourth stage — the per-machine...',
            {?}parser=&gt;'the first stage — source text to o...',
-           {?}rewriter=&gt;'the second stage — the code::T to ...',
-           {?}resolver=&gt;'the third stage — the walk that th...'],
+           {?}rewriter=&gt;'the second stage — the code::T to ...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
            'compiler::[rewriter=&gt;fixpoint_rewr...',
@@ -760,7 +769,8 @@ write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the
 ==&gt;docs::[obj=&gt;component::T[?[
      {?}state=&gt;union(stop,run,pause),
      {?}result=&gt;&lt;#{*}&gt;::T,
-     {?}tracer=&gt;tracer::T]]@/m/mach/component/processor,
+     {?}tracer=&gt;component::T[?[{?}stack=&gt;[{?}mtron_stack=&gt;bool::T,
+                                          {?}java_stack=&gt;bool::T]]][ctor?tracer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/tracer]]@/m/mach/component/processor,
           args=&gt;[
            {?}result=&gt;'the objs the last evaluation produ...',
            {?}state=&gt;'the run state: stop, run or pause',
@@ -857,11 +867,11 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
+           {?}pattern=&gt;'the branch this network answers as...',
            {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
            {?}listener=&gt;'the sockets this machine serves th...',
            {?}roster=&gt;'known machines, connectionless: &lt;h...',
-           {?}status=&gt;'the health method — an auto inst c...',
-           {?}pattern=&gt;'the branch this network answers as...'],
+           {?}status=&gt;'the health method — an auto inst c...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
@@ -956,17 +966,17 @@ that level's rows.</p>
 <p>There is no connect instruction: constructing a protocol client is the dial, and the client indexes itself into the
 network as <code>memspace::[pattern=&gt;xyz/#]</code> indexes into memory.</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[pattern=&gt;&lt;ws://localhost:8555/mtron&gt;]
-==&gt;ws_client::[pattern=&gt;ws://localhost:8555/mtron,
-               host=&gt;ws://localhost:8555/mtron,
-               send=&gt;λ(){&lt;j&gt;},
-               send_recv=&gt;λ(){&lt;j&gt;},
-               inst=&gt;[
-                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-                /m/inst/from=&gt;*uri::T,
-                /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-               close=&gt;λ(){&lt;j&gt;},
-               ...(1 more)]
+==&gt;[pattern=&gt;ws://localhost:8555/mtron,
+    host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    ...(1 more)]
 </code></pre>
 <p>A client's <code>inst</code> is a mini-instset of overrides with the native signatures: <code>from(&lt;uri&gt;)</code> reads, <code>obj.to(&lt;uri&gt;)</code> writes
 its lhs, and <code>eval(code)</code> ships a program for the far side to run. A <code>ws_client</code> declares all three; an <code>http_client</code>
@@ -1123,7 +1133,7 @@ timeout fail (<code>future get timed out after 2000 ms</code>) in that peer's pl
 <p><code>*~/network/host</code> answers the host the current machine runs on; peers forked on one host are told apart by their
 service authority.</p>
 <pre><code class="language-mtron">mtron&gt; *~/network/host
-==&gt;booger
+==&gt;&lt;2a34380c2799&gt;
 </code></pre>
 <h3>appendix — registered types</h3>
 <table>

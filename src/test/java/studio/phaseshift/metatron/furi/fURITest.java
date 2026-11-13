@@ -2335,4 +2335,52 @@ public class fURITest extends AbstractMetatronTest {
     void testHosted(final String furi, final boolean hosted) {
         assertEquals(hosted, f(furi).isHosted(), furi + " isHosted");
     }
+
+    /**
+     * {@code %} is the one character no other fURI token claims, so it carries the special characters a query
+     * component could not spell: {@code +}, {@code &}, {@code =}, a literal {@code %}, whitespace, non-ASCII.
+     * <p>
+     * The negative half of the contract matters as much as the positive one: {@code +} is NOT form encoding — it is
+     * the metatron wildcard/plus, so it stays a plus — and a {@code %} that opens no valid escape stays literal.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<http://x.com/a?x=1%2B2>     | 1+2",
+            "<http://x.com/a?x=a%26b>     | a&b",
+            "<http://x.com/a?x=a%3Db>     | a=b",
+            "<http://x.com/a?x=100%25>    | 100%",
+            "<http://x.com/a?x=a%20b>     | a b",
+            "<http://x.com/a?x=%E2%9C%93> | ✓",
+            "<http://x.com/a?x=%zz>       | %zz",
+            "<http://x.com/a?x=1+2>       | 1+2",   // a plus is a plus, not a space
+    }, delimiter = '|')
+    void testQueryPercentDecode(final String furi, final String value) {
+        assertEquals(value, f(furi).q("x"));
+    }
+
+    /**
+     * The other direction is deliberately NOT symmetric. Metatron never percent-ENCODES its own components: an
+     * internal address such as {@code /m/mult/a?rng=+&dom=+} must keep that spelling on render. {@code %} is an
+     * input-only escape — a caller writes {@code %2B} to get a literal {@code +}, and the literal comes back as
+     * itself. The consequence is that a value carrying {@code &} or {@code =} cannot be re-read unambiguously;
+     * that is the price of keeping internal uris literal.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<http://x.com/a?x=1%2B2>     | x=1+2",
+            "<http://x.com/a?x=a%26b>     | x=a&b",
+            "<http://x.com/a?x=100%25>    | x=100%",
+            "<http://x.com/a?x=a%20b>     | x=a b",
+            "<http://x.com/a?x=%E2%9C%93> | x=✓",
+    }, delimiter = '|')
+    void testQueryPercentDecodesButNeverEncodes(final String furi, final String query) {
+        assertEquals(query, f(furi).qString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"1+2", "100%", "x;y", "a/b", "text/html"}, delimiter = '|')
+    void testQueryLiteralRoundTrip(final String value) {
+        final fURI once = f("http://x.com/a").q("x", value);
+        assertEquals(value, f(once.toString()).q("x"));
+    }
 }

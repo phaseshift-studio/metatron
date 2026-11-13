@@ -577,28 +577,13 @@ three steps below are the same vertex after each application — the path shrink
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==>[path::[obj=>start(5).plus(0).neg().neg(),
-           origin=>place::[
-            obj=>//localhost,
-            authority=>[
-             http://localhost:8777,
-             ws://localhost:8555]],
            theory_unit_removal=>plan::[name=>theory_unit_removal,result=>!λ(#{*}::T){<j>}],
            law_involution=>plan::[name=>law_involution,result=>!λ(#{*}::T){<j>}]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>law_involution>>result]
 ==>[path::[obj=>start(5).plus(0),
-           origin=>place::[
-            obj=>//localhost,
-            authority=>[
-             http://localhost:8777,
-             ws://localhost:8555]],
            theory_unit_removal=>plan::[name=>theory_unit_removal,result=>!λ(#{*}::T){<j>}]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>law_involution>>result]==[>>theory_unit_removal>>result]
-==>[path::[obj=>start(5),
-           origin=>place::[
-            obj=>//localhost,
-            authority=>[
-             http://localhost:8777,
-             ws://localhost:8555]]]]
+==>[path::[obj=>start(5)]]
 ```
 **Liveness.** An edge is live iff its rule changes the code: the lift applies each rewrite of the machine's pool
 (`*~/instset/rewrite`) once, and a rule that leaves the code as it is draws no edge. The edges are the pool, so a rule
@@ -621,46 +606,46 @@ and computes its cut/span/where without consulting the code below; the descent (
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==>[abstraction::[obj=>[
-                   morphism[start?args=[/m/int]]::[
-                    name=>start,
-                    form=>initial,
-                    src=>!λ#(){<j>},
-                    trgt=>!λ#(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>start(5)],
-                   morphism[plus?rng=int&dom=int&args=[/m/int]]::[
-                    name=>plus,
-                    form=>mapper,
-                    class=>[endo],
-                    src=>!λint(){<j>},
-                    trgt=>!λint(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>plus(0),
-                    ...(1 more)],
-                   morphism[neg?rng=int&dom=int&args]::[
-                    name=>neg,
-                    form=>mapper,
-                    class=>[
-                     endo,
-                     iso,
-                     auto,
-                     section,
-                     retraction,
-                     mono,
-                     epi],
-                    src=>!λint(){<j>},
-                    trgt=>!λint(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>neg(),
-                    ...(1 more)],
-                   morphism[neg?rng=int&dom=int&args]::[
-                    name=>neg,
-                    form=>mapper,
-                    class=>[
-                     endo,
-                     iso,
-                     auto,
+==>[abstraction::[obj=>[morphism[start?args=[/m/int]]::[
+                         name=>start,
+                         form=>initial,
+                         src=>!λ#(){<j>},
+                         trgt=>!λ#(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>start(5)],
+                        morphism[plus?rng=int&dom=int&args=[/m/int]]::[
+                         name=>plus,
+                         form=>mapper,
+                         class=>[endo],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>plus(0),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
+                          retraction,
+                          mono,
+                          epi],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>neg(),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
    ...
 ```
 ### `plan::T` — a rewrite rule as a value
@@ -714,16 +699,16 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>ws_client::[host=>ws://localhost:8555/mtron,
-               send=>λ(){<j>},
-               send_recv=>λ(){<j>},
-               inst=>[
-                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-                /m/inst/from=>*uri::T,
-                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-               status=>!λstatus?bool<=(){<j>},
-               close=>λ(){<j>},
-               on_message=>print('received ${_}')]
+==>[host=>ws://localhost:8555/mtron,
+    send=>λ(){<j>},
+    send_recv=>λ(){<j>},
+    inst=>[
+     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+     /m/inst/from=>*uri::T,
+     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+    status=>!λstatus?bool<=(){<j>},
+    close=>λ(){<j>},
+    on_message=>print('received ${_}')]
 mtron> */network
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
@@ -732,12 +717,7 @@ now holding that `peer::T`, the `path::T` lists `law_shard` among its out-edges.
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
-           origin=>place::[
-            obj=>//localhost,
-            authority=>[
-             http://localhost:8777,
-             ws://localhost:8555]]]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum()]]
 ```
 `law_shard` is Theorem 19 of the stream-ring algebra ([Stream Ring Theory](../../../articles/stream-ring-theory.html)):
 monoidic reducers are **semi-right distributive**,

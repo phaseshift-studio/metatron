@@ -23,21 +23,21 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.m.web.webHelper;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -57,12 +57,12 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.http.handler.web_httpHandler.WEB_HTTP_TID;
 import static studio.phaseshift.metatron.isa.m.web.webInstSet.MCP_SERVER_TYPE;
@@ -158,10 +158,10 @@ public final class httpServer extends Listener {
     private final Map<LaneKey, RouteLane> lanes = new ConcurrentHashMap<>();
     private final Map<HandlerKey, HttpRec> handlers = new ConcurrentHashMap<>();
 
-    private httpServer(final fURI origin, final Network owner, final SSLContext tls) {
-        super(origin, HTTP_SERVER_TID, owner);
-        this.socket = bind(origin, tls, this);
-        LOG.info("http_server listening: %s", origin);
+    private httpServer(final Map<Obj, Obj> jvm, final Network owner, final SSLContext tls) {
+        super(jvm, HTTP_SERVER_TID, owner);
+        this.socket = bind(this.at(ORIGIN).uriValue(), tls, this);
+        LOG.info("http_server listening: %s", this.at(ORIGIN).uriValue());
     }
 
     /**
@@ -198,7 +198,9 @@ public final class httpServer extends Listener {
         }
         // the certificate is loaded before anything binds, so a keystore that cannot serve never holds the port
         final SSLContext tls = HTTPS.equals(origin.scheme()) ? tls(config) : null;
-        final httpServer server = new httpServer(origin, level, tls);
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>(config.jvm());
+        jvm.put(uri(ROUTE), routes);
+        final httpServer server = new httpServer(jvm, level, tls);
         try {
             Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {

@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
+import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyObjLogger;
@@ -53,9 +54,9 @@ import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.move_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -424,10 +425,10 @@ public interface Machine extends Rec, AutoCloseable {
         // the machine that holds it, so the rec holding it must be the machine's too. The child still starts with a
         // SNAPSHOT of this machine's keys (clone() copies them), which is all the machine rec ever offered — `at()`
         // does not walk the parent chain.
-        Machine.write(this.vid().extend("child").extend(childVID.removePrefix(this.vid())), auto_(move_(uri(childVID)).tryToInst()));
         final Machine child = (Machine) this.clone(null, this.tid(), childVID);
         if (child == this)
             throw MTronException.of("push(%s) cannot mint a child: clone() returned this machine, so the child would BE the parent", extension);
+        child.at(uri(CHILD), noobj(), MUTABLE);
         child.parent(this);
         // The child's memory is a union over this machine's memory: its own fresh level over the enclosing one.
         // Parent the union to the CHILD (not to the parent machine): Component.machine() walks parent(), and the
@@ -453,8 +454,7 @@ public interface Machine extends Rec, AutoCloseable {
         // no plumbing here), and REACH IS NOT — peers are neither inherited from the parent (not even
         // shadowed) nor shared with children. A connection belongs to exactly the machine that dialed it,
         // so a pop retracts precisely this machine's dials and a sibling never sees them.
-        final studio.phaseshift.metatron.isa.m.mach.type.network.NetworkUnion childNetwork =
-                new studio.phaseshift.metatron.isa.m.mach.type.network.NetworkUnion();
+        final NetworkUnion childNetwork = new NetworkUnion();
         childNetwork.parent(child);
         // the SETTER, not just the rec: AbstractMachine caches resolvedNetwork, and the child's clone
         // carries the parent's cached field — without the setter the accessor answers the parent's
@@ -470,6 +470,7 @@ public interface Machine extends Rec, AutoCloseable {
         // read the child back at its vid, which is what `move(<child>)` resolves.
         CURRENT.set(child);
         Helper.bootstrap(child);
+        this.at(CHILD, objs(this.atDirect(CHILD), auto_at_(childVID).tryToInst()), MUTABLE);
         // ... and its own PROCESSOR, of this machine's architecture: a processor indexes the computers its machine mints
         // and holds that machine's fail stacks (~/processor/computer/<n>, ~/processor/fail), so the instance the clone
         // shares with this machine filed the child's evaluations, and their fails, in this machine's. Minted once the
@@ -510,13 +511,21 @@ public interface Machine extends Rec, AutoCloseable {
         final Obj parent = machine.parent();
         if (!(parent instanceof Machine parentMachine))
             return this;
+        final fURI childVID = machine.vid();
         machine.close();
         CURRENT.set(parentMachine);
+        final Obj children = parentMachine.atDirect(CHILD);
+        if (!children.isNoObj()) {
+            if (children.isObjs()) {
+                parentMachine.at(CHILD, objs(children.stream().filter(c -> Obj.Helper.getAutoPointer(c).filter(id -> id.equals(childVID)).isEmpty()).toList()), MUTABLE);
+            } else if (Obj.Helper.getAutoPointer(children).filter(id -> id.equals(childVID)).isPresent())
+                parentMachine.at(CHILD, noobj(), MUTABLE);
+
+        }
         // POP DISCARDS THE ADDRESS: the two links push wrote go with the frame (the root's registration of its vid, and
         // the pushing frame's child link), or the closed frame and its components still answer at its vid and the
         // console's machine tree still lists it. Only a move leaves a frame standing at its address.
         Machine.root().memory().write(machine.vid(), noobj());
-        Machine.write(parentMachine.vid().extend("child").extend(machine.vid().removePrefix(parentMachine.vid())), noobj());
         return parentMachine;
     }
 

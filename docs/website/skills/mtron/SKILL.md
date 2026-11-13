@@ -323,20 +323,7 @@ mtron> import(/m/math,math)                     [-- module import, namespaced ma
 mtron> int::T[?>0]@posint                       [-- a new type: positive integers --]
 mtron> rec::T[?[name=>str::T, age=>int::T]]@being
 mtron> person::[name=>'marko', age=>29]         [-- the stock person type, constructed --]
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'marko',age=>29]
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'marko'=>==>str::T,
-      age=>(==>age)=>29=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'marko', age=>29]]
+==>person::[name=>'marko',age=>29]
 mtron> being::[name=>'stynx', age=>33]
 ==>being::[name=>'stynx',age=>33]
 ```

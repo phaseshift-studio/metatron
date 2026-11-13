@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -800,20 +803,7 @@ runs the type's checks, and casting (<code>.as(type::T)</code>) validates an exi
 mtron&gt; int::T[?&gt;0]@posint                       [-- a new type: positive integers --]
 mtron&gt; rec::T[?[name=&gt;str::T, age=&gt;int::T]]@being
 mtron&gt; person::[name=&gt;'marko', age=&gt;29]         [-- the stock person type, constructed --]
-==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=&gt;'marko',age=&gt;29]
-         X=&gt;
-     rec[role,position]::T[?[name=&gt;str::T,
-                             age=&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=&gt;rec::T,
-                             position=&gt;rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=&gt;(==&gt;name)=&gt;'marko'=&gt;==&gt;str::T,
-      age=&gt;(==&gt;age)=&gt;29=&gt;==&gt;nat::T,
-      noobj=&gt;(X=&gt;role)=&gt;noobj=&gt;X=&gt;rec::T,
-      noobj=&gt;(X=&gt;position)=&gt;noobj=&gt;X=&gt;rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=&gt;'marko', age=&gt;29]]
+==&gt;person::[name=&gt;'marko',age=&gt;29]
 mtron&gt; being::[name=&gt;'stynx', age=&gt;33]
 ==&gt;being::[name=&gt;'stynx',age=&gt;33]
 </code></pre>

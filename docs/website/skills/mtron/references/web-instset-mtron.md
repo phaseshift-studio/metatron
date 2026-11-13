@@ -27,6 +27,10 @@ mtron> http_server::[origin => http://localhost:8777,
                                /docker => docker:,
                                /usr    => /usr]]
 ==>http_server::[origin=>http://localhost:8777,
+                 route=>[
+                  /mcp=>mcp_mtron,
+                  /docker=>docker:,
+                  /usr=>/usr],
                  status=>!λstatus?bool<=(){<j>}]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,inst=>[/m/inst/from=>*uri::T,
@@ -36,7 +40,9 @@ mtron> http_client::[host => <https://#>]
                                         /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
 mtron> ws_server::[origin  => ws://localhost:8555,
                    route  => [/basic   => !*</sys/space/mcp/web_basic>]]
-==>ws_server::[origin=>ws://localhost:8555,status=>!λstatus?bool<=(){<j>}]
+==>ws_server::[origin=>ws://localhost:8555,
+               route=>[/basic=>!*/sys/space/mcp/web_basic],
+               status=>!λstatus?bool<=(){<j>}]
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -45,7 +51,7 @@ obj and which encoding. Below is metatron accessing this document.
 ```mtron
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>
 ==>
-   markdown::"""---
+   markdown::"---
    name: web instruction set
    description: |
      The `/m/web` vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document
@@ -89,35 +95,11 @@ blocks are executed by the docs pipeline and inlined with their results; a plain
 ```mtron
 mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
 mtron> person::[name=>'marko',age=>29]@/usr/person/1
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'marko',age=>29]@/usr/person/1
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'marko'=>==>str::T,
-      age=>(==>age)=>29=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'marko',age=>29]@/usr/person/1]
+==>person::[name=>'marko',
+            age=>29]@/usr/person/1
 mtron> person::[name=>'grant',age=>25]@/usr/person/2
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'grant',age=>25]@/usr/person/2
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'grant'=>==>str::T,
-      age=>(==>age)=>25=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'grant',age=>25]@/usr/person/2]
+==>person::[name=>'grant',
+            age=>25]@/usr/person/2
 ```
 ## types
 
@@ -236,10 +218,16 @@ binding step, and a route is debuggable by looking at the request uri.
 
 ```mtron
 mtron> */usr/person/1                                              [-- straight from the space --]
-==>[name=>'marko',age=>29]
+==>person::[name=>'marko',age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
+==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
+==>
+   json::'{"name":"marko","age":29}'
+   
+   
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
+==>"{name='marko', age=29}"
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

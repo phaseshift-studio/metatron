@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -1051,28 +1054,13 @@ to the previous segment's result, so a descent <code>[seed] == [lift] == [r₁] 
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
-           origin=&gt;place::[
-            obj=&gt;//localhost,
-            authority=&gt;[
-             http://localhost:8777,
-             ws://localhost:8555]],
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,result=&gt;!λ(#{*}::T){&lt;j&gt;}],
            law_involution=&gt;plan::[name=&gt;law_involution,result=&gt;!λ(#{*}::T){&lt;j&gt;}]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;law_involution&gt;&gt;result]
 ==&gt;[path::[obj=&gt;start(5).plus(0),
-           origin=&gt;place::[
-            obj=&gt;//localhost,
-            authority=&gt;[
-             http://localhost:8777,
-             ws://localhost:8555]],
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,result=&gt;!λ(#{*}::T){&lt;j&gt;}]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;law_involution&gt;&gt;result]==[&gt;&gt;theory_unit_removal&gt;&gt;result]
-==&gt;[path::[obj=&gt;start(5),
-           origin=&gt;place::[
-            obj=&gt;//localhost,
-            authority=&gt;[
-             http://localhost:8777,
-             ws://localhost:8555]]]]
+==&gt;[path::[obj=&gt;start(5)]]
 </code></pre>
 <p><strong>Liveness.</strong> An edge is live iff its rule changes the code: the lift applies each rewrite of the machine's pool
 (<code>*~/instset/rewrite</code>) once, and a rule that leaves the code as it is draws no edge. The edges are the pool, so a rule
@@ -1095,46 +1083,46 @@ derives its rewrite. The guard reads the laws/forms/theories off the word (<code
 and computes its cut/span/where without consulting the code below; the descent (\(\gamma\)) runs only through
 <code>path::T.obj</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==&gt;[abstraction::[obj=&gt;[
-                   morphism[start?args=[/m/int]]::[
-                    name=&gt;start,
-                    form=&gt;initial,
-                    src=&gt;!λ#(){&lt;j&gt;},
-                    trgt=&gt;!λ#(){&lt;j&gt;},
-                    analysis=&gt;!λ(){&lt;j&gt;},
-                    obj=&gt;start(5)],
-                   morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
-                    name=&gt;plus,
-                    form=&gt;mapper,
-                    class=&gt;[endo],
-                    src=&gt;!λint(){&lt;j&gt;},
-                    trgt=&gt;!λint(){&lt;j&gt;},
-                    analysis=&gt;!λ(){&lt;j&gt;},
-                    obj=&gt;plus(0),
-                    ...(1 more)],
-                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                    name=&gt;neg,
-                    form=&gt;mapper,
-                    class=&gt;[
-                     endo,
-                     iso,
-                     auto,
-                     section,
-                     retraction,
-                     mono,
-                     epi],
-                    src=&gt;!λint(){&lt;j&gt;},
-                    trgt=&gt;!λint(){&lt;j&gt;},
-                    analysis=&gt;!λ(){&lt;j&gt;},
-                    obj=&gt;neg(),
-                    ...(1 more)],
-                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                    name=&gt;neg,
-                    form=&gt;mapper,
-                    class=&gt;[
-                     endo,
-                     iso,
-                     auto,
+==&gt;[abstraction::[obj=&gt;[morphism[start?args=[/m/int]]::[
+                         name=&gt;start,
+                         form=&gt;initial,
+                         src=&gt;!λ#(){&lt;j&gt;},
+                         trgt=&gt;!λ#(){&lt;j&gt;},
+                         analysis=&gt;!λ(){&lt;j&gt;},
+                         obj=&gt;start(5)],
+                        morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
+                         name=&gt;plus,
+                         form=&gt;mapper,
+                         class=&gt;[endo],
+                         src=&gt;!λint(){&lt;j&gt;},
+                         trgt=&gt;!λint(){&lt;j&gt;},
+                         analysis=&gt;!λ(){&lt;j&gt;},
+                         obj=&gt;plus(0),
+                         ...(1 more)],
+                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                         name=&gt;neg,
+                         form=&gt;mapper,
+                         class=&gt;[
+                          endo,
+                          iso,
+                          auto,
+                          section,
+                          retraction,
+                          mono,
+                          epi],
+                         src=&gt;!λint(){&lt;j&gt;},
+                         trgt=&gt;!λint(){&lt;j&gt;},
+                         analysis=&gt;!λ(){&lt;j&gt;},
+                         obj=&gt;neg(),
+                         ...(1 more)],
+                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                         name=&gt;neg,
+                         form=&gt;mapper,
+                         class=&gt;[
+                          endo,
+                          iso,
+                          auto,
+                          section,
    ...
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>
@@ -1185,28 +1173,23 @@ registered rewrite has a <code>cut</code> — so <code>bind</code> is currently 
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
-               send=&gt;λ(){&lt;j&gt;},
-               send_recv=&gt;λ(){&lt;j&gt;},
-               inst=&gt;[
-                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-                /m/inst/from=&gt;*uri::T,
-                /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-               close=&gt;λ(){&lt;j&gt;},
-               on_message=&gt;print('received ${_}')]
+==&gt;[host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
 now holding that <code>peer::T</code>, the <code>path::T</code> lists <code>law_shard</code> among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
-           origin=&gt;place::[
-            obj=&gt;//localhost,
-            authority=&gt;[
-             http://localhost:8777,
-             ws://localhost:8555]]]]
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum()]]
 </code></pre>
 <p><code>law_shard</code> is Theorem 19 of the stream-ring algebra (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>):
 monoidic reducers are <strong>semi-right distributive</strong>,

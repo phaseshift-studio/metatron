@@ -66,7 +66,8 @@ public final class PlanInterpreter {
             // is what keeps the plan's gather from becoming a lane.
             .place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())
             .where(Placement.local(Span.at(), Span.after()))
-            // THE FAN-OUT that factors the seed: the dialed set, one level deep, strided
+            // THE FAN-OUT that factors the seed: the peer candidates (the dialed set, or the declared roster when
+            // nothing is dialed), one level deep, strided
             .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
             .where(Placement.tree(1, Span.seed().partition(), Span.before().floatable().withoutSeed(), Span.at()))
             .create();

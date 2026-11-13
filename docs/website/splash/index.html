@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<!--
+  ~ metatron splash — boot/space/web/index.html
+  ~
+  ~ served as the default page of the http_server mounted in boot/space/web/http.mtron:
+  ~     route => [/mcp       => mcp_mtron,
+  ~               /highlight => fs:docs/website/highlight,
+  ~               /css       => fs:docs/website/css,
+  ~               /          => fs:boot/space/web]
+  ~
+  ~ DESIGN — three bands, each one a seed of the web console:
+  ~  1. surfaces   what this machine exposes, probed live (http, ws, mcp).
+  ~  2. console    an mtron REPL over ws_server's /mtron route. One message is one
+  ~                expression, evaluated on this machine; the answer comes back as mtron.
+  ~  3. explore    the objs of a *full* boot (spaces, instruction sets, the dr.stynx agent)
+  ~                as one-click reads against the console, plus the live MCP tool catalog.
+  ~
+  ~ EXTENDING INTO A WEB CONSOLE — the contract this page keeps:
+  ~  · every panel is a <section class="card"> with a heading; adding a panel means adding
+  ~    a section (the grid reflows). no framework, no build step.
+  ~  · three data planes, all same-origin, all already served by metatron:
+  ~      reads   GET <address>?mimeq=application/json   (any mounted space)
+  ~      eval    WS  /mtron                             (this page's console)
+  ~      tools   POST /mcp  {jsonrpc:2.0}               (mcp_server over http)
+  ~    future push (agent tokens, logs, ?subq) is one more WS route, not a rewrite.
+  ~  · the page is a pure client: it holds no state the VM does not, so a panel that
+  ~    grows into a console view (space browser, instset docs, agent chat, ledger) only
+  ~    adds a renderer — never a second source of truth.
+  ~
+  ~ PROTOCOL — the web console is bin/wsplus's protocol in a browser:
+  ~   one text frame = one mtron expression; one reply frame = its answer;
+  ~   the session carries across frames; the connection uri picks the codecs:
+  ~     ?in=application/x-mtron  (what a frame IS — mtron text)
+  ~     ?out=application/x-mtron-ui (what the answer comes back as: the pretty-printed
+  ~                               obj rendering, in a BINARY frame — a client decodes
+  ~                               bytes before reading, as wsplus does; pass ?ws=...out=
+  ~                               application/x-mtron for the structural single-line form)
+  ~   the same two query keys the CLI builds. the browser keeps the structural
+  ~   x-mtron answer and colours it locally; x-mtron-ui is the ANSI terminal
+  ~   rendering, which a terminal wants and a DOM does not.
+  ~
+  ~ ACTION LINKS — the console's own url protocol, one expression + one surface:
+  ~     ?mtron=<expr>&at=<surface>
+  ~   surfaces: web/console (default — echo + append, scroll into view) and popup
+  ~   (a dialog). every clickable action on this page is such a link, so right-click
+  ~   → copy link yields a working action. a load-time ?mtron= NEVER runs by itself:
+  ~   it fills a pending bar and one click commits, then the params are stripped.
+  ~   the expression is encoded with URLSearchParams (so `+` is `%2B`), and a program
+  ~   that starts with `.` is meant to apply to the address in the path — the next
+  ~   step toward <address>?mtron=.plus(1).
+  ~
+  ~ KNOBS (override in the <meta> tags below, or per-visit with ?ws=…&http=…):
+  ~    metatron:ws     the mtron REPL endpoint      default ws://<host>:8555/mtron
+  ~    metatron:root   the fs root this page is served from (fallback detection)
+  ~    metatron:boot   the boot file named in the footer
+  ~    metatron:highlight  where highlight.min.js + languages/mtron.min.js live (/highlight/)
+  ~    metatron:style      where splash.css lives (/css/splash.css)
+  ~
+  ~ no external requests beyond its own origin: the page is one file, and the
+  ~ mtron syntax colour is an optional two-script load from a boot-mounted path
+  ~ (metatron:highlight) — without it the console is plain text and still works.
+  -->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0e13">
+    <meta name="description" content="metatron — a ring-oriented language and virtual machine">
+    <meta name="metatron:ws" content="">
+    <meta name="metatron:root" content="fs:boot/space/web">
+    <meta name="metatron:boot" content="docs/website/skills/drstynx/assets/drstynx.boot.mtron">
+    <meta name="metatron:highlight" content="/highlight/">
+    <title>metatron — PhaseShift Studio</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='11' r='7' fill='none' stroke='%23970207' stroke-width='2'/%3E%3Ccircle cx='12' cy='19' r='7' fill='none' stroke='%23c9d1d9' stroke-width='2'/%3E%3Ccircle cx='20' cy='19' r='7' fill='none' stroke='%238b949e' stroke-width='2'/%3E%3C/svg%3E">
+    <meta name="metatron:style" content="/css/splash.css">
+    <link id="metatron-style" rel="stylesheet" href="/css/splash.css">
+    <script>
+        /* one place for the design: docs/website/css/splash.css. ?css= or the meta
+           tag can point elsewhere; the critical block below keeps the page readable
+           if the stylesheet's mount is absent. */
+        (function () {
+            var query = new URLSearchParams(location.search).get("css");
+            var meta = document.querySelector('meta[name="metatron:style"]');
+            var link = document.getElementById("metatron-style");
+            var href = query || (meta && meta.content);
+            if (href && link.getAttribute("href") !== href) link.href = href;
+        })();
+    </script>
+    <style>
+        /* critical only — the design lives in /css/splash.css */
+        body { margin: 0; background: #0b0e13; color: #c9d1d9; font: 14px/1.55 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+        .wrap { width: min(1180px, 100% - 2.5rem); margin: 0 auto; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header class="hero">
+        <svg viewBox="0 0 64 64" role="img" aria-label="three interlocking rings">
+            <circle cx="32" cy="22" r="14" fill="none" stroke="#970207" stroke-width="2.4"/>
+            <circle cx="24" cy="38" r="14" fill="none" stroke="#c9d1d9" stroke-width="2.4" opacity=".9"/>
+            <circle cx="40" cy="38" r="14" fill="none" stroke="#8b949e" stroke-width="2.4" opacity=".9"/>
+        </svg>
+        <h1>metatron</h1>
+        <p class="tag">a ring-oriented language and virtual machine</p>
+        <p class="where">
+            <span id="origin">this machine</span>
+            <span class="sep">·</span> served by <code>http_server::T</code>
+            <span class="sep">·</span> <span id="clock">--:--:--</span>
+        </p>
+        <div class="badge" aria-live="polite">
+            <span class="dot busy" id="pulse-dot"></span>
+            <span id="pulse">probing surfaces</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- ── 1. surfaces ───────────────────────────────────── -->
+        <div class="grid" aria-label="surfaces">
+
+            <section class="card" aria-labelledby="h-http">
+                <header><span class="dot busy" id="d-http"></span><h2 id="h-http">http_server</h2><span class="meta" id="m-http">probing…</span></header>
+                <p class="lede">one socket, namespaces by path</p>
+                <table>
+                    <tbody>
+                    <tr><td class="addr"><a href="./">/</a></td><td class="note">this page</td><td class="st" id="r-root">—</td></tr>
+                    <tr><td class="addr"><a href="/mcp">/mcp</a></td><td class="note">mcp_server over http</td><td class="st" id="r-mcp">—</td></tr>
+                    </tbody>
+                </table>
+                <p class="hint">mounts are the exposure boundary — a full boot adds
+                    <code>/usr</code> <code>/mfs</code> <code>/docker</code> <code>/message</code></p>
+            </section>
+
+            <section class="card" aria-labelledby="h-ws">
+                <header><span class="dot busy" id="d-ws"></span><h2 id="h-ws">ws_server</h2><span class="meta" id="m-ws">probing…</span></header>
+                <p class="lede">one connection, protocols by path</p>
+                <table>
+                    <tbody>
+                    <tr><td class="addr">/mtron</td><td class="note">expression in, answer out</td><td class="st" id="r-mtron">—</td></tr>
+                    <tr><td class="addr">/mcp</td><td class="note">mcp_server over ws</td><td class="st" id="r-wsmcp">—</td></tr>
+                    </tbody>
+                </table>
+                <p class="hint">a full boot also mounts <code>/drstynx</code> — the dr.stynx agent as an
+                    <code>mcp_server</code></p>
+            </section>
+
+            <section class="card" aria-labelledby="h-mcp">
+                <header><span class="dot busy" id="d-mcp"></span><h2 id="h-mcp">mcp_server</h2><span class="meta" id="m-mcp">probing…</span></header>
+                <p class="lede">the machine as tools, one JSON-RPC surface</p>
+                <table>
+                    <tbody>
+                    <tr><td class="addr">tools/list</td><td class="note" id="note-tools">waiting…</td><td class="st" id="r-tools">—</td></tr>
+                    <tr><td class="addr">eval_mtron</td><td class="note">evaluate an expression remotely</td><td class="st" id="r-eval">—</td></tr>
+                    </tbody>
+                </table>
+                <p class="hint">the same catalog is listed below; over http and over ws it is one
+                    <code>mcp_server</code></p>
+            </section>
+        </div>
+
+        <!-- ── 2. console ────────────────────────────────────── -->
+        <section class="card wide" id="console-card" aria-labelledby="h-console">
+            <div class="console-head">
+                <span class="dot busy" id="d-console"></span>
+                <h2 id="h-console">console</h2>
+                <span class="hl-note" id="hl-note">syntax: loading</span>
+                <span class="meta" id="m-console">one message is one expression</span>
+                <span class="ep"><code id="ws-ep">ws://…/mtron</code></span>
+            </div>
+            <div class="pending" id="pending" hidden>
+                <span class="label">action</span>
+                <code id="pending-expr"></code>
+                <span class="at" id="pending-at"></span>
+                <button type="button" class="primary" id="pending-run">run</button>
+                <button type="button" class="ghost" id="pending-dismiss">dismiss</button>
+            </div>
+            <div class="out" id="out" role="log" aria-live="polite" aria-label="console output"></div>
+            <form class="repl" id="repl" autocomplete="off">
+                <span class="ps1" aria-hidden="true">mtron&gt;</span>
+                <label class="sr" for="expr">mtron expression</label>
+                <input id="expr" name="expr" type="text" spellcheck="false" autocapitalize="off"
+                       placeholder="1.plus(2)" aria-describedby="h-console">
+                <button class="primary" type="submit">run</button>
+                <button class="ghost" type="button" id="clear" title="clear the console">clear</button>
+            </form>
+            <div class="chips" aria-label="example expressions">
+                <span class="chip" data-expr="1.plus(2)">1.plus(2)</span>
+                <span class="chip" data-expr="!*boot/args">!*boot/args</span>
+                <span class="chip" data-expr="*&lt;/sys/space&gt;">*&lt;/sys/space&gt;</span>
+                <span class="chip" data-expr="*&lt;/sys/network/listener&gt;">*&lt;/sys/network/listener&gt;</span>
+                <span class="chip" data-expr="*&lt;/m/instset&gt;">*&lt;/m/instset&gt;</span>
+                <span class="chip" data-expr="*&lt;/usr/dr&gt;">*&lt;/usr/dr&gt;</span>
+                <span class="chip" data-expr="!math:datetime_now()">!math:datetime_now()</span>
+            </div>
+        </section>
+
+        <!-- ── 3. explore ─────────────────────────────────────── -->
+        <div class="grid" aria-label="explore">
+
+            <section class="card span2" aria-labelledby="h-tools">
+                <header><span class="dot busy" id="d-toolpanel"></span><h2 id="h-tools">mcp tools</h2><span class="meta" id="m-tools">0</span></header>
+                <p class="lede">live from <code>POST /mcp</code> — pick a tool and its <code>inputSchema</code> becomes a form; submit calls <code>tools/call</code></p>
+                <div class="tool-split">
+                    <div class="tool-pick">
+                        <label class="sr" for="tools-filter">filter tools</label>
+                        <input class="tools-filter" id="tools-filter" type="search" spellcheck="false" placeholder="filter…">
+                        <ol class="tools" id="tools">
+                            <li class="empty">waiting for the server…</li>
+                        </ol>
+                    </div>
+                    <div class="tool-run">
+                        <p class="tool-empty" id="tool-empty">select a tool — its schema becomes a form</p>
+                        <div id="tool-form-wrap" hidden>
+                            <div class="tool-head">
+                                <code id="tool-name"></code>
+                                <span class="dot" id="tool-dot"></span>
+                                <span class="meta" id="tool-status">idle</span>
+                            </div>
+                            <p class="tool-desc" id="tool-desc"></p>
+                            <form id="tool-form" autocomplete="off"></form>
+                            <div class="tool-out">
+                                <pre id="tool-result"></pre>
+                                <details class="tool-raw"><summary>raw envelope</summary><pre id="tool-raw"></pre></details>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="h-docs">
+                <header><h2 id="h-docs">documentation</h2></header>
+                <p class="lede">metatron in full</p>
+                <table>
+                    <tbody>
+                    <tr><td class="addr"><a href="https://metatron.phaseshift.studio/" target="_blank" rel="noopener">metatron.phaseshift.studio</a></td></tr>
+                    <tr><td class="addr"><a href="https://metatron.phaseshift.studio/start.html" target="_blank" rel="noopener">quick start</a></td></tr>
+                    <tr><td class="addr"><a href="https://metatron.phaseshift.studio/instset/index.html" target="_blank" rel="noopener">instruction sets</a></td></tr>
+                    <tr><td class="addr"><a href="https://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.html" target="_blank" rel="noopener">the web instruction set</a></td></tr>
+                    <tr><td class="addr"><a href="https://metatron.phaseshift.studio/articles/" target="_blank" rel="noopener">articles</a></td></tr>
+                    <tr><td class="addr"><a href="https://github.com/phaseshift-studio/metatron" target="_blank" rel="noopener">source · AGPLv3</a></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="card span2" aria-labelledby="h-spaces">
+                <header><h2 id="h-spaces">spaces of a full boot</h2><span class="meta">click to read</span></header>
+                <p class="lede">address → space kind. each action is a link — <em>console</em> appends the read,
+                    <em>popup</em> opens it in place — so what answers is what this machine actually holds.</p>
+                <table>
+                    <thead><tr><th>address</th><th>kind</th><th>read</th></tr></thead>
+                    <tbody id="spaces"></tbody>
+                </table>
+            </section>
+
+            <section class="card" aria-labelledby="h-instsets">
+                <header><h2 id="h-instsets">instruction sets</h2></header>
+                <p class="lede">imported by the dr.stynx boot</p>
+                <div id="instsets"></div>
+                <p class="hint">a read of <code>*&lt;/m/web&gt;</code> answers the set itself</p>
+            </section>
+
+            <section class="card" aria-labelledby="h-agent">
+                <header><h2 id="h-agent">the agent</h2><span class="meta">ws /drstynx</span></header>
+                <p class="lede">dr.stynx — a metatron agent, exposed as an <code>mcp_server</code></p>
+                <table>
+                    <tbody>
+                    <tr><td class="addr">/usr/dr/agent</td><td class="note">!*dr · the agent obj</td></tr>
+                    <tr><td class="addr">/usr/dr/session/1</td><td class="note">chat session · sqlite</td></tr>
+                    <tr><td class="addr">qwen3.8:27b</td><td class="note">ollama @ ginger.local:11434</td></tr>
+                    </tbody>
+                </table>
+                <p class="hint">features: chat · think · tool · skill · audit · summarize · todo · embed · cost · compaction · loop</p>
+                <p class="hint">tools: sql · codegraph · find_file · read_file · edit_file · web · bash · mcp</p>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="brand">
+            <a href="https://phaseshift.studio" target="_blank" rel="noopener">PhaseShift Studio</a> presents
+            <a href="https://metatron.phaseshift.studio/" target="_blank" rel="noopener">metatron</a>
+        </div>
+        <div>
+            boot <code id="boot-file">drstynx.boot.mtron</code>
+            <span class="sep">·</span> page <code>boot/space/web/index.html</code>
+            <span class="sep">·</span> <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPLv3</a>
+        </div>
+    </footer>
+</div>
+
+<dialog class="popup" id="popup" aria-labelledby="popup-title">
+    <header>
+        <span class="dot" id="popup-dot"></span>
+        <h2 id="popup-title">result</h2>
+        <span class="meta" id="popup-at">at=popup</span>
+    </header>
+    <p class="expr" id="popup-expr"></p>
+    <pre id="popup-out">evaluating…</pre>
+    <div class="actions">
+        <button type="button" class="ghost" id="popup-copy">copy</button>
+        <button type="button" class="primary" id="popup-close">close</button>
+    </div>
+</dialog>
+
+<noscript>
+    <div class="wrap" style="padding:1rem 0;color:#f85149">
+        this page probes and drives the server with JavaScript; the server itself is unaffected.
+    </div>
+</noscript>
+
+<script>
+    "use strict";
+
+    /* ── configuration ─────────────────────────────────────────────────────── */
+    const params = new URLSearchParams(location.search);
+    const metaContent = (name) => {
+        const el = document.querySelector('meta[name="' + name + '"]');
+        return el ? el.content || "" : "";
+    };
+    const host = location.hostname || "localhost";
+    const secure = location.protocol === "https:";
+    const offline = location.protocol === "file:";
+    const httpBase = params.get("http") ||
+        (offline ? "http://" + host + ":8777" : location.origin);
+    /* bin/wsplus appends the codecs it speaks to the endpoint; so does the console, so the uri in the
+       page is the uri you would hand the CLI. a ?ws= that already names codecs keeps its own. */
+    function codecUrl(base) {
+        try {
+            const url = new URL(base, location.href);
+            /* a MIME type is a query value with a slash. the websocket server matches the codec
+               string LITERALLY, and wsplus writes it unescaped (python's quote() leaves '/'),
+               so this writes it unescaped too — URLSearchParams would spell %2F and miss. */
+            const add = (key, value) => {
+                if (url.searchParams.has(key)) return;
+                const pair = key + "=" + encodeURIComponent(value).replace(/%2F/gi, "/");
+                url.search += (url.search ? "&" : "?") + pair;
+            };
+            add("in", "application/x-mtron");
+            add("out", "application/x-mtron-ui");   // pretty-printed obj results
+            return url.toString();
+        } catch (ignored) {
+            return base;
+        }
+    }
+
+    const wsBase = params.get("ws") || metaContent("metatron:ws") ||
+        (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
+    const wsUrl = codecUrl(wsBase);
+    const rootAddr = metaContent("metatron:root");
+
+    const $ = (sel, root) => (root || document).querySelector(sel);
+    const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+    /* ── small utilities ───────────────────────────────────────────────────── */
+    function withTimeout(ms) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), ms);
+        return { signal: ctrl.signal, done: () => clearTimeout(timer) };
+    }
+
+    function setDot(el, state) {
+        if (!el) return;
+        el.classList.remove("busy", "up", "warn", "bad");
+        if (state) el.classList.add(state);
+    }
+
+    const ms = (n) => n + " ms";
+
+    function wsFor(path) {
+        try {
+            const url = new URL(wsUrl);
+            url.pathname = path;
+            url.search = "";   // a probe names a protocol, not mtron's codecs
+            return url.toString();
+        } catch (ignored) {
+            return wsUrl;
+        }
+    }
+
+    /* ── clock ─────────────────────────────────────────────────────────────── */
+    function tickClock() {
+        const el = $("#clock");
+        if (el) el.textContent = new Date().toLocaleTimeString([], { hour12: false });
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    /* ── http probes ───────────────────────────────────────────────────────── */
+    async function probe(path, msTimeout) {
+        const t = performance.now();
+        const guard = withTimeout(msTimeout || 3000);
+        try {
+            const r = await fetch(new URL(path, httpBase), {
+                method: "GET",
+                cache: "no-store",
+                redirect: "follow",
+                headers: { "Accept": "application/json, text/plain;q=0.9, */*;q=0.8" },
+                signal: guard.signal
+            });
+            const body = await r.text();
+            return { reachable: true, status: r.status, body: body, ms: Math.round(performance.now() - t) };
+        } catch (e) {
+            return { reachable: false, status: 0, body: "", ms: Math.round(performance.now() - t), error: e.name };
+        } finally {
+            guard.done();
+        }
+    }
+
+    /* ── websocket probe ───────────────────────────────────────────────────── */
+    function probeWs(url, msTimeout) {
+        return new Promise((resolve) => {
+            const t = performance.now();
+            let settled = false;
+            let socket = null;
+            const finish = (ok, why) => {
+                if (settled) return;
+                settled = true;
+                try { if (socket) socket.close(); } catch (ignored) { }
+                resolve({ ok: ok, ms: Math.round(performance.now() - t), why: why });
+            };
+            const timer = setTimeout(() => finish(false, "timeout"), msTimeout || 2200);
+            try {
+                socket = new WebSocket(url);
+            } catch (e) {
+                clearTimeout(timer);
+                finish(false, "unsupported");
+                return;
+            }
+            socket.onopen = () => { clearTimeout(timer); finish(true); };
+            socket.onerror = () => { clearTimeout(timer); finish(false, "error"); };
+            socket.onclose = (e) => { clearTimeout(timer); finish(false, "closed " + e.code); };
+        });
+    }
+
+    /* ── mtron syntax ────────────────────────────────────────────────────────
+       The docs' highlighter is a standard highlight.js core plus a grammar
+       GENERATED from conf/nanorc/mtron.nanorc (NanorcToHljs) — the nanorc is
+       the standard of truth. It is loaded from a mount the boot provides
+       (`metatron:highlight`, default /highlight/); if it is not there the
+       console stays plain text, never broken. */
+    const hlBase = params.get("hl") || metaContent("metatron:highlight") || "/highlight/";
+    let HL = null;
+
+    const CONTROLS = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;   // CSI: SGR colour, cursor moves, erase
+
+    function paint(el, text, kind) {
+        text = String(text == null ? "" : text).replace(CONTROLS, "");
+        el._text = text;
+        el._kind = kind;
+        if (HL && kind !== "sys" && text.length < 20000) {
+            try {
+                el.innerHTML = HL.highlight(text, { language: "mtron", ignoreIllegals: true }).value;
+                return;
+            } catch (ignored) {
+                // a grammar that cannot read a fragment is not a reason to lose the fragment
+            }
+        }
+        el.textContent = text;
+    }
+
+    function retint(el) {
+        if (undefined !== el._text)
+            paint(el, el._text, el._kind);
+    }
+
+    function highlighterReady() {
+        HL = window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron") ? window.hljs : null;
+        const note = $("#hl-note");
+        if (note) note.textContent = HL ? "syntax: mtron" : "syntax: plain";
+        if (HL) {
+            $$("#out .line").forEach(retint);
+            if ($("#popup-out")._text) retint($("#popup-out"));
+        }
+    }
+
+    function loadScript(src) {
+        return new Promise((resolve) => {
+            const script = document.createElement("script");
+            script.src = src;
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.head.appendChild(script);
+        });
+    }
+
+    async function loadHighlighter() {
+        if (!hlBase) return;
+        try {
+            if (!(await loadScript(hlBase + "highlight.min.js"))) return highlighterReady();
+            if (!(await loadScript(hlBase + "languages/mtron.min.js"))) return highlighterReady();
+        } finally {
+            highlighterReady();
+        }
+    }
+
+    /* ── console: one socket, one answer per frame, evaluated in order ─────── */
+    const out = $("#out");
+
+    function line(kind, text) {
+        const el = document.createElement("span");
+        el.className = "line " + kind;
+        paint(el, text, kind);
+        out.appendChild(el);
+        while (out.childElementCount > 500) out.removeChild(out.firstElementChild);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function welcome() {
+        out.textContent = "";
+        line("sys", "metatron console — one message is one expression, evaluated on this machine");
+        line("sys", "same endpoint as bin/wsplus:  " + wsBase);
+        line("sys", "in application/x-mtron  ·  out application/x-mtron-ui  ·  one frame in, one frame out");
+        line("sys", "try  *</sys/space>   or   !*boot/args");
+    }
+    welcome();
+
+    let socket = null;
+    let chain = Promise.resolve();
+
+    function connect() {
+        if (socket && socket.readyState === WebSocket.OPEN) return Promise.resolve(socket);
+        if (socket && socket.readyState === WebSocket.CONNECTING) {
+            return new Promise((resolve, reject) => {
+                socket.addEventListener("open", () => resolve(socket), { once: true });
+                socket.addEventListener("error", () => reject(new Error("cannot reach " + wsUrl)), { once: true });
+            });
+        }
+        return new Promise((resolve, reject) => {
+            const ws = new WebSocket(wsUrl);
+            const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
+            ws.onopen = () => {
+                clearTimeout(timer);
+                socket = ws;
+                setDot($("#d-console"), "up");
+                $("#m-console").textContent = "connected";
+                resolve(ws);
+            };
+            ws.onerror = () => {
+                clearTimeout(timer);
+                setDot($("#d-console"), "bad");
+                $("#m-console").textContent = "not connected";
+                reject(new Error("cannot reach " + wsUrl));
+            };
+            ws.onclose = () => {
+                socket = null;
+                setDot($("#d-console"), "down");
+                $("#m-console").textContent = "closed";
+            };
+        });
+    }
+
+    /* a reply frame is text OR bytes: application/x-mtron comes back as a text frame, the UI
+       (and other binary serializations) as a binary frame — bin/wsplus decodes bytes before it
+       prints, so the browser does the same rather than reporting a frame it cannot read. */
+    async function frameText(data) {
+        if (typeof data === "string") return data;
+        if (data instanceof Blob) return await data.text();
+        if (data instanceof ArrayBuffer) return new TextDecoder().decode(data);
+        return String(data);
+    }
+
+    function evaluate(expr) {
+        return connect().then((ws) => new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                ws.removeEventListener("message", answer);
+                reject(new Error("no answer in 30 s"));
+            }, 30000);
+            const answer = async (ev) => {
+                clearTimeout(timer);
+                ws.removeEventListener("message", answer);
+                try {
+                    resolve(await frameText(ev.data));
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            ws.addEventListener("message", answer);
+            ws.send(expr);
+        }));
+    }
+
+    function evaluateThen(expr) {
+        const pending = chain.then(() => evaluate(expr));
+        chain = pending.catch(() => { });
+        return pending;
+    }
+
+    function run(expr, echo) {
+        expr = String(expr || "").trim();
+        if (!expr) return Promise.resolve();
+        if (echo !== false) line("cmd", expr);
+        return evaluateThen(expr).then((result) => {
+            line("res", result);
+            return result;
+        }).catch((error) => {
+            line("err", error && error.message ? error.message : String(error));
+        });
+    }
+
+    const exprInput = $("#expr");
+
+    $("#repl").addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        const value = exprInput.value;
+        exprInput.value = "";
+        remember(value);
+        run(value);
+    });
+
+    $("#clear").addEventListener("click", () => { welcome(); exprInput.focus(); });
+
+    /* history — persisted so a reload keeps the last few expressions */
+    const HISTORY_KEY = "metatron.console.history";
+    /* named `commands`, not `history`: a top-level let would shadow window.history,
+       and cleanActionParams() needs the real one */
+    let commands = [];
+    try { commands = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch (ignored) { commands = []; }
+    let cursor = commands.length;
+
+    function remember(expr) {
+        expr = String(expr || "").trim();
+        if (!expr || commands[commands.length - 1] === expr) return;
+        commands.push(expr);
+        if (commands.length > 100) commands = commands.slice(-100);
+        cursor = commands.length;
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(commands)); } catch (ignored) { }
+    }
+
+    exprInput.addEventListener("keydown", (ev) => {
+        if (ev.key === "ArrowUp") {
+            if (!commands.length) return;
+            ev.preventDefault();
+            cursor = Math.max(0, cursor - 1);
+            exprInput.value = commands[cursor];
+            exprInput.setSelectionRange(exprInput.value.length, exprInput.value.length);
+        } else if (ev.key === "ArrowDown") {
+            if (!commands.length) return;
+            ev.preventDefault();
+            cursor = Math.min(commands.length, cursor + 1);
+            exprInput.value = cursor === commands.length ? "" : commands[cursor];
+        } else if (ev.key === "l" && (ev.ctrlKey || ev.metaKey)) {
+            ev.preventDefault();
+            welcome();
+        }
+    });
+
+    document.addEventListener("keydown", (ev) => {
+        const tag = (document.activeElement || {}).tagName || "";
+        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
+        if (ev.key === "/" && !typing) {
+            ev.preventDefault();
+            exprInput.focus();
+        }
+    });
+
+    /* ── mcp ───────────────────────────────────────────────────────────────── */
+    let mcpId = 0;
+    let mcpSession = null;
+
+    async function rpc(method, params, msTimeout) {
+        const guard = withTimeout(msTimeout || 6000);
+        try {
+            const headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream"
+            };
+            if (mcpSession) headers["Mcp-Session-Id"] = mcpSession;
+            const r = await fetch(httpBase + "/mcp", {
+                method: "POST",
+                cache: "no-store",
+                signal: guard.signal,
+                headers: headers,
+                body: JSON.stringify({ jsonrpc: "2.0", id: ++mcpId, method: method, params: params || {} })
+            });
+            const sid = r.headers.get("mcp-session-id");
+            if (sid) mcpSession = sid;
+            const text = await r.text();
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            const type = r.headers.get("content-type") || "";
+            if (type.indexOf("event-stream") !== -1) {
+                const frames = text.split(/\r?\n/).filter((l) => l.indexOf("data:") === 0);
+                if (!frames.length) throw new Error("empty event stream");
+                return JSON.parse(frames[frames.length - 1].slice(5).trim());
+            }
+            return JSON.parse(text);
+        } finally {
+            guard.done();
+        }
+    }
+
+    const toolLabel = (name) => String(name || "").replace(/^m_web_mcp_mcp_mtron_/, "");
+
+    let CURRENT = null;
+    let TOOL_SIG = "";
+
+    function markSelected() {
+        $$("#tools li[data-name]").forEach((li) => {
+            li.classList.toggle("selected", !!CURRENT && li.dataset.name === CURRENT.name);
+        });
+    }
+
+    function renderTools(tools) {
+        const list = $("#tools");
+        list.textContent = "";
+        if (!tools.length) {
+            const li = document.createElement("li");
+            li.className = "empty";
+            li.textContent = "the server answered but offers no tools";
+            list.appendChild(li);
+            return;
+        }
+        tools.forEach((tool) => {
+            const li = document.createElement("li");
+            li.dataset.name = tool.name;
+            li.dataset.filter = (tool.name + " " + (tool.description || "")).toLowerCase();
+            li.tabIndex = 0;
+            li.setAttribute("role", "button");
+            li.title = tool.name;
+            const name = document.createElement("code");
+            name.className = "name";
+            name.textContent = toolLabel(tool.name);
+            const desc = document.createElement("span");
+            desc.className = "desc";
+            desc.textContent = tool.description || "(no description)";
+            li.appendChild(name);
+            li.appendChild(desc);
+            const pick = () => selectTool(tool);
+            li.addEventListener("click", pick);
+            li.addEventListener("keydown", (ev) => {
+                if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pick(); }
+            });
+            list.appendChild(li);
+        });
+        if (CURRENT) markSelected();
+        $("#m-tools").textContent = tools.length + (tools.length === 1 ? " tool" : " tools");
+        $("#note-tools").textContent = tools.length + " exposed";
+        const evalTool = tools.some((t) => /eval_mtron/.test(t.name));
+        const evalCell = $("#r-eval");
+        if (evalCell) {
+            evalCell.textContent = evalTool ? "available" : "—";
+            evalCell.style.color = evalTool ? "var(--ok)" : "";
+        }
+    }
+
+    function filterTools() {
+        const q = ($("#tools-filter").value || "").toLowerCase().trim();
+        const rows = $$("#tools li[data-filter]");
+        let shown = 0;
+        rows.forEach((li) => {
+            const hit = !q || li.dataset.filter.indexOf(q) !== -1;
+            li.style.display = hit ? "" : "none";
+            if (hit) shown++;
+        });
+        $("#m-tools").textContent = shown + " of " + rows.length + " tools";
+    }
+    $("#tools-filter").addEventListener("input", filterTools);
+
+    /* ── the runner: inputSchema -> a form -> tools/call -> the object ─────── */
+    function selectTool(tool) {
+        CURRENT = tool;
+        markSelected();
+        $("#tool-empty").hidden = true;
+        $("#tool-form-wrap").hidden = false;
+        $("#tool-name").textContent = toolLabel(tool.name);
+        $("#tool-name").title = tool.name;
+        $("#tool-desc").textContent = tool.description || "(no description)";
+        $("#tool-status").textContent = "idle";
+        setDot($("#tool-dot"), "");
+        $("#tool-result").textContent = "";
+        $("#tool-raw").textContent = "";
+        buildToolForm(tool);
+    }
+
+    function toolField(key, spec, required) {
+        const wrap = document.createElement("label");
+        wrap.className = "field";
+        const name = document.createElement("span");
+        name.className = "field-name";
+        name.textContent = key;
+        if (required) {
+            const star = document.createElement("span");
+            star.className = "req";
+            star.textContent = " *";
+            name.appendChild(star);
+        }
+        wrap.appendChild(name);
+
+        const type = spec.type;
+        let input;
+        let kind = "text";
+        if (Array.isArray(spec.enum)) {
+            input = document.createElement("select");
+            spec.enum.forEach((value) => {
+                const option = document.createElement("option");
+                option.value = String(value);
+                option.textContent = String(value);
+                input.appendChild(option);
+            });
+            kind = "enum";
+        } else if (type === "boolean") {
+            input = document.createElement("input");
+            input.type = "checkbox";
+            kind = "boolean";
+        } else if (type === "number" || type === "integer") {
+            input = document.createElement("input");
+            input.type = "number";
+            input.step = type === "integer" ? "1" : "any";
+            kind = "number";
+        } else if (type === "object" || type === "array") {
+            input = document.createElement("textarea");
+            input.placeholder = type === "array" ? "[…]" : "{…}";
+            kind = "json";
+        } else if (key === "code" || key === "on_message" || key === "current_memory") {
+            input = document.createElement("textarea");
+            kind = "text";
+        } else {
+            input = document.createElement("input");
+            input.type = "text";
+            kind = "text";
+        }
+        input.name = key;
+        input.dataset.kind = kind;
+        if (spec.default !== undefined && kind !== "boolean")
+            input.value = typeof spec.default === "string" ? spec.default : JSON.stringify(spec.default);
+        wrap.appendChild(input);
+        if (spec.description) {
+            const note = document.createElement("span");
+            note.className = "field-note";
+            note.textContent = spec.description;
+            wrap.appendChild(note);
+        }
+        return wrap;
+    }
+
+    function buildToolForm(tool) {
+        const form = $("#tool-form");
+        form.textContent = "";
+        const schema = tool.inputSchema || {};
+        const props = schema.properties || {};
+        const required = new Set(schema.required || []);
+        /* a schema may declare a required name it does not describe (the server has one);
+           only described properties get a field, and only they can be required by the form */
+        const names = Object.keys(props).filter((key) => key !== "");
+        if (!names.length) {
+            const note = document.createElement("p");
+            note.className = "tool-empty";
+            note.textContent = "no parameters";
+            form.appendChild(note);
+        }
+        names.forEach((key) => form.appendChild(toolField(key, props[key] || {}, required.has(key))));
+
+        const actions = document.createElement("div");
+        actions.className = "form-actions";
+        const error = document.createElement("span");
+        error.className = "form-error";
+        const submit = document.createElement("button");
+        submit.type = "submit";
+        submit.className = "primary";
+        submit.textContent = "call " + toolLabel(tool.name);
+        actions.appendChild(error);
+        actions.appendChild(submit);
+        form.appendChild(actions);
+
+        form.onsubmit = (ev) => {
+            ev.preventDefault();
+            error.textContent = "";
+            submit.disabled = true;
+            callTool(tool, form).catch((problem) => {
+                error.textContent = problem && problem.message ? problem.message : String(problem);
+                setDot($("#tool-dot"), "bad");
+                $("#tool-status").textContent = "error";
+            }).finally(() => { submit.disabled = false; });
+        };
+    }
+
+    function collectToolArgs(form, tool) {
+        const args = {};
+        const required = new Set((tool.inputSchema || {}).required || []);
+        form.querySelectorAll("[name]").forEach((input) => {
+            const key = input.name;
+            const kind = input.dataset.kind;
+            if (kind === "boolean") {
+                args[key] = input.checked;
+                return;
+            }
+            const raw = input.value;
+            if (raw === "") {
+                if (required.has(key)) {
+                    input.focus();
+                    throw new Error(key + " is required");
+                }
+                return;
+            }
+            if (kind === "number") {
+                const number = Number(raw);
+                if (!Number.isFinite(number)) {
+                    input.focus();
+                    throw new Error(key + " must be a number");
+                }
+                args[key] = number;
+            } else if (kind === "json") {
+                try {
+                    args[key] = JSON.parse(raw);
+                } catch (ignored) {
+                    input.focus();
+                    throw new Error(key + " is not valid JSON");
+                }
+            } else {
+                args[key] = raw;
+            }
+        });
+        return args;
+    }
+
+    async function callTool(tool, form) {
+        const args = collectToolArgs(form, tool);
+        setDot($("#tool-dot"), "busy");
+        $("#tool-status").textContent = "calling…";
+        $("#tool-result").textContent = "";
+        $("#tool-raw").textContent = "";
+        const started = performance.now();
+        const reply = await rpc("tools/call", { name: tool.name, arguments: args }, 30000);
+        if (reply && reply.error) throw new Error(reply.error.message || "mcp error");
+        renderToolResult((reply && reply.result) || {}, Math.round(performance.now() - started));
+    }
+
+    function renderToolResult(result, elapsed) {
+        const out = $("#tool-result");
+        const blocks = (result.content || []).filter((block) => block.type === "text");
+        const joined = blocks.map((block) => block.text || "").join("\n");
+        const failed = !!result.isError;
+        setDot($("#tool-dot"), failed ? "bad" : "up");
+        $("#tool-status").textContent = (failed ? "error" : "ok") + " · " + elapsed + " ms";
+        /* an mcp text block is often a serialized object (or a serialized mtron string):
+           show the structure, not the escaping. */
+        let display = joined;
+        let structured = false;
+        try {
+            const parsed = JSON.parse(joined);
+            if (parsed && typeof parsed === "object") {
+                structured = true;
+                display = JSON.stringify(parsed, null, 2);
+            } else if (typeof parsed === "string") {
+                display = parsed;
+            }
+        } catch (ignored) {
+            /* not json: the text is the answer */
+        }
+        if (!display) display = "(no text content)";
+        if (structured) out.textContent = display;
+        else paint(out, display, failed ? "err" : "res");
+        $("#tool-raw").textContent = JSON.stringify(result, null, 2);
+    }
+
+    async function loadTools() {
+        setDot($("#d-toolpanel"), "busy");
+        try {
+            await rpc("initialize", {
+                protocolVersion: "2025-06-18",
+                capabilities: {},
+                clientInfo: { name: "metatron-splash", version: "0.1" }
+            });
+            const reply = await rpc("tools/list", {});
+            const tools = (((reply || {}).result || {}).tools) || [];
+            const signature = tools.map((tool) => tool.name).join("|");
+            if (signature !== TOOL_SIG) {
+                TOOL_SIG = signature;
+                renderTools(tools);
+            } else {
+                markSelected();
+            }
+            if (CURRENT && !tools.some((tool) => tool.name === CURRENT.name)) {
+                CURRENT = null;
+                $("#tool-form-wrap").hidden = true;
+                $("#tool-empty").hidden = false;
+                $("#tool-result").textContent = "";
+                $("#tool-raw").textContent = "";
+            }
+            setDot($("#d-toolpanel"), "up");
+            setDot($("#d-mcp"), "up");
+            $("#m-mcp").textContent = tools.length + " tools";
+            $("#r-tools").textContent = "ok";
+            return tools;
+        } catch (error) {
+            setDot($("#d-toolpanel"), "bad");
+            setDot($("#d-mcp"), "bad");
+            $("#m-mcp").textContent = "unavailable";
+            $("#r-tools").textContent = "failed";
+            $("#note-tools").textContent = String(error.message || error);
+            const list = $("#tools");
+            list.textContent = "";
+            const li = document.createElement("li");
+            li.className = "empty";
+            li.textContent = "POST /mcp did not answer: " + (error.message || error);
+            list.appendChild(li);
+            return [];
+        }
+    }
+
+    /* ── surfaces ──────────────────────────────────────────────────────────── */
+    async function loadHttp() {
+        if (offline) {
+            setDot($("#d-http"), "warn");
+            $("#m-http").textContent = "file:// preview";
+            $("#r-root").textContent = "local file";
+            $("#r-mcp").textContent = "—";
+            return;
+        }
+        const root = await probe("./");
+        const mcp = await probe("/mcp", 4000);
+        setDot($("#d-http"), root.reachable ? "up" : "bad");
+        $("#m-http").textContent = root.reachable ? ms(root.ms) : "unreachable";
+        $("#r-root").textContent = root.reachable ? root.status + " · " + ms(root.ms) : "—";
+        $("#r-mcp").textContent = mcp.reachable
+            ? (mcp.status === 405 ? "405 · up" : mcp.status + " · " + ms(mcp.ms))
+            : "—";
+    }
+
+    async function loadWs() {
+        const mtron = await probeWs(wsUrl);
+        setDot($("#d-ws"), mtron.ok ? "up" : "bad");
+        $("#m-ws").textContent = mtron.ok ? ms(mtron.ms) : "unreachable";
+        $("#r-mtron").textContent = mtron.ok ? "up · " + ms(mtron.ms) : "—";
+        const mcp = await probeWs(wsFor("/mcp"), 1600);
+        $("#r-wsmcp").textContent = mcp.ok ? "up · " + ms(mcp.ms) : "—";
+    }
+
+    /* ── explore tables ────────────────────────────────────────────────────── */
+    const SPACES = [
+        ["/sys/space", "memspace", "the space registry"],
+        ["/sys/network/listener", "listener", "http · ws · mqtt · mdns"],
+        ["/sys/mach", "machine", "the machine template"],
+        ["/usr/marko", "memspace", "home · document q-procs"],
+        ["/usr/dr", "tblespace", "agent home · sqlite"],
+        ["/usr/dsh", "tblespace", "event mirror · sqlite"],
+        ["/log/metatron", "tblespace", "ledger · sqlite"],
+        ["/dev", "memspace", "scratch"],
+        ["/docker", "dckrspace", "docker daemon"],
+        ["mfs:", "fsspace", "the source tree"],
+        ["embed:", "vecspace", "chroma"],
+        ["h:", "grphspace", "janusgraph"],
+        ["g:", "grphspace", "tinkergraph"],
+        ["z2m:", "mqttspace", "zigbee2mqtt"]
+    ];
+
+    const INSTSETS = ["/m/web", "/m/db/tble", "/m/math", "/m/math/cat", "/m/ai/llm",
+        "/m/db/grph", "/m/db/vec", "/m/iot", "/m/dev/dckr", "/m/sys/ui", "/m/dev/ide"];
+
+    /* ── actions: an expression and the surface it lands on ──────────────────
+       the console's url protocol, carried on any page: ?mtron=<expr>&at=<surface>.
+       every clickable action renders as a real anchor, so copy-link works. */
+    const SURFACES = {
+        "web/console": (action) => run(action.expr),
+        "popup": (action) => showPopup(action)
+    };
+
+    function act(expr, at) {
+        expr = String(expr || "").trim();
+        if (!expr) return;
+        const surface = at && SURFACES[at] ? at : "web/console";
+        if (at && !SURFACES[at]) line("sys", "unknown at=" + at + " — using web/console");
+        SURFACES[surface]({ expr: expr, at: surface });
+        if (surface === "web/console")
+            $("#console-card").scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function actionHref(expr, at) {
+        const url = new URL(location.href);
+        url.searchParams.delete("mtron");
+        url.searchParams.delete("at");
+        url.searchParams.set("mtron", expr);
+        if (at && at !== "web/console") url.searchParams.set("at", at);
+        return url.pathname + url.search + url.hash;
+    }
+
+    function actionLink(label, expr, at, cls) {
+        const anchor = document.createElement("a");
+        anchor.className = "act" + (cls ? " " + cls : "");
+        anchor.href = actionHref(expr, at);
+        anchor.dataset.act = "1";
+        anchor.dataset.expr = expr;
+        anchor.dataset.at = at || "web/console";
+        anchor.textContent = label;
+        anchor.title = "mtron: " + expr + "   →   at=" + (at || "web/console");
+        return anchor;
+    }
+
+    function showPopup(action) {
+        const dialog = $("#popup");
+        $("#popup-expr").textContent = "mtron: " + action.expr;
+        $("#popup-at").textContent = "at=" + action.at;
+        paint($("#popup-out"), "evaluating…", "sys");
+        setDot($("#popup-dot"), "busy");
+        if (!dialog.open) dialog.showModal();
+        evaluateThen(action.expr).then((result) => {
+            setDot($("#popup-dot"), "up");
+            paint($("#popup-out"), result, "res");
+        }).catch((error) => {
+            setDot($("#popup-dot"), "bad");
+            paint($("#popup-out"), "!!! " + (error && error.message ? error.message : String(error)), "err");
+        });
+    }
+
+    document.addEventListener("click", (ev) => {
+        const anchor = ev.target && ev.target.closest ? ev.target.closest("a[data-act]") : null;
+        if (!anchor) return;
+        if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+        ev.preventDefault();
+        act(anchor.dataset.expr, anchor.dataset.at);
+    });
+
+    function cleanActionParams() {
+        const url = new URL(location.href);
+        url.searchParams.delete("mtron");
+        url.searchParams.delete("at");
+        history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
+
+    function showPending(expr, at) {
+        const bar = $("#pending");
+        bar.hidden = false;
+        $("#pending-expr").textContent = expr;
+        $("#pending-at").textContent = "→ at=" + (at || "web/console");
+        $("#pending-run").onclick = () => {
+            bar.hidden = true;
+            cleanActionParams();
+            act(expr, at);
+        };
+        $("#pending-dismiss").onclick = () => {
+            bar.hidden = true;
+            cleanActionParams();
+        };
+    }
+
+    function renderSpaces() {
+        const body = $("#spaces");
+        SPACES.forEach((row) => {
+            const tr = document.createElement("tr");
+            const address = document.createElement("td");
+            address.className = "addr";
+            address.textContent = row[0];
+            const kind = document.createElement("td");
+            kind.className = "note";
+            kind.textContent = row[1] + " · " + row[2];
+            const action = document.createElement("td");
+            action.className = "st";
+            action.appendChild(actionLink("console", "*<" + row[0] + ">", "web/console"));
+            action.appendChild(document.createTextNode(" · "));
+            action.appendChild(actionLink("popup", "*<" + row[0] + ">", "popup"));
+            tr.appendChild(address);
+            tr.appendChild(kind);
+            tr.appendChild(action);
+            body.appendChild(tr);
+        });
+    }
+
+    function renderInstsets() {
+        const box = $("#instsets");
+        INSTSETS.forEach((addr) => {
+            box.appendChild(actionLink(addr, "*<" + addr + ">", "web/console", "chip"));
+        });
+    }
+
+    /* ── boot ──────────────────────────────────────────────────────────────── */
+    function renderIdentity() {
+        $("#origin").textContent = location.host || "this machine";
+        $("#ws-ep").textContent = wsBase;
+        $("#ws-ep").title = wsUrl;
+        const boot = metaContent("metatron:boot");
+        if (boot) $("#boot-file").textContent = boot;
+    }
+
+    let refreshing = false;
+
+    async function refresh() {
+        if (refreshing) return;
+        refreshing = true;
+        try {
+            renderIdentity();
+            await Promise.all([loadHttp(), loadWs(), loadTools()]);
+            const dots = [$("#d-http"), $("#d-ws"), $("#d-mcp")];
+            const up = dots.filter((d) => d && d.classList.contains("up")).length;
+            setDot($("#pulse-dot"), up === 3 ? "up" : up === 0 ? "bad" : "warn");
+            $("#pulse").textContent = up === 3
+                ? "all surfaces up"
+                : up === 0
+                    ? "no surface answering"
+                    : up + " of 3 surfaces up";
+        } finally {
+            refreshing = false;
+        }
+    }
+
+    loadHighlighter();
+    renderSpaces();
+    renderInstsets();
+
+    /* the example chips become real links — copy-link yields a working action */
+    $$(".chips .chip").forEach((chip) => {
+        const expr = chip.dataset.expr || chip.textContent;
+        chip.replaceWith(actionLink(chip.textContent, expr, "web/console", "chip"));
+    });
+
+    $("#popup-close").addEventListener("click", () => $("#popup").close());
+    $("#popup").addEventListener("close", () => setDot($("#popup-dot"), ""));
+    $("#popup-copy").addEventListener("click", async () => {
+        const button = $("#popup-copy");
+        try {
+            await navigator.clipboard.writeText($("#popup-out").textContent);
+            button.textContent = "copied";
+        } catch (ignored) {
+            line("err", "clipboard unavailable");
+        }
+        setTimeout(() => { button.textContent = "copy"; }, 1200);
+    });
+
+    /* an action carried on this page's own url waits for one click */
+    const actionExpr = params.get("mtron");
+    const actionAt = params.get("at") || "web/console";
+    if (actionExpr) showPending(actionExpr, actionAt);
+
+    refresh();
+    setInterval(() => { if (!document.hidden) refresh(); }, 15000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+</script>
+</body>
+</html>

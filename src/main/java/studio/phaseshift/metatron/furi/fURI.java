@@ -1760,7 +1760,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
             return elements;
         }
 
-        static SortedMap<String, String> parseQuery(final String query) {
+        public static SortedMap<String, String> parseQuery(final String query) {
             if (null == query)
                 return AbstractfURI.canonicalQ(null);
             // the canonical map IS the accumulator: a `k=v` pair lands in normal-form position, and a repeated key
@@ -1768,7 +1768,11 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
             final SortedMap<String, String> parsed = AbstractfURI.sortedQ();
             for (final String pair : query.split("&")) {
                 final String[] kv = pair.split("=", 2);
-                parsed.merge(kv[0], kv.length > 1 ? kv[1] : "", (v1, v2) -> v1 + ";" + v2);
+                // `%` is the one character no other fURI token claims, so it carries the special characters a
+                // component could not spell otherwise (`+` above all). Decoding is per component, after the split.
+                parsed.merge(AbstractfURI.decodeQueryComponent(kv[0]),
+                        kv.length > 1 ? AbstractfURI.decodeQueryComponent(kv[1]) : "",
+                        (v1, v2) -> v1 + ";" + v2);
             }
             return parsed;
         }

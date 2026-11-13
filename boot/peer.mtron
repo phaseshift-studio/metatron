@@ -1,6 +1,10 @@
 [== a peer's own boot ==]
-[== the distributed rewrite lives in the category instset, and a bare node imports none of it ==]
+import(/m/sys);
 import(/m/math,math);
 import(/m/math/cat,cat);
-[== the space family, so a peer can mount its own fsspace ==]
-import(/m/sys,fs);
+import(/m/web,web);
+[== all peer to discover peers ==]
+mdns_discovery::[=>];
+fsspace::[pattern=>fs:#,
+          route  => [fs: => <~>]]@/sys/space/fs;
+

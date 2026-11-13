@@ -23,20 +23,18 @@ import com.google.gson.JsonSyntaxException;
 import org.yaml.snakeyaml.Yaml;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mcp.mcpClient;
+import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
-import studio.phaseshift.metatron.isa.m.web.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.parser.*;
 import studio.phaseshift.metatron.isa.m.web.space.mdns.handler.mdnsDiscovery;
-import studio.phaseshift.metatron.isa.m.web.type.MIME;
-import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.web.type.*;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -56,8 +54,7 @@ import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -122,10 +119,13 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI OBJ_XSV_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_xsv");
     public static final fURI OBJ_ZIP_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_zip");
 
+    public static final fURI SPLASH_PAGE = WEB_ISA_TID.extend("splash_page");
+    public static final fURI SPLASH_CARD = SPLASH_PAGE.extend("splash_card");
+
     public static Type MIME_OBJ_TYPE = TypeBuilder.build()
             .tid(URI_TID)
             .vid(MIME_TYPE_TID)
-            .isaPredicate(union_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).toArray(Obj[]::new)))
+            .predicate(union_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).toArray(Obj[]::new)).tryToInst())
             .create();
 
     public static final Type XML_TYPE = TypeBuilder.build()
@@ -315,25 +315,25 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(MARKDOWN_TYPE, "a str encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a str encoding of a java source file"),
                         OBJ_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_SERIALIZER_TID, "a serializer for converting objs to/from external formats")
-                                        .create(),
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_SERIALIZER_TID, "a serializer for converting objs to/from external formats")
+                                .create(),
                         OBJ_MTRON_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_MTRON_SERIALIZER_TID)
-                                        .isaPredicate(rec(
-                                                uri(CLIP), rec(
-                                                        uri(REC_TID).maybe().asUri(), isa_(INT_TYPE).orElse(jnt(7)),
-                                                        uri(LST_TID).maybe(), isa_(INT_TYPE).orElse(jnt(10)),
-                                                        uri(STR_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60)),
-                                                        uri(URI_TID).maybe(), isa_(INT_TYPE).orElse(jnt(Integer.MAX_VALUE)),
-                                                        uri(REAL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(4)),
-                                                        uri(BYTES_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60)),
-                                                        uri(FAIL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60))),
-                                                uri("pointer").maybe(), isa_(STR_TYPE).orElse(str("address")),
-                                                uri("pager").maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE)))
-                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_MTRON_SERIALIZER_TID), lst(T(OBJ_MTRON_SERIALIZER_TID)), (lhs, inst) -> ObjmtronUISerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
-                                        .refinement("mtron string serializer", "the UI serializer: the mtron string format rendered for a reader — clipped, indented, uris tagged as links", mutableMap(
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_MTRON_SERIALIZER_TID)
+                                .isaPredicate(rec(
+                                        uri(CLIP), rec(
+                                                uri(REC_TID).maybe().asUri(), isa_(INT_TYPE).orElse(jnt(7)),
+                                                uri(LST_TID).maybe(), isa_(INT_TYPE).orElse(jnt(10)),
+                                                uri(STR_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60)),
+                                                uri(URI_TID).maybe(), isa_(INT_TYPE).orElse(jnt(Integer.MAX_VALUE)),
+                                                uri(REAL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(4)),
+                                                uri(BYTES_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60)),
+                                                uri(FAIL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60))),
+                                        uri("pointer").maybe(), isa_(STR_TYPE).orElse(str("address")),
+                                        uri("pager").maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE)))
+                                .constructor(instC(INST_CTOR_TID.rng(OBJ_MTRON_SERIALIZER_TID), lst(T(OBJ_MTRON_SERIALIZER_TID)), (lhs, inst) -> ObjmtronUISerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                .refinement("mtron string serializer", "the UI serializer: the mtron string format rendered for a reader — clipped, indented, uris tagged as links", mutableMap(
                                         uri(f(CLIP).extend(REC_TID)).maybe().asUri(), "the max number of relations",
                                         uri(f(CLIP).extend(LST_TID)).maybe().asUri(), "the max number of elements",
                                         uri(f(CLIP).extend(STR_TID)).maybe().asUri(), "the max number of characters",
@@ -345,65 +345,84 @@ public class webInstSet extends AbstractInstSet {
                                         // uri(f(CLIP).extend(CODE_TID)).maybe().asUri(), "the max number of code statements to display",
                                         uri("pointer").maybe(), "how auto-pointer instructions are drawn: address (the console REPL style) or body (wrapped in one link)",
                                         uri("pager").maybe(), "whether a render longer than the terminal opens the pager"))
-                                        .desc("a serializer for converting objs to/from mtron string format")
-                                        .example("obj_mtron::[clip=>[m=>[rec=>10]]]")
-                                        .create(),
+                                .desc("a serializer for converting objs to/from mtron string format")
+                                .example("obj_mtron::[clip=>[m=>[rec=>10]]]")
+                                .create(),
                         OBJ_SIMPLE_JSON_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_SIMPLE_JSON_SERIALIZER_TID)
-                                        .isaPredicate(rec(
-                                                uri("wrap_uri").maybe().asUri(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
-                                                uri("bias_towards_uri").maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
-                                                uri("bias_towards_objs").maybe(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
-                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_SIMPLE_JSON_SERIALIZER_TID), lst(T(OBJ_SIMPLE_JSON_SERIALIZER_TID)), (lhs, inst) -> MObj.of(inst.arg(0).asRec().jvm(), OBJ_JSON_SERIALIZER_TID, inst.arg(0).vid(), ObjJSONSerializer.class)))
-                                        .refinement("simple json serializer", "a serializer for converting objs to/from a simple json format", mutableMap(
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_SIMPLE_JSON_SERIALIZER_TID)
+                                .isaPredicate(rec(
+                                        uri("wrap_uri").maybe().asUri(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
+                                        uri("bias_towards_uri").maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
+                                        uri("bias_towards_objs").maybe(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
+                                .constructor(instC(INST_CTOR_TID.rng(OBJ_SIMPLE_JSON_SERIALIZER_TID), lst(T(OBJ_SIMPLE_JSON_SERIALIZER_TID)), (lhs, inst) -> MObj.of(inst.arg(0).asRec().jvm(), OBJ_JSON_SERIALIZER_TID, inst.arg(0).vid(), ObjJSONSerializer.class)))
+                                .refinement("simple json serializer", "a serializer for converting objs to/from a simple json format", mutableMap(
                                         uri("wrap_uri").maybe().asUri(), "whether to wrap uris in angle brackets",
                                         uri("bias_towards_uri").maybe().asUri(), "whether to bias ambiguous values towards URI",
                                         uri("bias_towards_objs").maybe().asUri(), "whether to parse arrays as objs instead of lst"))
-                                        .desc("obj_simple_json::[wrap_uri=>true]")
-                                        .create(),
+                                .desc("obj_simple_json::[wrap_uri=>true]")
+                                .create(),
                         OBJ_BSON_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_BSON_SERIALIZER_TID, "a serializer for converting objs to/from bson format")
-                                        .create(),
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_BSON_SERIALIZER_TID, "a serializer for converting objs to/from bson format")
+                                .create(),
                         OBJ_YAML_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_YAML_SERIALIZER_TID, "a serializer for converting objs to/from yaml format")
-                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_YAML_SERIALIZER_TID), lst(T(OBJ_YAML_SERIALIZER_TID)),
-                                                (lhs, inst) -> ObjYAMLSerializer.of(inst.arg(0).jvm())))
-                                        .create(),
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_YAML_SERIALIZER_TID, "a serializer for converting objs to/from yaml format")
+                                .constructor(instC(INST_CTOR_TID.rng(OBJ_YAML_SERIALIZER_TID), lst(T(OBJ_YAML_SERIALIZER_TID)),
+                                        (lhs, inst) -> ObjYAMLSerializer.of(inst.arg(0).jvm())))
+                                .create(),
                         OBJ_BYTE_BUFFER_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_BYTE_BUFFER_SERIALIZER_TID, "byte buffer serializer")
-                                        .isaPredicate(rec(
-                                                uri("pretty").maybe().asUri(), BOOL_TYPE,
-                                                uri("indent").maybe(), jnt(2)))
-                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_BYTE_BUFFER_SERIALIZER_TID), lst(T(OBJ_BYTE_BUFFER_SERIALIZER_TID)), (lhs, inst) -> ObjByteBufferSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
-                                        .example("a serializer for converting objs to/from raw byte buffers", "obj_bytebuffer::[=>]")
-                                        .create(),
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_BYTE_BUFFER_SERIALIZER_TID, "byte buffer serializer")
+                                .isaPredicate(rec(
+                                        uri("pretty").maybe().asUri(), BOOL_TYPE,
+                                        uri("indent").maybe(), jnt(2)))
+                                .constructor(instC(INST_CTOR_TID.rng(OBJ_BYTE_BUFFER_SERIALIZER_TID), lst(T(OBJ_BYTE_BUFFER_SERIALIZER_TID)), (lhs, inst) -> ObjByteBufferSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                .example("a serializer for converting objs to/from raw byte buffers", "obj_bytebuffer::[=>]")
+                                .create(),
                         OBJ_XSV_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_XSV_SERIALIZER_TID)
-                                        .isaPredicate(rec(
-                                                uri("delimiter").maybe().asUri(), isa_(STR_TYPE).orElse(str(",")),
-                                                uri("header").maybe().asUri(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
-                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_XSV_SERIALIZER_TID), lst(T(OBJ_XSV_SERIALIZER_TID)), (lhs, inst) -> ObjXSVSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
-                                        .refinement("xsv serializer", "a serializer for converting objs to/from {comma,tab,etc.}-separated values", mutableMap(
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_XSV_SERIALIZER_TID)
+                                .isaPredicate(rec(
+                                        uri("delimiter").maybe().asUri(), isa_(STR_TYPE).orElse(str(",")),
+                                        uri("header").maybe().asUri(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
+                                .constructor(instC(INST_CTOR_TID.rng(OBJ_XSV_SERIALIZER_TID), lst(T(OBJ_XSV_SERIALIZER_TID)), (lhs, inst) -> ObjXSVSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                .refinement("xsv serializer", "a serializer for converting objs to/from {comma,tab,etc.}-separated values", mutableMap(
                                         uri("delimiter").maybe().asUri(), "the column delimiter token (e.g. ',' or '\\t')",
                                         uri("header").maybe().asUri(), "whether the first row is a header row parsed into rec::T keys"))
-                                        .desc("obj_xsv::[delimiter => ',', header => true]")
-                                        .create(),
+                                .desc("obj_xsv::[delimiter => ',', header => true]")
+                                .create(),
                         OBJ_ZIP_SERIALIZER_TYPE = TypeBuilder.build()
-                                        .tid(OBJ_SERIALIZER_TID)
-                                        .vid(OBJ_ZIP_SERIALIZER_TID, "a serializer for moving an obj, or the files and directories it names, as a zip archive")
-                                        .create(),
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_ZIP_SERIALIZER_TID, "a serializer for moving an obj, or the files and directories it names, as a zip archive")
+                                .create(),
+                        TypeBuilder.build()
+                                .tid(REC_TID)
+                                .vid(SPLASH_CARD)
+                                .isaPredicate(rec(
+                                        uri(TID), URI_TYPE,
+                                        uri(VID).maybe(), URI_TYPE,
+                                        uri(LABEL).maybe(), STR_TYPE,
+                                        uri(VIEW).maybe(), union_(uri(MTRON), uri(JSON), uri(PANEL)),
+                                        uri(SPAN).maybe(), rec(
+                                                uri(COL).maybe().asUri(), is_(gte_(jnt(1))).is_(lte_(jnt(4))).tryToInst(),
+                                                uri(ROW).maybe(), is_(gte_(jnt(1))).tryToInst())))
+                                .create(),
+                        TypeBuilder.build()
+                                .tid(REC_TID)
+                                .vid(SPLASH_PAGE)
+                                .isaPredicate(rec(
+                                        uri(TITLE), STR_TYPE,
+                                        uri(LAYOUT), T(LST_TID.poly(SPLASH_CARD.maybeSome()))))
+                                .create(),
                         docWrap(HTTP_SERVER_TYPE, """
-                                                  an http server as this machine's presence: it serves this machine's routes through an http(s)://host:port socket.
-                                                  a socket a machine above already holds is joined (this machine adds its own routes); otherwise it is bound here, and this machine's pop releases it.
-                                                  a request takes the most specific route of every machine sharing the socket (a wildcard key matches the paths it describes): that machine serves it.
-                                                  the server is furi aware: a route onto a space serves the nested addresses of its navigable objs (recs, lsts).
-                                                  an https:// host serves tls with the certificate in its keystore (a pkcs12 path or bytes), opened with its pass; neither is kept in the listener entry.
-                                                  """,
+                                        an http server as this machine's presence: it serves this machine's routes through an http(s)://host:port socket.
+                                        a socket a machine above already holds is joined (this machine adds its own routes); otherwise it is bound here, and this machine's pop releases it.
+                                        a request takes the most specific route of every machine sharing the socket (a wildcard key matches the paths it describes): that machine serves it.
+                                        the server is furi aware: a route onto a space serves the nested addresses of its navigable objs (recs, lsts).
+                                        an https:// host serves tls with the certificate in its keystore (a pkcs12 path or bytes), opened with its pass; neither is kept in the listener entry.
+                                        """,
                                 "http_server::[host=><http://0.0.0.0:8777>,route=>[/=><metatronfs:docs/website>,/mcp=>mcp_mtron]]           [-- serve the site and mcp on 8777 --]",
                                 "http_server::[host=><https://0.0.0.0:8443>,keystore=><conf/server.p12>,pass=>'changeit',route=>[/=><metatronfs:docs/website>]] [-- the site over tls --]"),
                         /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -415,10 +434,10 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
                         docWrap(WS_SERVER_TYPE, """
-                                                a websocket server as this machine's presence: it serves this machine's routes through a ws://host:port socket.
-                                                a socket a machine above already holds is joined (this machine adds its own routes); otherwise it is bound here, and this machine's pop releases it.
-                                                a connection takes the most specific route of every machine sharing the socket: that machine evaluates the session and holds its peer.
-                                                """,
+                                        a websocket server as this machine's presence: it serves this machine's routes through a ws://host:port socket.
+                                        a socket a machine above already holds is joined (this machine adds its own routes); otherwise it is bound here, and this machine's pop releases it.
+                                        a connection takes the most specific route of every machine sharing the socket: that machine evaluates the session and holds its peer.
+                                        """,
                                 "ws_server::[host=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]] [-- serve mtron and mcp on 8555 --]"),
                         docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
                         docWrap(WS_MCP_EMULTATOR_TYPE, "a websocket mcp emulator server that provides an agent a stateful environment of mcp server access"),
@@ -427,10 +446,10 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(HTTP_SOCKET_TYPE, "a generic http obj which can be refined with useful behaviors"),
                         docWrap(HTTP_HANDLER_TYPE, "a http server which should be refined to implement protocol specs"),
                         docWrap(HTTP_CLIENT_TYPE, """
-                                                  an http client: a peer the network reads through with an http GET (from) and writes through with an http POST (to); it serves no eval.
-                                                  a read never dials: an http(s) address answers only through a client someone constructed, and a wildcard host is the web gateway.
-                                                  a document is reified by its content type (html::T, json::T, ... < str::T), and is a str until it is parsed: .as(rec::T) gives it a structure to walk.
-                                                  """,
+                                        an http client: a peer the network reads through with an http GET (from) and writes through with an http POST (to); it serves no eval.
+                                        a read never dials: an http(s) address answers only through a client someone constructed, and a wildcard host is the web gateway.
+                                        a document is reified by its content type (html::T, json::T, ... < str::T), and is a str until it is parsed: .as(rec::T) gives it a structure to walk.
+                                        """,
                                 "http_client::[host=><http://#>]                         [-- the whole web, as one peer: the gateway   --]",
                                 "http_client::[host=><https://#>]                        [-- the whole web over tls                    --]",
                                 "*<http://phaseshift.studio>                             [-- a html::T < str::T, read through the gateway --]",
@@ -439,125 +458,125 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results", "mtron_http::[=>]"),
                         docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
                         docWrap(STDIO_MCP_HANDLER_TYPE, """
-                                                        an mcp stdio carrier — the transport-agnostic mcp server served over the process's own stdin/stdout.
-                                                        fd 1 is the wire, so the VM's ordinary output (logs, banners, renders) is moved to stderr.
-                                                        the session ends at EOF on stdin, which is how a client shuts the server down.
-                                                        """,
+                                        an mcp stdio carrier — the transport-agnostic mcp server served over the process's own stdin/stdout.
+                                        fd 1 is the wire, so the VM's ordinary output (logs, banners, renders) is moved to stderr.
+                                        the session ends at EOF on stdin, which is how a client shuts the server down.
+                                        """,
                                 "mcp_stdio::[server => !*</sys/space/mcp/basic_server>]@/sys/io/mcp/stdio"),
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
                         docWrap(MCP_MTRON_SERVER_TYPE, "a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, machine_info, find_inst)"),
                         MCP_SERVER_TYPE = TypeBuilder.build()
-                                        .tid(MCP_TID)
-                                        .vid(MCP_SERVER_TID)
-                                        .isaPredicate(rec(
-                                                uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
-                                                uri(RESOURCE).maybe().asUri(), T(ALL),
-                                                // `status` is installed by the constructor (a json-rpc ping of its own
-                                                // dispatch) but NOT declared here: a refinement of mcp_server::T
-                                                // (mcp_message, …) is matched by predicate EQUALITY, and a key added
-                                                // here un-matches every one of them, which unwires the route lanes
-                                                uri(PROMPT).maybe().asUri(), T(ALL)))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)), (lhs, inst) ->
-                                                new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid())))
-                                        .refinement("an mcp server specification", "a transport-agnostic mcp server", Map.of(
+                                .tid(MCP_TID)
+                                .vid(MCP_SERVER_TID)
+                                .isaPredicate(rec(
+                                        uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
+                                        uri(RESOURCE).maybe().asUri(), T(ALL),
+                                        // `status` is installed by the constructor (a json-rpc ping of its own
+                                        // dispatch) but NOT declared here: a refinement of mcp_server::T
+                                        // (mcp_message, …) is matched by predicate EQUALITY, and a key added
+                                        // here un-matches every one of them, which unwires the route lanes
+                                        uri(PROMPT).maybe().asUri(), T(ALL)))
+                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)), (lhs, inst) ->
+                                        new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid())))
+                                .refinement("an mcp server specification", "a transport-agnostic mcp server", Map.of(
                                         uri(TOOL).maybe(), "a collection of inst::T, tool::T, or skill::T objs",
                                         uri(RESOURCE).maybe(), "a collection of obj references (various obj types handled accordingly)",
                                         uri(PROMPT).maybe(), "a collection of prompts (various obj types handled accordingly"))
-                                        .desc("transport-agnostic mcp json-rpc protocol handler")
-                                        .create(),
+                                .desc("transport-agnostic mcp json-rpc protocol handler")
+                                .create(),
                         ROUTE_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(ROUTE_TID, "a mount table — mount pattern to route value (a uri, a type reference, or an inst?protocol<=uri instruction)")
-                                        .example("[/dr/+ => *dr.as(mcp::T), /docs/# => <mfs:docs/website/#>]@/m/web/route", "webHelper.routeProblems(rec) reports entries that cannot be mounted")
-                                        .create(),
+                                .tid(REC_TID)
+                                .vid(ROUTE_TID, "a mount table — mount pattern to route value (a uri, a type reference, or an inst?protocol<=uri instruction)")
+                                .example("[/dr/+ => *dr.as(mcp::T), /docs/# => <mfs:docs/website/#>]@/m/web/route", "webHelper.routeProblems(rec) reports entries that cannot be mounted")
+                                .create(),
                         HTTP_TYPE = TypeBuilder.build()
-                                        .tid(PROTOCOL_TID)
-                                        .vid(HTTP_TID, "the http verb vocabulary — it says only that these methods exist")
-                                        .example("an http surface handles its own on_get / on_put / ...")
-                                        .create(),
+                                .tid(PROTOCOL_TID)
+                                .vid(HTTP_TID, "the http verb vocabulary — it says only that these methods exist")
+                                .example("an http surface handles its own on_get / on_put / ...")
+                                .create(),
                         WS_TYPE = TypeBuilder.build()
-                                        .tid(PROTOCOL_TID)
-                                        .vid(WS_TID, "the websocket frame vocabulary — on_open / on_message / on_close exist")
-                                        .create(),
+                                .tid(PROTOCOL_TID)
+                                .vid(WS_TID, "the websocket frame vocabulary — on_open / on_message / on_close exist")
+                                .create(),
                         MCP_TYPE = TypeBuilder.build()
-                                        .tid(PROTOCOL_TID)
-                                        .vid(MCP_TID, "the mcp surface — a json-rpc protocol over tool / resource / prompt")
-                                        .example("mcp_server::T, mcp_client::T, mcp_http::T, mcp_ws::T are all mcp::T by path")
-                                        .create(),
+                                .tid(PROTOCOL_TID)
+                                .vid(MCP_TID, "the mcp surface — a json-rpc protocol over tool / resource / prompt")
+                                .example("mcp_server::T, mcp_client::T, mcp_http::T, mcp_ws::T are all mcp::T by path")
+                                .create(),
                         REST_TYPE = TypeBuilder.build()
-                                        .tid(HTTP_TID)
-                                        .vid(REST_TID, "the rest semantics — what the http methods mean over an addressable resource")
-                                        .example("get reads, put replaces, patch updates, delete unlinks, post creates", "web_http::T is a rest::T surface")
-                                        .create(),
+                                .tid(HTTP_TID)
+                                .vid(REST_TID, "the rest semantics — what the http methods mean over an addressable resource")
+                                .example("get reads, put replaces, patch updates, delete unlinks, post creates", "web_http::T is a rest::T surface")
+                                .create(),
                         MTRON_TYPE = TypeBuilder.build()
-                                        .tid(PROTOCOL_TID)
-                                        .vid(MTRON_TID, "the mtron surface — one message is one expression, evaluated")
-                                        .example("mtron_ws::T and mtron_http::T are mtron::T")
-                                        .create(),
+                                .tid(PROTOCOL_TID)
+                                .vid(MTRON_TID, "the mtron surface — one message is one expression, evaluated")
+                                .example("mtron_ws::T and mtron_http::T are mtron::T")
+                                .create(),
                         STREAM_TYPE = TypeBuilder.build()
-                                        .tid(PROTOCOL_TID)
-                                        .vid(STREAM_TID, "a raw byte / server-sent-event stream surface")
-                                        .create(),
+                                .tid(PROTOCOL_TID)
+                                .vid(STREAM_TID, "a raw byte / server-sent-event stream surface")
+                                .create(),
                         SSE_TYPE = TypeBuilder.build()
-                                        .tid(STREAM_TID)
-                                        .vid(SSE_TID, "the server-sent-events surface — a chunked text/event-stream response over an http handler")
-                                        .example("sse::T refines stream::T; an mcp http GET opens an sse stream to push server notifications")
-                                        .create(),
+                                .tid(STREAM_TID)
+                                .vid(SSE_TID, "the server-sent-events surface — a chunked text/event-stream response over an http handler")
+                                .example("sse::T refines stream::T; an mcp http GET opens an sse stream to push server notifications")
+                                .create(),
                         DISCOVERY_TYPE = TypeBuilder.build()
-                                        .tid(PROTOCOL_TID)
-                                        .vid(DISCOVERY_TID, "the discovery surface — a protocol whose product is a peer list rather than an answer to one address")
-                                        .example("where the message surfaces answer \"what is at this address\", a discovery surface answers \"who is out there\"")
-                                        .create(),
+                                .tid(PROTOCOL_TID)
+                                .vid(DISCOVERY_TID, "the discovery surface — a protocol whose product is a peer list rather than an answer to one address")
+                                .example("where the message surfaces answer \"what is at this address\", a discovery surface answers \"who is out there\"")
+                                .create(),
                         MDNS_TYPE = TypeBuilder.build()
-                                        .tid(DISCOVERY_TID)
-                                        .vid(MDNS_TID, "the multicast-dns discovery surface — service registration and browsing on 224.0.0.251:5353, interoperable with Bonjour and avahi")
-                                        .example("mdns::T refines discovery::T; its peers are found by a DNS-SD browse and advertised as _metatron._tcp.local")
-                                        .create(),
+                                .tid(DISCOVERY_TID)
+                                .vid(MDNS_TID, "the multicast-dns discovery surface — service registration and browsing on 224.0.0.251:5353, interoperable with Bonjour and avahi")
+                                .example("mdns::T refines discovery::T; its peers are found by a DNS-SD browse and advertised as _metatron._tcp.local")
+                                .create(),
                         MDNS_DISCOVERY_TYPE = TypeBuilder.build()
-                                        .tid(MDNS_TID)
-                                        .vid(MDNS_DISCOVERY_TID, "the mdns discovery handler — announces the authorities this machine answers to and writes every machine it knows, this one included, into the one roster/machine table. a source is live once it exists: construction starts the responders and close() stops them, so there is no start or scan to drive. a passive background object that publishes only its liveness — many discovery protocols run at once and collaborate on the one index")
-                                        // STATUS IS OPTIONAL HERE AND REQUIRED BY discovery::T, deliberately: the
-                                        // constructor installs it, so a predicate that demanded it would reject every
-                                        // rec a user could actually write. What satisfies the obligation is the
-                                        // CONSTRUCTED value, never the input to construction — which is also why this
-                                        // type is nominal: its content is its constructor, not its shape.
-                                        .isaPredicate(rec(
-                                                uri(STATUS).maybe().asUri(), BOOL_TYPE), Map.of(
+                                .tid(MDNS_TID)
+                                .vid(MDNS_DISCOVERY_TID, "the mdns discovery handler — announces the authorities this machine answers to and writes every machine it knows, this one included, into the one roster/machine table. a source is live once it exists: construction starts the responders and close() stops them, so there is no start or scan to drive. a passive background object that publishes only its liveness — many discovery protocols run at once and collaborate on the one index")
+                                // STATUS IS OPTIONAL HERE AND REQUIRED BY discovery::T, deliberately: the
+                                // constructor installs it, so a predicate that demanded it would reject every
+                                // rec a user could actually write. What satisfies the obligation is the
+                                // CONSTRUCTED value, never the input to construction — which is also why this
+                                // type is nominal: its content is its constructor, not its shape.
+                                .isaPredicate(rec(
+                                        uri(STATUS).maybe().asUri(), BOOL_TYPE), Map.of(
                                         uri(STATUS), "true while this handler is live and finding machines — the one field discovery::T requires. OPTIONAL here and required there, deliberately: the constructor installs it, so demanding it of the rec a user writes would reject every one of them. derived on read, never stored, so an interface that went away reads false rather than stale true"))
-                                        .constructor(mdns -> new mdnsDiscovery(new LinkedHashMap<>(mdns.asRec().jvm()), mdns.asRec().vid()))
-                                        .example("mdns_discovery::[=>]", "~/network/roster/discover/+.?[status=>false] [-- the discovery protocols that are down --]")
-                                        .create(),
+                                .constructor(mdns -> new mdnsDiscovery(new LinkedHashMap<>(mdns.asRec().jvm()), mdns.asRec().vid()))
+                                .example("mdns_discovery::[=>]", "~/network/roster/discover/+.?[status=>false] [-- the discovery protocols that are down --]")
+                                .create(),
                         // declared *after* its members so their Type objects exist when the union is built
                         PROTOCOL_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(PROTOCOL_TID, "the protocol-surface umbrella — the union of the protocol types, so it *classifies* rather than labels")
-                                        .isaPredicate(union_(HTTP_TYPE, WS_TYPE, MCP_TYPE, REST_TYPE, MTRON_TYPE, STREAM_TYPE, DISCOVERY_TYPE).tryToInst())
-                                        .example("a value is protocol::T iff it is an http::T, ws::T, rest::T, mcp::T, mtron::T, stream::T or discovery::T", "without the union, protocol::T would be purely nominal and could not decide an arbitrary rec")
-                                        .create(),
+                                .tid(REC_TID)
+                                .vid(PROTOCOL_TID, "the protocol-surface umbrella — the union of the protocol types, so it *classifies* rather than labels")
+                                .isaPredicate(union_(HTTP_TYPE, WS_TYPE, MCP_TYPE, REST_TYPE, MTRON_TYPE, STREAM_TYPE, DISCOVERY_TYPE).tryToInst())
+                                .example("a value is protocol::T iff it is an http::T, ws::T, rest::T, mcp::T, mtron::T, stream::T or discovery::T", "without the union, protocol::T would be purely nominal and could not decide an arbitrary rec")
+                                .create(),
                         MCP_CLIENT_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(MCP_CLIENT_TID)
-                                        .isaPredicate(rec(
-                                                uri(HOST).maybe().asUri(), URI_TYPE,
-                                                uri(TRANSPORT).maybe(), URI_TYPE,
-                                                uri(COMMAND).maybe(), LST_TYPE,
-                                                uri(ENV).maybe(), rec(URI_TYPE, ALL_TYPE),
-                                                uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)),
-                                                uri(STATUS).maybe(), BOOL_TYPE))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(REC_TYPE),
-                                                (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
-                                        .refinement("an mcp client type specification", "a connection to an existing mcp server", Map.of(
+                                .tid(REC_TID)
+                                .vid(MCP_CLIENT_TID)
+                                .isaPredicate(rec(
+                                        uri(HOST).maybe().asUri(), URI_TYPE,
+                                        uri(TRANSPORT).maybe(), URI_TYPE,
+                                        uri(COMMAND).maybe(), LST_TYPE,
+                                        uri(ENV).maybe(), rec(URI_TYPE, ALL_TYPE),
+                                        uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)),
+                                        uri(STATUS).maybe(), BOOL_TYPE))
+                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(REC_TYPE),
+                                        (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
+                                .refinement("an mcp client type specification", "a connection to an existing mcp server", Map.of(
                                         uri(HOST).maybe(), "the mcp server endpoint (optional for stdio)",
                                         uri(TRANSPORT).maybe(), "specify the transport if host schema resolution isn't sufficient",
                                         uri(COMMAND).maybe(), "only necessary for stdio mcp servers, where the client is the server",
                                         uri(ENV).maybe(), "environment variables for the stdio server process",
                                         uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
                                         uri(STATUS).maybe(), "the current status of the mcp client/server connection"))
-                                        .desc("a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems")
-                                        .example("mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]")
-                                        .example("mcp_client::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]")
-                                        .create()),
+                                .desc("a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems")
+                                .example("mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]")
+                                .example("mcp_client::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]")
+                                .create()),
                 uri(INST), lst(
                         docWrap(instC(WEB_ISA_TID.extend("inst/ping").dom(ALL.maybe()).rng(MATH_TIME_TID), lst(URI_TYPE), (lhs, inst) -> {
                                     final fURI host = inst.arg(0).uriValue().hasScheme() ? inst.arg(0).uriValue() : f("http://" + inst.arg(0).uriValue());
@@ -583,13 +602,13 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(instC(AS_INST_TID.dom(XML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjXMLSerializer.parse(lhs.strValue())), "parse an xml document into a rec", "*<mfs:conf/settings.xml>.as(rec::T)   [-- an xml document parsed into rec::T --]"),
                         docWrap(instC(AS_INST_TID.dom(REC_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> str(new String(ObjXMLSerializer.single().outputBytes(lhs).array(), StandardCharsets.UTF_8), XML_TID, null)), "serialize a rec as an xml document", "[config=>[port=>8555]].as(xml::T)   [-- the rec as an xml document --]"),
                         docWrap(instC(AS_INST_TID.dom(HTML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.strValue())), """
-                                                                                                                                                      html::[html=>
-                                                                                                                                                             [head=>
-                                                                                                                                                              [title=>"metatron"]],
-                                                                                                                                                              body=>
-                                                                                                                                                               [out=>[
-                                                                                                                                                                [tag=>a,href=>...],
-                                                                                                                                                                [tag...]]]]"""),
+                                html::[html=>
+                                       [head=>
+                                        [title=>"metatron"]],
+                                        body=>
+                                         [out=>[
+                                          [tag=>a,href=>...],
+                                          [tag...]]]]"""),
                         docWrap(instC(AS_INST_TID.dom(REC_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml(), HTML_TID, null)), "serialize a rec as an html document", "[head=>[title=>'metatron']].as(html::T)   [-- the rec as an html document --]"),
                         docWrap(instC(AS_INST_TID.dom(MARKDOWN_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.strValue())), "parse a markdown document into a rec", "*<mfs:.>/README.md.as(rec::T)   [-- the markdown document parsed into rec::T structure --]"),
                         // md ⇄ html via HTMLMarkdownSerializer — the generalized markdown⇄html

@@ -164,7 +164,14 @@ public class MType extends MObj implements Type {
                 // predicate with it. The request's span goes on with its point: both are the request's.
                 obj = obj.clone().selfTID(obj.tid().d(checkID.d()).b(checkID.b()));
                 if (obj.isType()) {
-                    if (checkID.c().equals(obj.c()) &&
+                    // A DEFINITION WINS OVER THE REGISTERED NAME. A request that names BOTH a base type and a vid
+                    // (X::T[...]@name) says what the name IS, so the registered form answers it only when it already
+                    // IS that type. The bracket may sit on the TID rather than the vid (rel[int,str]::T@route), and
+                    // checkID is the vid (no bracket of its own), so the TID is what the registered form is compared
+                    // against -- otherwise a name that already holds a different base type (web's rec route) silently
+                    // answers a rel declaration, dropping its path.
+                    final boolean sameTID = null == tid || null == vid || Objects.equals(bigTID, obj.tid());
+                    if (sameTID && checkID.c().equals(obj.c()) &&
                             Objects.equals(obj.asType().predicate(), predicate) &&
                             Objects.equals(obj.asType().constructor(), constructor)) {
                         // THE REQUESTED BRACKET SURVIVES THE REGISTERED FORM. The read answers with the

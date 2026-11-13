@@ -191,12 +191,12 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
         // read-then-write a no-op by dropping inherited rows.
         if (f(PREFIX).equals(at))
             return Network.Helper.markedTable(Component.Prefix.Helper.effectivePrefixes(this));
-        if (at.hasPrefix(f(PEER))) {
-            if (at.pathLength() == 1)
-                return this.peers();
-            else
-                return this.peers().at(at.pretract(1));
-        }
+        // THE BARE MAP IS THE ACCESSOR (a member's fields are not a rec's to walk: a KEY is the dial's own
+        // path, several segments long, so `at()` cannot descend from it into a field). Everything below the
+        // map is the cache's -- one entry, or one entry's fields, unrolled from the entry itself
+        // (Space.Helper#unrollPoly), which is the read path this branch documents.
+        if (f(PEER).equals(at))
+            return this.peers();
         final Obj read = this.cache.read(at);
         // a branch read answers rels at the cache's addresses: they are named where the caller asked (what @ anchors with)
         return vid.isBranch() && !vid.isRelative()

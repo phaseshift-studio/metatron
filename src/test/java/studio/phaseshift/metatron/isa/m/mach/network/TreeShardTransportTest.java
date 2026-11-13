@@ -108,9 +108,9 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
-     * The budget the root states travels with the part: the master ships one level fewer on the slave's FOLD (the
-     * seed states the part alone), {@code ?hop} is not copied onto any instruction between them, and the recombined
-     * value is the undistributed one. Each row: the budget stated on the fold % the recombined value.
+     * The budget the root states travels with the part: the master ships one level fewer on the slave's HEAD (the seed
+     * states the part alone), {@code ?hop} is not copied onto any other instruction, and the recombined value is the
+     * undistributed one. Each row: the budget stated on the fold % the recombined value.
      */
     @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the layout is the subject, not the value alone")
     @ParameterizedTest
@@ -125,9 +125,9 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
                 "the root recombines its child's partial: " + master);
         final DistributedSweep.Lane lane = layout.lane(0);
         checkEquality(LOG, uri(String.valueOf(hop - 1)), uri(lane.budget()), true);
-        checkEquality(LOG, bool(false), bool(lane.code().insts().getFirst().tid().hasQ(HOP)), true);
+        checkEquality(LOG, bool(true), bool(lane.code().insts().getFirst().tid().hasQ(HOP)), true);
         checkEquality(LOG, bool(false), bool(lane.code().insts()
-                .subList(1, lane.code().insts().size() - 1).stream().anyMatch(i -> i.tid().hasQ(HOP))), true);
+                .subList(1, lane.code().insts().size()).stream().anyMatch(i -> i.tid().hasQ(HOP))), true);
         checkEquality(LOG, ObjmtronSerializer.parse(String.valueOf(expected)),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(master)), true);
     }

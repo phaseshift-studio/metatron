@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -1813,6 +1814,9 @@ mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
                      route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                    /       =&gt; &lt;&gt;]]
 ==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst(uri::T,#::T){&lt;j&gt;}]],
+                 pattern=&gt;http://#,
+                 route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;],
                  status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
                    pattern  =&gt; &lt;ws://#&gt;,
@@ -3301,7 +3305,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{r}}e{{g}}T{{g}}A{{r}}T{{y}}R{{c}}o{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}M{{m}}e{{c}}T{{c}}A{{y}}t{{y}}R{{c}}O{{r}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5841,10 +5845,10 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6355852      7212   6348640   1% /run'
+==&gt;'tmpfs            6355852      6596   6349256   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 612810596 298147228  68% /'
-==&gt;'tmpfs           31779244    110948  31668296   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 612942408 298015416  68% /'
+==&gt;'tmpfs           31779244      7092  31772152   1% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
@@ -5859,7 +5863,6 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'CONTRIBUTING.md'
 ==&gt;dist
 ==&gt;docs
-==&gt;Downloads
 ==&gt;dsh-plugins
 ==&gt;'dsh-usage-boot.log'
 ==&gt;dsh-usage-data
@@ -5876,7 +5879,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').split(' ').count()
-==&gt;90</code></pre>
+==&gt;89</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -6064,7 +6067,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:1213/54/32/547?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:1301/11/04/158?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7907,7 +7910,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:1213/54/38/674?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1301/11/09/641?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7926,7 +7929,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:1213/54/38/674?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1301/11/09/641?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -7953,7 +7956,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABAAB'</code></pre>
+==&gt;'BABABABABA'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8018,7 +8021,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:1213/54/11/184?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:1301/10/43/199?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8026,7 +8029,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:1213/54/11/184?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:1301/10/43/199?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -9466,16 +9469,16 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/env/+/.take(10)
-==&gt;/sys/env/LOGNAME=&gt;'killswitch'
+==&gt;/sys/env/SDKMAN_CANDIDATES_API=&gt;'https://api.sdkman.io/2'
+==&gt;/sys/env/USER=&gt;'killswitch'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
 ==&gt;/sys/env/SAKANA_API_KEY=&gt;'fish_c6e79276b55fedf01aae6a5029fd8b263915542167d3dcea42aff825fa3cc316'
+==&gt;/sys/env/LOGNAME=&gt;'killswitch'
 ==&gt;/sys/env/SDKMAN_PLATFORM=&gt;'linuxx64'
-==&gt;/sys/env/XDG_SESSION_ID=&gt;'c2'
-==&gt;/sys/env/GPG_AGENT_INFO=&gt;'/run/user/1000/gnupg/S.gpg-agent:0:1'
-==&gt;/sys/env/COLORTERM=&gt;'truecolor'
+==&gt;/sys/env/XDG_SESSION_TYPE=&gt;'tty'
 ==&gt;/sys/env/XDG_SESSION_CLASS=&gt;'user'
-==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;' site'
-==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'</code></pre>
+==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
+==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;' site'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>
