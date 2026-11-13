@@ -410,6 +410,17 @@ public class grphInstSet extends AbstractInstSet {
     private static final Set<String> BARRIER_STEPS = Set.of("count");
 
     /**
+     * A step a run can carry into Gremlin: the table has a step for it, and it has NO SPAN. A span is a run of steps,
+     * not a count ({@code {0,2}out()} is {@code _ + out() + out().out()}), and one Gremlin step says neither: the fold
+     * rendered it once and multiplied its answers by the span. So a spanned step BREAKS THE RUN (Marko, 2026-11-13):
+     * what comes before it is pushed down, and the processor runs the span. Until a span renders as Gremlin's
+     * {@code repeat()} or {@code union()}.
+     */
+    private static boolean isPushable(final Inst inst) {
+        return inst.tid().b().isOne() && !getGremlinRewrite(inst.tid().name()).isNoObj();
+    }
+
+    /**
      * Fuse each maximal run of table instructions into ONE {@code gremlin(...)} call, so
      * {@code g:V/1.out(knows).out(created)} runs as the single traversal
      * {@code gremlin("g.V(1).out('knows').out('created')")} instead of a space read plus a walk.
@@ -429,12 +440,12 @@ public class grphInstSet extends AbstractInstSet {
             final int start = null == seed ? i : i + 1;
             // START A RUN WHERE THE TABLE HAS A STEP. The first SPLIT of this gate tested `!isNoObj()`, which
             // skipped exactly the table-backed instructions and left every chain uncompiled.
-            if (start >= insts.size() || getGremlinRewrite(insts.get(start).tid().name()).isNoObj()) {
+            if (start >= insts.size() || !isPushable(insts.get(start))) {
                 fused.add(insts.get(i));
                 continue;
             }
             int end = start + 1;
-            while (end < insts.size() && !getGremlinRewrite(insts.get(end).tid().name()).isNoObj())
+            while (end < insts.size() && isPushable(insts.get(end)))
                 end++;
             // a mapped (unseeded) run leaves a barrier to mtron: see BARRIER_STEPS
             if (null == seed)
