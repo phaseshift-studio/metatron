@@ -177,6 +177,21 @@ public class InstSetUnionReadTest extends AbstractMetatronTest {
     }
 
     /**
+     * EVERY REWRITE'S SHADOW IS ITS OWN IDENTITY, whatever the rewrite declares. A tid carries the declared argument types
+     * ({@code MInst.ARGS_IN_TID}) and a shadow carries one rec, so only a rewrite of one rec of rules (law_absorbing)
+     * agreed with its shadow by accident: one that declares none (branch_collapse, a library's gremlin_pushdown) got a
+     * shadow of another tid, which the door filed beside the rewrite, and the rewrite kept firing.
+     */
+    @Test
+    public void testEveryRewritesShadowIsItsOwnIdentity() {
+        final List<Inst> pool = List.copyOf(Machine.current().instset().rewrites());
+        assertTrue(pool.stream().anyMatch(rewrite -> rewrite.tid().hasArgs() && rewrite.tid().args().isEmpty()),
+                "the pool holds a rewrite that declares no arguments");
+        pool.forEach(rewrite -> assertEquals(rewrite.tid(), Processor.Helper.apply(rewrite, instB(INACTIVE_INST_TID, lst())).tid(),
+                () -> "the shadow of " + rewrite.tid() + " is the rewrite's own identity"));
+    }
+
+    /**
      * THE REWRITE DOOR (Marko, 2026-11-10) — mtron reaches a machine's rewrites at {@code ~/instset/rewrite}. A read there
      * answers the effective pool, and {@code rewrite/<name>} a rewrite by its name, walked as a path or projected with
      * {@code >>}. A write there lands in the machine's own level. So a rewrite is switched off and back on in mtron, in a
