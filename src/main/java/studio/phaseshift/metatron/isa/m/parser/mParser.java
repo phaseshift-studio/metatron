@@ -1642,7 +1642,9 @@ public class mParser {
         final List<Object> runs = new ArrayList<>();
         for (final Object element : elements) {
             final cInt span = element instanceof Inst inst ? inst.tid().b() : cInt.ONE();
-            if (span.isOne() || null == span.min() || !span.min().equals(span.max()))
+            // a negative span runs the instruction BACKWARD (its converse), which no copies of it can write out:
+            // {-1}plus(1) laid out as zero copies was plus(1) gone, the identity
+            if (span.isOne() || null == span.min() || !span.min().equals(span.max()) || span.min() < 0)
                 runs.add(element);
             else
                 for (long k = 0; k < span.min(); k++)

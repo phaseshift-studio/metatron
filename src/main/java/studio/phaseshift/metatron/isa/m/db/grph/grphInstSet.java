@@ -45,6 +45,7 @@ import studio.phaseshift.metatron.isa.m.db.grph.space.schema.GremlinRewriteUtils
 import studio.phaseshift.metatron.isa.m.db.grph.space.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -682,11 +683,11 @@ public class grphInstSet extends AbstractInstSet {
                                         lst(GRAPH_CONFIG),
                                         (lhs, inst) -> grphSpace.of(inst.arg(0).asRec(), lhs.vid())),
                                 "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),*/
-                        docWrap(instC(OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
+                        docWrap(InstBuilder.declareConverse(instC(OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)), IN_INST_TID),
                                 "a vertex", "out adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices"),
-                        docWrap(instC(IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
+                        docWrap(InstBuilder.declareConverse(instC(IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)), OUT_INST_TID),
                                 "a vertex", "in adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming vertices"),
-                        docWrap(instC(BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH)),
+                        docWrap(InstBuilder.declareConverse(instC(BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH)), BOTH_INST_TID),
                                 "a vertex", "both adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing vertices"),
                         docWrap(instC(OUTE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
                                 "a vertex", "out adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing edges"),

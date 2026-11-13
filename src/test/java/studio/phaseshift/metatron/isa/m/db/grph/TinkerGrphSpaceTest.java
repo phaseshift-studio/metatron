@@ -207,6 +207,12 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.{2,}out()>>name                               % {'ripple','lop'}",
             "*/g/V/6.{*}out()>>name                                % {'peter','lop'}",
             "*/g/V/+.{*}out().count()                              % 14",
+            // a NEGATIVE span walks backward (Marko, 2026-11-13): out()'s declared converse is in(), both() is its own
+            "*/g/V/4.{-1}out()>>name                               % \"marko\"",
+            "*/g/V/5.{-2,0}out()>>name                             % {'ripple','josh','marko'}",
+            "*/g/V/4.{-1,1}out()>>name                             % {'marko','josh','ripple','lop'}",
+            "*/g/V/1.{-1}in()>>name                                % {'vadas','josh','lop'}",
+            "*/g/V/1.{-1}both()>>name                              % {'vadas','josh','lop'}",
             // the escape hatch, in the same suffix form a fused run compiles to
             "*/g/V/1.gremlin('out(\"knows\").values(\"name\")')    % {'vadas','josh'}",
     }, delimiter = '%')

@@ -648,6 +648,7 @@ public final class QCollection {
                     uri(THEORY).maybe(), ALL_TYPE,
                     uri(LAW).maybe(), ALL_TYPE,
                     uri(INVERSE).maybe(), ALL_TYPE,
+                    uri(CONVERSE).maybe(), ALL_TYPE,
                     uri(DERIVATION).maybe(), ALL_TYPE,
                     uri(FORM).maybe(), ALL_TYPE,
                     uri(INST).maybe(), ALL_TYPE))

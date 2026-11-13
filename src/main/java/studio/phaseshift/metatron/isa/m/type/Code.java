@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.BLOCK;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -76,9 +77,14 @@ public interface Code extends Call {
         return this.asCode().insts().stream().allMatch(x -> x.isResolved(nested));
     }
 
+    /**
+     * A CODE IS A STREAM: iterating it runs it, so its objs are what it answers. A BLOCKED code ({@code ?block}) is held
+     * instead, one obj, itself (Marko, 2026-11-13): a negative span with no converse leaves its backward part as such a
+     * code, {@code start(x).{m,-1}inst}, which, run again, answers itself, so a stream that ran it would never end.
+     */
     @Override
     default @NonNull Iterator<Obj> iterator() {
-        return this.apply().iterator();
+        return this.tid().hasQ(BLOCK) ? List.<Obj>of(this).iterator() : this.apply().iterator();
     }
 
     default Code rewrite() {

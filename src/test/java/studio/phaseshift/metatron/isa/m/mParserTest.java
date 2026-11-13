@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bytes;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -503,9 +505,39 @@ public class mParserTest extends AbstractMetatronTest {
             "[a=>[a=>[b=>5]]].{5,}rshift(a)           % noobj",
             // a fail is no link to follow: stepped again it answers itself, so it ends the walk rather than looping
             "1.{*}plus('x')                           % <ERROR>",
+            // a negative span runs BACKWARD (Marko, 2026-11-13): -k steps are k steps of the declared converse, the
+            // relation reversed (plus(2) backward is minus(2)), and the backward runs append beside the forward ones
+            "4.{-1}plus(2)                            % 2",
+            "5.{-2,0}plus(1)                          % {3,4,5}",
+            "5.{-1,1}plus(1)                          % {4,5,6}",
+            "1.{-3,-1}minus(1)                        % {2,3,4}",
+            "5.{-1}neg()                              % -5",
+            "8.0.{-1}mult(2.0)                        % 4.0",
+            // an instruction that declares no converse leaves its backward runs as code on the lhs, in limbo
+            "start('marko').{-2,0}plus('a').count()   % 2",
+            "6.{-1}mult(2).count()                    % 1",
     }, delimiter = '%')
     void testApply(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * LIMBO (Marko, 2026-11-13): a negative span whose instruction declares no converse has no backward run to
+     * compute (str's plus appends, and nothing declares what it is backward), so that part of the span stays as code
+     * on its lhs, start('marko').{-2,-1}plus('a'), beside the forward runs.
+     */
+    @Test
+    void testABackwardRunWithNoConverseStaysInLimbo() {
+        final List<Obj> answers = ObjmtronSerializer.parse("'marko'.{-2,0}plus('a')").apply(noobj()).stream().toList();
+        assertTrue(answers.stream().anyMatch(answer -> answer.isStr() && "marko".equals(answer.strValue())),
+                () -> "the zero-step run is the lhs: " + answers);
+        final Code limbo = answers.stream().filter(Obj::isCode).findFirst()
+                .orElseThrow(() -> new AssertionError("no limbo in " + answers)).asCode();
+        assertEquals("marko", limbo.insts().getFirst().arg(0).strValue(), "the limbo starts at its lhs");
+        assertEquals("plus", limbo.insts().get(1).tid().name());
+        assertEquals(cInt.of(-2L, -1L), limbo.insts().get(1).tid().b(), "and keeps the backward part of the span");
+        // run, a limbo answers itself, so it is HELD: a stream that iterated it as a program would never end
+        assertEquals(List.of(limbo), limbo.stream().toList(), "iterated, the limbo is itself, not run");
     }
 
     /**
