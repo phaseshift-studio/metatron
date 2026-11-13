@@ -809,11 +809,6 @@ public final class CommandPalette extends MRec {
     private static final int MACHINE_TREE_WIDTH = 60;
     private static final int MACHINE_TREE_HEIGHT = 25;
     /**
-     * The child-link segment: written by {@link Machine#push(fURI)} and read by the walk, so the two cannot disagree
-     * about where a frame's children hang.
-     */
-    private static final String CHILD = "child";
-    /**
      * How deep the popup walks the frame tree. Depth is the tree's own budget ({@code max}); the ROW budget is the
      * terminal's, and the walk stops at it (the popup sizes itself to the rows it got, so nothing is ever windowed).
      */
@@ -871,10 +866,9 @@ public final class CommandPalette extends MRec {
     }
 
     /**
-     * The VM's frames walked into {@code entries}, depth-first and parents before children: each frame's children
-     * are the leaf addresses of its {@code child} table, read through THAT frame's own memory (the links hang in its
-     * own space) and with the {@code child} segment removed again — the link
-     * {@code <vid>/child/<relative>} is the child's address {@code <vid>/<relative>}.
+     * The VM's frames walked into {@code entries}, depth-first and parents before children: each frame's children are
+     * its {@code child} slot, the machines the root registry holds one segment below its address (Machine.Helper's
+     * bootstrap), ordered by address.
      *
      * @param entries    the tree's entries ({@link TreeWidget#entries()})
      * @param maxEntries the row budget: the walk stops once the popup could not draw another row
@@ -882,52 +876,28 @@ public final class CommandPalette extends MRec {
     static void walkFrames(final List<CommonUtil.TreeEntry> entries, final int maxEntries) {
         if (null == Machine.root())
             return;
-        walkFrame(Machine.root(), Machine.root().vid().resolve(), Machine.root().vid(), 0, true, entries, maxEntries);
+        walkFrame(Machine.root(), Machine.root().vid(), 0, true, entries, maxEntries);
     }
 
     /**
      * Visit one frame and its subtree, parents before children.
      */
-    private static void walkFrame(final Machine machine, final fURI base, final fURI display, final int depth,
-                                  final boolean isLast, final List<CommonUtil.TreeEntry> entries,
-                                  final int maxEntries) {
+    private static void walkFrame(final Machine machine, final fURI display, final int depth, final boolean isLast,
+                                  final List<CommonUtil.TreeEntry> entries, final int maxEntries) {
         if (entries.size() >= maxEntries)
             return;
-        final List<fURI> children = childFrames(machine, base);
+        final List<Machine> children = machine.at(uri(CHILD)).stream()
+                .map(Obj::asMachine)
+                .sorted(Comparator.comparing(child -> child.vid().toString()))
+                .toList();
         // THE ROW LABEL IS THE ADDRESS: a frame tree is read by address (that is what a click will move to), and a
         // name alone is ambiguous once two frames share a label at different depths
         entries.add(new CommonUtil.TreeEntry(display, display.toString(), display.toUri(),
                 depth, isLast, children.size()));
         if (depth >= MACHINE_TREE_DEPTH)
             return;
-        for (int i = 0; i < children.size(); i++) {
-            final fURI childVID = children.get(i);
-            final Obj child = Machine.read(childVID);
-            walkFrame(child.isMachine() ? child.asMachine() : null, childVID, childVID, depth + 1,
-                    i == children.size() - 1, entries, maxEntries);
-        }
-    }
-
-    /**
-     * The frames directly under {@code machine}: the leaf addresses of its {@code child} table. Read as a branch
-     * ({@code .../child/#/}) so every stored link comes back as a rel whose first is the CONCRETE address the child
-     * hangs at — which also keeps a multi-segment push ({@code push(<a/b>)}) one node rather than an invented
-     * intermediate one. A frame whose memory no longer answers (a popped frame's link outlives it) is a leaf.
-     */
-    private static List<fURI> childFrames(final Machine machine, final fURI vid) {
-        if (null == machine)
-            return List.of();
-        final List<fURI> children = new ArrayList<>();
-        final fURI table = vid.extend(CHILD);
-        machine.memory().read(table.extend("#/")).stream()
-                .map(Obj::asRel)
-                .forEach(link -> {
-                    final fURI relative = link.first().uriValue().removePrefix(table);
-                    if (!relative.isEmpty())
-                        children.add(vid.extend(relative).resolve());
-                });
-        children.sort(Comparator.comparing(fURI::toString));
-        return children;
+        for (int i = 0; i < children.size(); i++)
+            walkFrame(children.get(i), children.get(i).vid(), depth + 1, i == children.size() - 1, entries, maxEntries);
     }
 
     /**
