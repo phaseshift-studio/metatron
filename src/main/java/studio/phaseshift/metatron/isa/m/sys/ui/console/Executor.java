@@ -73,7 +73,6 @@ public final class Executor {
      */
     public void execute(final String line) {
         /// /////////////////////////////////////////////////////
-        final AtomicReference<Obj> running = new AtomicReference<>(noobj());
         final String fullInput = this.console.prefix + line + this.console.postfix;
         if (fullInput.isBlank()) return;
 
@@ -103,12 +102,13 @@ public final class Executor {
         }
         if (segments.isEmpty()) return;
 
-        // 3. Execute each segment with its own SwarmProcessor, chaining running state
+        // 3. Execute each segment with its own SwarmProcessor. EACH STATEMENT STARTS FROM NOTHING (Marko, 2026-11-13):
+        // ';' answers noobj{0}, so a segment is resolved against noobj, as it runs, never against the last answer
         boolean backgrounded = false;
         for (final Code segment : segments) {
             try {
                 final Level startLevel = this.console.getStatus().getState();
-                final Obj resolvedResult = Call.Helper.resolveInspection(running.get(), segment, unresolved -> {
+                final Obj resolvedResult = Call.Helper.resolveInspection(noobj(), segment, unresolved -> {
                     if (Typer.Helper.codeResolve()) {
                         throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
                     } else {
@@ -156,7 +156,6 @@ public final class Executor {
                 } else {
                     computeResult.set(this.console.input.apply(resolvedResult));
                 }
-                running.set(computeResult.get());
                 computeResult.get().stream().forEach(this.console::printResult);
                 this.console.promptTraceForFails(computeResult.get());
                 this.console.getStatus().setState(startLevel);

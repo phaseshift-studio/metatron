@@ -499,6 +499,27 @@ public class mParserTest extends AbstractMetatronTest {
         checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * ';' SHARES NOTHING (Marko, 2026-11-13): end() answers noobj{0}, and every statement after it starts over with a
+     * start() of its own, so a statement reads only what it names, as one program (apply) and statement by statement
+     * (eval) alike. A statement led by an instruction used to take end()'s noobj{0} and never run in one program
+     * (y -> {3}5; *y was noobj), and eval handed each statement the answer before it ({9}5, and 3 for a count).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "sn_a -> {3}5; *sn_a                      % {3}5",
+            "sn_b -> 5; *sn_b.plus(1)                 % 6",
+            "1.plus(1); 2.plus(2); 3.plus(3)          % 6",
+            "{3}5; count()                            % 0",
+            "{1,2,3}; sum()                           % 0",
+            "5; plus(1)                               % noobj",
+            "1.plus(1).end().plus(2)                  % noobj",
+    }, delimiter = '%')
+    void testStatementsShareNothing(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+        assertEquals(ObjmtronSerializer.parse(expected).apply(), ObjmtronSerializer.eval(code), code + ": statement by statement");
+    }
+
     // ========================================
     // eval() Statement Splitting
     // ========================================

@@ -131,7 +131,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                     parsed.isInst() ? parsed.as() : instB(START_INST_TID, lst(parsed)))));
         }
         if (segments.isEmpty()) return noobj();
-        Obj running = noobj();
+        Obj last = noobj();
         for (final Code segment : segments) {
             try {
                 // compile-then-run through the one path every other caller shares (Machine.evaluate):
@@ -139,12 +139,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 // and type stages — and explain()/profile() ARE whole-chain rewrites, so skipping the
                 // rewriter left them reading as the identity functions their registered stubs are
                 // ("expected /m/rec (got 3)").
-                running = segment.apply(running);
+                // EACH STATEMENT STARTS FROM NOTHING (Marko, 2026-11-13): ';' answers noobj{0}, so no statement
+                // reads the one before it. Handing the last answer on made y -> {3}5; *y read y once per copy, {9}5
+                last = segment.apply(noobj());
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
         }
-        return running;
+        return last;
     }
 
     // ── Byte I/O ─────────────────────────────────────────────────
