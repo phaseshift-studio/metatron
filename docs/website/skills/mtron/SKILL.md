@@ -1,15 +1,16 @@
 ---
 name: mtron
-description: understanding the language used to control the metatron
+description: understanding the language used to control metatron
 ---
 
 # mtron: traversing the metatron graph
 
 mtron is a functional, fluent, monadic language that manipulates the metatron environment.
 
-To understand mtron, it's necessary to first understand how structures and processes are organized in metatron.
+To understand mtron, it's necessary to first understand how language, structure, and process are organized in metatron.
 
-metatron's **structure** forms a [split graph](https://en.wikipedia.org/wiki/Split_graph) with two vertex sets:
+metatron's **structure** is abstractly defined as a [split graph](https://en.wikipedia.org/wiki/Split_graph) composed of
+two vertex sets:
 $V = U \cup O$. The set $U$ is the set of [uris](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) (**uniform
 resource identifiers**) and they maintain an _intra-edge_ set defined by uri **path adjacency**. The set $O$ is the set
 of objs (objects) whose _intra-edge_ set denote **shared/coupled state**. Finally, there exists a bi-directional

@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -509,7 +512,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="article-doc">
         <h1 class="article-title mb-1">Stream Ring Theory</h1>
-        <small class="article-subtitle">the algebra of metatron's instructions — serial composition and parallel branching as a turing complete stream computing algebra</small>
+        <small class="article-subtitle">metatron's algebra — serial composition and parallel branching as a turing complete stream computing machine</small>
         <div class="article-author">Marko A. Rodriguez<br>Captain, S/V Red Herring</div>
         <div class="article-citation">Rodriguez, M.A., “Stream Ring Theory,” S/V Red Herring’s Ship’s Log: Chronicles in the Sea of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.</div>
     </div>
@@ -613,7 +616,7 @@ directly deduced from the aforementioned ring theory axioms.</p>
    \end{equation*}
    \]
 :::</p>
-<p>::: proof <em>Proof.</em> The theorem's implications and equalities will be rigorously
+<p>::: <em>Proof.</em> The theorem's implications and equalities will be rigorously
 deduced from the ring axioms.</p>
 <ol>
 <li>
@@ -718,7 +721,7 @@ A similar deduction yields \(-a (b) = - (ab)\).</p>
 intuitive definition of these components will be presented first and
 then a formal specification containing axioms and theorems will be
 provided in the subsequent subsections.</p>
-<p>::: definition <strong>Definition 1</strong> (Stream). The stream ${\bf x} \in X^*$ is an unordered
+<p>::: <strong>Definition 1</strong> (Stream). The stream ${\bf x} \in X^*$ is an unordered
 list of objects in \(X\), where
 ${\bf x} = \langle x_1, x_2, \ldots, x_n \rangle$. A stream is directed.
 There is a tail function \(a: \,? \rightarrow X\) which inserts objects
@@ -726,14 +729,14 @@ into the stream and there is a head function \(b: X \rightarrow\,?\) which
 removes objects from the stream. The codomain type of the tail function
 always equals the domain type of the head function.[^5]
 :::</p>
-<p>::: definition <strong>Definition 2</strong> (Stream Object). A stream object is produced by a tail
+<p>::: <strong>Definition 2</strong> (Stream Object). A stream object is produced by a tail
 function and consumed by a respective head function. Every stream object
 \(x \in X\) has a corresponding coefficient \(c \in \mathcal{C}\) and when
 its coefficient is considered, the stream object is denoted \(cx\).
 Coefficients are elements from any algebraic ring with unity
 \(\langle\mathcal{C}, +, \cdot \rangle\).
 :::</p>
-<p>::: definition <strong>Definition 3</strong> (Stream Function). A stream function consumes objects
+<p>::: <strong>Definition 3</strong> (Stream Function). A stream function consumes objects
 from its incoming stream and produces objects for its outgoing stream.
 If the incoming stream is in \(X^*\) and the outgoing stream is in \(Y^*\),
 then, in general, the stream function \(a\) has the signature
@@ -755,10 +758,10 @@ being numeric multiplication. In order to prove that
 demonstrated that the structure satisfies all the aforementioned ring
 axioms. The validity of these axioms over \(\mathbb{Z}\) is readily
 apparent to those with rudimentary arithmetic knowledge.</p>
-<p>::: theorem <strong>Theorem 2</strong>. The structure \(\langle\mathbb{Z}, +, \cdot \rangle\) is a
+<p>::: <strong>Theorem 2</strong>. The structure \(\langle\mathbb{Z}, +, \cdot \rangle\) is a
 ring with unity.
 :::</p>
-<p>::: proof <em>Proof.</em> Each operator of a ring defines an algebraic substructure. The
+<p>::: <em>Proof.</em> Each operator of a ring defines an algebraic substructure. The
 substructure \(\langle\mathbb{Z}, + \rangle\) must be an abelian (commutative) group. The
 substructure \(\langle\mathbb{Z}, \cdot \rangle\)
 must be a monoid with unity.</p>
@@ -835,10 +838,10 @@ diagrammatically prove that
 \(\langle x \rangle (1 + 1) = \langle x,x \rangle\).</p>
 <p><img src="images/stream-ring-theory/fig-04.svg" alt="figure 4" /></p>
 <p><img src="images/stream-ring-theory/fig-05.svg" alt="figure 5" /></p>
-<p>::: theorem <strong>Theorem 3</strong>. The structure \(\langle\mathcal{F}, +, \cdot \rangle\) is a
+<p>::: <strong>Theorem 3</strong>. The structure \(\langle\mathcal{F}, +, \cdot \rangle\) is a
 ring with unity.
 :::</p>
-<p>::: proof <em>Proof.</em> The aforementioned axioms of ring theory must be true if
+<p>::: <em>Proof.</em> The aforementioned axioms of ring theory must be true if
 \(\langle\mathcal{F}, +, \cdot \rangle\) is a ring with unity.</p>
 <p>The abelian group \(\langle\mathcal{F}, + \rangle\) must be commutative
 such that \(a + b = b + a\). Diagrammatically,</p>
@@ -1080,10 +1083,10 @@ removed from the stream. If an object is the empty set, then it can
 be removed from the stream.</p>
 </li>
 </ol>
-<p>::: theorem <strong>Theorem 4</strong>. The structure
+<p>::: <strong>Theorem 4</strong>. The structure
 \(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\) is a ring with unity.
 :::</p>
-<p>::: proof <em>Proof.</em> If \(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\) is a ring
+<p>::: <em>Proof.</em> If \(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\) is a ring
 with unity, then \(\langle\mathcal{C}\mathcal{F}, + \rangle\) must be an
 abelian group and \(\langle\mathcal{C}\mathcal{F}, \cdot \rangle\) must be
 a monoid with unity. These two structures must also interact where
@@ -1221,11 +1224,11 @@ fashion. The stream ring's axioms entail a <em>lazy evaluation</em> strategy
 that can evaluate an expression using depth-first semantics (save
 space), breadth-first semantics (save time), or any arbitrary hybrid of
 the two.</p>
-<p>::: theorem <strong>Theorem 5</strong>. Streams are atemporal. There are no requirements to the
+<p>::: <strong>Theorem 5</strong>. Streams are atemporal. There are no requirements to the
 order in which functions are applied, streams are merged, or objects are
 bulked.
 :::</p>
-<p>::: proof <em>Proof.</em> With respect to function application and stream merging, the
+<p>::: <em>Proof.</em> With respect to function application and stream merging, the
 following derivation demonstrates that the objects of the outgoing
 stream from branch \(b\) can be processed by the subsequent function \(c\)
 even before the incoming objects of \(a\) are processed.
@@ -1308,7 +1311,7 @@ As a side, in any non-commutative monoid
 \(\langle\mathcal{C}\mathcal{F}, \cdot \rangle\), any \(n\)-composite of
 prime functions and respective prime coefficients can be factored in
 \(2^n -1\) ways.</p>
-<p>::: theorem <strong>Theorem 6</strong>. If \(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\) is a
+<p>::: <strong>Theorem 6</strong>. If \(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\) is a
 stream ring, \(c,d \in \mathcal{C}\), and \(a,b \in \mathcal{F}\), then
 \[
 \begin{equation*}
@@ -1321,7 +1324,7 @@ stream ring, \(c,d \in \mathcal{C}\), and \(a,b \in \mathcal{F}\), then
    \end{equation*}
    \]
 :::</p>
-<p>::: proof <em>Proof.</em> The theorem's equalities will be rigorously deduced from the
+<p>::: <em>Proof.</em> The theorem's equalities will be rigorously deduced from the
 stream ring axioms.</p>
 <ol>
 <li>
@@ -1383,7 +1386,7 @@ ca + (cd)b = c (a + db) = (a + db)c.
 \end{equation*}
 \]
 :::</p>
-<p>::: proof <em>Proof.</em>
+<p>::: <em>Proof.</em>
 \[
 \begin{equation*}
 \begin{array}{lclll}
@@ -1406,7 +1409,7 @@ ca + (cd)b = (a + db)c.
 \]
 ◻
 :::</p>
-<p>::: corollary <strong>Corollary 2</strong>. In a standard ring where
+<p>::: <strong>Corollary 2</strong>. In a standard ring where
 \(\langle\mathcal{C}, \cdot \rangle\) is not a commutative monoid, only
 the greatest common &quot;left&quot;-factor is left distributive and only the
 greatest common &quot;right&quot;-factor is right distributive. If
@@ -1423,7 +1426,7 @@ ca + (dc)b = (a + db)c.
 \end{equation*}
 \]
 :::</p>
-<p>::: proof <em>Proof.</em> The proof for left distributivity in Corollary
+<p>::: <em>Proof.</em> The proof for left distributivity in Corollary
 <a href="#theorem:factor">1</a>{reference-type=&quot;ref&quot; reference=&quot;theorem:factor&quot;}
 applies to the first equality. For the second equality, since
 \(a \cdot b \neq b \cdot a\) in a non-commutative ring, then the following
@@ -1481,7 +1484,7 @@ subset \(\mathcal{F}_r\) is the set of all <code>reduce</code> functions such th
 Note that these are not disjoint sets. It will be
 demonstrated that \(\mathcal{F}_f \subset \mathcal{F}_{fm}\) and
 \(\mathcal{F}_m \subset \mathcal{F}_{fm}\).</p>
-<p>::: definition <strong>Definition 4</strong> (Functionally Closed). Any ring
+<p>::: <strong>Definition 4</strong> (Functionally Closed). Any ring
 \(\langle A, +, \cdot \rangle\) is closed with respect to addition and
 multiplication if, for any two elements \(a,b \in A\), \(a+b \in A\) and
 \(ab \in A\). Every multi-typed function ring
@@ -1495,14 +1498,14 @@ closed</em> if \(a,b,c \in \mathcal{F}\), \(a: X \rightarrow Y\),
 and \(a+c \in \mathcal{F}\). A functional closure is a closure over those
 compositions for which function input and output types are respected.
 :::</p>
-<p>::: definition <strong>Definition 5</strong> (Stream Cardinality). The cardinality of the set \(A\) is
+<p>::: <strong>Definition 5</strong> (Stream Cardinality). The cardinality of the set \(A\) is
 the number of elements in the set and is denoted \(|A|\). Thus,
 \(|\{x,y,z\}| = 3\). The cardinality of a stream ${\bf x}$ is the sum of
 the absolute value of the coefficients of the elements of the stream and
 is denoted \(|{\bf x}|\). Thus, if \(\mathcal{C}= \mathbb{Z}\),
 \(|\langle-1x, 2y, 4z \rangle| = 7\).
 :::</p>
-<p>::: definition <strong>Definition 6</strong> (Multiplicative Inverses). The algebraic structure
+<p>::: <strong>Definition 6</strong> (Multiplicative Inverses). The algebraic structure
 \(\langle A, \cdot \rangle\) is a multiplicative <em>group</em> if for every
 \(a \in A\) there is an \(a^{-1} \in A\) such that
 \(a \cdot a^{-1} = a^{-1} \cdot a = 1\). The elements \(a,a^{-1} \in A\) are
@@ -1528,20 +1531,20 @@ and \(a,b,c \in A\), then
 all map functions \(a: X \rightarrow Y\) where, for each incoming object
 of type \(X\), \(a\) will map it to one and only one outgoing object of type
 \(Y\).</p>
-<p>::: theorem <strong>Theorem 7</strong>. The abelian map group \(\langle\mathcal{F}_m, + \rangle\)
+<p>::: <strong>Theorem 7</strong>. The abelian map group \(\langle\mathcal{F}_m, + \rangle\)
 is not functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For every \(a,b \in \mathcal{F}_m\) such that \(b \neq -a\), if
+<p>::: <em>Proof.</em> For every \(a,b \in \mathcal{F}_m\) such that \(b \neq -a\), if
 \(a: X \rightarrow Y\) and \(b: X \rightarrow Y\), then
 \(a + b \in \mathcal{F}_{fm}\) as \(|\langle x \rangle (a + b)| = 2\). The
 function \(a+b: X \rightarrow Y^*\) maps one object in \(X\) to two objects
 in \(Y\). Thus, \(a+b \notin \mathcal{F}_m\) and \(\langle F_m, + \rangle\) is
 not functionally closed. ◻
 :::</p>
-<p>::: theorem <strong>Theorem 8</strong>. The map monoid \(\langle\mathcal{F}_m, \cdot \rangle\) is
+<p>::: <strong>Theorem 8</strong>. The map monoid \(\langle\mathcal{F}_m, \cdot \rangle\) is
 functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For every \(a,b \in \mathcal{F}_m\) such that \(a \neq 0 \neq b\),
+<p>::: <em>Proof.</em> For every \(a,b \in \mathcal{F}_m\) such that \(a \neq 0 \neq b\),
 if \(a: X \rightarrow Y\), \(b: Y \rightarrow Z\), \(a (x) = y\), and
 \(b (y) = z\), then \(\langle x \rangle ab = z\). Thus,
 \(ab: X \rightarrow Z\), \(ab \in \mathcal{F}_m\), and
@@ -1586,10 +1589,10 @@ x &amp; \text{if $p (x) = \texttt{true}$}, \\
 \end{cases}
 \end{equation*}
 \]</p>
-<p>::: theorem <strong>Theorem 9</strong>. The filter monoid \(\langle\mathcal{F}_f, \cdot \rangle\)
+<p>::: <strong>Theorem 9</strong>. The filter monoid \(\langle\mathcal{F}_f, \cdot \rangle\)
 is both idempotent and commutative.
 :::</p>
-<p>::: proof <em>Proof.</em> If \(a \in \mathcal{F}_f\), then \(a (x) = x\) or
+<p>::: <em>Proof.</em> If \(a \in \mathcal{F}_f\), then \(a (x) = x\) or
 \(a (x) = \emptyset\). It must then be true that \(a (a (x)) = x\) or
 \(a (a (x)) = \emptyset\), respectively.[^20] Via induction, once a filter
 has been applied, a repeated application of that filter on the same
@@ -1603,10 +1606,10 @@ then \(a (b (x)) = b (a (x)) = \emptyset\). Thus, \(a \cdot b = b \cdot a\) and
 multiplication is commutative in
 \(\langle\mathcal{F}_f, \cdot \rangle\). ◻
 :::</p>
-<p>::: corollary <strong>Corollary 3</strong>. There are no multiplicative inverses in the filter
+<p>::: <strong>Corollary 3</strong>. There are no multiplicative inverses in the filter
 monoid \(\langle\mathcal{F}_f, \cdot \rangle\).
 :::</p>
-<p>::: proof <em>Proof.</em> A proof by contradiction will demonstrate that the filter
+<p>::: <em>Proof.</em> A proof by contradiction will demonstrate that the filter
 monoid does not have multiplicative inverses. Assume that for every
 \(a \in \mathcal{F}_f\) where \(a \neq 1\), there exists an
 \(a^{-1} \in \mathcal{F}_f\).
@@ -1638,7 +1641,7 @@ Diagrammatically,</p>
 \(\langle x \rangle\bar{a} = \langle x, -x \rangle= \langle\rangle\). If
 \(a (x) = \emptyset\), then
 \(\langle x \rangle\bar{a} = \langle x, \emptyset \rangle= \langle x \rangle\).</p>
-<p>::: theorem <strong>Theorem 10</strong>. For every annihilator pair
+<p>::: <strong>Theorem 10</strong>. For every annihilator pair
 \(a,\bar{a} \in \mathcal{F}_f\),
 \[
 \begin{equation*}
@@ -1651,7 +1654,7 @@ Diagrammatically,</p>
    \end{equation*}
    \]
 :::</p>
-<p>::: proof <em>Proof.</em> The theorem's equalities will be rigorously deduced from the
+<p>::: <em>Proof.</em> The theorem's equalities will be rigorously deduced from the
 ring axioms.</p>
 <ol>
 <li>
@@ -1717,10 +1720,10 @@ x &amp; \text{if $\langle x \rangle a = \langle\rangle$}, \\
 \end{cases}
 \end{equation*}
 \]</p>
-<p>::: theorem <strong>Theorem 11</strong>. The abelian filter group \(\langle F_f, + \rangle\) is not
+<p>::: <strong>Theorem 11</strong>. The abelian filter group \(\langle F_f, + \rangle\) is not
 functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For some \(a,b \in \mathcal{F}_f\), if
+<p>::: <em>Proof.</em> For some \(a,b \in \mathcal{F}_f\), if
 \(a: X \rightarrow X \cup \emptyset\),
 \(b: X \rightarrow X \cup \emptyset\), then \(a + b \in \mathcal{F}_{fm}\)
 as \(|\langle x \rangle (a+b)| \in \{0,1,2\}\). The function
@@ -1728,10 +1731,10 @@ as \(|\langle x \rangle (a+b)| \in \{0,1,2\}\). The function
 Thus, \(a+b \notin \mathcal{F}_f\) and \(\langle\mathcal{F}_f, + \rangle\)
 is not functionally closed. ◻
 :::</p>
-<p>::: theorem <strong>Theorem 12</strong>. The commutative filter monoid
+<p>::: <strong>Theorem 12</strong>. The commutative filter monoid
 \(\langle F_f, \cdot \rangle\) is functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For every \(a,b \in \mathcal{F}_f\), if
+<p>::: <em>Proof.</em> For every \(a,b \in \mathcal{F}_f\), if
 \(a: X \rightarrow X \cup \emptyset\),
 \(b: X \rightarrow X \cup \emptyset\), then
 \(b (a (x)) \in \{x, \emptyset\}\). Thus,
@@ -1743,10 +1746,10 @@ is not functionally closed. ◻
 the set of all flatmap functions \(a: X \rightarrow Y^*\) where, for each
 incoming object of type \(X\), \(a\) will emit zero or more outgoing objects
 of type \(Y\).</p>
-<p>::: theorem <strong>Theorem 13</strong>. The map functions \(\mathcal{F}_m\) and filter functions
+<p>::: <strong>Theorem 13</strong>. The map functions \(\mathcal{F}_m\) and filter functions
 \(\mathcal{F}_f\) are subsets of \(\mathcal{F}_{fm}\).
 :::</p>
-<p>::: proof <em>Proof.</em> If \(a: X \rightarrow Y^*\) is a flatmap function, then it maps a
+<p>::: <em>Proof.</em> If \(a: X \rightarrow Y^*\) is a flatmap function, then it maps a
 single incoming object to zero or more outgoing objects. If for all
 \(x \in X\), \(|a (x)| = 1\), \(a\) is equivalent to a map function. Likewise,
 when for all \(x \in X\), \(a (x) = x\) or \(a (x) = \emptyset\), \(a\) is
@@ -1757,20 +1760,20 @@ equivalent to a filter function. Thus,
 their own unique algebraic properties that are lost when generalized to
 flatmap. However, because their functions are subsets of the flatmap
 ring, they inherit all the properties of the flatmap ring.</p>
-<p>::: theorem <strong>Theorem 14</strong>. The abelian flatmap group
+<p>::: <strong>Theorem 14</strong>. The abelian flatmap group
 \(\langle\mathcal{F}_{fm}, + \rangle\) is functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For every \(a,b \in \mathcal{F}_{fm}\), if
+<p>::: <em>Proof.</em> For every \(a,b \in \mathcal{F}_{fm}\), if
 \(a: X \rightarrow Y^*\), \(b: X \rightarrow Y^*\), then
 \(a+b \in \mathcal{F}_{fm}\) as \(|\langle x \rangle (a+b)| \ge 0\). The
 function \(a+b: X \rightarrow Y^*\) maps one input to zero or more
 outputs. Thus, \(\langle\mathcal{F}_{fm}, + \rangle\) is functionally
 closed. ◻
 :::</p>
-<p>::: theorem <strong>Theorem 15</strong>. The flatmap monoid
+<p>::: <strong>Theorem 15</strong>. The flatmap monoid
 \(\langle\mathcal{F}_{fm}, \cdot \rangle\) is functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For every \(a,b \in \mathcal{F}_{fm}\), if
+<p>::: <em>Proof.</em> For every \(a,b \in \mathcal{F}_{fm}\), if
 \(a: X \rightarrow Y^*\), \(b: Y \rightarrow Z^*\), and
 \(\langle x \rangle a = \langle y_1,y_2,\ldots,y_n \rangle\), then
 \(\langle x \rangle ab = \langle b (y_1), b (y_2), \ldots, b (y_n) \rangle\).
@@ -1805,11 +1808,11 @@ consume the entire input stream and produce a single stream object
 with a reduce-specified coefficient \(d \in \mathcal{C}\). This is the <em>reduce apply axiom</em>.</p>
 </li>
 </ol>
-<p>::: theorem <strong>Theorem 16</strong>. Reduce functions are temporal. All previous functions
+<p>::: <strong>Theorem 16</strong>. Reduce functions are temporal. All previous functions
 must be applied and streams merged before a reducer processes its input
 stream.
 :::</p>
-<p>::: proof <em>Proof.</em> If \(a,b \in \mathcal{F}\setminus \mathcal{F}_r\) and
+<p>::: <em>Proof.</em> If \(a,b \in \mathcal{F}\setminus \mathcal{F}_r\) and
 \(c \in \mathcal{F}_r\), then the following derivation demonstrates that
 all incoming streams to \(c\) must be processed first. This is due to the
 fact that reduce functions are not right distributive and therefore,
@@ -1828,7 +1831,7 @@ Stream bulking is not necessary prior to the
 evaluation of a reduce function as all object coefficient information is
 contained in the reduce function's stream argument. ◻
 :::</p>
-<p>::: theorem <strong>Theorem 17</strong>. The universal functional commutativity of coefficients
+<p>::: <strong>Theorem 17</strong>. The universal functional commutativity of coefficients
 is not applicable to reduce functions. If \(c \in \mathcal{C}\) and
 \(a \in \mathcal{F}_{r}\), then
 \[
@@ -1837,7 +1840,7 @@ c1 \cdot 1a \neq 1a \cdot c1.
 \end{equation*}
 \]
 :::</p>
-<p>::: proof <em>Proof.</em> A counterexample is demonstrated. If
+<p>::: <em>Proof.</em> A counterexample is demonstrated. If
 \(a (\langle x \rangle) = y\), then
 \(\langle x \rangle c1 \cdot 1a = \langle 1y \rangle\) while
 \(\langle x \rangle 1a \cdot c1 = \langle cy \rangle\). Thus, in general,
@@ -1899,7 +1902,7 @@ that reduce functions are not right distributive.</p>
 <p>::: lemma <strong>Lemma 1</strong>. The structure \(\langle\mathcal{F}_r, +, \cdot \rangle\) is
 not a ring.
 :::</p>
-<p>::: proof <em>Proof.</em> The multiplication operator of
+<p>::: <em>Proof.</em> The multiplication operator of
 \(\langle\mathcal{F}_r, +, \cdot \rangle\) is not right distributive over
 addition. Assume the functions \(a,b \in \mathcal{F}\) and the reduce
 function \(c \in \mathcal{F}_r\). If reduce functions were right
@@ -1912,11 +1915,11 @@ merged reductions of branch \(ac\) and branch \(bc\). Therefore, because
 \((a+b)c \neq ac + bc\) and \(\langle\mathcal{F}_r, +, \cdot \rangle\) is
 not a ring. ◻
 :::</p>
-<p>::: theorem <strong>Theorem 18</strong>. The structure \(\langle\mathcal{F}_r, +, \cdot \rangle\)
+<p>::: <strong>Theorem 18</strong>. The structure \(\langle\mathcal{F}_r, +, \cdot \rangle\)
 is a near-ring with multiplication being left distributive over
 addition.
 :::</p>
-<p>::: proof <em>Proof.</em> Assume the functions \(a,b \in \mathcal{F}\) and the reduce
+<p>::: <em>Proof.</em> Assume the functions \(a,b \in \mathcal{F}\) and the reduce
 function \(c \in \mathcal{F}_r\). If multiplication is left distributive
 over addition, then \(c (a+b) = ca + cb\). In the expression \(c (a+b)\), the
 entire incoming stream to \(c\) is reduce to a single object \(x\). The \(x\)
@@ -1939,10 +1942,10 @@ being the identity element.[^23] If \(c \in \mathcal{F}_{mr}\),
 \begin{equation*} (a+b)c^n = (a+b)c = (ac + bc)c.
 \end{equation*}
 \]</p>
-<p>::: theorem <strong>Theorem 19</strong>. Monoidic reduce functions are idempotent and semi-right
+<p>::: <strong>Theorem 19</strong>. Monoidic reduce functions are idempotent and semi-right
 distributive.
 :::</p>
-<p>::: proof <em>Proof.</em> If \(\langle X, \oplus \rangle\) is a commutative monoid,
+<p>::: <em>Proof.</em> If \(\langle X, \oplus \rangle\) is a commutative monoid,
 ${\bf x} \in X^*$, and \(c \in \mathcal{F}_{mr}\), then the base case
 \(c^1\) is equivalent to
 \(c ({\bf x}) = x_1 \oplus \ldots \oplus x_n \oplus e\). For \(c^2\),
@@ -1977,19 +1980,19 @@ steam expression as long as the axioms and theorems of the respective
 structures are respected. All the examples to follow that reference
 functions in \(\mathcal{F}\) will typically not assume functions in
 \(\mathcal{F}_r\) unless explicitly stated.</p>
-<p>::: theorem <strong>Theorem 20</strong>. The abelian reduce group
+<p>::: <strong>Theorem 20</strong>. The abelian reduce group
 \(\langle\mathcal{F}_r, + \rangle\) is not functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For every \(a,b \in \mathcal{F}_r\), if \(a: X^* \rightarrow Y\),
+<p>::: <em>Proof.</em> For every \(a,b \in \mathcal{F}_r\), if \(a: X^* \rightarrow Y\),
 \(b: X^* \rightarrow Y\), then \(a+b \notin \mathcal{F}_{r}\) as
 \(|{\bf x} (a+b)| = 2\). The function \(a+b: X^* \rightarrow Y^*\) maps many
 inputs to two outputs. Thus, \(\langle\mathcal{F}_r, + \rangle\) is not
 functionally closed. ◻
 :::</p>
-<p>::: theorem <strong>Theorem 21</strong>. The reduce monoid \(\langle\mathcal{F}_r, \cdot \rangle\)
+<p>::: <strong>Theorem 21</strong>. The reduce monoid \(\langle\mathcal{F}_r, \cdot \rangle\)
 is functionally closed.
 :::</p>
-<p>::: proof <em>Proof.</em> For every \(a,b \in \mathcal{F}_r\), if \(a: X^* \rightarrow Y\),
+<p>::: <em>Proof.</em> For every \(a,b \in \mathcal{F}_r\), if \(a: X^* \rightarrow Y\),
 \(b: Y^* \rightarrow Z\), ${\bf x} a = \langle y \rangle$,
 \(\langle y \rangle b = z\), then ${\bf x} ab = z$. Thus,
 \(ab: X^* \rightarrow Z\), \(ab \in \mathcal{F}_r\) and
@@ -2234,9 +2237,9 @@ as \([a (b+c)]\).[^27] The function can be used in the larger example
 composition \(d[a (b+c)]e\) which has the diagram</p>
 <p><img src="images/stream-ring-theory/fig-18.svg" alt="figure 18" /></p>
 <h4>The Non-Existent Lambda Reducers</h4>
-<p>::: proposition <strong>Proposition 1</strong>. There is no such thing as a nested reduce function.
+<p>::: <strong>Proposition 1</strong>. There is no such thing as a nested reduce function.
 :::</p>
-<p>::: proof <em>Proof.</em> There is no known guaranteed way to reduce a stream of zero or
+<p>::: <em>Proof.</em> There is no known guaranteed way to reduce a stream of zero or
 more objects to a single object using stateless functions in
 \(\mathcal{F}\setminus \mathcal{F}_r\). Therefore, suppose that
 \([a (b+c)d]\) is a nested a reduce function, where \(d \in \mathcal{F}_r\).
@@ -2578,7 +2581,7 @@ commutative, associative binary operators. The unary \(\neg\) (&quot;not&quot;)
 operator yields the negation of the predicate such that
 \(a \wedge \neg a = \texttt{false}\) and \(a \vee \neg a = \texttt{true}\).
 The filter ring can express these logical operations.</p>
-<p>::: theorem <strong>Theorem 22</strong>. If \(a,b \in \mathcal{F}_f\), then logical &quot;and&quot;, &quot;or&quot;,
+<p>::: <strong>Theorem 22</strong>. If \(a,b \in \mathcal{F}_f\), then logical &quot;and&quot;, &quot;or&quot;,
 and &quot;not&quot; have the following equivalences.
 \[
 \begin{equation*}
@@ -2590,7 +2593,7 @@ a \vee b &amp;&amp; \;\;\; a + b - ab \\
 \end{equation*}
 \]
 :::</p>
-<p>:::: proof <em>Proof.</em> The proof is accomplished by exhaustively itemizing each
+<p>:::: <em>Proof.</em> The proof is accomplished by exhaustively itemizing each
 \(a/b\)-pair case.</p>
 <p>::: footnotesize
 \[
@@ -2619,7 +2622,7 @@ removed from the outgoing stream. This is similar to &quot;exclusive or&quot;
 which is defined in a stream ring as \((a + b) - 2ab\), where if \(a\) and
 \(b\) both emit a result, then both branch objects are removed from the
 outgoing stream.</p>
-<p>::: theorem <strong>Theorem 23</strong>. The filter ring \(\langle\mathcal{F}_f, +, \cdot \rangle\)
+<p>::: <strong>Theorem 23</strong>. The filter ring \(\langle\mathcal{F}_f, +, \cdot \rangle\)
 can express the equalities of De Morgan's Law.
 \[
 \begin{equation*}
@@ -2630,7 +2633,7 @@ can express the equalities of De Morgan's Law.
 \end{equation*}
 \]
 :::</p>
-<p>::: proof <em>Proof.</em>
+<p>::: <em>Proof.</em>
 \[
 \begin{equation*}
 \begin{array}{lll}
@@ -2972,7 +2975,7 @@ b\bar{a} + bab\bar{a} + babab &amp;&amp; [\text{$\cdot$ is left distributive}].
 \end{equation*}
 \]</p>
 <h3>Thread Metadata[]{#sec:thread-metadata label=&quot;sec:thread-metadata&quot;}</h3>
-<p>::: definition <strong>Definition 7</strong> (An Object Thread). Every outgoing object of a function
+<p>::: <strong>Definition 7</strong> (An Object Thread). Every outgoing object of a function
 is related to the respective incoming object of the function all the way
 back to the stream expression's original input object. This chain of
 relationships is called an object thread. If \(abc\) is a stream
@@ -3220,8 +3223,8 @@ combining sacks from two &quot;equal&quot; objects.</p>
 reference=&quot;sec:nestedfunctions&quot;}. The lambda filter specification in
 §<a href="#sec:lambdafilters">\[sec:lambdafilters\]</a>{reference-type=&quot;ref&quot;
 reference=&quot;sec:lambdafilters&quot;} was deemed &quot;overly complex&quot; because it
-extended the \(a (b+c)\) nested expression with a branch (\(+ 1\)), a map (\(\alpha\)), a reducer (\(\beta\)), and a filter
-(\(\theta\)). In sum total,
+extended the \(a (b+c)\) nested expression with a branch (\(+ 1\)), a map (\(\alpha\)), a reducer (\(\beta\)), and a filter ($
+\theta$). In sum total,
 the lambda filter for \(a (b+c)\) was defined as
 \[
 \begin{equation*}
@@ -3680,7 +3683,7 @@ a stream ring, \(c,c^*,d,d^* \in \mathcal{C}\), \(cd^* = dc^* = 0\),
 \end{equation*}
 \]
 :::</p>
-<p>::: proof <em>Proof.</em> In an algebraic group \(a \cdot a^{-1} = 1\). If the above
+<p>::: <em>Proof.</em> In an algebraic group \(a \cdot a^{-1} = 1\). If the above
 equality is true, then
 \[
 \begin{equation*}
@@ -3758,10 +3761,10 @@ current tape cell [@hopcroft:automata1979].</p>
 <h3>Stream Ring Turing Machines[]{#sec:stream-turing label=&quot;sec:stream-turing&quot;}</h3>
 <p>A system of computation is Turing Complete if it can implement any
 Turing machine.</p>
-<p>::: theorem <strong>Theorem 25</strong>. The stream ring
+<p>::: <strong>Theorem 25</strong>. The stream ring
 \(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\) is Turing Complete.
 :::</p>
-<p>::: proof <em>Proof.</em> The general form of a stream ring Turing machine is a
+<p>::: <em>Proof.</em> The general form of a stream ring Turing machine is a
 &quot;while-do&quot; loop containing mutually exclusive conditional branches.
 Each branch determines the current machine state and tape cell symbol
 and then writes to the current tape cell, changes the machine's state,

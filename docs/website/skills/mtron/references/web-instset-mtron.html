@@ -595,11 +595,35 @@ mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-ins
 blocks are executed by the docs pipeline and inlined with their results; a plain <code>mtron</code> block is only shown.)</p>
 <pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/usr/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/usr
 mtron&gt; person::[name=&gt;'marko',age=&gt;29]@/usr/person/1
-==&gt;person::[name=&gt;'marko',
-            age=&gt;29]@/usr/person/1
+==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
+     [[name=&gt;'marko',age=&gt;29]@/usr/person/1
+         X=&gt;
+     rec[role,position]::T[?[name=&gt;str::T,
+                             age=&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
+                             role=&gt;rec::T,
+                             position=&gt;rec::T]]@person
+     ────────────────────────────────────────────────────────────────────────────
+     [name=&gt;(==&gt;name)=&gt;'marko'=&gt;==&gt;str::T,
+      age=&gt;(==&gt;age)=&gt;29=&gt;==&gt;nat::T,
+      noobj=&gt;(X=&gt;role)=&gt;noobj=&gt;X=&gt;rec::T,
+      noobj=&gt;(X=&gt;position)=&gt;noobj=&gt;X=&gt;rec::T]]
+     predicate apply failed on execution
+   	while parsing: person::[name=&gt;'marko',age=&gt;29]@/usr/person/1]
 mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/usr/person/2
-==&gt;person::[name=&gt;'grant',
-            age=&gt;25]@/usr/person/2
+==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
+     [[name=&gt;'grant',age=&gt;25]@/usr/person/2
+         X=&gt;
+     rec[role,position]::T[?[name=&gt;str::T,
+                             age=&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
+                             role=&gt;rec::T,
+                             position=&gt;rec::T]]@person
+     ────────────────────────────────────────────────────────────────────────────
+     [name=&gt;(==&gt;name)=&gt;'grant'=&gt;==&gt;str::T,
+      age=&gt;(==&gt;age)=&gt;25=&gt;==&gt;nat::T,
+      noobj=&gt;(X=&gt;role)=&gt;noobj=&gt;X=&gt;rec::T,
+      noobj=&gt;(X=&gt;position)=&gt;noobj=&gt;X=&gt;rec::T]]
+     predicate apply failed on execution
+   	while parsing: person::[name=&gt;'grant',age=&gt;25]@/usr/person/2]
 </code></pre>
 <h3>types</h3>
 <table>
@@ -701,9 +725,9 @@ client, resolved <em>target</em>) — never per address, since a templated mount
 request while the same protocol engine serves them all.</li>
 </ul>
 <pre><code class="language-mtron">mtron&gt; */usr/person/1                                              [-- straight from the space --]
-==&gt;person::[name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
+==&gt;&quot;[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
 ==&gt;
    json::'{&quot;name&quot;:&quot;marko&quot;,&quot;age&quot;:29}'

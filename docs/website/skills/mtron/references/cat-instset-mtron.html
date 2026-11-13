@@ -811,6 +811,7 @@ code <em>in place</em>: the local laws below (\(\mathrm{op} (\mathrm{id}) \leads
 <tr><td><code>law_monoidic</code> (/m)</td><td>\(\mathrm{law} \ni \mathrm{monoidic}\) + the <code>reducer</code>/<code>join</code> form</td><td>\(f \cdot f \leadsto f\)</td></tr>
 <tr><td><code>law_poset</code> (/m)</td><td>\(\mathrm{law} \ni \mathrm{poset}\) + the comparison orders one bound past the other</td><td>\(\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))\), \(\min\) for <code>lt</code> — filters only: a bare <code>gt</code> answers a bool</td></tr>
 <tr><td><code>inverse_cancellation</code> (/m)</td><td>every group instance of the operand's type (<code>group_theory</code>'s rules), gated by <code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
+<tr><td><code>map_nest</code> (/m)</td><td>nothing: a plain rule, whatever the inner mapping maps</td><td>\(\mathrm{map}(\mathrm{map}(f)) \leadsto \mathrm{map}(f)\)</td></tr>
 <tr><td><code>form_map_unwrap</code> (/m)</td><td><code>form = mapper</code> declared by the operation <code>map</code> wraps</td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
 <tr><td><code>derivation_contraction</code> (/m)</td><td>the <code>derivation</code> of the contract the carrier dispatches to</td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
 <tr><td><code>branch_collapse</code> (/m)</td><td>the additive op of the code ring's theory (<code>branch</code>)</td><td>\(\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})\) — equal terms collapse, summing the coefficients</td></tr>
@@ -851,25 +852,27 @@ off for that machine, and writing back <code>.active()</code>, or <code>-&gt; no
 obj flowing in: an argument that is an instruction is code, and a block (<code>-&gt; |inst</code>) hands over a literal instruction,
 not the value an expression computes. A rewrite's declared
 argument <em>is</em> its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
-place. A law's rule is stated in the name <code>op</code>, the instruction that claims the law: <code>law_involution</code> carries
-<code>[involution =&gt; [op.op =&gt; ]]</code>, <code>law_idempotent</code> <code>[idempotent =&gt; [op.op =&gt; op]]</code> and <code>law_monoidic</code>
-<code>[monoidic =&gt; [op.op =&gt; op]]</code>. Every claimant binds <code>op</code> to
+place, and its body is where they hold: the gate it applies them under is written beside them, not picked by a key. A
+law's rule is stated in the name <code>op</code>, the instruction that claims the law: <code>law_involution</code> carries
+<code>[op.op =&gt; ]</code>, and <code>law_idempotent</code> and <code>law_monoidic</code> both carry <code>[op.op =&gt; op]</code>, told apart by the law whose
+claimants bind <code>op</code> and by the gate that reads it. Every claimant binds <code>op</code> to
 its own term (<code>neg</code>, <code>ucase</code>, <code>sum</code>, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared <code>involution</code> — <code>neg</code>, <code>inv</code>, <code>not</code>, <code>reverse</code>,
-<code>conjugate</code> — not only the additive group's. A row keyed by a <em>form</em> states its rule over a named hole, and the hole
-ranges over that form: <code>form_map_unwrap</code>'s <code>mapper =&gt; [map(#::T@f) =&gt; #::T@f]</code> unwraps a mapping where the operation <code>map</code> wraps
-declares the mapper form (a form is declared per operation). <code>map</code> hands each obj to its argument one at a time, so a mapper
+<code>conjugate</code> — not only the additive group's. A <em>form</em>'s rule is stated over a named hole, and its gate asks that the hole
+range over that form: <code>form_map_unwrap</code> carries <code>[map(#::T@f) =&gt; #::T@f]</code> and unwraps a mapping where the operation <code>map</code>
+wraps declares the mapper form (a form is declared per operation). <code>map</code> hands each obj to its argument one at a time, so a mapper
 (<code>map(neg)</code> is <code>neg</code>) unwraps and a stream's fold does not: <code>{1,2,3}.map(sum())</code> sums each element alone, where
-<code>{1,2,3}.sum()</code> is 6. A row keyed by anything else is <em>plain</em>: its rule is stated in the instructions themselves, so it
-applies as it stands, with no <code>op</code> to bind and no law to gate it. <code>else_after_count =&gt; [count().else(#::T) =&gt; count()]</code>
-drops the dead <code>else</code> after a total <code>count</code>, and <code>form_map_unwrap</code>'s first row, <code>map_nest =&gt; [map(map(#::T@f)) =&gt; map(#::T@f)]</code>, drops a map of a map,
-whatever it maps. A plain row may compute its change: a <code>${…}</code> template is evaluated with the names the run bound, so
-<code>range_skip_take =&gt; [range(int::T@i,int::T@n) =&gt; skip(#::T@i).take(${*n.minus(*i)})]</code> turns a window into a skip
-and a take. The poset law's rewrite, <code>law_poset</code>, is stated over the bound each rule keeps:
-<code>poset =&gt; [is(op(#::T@a)).is(op(#::T@b)) =&gt; is(op(#::T@b)), …]</code>. Its gate evaluates the comparison, so the bound
+<code>{1,2,3}.sum()</code> is 6. A <em>plain</em> rule is stated in the instructions themselves, so it applies as it stands, with no <code>op</code>
+to bind and no law to gate it. <code>else_after_count</code> carries <code>[count().else(#::T) =&gt; count()]</code> and drops the dead <code>else</code>
+after a total <code>count</code>, and <code>map_nest</code> carries <code>[map(map(#::T@f)) =&gt; map(#::T@f)]</code> and drops a map of a map, whatever it
+maps. It runs just before <code>form_map_unwrap</code>, and the two are separate rules: <code>map</code>'s own form is no mapper, so the unwrap
+never takes a nested mapping on its own. A plain rule may compute its change: a <code>${…}</code> template is evaluated with the
+names the run bound, so <code>range_skip_take</code>'s <code>[range(int::T@i,int::T@n) =&gt; skip(#::T@i).take(${*n.minus(*i)})]</code> turns a
+window into a skip and a take. The poset law's rewrite, <code>law_poset</code>, is stated over the bound each rule keeps:
+<code>[is(op(#::T@a)).is(op(#::T@b)) =&gt; is(op(#::T@b)), …]</code>. Its gate evaluates the comparison, so the bound
 kept is the one the comparison orders past the other (\(\max\) under <code>gt</code>, \(\min\) under <code>lt</code>), with no comparison
 named in the rule. The pair is also stated the other way round, and for <code>filter</code>.</p>
-<p>The absorbing law's rewrite, <code>law_absorbing</code>, is stated over a <em>run</em>, not a pair: <code>absorbing =&gt; [{+}#{*}&lt;=#{*}({*}#::T).op =&gt; op]</code>. Its
+<p>The absorbing law's rewrite, <code>law_absorbing</code>, is stated over a <em>run</em>, not a pair: <code>[{+}#{*}&lt;=#{*}({*}#::T).op =&gt; op]</code>. Its
 first element is an instruction with a <strong>span</strong>, <code>{span}inst{point}</code>, read as a type's span is read over a lst's slots:
 <code>{+}#({*}#::T)</code> is one or more instructions of any name and arguments, laid over the chain as a lst type's entries are
 laid over its indices. A rewrite tries the longest run first and shortens it where the gate refuses it. The run never
@@ -1083,46 +1086,46 @@ derives its rewrite. The guard reads the laws/forms/theories off the word (<code
 and computes its cut/span/where without consulting the code below; the descent (\(\gamma\)) runs only through
 <code>path::T.obj</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==&gt;[abstraction::[obj=&gt;[morphism[start?args=[/m/int]]::[
-                         name=&gt;start,
-                         form=&gt;initial,
-                         src=&gt;!λ#(){&lt;j&gt;},
-                         trgt=&gt;!λ#(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;start(5)],
-                        morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
-                         name=&gt;plus,
-                         form=&gt;mapper,
-                         class=&gt;[endo],
-                         src=&gt;!λint(){&lt;j&gt;},
-                         trgt=&gt;!λint(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;plus(0),
-                         ...(1 more)],
-                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                         name=&gt;neg,
-                         form=&gt;mapper,
-                         class=&gt;[
-                          endo,
-                          iso,
-                          auto,
-                          section,
-                          retraction,
-                          mono,
-                          epi],
-                         src=&gt;!λint(){&lt;j&gt;},
-                         trgt=&gt;!λint(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;neg(),
-                         ...(1 more)],
-                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                         name=&gt;neg,
-                         form=&gt;mapper,
-                         class=&gt;[
-                          endo,
-                          iso,
-                          auto,
-                          section,
+==&gt;[abstraction::[obj=&gt;[
+                   morphism[start?args=[/m/int]]::[
+                    name=&gt;start,
+                    form=&gt;initial,
+                    src=&gt;!λ#(){&lt;j&gt;},
+                    trgt=&gt;!λ#(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;start(5)],
+                   morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
+                    name=&gt;plus,
+                    form=&gt;mapper,
+                    class=&gt;[endo],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;plus(0),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
+                     section,
+                     retraction,
+                     mono,
+                     epi],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;neg(),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
    ...
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>

@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -572,7 +575,7 @@ objects, \(c, d, e \in \mathcal{C}\) are coefficients of a ring with unity, and
 \(x\). The proofs below cite the stream ring axioms of [1] by name: the <em>apply</em>, <em>split</em>, <em>merge</em> and <em>bulk</em>
 axioms, \(\langle 0x \rangle = \langle\rangle\), and
 the stream multiplication \(ca \cdot db = (c \cdot d)(a \cdot b)\).</p>
-<p>::: definition <strong>Definition 1</strong> (Point). The <em>point</em> of a term
+<p>::: <strong>Definition 1</strong> (Point). The <em>point</em> of a term
 \(ca \in \mathcal{C}\mathcal{F}\) is its coefficient \(c \in \mathcal{C}\). In mtron
 it is written after the instruction, <code>a{c}</code>. If \(n \in \mathbb{N}\), then by the
 stream ring's addition
@@ -582,7 +585,7 @@ na = \underbrace{1a + \cdots + 1a}_{n}.
 \end{equation*}
 \]
 :::</p>
-<p>::: definition <strong>Definition 2</strong> (Span). The <em>span</em> of a term is the exponent
+<p>::: <strong>Definition 2</strong> (Span). The <em>span</em> of a term is the exponent
 \(n \in \mathbb{N}\) of its run, where
 \[
 \begin{equation*}
@@ -640,10 +643,10 @@ diagrammatic order, a value being where a chain starts.)</li>
 positions <code>&lt;0&gt;</code>, <code>&lt;1&gt;</code> stay in code font here, never in math.]</li>
 </ul>
 <h4>The Point Coefficient</h4>
-<p>::: theorem <strong>Theorem 1</strong> (Points add across a branch). If \(a \in \mathcal{F}\)
+<p>::: <strong>Theorem 1</strong> (Points add across a branch). If \(a \in \mathcal{F}\)
 and \(c,d \in \mathcal{C}\), then \(ca + da = (c+d)a\).
 :::</p>
-<p>::: proof <em>Proof.</em> If \(a (x) = y\), then
+<p>::: <em>Proof.</em> If \(a (x) = y\), then
 \[
 \begin{equation*}
 \begin{array}{lclll}
@@ -657,11 +660,11 @@ ca + da &amp;=&amp; (c+d)a &amp;&amp; \\
 \]
 ◻
 :::</p>
-<p>::: theorem <strong>Theorem 2</strong> (Points multiply along a chain). If
+<p>::: <strong>Theorem 2</strong> (Points multiply along a chain). If
 \(a,b \in \mathcal{F}\) and \(c,d \in \mathcal{C}\), then
 \(ca \cdot db = (c \cdot d)(a \cdot b)\).
 :::</p>
-<p>::: proof <em>Proof.</em> If \(a (x) = y\) and \(b (y) = z\), then
+<p>::: <em>Proof.</em> If \(a (x) = y\) and \(b (y) = z\), then
 \[
 \begin{equation*}
 \begin{array}{lclll}
@@ -674,11 +677,11 @@ ca \cdot db &amp;=&amp; (c \cdot d)ab &amp;&amp; \\
 \]
 ◻
 :::</p>
-<p>::: theorem <strong>Theorem 3</strong> (Points are central). If
+<p>::: <strong>Theorem 3</strong> (Points are central). If
 \(a,b \in \mathcal{F}\setminus \mathcal{F}_r\) and \(c \in \mathcal{C}\), then
 \(ca \cdot b = a \cdot cb = (ab)c\).
 :::</p>
-<p>::: proof <em>Proof.</em>
+<p>::: <em>Proof.</em>
 \[
 \begin{equation*}
 \begin{array}{lclll}
@@ -708,10 +711,10 @@ mtron&gt; 5.plus{3}(1)
 mtron&gt; 5.plus(1).id{3}()
 ==&gt;{3}6
 </code></pre>
-<p>::: theorem <strong>Theorem 4</strong> (A zero point annihilates). If \(a \in \mathcal{F}\),
+<p>::: <strong>Theorem 4</strong> (A zero point annihilates). If \(a \in \mathcal{F}\),
 then \(0a = 0\).
 :::</p>
-<p>::: proof <em>Proof.</em> The zero of \(\mathcal{C}\mathcal{F}\) is
+<p>::: <em>Proof.</em> The zero of \(\mathcal{C}\mathcal{F}\) is
 \((0,0) \in \mathcal{C}\times \mathcal{F}\) [1]. If \(a (x) = y\), then
 \[
 \begin{equation*}
@@ -740,10 +743,10 @@ mtron&gt; 5.id{0}().count()
 ==&gt;0
 </code></pre>
 <h4>The Span Coefficient</h4>
-<p>::: theorem <strong>Theorem 5</strong> (Spans add along a chain). If \(a \in \mathcal{F}\) and
+<p>::: <strong>Theorem 5</strong> (Spans add along a chain). If \(a \in \mathcal{F}\) and
 \(m,n \in \mathbb{N}\), then \(a^m \cdot a^n = a^{m+n}\).
 :::</p>
-<p>::: proof <em>Proof.</em> By induction on \(n\).
+<p>::: <em>Proof.</em> By induction on \(n\).
 \[
 \begin{equation*}
 \begin{array}{lclll}
@@ -757,10 +760,10 @@ a^m \cdot a^{n+1} &amp;=&amp; a^m \cdot (a^n \cdot a) &amp;&amp; [\text{Definiti
 \]
 ◻
 :::</p>
-<p>::: theorem <strong>Theorem 6</strong> (Spans stay where they are written). In general,
+<p>::: <strong>Theorem 6</strong> (Spans stay where they are written). In general,
 \(a^n \cdot b \neq a \cdot b^n\).
 :::</p>
-<p>::: proof <em>Proof.</em> A counterexample. If \(a (x) = x + 1\) and \(b (x) = 2x\), then
+<p>::: <em>Proof.</em> A counterexample. If \(a (x) = x + 1\) and \(b (x) = 2x\), then
 \[
 \begin{equation*}
 \langle 5 \rangle a^2 b = \langle 14 \rangle \neq \langle 24 \rangle = \langle 5 \rangle a b^2.
@@ -779,21 +782,21 @@ mtron&gt; 5.{2}plus(1).mult(2)
 mtron&gt; 5.plus(1).{2}mult(2)
 ==&gt;24
 </code></pre>
-<p>::: corollary <strong>Corollary 1</strong> (Inductive generation). If \(a (x) = x + 1\), then
+<p>::: <strong>Corollary 1</strong> (Inductive generation). If \(a (x) = x + 1\), then
 \(\langle 0 \rangle a^n = \langle n \rangle\).
 :::</p>
-<p>::: proof <em>Proof.</em> By induction on \(n\):
+<p>::: <em>Proof.</em> By induction on \(n\):
 \(\langle 0 \rangle a^0 = \langle 0 \rangle 1 = \langle 0 \rangle\), and
 \(\langle 0 \rangle a^{n+1} = \langle 0 \rangle a^n \cdot a = \langle n \rangle a = \langle n + 1 \rangle\). ◻
 :::</p>
 <pre><code class="language-mtron">mtron&gt; 0.{5}plus(1)
 ==&gt;5
 </code></pre>
-<p>::: corollary <strong>Corollary 2</strong> (A constant's run is the constant). If
+<p>::: <strong>Corollary 2</strong> (A constant's run is the constant). If
 \(k (x) = v\) for every object \(x\), then \(k \cdot k = k\), so \(k^n = k\) for every
 \(n \geq 1\), and \(k^0 = 1\).
 :::</p>
-<p>::: proof <em>Proof.</em>
+<p>::: <em>Proof.</em>
 \[
 \begin{equation*}
 \begin{array}{lclll}
@@ -822,9 +825,9 @@ writes its span after it, <code>x{n}</code>, and until an address can be a branc
 the layout is the list of the copies, whose slots are those addresses:
 <code>2{3}</code> is <code>[2,2,2]</code>.</p>
 <pre><code class="language-mtron">mtron&gt; 2{3}
-==&gt;[2,2,2]
+==&gt;2{3}
 mtron&gt; {2}2{3}
-==&gt;[{2}2,{2}2,{2}2]
+==&gt;{2}2{3}
 </code></pre>
 <p>NOTES: spans on a value. Once branched uris read and write a layout, is
 <code>2{3}</code> the one value <code>2@&lt;{0,1,2}&gt;</code> rather than the lst <code>[2,2,2]</code>? And is a laid
@@ -832,11 +835,11 @@ value one obj or \(n\)? A ranged value span, <code>2{?}</code>, has no layout ye
 not parse. Would <code>2{2,3}</code> be the sum of its layouts, as a span range on an
 instruction is?</p>
 <h3>The Algebra Relating Point and Span Coefficients</h3>
-<p>::: theorem <strong>Theorem 7</strong> (The span exponentiates the point). If
+<p>::: <strong>Theorem 7</strong> (The span exponentiates the point). If
 \(a \in \mathcal{F}\), \(c \in \mathcal{C}\) and \(n \in \mathbb{N}\), then
 \((ca)^n = c^n a^n\).
 :::</p>
-<p>::: proof <em>Proof.</em> This is the third equality of Theorem 6 of [1]. By induction
+<p>::: <em>Proof.</em> This is the third equality of Theorem 6 of [1]. By induction
 on \(n\):
 \[
 \begin{equation*}
@@ -849,24 +852,24 @@ on \(n\):
 \]
 ◻
 :::</p>
-<p>::: corollary <strong>Corollary 3</strong> (Order matters). A point on a run is not a run of
+<p>::: <strong>Corollary 3</strong> (Order matters). A point on a run is not a run of
 the point: \(a^n \cdot c1 = c\,a^n\), while \((ca)^n = c^n a^n\).
 :::</p>
-<p>::: proof <em>Proof.</em> \(a^n \cdot c1 = (1 \cdot c)(a^n \cdot 1) = c\,a^n\) by stream
+<p>::: <em>Proof.</em> \(a^n \cdot c1 = (1 \cdot c)(a^n \cdot 1) = c\,a^n\) by stream
 multiplication, and \((ca)^n = c^n a^n\) by Theorem 7. The two agree only where
 \(c^n = c\). ◻
 :::</p>
-<p>::: corollary <strong>Corollary 4</strong> (Idempotents collapse). If \(e \cdot e = e\), then
+<p>::: <strong>Corollary 4</strong> (Idempotents collapse). If \(e \cdot e = e\), then
 \((ce)^n = c^n e\) for every \(n \geq 1\).
 :::</p>
-<p>::: proof <em>Proof.</em> \(e^n = e\) for \(n \geq 1\), by the induction of Corollary 2, so
+<p>::: <em>Proof.</em> \(e^n = e\) for \(n \geq 1\), by the induction of Corollary 2, so
 \((ce)^n = c^n e^n = c^n e\) by Theorem 7. The unity is idempotent, so
 \((c1)^n = c^n 1\). ◻
 :::</p>
-<p>::: corollary <strong>Corollary 5</strong> (\(0^0 = 1\)). \((0a)^0 = 1\): a zero run of the
+<p>::: <strong>Corollary 5</strong> (\(0^0 = 1\)). \((0a)^0 = 1\): a zero run of the
 annihilator is no step at all.
 :::</p>
-<p>::: proof <em>Proof.</em> \(t^0 = 1\) for every term \(t\) by Definition 2, and \(0a = 0\) is
+<p>::: <em>Proof.</em> \(t^0 = 1\) for every term \(t\) by Definition 2, and \(0a = 0\) is
 a term (Theorem 4). ◻
 :::</p>
 <p><strong>Live proof.</strong></p>
@@ -879,7 +882,7 @@ mtron&gt; 5.{3}id{2}()
 mtron&gt; 5.{0}id{0}()
 ==&gt;5
 </code></pre>
-<p>::: theorem <strong>Theorem 8</strong> (A span does not distribute over a branch). If
+<p>::: <strong>Theorem 8</strong> (A span does not distribute over a branch). If
 \(a,b \in \mathcal{F}\), then
 \[
 \begin{equation*} (a + b)^n = \sum_{w \in \{a,b\}^n} w,
@@ -893,7 +896,7 @@ the sum of all \(2^n\) words of length \(n\) over \(a\) and \(b\). If \(ab = ba\
 and each binomial coefficient is a point. In general,
 \((a + b)^n \neq a^n + b^n\).
 :::</p>
-<p>::: proof <em>Proof.</em> By induction on \(n\), expanding as [1] expands a multinomial:
+<p>::: <em>Proof.</em> By induction on \(n\), expanding as [1] expands a multinomial:
 \[
 \begin{equation*}
 \begin{array}{lclll} (a + b)^{n+1} &amp;=&amp; (a + b)^n \cdot (a + b) &amp;&amp; [\text{Definition 2}] \\
@@ -913,50 +916,22 @@ Pascal's triangle:
 \(b (x) = 2x\), then \(ab \neq ba\), and all four words of \((a + b)^2\) survive:
 \(\langle 5 \rangle (a + b)^2 = \langle 7, 12, 11, 20 \rangle\).</p>
 <pre><code class="language-mtron">mtron&gt; 2.{2}branch(plus(1),id())
-==&gt;fail{2}::[unable to determine inst function:
-   	[3, 2]      =&gt; /m/inst/plus(1)   | [inst]
-   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
-   	int{2}::T  X=&gt; [1]   |  \_args]
+==&gt;4
 ==&gt;{2}3
-==&gt;{2}2
+==&gt;2
 mtron&gt; 0.{4}branch(plus(1),id())
-==&gt;fail{42}::[unable to determine inst function:
-   	[fail{6}::['unable to determine inst function:
-   	[fail{2}::[&quot;&quot;&quot;unable to determine inst function:
-   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
-   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
-   	int{2}::T  X=&gt; [1]   |  \_args&quot;&quot;&quot;], {2}1, {2}0]  =&gt; /m/inst/plus(1)   | [inst]
-   	&lt;/m/{{2}fail,{4}int}&gt;::T  =&gt; &lt;#&gt;::T   |  \_dom
-   	&lt;/m/{{2}fail,{4}int}&gt;::T X=&gt; [1]   |  \_args'], fail{12}::[&quot;&quot;&quot;unable to determine inst function:
-   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
-   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
-   	int{2}::T  X=&gt; [1]   |  \_args&quot;&quot;&quot;], {12}1, {12}0]  =&gt; /m/inst/plus(1)   | [inst]
-   	&lt;/m/{{18}fail,{24}int}&gt;::T  =&gt; &lt;#&gt;::T   |  \_dom
-   	&lt;/m/{{18}fail,{24}int}&gt;::T X=&gt; [1]   |  \_args]
-==&gt;fail{252}::[unable to determine inst function:
-   	[fail{2}::[&quot;&quot;&quot;unable to determine inst function:
-   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
-   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
-   	int{2}::T  X=&gt; [1]   |  \_args&quot;&quot;&quot;], {2}1, {2}0]  =&gt; /m/inst/plus(1)   | [inst]
-   	&lt;/m/{{2}fail,{4}int}&gt;::T  =&gt; &lt;#&gt;::T   |  \_dom
-   	&lt;/m/{{2}fail,{4}int}&gt;::T X=&gt; [1]   |  \_args]
-==&gt;fail{504}::[unable to determine inst function:
-   	[1, 0]      =&gt; /m/inst/plus(1)   | [inst]
-   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
-   	int{2}::T  X=&gt; [1]   |  \_args]
-==&gt;{504}1
-==&gt;{504}0
+==&gt;4
+==&gt;{4}3
+==&gt;{6}2
+==&gt;{4}1
+==&gt;0
 mtron&gt; 5.{2}branch(plus(1),mult(2))
-==&gt;fail{2}::[unable to determine inst function:
-   	[6, 10]     =&gt; /m/inst/plus(1)   | [inst]
-   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
-   	int{2}::T  X=&gt; [1]   |  \_args]
-==&gt;fail{2}::[unable to determine inst function:
-   	[6, 10]     =&gt; /m/inst/mult(2)   | [inst]
-   	int{2}::T   =&gt; &lt;#&gt;::T   |  \_dom
-   	int{2}::T  X=&gt; [2]   |  \_args]
+==&gt;7
+==&gt;12
+==&gt;11
+==&gt;20
 </code></pre>
-<p>::: theorem <strong>Theorem 9</strong> (A shared prefix factors). If \(b,c \in \mathcal{F}\)
+<p>::: <strong>Theorem 9</strong> (A shared prefix factors). If \(b,c \in \mathcal{F}\)
 and \(a \in \mathcal{F}_m \cup \mathcal{F}_f \cup \mathcal{F}_{fm}\) is pure,
 then \(a \cdot b + a \cdot c = a \cdot (b + c)\), and for \(m \leq n\),
 \[
@@ -965,14 +940,16 @@ a^m \cdot b + a^n \cdot c = a^m \cdot (b + a^{n-m} \cdot c).
 \end{equation*}
 \]
 :::</p>
-<p>::: proof <em>Proof.</em> The first equality is the left distributivity of the function
+<p>::: <em>Proof.</em> The first equality is the left distributivity of the function
 ring [1]. The second follows from it and Theorem 5, as \(a^n = a^m \cdot a^{n-m}\).
 The prefix must be pure: on the right it runs once for both members, so an
 effectful \(a\), a write or a print, would change what the expression does. It
 must also take one object at a time, a map, filter or flatmap: an mtron branch
-hands each member the shipment its dom coefficient gathers — the whole lhs by
-default — so a reducer heading both members reads the whole stream in each,
-and sharing it ahead of the branch would reduce the stream once. A common
+feeds its members one object at a time, so a reducer heading both members
+reads one object in each, but the whole stream once it is shared. (A
+distribution rewrite may state <code>{*}</code> on the branch it emits, making the
+shipment whole; that is the plan's optimization, not the instruction's
+default.) A common
 suffix factors the other way, \(b \cdot a + c \cdot a = (b + c) \cdot a\), by
 right distributivity, but never a reducer \(r \in \mathcal{F}_r\): the reduce
 near-ring is not right distributive [1]. ◻
@@ -999,25 +976,25 @@ mtron&gt; 1.branch(plus(1).count(),plus(2).count())
 mtron&gt; 1.branch(plus(1),plus(2)).count()
 ==&gt;2
 mtron&gt; {1,2}.branch(count().plus(1),count().plus(2))
+==&gt;{2}2
 ==&gt;{2}3
-==&gt;{2}4
 mtron&gt; {1,2}.count().branch(plus(1),plus(2))
 ==&gt;3
 ==&gt;4
 </code></pre>
 <p><strong>NOTES</strong>:
-a branch gathers its shipment before feeding its members. Its declared dom is
-<code>{*}</code> (a barrier), so a bare branch hands each member the whole stream and
-<code>{1,2}.branch(plus(1).count(),plus(2).count())</code> is <code>{2,2}</code>, the two readings
-agreeing. The per-object reading (<code>{4}1</code>) is the streaming grain, stated as
-<code>?&lt;=int{?}</code> (the unit <code>{1}</code> normalizes away, so it cannot be stated); it is
-not the default. A reducer member is where the two readings could part, which
-is why <code>branch_factor</code> shares only a map, filter or flatmap — an element-wise
-head, not a fold.</p>
+<code>{1,2}.branch(plus(1).count(),plus(2).count())</code> is <code>{4}1</code> in mtron, each member
+counting one object, where the split axiom of [1] applied to the whole stream
+gives \(\langle 2,3 \rangle r + \langle 3,4 \rangle r\), which is <code>{2}2</code>. A
+reducer member is where the two readings part: is the per-object branch the
+intended \(+\)? The rewrites agree with the branch as it runs: <code>branch_factor</code>
+shares only a map, filter or flatmap. A distribution rewrite may state <code>{*}</code> on
+the branch it emits (the whole stream per member); the instruction's own
+default stays per-object.</p>
 <h3>Coefficient Ranges</h3>
 <p>A coefficient may be a range \([m,n]\) with \(m \leq n\). In mtron it is written
 <code>{m,n}</code>, and <code>{?}</code> is \([0,1]\), <code>{+}</code> is \([1,\infty)\) and <code>{*}</code> is \([0,\infty)\).</p>
-<p>::: definition <strong>Definition 3</strong> (Span range). If \(m \leq n\), then
+<p>::: <strong>Definition 3</strong> (Span range). If \(m \leq n\), then
 \[
 \begin{equation*}
 a^{[m,n]} = \sum_{k=m}^{n} a^k = a^m + a^{m+1} + \cdots + a^n.
@@ -1035,11 +1012,11 @@ so paths of different lengths meet only in that sum, at the end of every path.
 A range is no uncertainty over its unrolls: every unroll is taken, and the
 multiplicities are not weights that sum to one. The zero-step unroll is the
 unity, \(a^0 = 1\), which passes its object on.</p>
-<p>::: corollary <strong>Corollary 6</strong> (Each unroll carries its own power of the point).
+<p>::: <strong>Corollary 6</strong> (Each unroll carries its own power of the point).
 If \(c \in \mathcal{C}\) and \(m \leq n\), then
 \((ca)^{[m,n]} = \sum_{k=m}^{n} c^k a^k\).
 :::</p>
-<p>::: proof <em>Proof.</em> By Definition 3, \((ca)^{[m,n]} = \sum_{k=m}^{n} (ca)^k\), and
+<p>::: <em>Proof.</em> By Definition 3, \((ca)^{[m,n]} = \sum_{k=m}^{n} (ca)^k\), and
 \((ca)^k = c^k a^k\) by Theorem 7. ◻
 :::</p>
 <p>In mtron, <code>{2,3}a</code> answers what the branch of its unrolls, <code>branch(a.a,a.a.a)</code>,
@@ -1151,11 +1128,9 @@ code as paths that sum like branched uris.]</li>
 </ul>
 <h2>References</h2>
 <ol>
-<li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red
-Herring's Ship's Log: Chronicles in the Sea of Cortez, pages 10–40, Mulegé,
-Baja California Sur, México, February 2019.</li>
-<li>Rodriguez, M.A., Claude, &quot;<a href="./parametric-identities-in-ring-theory.html">Parametric Identities in Ring
-Theory</a>.&quot;</li>
+<li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red Herring's Ship's Log: Chronicles in the Sea
+of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.</li>
+<li>Rodriguez, M.A., Claude, &quot;<a href="./parametric-identities-in-ring-theory.html">Parametric Identities in Ring Theory</a>.&quot;</li>
 <li>Kleene, S.C., &quot;Representation of Events in Nerve Nets and Finite Automata,&quot;
 Automata Studies, Princeton University Press, 1956.</li>
 </ol>

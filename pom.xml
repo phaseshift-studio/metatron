@@ -110,11 +110,44 @@
         <janusgraph.version>1.2.0</janusgraph.version>
         <commons.text.version>1.15.0</commons.text.version>
         <commons.lang3.version>3.22.0</commons.lang3.version>
+        <netty.version>4.1.140.Final</netty.version>
+        <jackson3.version>3.1.8</jackson3.version>
+        <guava.version>33.7.2-jre</guava.version>
         <jproc.version>2.8.2</jproc.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
         <dependencies>
+            <!-- NETTY: one version for every module (else test-scoped moquette's 4.1.116 wins mediation) -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- JACKSON 3 PINS (MCP SDK); not the tools.jackson BOM: it pins jackson-annotations to 2.21 -->
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tools.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${jackson3.version}</version>
+            </dependency>
+            <!-- GUAVA PIN (janusgraph-driver) -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
             <!-- TINKERPOP -->
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
