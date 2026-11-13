@@ -490,8 +490,6 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     @Override
     public String writeReal(final Real real) {
-        final StringBuilder sb = new StringBuilder();
-        this.handleTID(sb, real, true);
         // Double.toString is the shortest round-trippable form and keeps a trailing .0 on
         // whole numbers, so a real (1.0) never reads back as an int (1)
         final String ds = Double.toString(real.jvm());
@@ -511,10 +509,8 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final int end = dot < 0 ? ds.length() : Math.min(hasExp ? exp : ds.length(), dot + 5);
             ds2 = ds.substring(0, end) + (hasExp ? ds.substring(exp) : "");
         }
-        sb.append(ds2);
-        if (ds2.endsWith(".")) sb.append("0");
-        this.handleVID(sb, real);
-        return postWrite(sb.toString());
+        // the display text goes where every scalar's does (handleIds): point before, span after, then the vid
+        return postWrite(this.handleIds(real, ds2.endsWith(".") ? ds2 + "0" : ds2));
     }
 
     private String generateString(final Str str, boolean clip) {

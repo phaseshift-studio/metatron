@@ -122,6 +122,13 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "<{2}/m/int{3}>",
             "{3}<{2}/a/b{4}>",                  // an obj coefficient, a span and a point on one uri
             "[<{2}/a/b>,{2}/a/b]",              // one uri spanning 2 beside one counted twice: two different slots
+            "{3}5{3}",                          // a value is {point}value{span}: its point before it, its span after it
+            "5{3}",
+            "{2}2.5{2}",
+            "true{2}",
+            "\"abc\"{2}",
+            "0x0102{2}",
+            "[{3}5{3},5{3},{3}5]",              // a span, a point, and both, side by side in one lst's slots
             "{[1,2],[3,4],[5,6]}",
             "{true,false,{1,0},{-100,12.35,-12.35}}"
     }, delimiter = '|')

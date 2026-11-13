@@ -1214,21 +1214,13 @@ public class mParser {
     }
 
     /**
-     * A VALUE IS {point}value{span} (Marko, 2026-11-10): a trailing coefficient is the value's span, so 2{3} is the value 2
-     * laid in space at the uris 0, 1 and 2. Until branched uris read and write a layout, a span lays the value out as the
-     * lst of its copies, whose slots are those uris: the copies keep the value's point, and the lst takes its vid. A span on
-     * the value's own tid would claim a run ({3}int::T is three ints), which one value is not.
-     */
-    private static Obj laid(final Obj value, final Integer span) {
-        return null == span || 1 == span ? value : lst(new ArrayList<>(Collections.nCopies(span, value.vid(null))), Tokens.LST_TID, value.vid());
-    }
-
-    /**
-     * A value's span is an exact count, {n}: a layout has a length. A ranged or negative brace ({?}, {*}, {-1}) is no span,
-     * so the value parser leaves it unread, as it did before values took spans: 3{?} reads as 3 and stops at the brace.
+     * A VALUE IS {point}value{span} (Marko, 2026-11-10): a trailing coefficient is the value's span, and it stays on the
+     * value's tid, curled up, until a space gives it an axis (Marko, 2026-11-11): {3}5{3} is one int that counts 9, not the
+     * lst of its copies, and 5{3}@xyz is 5 at xyz/0, xyz/1 and xyz/2. A span is an exact count, {n}: a ranged or negative
+     * brace ({?}, {*}, {-1}) is no span, so the value parser leaves it unread: 3{?} reads as 3 and stops at the brace.
      */
     private static Parser m_value_span() {
-        return seq(of('{'), digit().plus().flatten(), of('}')).map(t -> Integer.valueOf(mParser.<String>pick(t, 1)));
+        return seq(of('{'), digit().plus().flatten(), of('}')).map(t -> cInt.of(Long.parseLong(mParser.<String>pick(t, 1))));
     }
 
     public static Parser m_furi_coefficient() {
@@ -1440,7 +1432,7 @@ public class mParser {
                     try {
                         return baseType.d(coefficientOrOne(t));
                     } catch (Exception e) {
-                        return null;
+                        return baseType;
                     }
                 })), baseType);
     }
@@ -1478,26 +1470,26 @@ public class mParser {
     }
 
     public static Parser m_bool() {
-        return seq(m_type_prefix(Tokens.BOOL_TID), of("true").trim().or(of("false").trim()), opt(m_value_span(), null), m_vid_postfix())
-                .map(t -> laid(bool(pick(t, 1).equals("true"), pick(t, 0), pick(t, 3)), pick(t, 2)));
+        return seq(m_type_prefix(Tokens.BOOL_TID), of("true").trim().or(of("false").trim()), opt(m_value_span(), cInt.ONE()), m_vid_postfix())
+                .map(t -> bool(pick(t, 1).equals("true"), mParser.<fURI>pick(t, 0).b(pick(t, 2)), pick(t, 3)));
     }
 
     public static Parser m_bytes() {
         return seq(m_type_prefix(Tokens.BYTES_TID),
-                of("0x"), choice(digit(), anyOf("abcdefABCDEF")).plus().flatten(), opt(m_value_span(), null), m_vid_postfix()).
-                map(t -> laid(bytes(ByteBuffer.wrap(HexFormat.of().parseHex(mParser.<String>pick(t, 2))), pick(t, 0), pick(t, 4)), pick(t, 3)));
+                of("0x"), choice(digit(), anyOf("abcdefABCDEF")).plus().flatten(), opt(m_value_span(), cInt.ONE()), m_vid_postfix()).
+                map(t -> bytes(ByteBuffer.wrap(HexFormat.of().parseHex(mParser.<String>pick(t, 2))), mParser.<fURI>pick(t, 0).b(pick(t, 3)), pick(t, 4)));
     }
 
     public static Parser m_int() {
         return seq(m_type_prefix(Tokens.INT_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()))
-                .flatten().trim(), opt(m_value_span(), null), m_vid_postfix())
-                .map(t -> laid(jnt(Long.parseLong(pick(t, 1).toString()), pick(t, 0), pick(t, 3)), pick(t, 2)));
+                .flatten().trim(), opt(m_value_span(), cInt.ONE()), m_vid_postfix())
+                .map(t -> jnt(Long.parseLong(pick(t, 1).toString()), mParser.<fURI>pick(t, 0).b(pick(t, 2)), pick(t, 3)));
     }
 
     public static Parser m_real() {
         return seq(m_type_prefix(Tokens.REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus(), opt(seq(of("E"), opt(of("-"), ""), digit().plus()), ""))
-                .flatten().trim(), opt(m_value_span(), null), m_vid_postfix())
-                .map(t -> laid(new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), pick(t, 3)), pick(t, 2)));
+                .flatten().trim(), opt(m_value_span(), cInt.ONE()), m_vid_postfix())
+                .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), mParser.<fURI>pick(t, 0).b(pick(t, 2)), pick(t, 3)));
     }
 
     public static Parser m_str() {
@@ -1517,8 +1509,8 @@ public class mParser {
                         of('"').repeat(3, 3)).flatten(),
                 "unclosed triple-quote — missing closing '\"\"\"'")
                 .map(t -> t.toString().substring(3, t.toString().length() - 3));
-        return seq(m_type_prefix(Tokens.STR_TID), choice(tripleQuote, singleQuote, doubleQuote), opt(m_value_span(), null), m_vid_postfix())
-                .map(t -> laid(new MStr(mParser.pick(t, 1), pick(t, 0), pick(t, 3)), pick(t, 2)));
+        return seq(m_type_prefix(Tokens.STR_TID), choice(tripleQuote, singleQuote, doubleQuote), opt(m_value_span(), cInt.ONE()), m_vid_postfix())
+                .map(t -> new MStr(mParser.pick(t, 1), mParser.<fURI>pick(t, 0).b(pick(t, 2)), pick(t, 3)));
     }
 
     /**

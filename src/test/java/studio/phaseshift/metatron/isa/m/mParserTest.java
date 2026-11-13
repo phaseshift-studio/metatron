@@ -391,20 +391,41 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{2}*a.plus(1)                 % 1.from(a).from(a).plus(1)",
             "{2}!*a                          % auto_from(a).auto_from(a)",
             "{0}*a                           % {0}from(a)",
-            // a value is {point}value{span} (Marko, 2026-11-10): 2{3} is 2 laid in space at the uris 0, 1 and 2, the
-            // slots of a lst until branched uris read and write a layout; the copies keep the value's point
-            "2{3}                            % [2,2,2]",
-            "{2}2{3}                         % [{2}2,{2}2,{2}2]",
-            "2.5{2}                          % [2.5,2.5]",
-            "true{2}                         % [true,true]",
-            "\"abc\"{2}                      % [\"abc\",\"abc\"]",
-            "0x0102{2}                       % [0x0102,0x0102]",
+            // a value is {point}value{span} (Marko, 2026-11-10): a span of one is no span (testValueSpans has the rest)
             "2{1}                            % 2",
-            // a zero span lays the value at no uri: the empty lst, not noobj (a zero POINT annihilates)
-            "2{0}                            % []",
     }, delimiter = '%')
     void testParsesToTheSameObjAs(final String code, final String equivalent) {
         checkEquality(LOG, mParser.parse(code), mParser.parse(equivalent), true);
+    }
+
+    /**
+     * A value is {point}value{span} (Marko, 2026-11-10), and its span stays on the value's tid, curled up, until a space
+     * gives it an axis (Marko, 2026-11-11): {3}5{3} is one int with span 3 and point 3 that counts 9, not the lst of its
+     * copies. The tid is checked, not the value alone: an evaluation that folded the span into the point would still
+     * count 9, so only the span itself tells a kept span from a folded one, read, evaluated, and stored and read back.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "2{3}            % /m/int   % 3 % 1 % 3",
+            "{2}2{3}         % /m/int   % 3 % 2 % 6",
+            "{3}5{3}         % /m/int   % 3 % 3 % 9",
+            "{3}5            % /m/int   % 1 % 3 % 3",
+            "2{1}            % /m/int   % 1 % 1 % 1",
+            "2.5{2}          % /m/real  % 2 % 1 % 2",
+            "true{2}         % /m/bool  % 2 % 1 % 2",
+            "\"abc\"{2}      % /m/str   % 2 % 1 % 2",
+            "0x0102{2}       % /m/bytes % 2 % 1 % 2",
+    }, delimiter = '%')
+    void testValueSpans(final String code, final String type, final long span, final long point, final long count) {
+        final Obj value = mParser.m_obj().parse(code).<Obj>get();
+        assertEquals(f(type), value.tid().b(cInt.ONE()).d(cInt.ONE()), code + ": a spanned value keeps its base type");
+        assertEquals(cInt.of(span), value.tid().b(), code + ": the span is on the value's tid");
+        assertEquals(cInt.of(point), value.tid().d(), code + ": the point is on the value's tid");
+        assertEquals(cInt.of(count), value.c(), code + ": the value counts its span times its point");
+        assertEquals(value.tid(), ObjmtronSerializer.eval(code).tid(), code + ": evaluating it keeps its span and point");
+        // stored through the one door every write takes (Machine.write), read back through the one every read takes
+        Machine.write(f("value_span"), value);
+        assertEquals(value.tid(), Machine.read(f("value_span")).tid(), code + ": a space stores it as written and gives it back as written");
     }
 
     /**
@@ -430,9 +451,12 @@ public class mParserTest extends AbstractMetatronTest {
             "{1,2,3,4}.map(+2)                        % {3,4,5,6}",
             "1.445                                    % 1.445",
             "1.5                                      % 1.5",
-            // a laid value is its lst of copies, and a ranged value span has no layout yet
-            "2{3}                                     % [2,2,2]",
-            "2{3}.count()                             % 1",
+            // a value's span stays on it, curled up (Marko, 2026-11-11): it counts its span times its point, and a
+            // zero span is no copy at all; a ranged or negative value span does not parse
+            "2{3}.count()                             % 3",
+            "{3}5{3}.count()                          % 9",
+            "{3}5{3}.sum()                            % 45",
+            "2{0}                                     % noobj",
             "2{?}                                     % <ERROR>",
             "2{-1}                                    % <ERROR>",
             // a span is a run, computed when it applies (Marko, 2026-11-10): 1.{2,3}plus(1) runs as its unrolls,

@@ -161,12 +161,16 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── ID rendering ─────────────────────────────────────────────
 
-    private String handleIds(final Obj obj, final String objString) {
+    protected String handleIds(final Obj obj, final String objString) {
         final StringBuilder sb = new StringBuilder();
         if (obj.isObjInst()) {
             this.generateInstHead(sb, obj.asInst()).append(objString);
         } else {
             this.handleTID(sb, obj, !obj.isObjInst()).append(objString);
+            // A VALUE IS {point}value{span} (Marko, 2026-11-10): handleTID leads a base-typed value with its point, and its
+            // span trails it, so {3}5{3} writes as itself and reads back as itself (a named type writes both in its tid)
+            if (!obj.tid().b().isOne() && !obj.tid().hasPoly() && Tokens.BASE_TYPES.contains(obj.tid().basePath()))
+                sb.append('{').append(obj.tid().b()).append('}');
         }
         this.handleVID(sb, obj);
         return sb.toString();
@@ -566,7 +570,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             if (Tokens.BASE_TYPES.contains(obj.tid()))
                 return sb;
             else if (Tokens.BASE_TYPES.contains(obj.tid().basePath())) {
-                sb.append('{').append(obj.tid().c()).append('}');
+                // the point, not the count: a span trails the value (handleIds), and c() = b()*d() would fold it in
+                if (!obj.tid().d().isOne())
+                    sb.append('{').append(obj.tid().d()).append('}');
                 return sb;
             }
         }

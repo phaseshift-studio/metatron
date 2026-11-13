@@ -343,11 +343,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default fURI baseTypeID() {
         if (this.type().isRootType()) return ALL.c(this.c());
-        else if (this.isBool()) return BOOL_TID.c(this.c());
-        else if (this.isBytes()) return BYTES_TID.c(this.c());
-        else if (this.isInt()) return INT_TID.c(this.c());
-        else if (this.isReal()) return REAL_TID.c(this.c());
-        else if (this.isStr()) return STR_TID.c(this.c());
+        // A VALUE IS {point}value{span} (Marko, 2026-11-10): a scalar's base type keeps its span and its point apart,
+        // as its tid does. c() is span times point, so the base type of 2{3} written c(3) read as the point form
+        // /m/int{3}, a different type than the value's own {3}/m/int (Marko, 2026-11-11: {3}5{3} is an int)
+        else if (this.isBool()) return BOOL_TID.b(this.tid().b()).d(this.tid().d());
+        else if (this.isBytes()) return BYTES_TID.b(this.tid().b()).d(this.tid().d());
+        else if (this.isInt()) return INT_TID.b(this.tid().b()).d(this.tid().d());
+        else if (this.isReal()) return REAL_TID.b(this.tid().b()).d(this.tid().d());
+        else if (this.isStr()) return STR_TID.b(this.tid().b()).d(this.tid().d());
         else if (this.isUri()) return URI_TID.c(this.c());
         else if (this.isLst()) return LST_TID.c(this.c());
         else if (this.isRec()) return REC_TID.c(this.c());
