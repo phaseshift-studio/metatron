@@ -46,7 +46,11 @@ public interface SubQTest extends QProcTest {
             "$$/xyz/a?subq   ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
             "$$/xyz/#?subq   ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
             //   "$$/xyz/+/+?subq ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
-            "$$/xyz/+/+?subq ->sub::[code=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
+            "$$/xyz/+/+?subq ->sub::[code=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)",
+            // A BRANCH URI IS n URIS (Marko, 2026-11-13): each term passes the q-procs on its own, so a branched write
+            // reaches the subscription on its term, and a branched subscription registers on every term
+            "$$/xyz/a?subq   ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/{a,b} -> 12      % *$$/abc.eq($$/xyz/a)",
+            "$$/xyz/{a,b}?subq ->sub::[code=>>>1.to($$/abc)]           % $$/xyz/b -> 12          % *$$/abc.eq(12)"
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
         this.attachQ(SUBQ_TID);
