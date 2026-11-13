@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -141,22 +142,41 @@ public interface Processor extends Component {
             // the lhs runs i steps of the inst without its span, and the runs' results append. {2,3}plus(1) at 1 is the
             // branch of its unrolls, plus(1).plus(1) and plus(1).plus(1).plus(1), merging at noobj: {3,4}. Each step keeps
             // the inst's point, as {2}plus{3}(34) is plus{3}(34).plus{3}(34) (Theorem 7), and the zero-step run is the lhs.
-            // The code keeps the span, so a code pattern still reads {?}neg() as a run of none or one. An open span
-            // ({+}, {*}) has no last run and still applies once
+            // The code keeps the span, so a code pattern still reads {?}neg() as a run of none or one.
+            // AN OPEN SPAN LOOPS UNTIL NOOBJ (Marko, 2026-11-13): {*} is _ + a + aa + ... and {+} is a + aa + ..., each run
+            // one step past the last, until a run is noobj. A tree halts where its links run out, and a cycle in the data
+            // loops, as the expression says. (An open span applied once, 2026-11-10: it has no last run, but it has a
+            // first noobj.)
             final cInt span = inst.tid().b();
-            if (!span.isOne() && null != span.min() && null != span.max() && 0 <= span.min()) {
+            if (!span.isOne() && null != span.min() && 0 <= span.min()) {
                 final Inst step = inst.tid(inst.tid().b(null));
+                // a step that gathers, the swarm's barrier, reduces the whole stream: {1,2,3}.{0,1}sum() is {1,2,3,6}.
+                // Any other step maps over it obj by obj, as the swarm runs it, so a flatmap's stream feeds the next
+                // step one obj at a time
+                final UnaryOperator<Obj> once = current -> step.isGather()
+                        ? apply(current, step)
+                        : current.stream().map(o -> apply(o, step)).reduce(noobj(), Obj::append);
+                // the runs gather into a FRESH stream: an Objs appends in place, and the zero-step run is the lhs
+                // itself, a barrier's bag that every later run starts from again. Appended into, the bag grew by each
+                // run, and {1,2,3}.{0,2}sum() was {1,2,3,6,12}
                 Obj result = noobj();
+                if (null == span.max()) {
+                    Obj current = lhs;
+                    for (long i = 0; !current.isNoObj(); i++) {
+                        final boolean emitted = i >= span.min();
+                        result = objs(Stream.concat(result.stream(), current.stream().filter(o -> emitted || o.isUncaughtFail())));
+                        // A FAIL IS NO LINK TO FOLLOW: stepped again it answers itself, never noobj, so it ends the walk,
+                        // surfacing even short of the first emitted run
+                        if (current.stream().anyMatch(Obj::isUncaughtFail))
+                            return result;
+                        current = once.apply(current);
+                    }
+                    return result;
+                }
                 for (long i = span.min(); i <= span.max(); i++) {
                     Obj current = lhs;
-                    // a step that gathers, the swarm's barrier, reduces the whole stream: {1,2,3}.{0,1}sum() is {1,2,3,6}.
-                    // Any other step maps over it obj by obj, as the swarm runs it, so a flatmap's stream feeds the next
-                    // step one obj at a time
                     for (long j = 0; j < i; j++)
-                        current = step.isGather() ? apply(current, step) : current.stream().map(o -> apply(o, step)).reduce(noobj(), Obj::append);
-                    // the runs gather into a FRESH stream: an Objs appends in place, and the zero-step run is the lhs
-                    // itself, a barrier's bag that every later run starts from again. Appended into, the bag grew by each
-                    // run, and {1,2,3}.{0,2}sum() was {1,2,3,6,12}
+                        current = once.apply(current);
                     result = objs(Stream.of(result, current).flatMap(Obj::stream));
                 }
                 return result;

@@ -198,6 +198,12 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.out(knows).{0,1}out(created).out()>>name      % {'ripple','lop'}",
             "*/g/V/1.{0,1}out(knows).out(created)>>name            % {'lop','ripple','lop'}",
             "*/g/V/+.{0,2}out()>>name                              % {'marko','peter',{2}'vadas',{2}'josh',{5}'lop',{3}'ripple'}",
+            // an OPEN span loops until noobj (Marko, 2026-11-13): out() over the modern graph halts where the edges run out
+            "*/g/V/1.{*}out()>>name                                % {'marko','vadas','josh','lop','ripple','lop'}",
+            "*/g/V/1.{+}out()>>name                                % {'vadas','josh','lop','ripple','lop'}",
+            "*/g/V/1.{2,}out()>>name                               % {'ripple','lop'}",
+            "*/g/V/6.{*}out()>>name                                % {'peter','lop'}",
+            "*/g/V/+.{*}out().count()                              % 14",
             // the escape hatch, in the same suffix form a fused run compiles to
             "*/g/V/1.gremlin('out(\"knows\").values(\"name\")')    % {'vadas','josh'}",
     }, delimiter = '%')
