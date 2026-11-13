@@ -180,7 +180,9 @@ public interface Processor extends Component {
                     result = null == converse
                             ? objs(lhs.stream().map(o -> (Obj) MCode.of(List.of(instB(START_INST_TID, lst(o)),
                             instB(inst.tid().b(cInt.of(span.min(), -nearest)), inst.args())), CODE_TID.addQ(BLOCK), null)))
-                            : runs(lhs, stepping.apply(instB(converse, step.args())), nearest, -span.min(), result);
+                            // the converse is declared as its contract (minus?int<=int(int)), and called as any call is
+                            // keyed: that operation, with the call's own arguments
+                            : runs(lhs, stepping.apply(instB(Inst.Helper.operationTid(converse), step.args())), nearest, -span.min(), result);
                     if (null != span.max() && span.max() < 0)
                         return result;
                 }
