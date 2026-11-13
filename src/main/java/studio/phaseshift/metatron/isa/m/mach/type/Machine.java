@@ -149,6 +149,12 @@ public interface Machine extends Rec, AutoCloseable {
     static Obj read(final fURI vid) {
         if (null == ROOT_MACHINE)
             return noobj();
+        // A BRANCH URI IS n URIS READ IN PARALLEL (Marko, 2026-11-13): a/{a,b}/c is a/a/c and a/b/c, so the door
+        // linearizes it first and reads each term through itself again, where the term is aligned, dispatched and
+        // q-processed as any address is (its own network, space or variable stack), and the answers sum. The terms
+        // are read in turn, never on other threads: the machine a read runs in is the thread's (CURRENT)
+        if (vid.hasBranches())
+            return objs(vid.branches().map(term -> Machine.read(term)).flatMap(Obj::stream));
         // Authority dispatch comes FIRST, before the handoff to Memory: an address carrying an authority a peer has
         // declared is that peer's to answer, and Memory only ever sees an address already localized. Network.read
         // answers noobj for an address with no authority, or one whose authority is not in the roster, so the local
@@ -214,6 +220,18 @@ public interface Machine extends Rec, AutoCloseable {
     static Obj write(final fURI vid, final Obj obj) {
         if (null == ROOT_MACHINE)
             return noobj();
+        // ... and a write to a branch uri writes each of its terms through this door again, each its own copy, as if
+        // the obj were written once per term: a write may stamp what it is given (a ?subq registration records its
+        // target in the sub), and one obj written to n terms would carry the first term's stamp to the rest. It
+        // answers as any write does, with the obj (x -> y is y, terms or not), unless a term's write failed: then
+        // the fails, so one refused term is never hidden behind the others
+        if (vid.hasBranches()) {
+            final List<Obj> failed = vid.branches()
+                    .map(term -> Machine.write(term, Obj.Helper.deepClone(obj)))
+                    .filter(Obj::isFail)
+                    .toList();
+            return failed.isEmpty() ? obj : objs(failed);
+        }
         // Authority dispatch first, exactly as read: a declared peer's authority takes the write over the wire.
         // Network.write answers noobj for an undeclared authority, so the local path is untouched — but a declared
         // peer that is silent answers a fail, which must NOT be swallowed by the local fall-through.

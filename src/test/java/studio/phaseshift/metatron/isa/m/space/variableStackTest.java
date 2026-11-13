@@ -40,4 +40,22 @@ public class variableStackTest extends AbstractMetatronTest {
     void testVariablePersistence(final String code, final String expected) {
         checkCodeEvaluate(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // A BRANCH URI IS A SUM OF ADDRESSES (Marko, 2026-11-10): br/{a,b}/c -> 23 binds br/a/c and br/b/c, and
+            // *br/{a,b}/c reads both into one stream
+            "br/{a,b}/c -> 23; *br/{a,b}/c                 % {2}23",
+            "br/{a,b}/c -> 23; *br/a/c                     % 23",
+            "br/{a,b}/c -> 23; *br/b/c                     % 23",
+            // an unbound branch adds nothing
+            "br/{a,b}/c -> 23; *br/{b,q}/c                 % 23",
+            // the branches are separate bindings: rebinding one leaves the other
+            "br/{a,b}/c -> 23; br/a/c -> 7; *br/{a,b}/c    % {7,23}",
+            // the write answers its obj, as any write does (x -> y is y), however many bindings it made
+            "br/{a,b}/c -> 23                              % 23",
+    }, delimiter = '%')
+    void testBranchBindings(final String code, final String expected) {
+        checkCodeEvaluate(LOG, code, expected);
+    }
 }

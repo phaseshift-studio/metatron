@@ -144,6 +144,52 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
+    @ParameterizedTest()
+    @TestData(value = {
+            // A BRANCH URI IS A SUM OF ADDRESSES (Marko, 2026-11-10), n uris read and written in parallel (2026-11-13):
+            // the door linearizes it, and its write writes each term
+            "/t/br/{a,b}/c -> 23"
+    })
+    @CsvSource(value = {
+            "*/t/br/{a,b}/c                        % {2}23",
+            // two branched segments are the product of their terms, four addresses, two of them written
+            "*/t/br/{a,b}/{c,d}                    % {2}23",
+            "/t/br/{a,b}/{c,d} -> 1; */t/br/{a,b}/{c,d}  % {4}1",
+            "*/t/br/a/c                            % 23",
+            "*/t/br/b/c                            % 23",
+            "*/t/br/+/c                            % {2}23",
+            // a branch that holds nothing adds nothing, and a branch may span segments
+            "*/t/br/{a,b,q}/c                      % {2}23",
+            "*/t/br/{a/x,b}/c                      % 23",
+            // a sum, not a union: the wildcard and the a branch both read /t/br/a/c
+            "*/t/br/{+,a}/c                        % {3}23",
+            // the branches are separate addresses: rewriting or deleting one leaves the other
+            "/t/br/a/c -> 7; */t/br/{a,b}/c        % {7,23}",
+            "/t/br/a/c -> noobj; */t/br/{a,b}/c    % 23",
+            // the write answers its obj, as any write does (x -> y is y), however many terms it wrote
+            "/t/br/{x,y}/c -> 5                    % 5",
+            "/t/br/{x,y}/c -> noobj                % noobj",
+    }, delimiter = '%')
+    void testBranchReadWrite(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+
+    @ParameterizedTest()
+    @TestData(value = {
+            // branches in different spaces are written to, and read from, each their own space
+            "memspace::[pattern=>/u/#]@/sys/space/mem_u",
+            "/{t,u}/br -> 23"
+    }, oneTime = true)
+    @CsvSource(value = {
+            "*/t/br                  % 23",
+            "*/u/br                  % 23",
+            "*/{t,u}/br              % {2}23",
+            "*/{t,u,v}/br            % {2}23",
+    }, delimiter = '%')
+    void testBranchesAcrossSpaces(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+
     @Override
     protected boolean skipBasicOperations() {
         return false;
