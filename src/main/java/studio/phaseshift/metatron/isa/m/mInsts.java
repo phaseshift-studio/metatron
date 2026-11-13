@@ -740,6 +740,12 @@ public final class mInsts {
                         .body((lhs, _) -> lhs.asLst().zero())
                         .law(Law.unit, Law.idempotent, Law.pure)
                         .create(),
+                InstBuilder.build().tid(ONE_INST_TID, "the one of the lst slot product: one slot holding the one() instruction")
+                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the one lst")
+                        .argLst()
+                        .body((lhs, _) -> lhs.asLst().one())
+                        .law(Law.idempotent, Law.pure)
+                        .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "append the slots of the argument lst onto the slots of the lhs lst")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID, "the concatenated lst")
                         .argLst(LST_TYPE, "the lst to append")
@@ -756,10 +762,10 @@ public final class mInsts {
                         })
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(MULT_INST_TID, "pair every slot of the lhs lst with every slot of the argument lst")
-                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the lst of slot pairs")
-                        .argLst(LST_TYPE, "the lst to pair with")
-                        .body((lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList()))
+                InstBuilder.build().tid(MULT_INST_TID, "multiply every slot of the lhs lst by every slot of the argument lst, each by its own product")
+                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the lst of slot products, lhs-major")
+                        .argLst(LST_TYPE, "the lst to multiply by")
+                        .body((lhs, inst) -> lhs.asLst().mult(inst.arg(0).asLst()))
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(SPLIT_INST_TID, "split the lhs into the slots of the lst the argument inst builds")

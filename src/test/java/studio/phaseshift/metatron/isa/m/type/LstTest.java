@@ -59,6 +59,32 @@ public class LstTest extends AbstractAlgebraTest {
         return lst(jnt(1), jnt(2), jnt(3));
     }
 
+    /// THE SLOT PRODUCT — a lst multiplies as the ordered sum of its slots: every slot of the lhs by every slot of the
+    /// argument, lhs-major, each by its own type's product. The unit is [one()], one slot holding the one()
+    /// instruction, the one of whatever slot it meets, so it is the unit for lsts of every slot type. The empty lst
+    /// annihilates, and a product that is noobj is no slot: a lst of arrows is a relation, its product composition.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2].mult([3,4])                                                            % [3,4,6,8]",
+            "[1,2] * [3,4]                                                                % [3,4,6,8]",
+            "[true,false].mult([false,true])                                              % [false,true,false,false]",
+            "[1,2].mult([one()])                                                          % [1,2]",
+            "[one()].mult([1,2])                                                          % [1,2]",
+            "[2.5].mult([one()])                                                          % [2.5]",
+            "[1,2].mult([])                                                               % [,]",
+            "[].mult([1,2])                                                               % [,]",
+            "[1,2].mult([3,4]).mult([5,6])                                                % [1,2].mult([3,4].mult([5,6]))",
+            "[1].plus([2]).mult([3,4])                                                    % [1].mult([3,4]).plus([2].mult([3,4]))",
+            "[1,2].one()                                                                  % [one()]",
+            "['a','b'].one()                                                              % [1,2].one()",
+            "[(a=>1),(b=>2)].mult([(1=>x),(2=>y)])                                        % [(a=>x),(b=>y)]",
+            "[(a=>1)].mult([(id()=>id())])                                                % [(a=>1)]",
+            "[(a=>1)].mult([one()])                                                       % [(a=>1)]",
+    }, delimiter = '%')
+    public void testSlotProduct(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "[1,2,3]>> -1                                                                 % 3",

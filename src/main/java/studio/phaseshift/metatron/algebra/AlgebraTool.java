@@ -173,7 +173,9 @@ public final class AlgebraTool {
         partners.put(URI_TID.basePath(), uri(f("/c/d")));
         partners.put(LST_TID.basePath(), lst(jnt(4), jnt(5), jnt(6)));
         partners.put(REC_TID.basePath(), MRec.rec(uri("c"), jnt(3), uri("d"), jnt(4)));
-        partners.put(REL_TID.basePath(), rel(uri("c"), jnt(3)));
+        // rel's partner MEETS the probe a=>1 at both ends (a=>1 · 1=>a is a=>a, 1=>a · a=>1 is 1=>1), so composition
+        // is tested on arrows: a partner that meets neither end composes to noobj, and every check is noobj = noobj
+        partners.put(REL_TID.basePath(), rel(jnt(1), uri("a")));
         partners.put(CODE_TID.basePath(), instB(mInstSet.END_INST_TID, lst()));
         return Collections.unmodifiableMap(partners);
     }

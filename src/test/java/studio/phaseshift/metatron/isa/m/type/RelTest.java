@@ -47,11 +47,11 @@ public class RelTest extends AbstractAlgebraTest {
         return REL_TYPE;
     }
 
-    /// NOTE (kept from the interface-based guard this class used to carry): rel-arrow is a pair of monoids but not
-    /// a rig — plus has the noobj sink as a live zero (0+a = a = a+0) while mult composes over that sink only
-    /// partially (0*a => noobj=>noobj), so the rig annihilator 0*a = 0 does not hold for arrows; union over full
-    /// relations lives at the lst-of-arrows level. rel::T declares no theory instance of its own (yet), so the derived
-    /// test above skips it by name rather than going silently green.
+    /// rel::T's algebra is its composition MONOID: (a=>b)·(b=>c) is a=>c, the identity is the parametric unity
+    /// id()=>id(), and arrows that do not meet compose to noobj, the absorbing zero. It declares no additive instance:
+    /// plus leaves the carrier (two arrows sum to a stream, a relation, whose + is the stream ring's), so a stream on
+    /// the left of plus re-adds its argument once per arrow, and the zero, noobj, cannot be named in an instance rec
+    /// (a rec drops a noobj entry). With only mult bound, the inherited plus templates skip rel by name.
 
     @Override
     protected Obj sample() {
@@ -64,22 +64,16 @@ public class RelTest extends AbstractAlgebraTest {
     /// ////////////////////////////////////////////////////////////////////////
 
     ///
-    /// zero-sink laws — zero of rel::T is the sink rel (noobj=>noobj), a proper member of the
-    /// type.  Pinned in the space-bearing ring syntax (spaceless * is pointer-deref, not mult):
-    ///   (a=>b) + (noobj=>noobj) = (a=>b)         plus-identity, zero on the right
-    ///   (noobj=>noobj) + (a=>b) = (a=>b)         plus-identity, zero on the left
-    ///   (a=>b) * (noobj=>noobj) = (noobj=>noobj) annihilation to zero (zero on the right, green)
-    ///
-    /// KNOWN CANONICALIZATION TARGET (red, not pinned as a law): zero on the *left* through a
-    /// member, zero().mult(a), renders the zero as noobj=>noobj while the bare zero prints noobj —
-    /// a zero-refinement render split (zero().zero() != zero() as a render).  Value is identical
-    /// (Rel.zero() is receiver-static); Int/Lst do not split.  Fix = canonical zero-tid render
-    /// on rel, which touches the type system (JObjFactory reads tid.isZero()), so it is
-    /// isolated here rather than forced green.
+    /// zero-sink laws — the zero of rel::T is noobj: noobj=>noobj, an arrow with no object at either end, is no
+    /// arrow (Rel.isNoObj). Pinned in the space-bearing ring syntax (spaceless * is pointer-deref, not mult):
+    ///   (a=>b) + (noobj=>noobj) = (a=>b)          plus-identity, zero on the right
+    ///   {(noobj=>noobj),(a=>b)} = (a=>b)          plus-identity, zero on the left — the sum written as a stream,
+    ///                                             as noobj on the left of + takes no instruction
+    ///   (a=>b) * (noobj=>noobj) = (noobj=>noobj)  annihilation to zero
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b) + (noobj=>noobj)                                         % (a=>b)",
-            "(noobj=>noobj) + (a=>b)                                         % (a=>b)",
+            "{(noobj=>noobj),(a=>b)}                                         % (a=>b)",
             "(a=>b) * (noobj=>noobj)                                         % (noobj=>noobj)",
     }, delimiter = '%')
     public void testRelZeroSink(final String code, final String expected) {
@@ -88,15 +82,15 @@ public class RelTest extends AbstractAlgebraTest {
 
     ///
     /// canonical-zero divergence probe — does zero resolve identically via a deref'd element
-    /// (*a) vs a literal rel (a=>1)?  If these disagree, the zero-of-rel is routing through a
-    /// non-rel dispatch (bare noobj) on one path and the rel sink (noobj=>noobj) on the other.
+    /// (*a) vs a literal rel (a=>1)?  The zero is noobj on both paths, so nothing can be asked OF it
+    /// (its type, a plus on its left): 0 + a is written as the stream ring's sum, ⟨a⟩(0 + 1) = ⟨a⟩.
     @Training.SkipTraining(
             reason = "the rows depend on the memory write the method performs (a -> a=>1) and compare against a second expression; without that state *a.zero() yields 0, not a rel zero")
     @ParameterizedTest
     @CsvSource(value = {
             "*a.zero()                                                    % (a=>1).zero()",
-            "*a.zero().type()                                             % rel::T",
-            "*a.zero() + *a                                              % *a",
+            "*a.zero()                                                    % noobj",
+            "*a.branch(zero(),id())                                      % *a",
             "*a * (noobj=>noobj)                                         % (noobj=>noobj)",
             "*a.zero().tid()                                             % (a=>1).zero().tid()",
             "*a.zero().type()                                            % (a=>1).zero().type()",

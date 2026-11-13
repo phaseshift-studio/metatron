@@ -28,13 +28,14 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.List;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.one_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -42,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -233,11 +234,28 @@ public final class mTypes {
                                 uri(ID), bytes(new byte[0])),
                         MONOID_THEORY_TID, null))));
         // lst: a NON-commutative monoid under concatenation (PLUS), identity the empty lst — [a]+[b] is [a,b]
-        // while [b]+[a] is [b,a], which is why the theory is monoid, not commutative_monoid
+        // while [b]+[a] is [b,a], which is why the theory is monoid, not commutative_monoid — and a monoid under the
+        // slot product (MULT), [x,y]·[a,b] is [x·a,x·b,y·a,y·b] by each slot type's own product, whose identity is
+        // [one()]: one slot holding the one() instruction, the one of whatever slot it meets. The product distributes
+        // over concatenation on the right only (on the left, up to order), so the two monoids are declared apart
         declare(LST_TYPE, rec(mutableMap(
                 uri("add_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
                                 uri(ID), lst()),
+                        MONOID_THEORY_TID, null),
+                uri("mul_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(MULT_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
+                                uri(ID), lst(one_().tryToInst())),
+                        MONOID_THEORY_TID, null))));
+        // rel: a monoid under composition (MULT), (a=>b)·(b=>c) is a=>c, whose identity is the parametric unity
+        // id()=>id() — the identity instruction at both ends, standing for the diagonal relation. Arrows that do not
+        // meet compose to noobj, the zero, which absorbs. There is no additive instance: plus leaves the carrier (two
+        // arrows sum to a stream, and a stream's + is the stream ring's), and its zero, noobj, cannot be named in a
+        // rec, which drops a noobj entry
+        declare(REL_TYPE, rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(MULT_INST_TID.dom(REL_TID).rng(REL_TID)).tryToInst(),
+                                uri(ID), rel(id_().tryToInst(), id_().tryToInst())),
                         MONOID_THEORY_TID, null))));
         // rec: a COMMUTATIVE monoid under deep merge (PLUS), identity the empty rec — merge is keyed, so the
         // order of the two operands does not change the result. Both structures are declared: a theory refines no

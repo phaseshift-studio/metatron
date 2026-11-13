@@ -36,7 +36,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ONE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.mult_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.one_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -176,6 +179,36 @@ public interface Lst extends Poly<Lst, List<Obj>> {
     @Override
     default Lst zero() {
         return lst(new ArrayList<>());
+    }
+
+    /**
+     * The slots of both lsts multiplied pairwise, lhs-major — {@code [x,y]·[a,b]} is {@code [x·a,x·b,y·a,y·b]} — by
+     * each slot type's own product, so a lst multiplies as the ordered sum of its slots ({@link #plus}): the product
+     * is right-distributive, and associative wherever the slots' products are. A slot holding the one() instruction
+     * is the unit on either side ({@link #one()}), and a product that is noobj is no slot: arrows that do not meet add
+     * nothing to a relation.
+     */
+    default Lst mult(final Lst rhs) {
+        final List<Obj> list = new ArrayList<>();
+        this.<Obj>elements().forEach(a -> rhs.<Obj>elements().forEach(b -> {
+            final Obj product = isOne(a) ? b : isOne(b) ? a : mult_(b).apply(a);
+            if (!product.isNoObj())
+                list.add(product);
+        }));
+        return this.<Lst>jvm(list).c(cInt::one);
+    }
+
+    /**
+     * The unit of {@link #mult}: one slot holding the one() instruction. The instruction stands for the one of
+     * whatever slot it meets, so this one finite lst is the unit for lsts of ints, of reals, of arrows, … — a family
+     * no single value could be.
+     */
+    default Lst one() {
+        return lst(one_().tryToInst());
+    }
+
+    private static boolean isOne(final Obj slot) {
+        return slot.isObjInst() && slot.asInst().tid().path().equals(ONE_INST_TID.path());
     }
 
     @Override
