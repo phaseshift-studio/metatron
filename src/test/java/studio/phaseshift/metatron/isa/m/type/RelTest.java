@@ -647,6 +647,32 @@ public class RelTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
+    ///
+    /// COMPOSITION PROPAGATES THE JOIN — an arrow is the stream function is(dom)·rng, so (a=>b)·(c=>d) applies d to
+    /// the join b once b matches c. A value range is a constant, so arrows between values compose as before; a code
+    /// range consumes the join; a domain filters by value, by type or by predicate; a partial identity keeps the
+    /// join; a range that fans out is an arrow per object. An arrow whose range is code composes as code, so the
+    /// product regroups before any object arrives: (1=>2)·(?int=>plus(1))·(3=>x) is 1=>x either way.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "(1=>2) * (2=>3)                                                    % (1=>3)",
+            "(1=>2) * (3=>4)                                                    % noobj",
+            "(a=>2) * (?int::T => plus(1))                                      % (a=>3)",
+            "(a=>'x') * (?int::T => plus(1))                                    % noobj",
+            "(a=>2) * (?>1 => mult(10))                                         % (a=>20)",
+            "(a=>2) * (?>9 => mult(10))                                         % noobj",
+            "(marko=>josh) * (josh => id())                                     % (marko=>josh)",
+            "(marko=>'josh') * (?str::T => id())                                % (marko=>'josh')",
+            "(a=>2).mult((?int::T => branch(plus(1),plus(2))))                  % {(a=>3),(a=>4)}",
+            "[(a=>2)] * [(?int::T => branch(plus(1),plus(2)))]                  % [(a=>3),(a=>4)]",
+            "(1=>2).mult((?int::T => plus(1))).mult((3=>x))                     % (1=>x)",
+            "(1=>2).mult((?int::T => plus(1)).mult((3=>x)))                     % (1=>x)",
+            "(1=>2).mult((?int::T => plus(1)).mult((4=>x)))                     % noobj",
+    }, delimiter = '%')
+    public void testRelCompositionPropagatesTheJoin(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
 ///////////////////////////////////////////////////////////////////////////
 // RING STRUCTURE - INVERSE PROPERTIES
 

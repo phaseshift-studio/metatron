@@ -35,9 +35,11 @@ import static studio.phaseshift.metatron.Tokens.REL_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRelRecursion;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -214,26 +216,34 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>> {
     }
 
     /**
-     * Relation multiplication: composition of relations.
-     * (a=>b).mult(b=>c) = (a=>c) when the range of first matches domain of second.
-     * If they don't compose, returns noobj relation.
+     * Relation multiplication: composition, with each arrow read as the stream function {@code is(dom)·rng} — keep
+     * what matches the domain, then apply the range. When this arrow's range is an object, the JOIN, the argument's
+     * domain filters it and the argument's range is APPLIED to it: {@code (a=>b)·(c=>d)} is {@code a=>b.d}, one
+     * arrow per object {@code d} yields, and nothing when {@code b} does not match {@code c}. A value range is a
+     * constant, so arrows between values compose as they always have ({@code (1=>2)·(2=>3)} is {@code 1=>3}), and a
+     * code range consumes the join ({@code (a=>2)·(int=>plus(1))} is {@code a=>3}). When this arrow's range is code,
+     * the join is still to come, so the composite defers this very step: its range runs the code, lifts each object
+     * it yields into that object's own arrow, composes it with the argument, and reads the range —
+     * {@code (a=>f)·(c=>d)} is {@code a=>f.-<(id()=>id()).mult((c=>d)).rng()}. Either way the join propagates
+     * forward, and the product is the stream ring's composition: associative, with the unity id()=>id() and the zero
+     * noobj=>noobj.
      */
-    default Rel mult(final Rel rhs) {
-        // Handle identity cases first
+    default Obj mult(final Rel rhs) {
         if (this.isOne()) return rhs;
         if (rhs.isOne()) return this;
         if (this.isZero() || rhs.isZero()) return this.zero();
-
-        // Relation composition: (a=>b) × (b=>c) = (a=>c)
-        // The range of this must match (or be compatible with) the domain of rhs
-        if (this.jvm().get1().test(rhs.jvm().get0())) {
-            // Compose: take domain from this, range from rhs
-            // Use jvm().get0() and jvm().get1() directly to avoid autoResolve
-            return rel(this.jvm().get0(), rhs.jvm().get1());
-        } else {
-            // Non-composable relations return zero
+        final Obj domain = this.jvm().get0();
+        final Obj join = this.jvm().get1();
+        if (join.isObjCall())
+            return rel(domain, code(Stream.concat(join.asCall().insts().stream(),
+                    split_(this.one()).mult_(rhs).rng_().insts().stream()).toList()));
+        if (!join.test(rhs.jvm().get0()))
             return this.zero();
-        }
+        final Obj image = rhs.jvm().get1().apply(join);
+        if (image.isFail())
+            return image;
+        final List<Obj> arrows = image.stream().map(y -> (Obj) rel(domain, y)).toList();
+        return arrows.isEmpty() ? this.zero() : 1 == arrows.size() ? arrows.getFirst() : objs(arrows);
     }
 
     /**

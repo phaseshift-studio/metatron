@@ -121,6 +121,30 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
     }
 
     /**
+     * TRAVERSAL BY RELATION COMPOSITION — a vertex walks its labelled adjacency as its address does
+     * ({@code >>OUT/knows/IN}), so a label is an arrow whose range is that walk ({@code (id() => >>OUT/knows/IN)} is
+     * out(knows)), a start vertex is its own arrow ({@code v.split((id()=>id()))} is v=>v, g.V(v)), and a traversal is
+     * the product: the join propagates through each step while the start stays on the left. A filter is a partial
+     * identity, its domain the test and id() its range.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1.>>OUT/knows/IN/name                                                                       % {\"vadas\",\"josh\"}",
+            "*/g/V/1.>>OUT/knows.count()                                                                       % 2",
+            "*/g/V/2.>>IN/knows/OUT/name                                                                       % \"marko\"",
+            "*/g/V/1.>>OUT/created/IN/name                                                                     % \"lop\"",
+            "*/g/V/1.split((id()=>id())).mult((id() => >>OUT/knows/IN)).count()                                % 2",
+            "*/g/V/1.split((id()=>id())).mult((id() => >>OUT/knows/IN)).mult((id() => >>name)).rng()          % {\"vadas\",\"josh\"}",
+            "*/g/V/1.split((id()=>id())).mult((id() => >>OUT/knows/IN)).mult((id() => >>name)).dom().>>name   % {2}\"marko\"",
+            "*/g/V/1.split((id()=>id())).mult((id() => >>OUT/knows/IN)).mult(([age=>?>30] => id())).rng().>>name % \"josh\"",
+            "*/g/V/2.split((id()=>id())).mult((id() => >>IN/knows/OUT)).mult((id() => >>name)).rng()          % \"marko\"",
+            "*/g/V/1.split((id()=>id())).mult((?person::T => >>OUT/created/IN)).mult((id() => >>name)).rng()   % \"lop\"",
+    }, delimiter = '%')
+    public void testRelationTraversals(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
      * Instruction-call traversals off a SINGLE address ({@code /g/V/1.out()}).
      * <p>
      * A single element is the case where metatron detaches the vid ({@code vid(null)}) and

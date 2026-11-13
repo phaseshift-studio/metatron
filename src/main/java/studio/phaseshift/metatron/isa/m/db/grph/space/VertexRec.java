@@ -79,6 +79,9 @@ public class VertexRec extends ElementRec<Vertex> {
      * Intercept OUT/IN key access — handles both single-segment keys and
      * multi-segment cascade paths like /OUT/+/IN/name by decomposing the
      * first segment as a structural direction, then cascading the remainder.
+     * The segment after the direction names the edge LABEL, as the space's own
+     * address walk reads it ({@code v/OUT/knows/IN}): a wildcard, a direction or
+     * an external {@code scheme:label} names none, and cascades as before.
      */
     @Override
     public Obj at(final Obj key) {
@@ -92,13 +95,17 @@ public class VertexRec extends ElementRec<Vertex> {
         if (!isOut && !isIn && !"BOTH".equalsIgnoreCase(first))
             return super.at(key);
 
+        final String second = segs.size() > 1 ? segs.get(1) : null;
+        final boolean hasLabel = null != second && !"+".equals(second) && !"#".equals(second)
+                && !"IN".equalsIgnoreCase(second) && !"OUT".equalsIgnoreCase(second) && second.indexOf(':') < 0;
+        final String[] labels = hasLabel ? new String[]{second} : new String[0];
         final Direction dir = isIn ? Direction.IN : isOut ? Direction.OUT : null;
         Stream<Obj> stream = dir != null
-                ? edges(dir)
-                : Stream.concat(edges(Direction.OUT), edges(Direction.IN));
+                ? edges(dir, labels)
+                : Stream.concat(edges(Direction.OUT, labels), edges(Direction.IN, labels));
 
         // Cascade remaining segments through the edges
-        for (int i = 1; i < segs.size(); i++) {
+        for (int i = hasLabel ? 2 : 1; i < segs.size(); i++) {
             final String seg = segs.get(i);
             if ("+".equals(seg)) continue;
             if ("#".equals(seg)) break;
