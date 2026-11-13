@@ -418,6 +418,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
                         <span class="article-formats">
                             <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.md">md</a>
                         </span>
                     </li>
                     <li class="article-row">
@@ -554,6 +555,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[=&gt;]]],
+             inst=&gt;[
+              as?str&lt;=widget(str::T){&lt;j&gt;},
+              display?{0}&lt;=widget(){&lt;j&gt;},
+              nano?#{?}&lt;=(){&lt;j&gt;},
+              less?{0}&lt;=str(isa(int::T).else(10)){&lt;j&gt;}],
              type=&gt;[
               rec::T[][ctor?console&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/console,
               uri::T[?union(top_left,
@@ -682,12 +688,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               widget::T[?[
                {?}data=&gt;rec::T,
                {?}context=&gt;int::T,
-               {?}total=&gt;int::T]][ctor?stack_bar_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/stack_bar_widget],
-             inst=&gt;[
-              as?str&lt;=widget(str::T){&lt;j&gt;},
-              display?{0}&lt;=widget(){&lt;j&gt;},
-              nano?#{?}&lt;=(){&lt;j&gt;},
-              less?{0}&lt;=str(isa(int::T).else(10)){&lt;j&gt;}]]@/m/sys/ui</code></pre>
+               {?}total=&gt;int::T]][ctor?stack_bar_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/stack_bar_widget]]@/m/sys/ui</code></pre>
                     </div>
                 </div>
             </div>
@@ -819,8 +820,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#an accordion obj" class="text-success">an accordion obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
-  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
+  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__anchor">
@@ -982,8 +983,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a matrix of glyphs" class="text-success">a matrix of glyphs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#grid" class="text-light">grid</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line'" class="text-info">&#39;a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line&#39;</a>
-  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title drawn in the top border'" class="text-info">&#39;the title drawn in the top border&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title drawn in the top border'" class="text-info">&#39;the title drawn in the top border&#39;</a>
+  <a href="#grid" class="text-light">grid</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line'" class="text-info">&#39;a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__menu_bar_widget">
@@ -1027,8 +1028,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a menu bar widget" class="text-success">a menu bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lines" class="text-light">lines</a> <span class="text-light">=&gt;</span> <a href="#'a lst of line widgets laid out across the bar'" class="text-info">&#39;a lst of line widgets laid out across the bar&#39;</a>
-  <a href="#height" class="text-light">height</a> <span class="text-light">=&gt;</span> <a href="#'the interior height of the menu bar in rows'" class="text-info">&#39;the interior height of the menu bar in rows&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#height" class="text-light">height</a> <span class="text-light">=&gt;</span> <a href="#'the interior height of the menu bar in rows'" class="text-info">&#39;the interior height of the menu bar in rows&#39;</a>
+  <a href="#lines" class="text-light">lines</a> <span class="text-light">=&gt;</span> <a href="#'a lst of line widgets laid out across the bar'" class="text-info">&#39;a lst of line widgets laid out across the bar&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__modal_widget">
@@ -1072,8 +1073,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#modal" class="text-success">modal</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
-  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
+  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__network_panel_tool">
@@ -1195,8 +1196,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#panel" class="text-success">panel</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
-  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
+  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__progress_table_widget">
@@ -1325,9 +1326,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a stack bar widget" class="text-success">a stack bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
-  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
   <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#"the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)"" class="text-info">&quot;the sections: [key =&gt; int], each labelled by its key and drawn smallest first, largest last; the reserved key &lt;&gt; (the empty uri) is the what-is-left section — drawn last, wearing the unused section&#39;s style (dark by default)&quot;</a>
+  <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__style">
@@ -1529,10 +1530,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
-  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
   <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
   <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__tree_widget">

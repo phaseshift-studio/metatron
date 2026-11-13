@@ -418,6 +418,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
                         <span class="article-formats">
                             <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.md">md</a>
                         </span>
                     </li>
                     <li class="article-row">
@@ -927,15 +928,16 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/39
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/43
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/40
+==&gt;[body=&gt;'another one']@tbledoc:note/44
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;27
 ==&gt;24
 ==&gt;12
 ==&gt;21
 ==&gt;18
+==&gt;41
 ==&gt;15
 ==&gt;9
 ==&gt;3
@@ -944,6 +946,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;16
 ==&gt;38
 ==&gt;7
+==&gt;42
 ==&gt;35
 ==&gt;19
 ==&gt;32
@@ -960,11 +963,13 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;40
 ==&gt;17
 ==&gt;26
+==&gt;43
 ==&gt;20
 ==&gt;23
 ==&gt;28
 ==&gt;22
 ==&gt;33
+==&gt;44
 ==&gt;2
 ==&gt;25
 ==&gt;30

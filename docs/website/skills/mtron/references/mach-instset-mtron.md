@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
+           {?}resolver=>'the third stage — the walk that th...',
            {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
-           {?}rewriter=>'the second stage — the code::T to ...',
-           {?}resolver=>'the third stage — the walk that th...'],
+           {?}rewriter=>'the second stage — the code::T to ...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -275,9 +275,9 @@ mtron> */m/mach/component/processor?docq
      {?}result=><#{*}>::T,
      {?}tracer=>tracer::T]]@/m/mach/component/processor,
           args=>[
-           {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
            {?}result=>'the objs the last evaluation produ...',
+           {?}state=>'the run state: stop, run or pause',
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -373,11 +373,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
+           {?}pattern=>'the branch this network answers as...',
+           {?}peer=>"machine's own connections, one per...",
            {?}listener=>'the sockets this machine serves th...',
            {?}roster=>'known machines, connectionless: <h...',
-           {?}status=>'the health method — an auto inst c...',
-           {?}pattern=>'the branch this network answers as...',
-           {?}peer=>"machine's own connections, one per..."],
+           {?}status=>'the health method — an auto inst c...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',

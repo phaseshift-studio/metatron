@@ -418,6 +418,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
                         <span class="article-formats">
                             <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.md">md</a>
                         </span>
                     </li>
                     <li class="article-row">
@@ -940,8 +941,8 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
     <p class="mb-0 text-light"> the computing instance a processor mints for one evaluation: the code it runs and the state of the run</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the state of the run'" class="text-info">&#39;the state of the run&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code::T the computer runs'" class="text-info">&#39;the code::T the computer runs&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code::T the computer runs'" class="text-info">&#39;the code::T the computer runs&#39;</a>
+  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the state of the run'" class="text-info">&#39;the state of the run&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread__core">
@@ -1471,10 +1472,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
   <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
   <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
@@ -1580,10 +1581,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> the swarm processor&#39;s computer: monads move along the instruction chain independently, a barrier gathers them, and the halted monads are the result</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache__run" class="text-light">run</a> <span class="text-light">=&gt;</span> <a href="#'the monads still computing (inst x obj)'" class="text-info">&#39;the monads still computing (inst x obj)&#39;</a>
-  <a href="#{?}cache__barrier" class="text-light">barrier</a> <span class="text-light">=&gt;</span> <a href="#'the ordered barriers of the code, a lst[monad]'" class="text-info">&#39;the ordered barriers of the code, a lst[monad]&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache__barrier" class="text-light">barrier</a> <span class="text-light">=&gt;</span> <a href="#'the ordered barriers of the code, a lst[monad]'" class="text-info">&#39;the ordered barriers of the code, a lst[monad]&#39;</a>
   <a href="#{?}cache__halted" class="text-light">halted</a> <span class="text-light">=&gt;</span> <a href="#'the monads that halted, the result (inst0 x obj)'" class="text-info">&#39;the monads that halted, the result (inst0 x obj)&#39;</a>
   <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the three monad streams that are the state of the computation'" class="text-info">&#39;the three monad streams that are the state of the computation&#39;</a>
+  <a href="#{?}cache__run" class="text-light">run</a> <span class="text-light">=&gt;</span> <a href="#'the monads still computing (inst x obj)'" class="text-info">&#39;the monads still computing (inst x obj)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__swarm_processor">
