@@ -673,7 +673,7 @@ public class mParser {
                 newCode.add(instB(headTID, lst(first.isInst() ? noobj() : first)));
             else newCode.addAll(head);
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
-            return MCode.of(newCode, Tokens.CODE_TID, pick(t, 3)).tryToInst();
+            return MCode.of(startAfterEnd(newCode), Tokens.CODE_TID, pick(t, 3)).tryToInst();
         });
     }
 
@@ -993,7 +993,27 @@ public class mParser {
         final List<Inst> insts = new ArrayList<>();
         for (final Obj statement : statements)
             appendToInstList(insts, statement);
-        return MCode.of(insts, Tokens.CODE_TID, null).tryToInst();
+        return MCode.of(startAfterEnd(insts), Tokens.CODE_TID, null).tryToInst();
+    }
+
+    /**
+     * ';' IS end(), AND WHAT FOLLOWS IT STARTS OVER (Marko, 2026-11-13): "; has a rng of noobj{0}. It should not
+     * propagate it to the next inst. the next inst should be a start() dom noobj{0} and thus, no shared data across
+     * ;". An instruction after an end() that is not a start gets a start() in front of it, wherever the end() came
+     * from (the ';' sugar or a written .end()): {@code y -> {3}5; *y} is {@code start(y).ref({3}5).end().start().from(y)}
+     * and reads y afresh. Without it, from(y) took end()'s noobj{0} and the statement never ran. A statement led by a
+     * value already starts with its own start(x), and an empty one (';;') has nothing to start: an end() follows.
+     */
+    private static List<Inst> startAfterEnd(final List<Inst> insts) {
+        final List<Inst> started = new ArrayList<>(insts.size() + 1);
+        for (int i = 0; i < insts.size(); i++) {
+            started.add(insts.get(i));
+            if (END_INST_TID.equals(insts.get(i).tid().basePath()) && i + 1 < insts.size()
+                    && !START_INST_TID.equals(insts.get(i + 1).tid().basePath())
+                    && !END_INST_TID.equals(insts.get(i + 1).tid().basePath()))
+                started.add(instB(START_INST_TID, lst(noobj())));
+        }
+        return started;
     }
 
     /**
@@ -1604,10 +1624,11 @@ public class mParser {
                 opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix())
                 .map(t -> {
                     final List<Object> elements = runs(pick(t, 2));
-                    return elements.size() == 1 ? elements.getFirst() : new MCode((List) elements
+                    return elements.size() == 1 ? elements.getFirst() : new MCode((List) startAfterEnd(elements
                             .stream()
                             .filter(x -> x instanceof Inst)
-                            .toList(), pick(t, 0), pick(t, 4)).tryToInst();
+                            .map(x -> (Inst) x)
+                            .toList()), pick(t, 0), pick(t, 4)).tryToInst();
                 });
     }
 
