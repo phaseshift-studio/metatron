@@ -27,9 +27,12 @@ import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -183,6 +186,15 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.out(knows).out(created)>>name                 % {'ripple','lop'}",
             "*/g/V/1.out(knows).out(created)>>name.count()         % 2",
             "*/g/V/1.out(knows)>>name.count()                      % 2",
+            // a SPAN is a run of steps, not a count ({0,2}out() is _ + out() + out().out()): it breaks the fused run
+            "*/g/V/1.{0,2}out()>>name                              % {'marko','vadas','josh','lop','ripple','lop'}",
+            "*/g/V/1.{1,2}out()>>name                              % {'vadas','josh','lop','ripple','lop'}",
+            "*/g/V/1.{0,1}out()>>name                              % {'marko','vadas','josh','lop'}",
+            "*/g/V/1.{2}out()>>name                                % {'ripple','lop'}",
+            "*/g/V/1.{0}out()>>name                                % \"marko\"",
+            "*/g/V/1.out(knows).{0,1}out(created).out()>>name      % {'ripple','lop'}",
+            "*/g/V/1.{0,1}out(knows).out(created)>>name            % {'lop','ripple','lop'}",
+            "*/g/V/+.{0,2}out()>>name                              % {'marko','peter',{2}'vadas',{2}'josh',{5}'lop',{3}'ripple'}",
             // the escape hatch, in the same suffix form a fused run compiles to
             "*/g/V/1.gremlin('out(\"knows\").values(\"name\")')    % {'vadas','josh'}",
     }, delimiter = '%')
@@ -290,6 +302,30 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
                 .parse("*/g/V/+.outE(knows)").asCode().rewrite();
         assertEquals(1, wildcardHop.insts().size());
         assertEquals("g.V().outE('knows')", script(wildcardHop));
+    }
+
+    /**
+     * A SPAN BREAKS THE RUN (Marko, 2026-11-13). {@code {0,2}out()} is the run {@code _ + out() + out().out()}, not a
+     * count, and one Gremlin step says neither: folded into the call, it walked once and every answer came back
+     * {@code {0,2}}. The steps before a spanned step are pushed down, the spanned step stays for the processor to run,
+     * and the steps after it fuse again.
+     */
+    @Test
+    public void testASpanBreaksTheRun() {
+        final Code head = studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer
+                .parse("*/g/V/1.{0,2}out()>>name").asCode().rewrite();
+        assertTrue(head.insts().stream().noneMatch(inst -> inst.tid().name().equals("gremlin")),
+                () -> "a span at the head leaves no run to push down: " + head);
+        assertTrue(head.insts().stream().anyMatch(inst -> cInt.of("0,2").equals(inst.tid().b())),
+                () -> "the span stays on its step: " + head);
+        final Code middle = studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer
+                .parse("*/g/V/1.out(knows).{0,1}out(created).out()>>name").asCode().rewrite();
+        assertEquals(List.of("g.V(1).out('knows')", "out().values('name')"), middle.insts().stream()
+                        .filter(inst -> inst.tid().name().equals("gremlin"))
+                        .map(inst -> inst.arg((int) inst.args().count() - 1).strValue()).toList(),
+                "the steps before the span are one call, and the steps after it another");
+        assertEquals(3, middle.insts().size(), () -> "the span stays between the calls: " + middle);
+        assertEquals(cInt.of("0,1"), middle.insts().get(1).tid().b(), "and keeps its span for the processor to run");
     }
 
     @Disabled("id-based traversal count mismatch over TinkerGraph")
