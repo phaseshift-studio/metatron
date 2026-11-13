@@ -608,10 +608,17 @@ InstSet.Helper.rewriter(GEO_REWRITE_TID.extend(&quot;native_&quot; + nativeTid.n
                     .toList())).asCode();
 })
 </code></pre>
-<p>A rewrite whose rule is only instructions needs no Java at all. It is a <code>[lhs =&gt; rhs]</code> row in the declared argument of
-its own <code>/m</code> rewrite (one rewrite per rule), which <code>Call.Helper.update</code> matches and applies: <code>else_after_count</code>'s
-<code>[count().else(#::T) =&gt; count()]</code> drops the dead <code>else</code> after a total <code>count</code>. The rule rewrites and their law rows are
-described in the <code>cat-instset-mtron</code> reference.</p>
+<p>A rewrite whose rule is only instructions states it as data: a <code>[lhs =&gt; rhs]</code> rec, the declared argument of its own <code>/m</code>
+rewrite (one rewrite per rule), built with the rules overload of <code>InstSet.Helper.rewriter</code>. Its body hands the rules to
+<code>Law.Helper.rewrite(code, rules, gate)</code>, which applies each equation with <code>Call.Helper.update</code> wherever the gate admits
+the matched run. <code>else_after_count</code>'s <code>[count().else(#::T) =&gt; count()]</code> needs no gate, so it drops the dead <code>else</code> after
+a total <code>count</code> wherever the rule matches:</p>
+<pre><code class="language-java">docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend(&quot;else_after_count&quot;), ELSE_AFTER_COUNT, (code, rules) -&gt;
+        Law.Helper.rewrite(code, List.of(rules), (scanned, start, length) -&gt; true)), &quot;…&quot;)
+</code></pre>
+<p>A law's rewrite binds its rules to the law's claimants (<code>Law.Helper.claimed</code>) and writes its gate beside them, reading the
+law at the carrier flowing into the run (<code>Rewriter.Helper.carriers</code>). The rule rewrites and their gates are described in
+the <code>cat-instset-mtron</code> reference.</p>
 <p><strong><code>match(List&lt;Inst&gt;)</code></strong> — pattern instructions. <code>instA(tid)</code> creates a bare match instruction (no args, no f). Matching
 uses <code>instsMatch()</code>: TIDs must be compatible via <code>tid.test()</code>, args are compared by position, and <code>?.test(source)</code> tests
 unresolved args against source.</p>
@@ -714,15 +721,22 @@ stream — it either runs natively (one-shot) or not at all:</p>
 </code></pre>
 <h3>The rewrite instruction type</h3>
 <p><code>InstSet.Helper.rewriter()</code> creates the instruction:</p>
-<pre><code class="language-java">public static Inst rewriter(final fURI tid, Function&lt;Code, Code&gt; rewrite) {
+<pre><code class="language-java">public static Inst rewriter(final fURI tid, final Function&lt;Code, Code&gt; rewrite) {
     return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(),
         (lhs, inst) -&gt; rewrite.apply(lhs.asCode()));
+}
+
+public static Inst rewriter(final fURI tid, final Rec rules, final BiFunction&lt;Code, Rec, Code&gt; rewrite) {
+    return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(rules),
+        (lhs, inst) -&gt; rewrite.apply(lhs.asCode(), inst.arg(0).asRec()));
 }
 </code></pre>
 <ul>
 <li><strong>Domain:</strong> <code>CODE_TID</code> — receives a Code</li>
 <li><strong>Range:</strong> <code>CODE_TID.maybe()</code> — returns an optional Code (noobj = no rewrite)</li>
-<li><strong>Body:</strong> calls the provided <code>Function&lt;Code, Code&gt;</code></li>
+<li><strong>Body:</strong> calls the provided <code>Function&lt;Code, Code&gt;</code>, or the <code>BiFunction&lt;Code, Rec, Code&gt;</code> with the rules</li>
+<li><strong>Rules:</strong> the second overload declares its rules as the instruction's one argument, a value rather than a type, so
+it resolves with them bound; the body reads them off <code>inst.arg(0)</code>, so the argument is their one source</li>
 </ul>
 <p>The returned <code>Inst</code> is registered under <code>uri(REWRITE)</code> in the instset. During
 <code>Code.rewrite()</code>, it's applied with the current code as <code>lhs</code>.</p>

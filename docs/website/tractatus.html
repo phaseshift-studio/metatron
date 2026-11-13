@@ -472,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -3305,7 +3307,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}M{{m}}e{{c}}T{{c}}A{{y}}t{{y}}R{{c}}O{{r}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{g}}e{{b}}T{{r}}A{{m}}T{{m}}r{{m}}O{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5845,14 +5847,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6355852      6596   6349256   1% /run'
+==&gt;'tmpfs            6355852      6796   6349056   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 612942408 298015416  68% /'
-==&gt;'tmpfs           31779244      7092  31772152   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 610973244 299984580  68% /'
+==&gt;'tmpfs           31779244     91696  31687548   1% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6355848       272   6355576   1% /run/user/1000'
+==&gt;'tmpfs            6355848       264   6355584   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -6067,7 +6069,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:1301/11/04/158?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:1305/58/10/414?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7910,7 +7912,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:1301/11/09/641?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1305/58/15/098?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7929,7 +7931,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:1301/11/09/641?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1305/58/15/098?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -8021,7 +8023,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:1301/10/43/199?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:1305/57/48/390?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8029,7 +8031,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:1301/10/43/199?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:1305/57/48/390?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -8750,11 +8752,13 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 ==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
+==&gt;'alex'
 ==&gt;'grant'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;2</code></pre>
+==&gt;2
+==&gt;3</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8798,7 +8802,21 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
+==&gt;rec::T[?[{?}trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[{?}player=&gt;str::T,
+            {?}points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            {?}age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            {?}parent=&gt;auto_from?args=[/m/uri]::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8808,7 +8826,21 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+</code></pre>
+mtron&gt; *lite:+
+==&gt;rec::T[?[{?}trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[{?}player=&gt;str::T,
+            {?}points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            {?}age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            {?}parent=&gt;auto_from?args=[/m/uri]::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 </div>
@@ -9469,16 +9501,16 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/env/+/.take(10)
-==&gt;/sys/env/SDKMAN_CANDIDATES_API=&gt;'https://api.sdkman.io/2'
-==&gt;/sys/env/USER=&gt;'killswitch'
+==&gt;/sys/env/LOGNAME=&gt;'killswitch'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
 ==&gt;/sys/env/SAKANA_API_KEY=&gt;'fish_c6e79276b55fedf01aae6a5029fd8b263915542167d3dcea42aff825fa3cc316'
-==&gt;/sys/env/LOGNAME=&gt;'killswitch'
 ==&gt;/sys/env/SDKMAN_PLATFORM=&gt;'linuxx64'
-==&gt;/sys/env/XDG_SESSION_TYPE=&gt;'tty'
+==&gt;/sys/env/XDG_SESSION_ID=&gt;'c2'
+==&gt;/sys/env/GPG_AGENT_INFO=&gt;'/run/user/1000/gnupg/S.gpg-agent:0:1'
+==&gt;/sys/env/COLORTERM=&gt;'truecolor'
 ==&gt;/sys/env/XDG_SESSION_CLASS=&gt;'user'
-==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
-==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;' site'</code></pre>
+==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;' site'
+==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

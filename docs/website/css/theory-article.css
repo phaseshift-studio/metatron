@@ -28,19 +28,17 @@
  * two stay aligned. */
 
 .article-doc {
-    max-width: 140ch;
+    max-width: 100ch;
     margin: 0 auto 1.5rem;
 }
 
 .article-title {
-    font-family: Georgia, "Times New Roman", serif;
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.15;
 }
 
 .article-subtitle {
-    font-family: Georgia, "Times New Roman", serif;
     font-style: italic;
     color: var(--light, #6C7293);
 }
@@ -49,12 +47,10 @@
  * line shape it was authored with (`|` block → <br>), the citation reads as a
  * small reference line rather than body prose. */
 .article-author {
-    font-family: Georgia, "Times New Roman", serif;
     margin-top: 0.75rem;
 }
 
 .article-citation {
-    font-family: Georgia, "Times New Roman", serif;
     font-size: 0.9rem;
     font-style: italic;
     color: var(--light, #6C7293);
@@ -62,12 +58,17 @@
 }
 
 .article-body {
-    font-family: Georgia, "Times New Roman", serif;
     font-size: 1.05rem;
     line-height: 1.7;
-    max-width: 140ch;
+    max-width: 100ch;
     margin: 0 auto;
 }
+
+
+strong {
+    color: var(--mred);
+}
+
 
 /* The article's figures show at 75% of the size they are rendered at, centred in the
  * measure. Their intrinsic size is ~200dpi (bin/render-tikz.py `--scale`), which is right
@@ -88,7 +89,6 @@
 .article-body h2,
 .article-body h3,
 .article-body h4 {
-    font-family: Georgia, "Times New Roman", serif;
     letter-spacing: -0.01em;
     border-bottom: 1px solid rgba(108, 114, 147, 0.28);
     padding-bottom: 0.35rem;

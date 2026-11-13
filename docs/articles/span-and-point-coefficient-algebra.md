@@ -81,7 +81,7 @@ $x$. The proofs below cite the stream ring axioms of [1] by name: the *apply*, *
 axioms, $\langle 0x \rangle = \langle\rangle$, and
 the stream multiplication $ca \cdot db = (c \cdot d)(a \cdot b)$.
 
-::: definition **Definition 1** (Point). The *point* of a term
+::: **Definition 1** (Point). The *point* of a term
 $ca \in \mathcal{C}\mathcal{F}$ is its coefficient $c \in \mathcal{C}$. In mtron
 it is written after the instruction, `a{c}`. If $n \in \mathbb{N}$, then by the
 stream ring's addition
@@ -92,7 +92,7 @@ na = \underbrace{1a + \cdots + 1a}_{n}.
 $$
 :::
 
-::: definition **Definition 2** (Span). The *span* of a term is the exponent
+::: **Definition 2** (Span). The *span* of a term is the exponent
 $n \in \mathbb{N}$ of its run, where
 $$
 \begin{equation*}
@@ -147,11 +147,11 @@ along the axis of sequential addresses such that: `{3}plus(1)` is `plus(1)@<0>.p
 
 ### The Point Coefficient
 
-::: theorem **Theorem 1** (Points add across a branch). If $a \in \mathcal{F}$
+::: **Theorem 1** (Points add across a branch). If $a \in \mathcal{F}$
 and $c,d \in \mathcal{C}$, then $ca + da = (c+d)a$.
 :::
 
-::: proof *Proof.* If $a (x) = y$, then
+::: *Proof.* If $a (x) = y$, then
 $$
 \begin{equation*}
 \begin{array}{lclll}
@@ -166,12 +166,12 @@ $$
 ◻
 :::
 
-::: theorem **Theorem 2** (Points multiply along a chain). If
+::: **Theorem 2** (Points multiply along a chain). If
 $a,b \in \mathcal{F}$ and $c,d \in \mathcal{C}$, then
 $ca \cdot db = (c \cdot d)(a \cdot b)$.
 :::
 
-::: proof *Proof.* If $a (x) = y$ and $b (y) = z$, then
+::: *Proof.* If $a (x) = y$ and $b (y) = z$, then
 $$
 \begin{equation*}
 \begin{array}{lclll}
@@ -185,12 +185,12 @@ $$
 ◻
 :::
 
-::: theorem **Theorem 3** (Points are central). If
+::: **Theorem 3** (Points are central). If
 $a,b \in \mathcal{F}\setminus \mathcal{F}_r$ and $c \in \mathcal{C}$, then
 $ca \cdot b = a \cdot cb = (ab)c$.
 :::
 
-::: proof *Proof.*
+::: *Proof.*
 $$
 \begin{equation*}
 \begin{array}{lclll}
@@ -218,11 +218,11 @@ float past it (Theorem 17 of [1]). ◻
 5.plus(1).id{3}()
 ```
 
-::: theorem **Theorem 4** (A zero point annihilates). If $a \in \mathcal{F}$,
+::: **Theorem 4** (A zero point annihilates). If $a \in \mathcal{F}$,
 then $0a = 0$.
 :::
 
-::: proof *Proof.* The zero of $\mathcal{C}\mathcal{F}$ is
+::: *Proof.* The zero of $\mathcal{C}\mathcal{F}$ is
 $(0,0) \in \mathcal{C}\times \mathcal{F}$ [1]. If $a (x) = y$, then
 $$
 \begin{equation*}
@@ -255,11 +255,11 @@ adds it as it adds any point, and a reducer after it counts nothing.
 
 ### The Span Coefficient
 
-::: theorem **Theorem 5** (Spans add along a chain). If $a \in \mathcal{F}$ and
+::: **Theorem 5** (Spans add along a chain). If $a \in \mathcal{F}$ and
 $m,n \in \mathbb{N}$, then $a^m \cdot a^n = a^{m+n}$.
 :::
 
-::: proof *Proof.* By induction on $n$.
+::: *Proof.* By induction on $n$.
 $$
 \begin{equation*}
 \begin{array}{lclll}
@@ -274,11 +274,11 @@ $$
 ◻
 :::
 
-::: theorem **Theorem 6** (Spans stay where they are written). In general,
+::: **Theorem 6** (Spans stay where they are written). In general,
 $a^n \cdot b \neq a \cdot b^n$.
 :::
 
-::: proof *Proof.* A counterexample. If $a (x) = x + 1$ and $b (x) = 2x$, then
+::: *Proof.* A counterexample. If $a (x) = x + 1$ and $b (x) = 2x$, then
 $$
 \begin{equation*}
 \langle 5 \rangle a^2 b = \langle 14 \rangle \neq \langle 24 \rangle = \langle 5 \rangle a b^2.
@@ -297,11 +297,11 @@ the monoid $\langle\mathcal{F}, \cdot \rangle$ is not commutative. ◻
 5.plus(1).{2}mult(2)
 ```
 
-::: corollary **Corollary 1** (Inductive generation). If $a (x) = x + 1$, then
+::: **Corollary 1** (Inductive generation). If $a (x) = x + 1$, then
 $\langle 0 \rangle a^n = \langle n \rangle$.
 :::
 
-::: proof *Proof.* By induction on $n$:
+::: *Proof.* By induction on $n$:
 $\langle 0 \rangle a^0 = \langle 0 \rangle 1 = \langle 0 \rangle$, and
 $\langle 0 \rangle a^{n+1} = \langle 0 \rangle a^n \cdot a = \langle n \rangle a = \langle n + 1 \rangle$. ◻
 :::
@@ -310,12 +310,12 @@ $\langle 0 \rangle a^{n+1} = \langle 0 \rangle a^n \cdot a = \langle n \rangle a
 0.{5}plus(1)
 ```
 
-::: corollary **Corollary 2** (A constant's run is the constant). If
+::: **Corollary 2** (A constant's run is the constant). If
 $k (x) = v$ for every object $x$, then $k \cdot k = k$, so $k^n = k$ for every
 $n \geq 1$, and $k^0 = 1$.
 :::
 
-::: proof *Proof.*
+::: *Proof.*
 $$
 \begin{equation*}
 \begin{array}{lclll}
@@ -358,12 +358,12 @@ instruction is?
 
 ## The Algebra Relating Point and Span Coefficients
 
-::: theorem **Theorem 7** (The span exponentiates the point). If
+::: **Theorem 7** (The span exponentiates the point). If
 $a \in \mathcal{F}$, $c \in \mathcal{C}$ and $n \in \mathbb{N}$, then
 $(ca)^n = c^n a^n$.
 :::
 
-::: proof *Proof.* This is the third equality of Theorem 6 of [1]. By induction
+::: *Proof.* This is the third equality of Theorem 6 of [1]. By induction
 on $n$:
 $$
 \begin{equation*}
@@ -377,29 +377,29 @@ $$
 ◻
 :::
 
-::: corollary **Corollary 3** (Order matters). A point on a run is not a run of
+::: **Corollary 3** (Order matters). A point on a run is not a run of
 the point: $a^n \cdot c1 = c\,a^n$, while $(ca)^n = c^n a^n$.
 :::
 
-::: proof *Proof.* $a^n \cdot c1 = (1 \cdot c)(a^n \cdot 1) = c\,a^n$ by stream
+::: *Proof.* $a^n \cdot c1 = (1 \cdot c)(a^n \cdot 1) = c\,a^n$ by stream
 multiplication, and $(ca)^n = c^n a^n$ by Theorem 7. The two agree only where
 $c^n = c$. ◻
 :::
 
-::: corollary **Corollary 4** (Idempotents collapse). If $e \cdot e = e$, then
+::: **Corollary 4** (Idempotents collapse). If $e \cdot e = e$, then
 $(ce)^n = c^n e$ for every $n \geq 1$.
 :::
 
-::: proof *Proof.* $e^n = e$ for $n \geq 1$, by the induction of Corollary 2, so
+::: *Proof.* $e^n = e$ for $n \geq 1$, by the induction of Corollary 2, so
 $(ce)^n = c^n e^n = c^n e$ by Theorem 7. The unity is idempotent, so
 $(c1)^n = c^n 1$. ◻
 :::
 
-::: corollary **Corollary 5** ($0^0 = 1$). $(0a)^0 = 1$: a zero run of the
+::: **Corollary 5** ($0^0 = 1$). $(0a)^0 = 1$: a zero run of the
 annihilator is no step at all.
 :::
 
-::: proof *Proof.* $t^0 = 1$ for every term $t$ by Definition 2, and $0a = 0$ is
+::: *Proof.* $t^0 = 1$ for every term $t$ by Definition 2, and $0a = 0$ is
 a term (Theorem 4). ◻
 :::
 
@@ -412,7 +412,7 @@ a term (Theorem 4). ◻
 5.{0}id{0}()
 ```
 
-::: theorem **Theorem 8** (A span does not distribute over a branch). If
+::: **Theorem 8** (A span does not distribute over a branch). If
 $a,b \in \mathcal{F}$, then
 $$
 \begin{equation*} (a + b)^n = \sum_{w \in \{a,b\}^n} w,
@@ -427,7 +427,7 @@ and each binomial coefficient is a point. In general,
 $(a + b)^n \neq a^n + b^n$.
 :::
 
-::: proof *Proof.* By induction on $n$, expanding as [1] expands a multinomial:
+::: *Proof.* By induction on $n$, expanding as [1] expands a multinomial:
 $$
 \begin{equation*}
 \begin{array}{lclll} (a + b)^{n+1} &=& (a + b)^n \cdot (a + b) && [\text{Definition 2}] \\
@@ -454,7 +454,7 @@ $\langle 5 \rangle (a + b)^2 = \langle 7, 12, 11, 20 \rangle$.
 5.{2}branch(plus(1),mult(2))
 ```
 
-::: theorem **Theorem 9** (A shared prefix factors). If $b,c \in \mathcal{F}$
+::: **Theorem 9** (A shared prefix factors). If $b,c \in \mathcal{F}$
 and $a \in \mathcal{F}_m \cup \mathcal{F}_f \cup \mathcal{F}_{fm}$ is pure,
 then $a \cdot b + a \cdot c = a \cdot (b + c)$, and for $m \leq n$,
 $$
@@ -464,7 +464,7 @@ a^m \cdot b + a^n \cdot c = a^m \cdot (b + a^{n-m} \cdot c).
 $$
 :::
 
-::: proof *Proof.* The first equality is the left distributivity of the function
+::: *Proof.* The first equality is the left distributivity of the function
 ring [1]. The second follows from it and Theorem 5, as $a^n = a^m \cdot a^{n-m}$.
 The prefix must be pure: on the right it runs once for both members, so an
 effectful $a$, a write or a print, would change what the expression does. It
@@ -511,7 +511,7 @@ default stays per-object.
 A coefficient may be a range $[m,n]$ with $m \leq n$. In mtron it is written
 `{m,n}`, and `{?}` is $[0,1]$, `{+}` is $[1,\infty)$ and `{*}` is $[0,\infty)$.
 
-::: definition **Definition 3** (Span range). If $m \leq n$, then
+::: **Definition 3** (Span range). If $m \leq n$, then
 $$
 \begin{equation*}
 a^{[m,n]} = \sum_{k=m}^{n} a^k = a^m + a^{m+1} + \cdots + a^n.
@@ -531,12 +531,12 @@ A range is no uncertainty over its unrolls: every unroll is taken, and the
 multiplicities are not weights that sum to one. The zero-step unroll is the
 unity, $a^0 = 1$, which passes its object on.
 
-::: corollary **Corollary 6** (Each unroll carries its own power of the point).
+::: **Corollary 6** (Each unroll carries its own power of the point).
 If $c \in \mathcal{C}$ and $m \leq n$, then
 $(ca)^{[m,n]} = \sum_{k=m}^{n} c^k a^k$.
 :::
 
-::: proof *Proof.* By Definition 3, $(ca)^{[m,n]} = \sum_{k=m}^{n} (ca)^k$, and
+::: *Proof.* By Definition 3, $(ca)^{[m,n]} = \sum_{k=m}^{n} (ca)^k$, and
 $(ca)^k = c^k a^k$ by Theorem 7. ◻
 :::
 
@@ -641,10 +641,8 @@ coefficient of that type. In the console, `5.{2}plus{3}(1).type()` is
 
 # References
 
-1. Rodriguez, M.A., "[Stream Ring Theory](./stream-ring-theory.md)," S/V Red
-   Herring's Ship's Log: Chronicles in the Sea of Cortez, pages 10–40, Mulegé,
-   Baja California Sur, México, February 2019.
-2. Rodriguez, M.A., Claude, "[Parametric Identities in Ring
-   Theory](./parametric-identities-in-ring-theory.html)."
+1. Rodriguez, M.A., "[Stream Ring Theory](./stream-ring-theory.md)," S/V Red Herring's Ship's Log: Chronicles in the Sea
+   of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.
+2. Rodriguez, M.A., Claude, "[Parametric Identities in Ring Theory](./parametric-identities-in-ring-theory.html)."
 3. Kleene, S.C., "Representation of Events in Nerve Nets and Finite Automata,"
    Automata Studies, Princeton University Press, 1956.

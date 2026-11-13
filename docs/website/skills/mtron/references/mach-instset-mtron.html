@@ -622,21 +622,15 @@ after which instruction memory answers the address.</p>
 <h3>compiler</h3>
 <pre><code class="language-mtron">mtron&gt; */m/mach/component/compiler?docq
 ==&gt;docs::[obj=&gt;component::T[?[
-     {?}parser=&gt;component::T@/m/mach/component/parser,
-     {?}rewriter=&gt;component::T@/m/mach/component/rewriter,
-     {?}resolver=&gt;component::T[?[
-      {?}selector=&gt;component::T@/m/mach/component/selector,
-      {?}binder=&gt;component::T@/m/mach/component/binder]]@/m/mach/component/resolver,
-     {?}typer=&gt;component::T[?[{?}check=&gt;[{?}inst_dom=&gt;bool::T,
-                                         {?}inst_rng=&gt;bool::T,
-                                         {?}type_pred=&gt;bool::T,
-                                         {?}code_resolve=&gt;bool::T,
-                                         {?}obj_write=&gt;bool::T]]][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+     {?}parser=&gt;parser::T,
+     {?}rewriter=&gt;rewriter::T,
+     {?}resolver=&gt;resolver::T,
+     {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
-           {?}resolver=&gt;'the third stage — the walk that th...',
            {?}typer=&gt;'the fourth stage — the per-machine...',
            {?}parser=&gt;'the first stage — source text to o...',
-           {?}rewriter=&gt;'the second stage — the code::T to ...'],
+           {?}rewriter=&gt;'the second stage — the code::T to ...',
+           {?}resolver=&gt;'the third stage — the walk that th...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
            'compiler::[rewriter=&gt;fixpoint_rewr...',
@@ -769,12 +763,11 @@ write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the
 ==&gt;docs::[obj=&gt;component::T[?[
      {?}state=&gt;union(stop,run,pause),
      {?}result=&gt;&lt;#{*}&gt;::T,
-     {?}tracer=&gt;component::T[?[{?}stack=&gt;[{?}mtron_stack=&gt;bool::T,
-                                          {?}java_stack=&gt;bool::T]]][ctor?tracer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/tracer]]@/m/mach/component/processor,
+     {?}tracer=&gt;tracer::T]]@/m/mach/component/processor,
           args=&gt;[
-           {?}result=&gt;'the objs the last evaluation produ...',
            {?}state=&gt;'the run state: stop, run or pause',
            {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
+           {?}result=&gt;'the objs the last evaluation produ...',
            computer=&gt;'the computers this processor minte...',
            fail=&gt;&quot;the machine's fail stack: an uncau...&quot;],
           desc=&gt;'the processor contract of machine:...']
@@ -867,11 +860,11 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}pattern=&gt;'the branch this network answers as...',
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
            {?}listener=&gt;'the sockets this machine serves th...',
            {?}roster=&gt;'known machines, connectionless: &lt;h...',
-           {?}status=&gt;'the health method — an auto inst c...'],
+           {?}status=&gt;'the health method — an auto inst c...',
+           {?}pattern=&gt;'the branch this network answers as...',
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
@@ -1133,7 +1126,7 @@ timeout fail (<code>future get timed out after 2000 ms</code>) in that peer's pl
 <p><code>*~/network/host</code> answers the host the current machine runs on; peers forked on one host are told apart by their
 service authority.</p>
 <pre><code class="language-mtron">mtron&gt; *~/network/host
-==&gt;&lt;2a34380c2799&gt;
+==&gt;booger
 </code></pre>
 <h3>appendix — registered types</h3>
 <table>

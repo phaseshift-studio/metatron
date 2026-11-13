@@ -121,21 +121,15 @@ after which instruction memory answers the address.
 ```mtron
 mtron> */m/mach/component/compiler?docq
 ==>docs::[obj=>component::T[?[
-     {?}parser=>component::T@/m/mach/component/parser,
-     {?}rewriter=>component::T@/m/mach/component/rewriter,
-     {?}resolver=>component::T[?[
-      {?}selector=>component::T@/m/mach/component/selector,
-      {?}binder=>component::T@/m/mach/component/binder]]@/m/mach/component/resolver,
-     {?}typer=>component::T[?[{?}check=>[{?}inst_dom=>bool::T,
-                                         {?}inst_rng=>bool::T,
-                                         {?}type_pred=>bool::T,
-                                         {?}code_resolve=>bool::T,
-                                         {?}obj_write=>bool::T]]][ctor?typer<=(#{*}::T){<j>}]@/m/mach/component/typer]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
+     {?}parser=>parser::T,
+     {?}rewriter=>rewriter::T,
+     {?}resolver=>resolver::T,
+     {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}resolver=>'the third stage — the walk that th...',
            {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
-           {?}rewriter=>'the second stage — the code::T to ...'],
+           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}resolver=>'the third stage — the walk that th...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -279,12 +273,11 @@ mtron> */m/mach/component/processor?docq
 ==>docs::[obj=>component::T[?[
      {?}state=>union(stop,run,pause),
      {?}result=><#{*}>::T,
-     {?}tracer=>component::T[?[{?}stack=>[{?}mtron_stack=>bool::T,
-                                          {?}java_stack=>bool::T]]][ctor?tracer<=(#{*}::T){<j>}]@/m/mach/component/processor/tracer]]@/m/mach/component/processor,
+     {?}tracer=>tracer::T]]@/m/mach/component/processor,
           args=>[
-           {?}result=>'the objs the last evaluation produ...',
            {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
+           {?}result=>'the objs the last evaluation produ...',
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -380,11 +373,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
-           {?}peer=>"machine's own connections, one per...",
            {?}listener=>'the sockets this machine serves th...',
            {?}roster=>'known machines, connectionless: <h...',
-           {?}status=>'the health method — an auto inst c...'],
+           {?}status=>'the health method — an auto inst c...',
+           {?}pattern=>'the branch this network answers as...',
+           {?}peer=>"machine's own connections, one per..."],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
@@ -675,7 +668,7 @@ service authority.
 
 ```mtron
 mtron> *~/network/host
-==><2a34380c2799>
+==>booger
 ```
 ## appendix — registered types
 

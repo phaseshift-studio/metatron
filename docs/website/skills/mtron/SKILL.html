@@ -512,14 +512,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">mtron</h1>
-        <small>understanding the language used to control the metatron</small><br/>
+        <small>understanding the language used to control metatron</small><br/>
         <a href="SKILL.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>SKILL.md</a>
     </div>
     <div class="markdown-body">
 <h2>mtron: traversing the metatron graph</h2>
 <p>mtron is a functional, fluent, monadic language that manipulates the metatron environment.</p>
-<p>To understand mtron, it's necessary to first understand how structures and processes are organized in metatron.</p>
-<p>metatron's <strong>structure</strong> forms a <a href="https://en.wikipedia.org/wiki/Split_graph">split graph</a> with two vertex sets:
+<p>To understand mtron, it's necessary to first understand how language, structure, and process are organized in metatron.</p>
+<p>metatron's <strong>structure</strong> is abstractly defined as a <a href="https://en.wikipedia.org/wiki/Split_graph">split graph</a> composed of
+two vertex sets:
 \(V = U \cup O\). The set \(U\) is the set of <a href="https://en.wikipedia.org/wiki/Uniform_Resource_Identifier">uris</a> (<strong>uniform
 resource identifiers</strong>) and they maintain an <em>intra-edge</em> set defined by uri <strong>path adjacency</strong>. The set \(O\) is the set
 of objs (objects) whose <em>intra-edge</em> set denote <strong>shared/coupled state</strong>. Finally, there exists a bi-directional
