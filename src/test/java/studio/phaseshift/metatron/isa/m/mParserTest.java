@@ -456,6 +456,16 @@ public class mParserTest extends AbstractMetatronTest {
             "2{3}.count()                             % 3",
             "{3}5{3}.count()                          % 9",
             "{3}5{3}.sum()                            % 45",
+            // ... and a map keeps it, the typer's dom check on (this VM) as off (boot.mtron): the step runs on one copy and
+            // the answer takes back the value's span and point; an inst's point multiplies the point, never the span
+            "{3}5{3}.plus(1)                          % {3}6{3}",
+            "{3}5{3}.plus(1).plus(1)                  % {3}7{3}",
+            "5{3}.plus(1)                             % 6{3}",
+            "{3}5.plus(1)                             % {3}6",
+            "{3}5{3}.plus{2}(1)                       % {6}6{3}",
+            "{3}5{3}.neg()                            % {3}-5{3}",
+            "{3}5{3}.plus(1).count()                  % 9",
+            "{3}5{3}.plus(1).sum()                    % 54",
             "2{0}                                     % noobj",
             "2{?}                                     % <ERROR>",
             "2{-1}                                    % <ERROR>",
