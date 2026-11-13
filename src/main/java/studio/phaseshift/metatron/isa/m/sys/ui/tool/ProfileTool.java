@@ -52,9 +52,12 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
         cInt rng = cInt.ONE();
         boolean first = true;
         for (final Inst i : call.insts()) {
+            final Inst.Form form = Inst.Form.of(i);
             dom = first ? i.dom().c() : rng;
             boolean inDom = i.dom().c().lte(rng);
-            rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
+            // an initial inst makes its objs from its args, not from what flows in (the head, and the start() after
+            // every ';'), so its count is its own range's -- as a reducer's is one
+            rng = (form == Inst.Form.reducer) ? cInt.ONE() : (first || form == Inst.Form.initial ? i.rng().c() : i.rng().c().mult(dom));
             first = false;
             boolean found = !Machine.current().memory().read(i.tid().basePath()).isNoObj();
             this.instTable.addRow(List.of(
@@ -63,7 +66,7 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
                     i.rng().vid().small() + "::T",
                     (i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}") + argsSummary(i.args(), argsWidth),
                     i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
-                    "{{m}}" + Inst.Form.of(i).toString(),
+                    "{{m}}" + form.toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                     "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
             this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), i, dom, rng));

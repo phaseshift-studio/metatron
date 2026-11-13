@@ -19,11 +19,16 @@
 package studio.phaseshift.metatron.isa.m.sys.ui.tool;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.TableWidget;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -123,5 +128,26 @@ public class ExplainToolTest extends AbstractMetatronTest {
         assertEquals(11, ProfileTool.argsWidth(100, 0, 11));  // content-sized: 11 fits, no clip
         assertEquals(35, ProfileTool.argsWidth(100, 0, 100)); // long args: capped at 100 - 65
         assertEquals(51, ProfileTool.argsWidth(120, 4, 100)); // nested long: 120 - 4 - 65
+    }
+
+    /**
+     * The c_dom/c_rng columns of the compiled table (what space draws) walk the chain: an inst takes in what the one
+     * before it put out, and scales it. An initial inst makes its objs from its args, not from what flows in, so its
+     * count is its own range's -- the head's, and the start() after every ';', which does not inherit the end()'s {0}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "1+2                              % {0} {1}                     % {1} {1}",
+            "1+2; 3; plus(2)                  % {0} {1} {1} {0} {1} {0} {0} % {1} {1} {0} {1} {0} {0} {0}",
+            "1+2; 3; count()                  % {0} {1} {1} {0} {1} {0} {0} % {1} {1} {0} {1} {0} {0} {1}",
+            "{3}5; 2                          % {0} {3} {0}                 % {3} {0} {1}",
+            "1.plus(1).end().start(7).plus(1) % {0} {1} {1} {0} {1}         % {1} {1} {0} {1} {1}"})
+    public void testCoefficientsRestartAtEveryInitialInst(final String expression, final String cDom, final String cRng) {
+        final Code parsed = parse(expression);
+        final Code code = parsed.resolve(noobj()).asCode();
+        final TableWidget table = new ProfileTool(code, ProfileTool.ARGS_MIN_WIDTH).instTable;
+        // the columns as the console draws them
+        assertEquals(cDom, table.column(6).stream().map(cell -> Graphitty.strip(cell.toString())).collect(Collectors.joining(" ")), code.toString());
+        assertEquals(cRng, table.column(7).stream().map(cell -> Graphitty.strip(cell.toString())).collect(Collectors.joining(" ")), code.toString());
     }
 }
