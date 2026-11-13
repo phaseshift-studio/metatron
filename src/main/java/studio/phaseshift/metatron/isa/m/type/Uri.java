@@ -208,7 +208,15 @@ public interface Uri extends Mono, Comparable<Uri> {
                         for (Map.Entry<String, String> entry : query.entrySet()) {
                             String key = entry.getKey().replace(templatePlaceholder, replacement);
                             String val = entry.getValue().replace(templatePlaceholder, replacement);
-                            newQuery.put(key, val);
+                            // A query template occupies the QUERY slot, so its expansion is a query STRING
+                            // (`q=test&r=2`), not one component. Parse it into pairs — the expanded uri must be a
+                            // proper uri (`q("q")` answers `test`), not a map holding a fake key `q=test`.
+                            if (key.indexOf('=') >= 0 && val.isEmpty()) {
+                                for (Map.Entry<String, String> pair : fURI.Singleton.parseQuery(key).entrySet())
+                                    newQuery.merge(pair.getKey(), pair.getValue(), (v1, v2) -> v1 + ";" + v2);
+                            } else {
+                                newQuery.put(key, val);
+                            }
                         }
                         query = newQuery;
                     }

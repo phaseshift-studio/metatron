@@ -25,6 +25,8 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -927,6 +929,45 @@ public abstract class AbstractfURI implements fURI {
                 sb.append('=').append(kv.getValue());
         }
         return sb.toString();
+    }
+
+    /**
+     * Percent-decode a query component. {@code %XX} is the byte XX (UTF-8), and only that is special: {@code +} is a
+     * literal plus (a space is {@code %20}, never form encoding), and a {@code %} that does not open a valid escape
+     * stays literal.
+     * <p>
+     * DECODE ONLY. A metatron uri NEVER percent-encodes its own components on render: {@code ?rng=+&dom=+} is an
+     * internal address whose spelling is part of the contract (signatures, equality, the doc examples), so encoding
+     * {@code +} as {@code %2B} on the way out changes every rendered uri. {@code %} is therefore an INPUT escape —
+     * a caller may spell a structural character as {@code %XX} to get the literal, and the literal is handed back
+     * as itself.
+     */
+    public static String decodeQueryComponent(final String value) {
+        if (null == value || value.indexOf('%') < 0)
+            return value;
+        final StringBuilder decoded = new StringBuilder(value.length());
+        final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        for (int i = 0; i < value.length(); i++) {
+            final char c = value.charAt(i);
+            final int hi = '%' == c && i + 2 < value.length() ? Character.digit(value.charAt(i + 1), 16) : -1;
+            final int lo = 0 <= hi ? Character.digit(value.charAt(i + 2), 16) : -1;
+            if (0 <= hi && 0 <= lo) {
+                bytes.write(hi << 4 | lo);
+                i += 2;
+            } else {
+                flushUtf8(decoded, bytes);
+                decoded.append(c);
+            }
+        }
+        flushUtf8(decoded, bytes);
+        return decoded.toString();
+    }
+
+    private static void flushUtf8(final StringBuilder out, final ByteArrayOutputStream bytes) {
+        if (bytes.size() == 0)
+            return;
+        out.append(bytes.toString(StandardCharsets.UTF_8));
+        bytes.reset();
     }
 
     /**

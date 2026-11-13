@@ -55,8 +55,7 @@ http_server::[origin   => !*boot/args/web/http/origin,
               route    => [/          => <>,
                            /emulator  => mcp_emulator_http,
                            /mcp       => mcp_mtron,
-                           /docs      => <metatronfs:docs/website>,
-                           /console   => <metatronfs:src/main/resources/web/console>]];
+                           /docs      => <metatronfs:docs/website>]];
 http_client::[host     => <http://#>];
 http_client::[host     => <https://#>];
 ws_server::[origin  => !*boot/args/web/ws/origin,

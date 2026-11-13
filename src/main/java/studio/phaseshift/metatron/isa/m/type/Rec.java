@@ -105,11 +105,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
             return rhs.asRec().elements().allMatch(r -> {
                 // a value is tested only under a key that matched: pairing it with every value of rhs ran unrelated
                 // predicates on it (an instset tested against itself ran percent::T's ?>=0 on its docq), and a
-                // predicate that runs as code is an evaluation, which files its miss
+                // predicate that runs as code is an evaluation, which files its miss. A MISSING KEY DOES NOT MATCH A
+                // VALUE PATTERN: only an optional key may be absent, which the zeroable checks below decide -- a rec
+                // without `services` is not a compose, and a rec without `b` is not a `[b=>2]`.
                 final boolean found = this.elements()
-                        .anyMatch(l -> l.jvm().get0().test(r.jvm().get0()) && l.jvm().get1().test(r.jvm().get1())) ||
-                        // a type can have values that their super type (TODO: this plays for a type to its refinement and a type to its value -- each has a more particular restriction (this here is too general))
-                        (this.at(r.firstDirect()).isNoObj() && r.secondDirect().isValue());
+                        .anyMatch(l -> l.jvm().get0().test(r.jvm().get0()) && l.jvm().get1().test(r.jvm().get1()));
                 if (found) return true;
                 boolean notFound = r.jvm().get0().c().isZeroable() && this.elements().noneMatch(l -> l.jvm().get0().test(r.jvm().get0()));
                 if (notFound) return true;

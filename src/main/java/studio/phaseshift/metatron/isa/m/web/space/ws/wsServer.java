@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.space.ws.handler.mcp_wsHandler;
 import studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -39,7 +40,6 @@ import studio.phaseshift.metatron.isa.m.web.webHelper;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -264,9 +264,9 @@ public final class wsServer extends Listener {
      */
     private final Map<WebSocket, Session> sessions = Collections.synchronizedMap(new IdentityHashMap<>());
 
-    private wsServer(final fURI origin, final Network owner) {
-        super(origin, WS_SERVER_TID, owner);
-        this.socket = new Socket(origin);
+    private wsServer(final Map<Obj, Obj> jvm, final Network owner) {
+        super(jvm, WS_SERVER_TID, owner);
+        this.socket = new Socket(this.at(ORIGIN).uriValue());
     }
 
     /**
@@ -292,7 +292,10 @@ public final class wsServer extends Listener {
             Network.Helper.listen(level, held, routes);
             return held;
         }
-        final wsServer server = new wsServer(origin, level);
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        jvm.put(uri(ORIGIN), uri(origin));
+        jvm.put(uri(ROUTE), routes);
+        final wsServer server = new wsServer(jvm, level);
         try {
             Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {

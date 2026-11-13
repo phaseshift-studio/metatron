@@ -555,13 +555,15 @@ public final class mInsts {
                         .dom(URI_TID.maybeSome(), "zero or more uris").rng(URI_TID, "a single merged uri")
                         .argLst(T(URI_TID), "the uri placed between each merge")
                         .body((lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj"))))
-                        .law(Law.pure)
+                        .law(Law.pure, Law.monoidic, Law.commutative)
                         .create(),
                 InstBuilder.build().tid(SPLIT_INST_TID, "split a uri into its component branches")
                         .dom(URI_TID, "a uri with one or more branches")
                         .rng(URI_TID.maybeSome(), "the individual branches of the uri")
                         .argLst()
                         .body((lhs, inst) -> objs(lhs.uriValue().branches().map(MUri::uri)))
+                        // AN UNFOLD IS NOT A MONOID: monoidic is about a binary op or a fold (A{*} => A), and split is
+                        // the dual (A => A{*}) -- the fold it pairs with is merge, which declares monoidic. Split is pure.
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(NAME_INST_TID, "the name of the lhs uri")

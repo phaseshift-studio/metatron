@@ -19,12 +19,12 @@
 package studio.phaseshift.metatron.isa.m.mach.type.network;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * A LISTENER — a protocol server holding a socket: a machine's presence at an authority.
@@ -80,9 +79,9 @@ public abstract class Listener extends MRec implements Closeable {
     private final Set<Network> sharers = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<>()));
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    protected Listener(final fURI origin, final fURI tid, final Network owner) {
-        super(mutableMap(uri(ORIGIN), uri(origin)), tid, null);
-        this.origin = origin;
+    protected Listener(final Map<Obj, Obj> jvm, final fURI tid, final Network owner) {
+        super(new LinkedHashMap<>(jvm), tid, null);
+        this.origin = this.at(ORIGIN).uriValue();
         this.owner = owner;
         // THE STATUS every server answers — live until the socket is released, derived on read (Network.Helper.status)
         this.jvm().put(uri(STATUS), Network.Helper.statusOf(() -> !this.closed()));

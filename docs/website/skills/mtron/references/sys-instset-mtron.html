@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -565,27 +568,27 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(17 more)]
+    ...(16 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
-==&gt;['killswitch']
+==&gt;['ubuntu']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.9M  6.1G  ...',
-    'efivarfs        128K   42K   82K  ...',
+    'overlay         916G  585G  285G  ...',
+    'tmpfs            64M     0   64M  ...',
+    'shm              64M     0   64M  ...',
     '/dev/nvme1n1p2  916G  585G  285G  ...',
-    'tmpfs            31G  109M   31G  ...',
-    'tmpfs           5.0M   20K  5.0M  ...',
+    'tmpfs           6.1G  6.7M  6.1G  ...',
     'tmpfs            31G     0   31G  ...',
-    ...(3 more)]
+    ...(4 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
 ==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder&lt;228&gt;]]
@@ -601,8 +604,8 @@ the same <code>==</code> projection:</p>
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           ...(17 more)]]
-==&gt;['whoami'=&gt;['killswitch']]
+           ...(16 more)]]
+==&gt;['whoami'=&gt;['ubuntu']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
     'AGENTSWARM.md',
@@ -611,7 +614,7 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(18 more)]
+    ...(17 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -647,13 +650,13 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    ...(17 more)]
+    ...(16 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
     '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-12 10:50:51.562977...',
+    'Access: 2026-11-12 17:50:51.562977...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -668,7 +671,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    ...(17 more)]
+    ...(16 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -721,15 +724,15 @@ no input to take, so it is shown rather than run:</p>
 <p>One read each: the environment, the thread count, and the executor's own summary —
 <code>sys_stat</code> answers with running vs stopped, no introspection ceremony:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
-==&gt;'/home/killswitch'
+==&gt;'/work'
 mtron&gt; */sys/thread/+.count()
-==&gt;115
+==&gt;2
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::616.0,
-    free_mem_jvm=&gt;mB::174.3526,
+==&gt;[total_mem_jvm=&gt;mB::480.0,
+    free_mem_jvm=&gt;mB::164.2191,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::441.6473,
-    jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
+    used_mem_jvm=&gt;mB::315.7808,
+    jvm=&gt;'OpenJDK 64-Bit Server VM 25.0.4.1',
     os=&gt;'Linux 7.0.0-42-generic',
     arch=&gt;'amd64',
     ...(4 more)]
@@ -782,7 +785,12 @@ tag <em>is</em> the predicate validation — and, for <code>application/x-mtron<
 into its structural form. Where in doubt, <code>?docq</code> and <code>.explain()</code> say what an inst
 is doing — the sugar is short precisely because it is legible once:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
-==&gt;fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]
+==&gt;
+   markdown::&quot;&quot;&quot;# metatron
+   
+   &lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron-character.png&quot; width=&quot;225px&quot; align=&quot;right&quot;&gt;&lt;/a&gt;
+   
+   ...
        *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 </code></pre>
 <h3>walking the tree</h3>
@@ -852,7 +860,7 @@ the shape; it is read here, never run:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:bin/metatron&gt;
 ...
 mtron&gt; *&lt;mfs:bin/metatron&gt;.tid()
-==&gt;/sys/space/fs/mfs/exec/metatron?rng=#{*}&amp;dom=#{?}&amp;args=[#{*}]
+==&gt;/sys/space/mfs/exec/metatron?rng=#{*}&amp;dom=#{?}&amp;args=[#{*}]
 </code></pre>
 <h3>taking the mounts down</h3>
 <p>The doc leaves the graph as it found it — the two mounts it added are removed, and

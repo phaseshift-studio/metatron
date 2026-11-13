@@ -144,7 +144,12 @@ public class NetworkQProcTest extends AbstractMetatronTest {
         // it -- here the network declines (there is no transport), so the wire never sees it
         assertEquals(str("payload"), Machine.write(f(UNREACHABLE + "/x"), str("payload")),
                 "the write still answers what it wrote: the broadcast does not consume it");
-        CommonUtil.sleepThread(700);   // the broadcast applies its code on a virtual thread, as subq always has
+        // the broadcast applies its code on a virtual thread, as subq always has. The FIRST apply of a code in a VM is
+        // cold (measured ~2s here: ~540 log renders plus the compiler's first pass; later applies are milliseconds), so
+        // the wait is BOUNDED rather than a fixed sleep -- what is asserted is that the subscriber ran, not how fast its
+        // code compiles.
+        for (int waited = 0; waited < 20_000 && Machine.read(FIRED).isNoObj(); waited += 50)
+            CommonUtil.sleepThread(50);
         assertEquals(str("payload"), Machine.read(FIRED),
                 "the subscriber ran, in this VM, and saw exactly the obj written to the peer address");
     }

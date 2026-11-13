@@ -77,8 +77,10 @@ public class MFiberedRec extends MRec implements FiberedRec {
                 results.add(rhs);
             // A FIBER HOLDS WHAT IT HELD: a result goes back at a named fiber, at the multiplicity and as the type of
             // the value it replaces. Asked of the fiber, never of the rebuilt bundle: a bundle is also what any of its
-            // fibers is, so the bundle's own test passes on another fiber's account
-            held = held && !fiber.hasPattern() && rhs.c().equals(value.c()) && rhs.test(value.type());
+            // fibers is, so the bundle's own test passes on another fiber's account.
+            // A NAMESPACE-QUALIFIED FIBER IS NEVER HELD: it belongs to the wild fiber (`rec[geo:+]`), and the rec it
+            // wraps is a feature whose geometry ANSWERS — the result surfaces rather than being written back
+            held = held && !fiber.hasPattern() && !fiber.hasScheme() && rhs.c().equals(value.c()) && rhs.test(value.type());
             if (held)
                 moved = moved.at(fiber, rhs);
         }

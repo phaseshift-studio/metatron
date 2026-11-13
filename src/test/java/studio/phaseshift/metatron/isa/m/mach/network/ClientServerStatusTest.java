@@ -22,10 +22,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.webInstSet.MCP_SERVER_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * EVERY CLIENT AND EVERY SERVER ANSWERS {@code status} (Marko, 2026-10-24: "client.status() and server.status() should
@@ -63,7 +64,7 @@ public class ClientServerStatusTest extends AbstractMetatronTest {
      */
     private static final class Socketless extends Listener {
         private Socketless(final fURI authority, final Network owner) {
-            super(authority, REC_TID, owner);
+            super(mutableMap(uri(ORIGIN), uri(authority)), REC_TID, owner);
         }
 
         @Override

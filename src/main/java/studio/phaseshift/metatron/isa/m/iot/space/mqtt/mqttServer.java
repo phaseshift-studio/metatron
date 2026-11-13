@@ -20,20 +20,20 @@ package studio.phaseshift.metatron.isa.m.iot.space.mqtt;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
-import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PUB_TID;
 import static studio.phaseshift.metatron.isa.m.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -62,7 +63,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
 
 /**
  * MQTT_SERVER — an mqtt broker as a machine's PRESENCE: a {@link Listener} on an {@code mqtt://host:port} socket. The
@@ -150,12 +150,12 @@ public final class mqttServer extends Listener {
     private final MqttQueue queue = new MqttQueue();
     private final CoreThread dispatcher;
 
-    private mqttServer(final fURI origin, final Network owner) throws IOException {
-        super(origin, MQTT_SERVER_TID, owner);
+    private mqttServer(final Map<Obj, Obj> jvm, final Network owner) throws IOException {
+        super(jvm, MQTT_SERVER_TID, owner);
         this.machine = Machine.current();
         this.socket = new ServerSocket();
         this.socket.setReuseAddress(true);
-        this.socket.bind(address(origin));
+        this.socket.bind(address(this.at(ORIGIN).uriValue()));
         this.jvm().put(SYS_KEY, buildSys(this));
         this.acceptor = CoreThread.core(instLambda((_, _) -> {
             this.acceptLoop();
@@ -167,7 +167,7 @@ public final class mqttServer extends Listener {
             return noobj();
         }));//, this.machine.vid().extend("network").extend("mqtt-server-" + origin + "-dispatcher"));
         ThreadExecutor.instance().execute(this.dispatcher);
-        LOG.info("mqtt_server listening: %s", origin);
+        LOG.info("mqtt_server listening: %s", this.at(ORIGIN).uriValue());
     }
 
     /**
@@ -248,7 +248,10 @@ public final class mqttServer extends Listener {
             return held;
         final mqttServer server;
         try {
-            server = new mqttServer(origin, level);
+            final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+            jvm.put(uri(ORIGIN), uri(origin));
+            jvm.put(uri(ROUTE), routes);
+            server = new mqttServer(jvm, level);
         } catch (final IOException e) {
             throw MTronException.of(e, "unable to bind mqtt server %s", origin);
         }

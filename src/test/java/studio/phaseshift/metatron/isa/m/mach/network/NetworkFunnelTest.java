@@ -22,11 +22,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,11 +34,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PEER_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PEER_TYPE;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * THE FUNNEL ITSELF: {@link Network#index(Obj)} and {@link Network#drop(fURI)} are the two Addressable doors every
@@ -61,7 +62,7 @@ public class NetworkFunnelTest extends AbstractMetatronTest {
         private final AtomicInteger unbinds = new AtomicInteger(0);
 
         private Probe(final fURI origin, final Network owner) {
-            super(origin, REC_TID, owner);
+            super(mutableMap(uri(ORIGIN), uri(origin)), REC_TID, owner);
         }
 
         @Override

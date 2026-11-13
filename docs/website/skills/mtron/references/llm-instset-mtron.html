@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
                             </div>
                         </div>
                     </li>
@@ -471,7 +472,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/mfs/boot/space/web/"
+               title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -527,13 +530,11 @@ mtron&gt; model::[provider=&gt; ollama,
                protocol=&gt; ollama,
                host    =&gt; &lt;http://localhost:11434&gt;,
                llm     =&gt; &lt;qwen3.5:4b&gt;]@qwen3
-==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
-           size=&gt;gB::3.1571,
-           context=&gt;262144,
-           provider=&gt;ollama,
-           protocol=&gt;ollama,
-           host=&gt;http://localhost:11434,
-           llm=&gt;&lt;qwen3.5:4b&gt;]@qwen3
+==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: java.net.ConnectException (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.net.ConnectException [SocketChannelImpl&lt;204&gt;]']['fail']['fail']['fail']
+   	while parsing: model::[provider=&gt; ollama,
+                  protocol=&gt; ollama,
+                  host    =&gt; &lt;http://localhost:11434&gt;,
+                  llm     =&gt; &lt;qwen3.5:4b&gt;]@qwen3]
 </code></pre>
 <p>Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
 the workspace and a chat feature. Then:</p>
