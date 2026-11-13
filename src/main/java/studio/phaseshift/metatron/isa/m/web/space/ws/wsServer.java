@@ -294,7 +294,9 @@ public final class wsServer extends Listener {
         }
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(ORIGIN), uri(origin));
-        jvm.put(uri(ROUTE), routes);
+        // a route table is ABSENT rather than empty while the machine serves nothing through it (listener::T)
+        if (!routes.isEmpty())
+            jvm.put(uri(ROUTE), routes);
         final wsServer server = new wsServer(jvm, level);
         try {
             Network.Helper.listen(level, server, routes);
