@@ -1,13 +1,19 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
+import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_TYPER_TYPE;
@@ -84,5 +90,29 @@ public class TyperTest extends AbstractMetatronTest {
         final Rec state = rec(mutableMap(uri(Typer.CHECK), rec(mutableMap(uri(Typer.TYPE_PRED.name()), BOOL_FALSE))));
         MACH_TYPER_TYPE.constructor().apply(state);
         assertFalse(state.has(uri("verify")), "the typer is built on a copy of the caller's rec");
+    }
+
+    /**
+     * A CHECK CHECKS, IT DOES NOT COUNT (Marko, 2026-11-13; 2026-11-11: "as it is with the typer's dom check off"): the
+     * processor carries a lhs's count with the dom check on or off, so turning it off changes no answer. With it off,
+     * >> answered the field as stored and {2}[name=>5]>>name was 5; the others already agreed, and must not count twice.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "{2}[name=>5]>>name                     % {2}5",
+            "[name=>5].branch(id(),id())>>name      % {2}5",
+            "{2}5.plus(1)                           % {2}6",
+            "{3}5{3}.plus(1)                        % {3}6{3}",
+            "{3}5.count()                           % 3",
+            "{1,1,2}.plus(1)                        % {{2}2,3}"})
+    public void testTheDomCheckChangesNoAnswer(final String code, final String expected) {
+        try {
+            for (final Bool check : List.of(BOOL_TRUE, BOOL_FALSE)) {
+                Machine.current().compiler().typer().at("check/inst_dom", check, Poly.MUTABLE);
+                assertDoesNotThrow(() -> checkCodeParseApply(LOG, code, expected), "inst_dom=" + check);
+            }
+        } finally {
+            Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
+        }
     }
 }
