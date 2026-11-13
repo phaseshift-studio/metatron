@@ -148,3 +148,9 @@ start(0).{0,10}plus(1).sum()                              [-- 55 --]
 [NO_PROMPT][== the plan factors the UNROLL INDEX, not the seed: one lane per place, a narrowed span ==]
 start(0).{0,10}plus(1).sum().explain()>>format            [-- one lane per place, the unrolls' work split by sqrt --]
 ```
+
+```mtron_pre cast=span-and-point cols=110 rows=32 typing_delay=0.03 speed_rates="0.5,1,1.5,2" speed_default="1"
+0.plus(1).plus(1).plus(1)
+0.branch(plus(1),plus(1).plus(1),plus(1).plus(1).plus(1))
+0.{0,3}plus(1)
+```
