@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.db.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.m.db.grph.space.EdgeRec;
@@ -102,6 +103,9 @@ public class grphInstSet extends AbstractInstSet {
     public static final fURI OUTE_INST_TID = GRPH_INST_TID.extend("outE");
     public static final fURI IN_INST_TID = GRPH_INST_TID.extend("in");
     public static final fURI OUT_INST_TID = GRPH_INST_TID.extend("out");
+    // the path instructions (docs/design/smooth-crumple-relations.md): smooth(T) is ~T~, crumple(T) is ~T~>
+    public static final fURI SMOOTH_INST_TID = GRPH_INST_TID.extend("smooth");
+    public static final fURI CRUMPLE_INST_TID = GRPH_INST_TID.extend("crumple");
     public static final String AUTO_ROUTE_STRING = "!route";
     public static final Uri BOTH = uri(Direction.BOTH.name());
     public static final Uri ID = uri("ID");
@@ -116,6 +120,19 @@ public class grphInstSet extends AbstractInstSet {
 
     public grphInstSet() {
         super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), INSTSET_TID, GRPH_ISA_TID);
+    }
+
+    /**
+     * The path sugars, wraps around an edge type (docs/design/smooth-crumple-relations.md): {@code ~T~} is
+     * {@code smooth(T)}, which crosses the edges of type T and keeps nothing, and {@code ~T~>} is {@code crumple(T)},
+     * which crosses them and keeps the element it reaches as a point of the path. The longest sugar wins, so
+     * {@code ~T~>} is never read as {@code ~T~} and a stray {@code >}.
+     */
+    @Override
+    public Set<Sugar> sugars() {
+        return new LinkedHashSet<>(List.of(
+                Sugar.wrap("~", "~>", List.of(CRUMPLE_INST_TID), 1),
+                Sugar.wrap("~", "~", List.of(SMOOTH_INST_TID), 1)));
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
