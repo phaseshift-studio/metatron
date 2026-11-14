@@ -148,7 +148,11 @@ public class mParser {
         }
     }
 
-    private static Parser cachedSugarParser = null;
+    // THE SUGARS ARE ONE SETTABLE CHOICE that every addSugar re-sets, so a sugar an ISA registers when it is constructed
+    // or mounted (grphInstSet's ~T~ and ~T~>) parses at once. It was a choice built once in the static block, and the
+    // grammar captures this parser when it is built, so only mInstSet's and catInstSet's sugars ever parsed. The packrat
+    // cache is per parse run (PARSE_GENERATION), so a choice re-set between runs is never read stale.
+    private static final SettableParser sugar_parser = SettableParser.undefined();
     private static Parser cachedExpressionParser = null;
 
     //
@@ -198,11 +202,9 @@ public class mParser {
         LABELS.add(EXPECTED_OBJ);
         new mInstSet().sugars().forEach(mParser::addSugar);
         new catInstSet().sugars().forEach(mParser::addSugar);
-        // Cache the sugar parser after all sugars are loaded
-        cachedSugarParser = PARSERS.isEmpty() ? null : choice(PARSERS.values().toArray(new Parser[0]));
         // Initialize all parsers first
-        furi_parser.set(seq(word().or(seq(of("::").not(),
-                        anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
+        final Parser furiChar = word().or(seq(of("::").not(), anyOf(REDUCED_FURI_CHARS)));
+        furi_parser.set(seq(seq(furiChar, m_furi_rest(furiChar).star()).flatten(),
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
                 opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).d(coefficientOrOne(pick(t, 2))).qString(pick(t, 3))));
@@ -371,6 +373,7 @@ public class mParser {
                 return null == pick(t, 0) ? inst : inst.tid(inst.tid().b(coefficientOrOne(pick(t, 0))));
             }));
         }
+        sugar_parser.set(choice(PARSERS.values().toArray(new Parser[0])));
         return Collections.unmodifiableCollection(PARSERS.values());
     }
 
@@ -1120,11 +1123,22 @@ public class mParser {
                 opt(seq(of('%'), word().or(anyOf(".~-%")).plus()), null), of(']')).flatten();
     }
 
+    /**
+     * A BARE URI NEVER ENDS IN A '~' IT DID NOT START WITH (docs/design/smooth-crumple-relations.md): past its first
+     * character, a '~' is part of the uri only when another uri character follows it. The path sugars ~T~ and ~T~>
+     * close on that '~' (~knows~ is smooth(knows)), while ~ (the frame), ~/processor/fail and a~b stay one uri.
+     */
+    private static Parser m_furi_rest(final Parser element) {
+        return seq(of('~').not(), element).or(seq(of('~'), element.and()));
+    }
+
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query, final boolean allowLeadingBranch) {
         final Parser element = m_furi_ip_literal().or(word()).or(m_furi_template()).or(m_furi_branch_literal()).or(m_furi_coefficient_marked_atom()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)));
         // a quoted uri may lead with its span before a `/` (`<{2}/m/int{3}>`): the text goes to f(), which reads it
         final Parser first = allowLeadingBranch ? seq(m_furi_coefficient(), of('/').and()).or(m_furi_leading_coefficient_marked_atom()).or(element) : element;
-        final Parser contentParser = seq(first, element.star()).flatten();
+        // a bare uri (m_furi_bare) keeps a '~' past its first character only before another uri character (m_furi_rest);
+        // a quoted one has its own closer and keeps every '~'
+        final Parser contentParser = seq(first, (allowLeadingBranch ? element : m_furi_rest(element)).star()).flatten();
         final Parser leadingBraceGuard = allowLeadingBranch ? of("") : of('{').not();
         return new FuriPolyRuleParser(seq(of('-').not(), leadingBraceGuard, contentParser,
                 opt(polynomial ? m_furi_poly_type() : none(), null),
@@ -1620,8 +1634,15 @@ public class mParser {
     public static Parser m_code() {
         // only a typed prefix (code{2}::…) is the code's own: a bare leading coefficient is the first instruction's
         // span (m_inst_furi), so it is not read here as the code's coefficient
-        return seq(opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), Tokens.CODE_TID),
-                opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix())
+        // A TYPE PREFIX THAT LEADS NO CHAIN IS NOT ONE: the code's own type (code{2}::…) is read first, and when no chain
+        // follows it, the chain is read from the same place without it. A wrap sugar's head reads like a prefix: before
+        // this, ~knows::[weight=>?>0.4]~> and _/knows::[…]\_ took ~knows and _/knows for the code's type and failed
+        // (docs/design/smooth-crumple-relations.md)
+        final Parser prefixed = seq(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0),
+                opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix());
+        final Parser plain = seq(of("").map(t -> Tokens.CODE_TID),
+                opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix());
+        return choice(prefixed, plain)
                 .map(t -> {
                     final List<Object> elements = runs(pick(t, 2));
                     return elements.size() == 1 ? elements.getFirst() : new MCode((List) startAfterEnd(elements
@@ -1654,8 +1675,7 @@ public class mParser {
     }
 
     public static Parser m_inst() {
-        // Use cached sugar parser to avoid creating new array on every call
-        return cachedSugarParser == null ? inst_parser : cachedSugarParser.or(inst_parser);
+        return sugar_parser.or(inst_parser);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

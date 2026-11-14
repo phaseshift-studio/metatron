@@ -561,6 +561,45 @@ public class mParserTest extends AbstractMetatronTest {
         assertEquals(ObjmtronSerializer.parse(expected).apply(), ObjmtronSerializer.eval(code), code + ": statement by statement");
     }
 
+    /**
+     * THE PATH SUGARS (docs/design/smooth-crumple-relations.md). grphInstSet registers {@code ~T~} as
+     * {@code smooth(T)} and {@code ~T~>} as {@code crumple(T)}, wraps around an edge type.
+     * <ul>
+     *   <li>An ISA's sugar reaches the grammar, because addSugar re-sets the sugar choice.</li>
+     *   <li>The longest wrap wins, so {@code ~T~>} is never {@code ~T~} and a stray {@code >}.</li>
+     *   <li>A bare uri never ends in a {@code ~} it did not start with, so {@code ~}, {@code ~/processor/fail} and
+     *       {@code a~b} stay one uri.</li>
+     * </ul>
+     */
+    @Test
+    void testPathSugars() {
+        new studio.phaseshift.metatron.isa.m.db.grph.grphInstSet(); // registers its sugars, a no-op once registered
+        final Obj walk = ObjmtronSerializer.parse("x.~knows~.~created~>.>>name");
+        final List<Inst> insts = walk.asCall().insts();
+        final List<String> ops = insts.stream().map(i -> i.tid().segments().getLast()).toList();
+        final int at = ops.indexOf("smooth");
+        assertTrue(at >= 0, () -> "~knows~ is smooth: " + walk);
+        assertEquals(List.of("smooth", "crumple", "rshift"), ops.subList(at, at + 3), () -> "the walk's run: " + walk);
+        assertTrue(insts.get(at).tid().toString().startsWith("/m/db/grph/inst/smooth"), () -> "smooth is grph's: " + walk);
+        assertTrue(insts.get(at + 1).tid().toString().startsWith("/m/db/grph/inst/crumple"), () -> "crumple is grph's: " + walk);
+        assertEquals(uri("knows"), insts.get(at).arg(0), () -> "the edge type sits in the middle: " + walk);
+        assertEquals(uri("created"), insts.get(at + 1).arg(0), () -> "the '>' does not join the edge type: " + walk);
+        // an edge type with a predicate, closed by ~>
+        final Obj heavy = ObjmtronSerializer.parse("x.~knows::[weight=>?>0.4]~>");
+        final Inst crumple = heavy.asCall().insts().stream().filter(i -> i.tid().segments().getLast().equals("crumple"))
+                .findFirst().orElseThrow(() -> new AssertionError("~knows::[...]~> is crumple: " + heavy));
+        assertTrue(crumple.arg(0).toString().contains("knows") && crumple.arg(0).toString().contains("weight"),
+                () -> "the predicated edge type is the argument: " + heavy);
+        // a typed middle in any wrap: the code's type prefix no longer swallows the wrap's head (_/knows, ~knows)
+        assertFalse(mParser.parse("x.~knows::T~").isFail(), "a typed edge type in ~T~");
+        assertFalse(mParser.parse("[1,2]._/knows::[weight=>?>0.4]\\_").isFail(), "a typed middle in within's wrap");
+        // the uris a '~' already belongs to
+        assertEquals(uri("~/processor/fail"), ObjmtronSerializer.parse("~/processor/fail"));
+        assertEquals(uri("a~b"), ObjmtronSerializer.parse("a~b"));
+        assertEquals(uri("~"), ObjmtronSerializer.parse("~"));
+        assertFalse(mParser.parse("*~.vid()").isFail(), "~ alone is the frame");
+    }
+
     // ========================================
     // eval() Statement Splitting
     // ========================================

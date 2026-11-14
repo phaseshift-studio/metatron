@@ -2,7 +2,7 @@
 
 **Status:** design note, written 2026-11-13 on main `83a05cf0c`, then updated for `5f374b0f5` and `f4800f3e9`. Anything
 marked **observed** was checked on that day, by a test row, a live probe or a code read, with the commit given. Anything
-marked **proposed** is not built. Slice 1, the parser layer, starts next in worktree `friendly-jang-f35798`.
+marked **proposed** is not built. Slice 1, the parser layer, is done in worktree `friendly-jang-f35798` (§5).
 **Grew out of:**
 - the join-propagating rel product (main `1ad7f9963`);
 - Marko's goal: "I would love to get rid of out()/in() such that out/in data is fetched based on => relation
@@ -260,26 +260,30 @@ that bracket: `marko=[knows·created]=>lop`. Nothing needs this yet. It is where
 
 ## 5. Implementation plan
 
-**Slice 1 is the parser layer, and it does not depend on §4.**
-- Tids: `SMOOTH_INST_TID` and `CRUMPLE_INST_TID` under `GRPH_INST_TID` (`/m/db/grph/inst/…`), where the other graph
-  instructions live.
-- Sugars: `Sugar.wrap("~", "~>", [CRUMPLE], 1)` and `Sugar.wrap("~", "~", [SMOOTH], 1)`.
-  - **Registration constraint (observed in code).** The sugar choice, `cachedSugarParser`, is built once in mParser's
-    static block, from `mInstSet` and `catInstSet` only. `m_inst()` is read at grammar construction, so a sugar that
-    `addSugar` registers later lands in `PARSERS` and never reaches the grammar.
-  - Either the two wraps go in `mInstSet.sugars()`, or the choice becomes a settable parser that `addSugar` rebuilds.
-    The second would make instruction-set sugars work in general, which is what Marko described.
-- **Longest match.** Sugars are combined with `ChoiceParser(FURTHEST)`, so `~T~>` beats `~T~` without any ordering
-  trick.
-- **The `~` character.** `~` is in `REDUCED_FURI_CHARS` (`~/%$!#_-+:*`), as in `~/processor/fail`.
-  - Live: `~knows~` is a bare uri, and `'x'.~knows~` fails with "expected an obj". So nothing claims the instruction
-    position today.
-  - Inside the wrap, though, the middle (`m_paren_wrap(obj_rel_back_parser)`) would read `knows~` greedily.
-  - The fix: a bare furi may contain `~` but not end with one, using a one-character lookahead. `~/processor/fail`
-    still parses. The cost is that a bare uri ending in `~`, like `backup~`, no longer parses.
-- **Tests.** mParserTest rows parse `x.~knows~.~created~>.>>name` and `x.~knows::[weight=>?>0.4]~>`, plus regression
-  rows for `~/processor/fail` and `a~b`. Several mParserTest sources use `~` as the CSV quote character, so the new
-  rows need the default quoting.
+**Slice 1, the parser layer, is done** *(observed)*. It does not depend on §4.
+- **Tids and sugars.** `SMOOTH_INST_TID` and `CRUMPLE_INST_TID` sit under `GRPH_INST_TID` (`/m/db/grph/inst/…`), where
+  the other graph instructions live. `grphInstSet.sugars()` declares `Sugar.wrap("~", "~>", [CRUMPLE], 1)` and
+  `Sugar.wrap("~", "~", [SMOOTH], 1)`.
+- **Instruction-set sugars reach the grammar now.**
+  - The sugar choice was built once in mParser's static block, from `mInstSet` and `catInstSet` only. The grammar
+    captures that parser, so a sugar registered later never parsed.
+  - It is now a `SettableParser` that `addSugar` re-sets. The packrat cache is per parse run, so a re-set choice is
+    never read stale.
+- **Longest match.** The FURTHEST choice makes `~T~>` beat `~T~`.
+- **The `~` character.** A bare uri never ends in a `~` it did not start with (`m_furi_rest`): past its first character,
+  a `~` is part of the uri only before another uri character.
+  - `~` alone (the frame: `*~.vid()` in MachineIsolationScriptTest), `~/processor/fail` and `a~b` stay one uri.
+  - A bare `backup~` no longer parses. A quoted uri keeps every `~`.
+- **`m_code`'s type prefix backtracks.**
+  - `~knows::[weight=>?>0.4]~>` failed because `m_code` read `~knows::` as the code's own type, with a greedy `opt`,
+    and then found no chain.
+  - That was not new: `_/knows::[…]\_` in `within`'s wrap failed the same way.
+  - `m_code` now reads the chain both with and without the prefix and keeps the one that reaches furthest.
+- **Test.** `mParserTest.testPathSugars` covers:
+  - the walk's run;
+  - bare, predicated and typed edge types in the middle;
+  - a typed middle in `within`;
+  - the uris a `~` already belongs to.
 
 **Slice 2, nominal edge types**, depends on §4.5.
 
