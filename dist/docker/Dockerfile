@@ -78,6 +78,12 @@ RUN chmod +x /app/entrypoint.sh
 COPY --chown=metatron:metatron docs/website/skills/mtron /app/.metatron/skills/mtron
 COPY --chown=metatron:metatron docs/website/skills/metatron /app/.metatron/skills/metatron
 
+# splash page assets — the http routes /css, /js and /highlight mount these
+# (fs:docs/website/…), so the page renders styled + interactive, not bare HTML.
+COPY --chown=metatron:metatron docs/website/css /app/docs/website/css
+COPY --chown=metatron:metatron docs/website/js /app/docs/website/js
+COPY --chown=metatron:metatron docs/website/highlight /app/docs/website/highlight
+
 USER metatron
 
 # ws (mtron/MCP) and http — the standard boot binds both on 0.0.0.0

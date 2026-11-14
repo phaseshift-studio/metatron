@@ -75,7 +75,7 @@ under `/m/math/+` and available via the standard type resolution system.
 
 ```mtron
 mtron> datetime_now()
-==>datetime::<//2026.11:1307/50/02/824?tz=-0700>
+==>datetime::<//2026.11:1400/02/49/754?tz=-0700>
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
 ==>datetime::<//2024.12:25/09/00/00/000?tz=-0500>

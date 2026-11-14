@@ -1,0 +1,3 @@
+0.plus(1).plus(1).plus(1);
+0.branch(plus(1),plus(1).plus(1),plus(1).plus(1).plus(1));
+0.{0,3}plus(1);
