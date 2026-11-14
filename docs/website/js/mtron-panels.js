@@ -12,11 +12,11 @@
  *
  * UMD: `window.MtronPanels` in a page, `module.exports` under node (for tests).
  */
-(function (root, factory) {
-    if (typeof module === "object" && module.exports) module.exports = factory();
-    else root.MtronPanels = factory();
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
-    "use strict";
+import { read, write } from './mtron-io.js';
+import { parseSchema, renderForm, collectForm } from './mtron-form.js';
+import { serialize } from './obj_mtron_serializer.js';
+
+"use strict";
 
     const panels = new Map();
     const parents = new Map();
@@ -64,6 +64,14 @@
         } catch (ignored) {
             return String(value);
         }
+    }
+
+    /* a spinner + label for slow panel reads (schema discovery, table load) */
+    function spinner(label) {
+        const wrap = node("div", "tble-loading");
+        wrap.appendChild(node("span", "tble-spinner"));
+        wrap.appendChild(document.createTextNode(label || "loading…"));
+        return wrap;
     }
 
     /* /m/instset — the pattern and the q table every space shows. */
@@ -763,5 +771,372 @@
         return box;
     });
 
-    return { register, registerParent, resolve, parentOf, panels, parents };
-});
+    /* ── tblespace: a spreadsheet over the sql tables ────────────────────────
+       the space's schema (a wildcard read of <path>/+) lists one Type per table,
+       and its vid is the table name; a table's rows (a wildcard read of
+       <path>/<table>/+) are equal-sized recs, so the columns are the first
+       row's keys. */
+    function schemaTableNames(text) {
+        const source = String(text == null ? "" : text);
+        const names = [];
+        let depth = 0;
+        let listDepth = -1;
+        let quote = null;
+        for (let i = 0; i < source.length; i++) {
+            const c = source[i];
+            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+            if (c === "'" || c === '"') { quote = c; continue; }
+            if (c === "[" || c === "(" || c === "{") { depth++; if (listDepth < 0) listDepth = depth; continue; }
+            if (c === "]" || c === ")" || c === "}") { depth--; continue; }
+            if (c === "@" && depth === listDepth) {
+                let j = i + 1;
+                while (j < source.length && /[A-Za-z0-9_./-]/.test(source[j])) j++;
+                const name = source.slice(i + 1, j);
+                if (name) names.push(name);
+                i = j - 1;
+            }
+        }
+        return names;
+    }
+
+    /* the address an auto-at / auto-deref reference points at — what a clickable
+       cell opens. */
+    function refTarget(text) {
+        if (typeof text !== "string") return null;
+        const m = /^![@*]\s*(.+)$/.exec(text.trim());
+        if (!m) return null;
+        let t = m[1].trim();
+        if (t.charAt(0) === "<" && t.charAt(t.length - 1) === ">") t = t.slice(1, -1);
+        return t;
+    }
+
+    register("/m/db/tble/space/tblespace", async function (env, api) {
+        const box = node("div", "mpanel tblespace");
+        let data = "";
+        try {
+            const space = await api.json();
+            const pattern = space && space.pattern ? String(space.pattern) : "";
+            data = pattern.replace(/\/#.*$/, "").replace(/\/+$/, "");
+        } catch (ignored) { }
+        if (!data) {
+            box.appendChild(node("div", "mpanel-empty", "no table path"));
+            return box;
+        }
+
+        const pick = document.createElement("select");
+        pick.className = "tble-pick";
+        pick.appendChild(new Option("choose a table…", ""));
+        const grid = node("div", "tble-grid");
+        grid.appendChild(spinner("discovering tables…"));
+        try {
+            const schemaText = await api.mtron("*<" + data + "/+>");
+            const tables = schemaTableNames(schemaText);
+            grid.textContent = "";
+            tables.forEach((name) => pick.appendChild(new Option(name, name)));
+            grid.appendChild(node("div", "tble-empty", tables.length ? "pick a table" : "no tables"));
+        } catch (problem) {
+            grid.textContent = "";
+            grid.appendChild(node("div", "tble-empty", "cannot read schema: " + (problem && problem.message ? problem.message : problem)));
+        }
+        box.appendChild(pick);
+        box.appendChild(grid);
+
+        /* the mtron expression bar — pre-filled with the read that populated the
+           grid; edit + Enter re-evaluates it (filter, delete, insert, drop, …). */
+        const expr = document.createElement("input");
+        expr.type = "text";
+        expr.className = "tble-expr";
+        expr.spellcheck = false;
+        expr.autocomplete = "off";
+        expr.placeholder = "mtron — e.g. *<path>/<table>/+";
+        box.appendChild(expr);
+
+        /* one cell: an auto-at reference becomes a clickable button (opens the
+           popup, where it can be pinned); an array is its elements in a row; a
+           plain value is text. */
+        function renderCell(value) {
+            if (Array.isArray(value)) {
+                const span = node("span", "tble-cell");
+                value.forEach((item, i) => {
+                    if (i) span.appendChild(document.createTextNode(" · "));
+                    span.appendChild(renderCell(item));
+                });
+                return span;
+            }
+            const target = refTarget(value);
+            if (target) {
+                const prefix = String(value).slice(0, 2);
+                const b = node("button", "tble-ref", prefix + target.split("/").pop());
+                b.type = "button";
+                b.title = String(value) + " → " + target + " · shift-click for ?docq";
+                b.addEventListener("click", (ev) => {
+                    if (ev.shiftKey) {
+                        api.open({ vid: target + "?docq", shortTid: "docs" });
+                    } else {
+                        api.open({ vid: target, raw: String(value) });
+                    }
+                });
+                return b;
+            }
+            return document.createTextNode(brief(value));
+        }
+
+        function renderGrid(result) {
+            let rows = null;
+            if (Array.isArray(result))
+                rows = result.length && result.every((r) => r && typeof r === "object" && !Array.isArray(r)) ? result : null;
+            else if (result && typeof result === "object")
+                rows = [result];
+            if (!rows) {
+                grid.textContent = "";
+                grid.appendChild(node("div", "tble-empty", result == null ? "noobj" : (typeof result === "string" ? result : brief(result))));
+                return;
+            }
+            const columns = Object.keys(rows[0]);
+            const table = node("table", "tble-sheet");
+            const thead = document.createElement("thead");
+            const hr = document.createElement("tr");
+            hr.appendChild(node("th", "tble-idx", "#"));
+            columns.forEach((col) => hr.appendChild(node("th", "", col)));
+            thead.appendChild(hr);
+            table.appendChild(thead);
+            const tbody = document.createElement("tbody");
+            rows.forEach((row, idx) => {
+                const tr = document.createElement("tr");
+                tr.appendChild(node("td", "tble-idx", String(idx + 1)));
+                columns.forEach((col) => {
+                    const td = document.createElement("td");
+                    td.appendChild(renderCell(row[col]));
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            grid.textContent = "";
+            grid.appendChild(table);
+        }
+
+        async function runExpr(source) {
+            source = String(source == null ? "" : source).trim();
+            if (!source) return;
+            grid.textContent = "";
+            grid.appendChild(spinner("loading…"));
+            let result;
+            try {
+                result = await api.evalJson(source);
+            } catch (problem) {
+                grid.textContent = "";
+                grid.appendChild(node("div", "tble-empty", String(problem && problem.message ? problem.message : problem)));
+                return;
+            }
+            renderGrid(result);
+        }
+
+        function loadTable(name) {
+            const source = "*<" + data + "/" + name + "/+>";
+            expr.value = source;
+            runExpr(source);
+        }
+
+        expr.addEventListener("keydown", (ev) => {
+            if (ev.key === "Enter") {
+                ev.preventDefault();
+                runExpr(expr.value);
+            }
+        });
+
+        pick.addEventListener("change", () => { if (pick.value) loadTable(pick.value); });
+        return box;
+    });
+
+    /* ── agent::T — a feature tree (spine + branches) ──────────────────────
+       an agent is a rec with `feature => [ <feature>::[params] … ]`. each
+       feature's tid names its type (chat_feature, tool_feature, …) and its
+       value is the params rec. the [+] buttons are the "add" affordances:
+       [+] on `feature` adds a feature (from /m/ai/llm/feature/+), [+] on a
+       feature adds a param (keys dictated by that feature's type). the add /
+       edit writes and the type-driven editors are the next step — here the
+       tree is built and labelled. */
+
+    /* a rec field by key string — Map keys are fURI (reference equality), so
+       .get(f(key)) misses; walk and match on the name. */
+    function recGet(rec, key) {
+        if (!rec || !rec.js) return undefined;
+        for (const [k, v] of rec.js) if (k.toString() === key) return v;
+        return undefined;
+    }
+
+    /* the value leaf of a param — scalars plain, uri unbracketed, poly compact. */
+    function shortVal(v) {
+        if (v == null || v.isNoObj()) return "noobj";
+        if (v.isCode()) return "[code]";
+        if (v.isInt() || v.isReal() || v.isBool()) return String(v.js);
+        if (v.isStr()) return v.js;
+        if (v.isUri()) return v.js.toString();
+        if (v.isBytes()) return "0x" + Array.from(v.js).map((b) => b.toString(16).padStart(2, "0")).join("");
+        const s = write(v);
+        return s.length > 70 ? s.slice(0, 69) + "…" : s;
+    }
+
+    function treeNode() {
+        const li = document.createElement("li");
+        const row = node("div", "tree-row");
+        li.appendChild(row);
+        return { li: li, row: row };
+    }
+
+    function treeChildren(li) {
+        const ul = node("ul", "tree-children");
+        li.appendChild(ul);
+        return ul;
+    }
+
+    function treeToggle(childrenUl) {
+        const b = node("button", "tree-toggle", "−");
+        b.type = "button";
+        b.title = "fold";
+        if (childrenUl) {
+            b.addEventListener("click", () => {
+                const folded = childrenUl.hidden;
+                childrenUl.hidden = !folded;
+                b.textContent = folded ? "−" : "+";
+                b.title = folded ? "fold" : "unfold";
+            });
+        } else {
+            b.hidden = true;
+        }
+        return b;
+    }
+
+    function treeEdit(title, onClick) {
+        const b = node("button", "tree-edit", "✎");
+        b.type = "button";
+        b.title = title;
+        b.addEventListener("click", onClick);
+        return b;
+    }
+
+    /* the form's values → a mtron rec, typed by the schema (stub: str/uri/ref
+       quote as strings, rec/lst pass through raw). */
+    function buildRecText(schema, values) {
+        const parts = [];
+        schema.forEach((f) => {
+            const v = values[f.key];
+            if (v === undefined || v === null || v === '' || v === false) return;
+            let text;
+            if (f.kind === 'bool') text = v ? 'true' : 'false';
+            else if (f.kind === 'int') text = serialize(parseInt(v, 10));
+            else if (f.kind === 'real') text = serialize({ real: parseFloat(v) });
+            else if (f.kind === 'rec' || f.kind === 'lst') text = v;
+            else text = serialize(String(v));
+            parts.push(f.key + '=>' + text);
+        });
+        return '[' + parts.join(',') + ']';
+    }
+
+    /* the pencil: a popup with a type-definition-driven form (stub — save builds
+       the mtron and previews it; the write is not wired yet). */
+    function openFeatureEditor(featName, feat, api) {
+        const modal = document.createElement("div");
+        modal.className = "agent-modal";
+        const box = node("div", "agent-modal-box");
+        box.appendChild(node("h3", "agent-modal-title", "edit " + featName));
+        const body = node("div", "agent-modal-body");
+        body.appendChild(spinner("reading " + featName + " type…"));
+        box.appendChild(body);
+        const result = node("pre", "agent-modal-result");
+        result.hidden = true;
+        box.appendChild(result);
+        const actions = node("div", "agent-modal-actions");
+        const saveBtn = node("button", "btn btn-save", "save");
+        const cancelBtn = node("button", "btn", "cancel");
+        actions.appendChild(saveBtn);
+        actions.appendChild(cancelBtn);
+        box.appendChild(actions);
+        modal.appendChild(box);
+        document.body.appendChild(modal);
+
+        cancelBtn.addEventListener("click", () => modal.remove());
+        modal.addEventListener("click", (ev) => { if (ev.target === modal) modal.remove(); });
+
+        (async () => {
+            let schema = [];
+            try {
+                const typeDef = await api.mtron("*</m/ai/llm/feature/" + featName + ">");
+                schema = parseSchema(typeDef);
+            } catch (ignored) { }
+            body.textContent = "";
+            const form = renderForm(schema, feat && feat.isRec() ? feat.js : null);
+            body.appendChild(form);
+            saveBtn.addEventListener("click", () => {
+                const values = collectForm(form);
+                const recText = buildRecText(schema, values);
+                const expr = "</usr/dr/agent/feature/" + featName + "> -> " + featName + "::" + recText;
+                result.hidden = false;
+                result.textContent = "would write: " + expr;
+            });
+        })();
+    }
+
+    function agentTree(agent, api) {
+        const root = node("ul", "agent-tree");
+        const name = shortVal(recGet(agent, "name"));
+        const featureList = recGet(agent, "feature");
+        const features = featureList && featureList.isLst() ? featureList.js : [];
+
+        const agentNode = treeNode();
+        agentNode.row.appendChild(node("span", "tree-label", name && name !== "noobj" ? name : "agent"));
+        root.appendChild(agentNode.li);
+
+        const featUl = treeChildren(agentNode.li);
+        const featNode = treeNode();
+        featNode.row.appendChild(treeToggle(featUl));
+        featNode.row.appendChild(node("span", "tree-label", "feature"));
+        featUl.appendChild(featNode.li);
+
+        const featsUl = treeChildren(featNode.li);
+        features.forEach((feat) => {
+            const featName = feat && feat.tid ? feat.tid.name() : "feature";
+            const fNode = treeNode();
+            const hasParams = feat && feat.isRec();
+            const paramsUl = hasParams ? treeChildren(fNode.li) : null;
+            fNode.row.appendChild(treeToggle(paramsUl));
+            fNode.row.appendChild(node("span", "tree-label", featName));
+            fNode.row.appendChild(treeEdit("edit " + featName, () => openFeatureEditor(featName, feat, api)));
+            featsUl.appendChild(fNode.li);
+            if (hasParams) {
+                for (const [k, v] of feat.js) {
+                    const pNode = treeNode();
+                    pNode.row.appendChild(node("span", "tree-key", k.toString()));
+                    pNode.row.appendChild(node("span", "tree-arrow", "=>"));
+                    pNode.row.appendChild(node("span", "tree-val", shortVal(v)));
+                    paramsUl.appendChild(pNode.li);
+                }
+            }
+        });
+
+        return root;
+    }
+
+    register("/m/ai/llm/agent", async function (env, api) {
+        const box = node("div", "mpanel agent");
+        let vid = String((env && env.vid) || "").trim();
+        if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
+        if (!vid) {
+            box.appendChild(node("div", "mpanel-empty", "no agent address"));
+            return box;
+        }
+        box.appendChild(spinner("reading agent…"));
+        try {
+            const text = await api.mtron("*<" + vid + ">");
+            const agent = read(text);
+            box.textContent = "";
+            box.appendChild(agentTree(agent, api));
+        } catch (problem) {
+            box.textContent = "";
+            box.appendChild(node("div", "mpanel-empty", String(problem && problem.message ? problem.message : problem)));
+        }
+        return box;
+    });
+
+export { register, registerParent, resolve, parentOf, panels, parents };

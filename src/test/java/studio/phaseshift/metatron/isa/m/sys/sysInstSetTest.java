@@ -30,6 +30,7 @@ import java.nio.file.FileSystems;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -68,5 +69,20 @@ public class sysInstSetTest extends AbstractInstSetTest {
         assertEquals(1, found.asLst().lstValue().size());
         // ... but a nested quantifier is refused before it can backtrack against every path in it
         checkCodeParseApply(LOG, "find_file(name=>'(f+)+$',root=><test:.>,pattern=>true)", "<ERROR>");
+    }
+
+    @Test
+    public void testSysStatReportsPhysicalMachine() {
+        final Obj stat = Machine.evaluate("sys_stat()");
+        assertFalse(stat.isFail(), "sys_stat must answer: " + stat);
+        // the box, not the vm's heap: memory + root filesystem are normalized byte reals,
+        // cpu load is a percent real, the model is a str, cores is an int
+        assertTrue(stat.asRec().at(uri("total_mem_phys")).isReal(), "total_mem_phys is a real");
+        assertTrue(stat.asRec().at(uri("free_mem_phys")).isReal(), "free_mem_phys is a real");
+        assertTrue(stat.asRec().at(uri("disk_total")).isReal(), "disk_total is a real");
+        assertTrue(stat.asRec().at(uri("disk_free")).isReal(), "disk_free is a real");
+        assertTrue(stat.asRec().at(uri("cpu_load")).isReal(), "cpu_load is a real (0..100)");
+        assertTrue(stat.asRec().at(uri("cpu_model")).isStr(), "cpu_model is a str");
+        assertTrue(stat.asRec().at(uri("processor")).isInt(), "processor is an int");
     }
 }
