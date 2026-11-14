@@ -55,7 +55,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
 
     public static final Uri PRIMARY = uri("primary");
     private final GraphittyLogger LOG = Graphitty.log(this);
-    protected final Stats iostats = new MStats();
 
     private Memory resolvedMemory = null;
     private Network resolvedNetwork = null;
@@ -246,12 +245,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
         } finally {
             CLOSING = false;
         }
-    }
-
-    public Stats stats() {
-        if (Machine.loaded())
-            return this.iostats;
-        throw MTronException.of("machine not loaded");
     }
 
 

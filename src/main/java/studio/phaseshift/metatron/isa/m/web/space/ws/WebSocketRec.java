@@ -23,6 +23,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.Handshakedata;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -38,6 +39,7 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
@@ -184,8 +186,9 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     public void onMessage(final WebSocket conn, final Obj message) {
         try {
             // the single inbound funnel: a client's onMessage delegates into this same method, so counting here
-            // counts every frame that arrived on any socket, handled or not
-            WireStats.received(this.peerName(), message.vid());
+            // counts every frame that arrived on any socket, handled or not -- into the network of the machine the
+            // frame arrived in (a server session runs in its route's machine)
+            Machine.current().network().analyzer().incr(f(WIRE), f(RECV), 1L);
             // A FAIL IS CAUGHT BEFORE THE HANDLER IS ASKED TO RUN. An uncaught fail lhs skips a non-catch
             // instruction's function (Processor.applyFunction's "a fail lhs skips the function" gate), so a frame
             // whose answer is a fail would never reach on_message at all — not the socket's round-trip router, not a

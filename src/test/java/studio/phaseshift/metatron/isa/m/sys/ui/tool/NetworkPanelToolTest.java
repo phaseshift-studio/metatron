@@ -24,19 +24,22 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_NETWORK_PANEL_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -58,31 +61,42 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     private static final String PEER_A = "ws://alpha:8555/mtron";
     private static final String PEER_B = "ws://beta:8555/mtron";
 
+    /**
+     * the network's meters for this test, which the summary line counts from — fresh per test, as the window is
+     */
+    private Analyzer wire;
+
     @BeforeEach
     void resetWire() {
         // the panel's type lives in the ui instruction set, which a bare boot does not import
         InstSet.importInstSet(studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_ISA_TID);
-        WireStats.reset();
+        this.wire = new BasicAnalyzer();
         WireTrace.clear();
         WireTrace.pause(false);
     }
 
-    private static void exchange(final String peer, final String request, final long elapsedMs) {
+    /**
+     * A round trip as the tap records it (WebSocketObj.sendRecv): a row in the window and an observation of the
+     * network's round-trip timer, beside it.
+     */
+    private void exchange(final String peer, final String request, final long elapsedMs) {
         WireTrace.exchange(peer, null, str(request), str("answer:" + request), System.currentTimeMillis(),
                 elapsedMs, WireTrace.Outcome.OK);
+        this.wire.record(f(WIRE), f(TRIP), elapsedMs * 1_000_000L);
     }
 
     private static String plain(final String line) {
         return Graphitty.strip(Graphitty.string(line));
     }
 
-    private static List<String> lines(final boolean paused, final int maxRows, final String filter, final int width) {
-        return lines(paused, maxRows, filter, Set.of(), width);
+    private List<String> lines(final boolean paused, final int maxRows, final String filter, final int width) {
+        return this.lines(paused, maxRows, filter, Set.of(), width);
     }
 
-    private static List<String> lines(final boolean paused, final int maxRows, final String filter,
-                                      final Set<String> folded, final int width) {
-        return NetworkPanelTool.panelLines(WireTrace.snapshot(maxRows), paused, maxRows, filter, folded, width);
+    private List<String> lines(final boolean paused, final int maxRows, final String filter,
+                               final Set<String> folded, final int width) {
+        return NetworkPanelTool.panelLines(WireTrace.snapshot(maxRows), this.wire.analysis(), paused, maxRows, filter,
+                folded, width);
     }
 
     /**
@@ -95,8 +109,8 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         final String summary = plain(lines(false, 12, "", 120).getFirst());
         assertTrue(summary.contains("⇄2"), "two round trips completed: " + summary);
         assertTrue(summary.contains("1 peer"), "one lane is described: " + summary);
-        // ↓/↑ ARE WIRE FACTS, counted where frames are (send/onMessage), not where exchanges are recorded: a
-        // hand-recorded exchange therefore leaves them at zero, which is the honest answer for this fixture
+        // EVERY COUNT IS A WIRE FACT, the network's meter counted at its tap: the round trips this fixture records as the
+        // tap does, but ↓/↑ are counted where frames are (send/onMessage), so they stay at zero here -- the honest answer
         assertTrue(summary.contains("↓0") && summary.contains("↑0"),
                 "frames are counted by the socket tap, not invented by the ledger: " + summary);
     }
@@ -301,6 +315,8 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     void shouldMarkATimeoutOnTheSummaryAndTheLane() {
         WireTrace.exchange(PEER_B, null, str("ping"), null, System.currentTimeMillis(), 30_000L,
                 WireTrace.Outcome.TIMEOUT);
+        // the tap counts the missed deadline beside the row
+        this.wire.incr(f(WIRE), f(TIMEOUT), 1L);
         final List<String> lines = lines(false, 12, "", 120);
         assertTrue(plain(lines.getFirst()).contains("✗ 1"), "the summary counts the timeout with a cross, not a clock: " + plain(lines.getFirst()));
         assertTrue(plain(lines.get(1)).contains("✗ 1"), "and the lane does too: " + plain(lines.get(1)));

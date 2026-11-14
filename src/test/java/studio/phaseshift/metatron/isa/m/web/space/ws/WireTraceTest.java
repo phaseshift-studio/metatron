@@ -49,7 +49,6 @@ public class WireTraceTest extends AbstractMetatronTest {
 
     @BeforeEach
     void resetTrace() {
-        WireStats.reset();
         WireTrace.clear();
         WireTrace.pause(false);
     }

@@ -32,6 +32,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.tool.NetworkPanelTool;
@@ -39,7 +41,6 @@ import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.PanelWidget;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.TreeWidget;
-import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -79,13 +80,11 @@ public class StatusLineTest extends AbstractMetatronTest {
     @BeforeEach
     void clearBannerBefore() {
         StatusLine.message(str(""));
-        WireStats.reset();
     }
 
     @AfterEach
     void clearBannerAfter() {
         StatusLine.message(str(""));
-        WireStats.reset();
     }
 
     /**
@@ -116,13 +115,13 @@ public class StatusLineTest extends AbstractMetatronTest {
             "12 % 8 % 4 % ⇄12 ↓8 ↑4  % trips, arrivals and departures are counted separately",
     }, delimiter = '%')
     void testNetGauge(final long trips, final long received, final long sent, final String expected, final String description) {
+        // the network's meters, as the wire taps record them (WebSocketObj, WebSocketRec)
+        final Analyzer wire = new BasicAnalyzer();
         for (int i = 0; i < trips; i++)
-            WireStats.roundTrip(5);
-        for (int i = 0; i < received; i++)
-            WireStats.received("peer", null);
-        for (int i = 0; i < sent; i++)
-            WireStats.sent("peer", null);
-        assertEquals(expected, Graphitty.strip(StatusLine.netMarkup("y", BACK)).trim(), description);
+            wire.record(f(WIRE), f(TRIP), 5_000_000L);
+        wire.incr(f(WIRE), f(RECV), received);
+        wire.incr(f(WIRE), f(SENT), sent);
+        assertEquals(expected, Graphitty.strip(StatusLine.netMarkup("y", BACK, wire.analysis())).trim(), description);
     }
 
     /**
@@ -145,11 +144,27 @@ public class StatusLineTest extends AbstractMetatronTest {
      */
     @Test
     void shouldTintTheTripCountOnlyWhenTheWireHasTimedOut() {
-        assertFalse(StatusLine.netMarkup("y", BACK).contains("{{r&"), "an answering wire is quiet");
-        WireStats.timeout();
-        assertTrue(StatusLine.netMarkup("y", BACK).contains("{{r&"), "a timeout is the one thing worth a color");
-        assertEquals("⇄0 ↓0 ↑0", Graphitty.strip(StatusLine.netMarkup("y", BACK)).trim(),
+        final Analyzer wire = new BasicAnalyzer();
+        assertFalse(StatusLine.netMarkup("y", BACK, wire.analysis()).contains("{{r&"), "an answering wire is quiet");
+        wire.incr(f(WIRE), f(TIMEOUT), 1L);
+        assertTrue(StatusLine.netMarkup("y", BACK, wire.analysis()).contains("{{r&"), "a timeout is the one thing worth a color");
+        assertEquals("⇄0 ↓0 ↑0", Graphitty.strip(StatusLine.netMarkup("y", BACK, wire.analysis())).trim(),
                 "the count is unchanged — only its color is");
+    }
+
+    /**
+     * THE BAR READS THE MACHINE'S NETWORK, not a ledger of its own: a frame the network's analyzer counts is a frame the
+     * gauge shows, so the bar and ~/network/analyzer/analysis/wire can never disagree.
+     */
+    @Test
+    void shouldReadTheGaugeOffTheNetworkAnalyzer() {
+        final Analyzer network = Machine.current().network().analyzer();
+        final String before = Graphitty.strip(StatusLine.netMarkup("y", BACK, network.analysis())).trim();
+        network.incr(f(WIRE), f(SENT), 3L);
+        final String after = Graphitty.strip(StatusLine.netMarkup("y", BACK, network.analysis())).trim();
+        final long sentBefore = Long.parseLong(before.substring(before.indexOf('↑') + 1));
+        assertEquals(sentBefore + 3L, Long.parseLong(after.substring(after.indexOf('↑') + 1)),
+                "three more frames sent: " + before + " -> " + after);
     }
 
     @Test

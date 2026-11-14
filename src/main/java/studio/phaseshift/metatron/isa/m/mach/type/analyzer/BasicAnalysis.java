@@ -24,8 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -33,19 +32,23 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * BasicAnalysis — the {@code analysis::T} implementation: a Rec of meter groups, where a meter is a baggable,
- * commutatively-mergeable measurement (counter / gauge / timer). It is the statistics accumulator every component
- * publishes into; {@link #merge(Analysis, Analysis)} is the monoid that folds children's analyses up the hierarchy.
+ * BasicAnalysis — the {@code analysis::T} value: a Rec of probes whose leaves are meters (counter / gauge / timer). An
+ * {@link Analyzer} builds one each time it is read; {@link #merge(Analysis, Analysis)} is the monoid that folds one
+ * analysis into another.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class BasicAnalysis extends MRec implements Analysis {
 
     public BasicAnalysis() {
-        super(new LinkedHashMap<>(), ANALYSIS_TID, null);
+        this(new LinkedHashMap<>());
     }
 
-    // ======================== meter construction ========================
+    public BasicAnalysis(final Map<Obj, Obj> probes) {
+        super(probes, ANALYSIS_TID, null);
+    }
+
+    // ======================== the meters ========================
 
     public static Obj counter(final long value) {
         return jnt(value).tid(COUNTER_TID);
@@ -60,74 +63,32 @@ public class BasicAnalysis extends MRec implements Analysis {
                 .tid(TIMER_TID);
     }
 
-    // ======================== publish ========================
-
-    @Override
-    public Analysis incr(final fURI group, final fURI probe, final long delta) {
-        final Rec g = this.at(group).orElse(rec()).asRec();
-        final long current = g.at(probe).orElse(counter(0L)).intValue();
-        g.at(probe, counter(current + delta), MUTABLE);
-        this.at(group, g, MUTABLE);
-        return this;
-    }
-
-    @Override
-    public Analysis record(final fURI group, final fURI probe, final long nanos) {
-        final Rec g = this.at(group).orElse(rec()).asRec();
-        final Obj existing = g.at(probe);
-        final long count = existing.isRec() ? existing.asRec().at(uri(COUNT)).orElse(jnt(0)).intValue() + 1L : 1L;
-        final long total = existing.isRec() ? existing.asRec().at(uri(TOTAL)).orElse(jnt(0)).intValue() + nanos : nanos;
-        final long min = existing.isRec() ? Math.min(existing.asRec().at(uri(MIN)).orElse(jnt(nanos)).intValue(), nanos) : nanos;
-        final long max = existing.isRec() ? Math.max(existing.asRec().at(uri(MAX)).orElse(jnt(nanos)).intValue(), nanos) : nanos;
-        g.at(probe, timer(count, total, min, max), MUTABLE);
-        this.at(group, g, MUTABLE);
-        return this;
-    }
-
-    @Override
-    public Analysis set(final fURI group, final fURI probe, final double value) {
-        final Rec g = this.at(group).orElse(rec()).asRec();
-        g.at(probe, gauge(value), MUTABLE);
-        this.at(group, g, MUTABLE);
-        return this;
-    }
-
     // ======================== the monoid ========================
 
     public static Analysis merge(final Analysis a, final Analysis b) {
-        final BasicAnalysis merged = new BasicAnalysis();
-        final Set<fURI> groups = new LinkedHashSet<>();
-        a.jvm().keySet().forEach(key -> groups.add(key.uriValue()));
-        b.jvm().keySet().forEach(key -> groups.add(key.uriValue()));
-        for (final fURI group : groups) {
-            final Rec ga = a.at(group).orElse(rec()).asRec();
-            final Rec gb = b.at(group).orElse(rec()).asRec();
-            final Set<fURI> probes = new LinkedHashSet<>();
-            ga.jvm().keySet().forEach(key -> probes.add(key.uriValue()));
-            gb.jvm().keySet().forEach(key -> probes.add(key.uriValue()));
-            final Rec mergedGroup = rec();
-            for (final fURI probe : probes)
-                mergedGroup.at(probe, mergeMeasurement(ga.at(probe), gb.at(probe)), MUTABLE);
-            merged.at(group, mergedGroup, MUTABLE);
-        }
-        return merged;
+        return new BasicAnalysis(merge(a.jvm(), b.jvm()));
     }
 
-    private static Obj mergeMeasurement(final Obj x, final Obj y) {
-        if (x.isNoObj())
-            return y;
-        if (y.isNoObj())
-            return x;
-        final fURI tid = x.tid();
-        if (COUNTER_TID.equals(tid))
-            return counter(x.intValue() + y.intValue());
-        if (GAUGE_TID.equals(tid))
-            return y; // last-write wins — the one non-monoid kind
-        // timer — the commutative aggregate
-        final long count = x.asRec().at(uri(COUNT)).intValue() + y.asRec().at(uri(COUNT)).intValue();
-        final long total = x.asRec().at(uri(TOTAL)).intValue() + y.asRec().at(uri(TOTAL)).intValue();
-        final long min = Math.min(x.asRec().at(uri(MIN)).intValue(), y.asRec().at(uri(MIN)).intValue());
-        final long max = Math.max(x.asRec().at(uri(MAX)).intValue(), y.asRec().at(uri(MAX)).intValue());
-        return timer(count, total, min, max);
+    /**
+     * One level of the merge: the union of the two levels' keys, and where both hold one, the two combined — two meters
+     * by their kind, two probe levels by descending into them.
+     */
+    private static Map<Obj, Obj> merge(final Map<Obj, Obj> a, final Map<Obj, Obj> b) {
+        final Map<Obj, Obj> merged = new LinkedHashMap<>(a);
+        b.forEach((key, y) -> merged.merge(key, y, (x, _) -> {
+            final fURI kind = x.tid().basePath();
+            if (COUNTER_TID.equals(kind))
+                return counter(x.intValue() + y.intValue());
+            if (TIMER_TID.equals(kind))
+                return timer(x.asRec().at(uri(COUNT)).intValue() + y.asRec().at(uri(COUNT)).intValue(),
+                        x.asRec().at(uri(TOTAL)).intValue() + y.asRec().at(uri(TOTAL)).intValue(),
+                        Math.min(x.asRec().at(uri(MIN)).intValue(), y.asRec().at(uri(MIN)).intValue()),
+                        Math.max(x.asRec().at(uri(MAX)).intValue(), y.asRec().at(uri(MAX)).intValue()));
+            // a gauge is a point in time, the one kind that is no monoid: the later reading stands
+            if (GAUGE_TID.equals(kind) || !x.isRec() || !y.isRec())
+                return y;
+            return rec(merge(x.asRec().jvm(), y.asRec().jvm()));
+        }));
+        return merged;
     }
 }

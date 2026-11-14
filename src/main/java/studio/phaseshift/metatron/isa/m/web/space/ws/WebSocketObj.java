@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -146,12 +147,13 @@ public interface WebSocketObj extends Rec, Closeable {
                 // send as a websocket text frame so clients using onText listeners receive it
                 final String outgoing = new String(bytes.array(), StandardCharsets.UTF_8);
                 this.getWebSocket().send(outgoing);
-                WireStats.sent(this.peerName(), frame.vid());
                 this.logger().status(DEBUG, "sent %s to %s", frame, this.getWebSocket().getRemoteSocketAddress());
             } else {
                 this.getWebSocket().send(bytes);
-                WireStats.sent(this.peerName(), frame.vid());
             }
+            // THE WIRE IS COUNTED WHERE IT IS: below the q-procs, which see only the writes this machine addresses at a
+            // peer — never a reply, never an inbound push — so a ?subq could not feed these meters
+            Machine.current().network().analyzer().incr(f(WIRE), f(SENT), 1L);
         } catch (final Exception e) {
             this.logger().status(ERROR, "error sending %s to %s: %s", frame, this.getWebSocket().getRemoteSocketAddress(), e);
         }
@@ -289,15 +291,20 @@ public interface WebSocketObj extends Rec, Closeable {
                         }
                         this.logger().debug("sent tag=%s on %s, awaiting latch", tag, peer);
                         final long startedMs = System.currentTimeMillis();
+                        final long startedNanos = System.nanoTime();
                         if (!waiter.latch().await(deadlineMs, TimeUnit.MILLISECONDS)) {
                             this.logger().warn("connection timeout: tag=%s on %s after %s ms (outstanding=%s)", tag, peer, deadlineMs, waiters.size());
                             WireTrace.exchange(peer, tag, message, null, startedMs, deadlineMs, WireTrace.Outcome.TIMEOUT);
+                            Machine.current().network().analyzer().incr(f(WIRE), f(TIMEOUT), 1L);
                             return fail("no reply from %s within %s ms", peer, deadlineMs);
                         }
-                        final long elapsedMs = System.currentTimeMillis() - startedMs;
+                        final long elapsedNanos = System.nanoTime() - startedNanos;
                         // ONE ROW PER ROUND TRIP, recorded where both halves exist: the request that was sent and
-                        // the reply the latch released (fill() sets the obj before it counts down)
-                        WireTrace.exchange(peer, tag, message, waiter.obj().get(), startedMs, elapsedMs, WireTrace.Outcome.OK);
+                        // the reply the latch released (fill() sets the obj before it counts down) -- and one
+                        // observation of the round-trip timer, the meter beside the row
+                        WireTrace.exchange(peer, tag, message, waiter.obj().get(), startedMs,
+                                TimeUnit.NANOSECONDS.toMillis(elapsedNanos), WireTrace.Outcome.OK);
+                        Machine.current().network().analyzer().record(f(WIRE), f(TRIP), elapsedNanos);
                         this.logger().debug("filled tag=%s on %s", tag, peer);
                     } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();

@@ -28,12 +28,11 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.ScoringResolver;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
@@ -45,8 +44,8 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.ToLongFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -1815,38 +1814,55 @@ public class mInstSet extends AbstractInstSet {
         }
         final TypeGraph graph = Machine.current().memory().typeGraph();
         graph.resetStats();
-        ScoringResolver.resetTimings();
-        FixPointRewriter.resetRewriteTimings();
-        StatefulMonad.resetTimings();
-        BasicSwarmComputer.resetTimings();
+        // THE TIMED RUNS ARE PROFILED INTO AN ANALYZER OF THEIR OWN: every probe they pass -- the resolver's stages, each
+        // rewrite rule, the processor's split/apply/next, each instruction's flow -- records into it and nowhere else, so
+        // a profile measures exactly its own runs (never a concurrent evaluation's) and zeroes no one's meters. The
+        // warm-up above is not profiled.
+        final Analyzer profile = new BasicAnalyzer();
+        final Analyzer outer = Analyzer.PROFILE.get();
         final int iters = 5;
         long resolveMin = Long.MAX_VALUE, resolveMax = 0L;
         long rewriteMin = Long.MAX_VALUE, rewriteMax = 0L;
         long applyMin = Long.MAX_VALUE, applyMax = 0L;
         final AtomicReference<Code> lastRewritten = new AtomicReference<>();
         final AtomicReference<Code> lastResolved = new AtomicReference<>();
-        for (int i = 0; i < iters; i++) {
-            final long rw0 = System.nanoTime();
-            final Code rewritten = MCode.of(new ArrayList<>(originalInsts)).rewrite();
-            final long rw1 = System.nanoTime();
-            final Code resolved = Machine.current().compiler().resolver().apply(noobj(), rewritten);
-            final long r1 = System.nanoTime();
-            final long a0 = System.nanoTime();
-            resolved.apply(noobj());
-            final long a1 = System.nanoTime();
-            rewriteMin = Math.min(rewriteMin, rw1 - rw0);
-            rewriteMax = Math.max(rewriteMax, rw1 - rw0);
-            resolveMin = Math.min(resolveMin, r1 - rw0);
-            resolveMax = Math.max(resolveMax, r1 - rw0);
-            applyMin = Math.min(applyMin, a1 - a0);
-            applyMax = Math.max(applyMax, a1 - a0);
-            lastRewritten.set(rewritten);
-            lastResolved.set(resolved);
+        Analyzer.PROFILE.set(profile);
+        try {
+            for (int i = 0; i < iters; i++) {
+                final long rw0 = System.nanoTime();
+                final Code rewritten = MCode.of(new ArrayList<>(originalInsts)).rewrite();
+                final long rw1 = System.nanoTime();
+                final Code resolved = Machine.current().compiler().resolver().apply(noobj(), rewritten);
+                final long r1 = System.nanoTime();
+                final long a0 = System.nanoTime();
+                resolved.apply(noobj());
+                final long a1 = System.nanoTime();
+                rewriteMin = Math.min(rewriteMin, rw1 - rw0);
+                rewriteMax = Math.max(rewriteMax, rw1 - rw0);
+                resolveMin = Math.min(resolveMin, r1 - rw0);
+                resolveMax = Math.max(resolveMax, r1 - rw0);
+                applyMin = Math.min(applyMin, a1 - a0);
+                applyMax = Math.max(applyMax, a1 - a0);
+                lastRewritten.set(rewritten);
+                lastResolved.set(resolved);
+            }
+        } finally {
+            Analyzer.PROFILE.set(outer);
         }
         final Code rewritten = lastRewritten.get();
         final Code resolved = lastResolved.get();
-        final long resSum = ScoringResolver.T_RESOLVE.get() + ScoringResolver.T_BIND.get() + ScoringResolver.T_COMPOSE.get();
-        final long appSum = StatefulMonad.T_SPLIT.get() + StatefulMonad.T_APPLY.get() + StatefulMonad.T_NEXT.get();
+        final Analysis analysis = profile.analysis();
+        // a meter's reading at its path -- a counter's count, a timer's total (…/total) -- or 0 for a probe the runs
+        // never passed
+        final ToLongFunction<fURI> read = path -> analysis.at(uri(path)).orElse(jnt(0)).intValue();
+        final long tResolve = read.applyAsLong(f(RESOLVE).extend(INST_RESOLVE).extend(TOTAL));
+        final long tBind = read.applyAsLong(f(RESOLVE).extend(GENERIC_BINDING).extend(TOTAL));
+        final long tCompose = read.applyAsLong(f(RESOLVE).extend(INST_COMPOSITION).extend(TOTAL));
+        final long tSplit = read.applyAsLong(f(APPLY).extend(SPLIT).extend(TOTAL));
+        final long tApply = read.applyAsLong(f(APPLY).extend(APPLY).extend(TOTAL));
+        final long tNext = read.applyAsLong(f(APPLY).extend(NEXT).extend(TOTAL));
+        final long resSum = tResolve + tBind + tCompose;
+        final long appSum = tSplit + tApply + tNext;
         final StringBuilder sb = new StringBuilder("\n");
         sb.append("  stage     min (ms)   max (ms)\n");
         sb.append(String.format("  rewrite   %8.3f   %8.3f%n", rewriteMin / 1_000_000.0, rewriteMax / 1_000_000.0));
@@ -1854,43 +1870,41 @@ public class mInstSet extends AbstractInstSet {
         sb.append(String.format("  apply     %8.3f   %8.3f%n", applyMin / 1_000_000.0, applyMax / 1_000_000.0));
         sb.append(String.format("  insts     %d%n", resolved.insts().size()));
         sb.append("  resolve sub-stages (avg ms):\n");
-        sb.append(String.format("    inst-resolve      %8.3f  %5.1f%%%n", ScoringResolver.T_RESOLVE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringResolver.T_RESOLVE.get() * 100.0 / resSum));
-        sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", ScoringResolver.T_BIND.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringResolver.T_BIND.get() * 100.0 / resSum));
-        sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", ScoringResolver.T_COMPOSE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringResolver.T_COMPOSE.get() * 100.0 / resSum));
+        sb.append(String.format("    inst-resolve      %8.3f  %5.1f%%%n", tResolve / 1_000_000.0 / iters, 0L == resSum ? 0.0 : tResolve * 100.0 / resSum));
+        sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", tBind / 1_000_000.0 / iters, 0L == resSum ? 0.0 : tBind * 100.0 / resSum));
+        sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", tCompose / 1_000_000.0 / iters, 0L == resSum ? 0.0 : tCompose * 100.0 / resSum));
         sb.append("  rewrite rules:\n");
-        final List<Map.Entry<String, AtomicLong>> rules = new ArrayList<>(FixPointRewriter.REWRITE_TIMINGS.entrySet());
-        rules.sort((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()));
+        // rewrite => [<rule> => [in, out, time]], each rule read off its own rec, slowest first
+        final ToLongFunction<Obj> ruleTime = rule -> rule.asRec().at(uri(f(TIME).extend(TOTAL))).orElse(jnt(0)).intValue();
+        final ToLongFunction<Obj> ruleIn = rule -> rule.asRec().at(uri(IN)).orElse(jnt(0)).intValue();
+        final ToLongFunction<Obj> ruleOut = rule -> rule.asRec().at(uri(OUT)).orElse(jnt(0)).intValue();
+        final List<Map.Entry<Obj, Obj>> rules = new ArrayList<>(analysis.at(uri(REWRITE)).orElse(rec()).asRec().jvm().entrySet());
+        rules.sort((a, b) -> Long.compare(ruleTime.applyAsLong(b.getValue()), ruleTime.applyAsLong(a.getValue())));
         final int nRules = Math.min(6, rules.size());
         sb.append("                ");
         for (int i = 0; i < nRules; i++)
             sb.append(String.format("%-20s", rules.get(i).getKey()));
         sb.append('\n');
         sb.append("      insts.in  ");
-        for (int i = 0; i < nRules; i++) {
-            final AtomicLong v = FixPointRewriter.REWRITE_INS.get(rules.get(i).getKey());
-            sb.append(String.format("%-20d", null == v ? 0L : v.get()));
-        }
+        for (int i = 0; i < nRules; i++)
+            sb.append(String.format("%-20d", ruleIn.applyAsLong(rules.get(i).getValue())));
         sb.append('\n');
         sb.append("      insts.out ");
-        for (int i = 0; i < nRules; i++) {
-            final AtomicLong v = FixPointRewriter.REWRITE_OUTS.get(rules.get(i).getKey());
-            sb.append(String.format("%-20d", null == v ? 0L : v.get()));
-        }
+        for (int i = 0; i < nRules; i++)
+            sb.append(String.format("%-20d", ruleOut.applyAsLong(rules.get(i).getValue())));
         sb.append('\n');
         sb.append("      time(ms)  ");
         for (int i = 0; i < nRules; i++)
-            sb.append(String.format("%-20.3f", rules.get(i).getValue().get() / 1_000_000.0));
+            sb.append(String.format("%-20.3f", ruleTime.applyAsLong(rules.get(i).getValue()) / 1_000_000.0));
         sb.append('\n');
         // summary: the net reduction (original → rewritten inst count) and the total rule time.
-        long totalRuleTime = 0L;
-        for (final AtomicLong v : FixPointRewriter.REWRITE_TIMINGS.values())
-            totalRuleTime += v.get();
+        final long totalRuleTime = rules.stream().mapToLong(rule -> ruleTime.applyAsLong(rule.getValue())).sum();
         sb.append(String.format("      TOTAL     inst.in %d   inst.out %d   time(ms) %.3f%n",
                 originalInsts.size(), rewritten.insts().size(), totalRuleTime / 1_000_000.0));
         sb.append("  apply sub-stages (avg ms):\n");
-        sb.append(String.format("    split     %8.3f  %5.1f%%%n", StatefulMonad.T_SPLIT.get() / 1_000_000.0 / iters, 0L == appSum ? 0.0 : StatefulMonad.T_SPLIT.get() * 100.0 / appSum));
-        sb.append(String.format("    apply     %8.3f  %5.1f%%%n", StatefulMonad.T_APPLY.get() / 1_000_000.0 / iters, 0L == appSum ? 0.0 : StatefulMonad.T_APPLY.get() * 100.0 / appSum));
-        sb.append(String.format("    next      %8.3f  %5.1f%%%n", StatefulMonad.T_NEXT.get() / 1_000_000.0 / iters, 0L == appSum ? 0.0 : StatefulMonad.T_NEXT.get() * 100.0 / appSum));
+        sb.append(String.format("    split     %8.3f  %5.1f%%%n", tSplit / 1_000_000.0 / iters, 0L == appSum ? 0.0 : tSplit * 100.0 / appSum));
+        sb.append(String.format("    apply     %8.3f  %5.1f%%%n", tApply / 1_000_000.0 / iters, 0L == appSum ? 0.0 : tApply * 100.0 / appSum));
+        sb.append(String.format("    next      %8.3f  %5.1f%%%n", tNext / 1_000_000.0 / iters, 0L == appSum ? 0.0 : tNext * 100.0 / appSum));
         sb.append("  per-instruction (per iteration):\n");
         final List<Inst> insts = resolved.insts();
         sb.append("                ");
@@ -1898,69 +1912,52 @@ public class mInstSet extends AbstractInstSet {
             sb.append(String.format("%-10s", inst.tid().name()));
         sb.append('\n');
         sb.append("      in.monad  ");
-        for (int i = 0; i < insts.size(); i++) {
-            final AtomicLong v = StatefulMonad.INST_MONAD_IN.get(f(String.valueOf(i)));
-            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
-        }
+        for (int i = 0; i < insts.size(); i++)
+            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(MONAD_IN)) / iters));
         sb.append('\n');
         sb.append("      in.coeff  ");
-        for (int i = 0; i < insts.size(); i++) {
-            final AtomicLong v = StatefulMonad.INST_COEFF_IN.get(f(String.valueOf(i)));
-            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
-        }
+        for (int i = 0; i < insts.size(); i++)
+            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(C_IN)) / iters));
         sb.append('\n');
         sb.append("      out.monad ");
-        for (int i = 0; i < insts.size(); i++) {
-            final AtomicLong v = StatefulMonad.INST_MONAD_OUT.get(f(String.valueOf(i)));
-            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
-        }
+        for (int i = 0; i < insts.size(); i++)
+            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(MONAD_OUT)) / iters));
         sb.append('\n');
         sb.append("      out.coeff ");
-        for (int i = 0; i < insts.size(); i++) {
-            final AtomicLong v = StatefulMonad.INST_COEFF_OUT.get(f(String.valueOf(i)));
-            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
-        }
+        for (int i = 0; i < insts.size(); i++)
+            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(C_OUT)) / iters));
         sb.append('\n');
         sb.append("      time(ms)  ");
-        for (int i = 0; i < insts.size(); i++) {
-            final AtomicLong v = StatefulMonad.INST_TIME.get(f(String.valueOf(i)));
-            sb.append(String.format("%-10.3f", null == v ? 0.0 : v.get() / 1_000_000.0 / iters));
-        }
+        for (int i = 0; i < insts.size(); i++)
+            sb.append(String.format("%-10.3f", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(TIME).extend(TOTAL)) / 1_000_000.0 / iters));
         sb.append('\n');
-        final long monads = StatefulMonad.MONADS.get();
-        final long coeffSum = StatefulMonad.COEFF_SUM.get();
+        final long monads = read.applyAsLong(f(FLOW).extend(MONADS));
+        final long coeffSum = read.applyAsLong(f(FLOW).extend(C_SUM));
+        final long processors = read.applyAsLong(f(FLOW).extend(PROCESSORS));
         sb.append(String.format("  flow       monads=%d coeff-sum=%d compression=%.2f processors=%d%n",
-                monads, coeffSum, 0L == monads ? 0.0 : (double) coeffSum / (double) monads, BasicSwarmComputer.PROCESSORS.get()));
+                monads, coeffSum, 0L == monads ? 0.0 : (double) coeffSum / (double) monads, processors));
         sb.append(String.format("  cache     hits=%d misses=%d hit=%.1f%%%n", graph.hits(), graph.misses(), graph.hitRate() * 100.0));
         final String text = sb.toString();
         final double ms = 1_000_000.0; // nanos -> millis
         // per-rewrite-rule reduction records, sorted by time (same order as the text table)
-        final List<Obj> ruleRecs = FixPointRewriter.REWRITE_TIMINGS.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()))
-                .map(e -> {
-                    final AtomicLong in = FixPointRewriter.REWRITE_INS.get(e.getKey());
-                    final AtomicLong out = FixPointRewriter.REWRITE_OUTS.get(e.getKey());
-                    return (Obj) rec(
-                            uri(NAME), uri(f(e.getKey())),
-                            uri(IN), jnt(null == in ? 0L : in.get()),
-                            uri(OUT), jnt(null == out ? 0L : out.get()),
-                            uri(TIME), real(e.getValue().get() / ms, MILLIS_TYPE.vid(), null));
-                }).toList();
+        final List<Obj> ruleRecs = rules.stream()
+                .map(rule -> (Obj) rec(
+                        uri(NAME), rule.getKey(),
+                        uri(IN), jnt(ruleIn.applyAsLong(rule.getValue())),
+                        uri(OUT), jnt(ruleOut.applyAsLong(rule.getValue())),
+                        uri(TIME), real(ruleTime.applyAsLong(rule.getValue()) / ms, MILLIS_TYPE.vid(), null)))
+                .toList();
         // per-instruction monad/coefficient flow records
         final List<Obj> perInstRecs = new ArrayList<>();
         for (int i = 0; i < insts.size(); i++) {
-            final AtomicLong mi = StatefulMonad.INST_MONAD_IN.get(f(String.valueOf(i)));
-            final AtomicLong ci = StatefulMonad.INST_COEFF_IN.get(f(String.valueOf(i)));
-            final AtomicLong mo = StatefulMonad.INST_MONAD_OUT.get(f(String.valueOf(i)));
-            final AtomicLong co = StatefulMonad.INST_COEFF_OUT.get(f(String.valueOf(i)));
-            final AtomicLong ti = StatefulMonad.INST_TIME.get(f(String.valueOf(i)));
+            final fURI at = f(PER_INST).extend(String.valueOf(i));
             perInstRecs.add(rec(
                     uri(NAME), uri(f(insts.get(i).tid().name())),
-                    uri(MONAD_IN), jnt((null == mi ? 0L : mi.get()) / iters),
-                    uri(C_IN), jnt((null == ci ? 0L : ci.get()) / iters),
-                    uri(MONAD_OUT), jnt((null == mo ? 0L : mo.get()) / iters),
-                    uri(C_OUT), jnt((null == co ? 0L : co.get()) / iters),
-                    uri(TIME), real((null == ti ? 0L : ti.get()) / ms / iters, MILLIS_TYPE.vid(), null)));
+                    uri(MONAD_IN), jnt(read.applyAsLong(at.extend(MONAD_IN)) / iters),
+                    uri(C_IN), jnt(read.applyAsLong(at.extend(C_IN)) / iters),
+                    uri(MONAD_OUT), jnt(read.applyAsLong(at.extend(MONAD_OUT)) / iters),
+                    uri(C_OUT), jnt(read.applyAsLong(at.extend(C_OUT)) / iters),
+                    uri(TIME), real(read.applyAsLong(at.extend(TIME).extend(TOTAL)) / ms / iters, MILLIS_TYPE.vid(), null)));
         }
         return rec(mutableMap(
                 uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(text))),
@@ -1974,21 +1971,21 @@ public class mInstSet extends AbstractInstSet {
                         uri(APPLY), rec(uri(MIN), real(applyMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(applyMax / ms, MILLIS_TYPE.vid(), null))),
                 uri(INSTS), jnt(resolved.insts().size()),
                 uri(RESOLVE), rec(
-                        uri(INST_RESOLVE), real(ScoringResolver.T_RESOLVE.get() / ms / iters, MILLIS_TYPE.vid(), null),
-                        uri(GENERIC_BINDING), real(ScoringResolver.T_BIND.get() / ms / iters, MILLIS_TYPE.vid(), null),
-                        uri(INST_COMPOSITION), real(ScoringResolver.T_COMPOSE.get() / ms / iters, MILLIS_TYPE.vid(), null)),
+                        uri(INST_RESOLVE), real(tResolve / ms / iters, MILLIS_TYPE.vid(), null),
+                        uri(GENERIC_BINDING), real(tBind / ms / iters, MILLIS_TYPE.vid(), null),
+                        uri(INST_COMPOSITION), real(tCompose / ms / iters, MILLIS_TYPE.vid(), null)),
                 uri(REWRITE), rec(
                         uri(RULES), lst(ruleRecs),
                         uri(TOTAL), rec(uri(IN), jnt(originalInsts.size()), uri(OUT), jnt(rewritten.insts().size()), uri(TIME), real(totalRuleTime / ms, MILLIS_TYPE.vid(), null))),
                 uri(APPLY), rec(
-                        uri(SPLIT), real(StatefulMonad.T_SPLIT.get() / ms / iters, MILLIS_TYPE.vid(), null),
-                        uri(APPLY), real(StatefulMonad.T_APPLY.get() / ms / iters, MILLIS_TYPE.vid(), null),
-                        uri(NEXT), real(StatefulMonad.T_NEXT.get() / ms / iters, MILLIS_TYPE.vid(), null)),
+                        uri(SPLIT), real(tSplit / ms / iters, MILLIS_TYPE.vid(), null),
+                        uri(APPLY), real(tApply / ms / iters, MILLIS_TYPE.vid(), null),
+                        uri(NEXT), real(tNext / ms / iters, MILLIS_TYPE.vid(), null)),
                 uri(PER_INST), lst(perInstRecs),
                 uri(FLOW), rec(
                         uri(MONADS), jnt(monads), uri(C_SUM), jnt(coeffSum),
                         uri(COMPRESSION), real(0L == monads ? 0.0 : (double) coeffSum / (double) monads),
-                        uri(PROCESSORS), jnt(BasicSwarmComputer.PROCESSORS.get())),
+                        uri(PROCESSORS), jnt(processors)),
                 uri(CACHE), rec(
                         uri(HITS), jnt(graph.hits()), uri(MISSES), jnt(graph.misses()),
                         uri(HIT_RATE), real(graph.hitRate()))), PROFILING_TID, null);

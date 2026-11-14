@@ -481,6 +481,17 @@ public final class Tokens {
     public static final String RESOLVER = "resolver";
     public static final String TYPER = "typer";
     public static final String TRACER = "tracer";
+    // analyzer::T — a component's statistics (Marko, 2026-11-13): its analysis, the step it publishes at, and whether
+    // the component's costly instrumentation is on
+    public static final String ANALYZER = "analyzer";
+    public static final String STEP = "step";
+    public static final String PROFILE = "profile";
+    // the network analyzer's probes (Marko, 2026-11-13: wire/{sent,recv,trip,timeout}): the frames that crossed a
+    // socket each way, and the round trips that completed on it
+    public static final String WIRE = "wire";
+    public static final String SENT = "sent";
+    public static final String RECV = "recv";
+    public static final String TRIP = "trip";
     public static final String SELECTOR = "selector";
     public static final String BINDER = "binder";
     // profiling::T rec keys — the structured profile() report

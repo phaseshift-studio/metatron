@@ -880,13 +880,25 @@ public final class QCollection {
                     // here -- and an empty registry must cost one check, not a stream and a match per write
                     if (subscriptions.isEmpty())
                         return noobj();
-                    subscriptions.elements().filter(e -> vid.basePath().bimatches(e.asRec().at(TARGET).uriValue()))
-                            .forEach(s -> {
-                                subscriptions.logger().debug("spawning virtual thread for subscription code: %s", s);
-                                virtual(s.asRec().at(uri(CODE))).applyAsync(lst(List.of(vid.basePath().toUri(), obj), SUBQ_PUB_TID, null));
-                            });
+                    publish(subscriptions.elements().filter(e -> vid.basePath().bimatches(e.asRec().at(TARGET).uriValue())), vid, obj);
                     return noobj();
                 }).create();
+    }
+
+    /**
+     * PUBLISH {@code obj} at {@code vid} to each subscription: its code runs on a virtual thread of its own, handed
+     * {@code pub::[<vid>, <obj>]}, so a slow subscriber holds up neither the publisher nor another subscriber. The one
+     * delivery of {@code ?subq}: a write's broadcast and an analyzer's step both hand their subscriptions this.
+     *
+     * @param subscriptions the {@code sub::T} recs that match {@code vid}
+     * @param vid           the address the publication is about
+     * @param obj           what was published there
+     */
+    public static void publish(final Stream<Obj> subscriptions, final fURI vid, final Obj obj) {
+        subscriptions.forEach(s -> {
+            s.logger().debug("spawning virtual thread for subscription code: %s", s);
+            virtual(s.asRec().at(uri(CODE))).applyAsync(lst(List.of(vid.basePath().toUri(), obj), SUBQ_PUB_TID, null));
+        });
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////

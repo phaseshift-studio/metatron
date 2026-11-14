@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
@@ -56,7 +55,6 @@ public class RunningMonads implements Obj {
     public RunningMonads append(final Obj monad) {
         assert monad instanceof StatefulMonad;
         monad.forEach(o -> this.instIndex.compute(o.<StatefulMonad>as().inst(), (inst, value) -> null == value ? o.as() : value.obj(value.obj().append(o.<StatefulMonad>as().obj()))));
-        Machine.current().memory().stats().monadicStats().incrRunningMonads(1L);
         return this;
     }
 
@@ -79,7 +77,6 @@ public class RunningMonads implements Obj {
             return null;
         for (final Inst key : this.instIndex.keySet()) {
             final StatefulMonad value = this.instIndex.remove(key);
-            Machine.current().memory().stats().monadicStats().incrRunningMonads(-1L);
             return value;
         }
         return null;

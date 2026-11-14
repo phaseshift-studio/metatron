@@ -23,13 +23,12 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.Monad;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -45,53 +44,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MONAD_TID;
 
+/**
+ * A monad that carries its state through the code — and, while a run is profiled ({@link Analyzer#PROFILE}), the
+ * meters of that run: the processor stages ({@code apply/split}, {@code apply/apply}, {@code apply/next}), the
+ * bulk-compression flow ({@code flow/monads} propagated vs {@code flow/c_sum}, the coefficient magnitude they carried)
+ * and each instruction's flow, keyed by the resolved inst's vid (its index in the code sequence):
+ * {@code per_inst/<vid>/monad_in}, {@code monad_out}, {@code c_in}, {@code c_out} and {@code time}. A run nobody
+ * profiles reads the thread-local once per step and measures nothing.
+ */
 public interface StatefulMonad extends Monad<Lst> {
-
-    // processor-stage timing (read by the profile() instruction): split = coefficient splitting,
-    // apply = the instruction's f, next = the successor-inst lookup. MONADS/COEFF_SUM measure the
-    // bulk-compression: monads propagated vs the total coefficient magnitude they carried.
-    AtomicLong T_SPLIT = new AtomicLong(0);
-    AtomicLong T_APPLY = new AtomicLong(0);
-    AtomicLong T_NEXT = new AtomicLong(0);
-    AtomicLong MONADS = new AtomicLong(0);
-    AtomicLong COEFF_SUM = new AtomicLong(0);
-
-    // repeat() phase timing (read by RepeatInstTest): the escape/emit/until predicate applies and the repeated
-    // code apply inside the loop body, plus the loop-frame bookkeeping (loopback/pushLoop/incrLoop/popLoop) and
-    // a count of the number of times the repeat body ran. The esc phase is the escape-predicate check; emit/until
-    // are the two exit predicates; code is the actual repeated application; book is the monad state churn.
-    AtomicLong T_REPEAT_ESC = new AtomicLong(0);
-    AtomicLong T_REPEAT_EMIT = new AtomicLong(0);
-    AtomicLong T_REPEAT_UNTIL = new AtomicLong(0);
-    AtomicLong T_REPEAT_CODE = new AtomicLong(0);
-    AtomicLong T_REPEAT_BOOK = new AtomicLong(0);
-    AtomicLong REPEAT_ITERS = new AtomicLong(0);
-
-    // per-instruction stats, keyed by the resolved inst's vid (its index in the code sequence)
-    ConcurrentHashMap<fURI, AtomicLong> INST_MONAD_IN = new ConcurrentHashMap<>();
-    ConcurrentHashMap<fURI, AtomicLong> INST_MONAD_OUT = new ConcurrentHashMap<>();
-    ConcurrentHashMap<fURI, AtomicLong> INST_TIME = new ConcurrentHashMap<>();
-    ConcurrentHashMap<fURI, AtomicLong> INST_COEFF_IN = new ConcurrentHashMap<>();
-    ConcurrentHashMap<fURI, AtomicLong> INST_COEFF_OUT = new ConcurrentHashMap<>();
-
-    public static void resetTimings() {
-        T_SPLIT.set(0);
-        T_APPLY.set(0);
-        T_NEXT.set(0);
-        MONADS.set(0);
-        COEFF_SUM.set(0);
-        T_REPEAT_ESC.set(0);
-        T_REPEAT_EMIT.set(0);
-        T_REPEAT_UNTIL.set(0);
-        T_REPEAT_CODE.set(0);
-        T_REPEAT_BOOK.set(0);
-        REPEAT_ITERS.set(0);
-        INST_MONAD_IN.clear();
-        INST_MONAD_OUT.clear();
-        INST_TIME.clear();
-        INST_COEFF_IN.clear();
-        INST_COEFF_OUT.clear();
-    }
 
     /**
      * the coefficient magnitude of an obj — its exact multiplicity when it has one, else 1
@@ -103,13 +64,15 @@ public interface StatefulMonad extends Monad<Lst> {
     }
 
     /**
-     * diagnostic: record this monad's propagation — its coefficient magnitude (the number of
+     * diagnostic: record this monad's propagation into the run's profile — its coefficient magnitude (the number of
      * elements it carries when bulked) is added to the running sum, for the bulk-compression ratio.
      */
     default void countPropagation() {
-        MONADS.incrementAndGet();
-        final cInt c = this.obj().c();
-        COEFF_SUM.addAndGet(null != c.min() && c.min().equals(c.max()) ? c.min() : 1L);
+        final Analyzer profile = Analyzer.PROFILE.get();
+        if (null == profile)
+            return;
+        profile.incr(f(FLOW), f(MONADS), 1L);
+        profile.incr(f(FLOW), f(C_SUM), coeffMagnitude(this.obj()));
     }
 
     @Override
@@ -125,19 +88,21 @@ public interface StatefulMonad extends Monad<Lst> {
     default StatefulMonad next(final Obj obj) {
         final Code code = this.code();
         final Rec state = code.tid().hasQ(PATH) ? this.accruePath(obj) : this.state();
-        final long t0 = System.nanoTime();
+        final Analyzer profile = Analyzer.PROFILE.get();
+        final long t0 = null == profile ? 0L : System.nanoTime();
         final Inst nxt = code.nextInst(this.inst());
-        final long t1 = System.nanoTime();
-        T_NEXT.addAndGet(t1 - t0);
-        final fURI curVid = this.inst().vid();
-        if (null != curVid) {
-            INST_MONAD_OUT.computeIfAbsent(curVid, k -> new AtomicLong()).incrementAndGet();
-            INST_COEFF_OUT.computeIfAbsent(curVid, k -> new AtomicLong()).addAndGet(coeffMagnitude(obj));
-        }
-        final fURI nxtVid = nxt.vid();
-        if (null != nxtVid) {
-            INST_MONAD_IN.computeIfAbsent(nxtVid, k -> new AtomicLong()).incrementAndGet();
-            INST_COEFF_IN.computeIfAbsent(nxtVid, k -> new AtomicLong()).addAndGet(coeffMagnitude(obj));
+        if (null != profile) {
+            profile.record(f(APPLY), f(NEXT), System.nanoTime() - t0);
+            final fURI curVid = this.inst().vid();
+            if (null != curVid) {
+                profile.incr(f(PER_INST), curVid.extend(MONAD_OUT), 1L);
+                profile.incr(f(PER_INST), curVid.extend(C_OUT), coeffMagnitude(obj));
+            }
+            final fURI nxtVid = nxt.vid();
+            if (null != nxtVid) {
+                profile.incr(f(PER_INST), nxtVid.extend(MONAD_IN), 1L);
+                profile.incr(f(PER_INST), nxtVid.extend(C_IN), coeffMagnitude(obj));
+            }
         }
         return this.jvm(lst(CommonUtil.arrayList(obj, nxt, state, code)));
     }
@@ -314,7 +279,8 @@ public interface StatefulMonad extends Monad<Lst> {
         // read lens: which component to feed the instruction (default obj)
         final fURI in = tid.hasQ(MONAD_IN) ? f(tid.q(MONAD_IN)) : null;
         final Obj input = null == in ? this.obj() : this.component(in);
-        final long t0 = System.nanoTime();
+        final Analyzer profile = Analyzer.PROFILE.get();
+        final long t0 = null == profile ? 0L : System.nanoTime();
         // A SPAN IS A RUN, NOT A POINT: inst() writes the monad's multiplicity into the inst's coefficient with c(count),
         // which folds a span into the point. A spanned inst runs as written, on the obj at the monad's multiplicity, so
         // the multiplicity counts once and never once a step (Processor.Helper.apply lays the run out)
@@ -322,11 +288,12 @@ public interface StatefulMonad extends Monad<Lst> {
         final Obj result = written.tid().b().isOne()
                 ? Processor.Helper.apply(input, this.inst())
                 : Processor.Helper.apply(this.c().isOne() ? input : input.c(c -> c.mult(this.c())), written);
-        final long t1 = System.nanoTime();
-        T_APPLY.addAndGet(t1 - t0);
-        final fURI vid = this.inst().vid();
-        if (null != vid) {
-            INST_TIME.computeIfAbsent(vid, k -> new AtomicLong()).addAndGet(t1 - t0);
+        if (null != profile) {
+            final long elapsed = System.nanoTime() - t0;
+            profile.record(f(APPLY), f(APPLY), elapsed);
+            final fURI vid = this.inst().vid();
+            if (null != vid)
+                profile.record(f(PER_INST), vid.extend(TIME), elapsed);
         }
         // write lens: where the result lands (default obj). '+' = the monad's new contents,
         // returned raw for the machine to re-queue; other write-targets are future work.
@@ -334,9 +301,9 @@ public interface StatefulMonad extends Monad<Lst> {
             // terminal output: next() is never called for this inst (no successor), so record its
             // out-flow here — a gather (sum?int<=int{*}) emits one monad carrying its coefficient.
             final fURI outVid = this.inst().vid();
-            if (null != outVid && !result.isNoObj()) {
-                INST_MONAD_OUT.computeIfAbsent(outVid, k -> new AtomicLong()).incrementAndGet();
-                INST_COEFF_OUT.computeIfAbsent(outVid, k -> new AtomicLong()).addAndGet(coeffMagnitude(result));
+            if (null != profile && null != outVid && !result.isNoObj()) {
+                profile.incr(f(PER_INST), outVid.extend(MONAD_OUT), 1L);
+                profile.incr(f(PER_INST), outVid.extend(C_OUT), coeffMagnitude(result));
             }
             return result;
         }

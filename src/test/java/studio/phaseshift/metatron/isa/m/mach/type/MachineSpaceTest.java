@@ -197,6 +197,39 @@ public class MachineSpaceTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * A PUSHED MACHINE'S PROCESSOR IS NEW (Marko, 2026-11-13): constructed from a shallow copy of its parent's, never
+     * cloned, and the constructor makes what it is handed its own. A shared fail stack or computer index would be a
+     * nested rec that every write rewrites in place, so the parent would file the child's fails and index its
+     * computers. The stacks are compared by size, not by key: each counts its own keys from one.
+     */
+    @Test
+    public void testAPushedMachinesProcessorIsNew() {
+        final Machine parent = Machine.current().push(f("processor_parent"));
+        try {
+            MFail.fail("filed by the parent, before the push");
+            final int parentFails = parent.processor().at(uri("fail")).asRec().jvm().size();
+            final Machine child = parent.push(f("child"));
+            try {
+                assertNotSame(parent.processor(), child.processor(), "the child's processor is its own");
+                assertTrue(child.processor().at(uri("fail")).isNoObj(), "it holds none of the parent's fails");
+                assertTrue(child.processor().computers().isEmpty(), "and has minted no computer");
+                final int parentComputers = parent.processor().computers().jvm().size();
+                MFail.fail("filed by the child");
+                Machine.parse("1.plus(2)").apply(noobj());
+                assertEquals(1, child.processor().at(uri("fail")).asRec().jvm().size(), "the child files its own fails");
+                assertFalse(child.processor().computers().isEmpty(), "and indexes its own computers");
+                assertEquals(parentFails, parent.processor().at(uri("fail")).asRec().jvm().size(),
+                        "neither reaches the parent: its fails");
+                assertEquals(parentComputers, parent.processor().computers().jvm().size(), "nor its computers");
+            } finally {
+                child.pop();
+            }
+        } finally {
+            parent.pop();
+        }
+    }
+
     @Test
     public void testAWriteUnderAComponentThatIsNoPartOfItReadsBack() {
         // ~/memory/note is no field of the memory: the write lands in the space's store, and the read finds it there

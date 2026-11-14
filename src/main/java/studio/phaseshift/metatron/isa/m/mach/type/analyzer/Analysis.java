@@ -24,48 +24,33 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import static studio.phaseshift.metatron.Tokens.MACH_ISA_TID;
 
 /**
- * analysis::T — a component's statistics: a mergeable {@code Rec} keyed {@code group => [probe => meter]}.
+ * analysis::T — what a component has measured: a {@code Rec} whose paths are probes and whose leaves are meters,
+ * {@code group => [probe => meter]}, a probe nesting as deep as its path ({@code per_inst/0/time}).
  * <p>
- * A measurement's tid IS its kind — {@code counter} (a monotonic int), {@code gauge} (a point-in-time real), or
- * {@code timer} (a {@code rec[count, total, min, max]} duration distribution). Derived metrics — rates, ratios,
- * averages, percentages — are computed on read, never stored, so the stored core is exactly the two mergeable kinds
- * (counter + timer), and the merge-up is the monoid that folds a component's children into it
- * ({@code computer ⊎ computer → processor ⊎ … → machine}), the same {@code XXXUnion} walk as the InstSet union.
- * The {@code profile()} rec is this type's prototype; a {@code GrafanaSerializer} walks it and emits
- * {@code name{labels} value} with timers fanned into {@code _count/_sum/_min/_max}.
+ * A meter's tid IS its kind — {@code counter} (a monotonic int), {@code gauge} (a point-in-time real), or
+ * {@code timer} (a {@code rec[count, total, min, max]} distribution of nanoseconds). Derived metrics — rates, ratios,
+ * means, percentages — are computed on read, never stored, so the stored core is the two mergeable kinds (counter +
+ * timer) and {@link Helper#merge} is the monoid that folds one analysis into another: a machine's components, a
+ * cluster's machines. An analysis is a VALUE — the {@link Analyzer} that measures it builds a fresh one each time it
+ * is read, so a reader can never disturb the meters.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Analysis extends Rec {
 
     fURI ANALYSIS_TID = MACH_ISA_TID.extend("analysis");
-    // a measurement's tid is its kind
+    // a meter's tid is its kind
     fURI COUNTER_TID = ANALYSIS_TID.extend("counter");
     fURI GAUGE_TID = ANALYSIS_TID.extend("gauge");
     fURI TIMER_TID = ANALYSIS_TID.extend("timer");
-
-    /**
-     * increment a {@code counter} at {@code group/probe} by {@code delta} — the monotonic meter.
-     */
-    Analysis incr(fURI group, fURI probe, long delta);
-
-    /**
-     * record one {@code timer} observation (nanos) at {@code group/probe} — updates count/total/min/max.
-     */
-    Analysis record(fURI group, fURI probe, long nanos);
-
-    /**
-     * set a {@code gauge} at {@code group/probe} — the point-in-time meter (the one non-monoid kind).
-     */
-    Analysis set(fURI group, fURI probe, double value);
 
     final class Helper {
         private Helper() {
         }
 
         /**
-         * the monoid — merge two analyses pointwise: union the groups, union the probes, combine the measurements per
-         * kind (counter → sum, timer → count/total/min/max, gauge → last-write).
+         * the monoid — merge two analyses pointwise: union the paths, combine the meters per kind (counter → sum,
+         * timer → count/total/min/max, gauge → last-write).
          */
         public static Analysis merge(final Analysis a, final Analysis b) {
             return BasicAnalysis.merge(a, b);

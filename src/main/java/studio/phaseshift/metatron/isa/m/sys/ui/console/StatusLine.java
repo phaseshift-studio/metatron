@@ -26,19 +26,20 @@ import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
-import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.ToLongFunction;
 
 import static org.slf4j.event.Level.ERROR;
 import static org.slf4j.event.Level.INFO;
@@ -134,9 +135,9 @@ public class StatusLine implements Runnable, AutoCloseable {
         this.addWidget(f(TYPE_CHECK), () -> "{{w&[%s]}} T {{X}}".formatted(Typer.Helper.colorLevel()));
         // the strictness level is the bar's first segment, and a click on it is the pointer's alt+t
         this.onSegment(TYPE_CHECK, CommandPalette::cycleTyper);
-        // the wire, not the machine's io counters: bytes-in/out mixed LLM tokens, MQTT payloads and database reads
-        // (see Stats.IOStats), and the widget froze them at construction besides. see WireStats
-        this.addWidget(f("net"), () -> netMarkup(getForegroundColor(), getBackgroundColor()));
+        // the wire, read off the network's meters (~/network/analyzer/analysis/wire) -- the bar's thread is the root's
+        this.addWidget(f("net"), () -> netMarkup(getForegroundColor(), getBackgroundColor(),
+                Machine.current().network().analyzer().analysis()));
         // the wire is the panel's subject, so the gauge is the pointer's way in
         this.onSegment("net", CommandPalette::showNetworkPanel);
         // THE TIME THE CURRENT EVALUATION IS TAKING — the stopwatch the console has always shown, not a wall
@@ -157,12 +158,6 @@ public class StatusLine implements Runnable, AutoCloseable {
         // THE ENVELOPE ALONE IS THE HISTORY'S DOOR: the glyph is the hot spot, the banner text behind it stays
         // inert, so a click on a message never opens the list by accident.
         this.onSegment("message", Highlighter.visualLength(ENVELOPE), CommandPalette::showMessageHistory);
-        
-        /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Machine.authority().stats().monadicStats().runningMonads()));
-        this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Machine.authority().stats().monadicStats().haltedMonads()));
-        this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Machine.authority().stats().monadicStats().killedMonads()));
-        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Machine.authority().stats().monadicStats().barrierMonads()));
-        this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Machine.authority().stats().ioStats().connections(), this.getColor(), formatMessage(Machine.authority().stats().ioStats().lastMessage())));*/
         Machine.write(console.vid().extend(STATUS).addQ(SUBQ), instLambda((lhs, inst) -> {
             message(lhs.asRec().at(OBJ));
             return noobj();
@@ -246,22 +241,24 @@ public class StatusLine implements Runnable, AutoCloseable {
     }
 
     /**
-     * The wire's gauge: completed round trips, frames received, frames sent.
+     * The wire's gauge: completed round trips, frames received, frames sent — the network's meters
+     * ({@code ~/network/analyzer/analysis/wire}).
      * <p>
-     * It replaces the bytes-in/out widgets, which read {@code Stats.IOStats} — a counter fed by LLM token bytes,
-     * MQTT payloads and database reads as well as sockets, so it never measured the network — and which were
-     * computed once at construction and never changed again.
+     * It replaces the bytes-in/out widgets, which read a counter fed by LLM token bytes, MQTT payloads and database
+     * reads as well as sockets, so it never measured the network — and which were computed once at construction and
+     * never changed again.
      * <p>
-     * A wire that is answering is the normal state, so it reads quietly; a timeout tints the trip count red for
-     * as long as the window holds one. A pure function of {@link WireStats}, so it is tested like the banner.
+     * A wire that is answering is the normal state, so it reads quietly; a timeout tints the trip count red. A pure
+     * function of the analysis it is handed, so it is tested like the banner.
      */
-    static String netMarkup(final String fore, final String back) {
+    static String netMarkup(final String fore, final String back, final Analysis analysis) {
+        final ToLongFunction<fURI> wire = probe -> analysis.at(uri(f(WIRE).extend(probe))).orElse(jnt(0)).intValue();
         // a timeout tints the trip count and nothing else: the bar is a glance, the timeouts themselves are the
         // panel's to itemize (see NetworkPanelTool)
         return " {{W}}⇄{{%s&[%s]}}%d {{W}}↓{{%s&[%s]}}%d {{W}}↑{{%s&[%s]}}%d".formatted(
-                WireStats.timeouts() > 0 ? "r" : fore, back, WireStats.roundTrips(),
-                fore, back, WireStats.received(),
-                fore, back, WireStats.sent());
+                wire.applyAsLong(f(TIMEOUT)) > 0 ? "r" : fore, back, wire.applyAsLong(f(TRIP).extend(COUNT)),
+                fore, back, wire.applyAsLong(f(RECV)),
+                fore, back, wire.applyAsLong(f(SENT)));
     }
 
     /**

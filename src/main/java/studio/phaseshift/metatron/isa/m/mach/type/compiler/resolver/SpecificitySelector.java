@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
@@ -36,6 +37,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.MONAD_IN;
 import static studio.phaseshift.metatron.Tokens.MONAD_OUT;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SPECIFICITY_SELECTOR_TID;
@@ -116,9 +118,11 @@ public class SpecificitySelector extends MRec implements Selector {
             if (fetched.isObjInst())
                 return Inst.Helper.bindQ(lhs, userInst, Inst.Helper.unaddressed(fetched.asInst()));
         }
-        final long t0 = System.nanoTime();
+        final Analyzer profile = Analyzer.PROFILE.get();
+        final long t0 = null == profile ? 0L : System.nanoTime();
         final Obj fetched = Machine.read(basePath);
-        ScoringResolver.T_RESOLVE.addAndGet(System.nanoTime() - t0);
+        if (null != profile)
+            profile.record(f(Tokens.RESOLVE), f(Tokens.INST_RESOLVE), System.nanoTime() - t0);
 
         // A GENERIC CAST TARGET NAMES NO RANGE. A cast's target IS its range, so as(A::T) asks for no particular
         // type, and an overload that produces one (rec => json) cannot serve it: only a generic-range cast can,
@@ -176,13 +180,15 @@ public class SpecificitySelector extends MRec implements Selector {
      * taking the user's coefficient — the form the scored, multi-candidate path has always used.
      */
     private Inst hintCompose(final Inst candidate, final Inst userInst) {
-        final long t0 = System.nanoTime();
+        final Analyzer profile = Analyzer.PROFILE.get();
+        final long t0 = null == profile ? 0L : System.nanoTime();
         Inst hinted = userInst.hasDom() ? candidate.dom(this.hintedDom(candidate.dom(), userInst.dom())) : candidate;
         hinted = userInst.hasRng() ? hinted.rng(userInst.rng()) : hinted;
         hinted = userInst.tid().basePath().equals(AS_INST_TID)
                 ? hinted.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : Obj.Helper.specificType(userInst.arg(0)))
                 : hinted;
-        ScoringResolver.T_RESOLVE.addAndGet(System.nanoTime() - t0);
+        if (null != profile)
+            profile.record(f(Tokens.RESOLVE), f(Tokens.INST_RESOLVE), System.nanoTime() - t0);
         return hinted;
     }
 
@@ -214,13 +220,15 @@ public class SpecificitySelector extends MRec implements Selector {
         // ("abc".band?int{?}<=str on an int band): such a candidate is not viable at all
         if (userInst.hasDom() && !Inst.Helper.admitsIgnoringCoefficient(candidate, userInst.dom()))
             return null;
-        final long t0 = System.nanoTime();
+        final Analyzer profile = Analyzer.PROFILE.get();
+        final long t0 = null == profile ? 0L : System.nanoTime();
         Inst hinted = userInst.hasDom() ? candidate.dom(userInst.dom()) : candidate;
         hinted = userInst.hasRng() ? hinted.rng(userInst.rng()) : hinted;
         hinted = userInst.tid().basePath().equals(AS_INST_TID)
                 ? hinted.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : userInst.arg(0).asType())
                 : hinted;
-        ScoringResolver.T_RESOLVE.addAndGet(System.nanoTime() - t0);
+        if (null != profile)
+            profile.record(f(Tokens.RESOLVE), f(Tokens.INST_RESOLVE), System.nanoTime() - t0);
         return hinted;
     }
 

@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.parser.mtronParser;
@@ -232,6 +234,13 @@ public class machInstSet extends AbstractInstSet {
     // the tracer — the processor's diagnostics: stack traces, computational tracing, control of its stack
     public static final fURI MACH_TRACER_TID = MACH_PROCESSOR_TID.extend(TRACER);
     public static Type MACH_TRACER_TYPE;
+    // the analyzer — any component's statistics: the analysis it has measured, and the settings it publishes it by
+    public static final fURI MACH_ANALYZER_TID = MACH_MACHINE_COMPONENT_TID.extend(ANALYZER);
+    public static Type MACH_ANALYZER_TYPE;
+    public static Type MACH_ANALYSIS_TYPE;
+    public static Type MACH_COUNTER_TYPE;
+    public static Type MACH_GAUGE_TYPE;
+    public static Type MACH_TIMER_TYPE;
     // the compiler family — structural apply(source)->code contract, then the four stage families it composes
     public static final fURI MACH_COMPILER_TID = MACH_MACHINE_COMPONENT_TID.extend(COMPILER);
     public static Type MACH_COMPILER_TYPE;
@@ -312,10 +321,12 @@ public class machInstSet extends AbstractInstSet {
                                 .isaPredicate(rec(
                                         uri(STATE).maybe().asUri(), union_(uri(STOP), uri(RUN), uri(PAUSE)).tryToInst(),
                                         uri(RESULT).maybe(), T(ALL.maybeSome()),
-                                        uri(TRACER).maybe(), T(MACH_TRACER_TID)), Map.of(
+                                        uri(TRACER).maybe(), T(MACH_TRACER_TID),
+                                        uri(ANALYZER).maybe(), T(MACH_ANALYZER_TID)), Map.of(
                                         uri(STATE).maybe(), "the run state: stop, run or pause",
                                         uri(RESULT).maybe(), "the objs the last evaluation produced",
-                                        uri(TRACER).maybe(), "the processor's diagnostics (tracer::T), as the compiler's typer is its type checking: a pushed machine's processor carries a copy of its parent's"))
+                                        uri(TRACER).maybe(), "the processor's diagnostics (tracer::T), as the compiler's typer is its type checking: a pushed machine's processor carries a copy of its parent's",
+                                        uri(ANALYZER).maybe(), "the processor's statistics (analyzer::T): with profile=>true every evaluation's monad flow and stage timings are measured into it (apply, flow, per_inst, resolve, rewrite, repeat), at ~/processor/analyzer/analysis"))
                                 .slots(mutableMap(
                                         uri(COMPUTER), "the computers this processor minted, one per evaluation, by number: computer/<n>; an evaluation's uncaught fails are filed in its computer's stack, computer/<n>/fail",
                                         uri("fail"), "the machine's fail stack: an uncaught fail raised outside any evaluation, keyed by ?incrq; read with @ to keep each fail's address, so that catching it removes it"))
@@ -359,6 +370,47 @@ public class machInstSet extends AbstractInstSet {
                                         uri(Tracer.STACK).maybe(), "the trace points: mtron_stack (render mtron stack traces on an uncaught fail::T), java_stack (render java stack traces on an uncaught fail::T)"))
                                 // the tracer fills in its rec, so it gets a copy, never the caller's
                                 .constructor(arg -> new BasicTracer(mutableMap(arg.asRec().jvm()), MACH_TRACER_TID, arg.vid()))
+                                .create(),
+                        // the analysis a component measures, and the three meters it is made of: a meter's tid IS its kind
+                        MACH_ANALYSIS_TYPE = TypeBuilder.build()
+                                .tid(REC_TID)
+                                .vid(Analysis.ANALYSIS_TID, "what a component has measured: a rec whose paths are probes and whose leaves are meters (counter::T, gauge::T, timer::T). Derived values -- rates, means, ratios -- are computed from it, never stored in it, so two analyses merge: counters add, timers combine, a gauge keeps the later reading.")
+                                .example("*~/network/analyzer/analysis/wire   [-- the frames and round trips that crossed this machine's sockets --]")
+                                .create(),
+                        MACH_COUNTER_TYPE = TypeBuilder.build()
+                                .tid(INT_TID)
+                                .vid(Analysis.COUNTER_TID, "a monotonic count: how many times something happened since the meter was born")
+                                .create(),
+                        MACH_GAUGE_TYPE = TypeBuilder.build()
+                                .tid(REAL_TID)
+                                .vid(Analysis.GAUGE_TID, "a point-in-time value, read as it stands: the one meter that is no monoid")
+                                .create(),
+                        MACH_TIMER_TYPE = TypeBuilder.build()
+                                .tid(REC_TID)
+                                .vid(Analysis.TIMER_TID, "a distribution of durations, in nanoseconds: how many were observed and their total, least and greatest")
+                                .isaPredicate(rec(uri(COUNT), INT_TYPE, uri(TOTAL), INT_TYPE, uri(MIN), INT_TYPE, uri(MAX), INT_TYPE), Map.of(
+                                        uri(COUNT), "how many durations were observed",
+                                        uri(TOTAL), "their sum, in nanoseconds (total/count is the mean)",
+                                        uri(MIN), "the shortest, in nanoseconds",
+                                        uri(MAX), "the longest, in nanoseconds"))
+                                .create(),
+                        // the analyzer — any component's statistics, in the typer's and the tracer's form: its state is its
+                        // analysis, derived as it is read, and its settings sit beside it
+                        MACH_ANALYZER_TYPE = TypeBuilder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_ANALYZER_TID, "a component's statistics, at ~/<component>/analyzer: its analysis (what it has measured, derived as it is read), the step it publishes that analysis at to ~/+/analyzer/analysis?subq subscribers, and whether the component's costly instrumentation is on. The producer records in java, where the thing it counts happens, and never through a write.")
+                                // every slot is optional: a BasicAnalyzer is checked against this type while its rec is
+                                // still empty (MObj's constructor)
+                                .isaPredicate(rec(
+                                        uri(ANALYSIS).maybe().asUri(), ALL_TYPE,
+                                        uri(STEP).maybe(), INT_TYPE,
+                                        uri(PROFILE).maybe(), BOOL_TYPE), Map.of(
+                                        uri(ANALYSIS).maybe(), "the analysis::T the component has measured, built from its meters each time it is read",
+                                        uri(STEP).maybe(), "the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step",
+                                        uri(PROFILE).maybe(), "whether the component's costly instrumentation is on (default false): the processor's per-monad timings"))
+                                .example("*~/processor/analyzer/analysis   [-- the processor's measurements --]",
+                                        "~/network/analyzer/analysis?subq -> sub::[code=>>>1.to(/usr/wire)]   [-- each published analysis lands at /usr/wire --]")
+                                .constructor(arg -> new BasicAnalyzer(mutableMap(arg.asRec().jvm()), MACH_ANALYZER_TID, arg.vid()))
                                 .create(),
                         // the compiler family — structural apply(source)->code contract holding its four stages
                         MACH_COMPILER_TYPE = TypeBuilder.build()
@@ -799,7 +851,11 @@ public class machInstSet extends AbstractInstSet {
                                         // a method-shaped field, not a map: the component rec is
                                         // re-typechecked on every peer write, so this slot must say what
                                         // the component actually stores.
-                                        uri(STATUS).maybe().asUri(), INST_TYPE), Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
+                                        uri(STATUS).maybe().asUri(), INST_TYPE,
+                                        // the WIRE'S METERS, kept in the rec rather than the cache: the taps count into
+                                        // them per frame, and the machine's space answers ~/network/analyzer
+                                        uri(ANALYZER).maybe().asUri(), T(MACH_ANALYZER_TID)), Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
+                                        uri(ANALYZER).maybe(), "the network's statistics (analyzer::T): wire/sent and wire/recv count the frames each way on its sockets, wire/trip times the round trips they completed, and wire/timeout counts the deadlines they missed",
                                         uri(ROSTER).maybe(), "known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme://host:port); knowledge, not reach — a machine is reached by dialing one of them",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
