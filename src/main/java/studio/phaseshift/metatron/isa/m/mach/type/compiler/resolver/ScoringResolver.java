@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.BINDER;
 import static studio.phaseshift.metatron.Tokens.SELECTOR;
@@ -63,18 +62,5 @@ public class ScoringResolver extends MRec implements Resolver {
             this.at(SELECTOR, SpecificitySelector.single(), MUTABLE);
         if (this.at(BINDER).isNoObj())
             this.at(BINDER, GenericBinder.single(), MUTABLE);
-    }
-
-    // fine-grained resolve-stage timing (read by the profile() instruction). times accumulate
-    // across all resolutions; resetTimings() zeroes them before a profiling window. The binder
-    // advances them, so the profile() report is unchanged by the selector/binder split.
-    public static final AtomicLong T_RESOLVE = new AtomicLong(0);
-    public static final AtomicLong T_BIND = new AtomicLong(0);
-    public static final AtomicLong T_COMPOSE = new AtomicLong(0);
-
-    public static void resetTimings() {
-        T_RESOLVE.set(0);
-        T_BIND.set(0);
-        T_COMPOSE.set(0);
     }
 }

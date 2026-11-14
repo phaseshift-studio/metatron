@@ -19,7 +19,9 @@
 package studio.phaseshift.metatron.isa.m.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.util.MTronException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -55,6 +57,18 @@ public interface Component extends Rec {
         while (!mach.isNoObj() && !(mach instanceof Machine))
             mach = mach.parent();
         return mach instanceof Machine ? mach.as() : Machine.mach0();
+    }
+
+    /**
+     * THIS COMPONENT'S STATISTICS — its {@code analyzer} entry, the {@link Analyzer} read at
+     * {@code ~/<component>/analyzer}. A direct map read, because a producer asks it where the thing it counts happens
+     * (a socket frame). A component that measures nothing carries none, and asking it for one is a mistake, not an
+     * empty answer.
+     */
+    default Analyzer analyzer() {
+        if (this.jvm().get(Analyzer.KEY) instanceof Analyzer analyzer)
+            return analyzer;
+        throw MTronException.of("%s carries no analyzer", this.tid());
     }
 
     /**

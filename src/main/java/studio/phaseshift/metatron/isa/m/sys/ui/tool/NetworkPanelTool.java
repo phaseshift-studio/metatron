@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.sys.ui.tool;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
 import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
@@ -31,7 +32,6 @@ import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.LineUI;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
@@ -42,9 +42,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.ToLongFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -93,10 +96,6 @@ public class NetworkPanelTool extends AccordionWidget {
      */
     private static final int DEFAULT_WIDTH = 96;
     /**
-     * how often traffic may nudge a repaint: a panel is a view, not a strobe light
-     */
-    private static final long REPAINT_MS = 250L;
-    /**
      * the rec key holding the peers whose rows are folded away. A peer absent from it is open, so a fresh lane is
      * born open and the fold is a policy the user states, not a state the panel infers.
      */
@@ -132,7 +131,6 @@ public class NetworkPanelTool extends AccordionWidget {
      */
     private static final String FRAME_SYNTAX = "mtron";
 
-    private static volatile long lastNudgeMs = 0L;
     private static volatile boolean listening = false;
 
     public NetworkPanelTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -221,8 +219,8 @@ public class NetworkPanelTool extends AccordionWidget {
     @Override
     protected List<String> bodySource(final Map<Obj, Obj> fields) {
         final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
-        return panelLines(WireTrace.snapshot(this.max()), this.paused(), this.max(), this.peerFilter(),
-                this.foldedPeers(), Math.max(0, interior - 2));
+        return panelLines(WireTrace.snapshot(this.max()), Machine.current().network().analyzer().analysis(),
+                this.paused(), this.max(), this.peerFilter(), this.foldedPeers(), Math.max(0, interior - 2));
     }
 
     // ── the pointer: fold on the header, clear on a lane header ────
@@ -242,8 +240,8 @@ public class NetworkPanelTool extends AccordionWidget {
         if (bodyRow < 0)
             return false;
         final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
-        final List<LineUI> layout = layout(WireTrace.snapshot(this.max()), this.paused(), this.max(),
-                this.peerFilter(), this.foldedPeers(), Math.max(0, interior - 2));
+        final List<LineUI> layout = layout(WireTrace.snapshot(this.max()), Machine.current().network().analyzer().analysis(),
+                this.paused(), this.max(), this.peerFilter(), this.foldedPeers(), Math.max(0, interior - 2));
         if (bodyRow >= layout.size())
             return false;
         final Optional<SpanUI> hit = layout.get(bodyRow).at(col - CONTENT_OFFSET);
@@ -267,8 +265,9 @@ public class NetworkPanelTool extends AccordionWidget {
     // ── traffic nudges a repaint ───────────────────────────────────
 
     /**
-     * A transaction on the wire is what makes the panel stale, so that is what asks for a repaint — throttled, and
-     * only while a panel is actually on screen.
+     * Traffic on the wire is what makes the panel stale, so that is what asks for a repaint — and only while a panel
+     * is actually on screen. THE PANEL SUBSCRIBES TO THE WIRE'S METERS as any obj can: the network's analyzer
+     * publishes at most once per step, and only after traffic, so the repaint is throttled by the publication itself.
      */
     private static void listenForTraffic() {
         if (listening)
@@ -277,20 +276,15 @@ public class NetworkPanelTool extends AccordionWidget {
             if (listening)
                 return;
             listening = true;
-            WireStats.listen(frame -> {
-                final Console console = Console.LOCAL_INSTANCE;
-                if (null == console)
-                    return;
-                final long now = System.currentTimeMillis();
-                if (now - lastNudgeMs < REPAINT_MS)
-                    return;
-                // the console already knows how to redraw at the next prompt boundary; asking it is cheaper and
-                // calmer than rendering from the wire thread
-                if (console.getFloatingWidgets().stream().anyMatch(w -> w instanceof NetworkPanelTool)) {
-                    lastNudgeMs = now;
-                    console.requestRedraw();
-                }
-            });
+            Machine.write(Machine.root().vid().resolve().extend(NETWORK).extend(ANALYZER).extend(ANALYSIS).addQ(SUBQ),
+                    instLambda((lhs, inst) -> {
+                        // the console already knows how to redraw at the next prompt boundary; asking it is cheaper
+                        // and calmer than rendering from the publishing thread
+                        final Console console = Console.LOCAL_INSTANCE;
+                        if (null != console && console.getFloatingWidgets().stream().anyMatch(w -> w instanceof NetworkPanelTool))
+                            console.requestRedraw();
+                        return noobj();
+                    }));
         }
     }
 
@@ -301,9 +295,11 @@ public class NetworkPanelTool extends AccordionWidget {
      * its answer tabbed in beneath it, and each unsolicited inbound frame as a received row. A folded lane draws
      * its header and nothing else.
      * <p>
-     * Pure — the snapshot comes in, markup comes out — so the layout is tested without a terminal.
+     * Pure — the snapshot and the network's analysis come in, markup comes out — so the layout is tested
+     * without a terminal.
      *
      * @param snapshot   the window to draw
+     * @param analysis   the network's meters, which the summary line counts from — the ones the status gauge shows
      * @param paused     whether capture is paused (the panel says so; a frozen view must not look like a quiet one)
      * @param maxRows    how many lines the body may hold
      * @param peerFilter a substring a lane must contain, or empty for every lane
@@ -311,9 +307,9 @@ public class NetworkPanelTool extends AccordionWidget {
      * @param width      the columns available (a line longer than this is clipped)
      * @return the body lines, never more than {@code maxRows}
      */
-    static List<String> panelLines(final WireTrace.Snapshot snapshot, final boolean paused, final int maxRows,
-                                   final String peerFilter, final Set<String> folded, final int width) {
-        return layout(snapshot, paused, maxRows, peerFilter, folded, width).stream().map(LineUI::markup).toList();
+    static List<String> panelLines(final WireTrace.Snapshot snapshot, final Analysis analysis, final boolean paused,
+                                   final int maxRows, final String peerFilter, final Set<String> folded, final int width) {
+        return layout(snapshot, analysis, paused, maxRows, peerFilter, folded, width).stream().map(LineUI::markup).toList();
     }
 
     /**
@@ -321,19 +317,23 @@ public class NetworkPanelTool extends AccordionWidget {
      * lane header's marker and clear button; nothing on a summary or a data row). One pass builds both, so a hot
      * spot cannot drift from the line the renderer draws.
      */
-    private static List<LineUI> layout(final WireTrace.Snapshot snapshot, final boolean paused, final int maxRows,
-                                       final String peerFilter, final Set<String> folded, final int width) {
+    private static List<LineUI> layout(final WireTrace.Snapshot snapshot, final Analysis analysis, final boolean paused,
+                                       final int maxRows, final String peerFilter, final Set<String> folded, final int width) {
         final List<LineUI> lines = new ArrayList<>();
+        // THE COUNTS ARE THE NETWORK'S METERS, not the window's: the wire is counted at its taps, beside the rows, so a
+        // frozen view still reports the live totals
+        final ToLongFunction<fURI> wire = probe -> analysis.at(uri(f(WIRE).extend(probe))).orElse(jnt(0)).intValue();
+        final long timeouts = wire.applyAsLong(f(TIMEOUT));
         // the color LETTER, so it can be dropped into a tag: a timeout tints the trip count and stays quiet otherwise
-        final String trouble = snapshot.timeouts() > 0 ? "r" : "y";
+        final String trouble = timeouts > 0 ? "r" : "y";
         // A CROSS, NOT A TIMEPIECE. This is a count of deadlines that were missed, and an hourglass beside live
         // numbers reads as a clock — which is exactly how it was misread. Drawn only when there is one, so a
         // healthy wire says nothing at all.
-        final String alarms = snapshot.timeouts() > 0 ? " {{w}}\u2717 {{r}}%d{{w}}".formatted(snapshot.timeouts()) : "";
+        final String alarms = timeouts > 0 ? " {{w}}\u2717 {{r}}%d{{w}}".formatted(timeouts) : "";
         lines.add(new LineUI(MiniWidget.clip("{{c}}⇄{{%s}}%d {{c}}↓{{%s}}%d {{c}}↑{{%s}}%d%s  {{y}}%d peer%s%s"
-                        .formatted(trouble, snapshot.roundTrips(),
-                                trouble, snapshot.received(),
-                                trouble, snapshot.sent(),
+                        .formatted(trouble, wire.applyAsLong(f(TRIP).extend(COUNT)),
+                                trouble, wire.applyAsLong(f(RECV)),
+                                trouble, wire.applyAsLong(f(SENT)),
                                 alarms,
                                 snapshot.lanes().size(),
                                 1 == snapshot.lanes().size() ? "" : "s",

@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
-import studio.phaseshift.metatron.isa.m.mach.type.Stats;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -67,8 +66,6 @@ public interface Space extends Addressable, Rec, Closeable {
     Object sjvm();
 
     Map<Uri, Obj> routes();
-
-    Stats stats();
 
     // read(fURI)/write(fURI, Obj) and their String overloads are the Addressable contract: a Space is the
     // storage-shaped Addressable (pattern, q-procs, routes) among the machine's uniform read/write sources.

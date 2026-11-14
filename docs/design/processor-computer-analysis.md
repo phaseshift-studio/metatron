@@ -1,6 +1,7 @@
 # Processor / Computer architecture + `analysis::T`
 
-**Status:** design agreed 2026-11-03 — implementation starting.
+**Status:** design agreed 2026-11-03 — implementation starting. §7 extended 2026-11-13: `analyzer::T`, the metrics
+foundation every component follows.
 **See also:** `distributed_vid_computing.md` (the plan thread's survey), `machine-ring.md`,
 `compilation-execution-strategy.md`, the `mach-instset-mtron.md` skill reference.
 
@@ -278,15 +279,93 @@ Prometheus is `name{labels} value` + `# TYPE`. The mapping is mechanical:
 An `ObjGrafanaSerializer` walks `analysis`, emits `# TYPE` + `name{labels} value` per meter, fanning timers into four
 series. Graphite/StatsD fall out of the same walk.
 
+### The analyzer — the metrics foundation (Marko, 2026-11-13)
+
+`analysis::T` is what a component has measured; **`analyzer::T`** is the component that measures it, in the form of the
+compiler's typer and the processor's tracer. Every metric in metatron follows these rules.
+
+1. **One shape.** A metric that leaves its producer is an `analysis::T`: `group => [probe => meter]`, a probe nesting
+   as deep as its path (`per_inst/0/time` is `per_inst => [0 => [time => timer]]`, so a read walks it). The meter's
+   tid is its kind: `counter::T` (int), `gauge::T` (real), `timer::T` (`[count, total, min, max]`, nanoseconds).
+   Derived values are computed on read. `Analysis.Helper.merge` is the monoid (counters add, timers combine, a gauge
+   keeps the later reading), so a machine's analysis is the merge of its components' and a cluster's of its machines'.
+2. **Owner-held, at the owner's address.** A component carries its analyzer under `analyzer`
+   (`Component.analyzer()`), and the machine's space answers `<vid>/<component>/analyzer/…` for every component, the
+   network's included (`MachineSpace`):
+
+   ```
+   analyzer::[analysis => analysis::T, step => int::T, profile => bool::T]
+
+   *~/network/analyzer/analysis/wire/sent           [-- read live: the meters as they stand --]
+   ~/processor/analyzer/profile -> true             [-- a write sets a setting in place --]
+   ~/network/analyzer -> [step=>1000]               [-- a write AT the analyzer declares settings, never replaces it --]
+   ```
+
+   The analysis is derived as it is read (an `auto` closing over the analyzer, the `~/network/status` form) and takes
+   no write. No global registry, no statics.
+3. **Recording never writes a rec.** The producer calls `incr` / `record` / `set` in Java, where the thing it counts
+   happens. The meters are lock-free cells (`LongAdder`, atomic min/max): a socket frame or a monad step pays an atomic
+   add, never a map copy, a type check or a store write — which is what `Rec.at(k, v, MUTABLE)` costs, per event. The
+   rec is built from the cells when someone reads it.
+4. **Costly instrumentation is off by default; cheap counters are always on.** A component's costly probes run only
+   while a run is profiled: `Analyzer.PROFILE` is the analyzer the current thread's run is profiled into, and a probe
+   reads it once and measures only when it is set (one thread-local read when it is not). `profile()` scopes a fresh
+   analyzer around its own timed runs; a processor whose analyzer has `profile => true` mints every computer under
+   its own analyzer; a computer carries the profile it was minted under to whichever thread runs it.
+5. **Pull is the read; push is `?subq`.** Subscribers use the space's own pubsub:
+   `~/network/analyzer/analysis?subq -> sub::[code=>…]`, or `~/+/analyzer/analysis?subq` for every component (one
+   registry — the machine's space — answers them all). A change schedules one publication a `step` later (default 250
+   ms) and every change until then rides it: a subscriber hears at most one `pub::[<address>, analysis::T]` per step,
+   carrying every change before it, and a quiet analyzer publishes nothing. Delivery is `QCollection.publish`, the
+   same one a write's broadcast uses. No Java listener lists.
+6. **Export is a serializer** over `analysis::T`, as mapped above — not a second collection path.
+7. **Events are not meters.** A record of individual occurrences (`WireTrace`'s exchanges) is a bounded ring a human
+   reads; the counts behind it are the producer's meters, counted at the same tap.
+
+**Producers today.**
+
+| component | probe | kind | where it is counted |
+|---|---|---|---|
+| network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`, `WebSocketRec.onMessage` |
+| network | `wire/trip` | timer | `WebSocketObj.sendRecv`, when the reply lands |
+| network | `wire/timeout` | counter | `WebSocketObj.sendRecv`, when the deadline passes |
+| processor (profiled) | `apply/split`, `apply/apply`, `apply/next` | timer | `BasicSwarmComputer.split`, `StatefulMonad.apply/next` |
+| processor (profiled) | `flow/monads`, `flow/c_sum`, `flow/processors` | counter | the monad loop, each computer minted |
+| processor (profiled) | `per_inst/<vid>/{monad_in, monad_out, c_in, c_out}`, `…/time` | counter, timer | `StatefulMonad`, the barrier |
+| processor (profiled) | `resolve/{inst_resolve, generic_binding, inst_composition}` | timer | `SpecificitySelector`, `GenericBinder` |
+| processor (profiled) | `rewrite/<rule>/{in, out, time}` | counter, timer | `FixPointRewriter`, per rule |
+| processor (profiled) | `repeat/{esc, emit, until, code, state}`, `repeat/loop` | timer, counter | `repeat()` |
+
+The status line's wire gauge and the network panel's summary read the network analyzer, and the panel repaints as a
+`?subq` subscriber to it. `profile()` builds its `profiling::T` report from its scoped analyzer.
+
+**Retired.** `WireStats` (static atomics with a private listener list); the process-global profiling accumulators
+(`StatefulMonad.T_*`/`INST_*`/`MONADS`/`COEFF_SUM`/`T_REPEAT_*`, `ScoringResolver.T_*`,
+`FixPointRewriter.REWRITE_*`, `BasicSwarmComputer.PROCESSORS`), which every evaluation paid for in the monad loop and
+every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicStats`, which recorded nothing —
+`Memory.stats()` minted a fresh `MStats` per call, per monad.
+
+**Next.**
+
+- the OpenMetrics serializer and an `http_server` route over `~/+/analyzer/analysis` (the Grafana path);
+- a query-execution timer — open: whether nested argument evaluations (each a computer) belong in it, or only the
+  evaluations a user submits (`Machine.evaluate`, the console's executor);
+- more producers, each at its own analyzer: memory (writes, deletes, reads per space), `http_server` (requests by
+  route, status, latency), `tble`/`dcmnt` (query time, index use), the compiler (resolve/rewrite outside a profile);
+- a gauge read on demand (open sockets per listener) — a supplier-backed meter, sampled as the analysis is built;
+- bytes on the wire (only the send tap holds them today);
+- labels: how a probe names a dimension (peer, route, rule) so the serializer emits `name{label=…}` rather than a
+  name per value.
+
 ---
 
 ## 8. Open / deferred
 
 1. **`fiberedRecApply` / `isFiberedRec` home** — settles with directive #4; keep the meta-apply seam (directive #1) and
    the `?query` discipline (directive #4) coupled.
-2. **`analysis::T` wiring** — `Component.analyzer() -> analysis::T` (one method on `Component`, inherited by all).
-   Deferred until the meter types (`counter`/`gauge`/`timer`) are registered. `gauge` + `histogram` are the non-monoid /
-   advanced kinds.
+2. ~~**`analysis::T` wiring**~~ — done 2026-11-13: the meter types are registered, `Component.analyzer()` answers
+   the component's `analyzer::T`, and the network and processor carry one (see "The analyzer" in §7). `histogram`
+   remains the advanced kind.
 3. **`apply` auto-start** — does `apply(code)` mint dormant or running? (Dormant + explicit `start()` is the working
    shape.)
 4. **Compiled artifact** (directive #7) — the precomputed successor chain + initial/barrier indices; overlaps the

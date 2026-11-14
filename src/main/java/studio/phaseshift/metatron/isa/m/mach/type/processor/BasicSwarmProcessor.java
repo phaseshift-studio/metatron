@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,10 +35,14 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.COMPUTER;
 import static studio.phaseshift.metatron.Tokens.PROCESSOR;
+import static studio.phaseshift.metatron.Tokens.PROFILE;
 import static studio.phaseshift.metatron.Tokens.TRACER;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_ANALYZER_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * BasicSwarmProcessor — the swarm architecture: a machine component (never a thread) that mints a
@@ -50,9 +56,19 @@ public class BasicSwarmProcessor extends MRec implements Processor {
 
     public BasicSwarmProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.jvm().putIfAbsent(uri(COMPUTER), rec());
-        // the processor's diagnostics, as a compiler carries its typer: a given tracer is kept, else the boot default
-        this.jvm().putIfAbsent(uri(TRACER), new BasicTracer());
+        // A CONSTRUCTED PROCESSOR IS NEW, whatever rec it is built from: a template, or the shallow copy of the processor
+        // a pushed machine descends from (Machine.push). It has minted no computer and filed no fail, so its index and
+        // its fail stack are its own
+        this.jvm().put(uri(COMPUTER), rec());
+        this.jvm().remove(uri("fail"));
+        // its diagnostics, as a compiler carries its typer: a COPY of the tracer it is handed, else the boot default.
+        // A copy, because the trace points are a rec a nested write rewrites in place: shared, a change on one side
+        // would reach the other
+        final Obj tracer = this.jvm().get(uri(TRACER));
+        this.jvm().put(uri(TRACER), null == tracer ? new BasicTracer() : Obj.Helper.deepClone(tracer));
+        // ... and its statistics (see Analyzer): new meters under the settings of the analyzer it is handed
+        this.jvm().put(Analyzer.KEY, new BasicAnalyzer(this.jvm().get(Analyzer.KEY) instanceof Analyzer settings
+                ? new LinkedHashMap<>(settings.jvm()) : mutableMap(), MACH_ANALYZER_TID, null, PROCESSOR));
     }
 
     public static BasicSwarmProcessor processor(final Map<Obj, Obj> state, final fURI tid, final fURI vid) {
@@ -63,8 +79,22 @@ public class BasicSwarmProcessor extends MRec implements Processor {
         return new BasicSwarmProcessor(new LinkedHashMap<>(), MACH_SWARM_PROCESSOR_TID, Machine.current().vid().extend(PROCESSOR));
     }
 
+    /**
+     * Mint a computer for {@code code}. A PROCESSOR THAT PROFILES (its analyzer's {@code profile => true}) mints it under
+     * its own analyzer, so every evaluation it runs is measured there — unless the evaluation is already profiled (a
+     * {@code profile()} times its own runs into an analyzer of its own).
+     */
     @Override
     public BasicSwarmComputer apply(final Code code) {
+        if (null == Analyzer.PROFILE.get() && this.jvm().get(Analyzer.KEY) instanceof Analyzer analyzer
+                && analyzer.atDirect(uri(PROFILE)).orElse(BOOL_FALSE).boolValue()) {
+            Analyzer.PROFILE.set(analyzer);
+            try {
+                return BasicSwarmComputer.of(code);
+            } finally {
+                Analyzer.PROFILE.remove();
+            }
+        }
         return BasicSwarmComputer.of(code);
     }
 

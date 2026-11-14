@@ -23,16 +23,23 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
+import java.util.function.ToLongFunction;
+
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
- * repeat() behavior + timing probe. The monad loop already accrues processor-stage timing in {@link StatefulMonad}
- * (split / apply / next, plus monad propagation counters), and the repeat body itself accrues its internal phases
- * (escape / emit / until / code / bookkeeping). This test reads those accumulators around a single evaluation and
- * reports a per-phase breakdown, which is the "where is it slow" evidence behind the repeat() optimization.
+ * repeat() behavior + timing probe. A PROFILED run ({@link Analyzer#PROFILE}) measures the processor stages
+ * (apply/split, apply/apply, apply/next, plus the monad propagation counters in flow), and the repeat body measures its
+ * internal phases (repeat/esc, emit, until, code and state, and its passes in repeat/loop). This test profiles a single
+ * evaluation into an analyzer of its own and reports a per-phase breakdown, which is the "where is it slow" evidence
+ * behind the repeat() optimization.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -66,21 +73,30 @@ public class RepeatInstTest extends AbstractMetatronTest {
     }
 
     /**
-     * Parse, warm up (once, untimed — heats the fURI intern pool and JIT), then reset the accumulators and time one
-     * more apply. The parse is deliberately outside the timed region so the number is the repeat evaluation itself.
+     * Parse, warm up (once, untimed and unprofiled — heats the fURI intern pool and JIT), then profile and time one more
+     * apply. The parse is deliberately outside the timed region so the number is the repeat evaluation itself, and the
+     * profile is an analyzer of the probe's own, so the numbers are this evaluation's and no other's.
      */
     private static Probe probe(final String code) {
         Machine.parse(code).apply(noobj());
-        StatefulMonad.resetTimings();
         final Obj program = Machine.parse(code);
-        final long t0 = System.nanoTime();
-        program.apply(noobj());
-        final long wall = System.nanoTime() - t0;
+        final Analyzer profile = new BasicAnalyzer();
+        Analyzer.PROFILE.set(profile);
+        final long wall;
+        try {
+            final long t0 = System.nanoTime();
+            program.apply(noobj());
+            wall = System.nanoTime() - t0;
+        } finally {
+            Analyzer.PROFILE.remove();
+        }
+        final Analysis analysis = profile.analysis();
+        final ToLongFunction<String> read = path -> analysis.at(uri(path)).orElse(jnt(0)).intValue();
         return new Probe(wall,
-                StatefulMonad.T_SPLIT.get(), StatefulMonad.T_APPLY.get(), StatefulMonad.T_NEXT.get(),
-                StatefulMonad.T_REPEAT_ESC.get(), StatefulMonad.T_REPEAT_EMIT.get(), StatefulMonad.T_REPEAT_UNTIL.get(),
-                StatefulMonad.T_REPEAT_CODE.get(), StatefulMonad.T_REPEAT_BOOK.get(),
-                StatefulMonad.REPEAT_ITERS.get(), StatefulMonad.MONADS.get(), StatefulMonad.COEFF_SUM.get());
+                read.applyAsLong("apply/split/total"), read.applyAsLong("apply/apply/total"), read.applyAsLong("apply/next/total"),
+                read.applyAsLong("repeat/esc/total"), read.applyAsLong("repeat/emit/total"), read.applyAsLong("repeat/until/total"),
+                read.applyAsLong("repeat/code/total"), read.applyAsLong("repeat/state/total"),
+                read.applyAsLong("repeat/loop"), read.applyAsLong("flow/monads"), read.applyAsLong("flow/c_sum"));
     }
 
     @ParameterizedTest

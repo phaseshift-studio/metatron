@@ -31,7 +31,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * THE WIRE'S HISTORY — a bounded, ordered window of the exchanges that crossed this VM's peers, one lane per peer.
  * <p>
- * {@link WireStats} answers "how much"; this answers "what". The unit is the {@link Exchange}: one
+ * The network's analyzer answers "how much" ({@code ~/network/analyzer/analysis/wire}); this answers "what". Events are
+ * not meters: the meters are counted at the taps, beside the rows, and this keeps only what a human reads. The unit is
+ * the {@link Exchange}: one
  * {@code sendRecv} round trip (a request, the reply it was answered with, and how long that took), or a frame that
  * arrived with no round trip waiting for it (a push). Frames are deliberately NOT the unit: a frame list reads as
  * protocol noise, while an exchange is what a human means by "a message going back and forth".
@@ -202,10 +204,9 @@ public final class WireTrace {
     }
 
     /**
-     * the whole window at one instant: the counters ({@link WireStats}) plus every lane and its rows.
+     * the whole window at one instant: how much it saw and forgot, and every lane and its rows.
      */
-    public record Snapshot(long sent, long received, long roundTrips, long timeouts, long dropped,
-                           long lastLatencyMs, long exchanged, List<Lane> lanes) {
+    public record Snapshot(long dropped, long exchanged, List<Lane> lanes) {
     }
 
     private record LaneState(ArrayDeque<Exchange> rows, long exchanges, long timeouts, long lastActivityMs) {
@@ -273,13 +274,6 @@ public final class WireTrace {
      */
     public static void exchange(final String peer, final fURI tag, final Obj request, final Obj reply,
                                 final long startedMs, final long elapsedMs, final Outcome outcome) {
-        // THE COUNTERS DESCRIBE THE WIRE, which never pauses: a frozen VIEW still reports the live truth. They are
-        // incremented here, on the one path that records an exchange, so the window's rows and its counts can
-        // never disagree — including for a caller that records one by hand (a test, a replayed trace).
-        if (Outcome.OK == outcome)
-            WireStats.roundTrip(elapsedMs);
-        else if (Outcome.TIMEOUT == outcome)
-            WireStats.timeout();
         if (paused)
             return;
         final String requestText = render(request);
@@ -344,7 +338,7 @@ public final class WireTrace {
     }
 
     /**
-     * @return the whole window at this instant (counters from {@link WireStats})
+     * @return the whole window at this instant
      */
     public static Snapshot snapshot(final int rowsPerLane) {
         final List<Lane> lanes = new ArrayList<>();
@@ -367,8 +361,7 @@ public final class WireTrace {
         }
         // the busiest peer leads the view: a lane is shown so a human can read what is happening NOW
         lanes.sort((a, b) -> Long.compare(b.lastActivityMs(), a.lastActivityMs()));
-        return new Snapshot(WireStats.sent(), WireStats.received(), WireStats.roundTrips(), WireStats.timeouts(),
-                DROPPED.get(), WireStats.lastRoundTripMs(), SEQ.get(), lanes);
+        return new Snapshot(DROPPED.get(), SEQ.get(), lanes);
     }
 
     private static long lastLatency(final LaneState state) {
@@ -406,7 +399,7 @@ public final class WireTrace {
     }
 
     /**
-     * Forget every exchange (the counters in {@link WireStats} are theirs to reset).
+     * Forget every exchange (the network's meters are not the window's to reset).
      */
     public static void clear() {
         synchronized (LOCK) {
@@ -420,8 +413,7 @@ public final class WireTrace {
 
     /**
      * Forget ONE PEER's exchanges — its lane and every exchange the global and detail windows still hold for it.
-     * The counters in {@link WireStats} are global and theirs to reset, so they are untouched: clearing a peer's
-     * MESSAGES leaves the machine's totals alone (a cleared lane simply stops contributing to them).
+     * The network's meters are untouched: clearing a peer's MESSAGES leaves the machine's totals alone.
      *
      * @param peer the peer's name, or a socket name carrying an identity-hash suffix (folded to its lane key)
      */

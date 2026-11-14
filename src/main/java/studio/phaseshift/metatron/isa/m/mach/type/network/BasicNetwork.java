@@ -24,6 +24,8 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -114,8 +116,9 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
         this.addQ(QCollection.subQ());
         this.qs().lstValue().forEach(q -> this.cache.addQ(q.as()));
         // THE REC IS THE SPACE'S CONFIGURATION; what the level was constructed with goes into the cache, each field at
-        // its own address and through the door every other write takes
-        final Set<fURI> config = Set.of(f(PATTERN), f(QPROC));
+        // its own address and through the door every other write takes. The ANALYZER stays in the rec, as every
+        // component's does: the wire taps count into it per frame, and the machine's space answers it
+        final Set<fURI> config = Set.of(f(PATTERN), f(QPROC), f(ANALYZER));
         this.jvm().entrySet().stream()
                 .filter(field -> field.getKey().isUri() && !config.contains(field.getKey().uriValue()))
                 .toList()
@@ -125,6 +128,9 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
                 });
         // the status METHOD is an entry like any other: `*/network/status` evaluates it, closing over this level
         this.write(f(STATUS), this.status());
+        // THE WIRE'S METERS (wire/sent, recv, trip, timeout): the frames each way on this level's sockets, the round trips
+        // they completed and the deadlines they missed (WebSocketObj), read at ~/network/analyzer/analysis/wire
+        this.jvm().putIfAbsent(Analyzer.KEY, new BasicAnalyzer(NETWORK));
     }
 
     /**

@@ -19,17 +19,22 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.ANALYSIS;
+import static studio.phaseshift.metatron.Tokens.IN;
 import static studio.phaseshift.metatron.Tokens.MAX;
+import static studio.phaseshift.metatron.Tokens.OUT;
+import static studio.phaseshift.metatron.Tokens.REWRITE;
+import static studio.phaseshift.metatron.Tokens.TIME;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_FIXPOINT_REWRITER_TID;
@@ -53,11 +58,6 @@ public class FixPointRewriter extends AbstractRewriter {
 
     private static final FixPointRewriter INSTANCE = new FixPointRewriter(mutableMap(), MACH_FIXPOINT_REWRITER_TID, null);
 
-    // rewrite-rule timing + inst reduction, keyed by rule leaf name (read by the profile() instruction)
-    public static final ConcurrentHashMap<String, AtomicLong> REWRITE_TIMINGS = new ConcurrentHashMap<>();
-    public static final ConcurrentHashMap<String, AtomicLong> REWRITE_INS = new ConcurrentHashMap<>();
-    public static final ConcurrentHashMap<String, AtomicLong> REWRITE_OUTS = new ConcurrentHashMap<>();
-
     /**
      * The budget on remembered rule orders. A VM's vocabulary changes when an ISA is mounted, imported, redefined or
      * unmounted — a handful of times per configuration, never per evaluation — so a small number is a real ceiling
@@ -73,12 +73,6 @@ public class FixPointRewriter extends AbstractRewriter {
 
     public static FixPointRewriter single() {
         return INSTANCE;
-    }
-
-    public static void resetRewriteTimings() {
-        REWRITE_TIMINGS.clear();
-        REWRITE_INS.clear();
-        REWRITE_OUTS.clear();
     }
 
     public FixPointRewriter() {
@@ -115,22 +109,25 @@ public class FixPointRewriter extends AbstractRewriter {
             // rule set rather than once per code value — and this method runs once per value AND once per branch
             // member it descends into.
             final List<Inst> rules = orderedRules(this.rewrites());
+            // a PROFILED run measures each rule, keyed by its leaf name: its time, and the instructions it took in and
+            // gave back (rewrite/<rule>/time, in, out) -- the reduction profile() reports
+            final Analyzer profile = Analyzer.PROFILE.get();
             rules
                     .forEach(r -> {
                         //this.logger().warn("rewrite: %s", r);
                         //this.logger().warn("code: %s", rewritten.get());
-                        final long t0 = System.nanoTime();
+                        final long t0 = null == profile ? 0L : System.nanoTime();
                         final Code before = rewritten.get();
                         // capture the inst count BEFORE apply: rewriters mutate the code in place
                         // (selfJVM), so reading before.size() after the fact reports the post size.
                         final int in = before.codeValue().size();
                         final Obj out = r.apply(before);
-                        final long t1 = System.nanoTime();
-                        final String name = r.tid().name();
-                        REWRITE_TIMINGS.computeIfAbsent(name, _ -> new AtomicLong()).addAndGet(t1 - t0);
-                        final int outSize = out.isCode() ? out.asCode().codeValue().size() : in;
-                        REWRITE_INS.computeIfAbsent(name, _ -> new AtomicLong()).addAndGet(in);
-                        REWRITE_OUTS.computeIfAbsent(name, _ -> new AtomicLong()).addAndGet(outSize);
+                        if (null != profile) {
+                            final fURI rule = f(r.tid().name());
+                            profile.record(f(REWRITE), rule.extend(TIME), System.nanoTime() - t0);
+                            profile.incr(f(REWRITE), rule.extend(IN), in);
+                            profile.incr(f(REWRITE), rule.extend(OUT), out.isCode() ? out.asCode().codeValue().size() : in);
+                        }
                         if (out.isCode())
                             rewritten.set(out.asCode());
                     });

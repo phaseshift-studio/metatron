@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -489,18 +490,15 @@ public interface Machine extends Rec, AutoCloseable {
         // read the child back at its vid, which is what `move(<child>)` resolves.
         CURRENT.set(child);
         Helper.bootstrap(child);
-        // ... and its own PROCESSOR, of this machine's architecture: a processor indexes the computers its machine mints
-        // and holds that machine's fail stacks (~/processor/computer/<n>, ~/processor/fail), so the instance the clone
-        // shares with this machine filed the child's evaluations, and their fails, in this machine's. Minted once the
-        // child's space is mounted, so its write at <child>/processor is the child's.
-        // Its TRACER is a copy of this machine's, the fork the compiler's typer gets below: the child traces as this
-        // machine did at the push, and a later change on either side stays on that side.
+        // ... and its own PROCESSOR, NEW (Marko, 2026-11-13: never a clone, which runs no constructor), handed a shallow
+        // copy of this machine's: a processor indexes the computers its machine mints and holds that machine's fail
+        // stacks (~/processor/computer/<n>, ~/processor/fail), and the constructor makes what it is handed its own --
+        // an empty index and stack, a copy of the TRACER (the child traces as this machine did at the push, the fork the
+        // compiler's typer gets below), and new meters under the ANALYZER's settings. Minted once the child's space is
+        // mounted, so its write at <child>/processor is the child's.
         final Processor processor = this.processor();
-        final java.util.Map<Obj, Obj> fresh = new LinkedHashMap<>();
-        final Obj tracer = processor.atDirect(uri(TRACER));
-        if (!tracer.isNoObj())
-            fresh.put(uri(TRACER), Obj.Helper.deepClone(tracer));
-        child.jvm().put(uri(PROCESSOR), processor.clone(fresh, processor.tid(), childVID.extend(PROCESSOR)).parent(child));
+        child.jvm().put(uri(PROCESSOR), new BasicSwarmProcessor(new LinkedHashMap<>(processor.jvm()), processor.tid(),
+                childVID.extend(PROCESSOR)).parent(child));
         // ... and its own COMPILER (Marko, 2026-11-10): a deep clone of this machine's, stages and all, so a write under
         // the child's ~/compiler (its selector, a typer check) is the child's alone, and a write this machine makes after
         // the push stays this machine's. The child compiles as this machine did at the push. Through the setter, which

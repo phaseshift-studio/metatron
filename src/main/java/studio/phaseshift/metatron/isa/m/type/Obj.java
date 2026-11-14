@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
@@ -1657,18 +1658,25 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     uri(EMIT).maybe(), "the emit predicate"))
                             .desc("a repetition function: loopback application of the code with escape/exit/emit predicates")
                             .body((lhs, inst) -> {
-                                StatefulMonad.REPEAT_ITERS.incrementAndGet();
-                                final long book0 = System.nanoTime();
+                                // a PROFILED run measures the loop's phases: the escape/emit/until predicate applies,
+                                // the repeated code's apply, and the loop-frame bookkeeping (the monad state churn) --
+                                // repeat/esc, emit, until, code and state -- and counts each pass (repeat/loop)
+                                final Analyzer profile = Analyzer.PROFILE.get();
+                                if (null != profile)
+                                    profile.incr(f(REPEAT), f(LOOP), 1L);
+                                final long book0 = null == profile ? 0L : System.nanoTime();
                                 final Obj escPredicate = inst.arg(f(ESC), 0);
                                 final Obj repeatedApply = inst.arg(f(CODE), 1);
                                 final Obj untilPredicate = inst.arg(f(UNTIL), 2);
                                 final Obj emitPredicate = inst.arg(f(EMIT), 3);
                                 final List<Obj> toEmit = new ArrayList<>();
                                 final StatefulMonad monad = StatefulMonad.of(lhs);
-                                StatefulMonad.T_REPEAT_BOOK.addAndGet(System.nanoTime() - book0);
-                                final long esc0 = System.nanoTime();
+                                if (null != profile)
+                                    profile.record(f(REPEAT), f(STATE), System.nanoTime() - book0);
+                                final long esc0 = null == profile ? 0L : System.nanoTime();
                                 final boolean esc = escPredicate.apply(monad).booleanCheck();
-                                StatefulMonad.T_REPEAT_ESC.addAndGet(System.nanoTime() - esc0);
+                                if (null != profile)
+                                    profile.record(f(REPEAT), f(ESC), System.nanoTime() - esc0);
                                 if (esc) {
                                     toEmit.add(monad.loopback(false).nextInst());
                                 } else {
@@ -1676,34 +1684,39 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                         toEmit.add(monad.loopback(false).nextInst());
                                     } else {
                                         // fresh entry pushes a loop frame; a loopback continuation does not
-                                        final long book1 = System.nanoTime();
+                                        final long book1 = null == profile ? 0L : System.nanoTime();
                                         final boolean loopback = monad.isLoopback();
                                         final StatefulMonad m = monad.loopback(false);
                                         final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
-                                        StatefulMonad.T_REPEAT_BOOK.addAndGet(System.nanoTime() - book1);
+                                        if (null != profile)
+                                            profile.record(f(REPEAT), f(STATE), System.nanoTime() - book1);
                                         final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().asCode() : emitPredicate;
-                                        final long emit0 = System.nanoTime();
+                                        final long emit0 = null == profile ? 0L : System.nanoTime();
                                         final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
-                                        StatefulMonad.T_REPEAT_EMIT.addAndGet(System.nanoTime() - emit0);
+                                        if (null != profile)
+                                            profile.record(f(REPEAT), f(EMIT), System.nanoTime() - emit0);
                                         if (emit)
                                             toEmit.add(repeatMonad.popLoop().nextInst());
                                         // wrap the predicate in code so a single-inst until (is(gt(10))) goes
                                         // through the monad lens like the multi-inst form (loop().is(gt(3))) —
                                         // applied bare, is(gt(10)) receives the whole monad and never terminates.
                                         final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().asCode() : untilPredicate;
-                                        final long until0 = System.nanoTime();
+                                        final long until0 = null == profile ? 0L : System.nanoTime();
                                         final boolean until = untilCode.apply(repeatMonad).booleanCheck();
-                                        StatefulMonad.T_REPEAT_UNTIL.addAndGet(System.nanoTime() - until0);
+                                        if (null != profile)
+                                            profile.record(f(REPEAT), f(UNTIL), System.nanoTime() - until0);
                                         if (until) {
                                             if (!emit)
                                                 toEmit.add(repeatMonad.popLoop().nextInst());
                                         } else {
-                                            final long code0 = System.nanoTime();
+                                            final long code0 = null == profile ? 0L : System.nanoTime();
                                             final Obj codeResult = repeatedApply.apply(repeatMonad.obj());
-                                            StatefulMonad.T_REPEAT_CODE.addAndGet(System.nanoTime() - code0);
-                                            final long book2 = System.nanoTime();
+                                            if (null != profile)
+                                                profile.record(f(REPEAT), f(CODE), System.nanoTime() - code0);
+                                            final long book2 = null == profile ? 0L : System.nanoTime();
                                             final StatefulMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
-                                            StatefulMonad.T_REPEAT_BOOK.addAndGet(System.nanoTime() - book2);
+                                            if (null != profile)
+                                                profile.record(f(REPEAT), f(STATE), System.nanoTime() - book2);
                                             toEmit.add(monadX);
                                         }
                                     }

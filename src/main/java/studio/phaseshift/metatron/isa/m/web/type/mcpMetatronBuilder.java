@@ -213,14 +213,18 @@ public final class mcpMetatronBuilder {
                                                         .map(e -> str(e.getKey().uriValue().name()))
                                                         .toList().toArray(Obj[]::new)
                                                         : new Obj[0])),
-                                        uri("io_stats"), machine.memory().stats().ioStats());
+                                        // what the components have measured -- the network's wire, and the
+                                        // processor's evaluations while its profile is on
+                                        uri(ANALYSIS), rec(
+                                                uri(NETWORK), machine.network().analyzer().analysis(),
+                                                uri(PROCESSOR), machine.processor().analyzer().analysis()));
                             }), "noobj lhs", "the machine's vid and tid, its spaces, and the three naming tables it answers to",
                     Map.of(uri(MACHINE), "the frame you are standing in: vid and tid",
                             uri("spaces"), "how many spaces are mounted",
                             uri(PREFIX), "the instruction sets' short names: <name> => the vid it denotes",
                             uri(PEER), "the network's names for peers: <label> => the origin, usable as //label/path",
                             uri(REDIRECT), "the name index: row count, and the short names that denote more than one home",
-                            uri("io_stats"), "read and write byte counters"),
+                            uri(ANALYSIS), "what the components have measured: <component> => analysis::T (~/<component>/analyzer/analysis)"),
                     "returns what the running machine is, what it is called, and what it calls things"), MUTABLE);
 
             // find_inst — gets lst of loaded /m instructions and documentation

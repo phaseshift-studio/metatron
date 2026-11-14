@@ -98,11 +98,6 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
         return Map.of();
     }
 
-    @Override
-    default Stats stats() {
-        return new MStats();
-    }
-
     fURI redirect(final fURI vid, final boolean big);
 
     void registerRedirect(final fURI small, final fURI big);

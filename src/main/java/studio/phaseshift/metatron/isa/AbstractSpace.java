@@ -20,9 +20,7 @@ package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.MStats;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Stats;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -45,7 +43,6 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     protected final fURI pattern;
     protected SJVM sjvm;
-    protected Stats ioStats;
     protected GraphittyLogger LOG;
 
     public AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
@@ -57,7 +54,6 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         InstSet.JREService.Helper.verifyClass(this.getClass(), vid);
         this.sjvm = sjvm;
         this.at(PATTERN, uri(this.pattern = this.at(PATTERN).apply().uriValue()), MUTABLE);
-        this.ioStats = new MStats();
         LOG = Graphitty.log(this);
         // Don't auto-register InstSets - they're registered via import AFTER full construction.
         // A space self-registers into the memory of the machine being constructed IN (current), not the root.
@@ -162,11 +158,6 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     @Override
     public Map<Uri, Obj> routes() {
         return this.at(ROUTE).orElse(rec0()).jvmAs();
-    }
-
-    @Override
-    public Stats stats() {
-        return this.ioStats;
     }
 
     @Override

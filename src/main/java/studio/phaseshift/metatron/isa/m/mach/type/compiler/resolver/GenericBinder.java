@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -30,6 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.GENERIC_BINDING;
+import static studio.phaseshift.metatron.Tokens.INST_COMPOSITION;
+import static studio.phaseshift.metatron.Tokens.RESOLVE;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_GENERIC_BINDER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -41,9 +46,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * the coefficient, and copies the user's api query maps — returning null at any step that rejects
  * the candidate.
  *
- * The resolve-stage sub-timings (T_RESOLVE/T_BIND/T_COMPOSE) stay on ScoringResolver so the
- * profile() report is unchanged; T_RESOLVE is advanced by the selector (the hint step) and this
- * class advances T_BIND and T_COMPOSE.
+ * While a run is profiled ({@link Analyzer#PROFILE}) it times its two steps into the profile's resolve group —
+ * {@code resolve/generic_binding} and {@code resolve/inst_composition} — beside the selector's
+ * {@code resolve/inst_resolve}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -72,11 +77,12 @@ public class GenericBinder extends MRec implements Binder {
             return null;
         final List<Inst> sequence = new ArrayList<>(candidates.size());
         Obj input = lhs;
+        final Analyzer profile = Analyzer.PROFILE.get();
         for (int i = 0; i < candidates.size(); i++) {
             final Inst userInst = users.get(i);
             // 1. generics: bind the candidate's unresolved types to the lhs, and reject the candidate
             //    when an argument cannot be reconciled with the user's.
-            final long t1 = System.nanoTime();
+            final long t1 = null == profile ? 0L : System.nanoTime();
             // binding copies the candidate (generics, args, coefficient): never at the definition's own address
             final Inst unaddressed = Inst.Helper.unaddressed(candidates.get(i));
             // an instruction lhs (higher-order) binds nothing; noobj is an Inst too (the ring's zero) but binds like any obj
@@ -88,7 +94,7 @@ public class GenericBinder extends MRec implements Binder {
             // 2. arguments: resolve the user's args against the bound candidate (this is where nested
             //    code arguments are compiled), then seed an initial inst's range from its own argument
             //    and carry the call's coefficient onto the result.
-            final long t2 = System.nanoTime();
+            final long t2 = null == profile ? 0L : System.nanoTime();
             final Poly<?, ?> resolvedArgs = Inst.Helper.resolveArgs(userInst, bound, input);
             if (null == resolvedArgs)
                 return null;
@@ -106,9 +112,10 @@ public class GenericBinder extends MRec implements Binder {
             // does the same for an unspecialized call (Inst.Helper.fullSignature), and the frame a fail reports is
             // this tid, so a stale `[#]` names no contract at all.
             bound = Inst.Helper.fullSignature(bound);
-            final long t3 = System.nanoTime();
-            ScoringResolver.T_BIND.addAndGet(t2 - t1);
-            ScoringResolver.T_COMPOSE.addAndGet(t3 - t2);
+            if (null != profile) {
+                profile.record(f(RESOLVE), f(GENERIC_BINDING), t2 - t1);
+                profile.record(f(RESOLVE), f(INST_COMPOSITION), System.nanoTime() - t2);
+            }
             // 3. the user's api query maps (block, ...) ride onto the bound contract.
             bound = Inst.Helper.bindQ(input, userInst, bound);
             sequence.add(bound);

@@ -23,7 +23,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
+import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -35,6 +37,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MEM_SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -60,6 +63,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     that ran it ({@code computer/<n>/fail}), whose {@code ?incrq} keys this space's q-processors mint;</li>
  *     <li>{@code <vid>/compiler/…} — written in place: the typer's state lives at
  *     {@code <vid>/compiler/typer/check};</li>
+ *     <li>{@code <vid>/<component>/analyzer/…} — any component's analyzer, the network's included: read live through
+ *     the component that carries it, written in place (a write declares its settings, never replaces it), and
+ *     subscribed to here, so one {@code ?subq} registry hears every analyzer's publication;</li>
  *     <li>{@code <vid>/<component>/…} — any component, read live; a branch pattern answers each match at its address
  *     ({@code vid => obj}), as a space's does, which is what {@code @} needs to anchor a value. What the component
  *     does not hold, the store answers: a write under {@code ~/memory} or {@code ~/instset} that is no part of it
@@ -131,14 +137,24 @@ public final class MachineSpace extends memSpace {
         return segments.size() > this.depth ? segments.get(this.depth) : null;
     }
 
+    /**
+     * whether an address it covers names a component's analyzer, {@code <vid>/<component>/analyzer[/…]}
+     */
+    private boolean analyzes(final fURI vid) {
+        final List<String> segments = vid.qLess().resolve().segments();
+        return segments.size() > this.depth + 1 && ANALYZER.equals(segments.get(this.depth + 1));
+    }
+
     @Override
     public Obj read(final fURI vid) {
         if (null == this.owner || !this.covers(vid))
             return super.read(vid);
         final String part = this.part(vid);
         // the network answers below itself, a space of its own: fields, and members at their keys' paths (and the
-        // q-procs it speaks); the component's own address is read live, as every component's is
-        if (NETWORK.equals(part) && this.below(vid))
+        // q-procs it speaks); the component's own address is read live, as every component's is. ITS ANALYZER is the
+        // machine's to answer, as every component's is: one ?subq registry then hears every analyzer
+        // (~/+/analyzer/analysis?subq), and the analyzer is read live through the component that carries it
+        if (NETWORK.equals(part) && this.below(vid) && !this.analyzes(vid))
             return this.owner.network().read(vid);
         // ~/sys, and a query on the machine or a component, are the store's: the component itself is no doc
         if (SYS.equals(part) || vid.hasQ())
@@ -172,10 +188,33 @@ public final class MachineSpace extends memSpace {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final String part = null == this.owner || !this.covers(vid) ? null : this.part(vid);
+        final boolean analyzes = null != part && this.analyzes(vid);
         // the network writes below itself: a field into its cache, a member's deletion its retraction, a value at a
         // member refused (BasicNetwork); the component's own address is the store's, as every component's is
-        if (NETWORK.equals(part) && this.below(vid))
+        if (NETWORK.equals(part) && this.below(vid) && !analyzes)
             return this.owner.network().write(vid, obj);
+        // A COMPONENT'S ANALYZER IS WRITTEN IN PLACE, NEVER REPLACED: the analyzer IS the component's meters, so a write
+        // at it declares its settings (step, profile) field by field, and a write below it sets the one field. Its
+        // analysis is derived from the meters and takes no write. A ?subq registers in this space, the one registry.
+        if (analyzes && !vid.hasQ() && this.owner.at(uri(part)) instanceof Component component) {
+            final List<String> segments = vid.qLess().resolve().segments();
+            final List<String> field = segments.subList(this.depth + 2, segments.size());
+            if (!field.isEmpty() && ANALYSIS.equals(field.getFirst())) {
+                LOG.warn("an analysis is derived from its meters, not written: %s refused", vid);
+                return noobj();
+            }
+            return QProc.Layer.write(this, vid, obj, () -> {
+                final Analyzer analyzer = component.analyzer();
+                if (!field.isEmpty())
+                    analyzer.at(uri(String.join("/", field)), obj, MUTABLE);
+                else if (obj.isRec())
+                    obj.asRec().jvm().forEach((key, value) -> {
+                        if (!uri(ANALYSIS).equals(key))
+                            analyzer.at(key, value, MUTABLE);
+                    });
+                return obj;
+            });
+        }
         // the instset writes its table doors, ~/instset/<table>/<name>, into this machine's own level (BasicInstSet)
         if (INSTSET.equals(part) && !vid.hasQ()) {
             final List<String> segments = vid.qLess().resolve().segments();

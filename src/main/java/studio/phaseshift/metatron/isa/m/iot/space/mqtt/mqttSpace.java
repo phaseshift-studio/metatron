@@ -33,7 +33,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -210,7 +209,6 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                         try {
                             LOG.debug("received %s => %s", p.getTopic(), topic);
                             StatusLine.message(str("%s => %s".formatted(topic, new String(p.getPayloadAsBytes()))));
-                            Machine.current().memory().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
                             final Obj obj;
                             if (p.getPayload().isPresent()) {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
@@ -301,7 +299,6 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                     .retain(true)
                     .send()
                     .get(TIMEOUT_S, TimeUnit.SECONDS);
-            Machine.current().memory().stats().ioStats().incrBytesSent(payload.length);
             // Write directly to cache so local readers see the data immediately,
             // without waiting for the MQTT subscriber callback to fire on a Netty thread.
             this.cache.write(pattern, obj);
