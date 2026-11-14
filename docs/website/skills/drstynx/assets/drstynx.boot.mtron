@@ -206,7 +206,7 @@ grphspace::[pattern   => h:#,
 
 grphspace::[pattern  => g:#,
              q        => [incrq::[=>],subq::[=>]],
-             schema   => noobj,
+             schema   => !*/m/db/grph/schema/modern,
              config   => [
                dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
                <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],

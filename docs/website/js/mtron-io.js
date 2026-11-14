@@ -1,404 +1,343 @@
 /*
- * mtron-io — a v1 reader/writer for the mtron VALUE grammar.
+ * mtron-io — a reader/writer for the mtron VALUE grammar, over PlatonicObj.
  *
- *   true | false          bool
- *   1324  |  -5           int
- *   12.345 | 1e3          real
- *   0xaf3403              bytes
- *   'x' | "x" | """x"""   str  (single/double single-line; triple multi-line; \ escapes)
- *   <a/b/c>               uri
- *   [1,3,4]               lst
- *   [a=>1,b=>2]           rec
- *   tid::value@vid        typed value (vid optional); nested typed values are values too
+ *   true | false          -> Bool
+ *   1324  |  -5           -> Int
+ *   12.345 | 1e3          -> Real
+ *   0xaf3403              -> Bytes
+ *   'x' | "x" | """x"""   -> Str
+ *   <a/b/c>               -> Uri (js is an fURI)
+ *   [1,3,4]               -> Lst (js is an array of objs)
+ *   [a=>1,b=>2]           -> Rec (js is a Map<fURI,obj>)
+ *   tid::value@vid        -> the obj retagged with that tid/vid
  *
- * The reader answers {tid, vid, value}. uri, sym, bytes and typed are tagged
- * values so a writer never confuses a string with a uri or a typed value:
+ * read() answers a PlatonicObj — never a string, never a plain object. URIs are
+ * fURI, rec keys are fURI. write() serializes a PlatonicObj back to mtron.
  *
- *   uri("/m/web")             -> </m/web>
- *   sym("panel")              -> panel
- *   bytes([0xaf,0x34,0x03])   -> 0xaf3403
- *   typed("splash_card", rec) -> splash_card::[...]
- *
- * A plain JS object is a rec, an array is a lst, null/undefined is noobj.
- * UMD: window.MtronIO in a page, module.exports under node (for tests).
+ * ES module. The objs come from ../mtron-obj.js and the addresses from ../furi.js.
  */
-(function (root, factory) {
-    if (typeof module === "object" && module.exports) module.exports = factory();
-    else root.MtronIO = factory();
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
-    "use strict";
+import { fURI, f } from './furi.js';
+import { PlatonicObj, Bool, Bytes, Int, Real, Str, Uri, Lst, Rec, Rel, Code, noobj } from './mtron-obj.js';
 
-    const WS = /\s/;
+const WS = /\s/;
 
-    function uri(value) {
-        return { $uri: String(value) };
+/* base tids render bare (no `tid::` prefix) */
+const BASE_TID = new Set(['int', 'real', 'str', 'bool', 'bytes', 'uri', 'rec', 'lst', 'rel', 'fail', 'type', 'inst', 'code', 'objs']);
+
+function quote(text) {
+    const s = String(text);
+    const multiline = /[\n\r]/.test(s);
+    if (!multiline && s.indexOf("'") < 0) return "'" + s.replace(/\\/g, "\\\\") + "'";
+    if (!multiline && s.indexOf('"') < 0) return '"' + s.replace(/\\/g, "\\\\") + '"';
+    if (s.indexOf('"""') < 0) return '"""' + s + '"""';
+    return '"' + s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r") + '"';
+}
+
+function terminates(c) {
+    return c === undefined || WS.test(c) || c === ',' || c === ']' || c === ')' || c === '}';
+}
+
+class Reader {
+    constructor(text) {
+        this.text = String(text == null ? '' : text);
+        this.i = 0;
     }
 
-    function sym(value) {
-        return { $sym: String(value) };
+    fail(message) { throw new Error(message + ' at ' + this.i); }
+    skip() { while (this.i < this.text.length && WS.test(this.text[this.i])) this.i += 1; }
+    peek() { return this.text[this.i]; }
+    startsWith(token) { return this.text.startsWith(token, this.i); }
+
+    read() {
+        const v = this.value();
+        this.skip();
+        if (this.i !== this.text.length) this.fail('trailing input');
+        return v;
     }
 
-    function bytes(value) {
-        return { $bytes: value instanceof Uint8Array ? value : Uint8Array.from(value) };
-    }
-
-    function typed(tid, value, vid) {
-        return { $typed: { tid: String(tid), value: value, vid: vid == null ? null : String(vid) } };
-    }
-
-    function terminates(c) {
-        return c === undefined || WS.test(c) || c === "," || c === "]" || c === ")" || c === "}";
-    }
-
-    class Reader {
-        constructor(text) {
-            this.text = String(text == null ? "" : text);
-            this.i = 0;
+    value() {
+        this.skip();
+        const c = this.peek();
+        if (c === undefined) this.fail('value expected');
+        if (c === "'" || c === '"') return this.string();
+        if (c === '<') return this.uri();
+        if (c === '[') {
+            if (this.text.startsWith('[==', this.i)) return this.rawBlock();
+            return this.bracket();
         }
+        if (c === '-' || c === '+' || c === '.' || (c >= '0' && c <= '9')) return this.number();
+        if (c === '!' || c === '(') return this.code();
+        if (c === '/') return this.barePath();
+        if (this.startsWith('true') && terminates(this.text[this.i + 4])) { this.i += 4; return new Bool(true, f('bool'), null); }
+        if (this.startsWith('false') && terminates(this.text[this.i + 5])) { this.i += 5; return new Bool(false, f('bool'), null); }
+        if (this.startsWith('noobj') && terminates(this.text[this.i + 5])) { this.i += 5; return noobj; }
 
-        fail(message) {
-            throw new Error(message + " at " + this.i);
-        }
-
-        skip() {
-            while (this.i < this.text.length && WS.test(this.text[this.i])) this.i += 1;
-        }
-
-        peek() {
-            return this.text[this.i];
-        }
-
-        startsWith(token) {
-            return this.text.startsWith(token, this.i);
-        }
-
-        read() {
-            const value = this.value();
+        const start = this.i;
+        const token = this.symbol();
+        if (token && this.startsWith('::')) {
+            this.i += 2;
+            const inner = this.value();
             this.skip();
-            if (this.i !== this.text.length) this.fail("trailing input");
-            return value;
+            let vid = null;
+            if (this.peek() === '@') { this.i += 1; vid = this.vid(); }
+            inner.tid = f(token);
+            if (vid) inner.vid = f(vid);
+            return inner;
         }
+        if (token && this.peek() === '(') { this.i = start; return this.code(); }
+        this.i = start;
+        const bare = this.symbol();
+        if (bare) return new Str(bare, f('str'), null);
+        this.fail('value expected');
+    }
 
-        value() {
-            this.skip();
-            const c = this.peek();
-            if (c === undefined) this.fail("value expected");
-            if (c === "'" || c === '"') return this.string();
-            if (c === "<") return this.uri();
-            if (c === "[") return this.bracket();
-            if (c === "-" || c === "+" || c === "." || (c >= "0" && c <= "9")) return this.number();
-            if (this.startsWith("true") && terminates(this.text[this.i + 4])) { this.i += 4; return true; }
-            if (this.startsWith("false") && terminates(this.text[this.i + 5])) { this.i += 5; return false; }
-            if (this.startsWith("noobj") && terminates(this.text[this.i + 5])) { this.i += 5; return null; }
-
-            const start = this.i;
-            const token = this.symbol();
-            if (token && this.startsWith("::")) {
-                this.i += 2;
-                const inner = this.value();
-                this.skip();
-                let vid = null;
-                if (this.peek() === "@") {
-                    this.i += 1;
-                    vid = this.vid();
-                }
-                return typed(token, inner, vid);
+    /* an opaque code value — inst(…), !(…), !*ref, (…) — skip it balanced and
+       keep the raw text; the reader does not understand the code ring. */
+    code() {
+        const start = this.i;
+        let depth = 0;
+        while (this.i < this.text.length) {
+            const c = this.text[this.i];
+            if (c === "'" || c === '"') { this.string(); continue; }
+            if (c === '<') {
+                if (this.text[this.i + 1] === '=') { this.i += 2; continue; } /* the rng<=dom arrow */
+                this.uri(); continue;
             }
-            this.i = start;
-            const bare = this.symbol();
-            if (bare) return sym(bare);
-            this.fail("value expected");
-        }
-
-        symbol() {
-            const start = this.i;
-            while (this.i < this.text.length) {
-                const c = this.text[this.i];
-                if (WS.test(c)) break;
-                if (",[](){}<>'\"=:".includes(c)) break;
-                this.i += 1;
+            if (c === '[' && this.text.startsWith('[==', this.i)) { this.rawBlock(); continue; }
+            if (c === '[' || c === '(' || c === '{') { depth += 1; this.i += 1; continue; }
+            if (c === ')' || c === '}') { depth -= 1; this.i += 1; continue; }
+            if (c === ']') {
+                if (depth > 0) { depth -= 1; this.i += 1; continue; }
+                break; /* top-level delimiter — the enclosing rec/lst's closer */
             }
-            return this.text.slice(start, this.i);
-        }
-
-        vid() {
-            const start = this.i;
-            while (this.i < this.text.length) {
-                const c = this.text[this.i];
-                if (WS.test(c) || c === "," || c === "]" || c === ")" || c === "}" || c === "'" || c === '"') break;
-                this.i += 1;
-            }
-            return this.text.slice(start, this.i);
-        }
-
-        string() {
-            const quote = this.peek();
-            if (quote === '"' && this.startsWith('"""')) {
-                this.i += 3;
-                const end = this.text.indexOf('"""', this.i);
-                if (end < 0) this.fail("unterminated triple string");
-                const text = this.text.slice(this.i, end);
-                this.i = end + 3;
-                return text;
-            }
+            if (c === ',' && depth === 0) break;
             this.i += 1;
-            let out = "";
-            while (this.i < this.text.length) {
-                const c = this.text[this.i];
-                this.i += 1;
-                if (c === "\\") {
-                    const esc = this.text[this.i];
-                    this.i += 1;
-                    if (esc === "n") out += "\n";
-                    else if (esc === "t") out += "\t";
-                    else if (esc === "r") out += "\r";
-                    else if (esc === "\\" || esc === "'" || esc === '"') out += esc;
-                    else this.fail("bad escape \\" + esc);
-                } else if (c === quote) {
-                    return out;
-                } else if (c === "\n" || c === "\r") {
-                    this.fail("newline in single-line string");
-                } else {
-                    out += c;
-                }
-            }
-            this.fail("unterminated string");
         }
+        return new Code(this.text.slice(start, this.i).trim(), f('code'), null);
+    }
 
-        uri() {
+    /* a bare path (/a/b) is a uri; a path that carries a query/code is opaque. */
+    barePath() {
+        const start = this.i;
+        let j = this.i;
+        while (j < this.text.length && !',]'.includes(this.text[j])) j += 1;
+        const raw = this.text.slice(start, j);
+        if (/[?({<\[]/.test(raw)) { this.i = start; return this.code(); }
+        this.i = j;
+        return new Uri(f(raw.trim()), f('uri'), null);
+    }
+
+    /* a [== … ==] raw/literal block */
+    rawBlock() {
+        const start = this.i;
+        const end = this.text.indexOf('==]', this.i + 3);
+        this.i = end < 0 ? this.text.length : end + 3;
+        return new Code(this.text.slice(start, this.i), f('code'), null);
+    }
+
+    symbol() {
+        const start = this.i;
+        while (this.i < this.text.length) {
+            const c = this.text[this.i];
+            if (WS.test(c)) break;
+            if (",[](){}<>'\"=".includes(c)) break;
+            if (c === ':' && this.text[this.i + 1] === ':') break; /* only :: (the type marker) */
             this.i += 1;
-            const end = this.text.indexOf(">", this.i);
-            if (end < 0) this.fail("unterminated uri");
+        }
+        return this.text.slice(start, this.i);
+    }
+
+    vid() {
+        const start = this.i;
+        while (this.i < this.text.length) {
+            const c = this.text[this.i];
+            if (WS.test(c) || c === ',' || c === ']' || c === ')' || c === '}' || c === "'" || c === '"') break;
+            this.i += 1;
+        }
+        return this.text.slice(start, this.i);
+    }
+
+    string() {
+        const quote = this.peek();
+        if (quote === '"' && this.startsWith('"""')) {
+            this.i += 3;
+            const end = this.text.indexOf('"""', this.i);
+            if (end < 0) this.fail('unterminated triple string');
             const text = this.text.slice(this.i, end);
-            this.i = end + 1;
-            return uri(text);
+            this.i = end + 3;
+            return new Str(text, f('str'), null);
         }
-
-        number() {
-            const match = /^[+-]?(?:0x[0-9a-fA-F]+|(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?)/.exec(this.text.slice(this.i));
-            if (!match) this.fail("bad number");
-            const raw = match[0];
-            this.i += raw.length;
-            if (/^[+-]?0x/.test(raw)) {
-                const hex = raw.replace(/^[+-]?0x/, "");
-                if (hex.length % 2 !== 0) this.fail("odd hex byte count");
-                return bytes(Uint8Array.from(hex.match(/../g).map((pair) => parseInt(pair, 16))));
-            }
-            if (/[.eE]/.test(raw)) return Number(raw);
-            return parseInt(raw, 10);
-        }
-
-        bracket() {
+        this.i += 1;
+        let out = '';
+        while (this.i < this.text.length) {
+            const c = this.text[this.i];
             this.i += 1;
-            this.skip();
-            if (this.peek() === "]") { this.i += 1; return []; }
-            if (this.startsWith("=>")) {
-                this.i += 2;
-                this.skip();
-                if (this.peek() !== "]") this.fail("] expected after =>");
+            if (c === '\\') {
+                const esc = this.text[this.i];
                 this.i += 1;
-                return {};
-            }
-            if (this.peek() === "," && this.text[this.i + 1] === "]") { this.i += 2; return []; }
-            return this.pairAhead() ? this.record() : this.list();
-        }
-
-        /* does a top-level => arrive before the first top-level , or ]? */
-        pairAhead() {
-            let i = this.i;
-            let depth = 0;
-            let quote = null;
-            for (; i < this.text.length; i += 1) {
-                const c = this.text[i];
-                if (quote) {
-                    if (c === "\\") { i += 1; continue; }
-                    if (c === quote) quote = null;
-                    continue;
-                }
-                if (c === "'" || c === '"') {
-                    if (c === '"' && this.text.startsWith('"""', i)) {
-                        const end = this.text.indexOf('"""', i + 3);
-                        if (end < 0) return false;
-                        i = end + 2;
-                        continue;
-                    }
-                    quote = c;
-                    continue;
-                }
-                if (c === "<") {
-                    const end = this.text.indexOf(">", i + 1);
-                    if (end < 0) return false;
-                    i = end;
-                    continue;
-                }
-                if (c === "[" || c === "(" || c === "{") { depth += 1; continue; }
-                if (c === "]" || c === ")" || c === "}") { if (depth === 0) return false; depth -= 1; continue; }
-                if (depth !== 0) continue;
-                if (c === ",") return false;
-                if (c === "=" && this.text[i + 1] === ">") return true;
-            }
-            return false;
-        }
-
-        record() {
-            const out = {};
-            while (true) {
-                this.skip();
-                if (this.peek() === "]") { this.i += 1; return out; }
-                if (this.peek() === ",") this.fail("empty rec entry");
-                const key = this.key();
-                this.skip();
-                if (!this.startsWith("=>")) this.fail("=> expected");
-                this.i += 2;
-                out[key] = this.value();
-                this.skip();
-                if (this.peek() === ",") { this.i += 1; continue; }
-                if (this.peek() === "]") { this.i += 1; return out; }
-                this.fail("] expected");
+                if (esc === 'n') out += '\n';
+                else if (esc === 't') out += '\t';
+                else if (esc === 'r') out += '\r';
+                else if (esc === '\\' || esc === "'" || esc === '"') out += esc;
+                else out += '\\' + esc; /* \b \d \s … — regex escapes keep their backslash */
+            } else if (c === quote) {
+                return new Str(out, f('str'), null);
+            } else if (c === '\n' || c === '\r') {
+                this.fail('newline in single-line string');
+            } else {
+                out += c;
             }
         }
-
-        key() {
-            this.skip();
-            const c = this.peek();
-            if (c === "'" || c === '"') return this.string();
-            const start = this.i;
-            while (this.i < this.text.length && !(this.text[this.i] === "=" && this.text[this.i + 1] === ">")) this.i += 1;
-            const key = this.text.slice(start, this.i).trim();
-            if (!key) this.fail("key expected");
-            return key;
-        }
-
-        list() {
-            const out = [];
-            while (true) {
-                this.skip();
-                if (this.peek() === "]") { this.i += 1; return out; }
-                if (this.peek() === ",") this.fail("empty list entry");
-                out.push(this.value());
-                this.skip();
-                if (this.peek() === ",") { this.i += 1; continue; }
-                if (this.peek() === "]") { this.i += 1; return out; }
-                this.fail("] expected");
-            }
-        }
+        this.fail('unterminated string');
     }
 
-    function split(text) {
+    uri() {
+        this.i += 1;
+        const end = this.text.indexOf('>', this.i);
+        if (end < 0) this.fail('unterminated uri');
+        const text = this.text.slice(this.i, end);
+        this.i = end + 1;
+        return new Uri(f(text), f('uri'), null);
+    }
+
+    number() {
+        const match = /^[+-]?(?:0x[0-9a-fA-F]+|(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?)/.exec(this.text.slice(this.i));
+        if (!match) this.fail('bad number');
+        const raw = match[0];
+        this.i += raw.length;
+        if (/^[+-]?0x/.test(raw)) {
+            const hex = raw.replace(/^[+-]?0x/, '');
+            if (hex.length % 2 !== 0) this.fail('odd hex byte count');
+            return new Bytes(Uint8Array.from(hex.match(/../g).map((pair) => parseInt(pair, 16))), f('bytes'), null);
+        }
+        if (/[.eE]/.test(raw)) return new Real(Number(raw), f('real'), null);
+        return new Int(parseInt(raw, 10), f('int'), null);
+    }
+
+    bracket() {
+        this.i += 1;
+        this.skip();
+        if (this.peek() === ']') { this.i += 1; return new Lst([], f('lst'), null); }
+        if (this.startsWith('=>')) {
+            this.i += 2;
+            this.skip();
+            if (this.peek() !== ']') this.fail('] expected after =>');
+            this.i += 1;
+            return new Rec(new Map(), f('rec'), null);
+        }
+        if (this.peek() === ',' && this.text[this.i + 1] === ']') { this.i += 2; return new Lst([], f('lst'), null); }
+        return this.pairAhead() ? this.record() : this.list();
+    }
+
+    pairAhead() {
+        let i = this.i;
         let depth = 0;
         let quote = null;
-        let typeAt = -1;
-        let vidAt = -1;
-        for (let i = 0; i < text.length; i += 1) {
-            const c = text[i];
+        for (; i < this.text.length; i += 1) {
+            const c = this.text[i];
             if (quote) {
-                if (c === "\\") { i += 1; continue; }
+                if (c === '\\') { i += 1; continue; }
                 if (c === quote) quote = null;
                 continue;
             }
             if (c === "'" || c === '"') {
-                if (c === '"' && text.startsWith('"""', i)) {
-                    const end = text.indexOf('"""', i + 3);
-                    if (end < 0) return { typeAt: -1, vidAt: -1 };
+                if (c === '"' && this.text.startsWith('"""', i)) {
+                    const end = this.text.indexOf('"""', i + 3);
+                    if (end < 0) return false;
                     i = end + 2;
                     continue;
                 }
                 quote = c;
                 continue;
             }
-            if (c === "<") {
-                const end = text.indexOf(">", i + 1);
-                if (end < 0) return { typeAt: -1, vidAt: -1 };
+            if (c === '<') {
+                const end = this.text.indexOf('>', i + 1);
+                if (end < 0) return false;
                 i = end;
                 continue;
             }
-            if (c === "[" || c === "(" || c === "{") { depth += 1; continue; }
-            if (c === "]" || c === ")" || c === "}") { if (depth > 0) depth -= 1; continue; }
+            if (c === '[' || c === '(' || c === '{') { depth += 1; continue; }
+            if (c === ']' || c === ')' || c === '}') { if (depth === 0) return false; depth -= 1; continue; }
             if (depth !== 0) continue;
-            if (c === ":" && text[i + 1] === ":" && typeAt < 0) { typeAt = i; i += 1; continue; }
-            if (c === "@") vidAt = i;
+            if (c === ',') return false;
+            if (c === '=' && this.text[i + 1] === '>') return true;
         }
-        return { typeAt, vidAt };
+        return false;
     }
 
-    /** read text -> {tid, vid, value}; tid/vid are null for a bare value */
-    function read(text) {
-        const source = String(text == null ? "" : text);
-        const at = split(source);
-        const start = at.typeAt >= 0 ? at.typeAt + 2 : 0;
-        const end = at.vidAt >= 0 ? at.vidAt : source.length;
-        const valueText = source.slice(start, end);
-        const reader = new Reader(valueText);
-        const value = reader.read();
-        return {
-            tid: at.typeAt > 0 ? source.slice(0, at.typeAt).trim() : null,
-            vid: at.vidAt >= 0 ? source.slice(at.vidAt + 1).trim() : null,
-            value
-        };
-    }
-
-    function value(text) {
-        return read(text).value;
-    }
-
-    function quote(text) {
-        const s = String(text);
-        const multiline = /[\n\r]/.test(s);
-        if (!multiline && s.indexOf("'") < 0) return "'" + s.replace(/\\/g, "\\\\") + "'";
-        if (!multiline && s.indexOf('"') < 0) return '"' + s.replace(/\\/g, "\\\\") + '"';
-        if (s.indexOf('"""') < 0) return '"""' + s + '"""';
-        return '"' + s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r") + '"';
-    }
-
-    function writeKey(key) {
-        const s = String(key);
-        if (/^[^\s,[\](){}<>@'\"=]+$/.test(s) && s.indexOf("=>") < 0) return s;
-        return quote(s);
-    }
-
-    function write(value) {
-        if (value === null || value === undefined) return "noobj";
-        if (value instanceof Uint8Array) return "0x" + Array.from(value).map((b) => b.toString(16).padStart(2, "0")).join("");
-        const type = typeof value;
-        if (type === "boolean") return value ? "true" : "false";
-        if (type === "number") {
-            if (!Number.isFinite(value)) throw new Error("cannot write a non-finite number");
-            return String(value);
+    record() {
+        const out = new Map();
+        while (true) {
+            this.skip();
+            if (this.peek() === ']') { this.i += 1; return new Rec(out, f('rec'), null); }
+            if (this.peek() === ',') this.fail('empty rec entry');
+            const key = this.key();
+            this.skip();
+            if (!this.startsWith('=>')) this.fail('=> expected');
+            this.i += 2;
+            out.set(f(key), this.value());
+            this.skip();
+            if (this.peek() === ',') { this.i += 1; continue; }
+            if (this.peek() === ']') { this.i += 1; return new Rec(out, f('rec'), null); }
+            this.fail('] expected');
         }
-        if (type === "string") return quote(value);
-        if (Array.isArray(value)) return "[" + value.map(write).join(",") + "]";
-        if (type === "object") {
-            if ("$uri" in value) {
-                const s = String(value.$uri);
-                if (/[<>\s]/.test(s)) throw new Error("uri contains a delimiter");
-                return "<" + s + ">";
-            }
-            if ("$sym" in value) {
-                const s = String(value.$sym);
-                if (!/^[^\s,[\](){}<>@'\"=:]+$/.test(s)) throw new Error("symbol contains a delimiter");
-                return s;
-            }
-            if ("$bytes" in value) {
-                const b = value.$bytes instanceof Uint8Array ? value.$bytes : Uint8Array.from(value.$bytes);
-                return "0x" + Array.from(b).map((x) => x.toString(16).padStart(2, "0")).join("");
-            }
-            if ("$typed" in value) {
-                const t = value.$typed;
-                const tail = t.vid ? "@" + String(t.vid) : "";
-                return String(t.tid) + "::" + write(t.value) + tail;
-            }
-            const keys = Object.keys(value);
-            if (!keys.length) return "[=>]";
-            return "[" + keys.map((key) => writeKey(key) + "=>" + write(value[key])).join(",") + "]";
+    }
+
+    key() {
+        this.skip();
+        const c = this.peek();
+        if (c === "'" || c === '"') return this.string().js;
+        const start = this.i;
+        while (this.i < this.text.length && !(this.text[this.i] === '=' && this.text[this.i + 1] === '>')) this.i += 1;
+        const key = this.text.slice(start, this.i).trim();
+        if (!key) this.fail('key expected');
+        return key;
+    }
+
+    list() {
+        const out = [];
+        while (true) {
+            this.skip();
+            if (this.peek() === ']') { this.i += 1; return new Lst(out, f('lst'), null); }
+            if (this.peek() === ',') this.fail('empty list entry');
+            out.push(this.value());
+            this.skip();
+            if (this.peek() === ',') { this.i += 1; continue; }
+            if (this.peek() === ']') { this.i += 1; return new Lst(out, f('lst'), null); }
+            this.fail('] expected');
         }
-        throw new Error("cannot write a " + type);
     }
+}
 
-    function writeEnvelope(tid, value, vid) {
-        const head = tid ? String(tid) + "::" : "";
-        const tail = vid ? "@" + String(vid) : "";
-        return head + write(value) + tail;
-    }
+function read(text) {
+    return new Reader(text).read();
+}
 
-    return { read, value, write, writeEnvelope, uri, sym, bytes, typed, Reader };
-});
+function value(text) {
+    return read(text);
+}
+
+/* serialize a PlatonicObj back to mtron (rec values recurse with their tids) */
+function write(obj) {
+    if (obj == null || obj.isNoObj()) return 'noobj';
+    let s;
+    if (obj.isBool()) s = obj.js ? 'true' : 'false';
+    else if (obj.isInt()) s = String(obj.js);
+    else if (obj.isReal()) s = Number.isInteger(obj.js) ? obj.js + '.0' : String(obj.js);
+    else if (obj.isStr()) s = quote(obj.js);
+    else if (obj.isUri()) s = '<' + obj.js.toString() + '>';
+    else if (obj.isBytes()) s = '0x' + Array.from(obj.js).map((b) => b.toString(16).padStart(2, '0')).join('');
+    else if (obj.isRel()) s = write(obj.js[0]) + '=>' + write(obj.js[1]);
+    else if (obj.isLst()) s = '[' + obj.js.map(write).join(',') + ']';
+    else if (obj.isRec()) s = '[' + [...obj.js.entries()].map(([k, v]) => k.toString() + '=>' + write(v)).join(',') + ']';
+    else if (obj.isFail()) s = 'fail::' + obj.js;
+    else s = String(obj.js);
+
+    const tn = obj.tid ? obj.tid.name() : null;
+    if (obj.tid && tn && !BASE_TID.has(tn)) s = obj.tid.toString() + '::' + s;
+    if (obj.vid) s += '@' + obj.vid.toString();
+    return s;
+}
+
+export { read, value, write, Reader, quote };
+export default { read, value, write, Reader, quote };

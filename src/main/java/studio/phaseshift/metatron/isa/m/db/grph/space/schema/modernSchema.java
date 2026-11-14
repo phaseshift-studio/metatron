@@ -30,11 +30,10 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.db.grph.grphInstSet.*;
+import static studio.phaseshift.metatron.isa.m.db.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.db.grph.grphInstSet.JREService;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -44,13 +43,14 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @JREService(vid = "/m/db/grph/schema/modern")
 public class modernSchema extends AbstractInstSet {
 
+
     public static final fURI MODERN_SCHEMA_TID = GRPH_ISA_TID.extend("schema").extend("modern");
     public static final fURI PERSON_TID = MODERN_SCHEMA_TID.extend("person");
     public static final fURI SOFTWARE_TID = MODERN_SCHEMA_TID.extend("software");
     public static final fURI KNOWS_TID = MODERN_SCHEMA_TID.extend("knows");
     public static final fURI CREATED_TID = MODERN_SCHEMA_TID.extend("created");
 
-    public static final Type MODERN_SCHEMA_TYPE = T(MODERN_SCHEMA_TID);
+    // public static final Type MODERN_SCHEMA_TYPE = T(MODERN_SCHEMA_TID);
 
     public static final Type PERSON_TYPE = TypeBuilder.build()
             .tid(REC_TID)
@@ -66,23 +66,26 @@ public class modernSchema extends AbstractInstSet {
                     uri("name"), STR_TYPE,
                     uri("lang"), STR_TYPE)).create();
 
-    public static final Type KNOWS_TYPE = TypeBuilder.build()
+    public static final Type WEIGHTED_EDGE_TYPE = TypeBuilder.build()
             .tid(REC_TID)
-            .vid(KNOWS_TID)
+            .vid(MODERN_SCHEMA_TID.extend("weighted_edge"))
             .isaPredicate(rec(
                     uri("weight"), REAL_TYPE)).create();
 
+    public static final Type KNOWS_TYPE = TypeBuilder.build()
+            .tid(MODERN_SCHEMA_TID.extend("weighted_edge"))
+            .vid(KNOWS_TID).create();
+
     public static final Type CREATED_TYPE = TypeBuilder.build()
-            .tid(REC_TID)
+            .tid(MODERN_SCHEMA_TID.extend("weighted_edge"))
             .vid(CREATED_TID)
-            .isaPredicate(rec(
-                    uri("weight"), REAL_TYPE)).create();
+            .create();
 
     /**
      * The schema's member types. {@code grphInstSet.setup()} registers them in every machine that sets up grph:
      * building them registers them only in the machine current when this class initializes, once per JVM.
      */
-    public static final List<Type> TYPES = List.of(PERSON_TYPE, SOFTWARE_TYPE, KNOWS_TYPE, CREATED_TYPE);
+    public static final List<Type> TYPES = List.of(WEIGHTED_EDGE_TYPE, PERSON_TYPE, SOFTWARE_TYPE, KNOWS_TYPE, CREATED_TYPE);
 
     public modernSchema() {
         super(mutableMap(uri(PATTERN), uri(MODERN_SCHEMA_TID.extend(ALL))), INSTSET_TID, MODERN_SCHEMA_TID);
@@ -92,6 +95,7 @@ public class modernSchema extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(TYPE), lst(
+                        docWrap(WEIGHTED_EDGE_TYPE, "weighted edge"),
                         docWrap(PERSON_TYPE, "a person"),
                         docWrap(SOFTWARE_TYPE, "a software"),
                         docWrap(KNOWS_TYPE, "a knows"),
@@ -100,5 +104,7 @@ public class modernSchema extends AbstractInstSet {
         )));
         super.setup();
     }
+
+    public static final modernSchema MODERN_SCHEMA = new modernSchema();
 }
 

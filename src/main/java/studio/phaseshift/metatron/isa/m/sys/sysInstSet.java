@@ -39,8 +39,10 @@ import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -158,6 +160,20 @@ public class sysInstSet extends AbstractInstSet {
     private static final int MAX_DIRECTORY_DEPTH = 50;
     private static final int MAX_FILE_RESULTS = 50;
 
+    /** the cpu's model name (linux /proc/cpuinfo), falling back to os.arch where it cannot be read */
+    private static String cpuModelName() {
+        try {
+            for (final String line : Files.readAllLines(Path.of("/proc/cpuinfo")))
+                if (line.startsWith("model name")) {
+                    final int colon = line.indexOf(':');
+                    return colon >= 0 ? line.substring(colon + 1).trim() : line.trim();
+                }
+        } catch (final Exception ignored) {
+            // not linux / no procfs — fall back to the arch
+        }
+        return System.getProperty("os.arch", "?");
+    }
+
     public void setup() {
         this.jvm().putAll(Map.of(
                 uri(CONST), lst(ThreadExecutor.instance()),
@@ -200,11 +216,25 @@ public class sysInstSet extends AbstractInstSet {
                                 uri(SHORT), uri(Machine.current().memory().redirect(inst.arg(0).uriValue(), false)),
                                 uri(LONG), uri(Machine.current().memory().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
                         docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> {
-                            Runtime rt = Runtime.getRuntime();
-                            long totalMemory = rt.totalMemory();
-                            long freeMemory = rt.freeMemory();
-                            long usedMemory = totalMemory - freeMemory;
-                            long maxMemory = rt.maxMemory();
+                            final Runtime rt = Runtime.getRuntime();
+                            final long totalMemory = rt.totalMemory();
+                            final long freeMemory = rt.freeMemory();
+                            final long usedMemory = totalMemory - freeMemory;
+                            final long maxMemory = rt.maxMemory();
+
+                            // PHYSICAL MACHINE — the box this vm runs on, not the vm's own heap. These
+                            // come from the platform bean and the root filesystem, so they are the honest
+                            // machine numbers a dashboard wants (the jvm heap fields above are not).
+                            final com.sun.management.OperatingSystemMXBean os = ManagementFactory.getPlatformMXBean(com.sun.management.OperatingSystemMXBean.class);
+                            final long totalPhys = os.getTotalPhysicalMemorySize();
+                            final long freePhys = os.getFreePhysicalMemorySize();
+                            final long usedPhys = totalPhys - freePhys;
+                            final double cpuRaw = os.getSystemCpuLoad();
+                            final double cpuLoad = (cpuRaw < 0.0d || Double.isNaN(cpuRaw)) ? 0.0d : Math.min(1.0d, cpuRaw);
+                            final long diskTotal = new File("/").getTotalSpace();
+                            final long diskFree = new File("/").getFreeSpace();
+                            final long diskUsed = diskTotal - diskFree;
+
                             return rec(
                                     uri("total_mem_jvm"), mathInstSet.normalizeData(real((double) totalMemory, MATH_BYTE_TID, null)),
                                     uri("free_mem_jvm"), mathInstSet.normalizeData(real((double) freeMemory, MATH_BYTE_TID, null)),
@@ -221,8 +251,17 @@ public class sysInstSet extends AbstractInstSet {
                                     uri("processor"), jnt(Runtime.getRuntime().availableProcessors()),
                                     uri("free_jvm"), start_(real(1.0d - ((double) usedMemory / (double) totalMemory))).as_(T(MATH_PERCENT_TID)).apply(),
                                     uri("free_mach"), start_(real(1.0d - ((double) usedMemory / (double) maxMemory))).as_(T(MATH_PERCENT_TID)).apply(),
-                                    uri("thread"), ThreadExecutor.instance().summary());
-                        }), "a summary of thread counts"),
+                                    uri("thread"), ThreadExecutor.instance().summary(),
+                                    // physical machine: memory, cpu, and the root filesystem
+                                    uri("total_mem_phys"), mathInstSet.normalizeData(real((double) totalPhys, MATH_BYTE_TID, null)),
+                                    uri("free_mem_phys"), mathInstSet.normalizeData(real((double) freePhys, MATH_BYTE_TID, null)),
+                                    uri("used_mem_phys"), mathInstSet.normalizeData(real((double) usedPhys, MATH_BYTE_TID, null)),
+                                    uri("cpu_load"), real(cpuLoad * 100.0d),
+                                    uri("cpu_model"), str(cpuModelName()),
+                                    uri("disk_total"), mathInstSet.normalizeData(real((double) diskTotal, MATH_BYTE_TID, null)),
+                                    uri("disk_free"), mathInstSet.normalizeData(real((double) diskFree, MATH_BYTE_TID, null)),
+                                    uri("disk_used"), mathInstSet.normalizeData(real((double) diskUsed, MATH_BYTE_TID, null)));
+                        }), "a summary of jvm + physical machine resources"),
                         docWrap(instC(SYS_INST_TID.extend("find_file").dom(ALL.maybe()).rng(LST_TID), rec(
                                         uri(NAME), STR_TYPE,
                                         uri(ROOT).maybe(), URI_TYPE,

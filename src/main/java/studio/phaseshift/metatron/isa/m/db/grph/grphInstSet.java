@@ -35,8 +35,8 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.db.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.m.db.grph.space.EdgeRec;
 import studio.phaseshift.metatron.isa.m.db.grph.space.ElementRec;
@@ -62,7 +62,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.db.grph.space.grphSpace.*;
 import static studio.phaseshift.metatron.isa.m.db.grph.space.grphSpace.SERIALIZER;
-import static studio.phaseshift.metatron.isa.m.db.grph.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
+import static studio.phaseshift.metatron.isa.m.db.grph.space.schema.modernSchema.MODERN_SCHEMA;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
@@ -601,7 +601,8 @@ public class grphInstSet extends AbstractInstSet {
         final List<Obj> walks = new ArrayList<>();
         lhs.stream().forEach(element -> walks.add(suffixWalk(element, expression)));
         for (final Obj walk : walks)
-            if (walk.isFail()) return walk;     // a member that is not a graph element is the failure, not an objs of it
+            if (walk.isFail())
+                return walk;     // a member that is not a graph element is the failure, not an objs of it
         return objs(walks.stream());
     }
 
@@ -661,7 +662,9 @@ public class grphInstSet extends AbstractInstSet {
                 : elementSeed(edge, entry);
     }
 
-    /** A TinkerPop id literal: a number bare, anything else (a UUID, a name) quoted. */
+    /**
+     * A TinkerPop id literal: a number bare, anything else (a UUID, a name) quoted.
+     */
     private static String idLiteral(final String id) {
         return id.matches("-?\\d+") ? id : "'" + id + "'";
     }
@@ -674,11 +677,10 @@ public class grphInstSet extends AbstractInstSet {
     @Override
     public void setup() {
         this.jvm().putAll(mutableMap(
-                uri(CONSTQ), lst(ObjTP3Serializer.single()),
+                uri(CONSTQ), lst(ObjTP3Serializer.single(), MODERN_SCHEMA),
                 uri(TYPE), lst(
                         GREMLIN_THEORY_TYPE,
-                        docWrap(GRPH_SPACE_TYPE, "a space for graph traversal"),
-                        docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
+                        docWrap(GRPH_SPACE_TYPE, "a space for graph traversal")
                 ),
                 uri(INST), lst(
                         docWrap(instC(GREMLIN_INST_TID.dom(REC_TID).rng(ALL.maybeSome()), lst(STR_TYPE),
@@ -701,13 +703,13 @@ public class grphInstSet extends AbstractInstSet {
                                         (lhs, inst) -> grphSpace.of(inst.arg(0).asRec(), lhs.vid())),
                                 "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),*/
                         docWrap(InstBuilder.declareConverse(instC(OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
-                                IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
+                                        IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
                                 "a vertex", "out adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices"),
                         docWrap(InstBuilder.declareConverse(instC(IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
-                                OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
+                                        OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
                                 "a vertex", "in adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming vertices"),
                         docWrap(InstBuilder.declareConverse(instC(BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH)),
-                                BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
+                                        BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
                                 "a vertex", "both adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing vertices"),
                         docWrap(instC(OUTE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
                                 "a vertex", "out adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing edges"),

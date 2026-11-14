@@ -17,11 +17,7 @@
  *
  * UMD: `window.MtronEnvelope` in a browser, `module.exports` under node (for tests).
  */
-(function (root, factory) {
-    if (typeof module === "object" && module.exports) module.exports = factory();
-    else root.MtronEnvelope = factory();
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
-    "use strict";
+"use strict";
 
     const OPENERS = { "[": true, "(": true, "{": true };
     const CLOSERS = { "]": true, ")": true, "}": true };
@@ -160,29 +156,72 @@
         while (i < source.length) {
             const c = source[i];
             if (c === "'" || c === '"') { i = skipString(source, i); continue; }
+            if (c === "<") {
+                // a bare angle-uri: <path> — the address is itself the object
+                const close = source.indexOf(">", i + 1);
+                if (close < 0) { i++; continue; }
+                const uri = source.slice(i + 1, close);
+                if (uri && !/\s/.test(uri)) {
+                    found.push({
+                        tid: null,
+                        vid: uri,
+                        shortTid: uri.split("/").pop(),
+                        start: i,
+                        end: close + 1,
+                        raw: source.slice(i, close + 1)
+                    });
+                }
+                i = close + 1;
+                continue;
+            }
             if (c === ":" && source[i + 1] === ":") {
                 const start = typeStart(source, i);
                 const tid = source.slice(start, i);
                 const open = i + 2;
-                if (tid && source[open] === "[" && /^[A-Za-z/]/.test(tid)) {
-                    const end = closeOf(source, open);
-                    let vid = null;
-                    let stop = end;
-                    if (source[end] === "@") {
-                        const ve = vidEnd(source, end + 1);
-                        if (ve > end + 1) {
-                            vid = source.slice(end + 1, ve);
-                            stop = ve;
+                if (tid && /^[A-Za-z/]/.test(tid)) {
+                    if (source[open] === "[") {
+                        const end = closeOf(source, open);
+                        let vid = null;
+                        let stop = end;
+                        if (source[end] === "@") {
+                            const ve = vidEnd(source, end + 1);
+                            if (ve > end + 1) {
+                                vid = source.slice(end + 1, ve);
+                                stop = ve;
+                            }
                         }
+                        found.push({
+                            tid: tid,
+                            vid: vid,
+                            shortTid: tid.split("/").pop().replace(/\{[^}]*\}$/, ""),
+                            start: start,
+                            end: stop,
+                            raw: source.slice(start, stop)
+                        });
+                    } else if (source[open] === "T") {
+                        // a type reference: tid::T (optionally tid::T[…]@vid)
+                        let stop = open + 1;                       // past the 'T'
+                        if (source[stop] === "[") stop = closeOf(source, stop);
+                        let vid = null;
+                        let end = stop;
+                        if (source[stop] === "@") {
+                            const ve = vidEnd(source, stop + 1);
+                            if (ve > stop + 1) {
+                                vid = source.slice(stop + 1, ve);
+                                end = ve;
+                            }
+                        }
+                        found.push({
+                            tid: tid,
+                            vid: vid || tid,                       // the type's own address is its tid
+                            shortTid: tid.split("/").pop(),
+                            start: start,
+                            end: end,
+                            raw: source.slice(start, end)
+                        });
+                        i = end;
+                        continue;
                     }
-                    found.push({
-                        tid: tid,
-                        vid: vid,
-                        shortTid: tid.split("/").pop().replace(/\{[^}]*\}$/, ""),
-                        start: start,
-                        end: stop,
-                        raw: source.slice(start, stop)
-                    });
                 }
                 i += 2;
                 continue;
@@ -192,5 +231,5 @@
         return found;
     }
 
-    return { parse: parse, objects: objects };
-});
+export { parse, objects };
+export default { parse, objects };

@@ -107,6 +107,7 @@
                 <span class="dot busy" id="pulse-dot" aria-hidden="true"></span>
                 <span class="sr" id="pulse" aria-live="polite">probing surfaces</span>
             </div>
+            <div class="topbar-stats" id="topbar-stats" aria-label="physical machine stats"></div>
             <div class="popup-tabs page-tabs" role="tablist" aria-label="page view">
                 <button type="button" class="popup-tab" data-page-view="panel" aria-selected="true">panel</button>
                 <button type="button" class="popup-tab" data-page-view="mtron" aria-selected="false">mtron</button>
@@ -120,9 +121,7 @@
                 <button type="button" class="page-save" id="page-save">save as…</button>
             </div>
             <div class="status-meta">
-                <span id="origin">this machine</span>
-                <span class="sep">·</span> served by <code>http_server::T</code>
-                <span class="sep">·</span> <span id="clock">--:--:--</span>
+                served by <code>http_server::T</code>
             </div>
         </div>
     </div>
@@ -215,14 +214,11 @@
 
     <footer>
         <div class="brand">
-            <a href="https://phaseshift.studio" target="_blank" rel="noopener">PhaseShift Studio</a> presents
-            <a href="https://metatron.phaseshift.studio/" target="_blank" rel="noopener">metatron</a>
+            <a href="http://phaseshift.studio" target="_blank" rel="noopener">PhaseShift Studio</a> presents
+            <a href="http://metatron.phaseshift.studio" target="_blank" rel="noopener">metatron</a>
+            server splash
         </div>
-        <div>
-            boot <code id="boot-file">drstynx.boot.mtron</code>
-            <span class="sep">·</span> page <code>boot/space/web/index.html</code>
-            <span class="sep">·</span> <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPLv3</a>
-        </div>
+        <div class="license">AGPL3</div>
     </footer>
 </div>
 
@@ -274,10 +270,10 @@
     </div>
 </noscript>
 
-<script src="/js/mtron-envelope.js"></script>
-<script src="/js/mtron-io.js"></script>
-<script src="/js/mtron-panels.js"></script>
-<script>
+<script type="module">
+    import * as MtronEnvelope from '/js/mtron-envelope.js';
+    import * as MtronIO from '/js/mtron-io.js';
+    import * as MtronPanels from '/js/mtron-panels.js';
     "use strict";
 
     /* ── configuration ─────────────────────────────────────────────────────── */
@@ -349,8 +345,23 @@
     /* ── card span ──────────────────────────────────────────────────────────
        a splash_card's span is [col=>n,row=>n]; a field the page leaves out is
        the UI's choice (1). the grid is 4 columns, so col is clamped to it. */
+    /* a PlatonicObj collapsed to a plain JS value (uris -> strings, recs -> objects).
+       the page config (splash_page/card) is consumed through this; the browsed objs
+       stay PlatonicObj. */
+    function plain(obj) {
+        if (obj == null) return undefined;
+        if (typeof obj !== "object") return obj;
+        if (obj.isNoObj()) return null;
+        if (obj.isUri()) return obj.js.toString();
+        if (obj.isStr() || obj.isInt() || obj.isReal() || obj.isBool() || obj.isBytes() || obj.isFail()) return obj.js;
+        if (obj.isLst()) return obj.js.map(plain);
+        if (obj.isRel()) return [plain(obj.js[0]), plain(obj.js[1])];
+        if (obj.isRec()) { const o = {}; for (const [k, v] of obj.js) o[k.toString()] = plain(v); return o; }
+        return obj.js;
+    }
+
     function spanOf(value) {
-        const rec = value && typeof value === "object" && !value.$uri && !value.$sym ? value : {};
+        const rec = value && value.isRec ? plain(value) : (value && typeof value === "object" ? value : {});
         return {
             col: Math.max(1, Math.min(4, Number(rec.col) || 1)),
             row: Math.max(1, Number(rec.row) || 1)
@@ -359,10 +370,8 @@
 
     function wordOf(value) {
         if (value == null) return null;
-        if (typeof value === "string") return value;
-        if (value.$sym) return value.$sym;
-        if (value.$uri) return value.$uri;
-        return String(value);
+        const p = plain(value);
+        return p == null ? null : String(p);
     }
 
     /* one place that turns a col/row pair into the grid placement */
@@ -374,14 +383,6 @@
         el.style.gridRow = span.row > 1 ? "span " + span.row : "";
         el.style.alignSelf = span.row > 1 ? "stretch" : "";
     }
-
-    /* ── clock ─────────────────────────────────────────────────────────────── */
-    function tickClock() {
-        const el = $("#clock");
-        if (el) el.textContent = new Date().toLocaleTimeString([], { hour12: false });
-    }
-    tickClock();
-    setInterval(tickClock, 1000);
 
     /* ── http probes ───────────────────────────────────────────────────────── */
     async function probe(path, msTimeout) {
@@ -623,7 +624,7 @@
     }
 
     function reference(text, expr) {
-        const env = window.MtronEnvelope ? window.MtronEnvelope.parse(text) : null;
+        const env = MtronEnvelope ? MtronEnvelope.parse(text) : null;
         if (!env) return;
         env.expr = expr ? String(expr).trim() : null;
         if (!REFERENCES.some((r) => r.tid === env.tid && r.vid === env.vid)) {
@@ -870,7 +871,7 @@
     }
 
     function resolvePanel(tid) {
-        return window.MtronPanels && window.MtronPanels.resolve ? window.MtronPanels.resolve(tid) : null;
+        return MtronPanels && MtronPanels.resolve ? MtronPanels.resolve(tid) : null;
     }
 
     function mountPanel(card, host, env) {
@@ -884,6 +885,8 @@
             eval: (expr) => evaluateThen(expr),
             evalJson: (expr) => evalJson(expr),
             read: (vid) => vid ? readJson(vid) : Promise.resolve(null),
+            mtron: (expr) => evalMtron(expr),
+            open: (env) => inspectReference(env || {}),
             frame: (vid) => { pageFrame = (!vid || vid === "/.") ? null : String(vid); },
             paint: (el, text, kind) => paint(el, text, kind),
             announce: (tools) => announceMcpTools(tools)
@@ -896,42 +899,71 @@
     }
 
     /* a dot under every nested object in the mtron view; `open` names the host */
+    /* make every address in the mtron view clickable: each object (a typed rec/lst,
+       a type reference, or a bare <uri>) is wrapped in a transparent button — the
+       text keeps its look, only the cursor changes. shift-click opens its ?docq. */
     function annotateObjects(root, text, open) {
-        const objects = window.MtronEnvelope && window.MtronEnvelope.objects
-            ? window.MtronEnvelope.objects(text) : [];
+        const clean = root && root._text ? root._text : String(text == null ? "" : text);
+        const objects = MtronEnvelope && MtronEnvelope.objects
+            ? MtronEnvelope.objects(clean) : [];
         if (!objects.length) return;
-        const nodes = [];
-        let total = 0;
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-        while (walker.nextNode()) {
-            const node = walker.currentNode;
-            nodes.push({ node: node, start: total });
-            total += node.data.length;
-        }
-        objects.slice().sort((a, b) => b.end - a.end).forEach((obj) => {
-            if (obj.start === 0 && obj.end === text.length) return;  // the view itself
-            for (const entry of nodes) {
-                const nodeEnd = entry.start + entry.node.data.length;
-                if (obj.end >= entry.start && obj.end <= nodeEnd) {
-                    const offset = obj.end - entry.start;
-                    const tail = offset < entry.node.data.length ? entry.node.splitText(offset) : null;
-                    const dot = document.createElement("button");
-                    dot.type = "button";
-                    dot.className = "obj-dot";
-                    dot.textContent = "●";
-                    dot.title = "open " + obj.tid + (obj.vid ? " @ " + obj.vid : "");
-                    dot.setAttribute("aria-label", dot.title);
-                    dot.addEventListener("click", (ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        if (open) open(obj);
-                    });
-                    const parent = tail ? tail.parentNode : entry.node.parentNode;
-                    parent.insertBefore(dot, tail || entry.node.nextSibling);
-                    break;
-                }
-            }
+        const filtered = objects.filter((o) => !(o.start === 0 && o.end === clean.length));
+        if (!filtered.length) return;
+        const sorted = filtered.slice().sort((a, b) => a.start - b.start || b.end - a.end);
+
+        /* a containment tree: the stack's top is the smallest object still open */
+        const roots = [];
+        const stack = [];
+        sorted.forEach((obj) => {
+            while (stack.length && stack[stack.length - 1].end <= obj.start) stack.pop();
+            if (stack.length) (stack[stack.length - 1].kids = stack[stack.length - 1].kids || []).push(obj);
+            else roots.push(obj);
+            stack.push(obj);
         });
+
+        function highlightInto(el, seg) {
+            if (!seg) return;
+            if (window.hljs) {
+                try { el.innerHTML = window.hljs.highlight(seg, { language: "mtron", ignoreIllegals: true }).value; return; }
+                catch (ignored) { }
+            }
+            el.textContent = seg;
+        }
+
+        function render(parent, start, end, objs) {
+            let cursor = start;
+            objs.forEach((obj) => {
+                if (obj.start > cursor) {
+                    const seg = document.createElement("span");
+                    highlightInto(seg, clean.slice(cursor, obj.start));
+                    parent.appendChild(seg);
+                }
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "obj-link";
+                btn.title = (obj.vid ? obj.vid : obj.raw) + (obj.vid ? " · shift-click for ?docq" : "");
+                btn.addEventListener("click", (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (ev.shiftKey && obj.vid) {
+                        open({ tid: null, vid: obj.vid + "?docq", raw: "!*<" + obj.vid + "?docq>", shortTid: "docs" });
+                    } else {
+                        open(obj);
+                    }
+                });
+                render(btn, obj.start, obj.end, obj.kids || []);
+                parent.appendChild(btn);
+                cursor = obj.end;
+            });
+            if (cursor < end) {
+                const seg = document.createElement("span");
+                highlightInto(seg, clean.slice(cursor, end));
+                parent.appendChild(seg);
+            }
+        }
+
+        root.textContent = "";
+        render(root, 0, clean.length, roots);
     }
 
     function updateBack(card, host) {
@@ -1030,13 +1062,14 @@
         root.dataset.label = opts.label || env.shortTid || "value";
         root.dataset.view = opts.view || "panel";
         applySpan(root, opts.col, opts.row);
-        root.innerHTML = '<header class="pin-head"><span class="pin-title"></span>' +
-            '<span class="pin-vid"></span>' +
-            '<button type="button" class="pin-unpin" title="unpin">×</button></header>' +
+        root.innerHTML = '<header class="pin-head">' +
+            '<span class="pin-title"></span>' +
             '<div class="popup-tabs" role="tablist">' +
             '<button type="button" class="popup-tab" data-tab="panel" hidden>panel</button>' +
             '<button type="button" class="popup-tab" data-tab="mtron">mtron</button>' +
             '<button type="button" class="popup-tab" data-tab="json" disabled>json</button></div>' +
+            '<span class="pin-vid"></span>' +
+            '<button type="button" class="pin-unpin" title="unpin">×</button></header>' +
             '<div class="popup-out"></div>';
         const host = {
             dialog: null,
@@ -1163,8 +1196,8 @@
     /* the static mcp_client card (the fallback page and the pre-load paint) has no vid,
        so it asks for one; a page card with a vid gets the real runner through mountPanel */
     (function mountStaticMcpPanel() {
-        const factory = window.MtronPanels && window.MtronPanels.resolve
-            ? window.MtronPanels.resolve("mcp_client") : null;
+        const factory = MtronPanels && MtronPanels.resolve
+            ? MtronPanels.resolve("mcp_client") : null;
         const host = $("#mcp-panel-host");
         if (!factory || !host) return;
         host.appendChild(factory(
@@ -1254,7 +1287,7 @@
         cardDot(host, "busy");
         if (!host.dialog.open) host.dialog.showModal();
         evaluateThen(action.expr).then((result) => {
-            const env = window.MtronEnvelope ? window.MtronEnvelope.parse(result) : null;
+            const env = MtronEnvelope ? MtronEnvelope.parse(result) : null;
             cardDot(host, "up");
             inspectCard(DIALOG, host, env || { raw: result }, { open: true, expr: "mtron> " + action.expr });
         }).catch((error) => {
@@ -1295,12 +1328,105 @@
     }
 
     /* ── boot ──────────────────────────────────────────────────────────────── */
+    /* ── physical machine stats ─────────────────────────────────────────────
+       evaluate sys_stat() on the x-mtron socket, so the byte values keep their
+       unit — the json codec drops it. */
+    const BYTE_UNITS = { bB: 1, kB: 1024, mB: 1048576, gB: 1073741824, tB: 1099511627776, pB: 1125899906842624 };
+
+    function statVal(v) {
+        return v && typeof v === "object" && "js" in v ? v.js : v;
+    }
+
+    function statBytes(v) {
+        if (!v || typeof v !== "object" || !("js" in v) || !v.tid) return NaN;
+        const unit = String(v.tid.toString()).split("/").pop();
+        return (v.js || 0) * (BYTE_UNITS[unit] || 1);
+    }
+
+    function humanBytes(n) {
+        if (!Number.isFinite(n)) return "—";
+        if (n >= 1099511627776) return (n / 1099511627776).toFixed(1) + "tB";
+        if (n >= 1073741824) return (n / 1073741824).toFixed(1) + "gB";
+        if (n >= 1048576) return (n / 1048576).toFixed(1) + "mB";
+        if (n >= 1024) return (n / 1024).toFixed(1) + "kB";
+        return n + "B";
+    }
+
+    function statChip(k, v) {
+        const chip = document.createElement("span");
+        chip.className = "stat";
+        const key = document.createElement("span");
+        key.className = "k";
+        key.textContent = k;
+        const val = document.createElement("span");
+        val.className = "v";
+        val.textContent = v;
+        chip.appendChild(key);
+        chip.appendChild(val);
+        return chip;
+    }
+
+    function renderStats(s) {
+        const el = $("#topbar-stats");
+        if (!el || !s || !s.isRec || !s.isRec()) return;
+        const g = (key) => { for (const [k, v] of s.js) if (k.toString() === key) return v; return undefined; };
+        const chips = [];
+        if (location.host) chips.push(statChip("at", location.host));
+        const memFree = statBytes(g("free_mem_phys"));
+        const memTotal = statBytes(g("total_mem_phys"));
+        const diskFree = statBytes(g("disk_free"));
+        const diskTotal = statBytes(g("disk_total"));
+        const cpu = statVal(g("cpu_load"));
+        const model = statVal(g("cpu_model"));
+        const cores = statVal(g("processor"));
+        if (Number.isFinite(memFree) && Number.isFinite(memTotal))
+            chips.push(statChip("mem", humanBytes(memFree) + " / " + humanBytes(memTotal)));
+        if (Number.isFinite(diskFree) && Number.isFinite(diskTotal))
+            chips.push(statChip("disk", humanBytes(diskFree) + " / " + humanBytes(diskTotal)));
+        if (cpu != null && cpu !== "")
+            chips.push(statChip("load", (typeof cpu === "number" ? Math.round(cpu) : cpu) + "%"));
+        if (model)
+            chips.push(statChip("cpu", (cores ? cores + " cores · " : "") + String(model).split(" w/ ")[0]));
+        el.replaceChildren(...chips);
+    }
+
+    /* evaluate one expression on the x-mtron (structural) socket — unit- and
+       vid-preserving; the json codec drops tids/vids, so the stats strip and
+       the panels that need the raw machine form read through here. */
+    function evalMtron(expr) {
+        const mime = "application/x-mtron";
+        const reader = readerFor(mime);
+        const run = reader.chain.then(() => connectReader(mime)).then((socket) => new Promise((resolve) => {
+            const timer = setTimeout(() => { socket.removeEventListener("message", answer); resolve(""); }, 8000);
+            const answer = (ev) => {
+                clearTimeout(timer);
+                socket.removeEventListener("message", answer);
+                frameText(ev.data).then((text) => resolve(text)).catch(() => resolve(""));
+            };
+            socket.addEventListener("message", answer);
+            socket.send(String(expr));
+        }));
+        reader.chain = run.catch(() => { });
+        return run;
+    }
+
+    async function loadStats() {
+        try {
+            const raw = await evalMtron("sys_stat()");
+            if (!raw) return;
+            const parsed = MtronIO.read(String(raw));
+            renderStats(parsed);
+        } catch (ignored) {
+            /* stats are decorative — a failed read leaves the strip empty, never broken */
+        }
+    }
+
     function renderIdentity() {
-        $("#origin").textContent = location.host || "this machine";
         $("#ws-ep").textContent = wsBase;
         $("#ws-ep").title = wsUrl;
         const boot = metaContent("metatron:boot");
-        if (boot) $("#boot-file").textContent = boot;
+        const bootEl = $("#boot-file");
+        if (boot && bootEl) bootEl.textContent = boot;
     }
 
     let refreshing = false;
@@ -1310,6 +1436,7 @@
         refreshing = true;
         try {
             renderIdentity();
+            loadStats();
             await Promise.all([loadHttp(), loadWs()]);
             const dots = [$("#d-http"), $("#d-ws")];
             const up = dots.filter((d) => d && d.classList.contains("up")).length;
@@ -1471,14 +1598,6 @@
             });
         }
 
-        function uriOf(value) {
-            if (value == null) return null;
-            if (typeof value === "string") return value;
-            if (value.$uri) return value.$uri;
-            if (value.$sym) return value.$sym;
-            return String(value);
-        }
-
         function pageCards() {
             if (loadedGrid && !loadedGrid.hidden) {
                 return Array.from(loadedGrid.children)
@@ -1517,19 +1636,18 @@
                 if (named) vid = named;
                 if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
             } catch (ignored) { }
-            if (!window.MtronIO) throw new Error("mtron-io.js is not loaded");
+            if (!MtronIO) throw new Error("mtron-io.js is not loaded");
             /* the vid is used exactly as given: mfs:boot/... is the mfs scheme, not the /mfs space path */
             const raw = await readAs("application/x-mtron", vid);
             const parsed = MtronIO.read(String(raw == null ? "" : raw));
-            if (!parsed || !parsed.value) throw new Error("no splash_page object at " + vid);
-            const page = parsed.value;
+            const page = plain(parsed);
+            if (!page || !page.layout) throw new Error("no splash_page object at " + vid);
             const layout = Array.isArray(page.layout) ? page.layout : [];
             loadedGrid.textContent = "";
-            layout.forEach((entry) => {
-                const rec = entry && entry.$typed ? entry.$typed.value : entry;
+            layout.forEach((rec) => {
                 if (!rec) return;
-                const tid = uriOf(rec.tid);
-                const cvid = uriOf(rec.vid);
+                const tid = rec.tid ? String(rec.tid) : null;
+                const cvid = rec.vid ? String(rec.vid) : null;
                 if (!tid) return;
                 const known = KNOWN[tid];
                 const cardTid = known ? known[0] : tid;
@@ -1567,26 +1685,23 @@
         }
 
         async function savePage(destination) {
-            if (!window.MtronIO) {
-                line("err", "mtron-io.js is not loaded; cannot save the page");
-                return false;
-            }
             const vid = String(destination == null ? PAGE : destination);
             if (pageSave) { pageSave.disabled = true; pageSave.textContent = "saving…"; }
             try {
                 const layout = pageCards().map((card) => {
-                    const rec = { tid: MtronIO.uri(card.tid) };
-                    if (card.vid) rec.vid = MtronIO.uri(card.vid);
-                    if (card.label) rec.label = card.label;
-                    if (card.view) rec.view = MtronIO.sym(card.view);
+                    const parts = ["tid=><" + card.tid + ">"];
+                    if (card.vid) parts.push("vid=><" + card.vid + ">");
+                    if (card.label) parts.push("label=>'" + String(card.label).replace(/'/g, "\\'") + "'");
+                    if (card.view && card.view !== "panel") parts.push("view=>" + card.view);
                     if (card.col > 1 || card.row > 1) {
-                        rec.span = {};
-                        if (card.col > 1) rec.span.col = card.col;
-                        if (card.row > 1) rec.span.row = card.row;
+                        const sp = [];
+                        if (card.col > 1) sp.push("col=>" + card.col);
+                        if (card.row > 1) sp.push("row=>" + card.row);
+                        parts.push("span=>[" + sp.join(",") + "]");
                     }
-                    return MtronIO.typed("splash_card", rec);
+                    return "splash_card::[" + parts.join(",") + "]";
                 });
-                const value = MtronIO.write({ title: pageTitle, layout: layout });
+                const value = "[title=>'" + String(pageTitle).replace(/'/g, "\\'") + "',layout=>[" + layout.join(",") + "]]";
                 const target = String(vid).charAt(0) === "<" ? String(vid) : "<" + vid + ">";
                 const expr = target + " -> splash_page::" + value;
                 const result = await evaluate(expr);
