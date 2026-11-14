@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -74,10 +74,10 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.8M  6.1G  ...',
+    'tmpfs           6.1G  7.0M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme1n1p2  916G  583G  287G  ...',
-    'tmpfs            31G  181M   31G  ...',
+    '/dev/nvme1n1p2  916G  582G  288G  ...',
+    'tmpfs            31G  3.5M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -167,7 +167,7 @@ mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
     '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-12 10:50:51.562977...',
+    'Access: 2026-11-13 15:23:22.503152...',
    ...
 ```
 ### a shape of its own
@@ -254,16 +254,16 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>66
+==>103
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::648.0,
-    free_mem_jvm=>mB::459.3993,
+==>[total_mem_jvm=>mB::528.0,
+    free_mem_jvm=>mB::118.3750,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::188.6006,
+    used_mem_jvm=>mB::409.6249,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',
-    ...(4 more)]
+    ...(12 more)]
 ```
 # file system space (`fsspace::T`)
 

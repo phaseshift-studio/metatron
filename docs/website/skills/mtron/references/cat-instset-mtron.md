@@ -702,16 +702,16 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>[host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    on_message=>print('received ${_}')]
+==>ws_client::[host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               on_message=>print('received ${_}')]
 mtron> */network
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
@@ -720,7 +720,8 @@ now holding that `peer::T`, the `path::T` lists `law_shard` among its out-edges.
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum()]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+           law_shard=>plan::[name=>law_shard,result=>!λ(#{*}::T){<j>}]]]
 ```
 `law_shard` is Theorem 19 of the stream-ring algebra ([Stream Ring Theory](../../../articles/stream-ring-theory.html)):
 monoidic reducers are **semi-right distributive**,
@@ -742,14 +743,16 @@ form a tree. Every rewrite of the machine's pool is an edge, so the rewrite tabl
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[>>law_shard>>result]
-==>[noobj]
+==>[path::[obj=>branch?<={0}&split=part(ws://localhost:8555=>/m/inst/start?hop=0({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum()).sum(),
+           where=>[[span=>at]=>[//localhost:8555=>1]]]]
 ```
 A keyed fold distributes the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the
 partial recs and `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[>>law_shard>>result]
-==>[noobj]
+==>[path::[obj=>branch?<={0}&split=part(ws://localhost:8555=>/m/inst/start?hop=0({1,2,3,4,5,6})./m/inst/group([/m/inst/mod(3)=>/m/inst/sum()])).sum?rec<=rec{*}().select([id()=>sum()]),
+           where=>[[span=>at]=>[//localhost:8555=>1]]]]
 ```
 ### may / must — the fiber modality
 
@@ -786,7 +789,9 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 ```mtron
 mtron> <//localhost>.as(place::T)
 ==>place::[obj=>//localhost,
-           authority=>[ws://localhost:8555],
+           authority=>[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=>!λ(){<j>},
            linked_from=>!λ(){<j>},
            status=>!λ(){<j>}]

@@ -521,7 +521,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">6</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">13</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">11</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             
-            <span class="instset-built">built November 13, 2026</span>
+            <span class="instset-built">built November 14, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -555,7 +555,22 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[=&gt;]]],
-             constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
+             constq=&gt;[
+              /m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3,
+              /m/instset::[
+               pattern=&gt;/m/db/grph/schema/modern/#,
+               q=&gt;[
+                docq::[
+                 pattern=&gt;docq,
+                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+                 obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+                 inst=&gt;/m/instset::[=&gt;]],
+                /m/qproc/decq::[
+                 pattern=&gt;decq,
+                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+                 obj=&gt;/m/instset::[=&gt;]]]]@/m/db/grph/schema/modern],
              type=&gt;[
               theory::T[?[
                mul_monoid=&gt;monoid_theory::[
@@ -583,8 +598,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 {?}sugar=&gt;{?}[lst::T],
                 {?}reference=&gt;uri{*}::T,
                 {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
-               {?}config=&gt;rec::T]][ctor?grphspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/grph/space/grphspace,
-              modern::T],
+               {?}config=&gt;rec::T]][ctor?grphspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/grph/space/grphspace],
              inst=&gt;[
               gremlin?&lt;=rec(str::T){&lt;j&gt;},
               label?uri&lt;=rec(){&lt;j&gt;},
@@ -621,10 +635,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">schema</small></div><div class="d-flex flex-wrap"><a href="#__m__db__grph__schema__modern" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">modern</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">theory</small></div><div class="d-flex flex-wrap"><a href="#__m__db__grph__theory__gremlin_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">theory</small></div><div class="d-flex flex-wrap"><a href="#__m__db__grph__theory__gremlin_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_theory</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">schema&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">modern</small></div></div><div class="d-flex flex-wrap"><a href="#__m__db__grph__schema__modern__created" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -638,6 +649,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__db__grph__schema__modern__software" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">software</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__db__grph__schema__modern__weighted_edge" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">weighted_edge</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
@@ -732,13 +746,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">created::T</span>
-            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+            <span class="ms-2">refines <a href="#__m__db__grph__schema__modern__weighted_edge" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/db/grph/schema/modern/weighted_edge::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/db/grph/schema/modern/created</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[weight=&gt;real::T]]@/m/db/grph/schema/modern/created</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/schema/modern/weighted_edge::T@/m/db/grph/schema/modern/created</code></pre></div>
     
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__db__grph__schema__modern__weighted_edge" class="code inherited-link">weighted_edge::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[weight=&gt;real::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__db__grph__theory__gremlin_theory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -770,28 +784,14 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">knows::T</span>
-            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+            <span class="ms-2">refines <a href="#__m__db__grph__schema__modern__weighted_edge" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/db/grph/schema/modern/weighted_edge::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/db/grph/schema/modern/knows</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[weight=&gt;real::T]]@/m/db/grph/schema/modern/knows</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/schema/modern/weighted_edge::T@/m/db/grph/schema/modern/knows</code></pre></div>
     
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__db__grph__schema__modern__weighted_edge" class="code inherited-link">weighted_edge::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[weight=&gt;real::T]</code></div></div>
     
-    
-</div><div class="card mb-3" id="__m__db__grph__schema__modern">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">modern::T</span>
-            
-        </span>
-        <small class="text-muted code">/m/db/grph/schema/modern</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">modern::T</code></pre></div>
-    
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a schema for the modern graph dataset</p>
-</div>
 </div><div class="card mb-3" id="__m__db__grph__schema__modern__person">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -813,6 +813,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <small class="text-muted code">/m/db/grph/schema/modern/software</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[name=&gt;str::T,lang=&gt;str::T]]@/m/db/grph/schema/modern/software</code></pre></div>
+    
+    
+    
+</div><div class="card mb-3" id="__m__db__grph__schema__modern__weighted_edge">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">weighted_edge::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/db/grph/schema/modern/weighted_edge</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[weight=&gt;real::T]]@/m/db/grph/schema/modern/weighted_edge</code></pre></div>
     
     
     

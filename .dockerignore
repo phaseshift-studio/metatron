@@ -14,6 +14,12 @@ target/*
 !dist/docker/Dockerfile
 !docs/
 !docs/website/
+!docs/website/css/
+!docs/website/css/**
+!docs/website/js/
+!docs/website/js/**
+!docs/website/highlight/
+!docs/website/highlight/**
 !docs/website/skills/
 !docs/website/skills/mtron/
 !docs/website/skills/metatron/

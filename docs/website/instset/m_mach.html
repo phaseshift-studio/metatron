@@ -518,10 +518,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">36</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">10</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">41</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">10</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 13, 2026</span>
+            <span class="instset-built">built November 14, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -573,7 +573,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               component::T[?[
                {?}state=&gt;union(stop,run,pause),
                {?}result=&gt;&lt;#{*}&gt;::T,
-               {?}tracer=&gt;tracer::T]]@/m/mach/component/processor,
+               {?}tracer=&gt;tracer::T,
+               {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor,
               processor::T[][ctor?swarm_processor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/swarm_processor,
               component::T[?[code=&gt;&lt;#&gt;::T,{?}cache=&gt;rec::T]]@/m/mach/component/processor/computer,
               computer::T[?[{?}cache=&gt;[{?}halted=&gt;&lt;#{*}&gt;::T,
@@ -581,6 +582,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                        {?}barrier=&gt;lst::T]]][ctor?swarm_computer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/computer/swarm_computer,
               component::T[?[{?}stack=&gt;[{?}mtron_stack=&gt;bool::T,
                                         {?}java_stack=&gt;bool::T]]][ctor?tracer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/tracer,
+              rec::T@/m/mach/analysis,
+              int::T@/m/mach/analysis/counter,
+              real::T@/m/mach/analysis/gauge,
+              rec::T[?[
+               count=&gt;int::T,
+               total=&gt;int::T,
+               min=&gt;int::T,
+               max=&gt;int::T]]@/m/mach/analysis/timer,
+              component::T[?[
+               {?}analysis=&gt;&lt;#&gt;::T,
+               {?}step=&gt;int::T,
+               {?}profile=&gt;bool::T]][ctor?analyzer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/analyzer,
               component::T[?[
                {?}parser=&gt;parser::T,
                {?}rewriter=&gt;rewriter::T,
@@ -656,7 +669,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
                {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
                {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
-               {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+               {?}status=&gt;inst::T,
+               {?}analyzer=&gt;component::T[?[
+                {?}analysis=&gt;&lt;#&gt;::T,
+                {?}step=&gt;int::T,
+                {?}profile=&gt;bool::T]][ctor?analyzer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/analyzer]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
               rec::T[?[
                {?}instset=&gt;rec::T[?[
                 {?}pattern=&gt;uri::T,
@@ -689,11 +706,16 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                  {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
                 {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
                 {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
-                {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+                {?}status=&gt;inst::T,
+                {?}analyzer=&gt;component::T[?[
+                 {?}analysis=&gt;&lt;#&gt;::T,
+                 {?}step=&gt;int::T,
+                 {?}profile=&gt;bool::T]][ctor?analyzer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/analyzer]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
                {?}processor=&gt;component::T[?[
                 {?}state=&gt;union(stop,run,pause),
                 {?}result=&gt;&lt;#{*}&gt;::T,
-                {?}tracer=&gt;tracer::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
+                {?}tracer=&gt;tracer::T,
+                {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
               rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor,
               /m/mach/thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
               /m/mach/thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual],
@@ -719,7 +741,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mach</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__component" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mach</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__analysis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">analysis</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">component</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__factory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -749,7 +774,19 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__mach__thread_executor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">thread_executor</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">component</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__binder" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">analysis</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__analysis__counter" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">counter</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__analysis__gauge" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gauge</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__analysis__timer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">timer</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">component</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__analyzer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">analyzer</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__binder" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">binder</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__component__compiler" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -870,8 +907,51 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">36</span></h3>
-    <div class="card mb-3" id="__m__mach__component__binder">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">41</span></h3>
+    <div class="card mb-3" id="__m__mach__analysis">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">analysis::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/analysis</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/analysis</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> what a component has measured: a rec whose paths are probes and whose leaves are meters (counter::T, gauge::T, timer::T). Derived values -- rates, means, ratios -- are computed from it, never stored in it, so two analyses merge: counters add, timers combine, a gauge keeps the later reading.</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*~/network/analyzer/analysis/wire   [-- the frames and round trips that crossed this machine&#39;s sockets --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__analyzer">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">analyzer::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/analyzer</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}analysis=&gt;&lt;#&gt;::T,
+               {?}step=&gt;int::T,
+               {?}profile=&gt;bool::T]][ctor?analyzer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/analyzer</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a component&#39;s statistics, at ~/&lt;component&gt;/analyzer: its analysis (what it has measured, derived as it is read), the step it publishes that analysis at to ~/+/analyzer/analysis?subq subscribers, and whether the component&#39;s costly instrumentation is on. The producer records in java, where the thing it counts happens, and never through a write.</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}profile" class="text-light">{?}profile</a> <span class="text-light">=&gt;</span> <a href="#"whether the component's costly instrumentation is on (default false): the processor's per-monad timings"" class="text-info">&quot;whether the component&#39;s costly instrumentation is on (default false): the processor&#39;s per-monad timings&quot;</a>
+  <a href="#{?}analysis" class="text-light">{?}analysis</a> <span class="text-light">=&gt;</span> <a href="#'the analysis::T the component has measured, built from its meters each time it is read'" class="text-info">&#39;the analysis::T the component has measured, built from its meters each time it is read&#39;</a>
+  <a href="#{?}step" class="text-light">{?}step</a> <span class="text-light">=&gt;</span> <a href="#'the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step'" class="text-info">&#39;the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*~/processor/analyzer/analysis   [-- the processor&#39;s measurements --]
+~/network/analyzer/analysis?subq -&gt; sub::[code=&gt;&gt;&gt;1.to(/usr/wire)]   [-- each published analysis lands at /usr/wire --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__binder">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">binder::T</span>
@@ -969,6 +1049,20 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">core::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.0]@~/thread/ping</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__mach__analysis__counter">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">counter::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__int" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/int::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/analysis/counter</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T@/m/mach/analysis/counter</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a monotonic count: how many times something happened since the meter was born</p>
+</div>
 </div><div class="card mb-3" id="__m__mach__component__network__discovery">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1055,6 +1149,20 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">fixpoint_rewriter::[max=&gt;3]   [-- accept the fixpoint after three stable passes --]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__mach__analysis__gauge">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">gauge::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__real" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/real::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/analysis/gauge</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/mach/analysis/gauge</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a point-in-time value, read as it stands: the one meter that is no monoid</p>
+</div>
 </div><div class="card mb-3" id="__m__mach__component__binder__generic_binder">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1096,10 +1204,10 @@ the local read.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
   <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
-  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1209,11 +1317,16 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
            {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
           {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
           {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
-          {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+          {?}status=&gt;inst::T,
+          {?}analyzer=&gt;component::T[?[
+           {?}analysis=&gt;&lt;#&gt;::T,
+           {?}step=&gt;int::T,
+           {?}profile=&gt;bool::T]][ctor?analyzer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/analyzer]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
          {?}processor=&gt;component::T[?[
           {?}state=&gt;union(stop,run,pause),
           {?}result=&gt;&lt;#{*}&gt;::T,
-          {?}tracer=&gt;tracer::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
+          {?}tracer=&gt;tracer::T,
+          {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
     <div class="card-body py-2">
     <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__mach__machine').showModal();" title="show the whole algebra">algebra</button>
 </div>
@@ -1265,11 +1378,16 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
     {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
    {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
    {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
-   {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+   {?}status=&gt;inst::T,
+   {?}analyzer=&gt;component::T[?[
+    {?}analysis=&gt;&lt;#&gt;::T,
+    {?}step=&gt;int::T,
+    {?}profile=&gt;bool::T]][ctor?analyzer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/analyzer]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
   {?}processor=&gt;component::T[?[
    {?}state=&gt;union(stop,run,pause),
    {?}result=&gt;&lt;#{*}&gt;::T,
-   {?}tracer=&gt;tracer::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
+   {?}tracer=&gt;tracer::T,
+   {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
                   theory=&gt;[
                    free_groupoid=&gt;group_theory::[
                     objects=&gt;/m/mach/machine,
@@ -1375,7 +1493,11 @@ machine is popped off the parent stack. the absolute root of the metatron graph
                 {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
                {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
                {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
-               {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
+               {?}status=&gt;inst::T,
+               {?}analyzer=&gt;component::T[?[
+                {?}analysis=&gt;&lt;#&gt;::T,
+                {?}step=&gt;int::T,
+                {?}profile=&gt;bool::T]][ctor?analyzer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/analyzer]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
@@ -1472,10 +1594,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
-  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
@@ -1488,7 +1610,8 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}state=&gt;union(stop,run,pause),
                {?}result=&gt;&lt;#{*}&gt;::T,
-               {?}tracer=&gt;tracer::T]]@/m/mach/component/processor</code></pre></div>
+               {?}tracer=&gt;tracer::T,
+               {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
@@ -1581,10 +1704,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> the swarm processor&#39;s computer: monads move along the instruction chain independently, a barrier gathers them, and the halted monads are the result</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache__barrier" class="text-light">barrier</a> <span class="text-light">=&gt;</span> <a href="#'the ordered barriers of the code, a lst[monad]'" class="text-info">&#39;the ordered barriers of the code, a lst[monad]&#39;</a>
-  <a href="#{?}cache__halted" class="text-light">halted</a> <span class="text-light">=&gt;</span> <a href="#'the monads that halted, the result (inst0 x obj)'" class="text-info">&#39;the monads that halted, the result (inst0 x obj)&#39;</a>
-  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the three monad streams that are the state of the computation'" class="text-info">&#39;the three monad streams that are the state of the computation&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the three monad streams that are the state of the computation'" class="text-info">&#39;the three monad streams that are the state of the computation&#39;</a>
   <a href="#{?}cache__run" class="text-light">run</a> <span class="text-light">=&gt;</span> <a href="#'the monads still computing (inst x obj)'" class="text-info">&#39;the monads still computing (inst x obj)&#39;</a>
+  <a href="#{?}cache__barrier" class="text-light">barrier</a> <span class="text-light">=&gt;</span> <a href="#'the ordered barriers of the code, a lst[monad]'" class="text-info">&#39;the ordered barriers of the code, a lst[monad]&#39;</a>
+  <a href="#{?}cache__halted" class="text-light">halted</a> <span class="text-light">=&gt;</span> <a href="#'the monads that halted, the result (inst0 x obj)'" class="text-info">&#39;the monads that halted, the result (inst0 x obj)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__swarm_processor">
@@ -1599,7 +1722,8 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;union(stop,run,pause),
  {?}result=&gt;&lt;#{*}&gt;::T,
- {?}tracer=&gt;tracer::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+ {?}tracer=&gt;tracer::T,
+ {?}analyzer=&gt;analyzer::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the swarm architecture: mints a swarm computer per apply(code), which schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result</p>
 </div>
@@ -1616,6 +1740,30 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the gateway interface for all threads in metatron</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__analysis__timer">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">timer::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/analysis/timer</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[count=&gt;int::T,
+         total=&gt;int::T,
+         min=&gt;int::T,
+         max=&gt;int::T]]@/m/mach/analysis/timer</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a distribution of durations, in nanoseconds: how many were observed and their total, least and greatest</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the shortest, in nanoseconds'" class="text-info">&#39;the shortest, in nanoseconds&#39;</a>
+  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the longest, in nanoseconds'" class="text-info">&#39;the longest, in nanoseconds&#39;</a>
+  <a href="#total" class="text-light">total</a> <span class="text-light">=&gt;</span> <a href="#'their sum, in nanoseconds (total__count is the mean)'" class="text-info">count is the mean)&#39;</a>
+  <a href="#count" class="text-light">count</a> <span class="text-light">=&gt;</span> <a href="#'how many durations were observed'" class="text-info">&#39;how many durations were observed&#39;</a>
+</pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__tracer">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

@@ -1177,23 +1177,24 @@ registered rewrite has a <code>cut</code> — so <code>bind</code> is currently 
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;[host=&gt;ws://localhost:8555/mtron,
-    send=&gt;λ(){&lt;j&gt;},
-    send_recv=&gt;λ(){&lt;j&gt;},
-    inst=&gt;[
-     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-     /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
-    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-    close=&gt;λ(){&lt;j&gt;},
-    on_message=&gt;print('received ${_}')]
+==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
+               send=&gt;λ(){&lt;j&gt;},
+               send_recv=&gt;λ(){&lt;j&gt;},
+               inst=&gt;[
+                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+                /m/inst/from=&gt;*uri::T,
+                /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+               close=&gt;λ(){&lt;j&gt;},
+               on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
 now holding that <code>peer::T</code>, the <code>path::T</code> lists <code>law_shard</code> among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum()]]
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
+           law_shard=&gt;plan::[name=&gt;law_shard,result=&gt;!λ(#{*}::T){&lt;j&gt;}]]]
 </code></pre>
 <p><code>law_shard</code> is Theorem 19 of the stream-ring algebra (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>):
 monoidic reducers are <strong>semi-right distributive</strong>,
@@ -1212,12 +1213,14 @@ partials recombine at home through the reducer's combiner (Thm 19). A peer hande
 again over its own peers, so the shards
 form a tree. Every rewrite of the machine's pool is an edge, so the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[&gt;&gt;law_shard&gt;&gt;result]
-==&gt;[noobj]
+==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start?hop=0({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum()).sum(),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]]]]
 </code></pre>
 <p>A keyed fold distributes the same way, its master recombining pointwise: the <code>sum()</code> after the branch deep-merges the
 partial recs and <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[&gt;&gt;law_shard&gt;&gt;result]
-==&gt;[noobj]
+==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start?hop=0({1,2,3,4,5,6})./m/inst/group([/m/inst/mod(3)=&gt;/m/inst/sum()])).sum?rec&lt;=rec{*}().select([id()=&gt;sum()]),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]]]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1251,7 +1254,9 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
-           authority=&gt;[ws://localhost:8555],
+           authority=&gt;[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=&gt;!λ(){&lt;j&gt;},
            linked_from=&gt;!λ(){&lt;j&gt;},
            status=&gt;!λ(){&lt;j&gt;}]

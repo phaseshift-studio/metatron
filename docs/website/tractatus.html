@@ -1816,9 +1816,12 @@ mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
                      pattern  =&gt; &lt;http://#&gt;,
                      route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                    /       =&gt; &lt;&gt;]]
-==&gt;http_server::[origin=&gt;http://localhost:8777,
-                 route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;],
-                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
+==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
+   	while parsing: http_server::[origin     =&gt; http://localhost:8777,
+                        q        =&gt; [mimeq::[=&gt;]],
+                        pattern  =&gt; &lt;http://#&gt;,
+                        route    =&gt; [/mcp     =&gt; mcp_mtron_http,
+                                      /       =&gt; &lt;&gt;]]]
 mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
                    pattern  =&gt; &lt;ws://#&gt;,
                    q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -2317,8 +2320,70 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
-   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]
+==>mcp_client::[host=>ws://localhost:8555/mcp,
+                status=>!λstatus?bool<=(){<j>},
+                tool=>[
+                 m_web_mcp_mcp_mtron_write_memory=>tool::[
+                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
+                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
+                  name=>m_web_mcp_mcp_mtron_write_memory,
+                  desc=>'(experimental) returns a memory re...',
+                  arg=>[
+                   current_memory=>'the memory to remember -- e.g. a s...',
+                   previous_memory=>'a previous memory vid to chain cur...']],
+                 m_web_mcp_mcp_mtron_read_memory=>tool::[
+                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
+                  name=>m_web_mcp_mcp_mtron_read_memory,
+                  desc=>'(experimental) returns the result ...',
+                  arg=>[memory_vid=>'the vid of the memory to read']],
+                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
+                  inst=>inst(code=>'/m/code',<>=>'<no description>'){<j>},
+                  name=>m_web_mcp_mcp_mtron_eval_mtron,
+                  desc=>'<no description>',
+                  arg=>[code=>'/m/code',<>=>'<no description>']],
+                 m_web_mcp_mcp_mtron_list_space=>tool::[
+                  inst=>inst(){<j>},
+                  name=>m_web_mcp_mcp_mtron_list_space,
+                  desc=>'returns a rec identifying all acti...',
+                  arg=>[=>]],
+                 m_web_mcp_mcp_mtron_machine_info=>tool::[
+                  inst=>inst(){<j>},
+                  name=>m_web_mcp_mcp_mtron_machine_info,
+                  desc=>'returns what the running machine i...',
+                  arg=>[=>]],
+                 m_web_mcp_mcp_mtron_find_inst=>tool::[
+                  inst=>inst(pattern=>'the inst tid to match',
+                             dom=>'the dom of inst to match (can be added to pattern arg)',
+                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
+                  name=>m_web_mcp_mcp_mtron_find_inst,
+                  desc=>'returns a lst of all instruction p...',
+                  arg=>[
+                   pattern=>'the inst tid to match',
+                   dom=>'the dom of inst to match (can be a...',
+                   rng=>'the rng of inst to match (can be a...']],
+                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
+                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
+                             on_message=>'the function to evaluate on every received message'){<j>},
+                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
+                  desc=>'create a websocket client with pro...',
+                  arg=>[
+                   host=>'the full ws:// uri of the websocke...',
+                   on_message=>'the function to evaluate on every ...']],
+                 ...(1 more)],
+                inst=>[
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
+                                                                       previous_memory=>'a previous memory vid to chain current memory to'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',
+                                                                     <>=>'<no description>'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
+                                                                    dom=>'the dom of inst to match (can be added to pattern arg)',
+                                                                    rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
+                                                                         on_message=>'the function to evaluate on every received message'){<j>},
+                 ...(1 more)]]@/usr/ai/mcp/mtron
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
@@ -3306,7 +3371,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}M{{r}}e{{b}}t{{b}}A{{r}}T{{b}}r{{m}}O{{m}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{y}}E{{g}}T{{b}}A{{b}}T{{m}}r{{c}}O{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5846,14 +5911,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6355852      6876   6348976   1% /run'
+==&gt;'tmpfs            6355852      7144   6348708   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 610914080 300043744  68% /'
-==&gt;'tmpfs           31779244    183860  31595384   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 609564996 301392828  67% /'
+==&gt;'tmpfs           31779244      3520  31775724   1% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6355848       264   6355584   1% /run/user/1000'
+==&gt;'tmpfs            6355848       256   6355592   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -6068,7 +6133,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:1307/48/34/815?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:1400/01/10/210?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7911,7 +7976,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:1307/48/40/243?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1400/01/16/112?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7930,7 +7995,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:1307/48/40/243?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1400/01/16/112?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -8022,7 +8087,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:1307/48/13/315?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:1400/00/50/369?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8030,7 +8095,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:1307/48/13/315?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:1400/00/50/369?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>

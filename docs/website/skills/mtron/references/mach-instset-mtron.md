@@ -126,9 +126,9 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}resolver=>'the third stage — the walk that th...',
-           {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
+           {?}typer=>'the fourth stage — the per-machine...',
+           {?}resolver=>'the third stage — the walk that th...',
            {?}rewriter=>'the second stage — the code::T to ...'],
           desc=>'the compiler contract of machine::...',
           example=>[
@@ -273,11 +273,13 @@ mtron> */m/mach/component/processor?docq
 ==>docs::[obj=>component::T[?[
      {?}state=>union(stop,run,pause),
      {?}result=><#{*}>::T,
-     {?}tracer=>tracer::T]]@/m/mach/component/processor,
+     {?}tracer=>tracer::T,
+     {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
+           {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
            {?}result=>'the objs the last evaluation produ...',
-           {?}state=>'the run state: stop, run or pause',
+           {?}analyzer=>"the processor's statistics (analyz...",
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -291,6 +293,7 @@ separate axes of a machine.
 | `swarm_processor::T`                 | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result |
 | `computer::T`, `swarm_computer::T`   | the computer an evaluation runs in: its code and the state of the run                             |
 | `tracer::T`                          | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's |
+| `analyzer::T`                        | any component's statistics, in the same form, at `~/<component>/analyzer`: its `analysis` (an `analysis::T` of `counter::T`, `gauge::T` and `timer::T` meters, derived as it is read) and its settings, `step` (the millis a `~/+/analyzer/analysis?subq` publication waits) and `profile` (the processor measures every evaluation's stages and monad flow into it while on, off by default); the network counts its wire at `~/network/analyzer/analysis/wire`; a pushed machine's processor measures into new meters under its parent's settings |
 
 Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
 stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
@@ -311,13 +314,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}runtime=>"computes the thread's current runn...",
-           code=>"the thread's executing code",
-           {?}time=>'the datetime::T when the thread wa...',
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}result=>'the last result produced by the th...',
            {?}state=>'current state of the thread',
-           {?}result=>'the last result produced by the th...'],
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}time=>'the datetime::T when the thread wa...',
+           code=>"the thread's executing code",
+           {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
 | key       | value                                    |
@@ -371,13 +374,14 @@ mtron> */m/mach/component/network?docq
       {?}server=><#>::T]]@/m/mach/listener],
      {?}supervisor=>rec::T[?[status=>union(supervising,closed)]][ctor?network_supervisor<=(#{*}::T){<j>}]@/m/mach/network_supervisor,
      {?}prefix=>{?}[uri::T=>uri::T],
-     ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
+     ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
+           {?}status=>'the health method — an auto inst c...',
+           {?}listener=>'the sockets this machine serves th...',
            {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per...",
-           {?}listener=>'the sockets this machine serves th...',
-           {?}roster=>'known machines, connectionless: <h...',
-           {?}status=>'the health method — an auto inst c...'],
+           {?}analyzer=>"the network's statistics (analyzer...",
+           {?}roster=>'known machines, connectionless: <h...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
@@ -464,17 +468,17 @@ network as `memspace::[pattern=>xyz/#]` indexes into memory.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>[pattern=>ws://localhost:8555/mtron,
-    host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    ...(1 more)]
+==>ws_client::[pattern=>ws://localhost:8555/mtron,
+               host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               ...(1 more)]
 ```
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
 its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client`
@@ -674,8 +678,8 @@ mtron> *~/network/host
 
 | under                | types (`::T`)                                                                                                                                                                                                                     |
 |----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer` |
-| `/m/mach`            | `machine`, `component`, `thread`, `thread/core`, `thread/virtual`, `thread_executor`, `peer`, `listener`, `id_client`, `network_supervisor`, `monad`, `plan` (a rewrite rule as a value), `factory`                                |
+| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer`, `analyzer` |
+| `/m/mach`            | `machine`, `component`, `thread`, `thread/core`, `thread/virtual`, `thread_executor`, `peer`, `listener`, `id_client`, `network_supervisor`, `monad`, `plan` (a rewrite rule as a value), `factory`, `analysis`, `analysis/counter`, `analysis/gauge`, `analysis/timer` |
 | `/m/uri`             | `origin`, `path_encoding`, `authority`                                                                                                                                                                                              |
 
 `instset::T` is `/m/instset`, declared by the `m` instruction set.
