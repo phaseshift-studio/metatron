@@ -126,6 +126,9 @@ public class mcpServer extends MRec {
     /**
      * Handle a JSON-RPC message and return the response.
      * Transport layers call this method, then deliver the returned result.
+     * <p>
+     * A message without an {@code id} is a notification; it is dispatched for its side effect and answered
+     * with {@code noobj} whatever its method is, because JSON-RPC forbids replying to a notification.
      *
      * @param message the incoming parsed JSON-RPC message (as a Rec)
      * @return the JSON-RPC response to send (noobj for notifications/errors)
@@ -143,7 +146,7 @@ public class mcpServer extends MRec {
 
             LOG.debug("mcp request: method=%s, id=%s, params=%s", method, id, params);
 
-            return switch (method) {
+            final Obj response = switch (method) {
                 case "tools/list" -> handleToolsList(id, params);
                 case "tools/call" -> handleToolsCall(id, params);
                 case "resources/list" -> handleResourcesList(id, params);
@@ -155,9 +158,15 @@ public class mcpServer extends MRec {
                 case "server/discover" -> handleServerDiscover(id, params);
                 case "subscriptions/listen" -> handleSubscriptionsListen(id, params);
                 case "ping" -> handlePing(id, params);
-                case "notifications/initialized", "notifications/cancelled" -> handleNotifications(id, method);
+                // ONE arm for every notification, not a list of the ones implemented today: the protocol keeps
+                // adding them beside the handlers (progress, message, roots/list_changed, …), and falling
+                // through to the unknown-method arm answered a notification with a method-not-found error
+                case String notification when notification.startsWith("notifications/") -> this.handleNotifications(id, notification);
                 default -> handleUnknownMethod(id, method);
             };
+            // a message with no id is a notification, and json-rpc forbids answering one — not even to name an
+            // unknown method back at a sender that is not expecting (and cannot correlate) a response
+            return id.isNoObj() ? noobj() : response;
         } catch (final Throwable e) {
             // Throwable (not Exception) — an Error such as a
             // StackOverflowError from a pathological regex in a tool
@@ -526,8 +535,15 @@ public class mcpServer extends MRec {
     }
 
     /**
-     * Handle notification messages ({@code notifications/initialized},
-     * {@code notifications/cancelled}). Notifications require no response.
+     * Handle a client's notification — {@code notifications/initialized}, {@code notifications/cancelled},
+     * {@code notifications/progress}, {@code notifications/roots/list_changed}, and any notification a later
+     * revision adds. A notification carries no id and is never answered, so there is nothing to return.
+     * <p>
+     * {@code notifications/roots/list_changed} says the client's filesystem roots moved. The 2025-03-26
+     * revision follows it with a {@code roots/list} request back to the client; this server never asks for
+     * roots (it has no filesystem boundary of its own), and the 2026-07-28 revision removes roots and this
+     * notification outright — so accepting it, which is what keeping it out of the unknown-method arm means,
+     * is the whole contract.
      */
     protected Obj handleNotifications(final Obj id, final String method) {
         return noobj();

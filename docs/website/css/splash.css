@@ -1369,6 +1369,61 @@ dialog.save-as .actions {
     margin: .35rem 0 0;
 }
 
+/* network — the roster (known) and the peers (connected) */
+.network-summary { margin-left: auto; color: var(--faint); font-size: 10.5px; }
+
+.network-section {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .55rem 0 .25rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.network-title { color: var(--mred); font-size: 10.5px; letter-spacing: .05em; }
+.network-sub { color: var(--faint); font-size: 10.5px; }
+.network-count { color: var(--faint); font-size: 10.5px; margin-left: auto; }
+
+.network-rows .mpanel-row { grid-template-columns: minmax(9rem, 1fr) 1.6fr; }
+
+.network-peers { display: flex; flex-direction: column; }
+
+.network-peer {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1.25fr) minmax(9rem, 1fr) auto;
+    gap: .6rem;
+    align-items: baseline;
+    padding: .22rem 0;
+    border-top: 1px solid var(--line);
+}
+
+.network-key { color: var(--dim); font-size: 11px; overflow-wrap: anywhere; }
+.network-target { color: var(--fg); font-size: 11px; overflow-wrap: anywhere; }
+.network-note { color: var(--faint); font-size: 10.5px; white-space: nowrap; }
+
+.network-peer.template .network-key,
+.network-peer.template .network-target,
+.network-peer.template .network-note { color: var(--faint); }
+
+.network-tag {
+    color: var(--faint);
+    font-size: 9px;
+    letter-spacing: .04em;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0 .25rem;
+    margin-left: .35rem;
+}
+
+/* a ws peer is an instance: clicking it points the page's data at it */
+.network-peer.instance { cursor: pointer; }
+.network-peer.instance:hover { background: rgba(255, 255, 255, .035); }
+.network-peer.instance .network-target { color: var(--link); }
+
+#instance { color: var(--fg); }
+#instance-local { margin-left: .5rem; font-size: 10.5px; }
+#instance-local[hidden] { display: none; }
+
 /* a pinned card: the same object view, without the dialog's chrome */
 .pin-card {
     background: var(--panel);

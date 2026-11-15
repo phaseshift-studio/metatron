@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.isa.m.web.space;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -216,11 +218,34 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
         assertEquals(jnt(-32601), error.asRec().at(uri(CODE)));
     }
 
-    @Test
-    public void testNotificationProducesNoResponse() {
+    /**
+     * Every notification is unanswered, whichever method it names — including ones this server does nothing
+     * for. A notification has no id and json-rpc forbids replying to it; the transport then decides what "no
+     * response" means (202 with no body on streamable http, no frame on ws/stdout).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "notifications/initialized",
+            "notifications/cancelled",
+            "notifications/progress",
+            "notifications/message",
+            "notifications/roots/list_changed"})
+    public void testNotificationProducesNoResponse(final String method) {
         mcpNotification(rec(
                 uri(JSONRPC), str("2.0"),
-                uri("method"), uri("notifications/initialized")));
+                uri("method"), uri(method)));
+    }
+
+    /**
+     * An id-less message is a notification, so even a method the server does not know is not answered. The
+     * unknown-method arm used to answer with a method-not-found error carrying no id, which a client reads as
+     * a response to a request it never made.
+     */
+    @Test
+    public void testUnknownMethodWithoutIdProducesNoResponse() {
+        mcpNotification(rec(
+                uri(JSONRPC), str("2.0"),
+                uri("method"), uri("bogus/method")));
     }
 
     @Test

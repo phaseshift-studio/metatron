@@ -330,7 +330,17 @@ says "re-read what you already know":
 | `notifications/tools/list_changed`  | the available tool set changed                   |
 | `notifications/prompts/list_changed`| the available prompt set changed                 |
 | `notifications/logging/message`     | a log line for the client                        |
-| `notifications/roots/list_changed`  | the server's accessible filesystem roots changed |
+
+### client -> server notifications
+
+The same envelope travels the other way for the notification methods a **client** owns —
+`notifications/initialized`, `notifications/cancelled`, `notifications/progress`, and
+`notifications/roots/list_changed` (the client's roots moved; it is not a server->client method). Those messages
+carry no `id`, so they are dispatched and **never answered**: streamable HTTP replies `202` with no body, ws and
+stdio send no frame. Any `notifications/*` method is accepted this way, including ones this server does nothing
+for — falling through to the unknown-method arm and answering a notification with a method-not-found error is a
+protocol violation (json-rpc forbids replying to a notification). Roots itself is deprecated in the 2026-07-28
+revision, and this server never issues `roots/list`.
 
 ## not available yet
 

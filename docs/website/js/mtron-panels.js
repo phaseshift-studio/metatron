@@ -721,6 +721,145 @@ import { serialize } from './obj_mtron_serializer.js';
     register("/m/mach/machine", machinePanel);
     register("machine", machinePanel);
 
+    /* network — the machine's membership and reachability boundary: what it knows
+       (the roster: discovery sources plus the machine authorities and the
+       endpoints each reaches) and what it is connected to (the peers: origin,
+       client and tools; the `#` route templates are rendered dimmed). */
+    function networkPanel(env, api) {
+        const box = node("div", "mpanel network-panel");
+        const readJson = (api && api.json) || (() => Promise.resolve(null));
+        const readFresh = (vid) => (api && api.evalJson)
+            ? api.evalJson("*<" + vid + ">")
+            : readJson();
+        const base = (((env && env.vid) || "/network").replace(/\/+$/, "")) || "/network";
+        const root = "/network";
+        let token = 0;
+
+        const head = node("div", "mpanel-head");
+        head.appendChild(node("span", "mpanel-k", "network"));
+        const pattern = node("span", "mpanel-pattern", base);
+        head.appendChild(pattern);
+        const summary = node("span", "network-summary", "");
+        head.appendChild(summary);
+        box.appendChild(head);
+
+        const knownHead = node("div", "network-section");
+        box.appendChild(knownHead);
+        const knownRows = node("div", "network-rows");
+        box.appendChild(knownRows);
+
+        const peerHead = node("div", "network-section");
+        box.appendChild(peerHead);
+        const peerRows = node("div", "network-peers");
+        box.appendChild(peerRows);
+
+        function sectionHead(el, title, sub, count) {
+            el.textContent = "";
+            el.appendChild(node("span", "network-title", title));
+            el.appendChild(node("span", "network-sub", sub));
+            if (count != null) el.appendChild(node("span", "network-count", String(count)));
+        }
+
+        function row(label, value) {
+            const el = node("div", "mpanel-row");
+            el.appendChild(node("span", "mpanel-k", label));
+            el.appendChild(node("span", "mpanel-v", value));
+            return el;
+        }
+
+        function endpoints(value) {
+            if (value == null) return "—";
+            if (Array.isArray(value)) return value.map((item) => brief(item)).join(" · ");
+            return brief(value);
+        }
+
+        function schemeOf(key, origin) {
+            const match = typeof origin === "string" ? origin.match(/^([a-z]+):\/\//) : null;
+            if (match) return match[1];
+            return String(key).split("/")[0] || "";
+        }
+
+        function peerRow(key, value) {
+            const member = value && typeof value === "object" ? value : {};
+            const client = member.client && typeof member.client === "object" ? member.client : {};
+            const template = String(key).includes("#");
+            const rowEl = node("div", "network-peer" + (template ? " template" : ""));
+            const keyEl = node("span", "network-key", key);
+            if (template) keyEl.appendChild(node("span", "network-tag", "template"));
+            rowEl.appendChild(keyEl);
+            const origin = member.origin || member.host || "—";
+            rowEl.appendChild(node("span", "network-target", String(origin)));
+            const note = [schemeOf(key, member.origin)];
+            const tools = client.tool && typeof client.tool === "object" ? Object.keys(client.tool).length : 0;
+            if (tools) note.push(tools + (tools === 1 ? " tool" : " tools"));
+            const host = client.host || member.host;
+            if (!template && host && String(host) !== String(origin))
+                note.push(String(host).replace(/^[a-z]+:\/\/[^/]+/, ""));
+            rowEl.appendChild(node("span", "network-note", note.filter(Boolean).join(" · ")));
+            /* a ws peer with an mtron endpoint is an instance: the page can wear its data */
+            const endpoint = !template ? (client.host || member.host) : null;
+            if (!template && endpoint && /^wss?:\/\//.test(String(member.origin || "")) && api && typeof api.view === "function") {
+                rowEl.classList.add("instance");
+                rowEl.title = "view this instance: " + endpoint;
+                rowEl.addEventListener("click", () => api.view(endpoint));
+            }
+            return rowEl;
+        }
+
+        async function load() {
+            const my = ++token;
+            try {
+                const network = await readJson();
+                if (my !== token) return;
+                if (network && typeof network === "object" && network.pattern) pattern.textContent = String(network.pattern);
+                const roster = await readFresh(root + "/roster");
+                if (my !== token) return;
+                const machines = roster && roster.machine && typeof roster.machine === "object" ? roster.machine : {};
+                const authorities = Object.keys(machines).sort();
+                knownRows.textContent = "";
+                const discover = roster && roster.discover && typeof roster.discover === "object" ? roster.discover : null;
+                if (discover) {
+                    const sources = Object.keys(discover).sort();
+                    if (sources.length) knownRows.appendChild(row("discover", sources.join(" · ")));
+                }
+                authorities.forEach((authority) => knownRows.appendChild(row(authority, endpoints(machines[authority]))));
+                if (!discover && !authorities.length) knownRows.appendChild(node("div", "mpanel-empty", "no roster"));
+                sectionHead(knownHead, "known", "roster", authorities.length);
+
+                const peers = await readFresh(base + "/peer");
+                if (my !== token) return;
+                const members = peers && typeof peers === "object" ? Object.entries(peers) : [];
+                const connected = members.filter(([key]) => !String(key).includes("#"));
+                const templates = members.filter(([key]) => String(key).includes("#"));
+                summary.textContent = authorities.length + " known · " + connected.length + " connected";
+                sectionHead(peerHead, "connected", "peer", connected.length);
+                peerRows.textContent = "";
+                connected.forEach(([key, value]) => peerRows.appendChild(peerRow(key, value)));
+                templates.forEach(([key, value]) => peerRows.appendChild(peerRow(key, value)));
+                if (!members.length) peerRows.appendChild(node("div", "mpanel-empty", "no peers"));
+            } catch (problem) {
+                if (my !== token) return;
+                summary.textContent = "—";
+                knownRows.textContent = "";
+                knownRows.appendChild(node("div", "mpanel-empty", "cannot read the network: " + (problem && problem.message ? problem.message : problem)));
+                peerRows.textContent = "";
+            }
+        }
+
+        sectionHead(knownHead, "known", "roster", null);
+        sectionHead(peerHead, "connected", "peer", null);
+        load();
+        /* the roster and the peers move; the api.read cache would pin them, so the
+           poll takes the uncached socket read */
+        setInterval(() => {
+            if (box.isConnected && !document.hidden) load();
+        }, 5000);
+        return box;
+    }
+
+    register("/m/mach/component/network", networkPanel);
+    register("network", networkPanel);
+
 
     /* the web surfaces: the server obj's own route table, not a probe */
     function routePanel(title, value) {
