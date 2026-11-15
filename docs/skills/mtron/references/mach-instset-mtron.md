@@ -11,13 +11,13 @@ description: |
 A **machine** is the unit of process: every evaluation runs in one, and `/` is the root machine. `machine::T`
 (`/m/mach/machine`, a `rec::T`) has five optional component slots:
 
-| slot        | holds                                                                     |
-|-------------|---------------------------------------------------------------------------|
-| `instset`   | the visible vocabulary: types, instructions, rewrites, sugars              |
-| `compiler`  | the map from source to `code::T`                                          |
-| `memory`    | the address space: relative bindings and the index of absolute spaces     |
-| `network`   | reach (peers), presence (listeners) and names (prefixes)                  |
-| `processor` | the runtime that executes `code::T`                                       |
+| slot        | holds                                                                 |
+|-------------|-----------------------------------------------------------------------|
+| `instset`   | the visible vocabulary: types, instructions, rewrites, sugars         |
+| `compiler`  | the map from source to `code::T`                                      |
+| `memory`    | the address space: relative bindings and the index of absolute spaces |
+| `network`   | reach (peers), presence (listeners) and names (prefixes)              |
+| `processor` | the runtime that executes `code::T`                                   |
 
 ## components
 
@@ -25,12 +25,12 @@ Each slot holds a `component::T` (`/m/mach/component`), a `rec::T`. A component 
 machine rec's slot, by `~/<slot>` and by `<vid>/<slot>`; the four views answer one object. `push` gives each component
 its own semantics:
 
-| component           | in a pushed child                                                                         |
-|---------------------|-------------------------------------------------------------------------------------------|
+| component           | in a pushed child                                                                           |
+|---------------------|---------------------------------------------------------------------------------------------|
 | `memory`, `instset` | a level over the parent's: the parent's later writes read through, the child's stay its own |
-| `network`           | a level of its own: peers and listeners are not inherited; names inherit by shadowing      |
-| `processor`         | a fresh processor of the parent's architecture, with its own computers and fail stacks     |
-| `compiler`          | a deep clone of the parent's at the push: a later write on either side stays on that side  |
+| `network`           | a level of its own: peers and listeners are not inherited; names inherit by shadowing       |
+| `processor`         | a fresh processor of the parent's architecture, with its own computers and fail stacks      |
+| `compiler`          | a deep clone of the parent's at the push: a later write on either side stays on that side   |
 
 Three components are **prefixed**: each keeps a table of names, and the three tables resolve by one rule, the nearest
 declaration wins.
@@ -97,7 +97,7 @@ candidates by distance along the refinement path. A short name is resolved by da
 after which instruction memory answers the address.
 
 <!-- figure source: assets/tikz/mach-instset.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
-<img src="../assets/mach-instset.png" alt="one machine, two memories, one read, drawn as two boxes headed by their types, memory::T and instset::T. An instruction set joins the machine twice: the machine::T vertex sends membership (solid) into instset::T and registration (dashed) into memory::T. memory::T does two things, one row each — a value at an address (/usr/marko/age, value, 29) and a route (the name plus, route, the address /m/inst/plus) — and a dotted line carries that same address across the gap into instset::T. There the query ?nat<=nat admits the int contract (drawn solid) while the address's other candidates, real and str, sit dotted inside a group bracket labelled off nat's path, because the query's domain only reaches down nat's path. Beneath both boxes one read runs — mtron's *id, then network, then memory, then instset (on a miss) — with dotted lines tying each hop to the box it asks. The tags under each header give the two lenses: INSTANCES / data and SCHEMA / inst" width="100%" style="margin:0.3em 0 0 0"/>
+<img src="../assets/mach-instset.png" alt="one machine, two memories, one read, drawn as two boxes headed by their types, memory::T and instset::T. An instruction set joins the machine twice: the machine::T vertex sends membership (solid) into instset::T and registration (dashed) into memory::T. memory::T does two things, one row each — a value at an address (/usr/marko/age, value, 29) and a route (the name plus, route, the address /m/inst/plus) — and a dotted line carries that same address across the gap into instset::T. There the query ?nat<=nat admits the int contract (drawn solid) while the address's other candidates, real and str, sit dotted inside a group bracket labeled off nat's path, because the query's domain only reaches down nat's path. Beneath both boxes one read runs — mtron's *id, then network, then memory, then instset (on a miss) — with dotted lines tying each hop to the box it asks." width="100%" style="margin:0.3em 0 0 0"/>
 
 ## compiler
 
@@ -114,7 +114,7 @@ $$\mathrm{compile} = \mathrm{type} \circ \mathrm{resolve} \circ \mathrm{rewrite}
 
 | stage   | key        | default                | settles                                         |
 |---------|------------|------------------------|-------------------------------------------------|
-| parse   | `parser`   | `mtron_parser::T`      | the obj the source denotes, hence the language |
+| parse   | `parser`   | `mtron_parser::T`      | the obj the source denotes, hence the language  |
 | rewrite | `rewriter` | `fixpoint_rewriter::T` | the instruction chain, before any type is known |
 | resolve | `resolver` | `scoring_resolver::T`  | the concrete instruction each call becomes      |
 | type    | `typer`    | `typer::T`             | the type-check points in force                  |
@@ -156,11 +156,11 @@ compiler::[parser=>a_lang::[=>]]   [-- a_lang::T, a registered parser::T subtype
 The stage is total over objs: an obj that is not a `str` is lifted as it stands, not re-read. mtron's grammar yields
 three shapes:
 
-| source      | yields       | lifted to                         |
-|-------------|--------------|-----------------------------------|
-| `6.plus(1)` | `code::T`    | itself                            |
+| source      | yields       | lifted to                          |
+|-------------|--------------|------------------------------------|
+| `6.plus(1)` | `code::T`    | itself                             |
 | `plus(1)`   | an `inst::T` | a one-instruction code, no `start` |
-| `5`         | `int::5`     | a code that starts with it        |
+| `5`         | `int::5`     | a code that starts with it         |
 
 A lone instruction receives no `start`: it is a fragment relative to its lhs (`plus(1)` maps `6` to `7`, and `noobj` to
 `noobj`).
@@ -169,10 +169,10 @@ A lone instruction receives no `start`: it is a fragment relative to its lhs (`p
 
 The rewrite stage precedes resolution, so a rule sees generic dom/rng.
 
-| rewriter               | rule                                                                                                                                                                            |
-|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| rewriter               | rule                                                                                                                                                                             |
+|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `fixpoint_rewriter::T` | apply every rewrite of every instset over the code until the code hash $h$ satisfies $h(c_{k+1}) = h(c_k)$ for `max` consecutive passes (default `2`); a rule must be idempotent |
-| `identity_rewriter::T` | return the code unchanged                                                                                                                                                       |
+| `identity_rewriter::T` | return the code unchanged                                                                                                                                                        |
 
 A rewrite is switched off per frame through its door (*the table doors*).
 
@@ -186,10 +186,10 @@ fixpoint_rewriter::[max=>3]
 Resolution threads each instruction's range into the next instruction's domain and, per instruction, consults two
 collaborators:
 
-| collaborator | question                                     | default                   |
-|--------------|----------------------------------------------|---------------------------|
-| `selector`   | which candidates, and in what order          | `specificity_selector::T` |
-| `binder`     | whether a candidate can be made concrete     | `generic_binder::T`       |
+| collaborator | question                                 | default                   |
+|--------------|------------------------------------------|---------------------------|
+| `selector`   | which candidates, and in what order      | `specificity_selector::T` |
+| `binder`     | whether a candidate can be made concrete | `generic_binder::T`       |
 
 Binding gates selection (it runs inside the selector's candidate walk), so the pair are two entries of one stage, and
 any selector composes with any binder:
@@ -200,12 +200,12 @@ scoring_resolver::[selector=>firstfind_selector::[=>]]
 identity_resolver::[=>]
 ```
 
-| strategy                  | rule                                                                               |
-|---------------------------|------------------------------------------------------------------------------------|
-| `specificity_selector::T` | rank candidates by signature specificity; take the first the binder binds          |
-| `firstfind_selector::T`   | the first viable candidate in read order; selection is order-dependent             |
-| `generic_binder::T`       | bind generics to the lhs, gate on the lhs domain, resolve the arguments            |
-| `identity_resolver::T`    | no walk; return the code unchanged                                                 |
+| strategy                  | rule                                                                      |
+|---------------------------|---------------------------------------------------------------------------|
+| `specificity_selector::T` | rank candidates by signature specificity; take the first the binder binds |
+| `firstfind_selector::T`   | the first viable candidate in read order; selection is order-dependent    |
+| `generic_binder::T`       | bind generics to the lhs, gate on the lhs domain, resolve the arguments   |
+| `identity_resolver::T`    | no walk; return the code unchanged                                        |
 
 The walk also classifies each instruction for the processor — a filter (whose $\{0,1\}$ coefficient is dropped for
 compile-time typing only), a gather or barrier, an initial instruction seeding the element type — and rebinds a cast's
@@ -226,7 +226,8 @@ push(lenient)
 pop()
 ```
 
-The stages query the state through `Typer.Helper`: the processor before invoking (`instDom`, `instRng`), a space before a
+The stages query the state through `Typer.Helper`: the processor before invoking (`instDom`, `instRng`), a space before
+a
 write (`objWrite`), a predicate test (`typePred`), and the selector before a dynamic resolution (`codeResolve`).
 
 ## processor
@@ -238,18 +239,37 @@ write (`objWrite`), a predicate test (`typePred`), and the selector before a dyn
 The processor executes what the compiler produces; the two are siblings, since what a program means and how it runs are
 separate axes of a machine.
 
-| type                                 | description                                                                                        |
-|--------------------------------------|----------------------------------------------------------------------------------------------------|
-| `processor::T`                       | the runtime contract: executes a `code::T`, reports `state` (`stop`, `run`, `pause`) and `result`  |
-| `swarm_processor::T`                 | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result |
-| `computer::T`, `swarm_computer::T`   | the computer an evaluation runs in: its code and the state of the run                             |
-| `tracer::T`                          | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's |
-| `analyzer::T`                        | any component's statistics, in the same form, at `~/<component>/analyzer`: its `analysis` (an `analysis::T` of `counter::T`, `gauge::T` and `timer::T` meters, derived as it is read) and its settings, `step` (the millis a `~/+/analyzer/analysis?subq` publication waits) and `profile` (the processor measures every evaluation's stages and monad flow into it while on, off by default); the network counts its wire at `~/network/analyzer/analysis/wire`; a pushed machine's processor measures into new meters under its parent's settings |
+| type                               | description                                                                                                                                                                                                                                                                                                                                           |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `processor::T`                     | the runtime contract: executes a `code::T`, reports `state` (`stop`, `run`, `pause`) and `result`                                                                                                                                                                                                                                                     |
+| `swarm_processor::T`               | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result                                                                                                                                                                                                        |
+| `computer::T`, `swarm_computer::T` | the computer an evaluation runs in: its code and the state of the run                                                                                                                                                                                                                                                                                 |
+| `tracer::T`                        | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's                                                                                     |
+| `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`/`enabled`; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
 
 Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
 stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
 evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught, so it is used as a value through
 `catch(_)`. A read with `@` keeps each fail's address, so catching it removes it; `*` returns a detached copy.
+
+### analyzer
+
+The `analyzer::T` is any component's statistics, in the typer's and the tracer's form: a producer records in Java
+(`incr`/`record`/`set`) where the thing it counts happens, and anyone reads the live `analysis::T` — derived from the
+meters as it is read — at `~/<component>/analyzer/analysis`. The meters are `counter::T` (a `nat`, non-negative and
+monotonic in practice), `gauge::T` (a point-in-time `real`) and `timer::T` (`count`/`total`/`min`/`max` of nanos); the
+settings `step`, `profile` and `enabled` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
+machine's components, a cluster's machines).
+
+A metric no analyzable emits can be attached to the analyzer as a **derived `!` field** — a live computation over the
+analysis, pulled on demand (the mtron form of a recording rule):
+
+```mtron_pre
+[NO_OUTPUT] ~/network/analyzer/total -> !*~/network/analyzer/analysis/wire/sent.plus(*~/network/analyzer/analysis/wire/recv)
+```
+
+`*~/network/analyzer/total` then answers the sum, re-derived each read, and stays a sibling of the mergeable
+`analysis` — never inside it.
 
 ### threads
 
@@ -257,14 +277,14 @@ evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught
 */m/mach/thread?docq
 ```
 
-| key       | value                                    |
-|-----------|------------------------------------------|
-| `code`    | the code executed                        |
-| `time`    | the start time                           |
-| `runtime` | the running time                         |
+| key       | value                                        |
+|-----------|----------------------------------------------|
+| `code`    | the code executed                            |
+| `time`    | the start time                               |
+| `runtime` | the running time                             |
 | `loop`    | the repeat delay; absent, the code runs once |
-| `state`   | the current state                        |
-| `result`  | the last result                          |
+| `state`   | the current state                            |
+| `result`  | the last result                              |
 
 `thread::T` is the base, and `core::T` (a platform thread) and `virtual::T` (a virtual thread) are its strategies, e.g.
 `core::[code=>…,loop=>second::1.0]@~/sys/thread/…`. Evaluation runs on virtual threads by default.
@@ -290,11 +310,11 @@ dom/rng types) is a data read, so instruction memory is not re-entered.
 */m/mach/component/network?docq
 ```
 
-| index      | holds                                                                 | scope                                     |
-|------------|-----------------------------------------------------------------------|-------------------------------------------|
-| `peer`     | the members this level reaches, keyed by the dial's path encoding      | reach: never inherited                    |
-| `listener` | the sockets this level serves on: origin, server, route table          | presence: a socket is shared with descendants |
-| `prefix`   | the names a peer is called by                                         | denotation: inherited by shadowing        |
+| index      | holds                                                             | scope                                         |
+|------------|-------------------------------------------------------------------|-----------------------------------------------|
+| `peer`     | the members this level reaches, keyed by the dial's path encoding | reach: never inherited                        |
+| `listener` | the sockets this level serves on: origin, server, route table     | presence: a socket is shared with descendants |
+| `prefix`   | the names a peer is called by                                     | denotation: inherited by shadowing            |
 
 The **roster** — what the system knows — is one listing at the root, shared by every frame. A `pop` retracts its level's
 reach and presence and restores a shadowed name.
@@ -305,17 +325,17 @@ A peer is keyed by its dial address written as a path — the scheme, each host 
 segments, no query: `ws://localhost:8555/mtron` ↦ `ws/localhost/8555/mtron`, `ws://peer.local:8555/mtron` ↦
 `ws/peer/local/8555/mtron`. Two routes of one service are two members, and `127.0.0.1` keys as `localhost`.
 
-| type               | predicate                                                          | holds                          |
-|--------------------|--------------------------------------------------------------------|--------------------------------|
-| `origin::T`        | scheme and host; no path, no query                                 | the service a peer reaches     |
-| `path_encoding::T` | scheme, host labels, port and route as path segments; no authority | the peer and listener keys     |
-| `authority::T`     | host and optional port; no scheme, no path                         | a name for a service           |
+| type               | predicate                                                          | holds                      |
+|--------------------|--------------------------------------------------------------------|----------------------------|
+| `origin::T`        | scheme and host; no path, no query                                 | the service a peer reaches |
+| `path_encoding::T` | scheme, host labels, port and route as path segments; no authority | the peer and listener keys |
+| `authority::T`     | host and optional port; no scheme, no path                         | a name for a service       |
 
-| `peer::T` field | value                                                              |
-|-----------------|--------------------------------------------------------------------|
-| `origin`        | the service, `scheme://host:port`; required                        |
-| `host`          | the dial, route included                                           |
-| `client`        | the protocol client the dial constructed, released by `drop`       |
+| `peer::T` field | value                                                        |
+|-----------------|--------------------------------------------------------------|
+| `origin`        | the service, `scheme://host:port`; required                  |
+| `host`          | the dial, route included                                     |
+| `client`        | the protocol client the dial constructed, released by `drop` |
 
 An origin alone is known but not reachable from here (a peer reference after crossing a wire); with a client it is
 reachable. Status is derived on read, never stored.
@@ -325,17 +345,17 @@ reachable. Status is derived on read, never stored.
 `index(m)` enters a thing into the jurisdiction, and `drop(address)` maps an address to `noobj`. No other operation
 writes the network's indexes. `index` dispatches on the handle's nominal type:
 
-| handle                                                         | effect                                                                                               |
-|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| a protocol client (`ws_client::T`, `http_client::T`, `id_client::T`) | reads the claim from the client, mints a `peer::T` at the claim's path encoding, supervises a link |
-| a `listener::T`                                                | mounts the socket: refuses a route another level serves, shares the server, writes this level's entry |
+| handle                                                               | effect                                                                                                |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| a protocol client (`ws_client::T`, `http_client::T`, `id_client::T`) | reads the claim from the client, mints a `peer::T` at the claim's path encoding, supervises a link    |
+| a `listener::T`                                                      | mounts the socket: refuses a route another level serves, shares the server, writes this level's entry |
 
-| `drop` address                                   | retracted                                                                  |
-|--------------------------------------------------|----------------------------------------------------------------------------|
-| a peer key (`ws/localhost/8555/mtron`)           | the member; its client is released                                         |
-| a wire uri with a route (`ws://host:8555/mtron`) | that surface                                                               |
-| a bare origin (`ws://host:8555`)                 | every surface of the service; reach only                                   |
-| a socket key (`ws/localhost/8555`)               | this level's listener entry, and the server when this level owns it       |
+| `drop` address                                   | retracted                                                           |
+|--------------------------------------------------|---------------------------------------------------------------------|
+| a peer key (`ws/localhost/8555/mtron`)           | the member; its client is released                                  |
+| a wire uri with a route (`ws://host:8555/mtron`) | that surface                                                        |
+| a bare origin (`ws://host:8555`)                 | every surface of the service; reach only                            |
+| a socket key (`ws/localhost/8555`)               | this level's listener entry, and the server when this level owns it |
 
 `unlisten(origin)` is `drop(origin.pathEncoding())`. One retraction answers the member, several a bag, none `noobj`.
 Dialing a surface already held closes the old connection, and the new one takes its key.
@@ -351,11 +371,11 @@ A machine's authorities — what mDNS announces and a roster files — are its l
 `http_server::T`). A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
 identity: its host and credentials never leave the machine, and an address carrying userinfo is refused.
 
-| `listener::T` field | value                                                       |
-|---------------------|-------------------------------------------------------------|
-| `origin`            | the socket's service uri                                    |
+| `listener::T` field | value                                                           |
+|---------------------|-----------------------------------------------------------------|
+| `origin`            | the socket's service uri                                        |
 | `route`             | this level's route table, `<path> => target`; absent when empty |
-| `server`            | the protocol server holding the socket                      |
+| `server`            | the protocol server holding the socket                          |
 
 ```mtron
 listener::[origin=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]
@@ -399,11 +419,11 @@ while its dispatch answers a ping, a server while its socket is bound. `*~/netwo
 
 The network supervises each peer whose client holds a live connection (a link: `ws_client`):
 
-| event                                                        | response                                                                                         |
-|--------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| the far side goes away                                       | the peer stays listed, offline, and is redialed in place, backoff $0.5\,\mathrm{s} \cdot 2^k \le 10\,\mathrm{s}$ |
-| a request needs an offline peer                              | the request redials on demand within its $5\,\mathrm{s}$ open wait                               |
-| the owner hangs up (`drop`, the client deleted, a `pop`)     | the peer leaves the map and is not redialed                                                      |
+| event                                                    | response                                                                                                         |
+|----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| the far side goes away                                   | the peer stays listed, offline, and is redialed in place, backoff $0.5\,\mathrm{s} \cdot 2^k \le 10\,\mathrm{s}$ |
+| a request needs an offline peer                          | the request redials on demand within its $5\,\mathrm{s}$ open wait                                               |
+| the owner hangs up (`drop`, the client deleted, a `pop`) | the peer leaves the map and is not redialed                                                                      |
 
 A dial made before the far side is up is an offline peer. Deleting the address that holds a client is the hang-up:
 
@@ -444,11 +464,11 @@ ws_client::[pattern=><ws://ginger.local:8555/mtron>];
 Three instructions choose where code runs. They share one address dialect — `~` the current frame, `a` (or `~/a`) its
 child, `..` its parent, `../b` a sibling — and differ in what they do with the address:
 
-| instruction | effect                                                                                                                                                         |
-|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| instruction | effect                                                                                                                                                            |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `push(t)`   | mints the machine at `t` and makes it current; only the leaf is new: $\mathrm{push}(t) = \mathrm{move}(\mathrm{parent}(t)) \cdot \mathrm{push}(\mathrm{name}(t))$ |
-| `move(t)`   | walks to the machine at `t` and closes nothing; `move()` is `move(<..>)`                                                                                       |
-| `pop()`     | discards the current machine — its components and its address — and lands on `..`                                                                             |
+| `move(t)`   | walks to the machine at `t` and closes nothing; `move()` is `move(<..>)`                                                                                          |
+| `pop()`     | discards the current machine — its components and its address — and lands on `..`                                                                                 |
 
 A frame is an address. A `>>` without `*` walks the uri graph (what is written under an address), and `*…>>` walks the
 obj graph.
@@ -463,7 +483,8 @@ pop()
 ```
 
 A pushed frame is its own scope (*components*): what it writes, imports and dials, and the fails its evaluations file,
-are its own, and a `pop` retracts them, the frame's address included. A frame holds no peers until it dials one. A frame lives in this process:
+are its own, and a `pop` retracts them, the frame's address included. A frame holds no peers until it dials one. A frame
+lives in this process:
 `push(<ws://localhost:8555/worker>)` is refused, and code reaches another process by being shipped there.
 
 **Not yet**: the three instructions answer the whole machine, which over a wire is a large reply rather than a
@@ -527,7 +548,8 @@ acknowledgements travel home.
 
 ### the gather
 
-The gather completes when every lane, or every route of a `merge()`, has replied. Equal replies bulk: three replies of `34` arrive as one obj
+The gather completes when every lane, or every route of a `merge()`, has replied. Equal replies bulk: three replies of
+`34` arrive as one obj
 with coefficient 3, $34\{3\}$, so replies are counted through coefficients:
 
 ```mtron_pre
@@ -554,11 +576,11 @@ service authority.
 
 ## appendix — registered types
 
-| under                | types (`::T`)                                                                                                                                                                                                                     |
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/m/mach/component`  | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer`, `analyzer` |
-| `/m/mach`            | `machine`, `component`, `thread`, `thread/core`, `thread/virtual`, `thread_executor`, `peer`, `listener`, `id_client`, `network_supervisor`, `monad`, `plan` (a rewrite rule as a value), `factory`, `analysis`, `analysis/counter`, `analysis/gauge`, `analysis/timer` |
-| `/m/uri`             | `origin`, `path_encoding`, `authority`                                                                                                                                                                                              |
+| under               | types (`::T`)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/m/mach/component` | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`, `memory`, `network`, `network/discovery`, `processor`, `processor/swarm_processor`, `processor/computer`, `processor/computer/swarm_computer`, `processor/tracer`, `analyzer` |
+| `/m/mach`           | `machine`, `component`, `thread`, `thread/core`, `thread/virtual`, `thread_executor`, `peer`, `listener`, `id_client`, `network_supervisor`, `monad`, `plan` (a rewrite rule as a value), `factory`, `analysis`, `analysis/counter`, `analysis/gauge`, `analysis/timer`                                                                                                                                                                             |
+| `/m/uri`            | `origin`, `path_encoding`, `authority`                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 `instset::T` is `/m/instset`, declared by the `m` instruction set.
 

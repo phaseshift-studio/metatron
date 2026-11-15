@@ -619,7 +619,7 @@ alongside, so <code>plus</code> is a family rather than a slot.</p>
 candidates by distance along the refinement path. A short name is resolved by data memory (<code>plus</code> → <code>/m/inst/plus</code>),
 after which instruction memory answers the address.</p>
 <!-- figure source: assets/tikz/mach-instset.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
-<img src="../assets/mach-instset.png" alt="one machine, two memories, one read, drawn as two boxes headed by their types, memory::T and instset::T. An instruction set joins the machine twice: the machine::T vertex sends membership (solid) into instset::T and registration (dashed) into memory::T. memory::T does two things, one row each — a value at an address (/usr/marko/age, value, 29) and a route (the name plus, route, the address /m/inst/plus) — and a dotted line carries that same address across the gap into instset::T. There the query ?nat<=nat admits the int contract (drawn solid) while the address's other candidates, real and str, sit dotted inside a group bracket labelled off nat's path, because the query's domain only reaches down nat's path. Beneath both boxes one read runs — mtron's *id, then network, then memory, then instset (on a miss) — with dotted lines tying each hop to the box it asks. The tags under each header give the two lenses: INSTANCES / data and SCHEMA / inst" width="100%" style="margin:0.3em 0 0 0"/>
+<img src="../assets/mach-instset.png" alt="one machine, two memories, one read, drawn as two boxes headed by their types, memory::T and instset::T. An instruction set joins the machine twice: the machine::T vertex sends membership (solid) into instset::T and registration (dashed) into memory::T. memory::T does two things, one row each — a value at an address (/usr/marko/age, value, 29) and a route (the name plus, route, the address /m/inst/plus) — and a dotted line carries that same address across the gap into instset::T. There the query ?nat<=nat admits the int contract (drawn solid) while the address's other candidates, real and str, sit dotted inside a group bracket labeled off nat's path, because the query's domain only reaches down nat's path. Beneath both boxes one read runs — mtron's *id, then network, then memory, then instset (on a miss) — with dotted lines tying each hop to the box it asks." width="100%" style="margin:0.3em 0 0 0"/>
 <h3>compiler</h3>
 <pre><code class="language-mtron">mtron&gt; */m/mach/component/compiler?docq
 ==&gt;docs::[obj=&gt;component::T[?[
@@ -628,10 +628,10 @@ after which instruction memory answers the address.</p>
      {?}resolver=&gt;resolver::T,
      {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
-           {?}parser=&gt;'the first stage — source text to o...',
-           {?}typer=&gt;'the fourth stage — the per-machine...',
            {?}resolver=&gt;'the third stage — the walk that th...',
-           {?}rewriter=&gt;'the second stage — the code::T to ...'],
+           {?}rewriter=&gt;'the second stage — the code::T to ...',
+           {?}parser=&gt;'the first stage — source text to o...',
+           {?}typer=&gt;'the fourth stage — the per-machine...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
            'compiler::[rewriter=&gt;fixpoint_rewr...',
@@ -757,7 +757,8 @@ mtron&gt; *~/compiler/typer/check
     obj_write=&gt;true]
 mtron&gt; pop()
 </code></pre>
-<p>The stages query the state through <code>Typer.Helper</code>: the processor before invoking (<code>instDom</code>, <code>instRng</code>), a space before a
+<p>The stages query the state through <code>Typer.Helper</code>: the processor before invoking (<code>instDom</code>, <code>instRng</code>), a space before
+a
 write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the selector before a dynamic resolution (<code>codeResolve</code>).</p>
 <h3>processor</h3>
 <pre><code class="language-mtron">mtron&gt; */m/mach/component/processor?docq
@@ -767,10 +768,10 @@ write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the
      {?}tracer=&gt;tracer::T,
      {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor,
           args=&gt;[
-           {?}state=&gt;'the run state: stop, run or pause',
-           {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
            {?}result=&gt;'the objs the last evaluation produ...',
            {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
+           {?}state=&gt;'the run state: stop, run or pause',
+           {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
            computer=&gt;'the computers this processor minte...',
            fail=&gt;&quot;the machine's fail stack: an uncau...&quot;],
           desc=&gt;'the processor contract of machine:...']
@@ -786,13 +787,27 @@ separate axes of a machine.</p>
 <tr><td><code>swarm_processor::T</code></td><td>the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result</td></tr>
 <tr><td><code>computer::T</code>, <code>swarm_computer::T</code></td><td>the computer an evaluation runs in: its code and the state of the run</td></tr>
 <tr><td><code>tracer::T</code></td><td>the processor's diagnostics, in the typer's form: trace points at <code>~/processor/tracer/stack</code> (<code>mtron_stack</code>, <code>java_stack</code>), all off by default, overridden by a boot profile's <code>tracer/stack =&gt; […]</code>; a pushed machine's processor carries a copy of its parent's</td></tr>
-<tr><td><code>analyzer::T</code></td><td>any component's statistics, in the same form, at <code>~/&lt;component&gt;/analyzer</code>: its <code>analysis</code> (an <code>analysis::T</code> of <code>counter::T</code>, <code>gauge::T</code> and <code>timer::T</code> meters, derived as it is read) and its settings, <code>step</code> (the millis a <code>~/+/analyzer/analysis?subq</code> publication waits) and <code>profile</code> (the processor measures every evaluation's stages and monad flow into it while on, off by default); the network counts its wire at <code>~/network/analyzer/analysis/wire</code>; a pushed machine's processor measures into new meters under its parent's settings</td></tr>
+<tr><td><code>analyzer::T</code></td><td>any component's statistics at <code>~/&lt;component&gt;/analyzer</code>: a live <code>analysis::T</code> of <code>counter::T</code> (a <code>nat</code>, non-negative), <code>gauge::T</code> and <code>timer::T</code> meters, plus the settings <code>step</code>/<code>profile</code>/<code>enabled</code>; producers record in Java (<code>incr</code>/<code>record</code>/<code>set</code>); a derived <code>!</code> field (a custom aggregate) may be attached beside the analysis (see <em>analyzer</em>)</td></tr>
 </tbody>
 </table>
 <p>Each evaluation runs in a computer the processor mints at <code>~/processor/computer/&lt;n&gt;</code>. The processor holds the fail
 stacks: an evaluation's uncaught fail is filed at <code>~/processor/computer/&lt;n&gt;/fail/&lt;k&gt;</code>, a fail raised outside any
 evaluation at <code>~/processor/fail/&lt;k&gt;</code>. A fail read from a stack is still uncaught, so it is used as a value through
 <code>catch(_)</code>. A read with <code>@</code> keeps each fail's address, so catching it removes it; <code>*</code> returns a detached copy.</p>
+<h4>analyzer</h4>
+<p>The <code>analyzer::T</code> is any component's statistics, in the typer's and the tracer's form: a producer records in Java
+(<code>incr</code>/<code>record</code>/<code>set</code>) where the thing it counts happens, and anyone reads the live <code>analysis::T</code> — derived from the
+meters as it is read — at <code>~/&lt;component&gt;/analyzer/analysis</code>. The meters are <code>counter::T</code> (a <code>nat</code>, non-negative and
+monotonic in practice), <code>gauge::T</code> (a point-in-time <code>real</code>) and <code>timer::T</code> (<code>count</code>/<code>total</code>/<code>min</code>/<code>max</code> of nanos); the
+settings <code>step</code>, <code>profile</code> and <code>enabled</code> sit beside them. <code>Analysis.Helper.merge</code> folds one analysis into another (a
+machine's components, a cluster's machines).</p>
+<p>A metric no analyzable emits can be attached to the analyzer as a <strong>derived <code>!</code> field</strong> — a live computation over the
+analysis, pulled on demand (the mtron form of a recording rule):</p>
+<pre><code class="language-mtron">mtron&gt; ~/network/analyzer/total -&gt; !*~/network/analyzer/analysis/wire/sent.plus(*~/network/analyzer/analysis/wire/recv)
+...
+</code></pre>
+<p><code>*~/network/analyzer/total</code> then answers the sum, re-derived each read, and stays a sibling of the mergeable
+<code>analysis</code> — never inside it.</p>
 <h4>threads</h4>
 <pre><code class="language-mtron">mtron&gt; */m/mach/thread?docq
 ==&gt;docs::[obj=&gt;rec::T[?[
@@ -864,12 +879,12 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(2 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
+           {?}roster=&gt;'known machines, connectionless: &lt;h...',
            {?}status=&gt;'the health method — an auto inst c...',
            {?}listener=&gt;'the sockets this machine serves th...',
            {?}pattern=&gt;'the branch this network answers as...',
            {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
-           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
-           {?}roster=&gt;'known machines, connectionless: &lt;h...'],
+           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
@@ -964,17 +979,17 @@ that level's rows.</p>
 <p>There is no connect instruction: constructing a protocol client is the dial, and the client indexes itself into the
 network as <code>memspace::[pattern=&gt;xyz/#]</code> indexes into memory.</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[pattern=&gt;&lt;ws://localhost:8555/mtron&gt;]
-==&gt;ws_client::[pattern=&gt;ws://localhost:8555/mtron,
-               host=&gt;ws://localhost:8555/mtron,
-               send=&gt;λ(){&lt;j&gt;},
-               send_recv=&gt;λ(){&lt;j&gt;},
-               inst=&gt;[
-                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-                /m/inst/from=&gt;*uri::T,
-                /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-               close=&gt;λ(){&lt;j&gt;},
-               ...(1 more)]
+==&gt;[pattern=&gt;ws://localhost:8555/mtron,
+    host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    ...(1 more)]
 </code></pre>
 <p>A client's <code>inst</code> is a mini-instset of overrides with the native signatures: <code>from(&lt;uri&gt;)</code> reads, <code>obj.to(&lt;uri&gt;)</code> writes
 its lhs, and <code>eval(code)</code> ships a program for the far side to run. A <code>ws_client</code> declares all three; an <code>http_client</code>
@@ -1057,7 +1072,8 @@ mtron&gt; *~.vid()
 ==&gt;&lt;/.&gt;
 </code></pre>
 <p>A pushed frame is its own scope (<em>components</em>): what it writes, imports and dials, and the fails its evaluations file,
-are its own, and a <code>pop</code> retracts them, the frame's address included. A frame holds no peers until it dials one. A frame lives in this process:
+are its own, and a <code>pop</code> retracts them, the frame's address included. A frame holds no peers until it dials one. A frame
+lives in this process:
 <code>push(&lt;ws://localhost:8555/worker&gt;)</code> is refused, and code reaches another process by being shipped there.</p>
 <p><strong>Not yet</strong>: the three instructions answer the whole machine, which over a wire is a large reply rather than a
 reference.</p>
@@ -1114,7 +1130,8 @@ acknowledgements travel home.</p>
 <!-- figure source: assets/tikz/mach-workload.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
 <img src="../assets/mach-workload.png" alt="one master, three satellites, one shared MariaDB, drawn top to bottom. The master ships a workload to each satellite (solid arrows w1, w2, w3) as start([w1,w2,w3]).select([to(s1),to(s2),to(s3)]).merge(), and the acknowledgements come back up (dashed) into that merge, the latch. Each satellite is labelled with its binding — xyz=>'east', 'west', 'north' — and exchanges with the MariaDB below it (pull xyz/+, push result/xyz). A dotted arc from the master to MariaDB marks the master's own steps: 1. creates every table, 3. reads result/+. The legend: solid — a workload [db, xyz, code] ships, and evaluating it constructs the satellite's own space (construction is connection); dashed — the acknowledgements, merge() is the latch (no fail, counted through coefficients); dotted — the master's own writes and reads" width="100%" style="margin:0.3em 0 0 0"/>
 <h4>the gather</h4>
-<p>The gather completes when every lane, or every route of a <code>merge()</code>, has replied. Equal replies bulk: three replies of <code>34</code> arrive as one obj
+<p>The gather completes when every lane, or every route of a <code>merge()</code>, has replied. Equal replies bulk: three replies of
+<code>34</code> arrive as one obj
 with coefficient 3, \(34\{3\}\), so replies are counted through coefficients:</p>
 <pre><code class="language-mtron">mtron&gt; {34,34,34}
 ==&gt;{3}34

@@ -60,8 +60,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -378,7 +377,7 @@ public class machInstSet extends AbstractInstSet {
                                 .example("*~/network/analyzer/analysis/wire   [-- the frames and round trips that crossed this machine's sockets --]")
                                 .create(),
                         MACH_COUNTER_TYPE = TypeBuilder.build()
-                                .tid(INT_TID)
+                                .tid(NAT_TID)
                                 .vid(Analysis.COUNTER_TID, "a monotonic count: how many times something happened since the meter was born")
                                 .create(),
                         MACH_GAUGE_TYPE = TypeBuilder.build()
@@ -855,7 +854,7 @@ public class machInstSet extends AbstractInstSet {
                                         // the WIRE'S METERS, kept in the rec rather than the cache: the taps count into
                                         // them per frame, and the machine's space answers ~/network/analyzer
                                         uri(ANALYZER).maybe().asUri(), T(MACH_ANALYZER_TID)), Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
-                                        uri(ANALYZER).maybe(), "the network's statistics (analyzer::T): wire/sent and wire/recv count the frames each way on its sockets, wire/trip times the round trips they completed, and wire/timeout counts the deadlines they missed",
+                                        uri(ANALYZER).maybe(), "the network's statistics (analyzer::T): wire/sent and wire/recv count the frames each way on its sockets",
                                         uri(ROSTER).maybe(), "known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme://host:port); knowledge, not reach — a machine is reached by dialing one of them",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",

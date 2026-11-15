@@ -486,6 +486,7 @@ public final class Tokens {
     public static final String ANALYZER = "analyzer";
     public static final String STEP = "step";
     public static final String PROFILE = "profile";
+    public static final String ENABLED = "enabled";
     // the network analyzer's probes (Marko, 2026-11-13: wire/{sent,recv,trip,timeout}): the frames that crossed a
     // socket each way, and the round trips that completed on it
     public static final String WIRE = "wire";

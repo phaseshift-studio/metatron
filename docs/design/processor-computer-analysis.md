@@ -322,13 +322,31 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
 7. **Events are not meters.** A record of individual occurrences (`WireTrace`'s exchanges) is a bounded ring a human
    reads; the counts behind it are the producer's meters, counted at the same tap.
 
+### `analyzable` — the owner side, and `Analyzable.Helper` (2026-11-15)
+
+`Analyzer` is the *instrument*; **`Analyzable`** is the thing that carries one. A component is not automatically
+analyzable, and an analyzer is not a component: `Analyzer` extends `Rec`, and `Analyzable extends Rec` is a mixin any
+rec — a component, a listener (server), or later a data-path space — opts into.
+
+- `Analyzable.analyzer()` answers the analyzer it records into (null when it carries none → recording is a noop);
+  `Analyzable.group()` answers the group it records under inside a shared analyzer.
+- **`Analyzable.Helper.incr/set/record/timed`** are the one gated recording path: a producer calls
+  `Helper.timed(this, latency, this::doRead)` and never considers whether its analyzer is absent or muted, nor where the
+  group lives. `timed` wraps the work — the `t0`-before/`record`-after/skip-`nanoTime`-when-off idiom lives once, in the
+  Helper, so a muted producer pays one `null` read and runs its work bare.
+- **`Analyzable.Helper.locateBase(path)`** is the `locateBasePoly` walk, for analyzers: retract up from `path` until an
+  `analyzer::T` is read, and the retracted tail is the group. A server's `analyzer => ~/network/analyzer/web_analyzer/http`
+  binds to the network's analyzer under group `web_analyzer/http`, so many servers share one meter store and each is
+  discriminated by its group (`web_analyzer/http`, `web_analyzer/mqtt`, `web_analyzer/ws`) — and the flattened total
+  remains a read-time derivation over those groups.
+- **The servers** (`http_server`, `mqtt_server`, `ws_server`) are `Analyzable` via their common `Listener`: their
+  `analyzer => path` config is resolved once at construction, and their request/message/connection taps call the Helper.
+
 **Producers today.**
 
 | component | probe | kind | where it is counted |
 |---|---|---|---|
 | network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`, `WebSocketRec.onMessage` |
-| network | `wire/trip` | timer | `WebSocketObj.sendRecv`, when the reply lands |
-| network | `wire/timeout` | counter | `WebSocketObj.sendRecv`, when the deadline passes |
 | processor (profiled) | `apply/split`, `apply/apply`, `apply/next` | timer | `BasicSwarmComputer.split`, `StatefulMonad.apply/next` |
 | processor (profiled) | `flow/monads`, `flow/c_sum`, `flow/processors` | counter | the monad loop, each computer minted |
 | processor (profiled) | `per_inst/<vid>/{monad_in, monad_out, c_in, c_out}`, `…/time` | counter, timer | `StatefulMonad`, the barrier |
@@ -339,7 +357,9 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
 The status line's wire gauge and the network panel's summary read the network analyzer, and the panel repaints as a
 `?subq` subscriber to it. `profile()` builds its `profiling::T` report from its scoped analyzer.
 
-**Retired.** `WireStats` (static atomics with a private listener list); the process-global profiling accumulators
+**Retired.** `WireStats` (static atomics with a private listener list); the network analyzer's `wire/trip` and
+`wire/timeout` (the raw round-trip timer and deadline-miss counter, retired when the servers moved onto the
+`web_analyzer` buckets); the process-global profiling accumulators
 (`StatefulMonad.T_*`/`INST_*`/`MONADS`/`COEFF_SUM`/`T_REPEAT_*`, `ScoringResolver.T_*`,
 `FixPointRewriter.REWRITE_*`, `BasicSwarmComputer.PROCESSORS`), which every evaluation paid for in the monad loop and
 every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicStats`, which recorded nothing —

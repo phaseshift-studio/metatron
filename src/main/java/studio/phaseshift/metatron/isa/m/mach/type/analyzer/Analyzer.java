@@ -19,19 +19,19 @@
 package studio.phaseshift.metatron.isa.m.mach.type.analyzer;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import static studio.phaseshift.metatron.Tokens.ANALYZER;
+import static studio.phaseshift.metatron.Tokens.ENABLED;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * analyzer::T — a component's statistics, in the form of the compiler's typer and the processor's tracer (Marko,
- * 2026-11-13). A component holds its analyzer at {@code ~/<component>/analyzer}; the analyzer's STATE is the
- * {@link Analysis} it has measured, derived as it is read at {@code ~/<component>/analyzer/analysis}, and its SETTINGS
- * sit beside that state:
+ * analyzer::T — the INSTRUMENT that measures, in the form of the compiler's typer and the processor's tracer (Marko,
+ * 2026-11-13). The thing that carries it is an {@link Analyzable}; the analyzer's STATE is the {@link Analysis} it has
+ * measured, derived as it is read, and its SETTINGS sit beside that state:
  * <pre>
- * analyzer::[analysis => analysis::T, step => int::T, profile => bool::T]
+ * analyzer::[analysis => analysis::T, step => int::T, profile => bool::T, enabled => bool::T]
  * </pre>
  * <ul>
  *   <li><b>recording</b> ({@link #incr}, {@link #record}, {@link #set}) is the producer's, in Java, where the thing it
@@ -41,12 +41,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li><b>subscribing</b> is the space's own pubsub: {@code ~/+/analyzer/analysis?subq -> sub::[code=>…]} receives
  *   {@code pub::[<address>, analysis::T]} at most once per {@code step} (millis), and only after a change;</li>
  *   <li><b>{@code profile}</b> switches on a component's costly instrumentation (the processor's per-monad timings),
- *   which is off by default: a meter that costs a clock read per step is a meter no machine can leave on.</li>
+ *   which is off by default; <b>{@code enabled}</b> switches recording itself off, so a producer's one {@link
+ *   #enabled()} read elides the meter work entirely.</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Analyzer extends Component {
+public interface Analyzer extends Rec {
 
     /**
      * the key a component holds its analyzer under — a constant, so a producer's lookup is one map read
@@ -80,4 +81,13 @@ public interface Analyzer extends Component {
      * @return the analysis the meters hold as they stand — a value built for this read, which the reader may keep
      */
     Analysis analysis();
+
+    /**
+     * whether recording is on — a setting switched off at {@code ~/<component>/analyzer/enabled}. On by default; a
+     * producer reads it once per event so that, muted, it pays that one read and nothing else.
+     */
+    default boolean enabled() {
+        final Obj enabled = this.at(uri(ENABLED));
+        return !enabled.isBool() || enabled.boolValue();
+    }
 }

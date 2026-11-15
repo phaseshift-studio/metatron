@@ -25,6 +25,7 @@ import com.sun.net.httpserver.HttpsServer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzable;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -55,6 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
@@ -136,7 +138,8 @@ public final class httpServer extends Listener {
                     // the bind and kept by no rec
                     uri(KEYSTORE).maybe().asUri(), T(ALL),
                     uri(PASS).maybe().asUri(), T(ALL),
-                    uri(STATUS).maybe().asUri(), BOOL_TYPE))
+                    uri(STATUS).maybe().asUri(), BOOL_TYPE,
+                    uri(ANALYZER).maybe().asUri(), T(ALL)))
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_SERVER_TID),
                     lst(T(REC_TID)), (_, inst) -> httpServer.of(inst.arg(0).asRec()))).create();
 
@@ -158,8 +161,9 @@ public final class httpServer extends Listener {
     private final Map<LaneKey, RouteLane> lanes = new ConcurrentHashMap<>();
     private final Map<HandlerKey, HttpRec> handlers = new ConcurrentHashMap<>();
 
-    private httpServer(final Map<Obj, Obj> jvm, final Network owner, final SSLContext tls) {
+    private httpServer(final Map<Obj, Obj> jvm, final Network owner, final SSLContext tls, final Obj analyzer) {
         super(jvm, HTTP_SERVER_TID, owner);
+        this.analyze(analyzer);
         this.socket = bind(this.at(ORIGIN).uriValue(), tls, this);
         LOG.info("http_server listening: %s", this.at(ORIGIN).uriValue());
     }
@@ -204,7 +208,7 @@ public final class httpServer extends Listener {
         jvm.put(uri(ORIGIN), uri(origin));
         if (!routes.isEmpty())
             jvm.put(uri(ROUTE), routes);
-        final httpServer server = new httpServer(jvm, level, tls);
+        final httpServer server = new httpServer(jvm, level, tls, config.at(uri(ANALYZER)));
         try {
             Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {
@@ -239,6 +243,7 @@ public final class httpServer extends Listener {
 
     private void handle(final HttpExchange exchange) {
         try {
+            Analyzable.Helper.incr(this, f("requests"), 1L);
             final fURI request = request(exchange);
             final Optional<Route> route = this.route(request);
             if (route.isEmpty()) {
@@ -263,12 +268,15 @@ public final class httpServer extends Listener {
             return;
         }
         final HttpRec handler = this.handler(route, exchange.getRequestHeaders().getFirst("Mcp-Session-Id"), lane);
-        try {
-            handler.handle(exchange, mountOf(route.key(), request), lane.address());
-        } catch (final IOException e) {
-            // the handler completes its own exchange; an i/o failure here is the client gone
-            LOG.debug("unable to answer %s: %s", request, e.getMessage());
-        }
+        Analyzable.Helper.timed(this, f("latency"), () -> {
+            try {
+                handler.handle(exchange, mountOf(route.key(), request), lane.address());
+            } catch (final IOException e) {
+                // the handler completes its own exchange; an i/o failure here is the client gone
+                LOG.debug("unable to answer %s: %s", request, e.getMessage());
+            }
+            return null;
+        });
     }
 
     /**

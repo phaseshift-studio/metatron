@@ -69,18 +69,18 @@ mtron> bash('ls')
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(16 more)]
+    ...(17 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
-==>['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  7.0M  6.1G  ...',
-    'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme1n1p2  916G  582G  288G  ...',
-    'tmpfs            31G  3.5M   31G  ...',
-    'tmpfs           5.0M   20K  5.0M  ...',
-    'tmpfs            31G     0   31G  ...',
-    ...(3 more)]
+==>['Filesystem             Size  Used ...',
+    'tmpfs                  6.1G  6.8M ...',
+    'efivarfs               128K   42K ...',
+    '/dev/nvme1n1p2         916G  583G ...',
+    'tmpfs                   31G  7.6M ...',
+    'tmpfs                  5.0M   20K ...',
+    'tmpfs                   31G     0 ...',
+    ...(4 more)]
 ```
 A timeout and a failed exit are both fails, and both are inspectable:
 
@@ -110,7 +110,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           ...(16 more)]]
+           ...(17 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -120,7 +120,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(17 more)]
+    ...(18 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -161,13 +161,13 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    ...(16 more)]
+    ...(17 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 26815     	Blocks: 56     ...',
-    'Device: 259,5	Inode: 22826403    L...',
+    'Device: 259,3	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-13 15:23:22.503152...',
+    'Access: 2026-11-14 15:29:16.659593...',
    ...
 ```
 ### a shape of its own
@@ -185,7 +185,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    ...(16 more)]
+    ...(17 more)]
 ```
 Unit values test against each other's units:
 
@@ -254,14 +254,14 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>103
+==>66
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::528.0,
-    free_mem_jvm=>mB::118.3750,
+    free_mem_jvm=>mB::255.0475,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::409.6249,
+    used_mem_jvm=>mB::272.9524,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
-    os=>'Linux 7.0.0-42-generic',
+    os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
     ...(12 more)]
 ```

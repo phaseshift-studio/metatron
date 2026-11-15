@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzable;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
@@ -104,7 +106,8 @@ public final class mqttServer extends Listener {
     public static final Type MQTT_SERVER_TYPE = TypeBuilder.build()
             .tid(LISTENER_TID)
             .vid(MQTT_SERVER_TID)
-            .isaPredicate(rec(SYS_KEY.maybe().asUri(), rec(URI_TYPE, T(ALL))))
+            .isaPredicate(rec(SYS_KEY.maybe().asUri(), rec(URI_TYPE, T(ALL)),
+                    uri(ANALYZER).maybe().asUri(), URI_TYPE))
             .constructor(config -> mqttServer.of(config.asRec().apply().asRec()))
             .create();
 
@@ -133,13 +136,6 @@ public final class mqttServer extends Listener {
      */
     private final Instant started = Instant.now();
     /**
-     * the $SYS data a !inst leaf derives: packets and messages, in and out
-     */
-    private final AtomicInteger packetsIn = new AtomicInteger(0);
-    private final AtomicInteger packetsOut = new AtomicInteger(0);
-    private final AtomicInteger messagesIn = new AtomicInteger(0);
-    private final AtomicInteger messagesOut = new AtomicInteger(0);
-    /**
      * the live $SYS subscribers, by session, with the filters they earned — re-pushed at the moments that change the state
      */
     private final Map<mqttSession, List<fURI>> sysSubs = Collections.synchronizedMap(new IdentityHashMap<>());
@@ -150,8 +146,9 @@ public final class mqttServer extends Listener {
     private final MqttQueue queue = new MqttQueue();
     private final CoreThread dispatcher;
 
-    private mqttServer(final Map<Obj, Obj> jvm, final Network owner) throws IOException {
+    private mqttServer(final Map<Obj, Obj> jvm, final Network owner, final Obj analyzer) throws IOException {
         super(jvm, MQTT_SERVER_TID, owner);
+        this.analyze(analyzer);
         this.machine = Machine.current();
         this.socket = new ServerSocket();
         this.socket.setReuseAddress(true);
@@ -185,11 +182,11 @@ public final class mqttServer extends Listener {
                                 uri("messages"), sysCall("mqtt_pending", () -> server.queue.jvm().size()),
                                 uri("queue"), server.queue),
                         uri("packets"), rec(
-                                uri("received"), sysCall("mqtt_packets_rx", server::packetsReceived),
-                                uri("sent"), sysCall("mqtt_packets_tx", server::packetsSent)),
+                                uri("received"), metric(server, "packets/received"),
+                                uri("sent"), metric(server, "packets/sent")),
                         uri("messages"), rec(
-                                uri("received"), sysCall("mqtt_messages_rx", server::messagesReceived),
-                                uri("sent"), sysCall("mqtt_messages_tx", server::messagesSent))));
+                                uri("received"), metric(server, "messages/received"),
+                                uri("sent"), metric(server, "messages/sent"))));
         sys.jvm().putAll(server.at(SYS_KEY).orElse(rec()).jvm());
         return sys;
     }
@@ -201,20 +198,19 @@ public final class mqttServer extends Listener {
         return auto_(instLambda(name, ALL.maybe(), INT_TID, (_, _) -> jnt(value.get()))).tryToInst();
     }
 
-    private int packetsReceived() {
-        return this.packetsIn.get();
-    }
-
-    private int packetsSent() {
-        return this.packetsOut.get();
-    }
-
-    private int messagesReceived() {
-        return this.messagesIn.get();
-    }
-
-    private int messagesSent() {
-        return this.messagesOut.get();
+    /**
+     * A $SYS COUNTER leaf that IS the analyzer's own value — one metric aggregator: the broker's packet and message
+     * counters live in its analyzer, and a $SYS leaf dereferences the analysis at {@code <group>/<rel>}. An unbound
+     * broker (no analyzer) or an unrecorded probe answers {@code noobj}, the honest "absent" — never a fabricated zero.
+     */
+    private static Obj metric(final mqttServer server, final String rel) {
+        return auto_(instLambda("mqtt_" + rel.replace('/', '_'), ALL.maybe(), INT_TID.maybe(), (_, _) -> {
+            final Analyzer analyzer = server.analyzer();
+            final fURI group = server.group();
+            if (null == analyzer || null == group)
+                return noobj();
+            return analyzer.analysis().at(uri(group.extend(f(rel)).toString()));
+        })).tryToInst();
     }
 
     /**
@@ -226,7 +222,7 @@ public final class mqttServer extends Listener {
         if (!host.isUri())
             throw MTronException.of("an mqtt_server serves a socket: host=><mqtt://host:port> required, got %s", host);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec());
+        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec(), config.at(uri(ANALYZER)));
     }
 
     /**
@@ -234,7 +230,7 @@ public final class mqttServer extends Listener {
      * one already holds, or bind it here.
      */
     public static Listener serve(final fURI origin) {
-        return serve(origin, rec());
+        return serve(origin, rec(), noobj());
     }
 
     /**
@@ -242,6 +238,10 @@ public final class mqttServer extends Listener {
      * {@link Listener#route(fURI)} walks it live, and on this server's rec, where it is introspectable.
      */
     public static Listener serve(final fURI origin, final Rec routes) {
+        return serve(origin, routes, noobj());
+    }
+
+    private static Listener serve(final fURI origin, final Rec routes, final Obj analyzer) {
         final Network level = Machine.current().network();
         final Listener held = Network.Helper.listenerFor(origin);
         if (null != held)
@@ -253,7 +253,7 @@ public final class mqttServer extends Listener {
             // a route table is ABSENT rather than empty while the machine serves nothing through it (listener::T)
             if (!routes.isEmpty())
                 jvm.put(uri(ROUTE), routes);
-            server = new mqttServer(jvm, level);
+            server = new mqttServer(jvm, level, analyzer);
         } catch (final IOException e) {
             throw MTronException.of(e, "unable to bind mqtt server %s", origin);
         }
@@ -341,6 +341,7 @@ public final class mqttServer extends Listener {
             this.sessions.put(conn, session);
             this.sessionsByVid.put(vid, session);
             session.start();
+            Analyzable.Helper.set(this, f("connections"), this.sessionCount());
             this.pushSys(); // a session opening is a moment: the client count its $SYS watchers cover has moved
         } catch (final Exception e) {
             LOG.debug("mqtt connection from %s dropped: %s", conn.getRemoteSocketAddress(), e.getMessage());
@@ -361,6 +362,7 @@ public final class mqttServer extends Listener {
         synchronized (this.sysSubs) {
             this.sysSubs.remove(session);
         }
+        Analyzable.Helper.set(this, f("connections"), this.sessionCount());
         this.pushSys(); // the remaining watchers see the count the retirement leaves behind
     }
 
@@ -382,20 +384,20 @@ public final class mqttServer extends Listener {
             LOG.debug("mqtt $SYS publish dropped: %s is the broker's own namespace", topic);
             return;
         }
-        this.messagesIn.incrementAndGet();
+        Analyzable.Helper.incr(this, f("messages/received"), 1L);
         this.machine.memory().write(topic, obj);
         this.pushSys();
     }
 
     /**
-     * packet counters the $SYS leaves derive — a session's read and write each pass through one
+     * a session's read and write each pass through one — the broker's packet counters, in and out
      */
     void packetIn() {
-        this.packetsIn.incrementAndGet();
+        Analyzable.Helper.incr(this, f("packets/received"), 1L);
     }
 
     void packetOut() {
-        this.packetsOut.incrementAndGet();
+        Analyzable.Helper.incr(this, f("packets/sent"), 1L);
     }
 
     /**
@@ -602,7 +604,7 @@ public final class mqttServer extends Listener {
             }
             try {
                 session.deliver(args.get(0).asLst());
-                this.messagesOut.incrementAndGet();
+                Analyzable.Helper.incr(this, f("messages/sent"), 1L);
             } catch (final Exception e) {
                 LOG.debug("mqtt delivery to %s failed: %s", session.vid(), e.getMessage());
             }

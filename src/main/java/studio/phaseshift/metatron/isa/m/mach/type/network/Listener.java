@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.isa.m.mach.type.network;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzable;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
@@ -49,7 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * ({@link #SPECIFICITY}). No two machines can claim one key on a socket — the second is refused when it mounts
  * ({@link #refuseClaimed}) — so the walk never has to choose between equals.
  */
-public abstract class Listener extends MRec implements Closeable {
+public abstract class Listener extends MRec implements Analyzable, Closeable {
 
     /**
      * Where a connection lands: the level whose table holds the matched route, the route's key, and its target. The
@@ -78,6 +80,12 @@ public abstract class Listener extends MRec implements Closeable {
      */
     private final Set<Network> sharers = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<>()));
     private final AtomicBoolean closed = new AtomicBoolean(false);
+    /**
+     * this listener's analyzer, and the group it records under inside it — bound from its {@code analyzer => path}
+     * config (see {@link #analyze}), null when it carries none (recording is a noop)
+     */
+    private Analyzer analyzer;
+    private fURI group;
 
     protected Listener(final Map<Obj, Obj> jvm, final fURI tid, final Network owner) {
         super(new LinkedHashMap<>(jvm), tid, null);
@@ -99,6 +107,31 @@ public abstract class Listener extends MRec implements Closeable {
      */
     public Network owner() {
         return this.owner;
+    }
+
+    @Override
+    public Analyzer analyzer() {
+        return this.analyzer;
+    }
+
+    @Override
+    public fURI group() {
+        return this.group;
+    }
+
+    /**
+     * bind this listener's analyzer from its {@code analyzer => path} config: the path resolves (via
+     * {@link Analyzable.Helper#locateBase}) to the analyzer it names, and the retracted tail is the group. Absent, the
+     * listener carries none and every recording is a noop.
+     */
+    protected void analyze(final Obj analyzerConfig) {
+        if (!analyzerConfig.isUri())
+            return;
+        final Analyzable.Helper.Located located = Analyzable.Helper.locateBase(analyzerConfig.uriValue());
+        if (null == located)
+            return;
+        this.analyzer = located.analyzer();
+        this.group = located.group();
     }
 
     /**
