@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis.TIMER_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -427,6 +428,39 @@ public class AnalyzerTest extends AbstractMetatronTest {
             Machine.write(f("~/processor/analyzer/profile"), bool(false));
             Machine.parse("{1,2,3}.plus(1)").apply(noobj());
             assertEquals(during, read(processor.analysis(), "flow/monads"), "nothing more once the profile is off");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    // ======================== derived fields ========================
+
+    /**
+     * A DERIVED FIELD IS A CUSTOM ANALYSIS OVER THE ANALYSIS: a metric no analyzable emits can be attached to the
+     * analyzer as an auto field, computed on read over the live analysis — a sibling of the analysis, never part of its
+     * mergeable core.
+     */
+    @Test
+    void shouldComputeADerivedFieldOverTheAnalysis() {
+        final Machine machine = Machine.current().push(f("analyzer_derived"));
+        try {
+            final Analyzer analyzer = machine.network().analyzer();
+            analyzer.incr(f("web_analyzer/http"), f("requests"), 100L);
+            analyzer.incr(f("web_analyzer/mqtt/messages"), f("sent"), 50L);
+            // total = requests + messages/sent, attached to the analyzer as a derived (auto) field
+            Machine.write(f("~/network/analyzer/total"),
+                    auto_(instLambda(lhs -> {
+                        final Analysis analysis = analyzer.analysis();
+                        return jnt(analysis.at(uri("web_analyzer/http/requests")).intValue()
+                                + analysis.at(uri("web_analyzer/mqtt/messages/sent")).intValue());
+                    })).tryToInst());
+            assertEquals(150L, Machine.read(f("~/network/analyzer/total")).intValue(),
+                    "a derived field computes over the live analysis");
+            analyzer.incr(f("web_analyzer/http"), f("requests"), 5L);
+            assertEquals(155L, Machine.read(f("~/network/analyzer/total")).intValue(),
+                    "and re-derives as the meters move");
+            assertTrue(Machine.read(f("~/network/analyzer/analysis")).asRec().at(uri("total")).isNoObj(),
+                    "a derived field is a sibling of the analysis, never inside it");
         } finally {
             machine.pop();
         }

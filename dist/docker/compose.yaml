@@ -15,12 +15,12 @@
 #  lives in README.md → "Compose".
 #
 #  QUICK START
-#      docker compose up -d                                  # boot + healthcheck
+#      docker compose up -d                                            # boot + health check
 #      docker compose logs -f metatron
 #      docker compose exec metatron wsplus ws://localhost:8555/mtron   # the REPL console
-#      docker compose -f compose.yaml -f compose.infra.yaml up -d   # + backends
-#      docker compose down                                   # keep the state volume
-#      docker compose down -v                                # ... or wipe it too
+#      docker compose -f compose.yaml -f compose.infra.yaml up -d      # + backends
+#      docker compose down                                             # keep the state volume
+#      docker compose down -v                                          # ... or delete it
 # =============================================================================
 
 name: ${COMPOSE_PROJECT_NAME:-metatron}
@@ -81,7 +81,7 @@ services:
 
     # host networking: the VM binds its listener sockets directly on the host
     # interfaces — the same reach the published ports gave, one translation
-    # fewer.  This is also what mDNS discovery needs when this machine must be
+    # fewer. This is also what mDNS discovery needs when this machine must be
     # FOUND (mdns_discovery::T announces across this NIC): the same L2
     # multicast domain as the machines that must hear it, and an announced
     # address they can actually route to — a bridge-local container IP is one

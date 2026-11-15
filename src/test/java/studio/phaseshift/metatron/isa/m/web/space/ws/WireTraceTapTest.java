@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /**
  * The TAP, not the ring: a real {@code sendRecv} against a real loopback peer must land in the trace as one
  * exchange in that peer's lane, carrying the request that was sent and the reply that came back — and in the
- * network's meters ({@code ~/network/analyzer/analysis/wire}) as the frames and the round trip it was.
+ * network's meters ({@code ~/network/analyzer/analysis/wire}) as the frames it was.
  * <p>
  * {@link WireTraceTest} proves the window; this proves that the window and the meters are fed by the wire they claim
  * to watch.
@@ -81,7 +81,6 @@ public class WireTraceTapTest extends AbstractMetatronTest {
                     Machine.read(f("/network/analyzer/analysis/wire").extend(probe)).orElse(jnt(0)).intValue();
             final long sent = wire.applyAsLong(SENT);
             final long received = wire.applyAsLong(RECV);
-            final long trips = wire.applyAsLong("trip/count");
 
             final Obj reply = FutureObj.resolveFuture(wsRec.sendRecv(ObjmtronSerializer.parse("1.plus(1)")));
             assertFalse(reply.isNoObj(), "the peer answered");
@@ -93,9 +92,6 @@ public class WireTraceTapTest extends AbstractMetatronTest {
                     .findFirst()
                     .orElseThrow(() -> new AssertionError("no lane for the dialed peer in " + snapshot.lanes()));
             assertEquals(1L, lane.exchanges(), "one round trip, one exchange in the lane");
-            // THE METERS ARE READ AS EVERYONE READS THEM, at their address: the round trip is one observation of the
-            // network's round-trip timer
-            assertEquals(trips + 1L, wire.applyAsLong("trip/count"), "and one completed round trip on the meter");
             // A SELF-LOOP SENDS BOTH HALVES FROM THIS VM: the request leaves the client and the reply leaves the
             // server, and each also arrives here. So the wire's meters see two frames each way for one conversation —
             // which is what a FRAME count means, and why the panel's unit is the exchange, not the frame.

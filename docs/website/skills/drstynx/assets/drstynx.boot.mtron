@@ -95,6 +95,7 @@ mcp_server::[tool => [
   write_events => inst(events => ?lst::T) { *events.>-.to(/usr/dsh/event/_?incrq) }
 ]]@mcp_dsh_mirror;
 http_server::[origin   => !*<boot/args/external/web/http>,
+              analyzer => ~/network/analyzer/web_analyzer/http,
               route    => [/dsh       => mcp_dsh_mirror,
                            /mcp       => mcp_mtron,
                            /docker    => docker:,
@@ -104,6 +105,7 @@ http_server::[origin   => !*<boot/args/external/web/http>,
                            /          => mfs:docs/website/]]@/sys/space/web/http;
 [== the same table over tls: an https host serves the certificate in its keystore (a pkcs12 with a private key), opened with its pass ==]
 http_server::[origin   => !*<boot/args/external/web/https>,
+              analyzer => ~/network/analyzer/web_analyzer/http/tls,
               keystore => *<mfs:conf/server.p12>,
               pass     => 'changeit',
               route    => [/dsh       => mcp_dsh_mirror,
@@ -116,7 +118,7 @@ http_server::[origin   => !*<boot/args/external/web/https>,
 [== the web gateway: a peer for every http(s) authority, so the web tool's *<url> reads the web ==]
 http_client::[host => <http://#>];
 http_client::[host => <https://#>];
-mqtt_server::[origin => <mqtt://0.0.0.0:1883>];
+mqtt_server::[origin => <mqtt://0.0.0.0:1883>, analyzer => ~/network/analyzer/web_analyzer/mqtt]@/sys/space/web/mqtt;
 [==
   spawn a series of sibling jvms on current physical machine.
   make spawns ws_client::T peers.
@@ -179,6 +181,7 @@ tblespace::[pattern    => </log/metatron/#>,
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
             route      => [/log/metatron/ => <>]]@</sys/space/log/metatron>;
 ws_server::[origin     => !*<boot/args/external/web/ws>,
+            analyzer  => ~/network/analyzer/web_analyzer/ws,
             route    => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
                          /mcp     => mcp_mtron,
                          /message => mcp_message,

@@ -295,16 +295,13 @@ public interface WebSocketObj extends Rec, Closeable {
                         if (!waiter.latch().await(deadlineMs, TimeUnit.MILLISECONDS)) {
                             this.logger().warn("connection timeout: tag=%s on %s after %s ms (outstanding=%s)", tag, peer, deadlineMs, waiters.size());
                             WireTrace.exchange(peer, tag, message, null, startedMs, deadlineMs, WireTrace.Outcome.TIMEOUT);
-                            Machine.current().network().analyzer().incr(f(WIRE), f(TIMEOUT), 1L);
                             return fail("no reply from %s within %s ms", peer, deadlineMs);
                         }
                         final long elapsedNanos = System.nanoTime() - startedNanos;
                         // ONE ROW PER ROUND TRIP, recorded where both halves exist: the request that was sent and
-                        // the reply the latch released (fill() sets the obj before it counts down) -- and one
-                        // observation of the round-trip timer, the meter beside the row
+                        // the reply the latch released (fill() sets the obj before it counts down)
                         WireTrace.exchange(peer, tag, message, waiter.obj().get(), startedMs,
                                 TimeUnit.NANOSECONDS.toMillis(elapsedNanos), WireTrace.Outcome.OK);
-                        Machine.current().network().analyzer().record(f(WIRE), f(TRIP), elapsedNanos);
                         this.logger().debug("filled tag=%s on %s", tag, peer);
                     } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
