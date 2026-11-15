@@ -79,11 +79,16 @@ services:
     command:
       - *metatron-command
 
-    # one variable drives host AND container side (and the boot-args URIs and
-    # the healthcheck) so the four cannot drift apart:
-    ports:
-      - "${METATRON_BIND_IP:-0.0.0.0}:${METATRON_WS_PORT:-8555}:${METATRON_WS_PORT:-8555}"
-      - "${METATRON_BIND_IP:-0.0.0.0}:${METATRON_HTTP_PORT:-8777}:${METATRON_HTTP_PORT:-8777}"
+    # host networking: the VM binds its listener sockets directly on the host
+    # interfaces — the same reach the published ports gave, one translation
+    # fewer.  This is also what mDNS discovery needs when this machine must be
+    # FOUND (mdns_discovery::T announces across this NIC): the same L2
+    # multicast domain as the machines that must hear it, and an announced
+    # address they can actually route to — a bridge-local container IP is one
+    # they cannot.  Compose forbids `ports:` and attached networks under host
+    # mode, so those blocks are gone; the boot-args web URIs and the healthcheck
+    # still drive off the same port vars.
+    network_mode: host
 
     volumes:
       # host docker daemon → dckrspace::T pulls the space backends through it
@@ -143,8 +148,8 @@ services:
       com.phaseshift.metatron.boot: "${METATRON_BOOT:-boot/docker.boot.mtron}"
       com.phaseshift.metatron.user: "${METATRON_USER:-avatar}"
 
-    networks:
-      - netatron
+    # no attached networks: `network_mode: host` forbids them.  The top-level
+    # `netatron` definition stays for compose.infra.yaml's backends.
 
   # --- the REPL console ------------------------------------------------------
   # wsplus (the mtron console) is distributed with the metatron image.  Access it by

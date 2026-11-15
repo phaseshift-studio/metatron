@@ -72,25 +72,36 @@
     <meta name="metatron:boot" content="docs/website/skills/drstynx/assets/drstynx.boot.mtron">
     <meta name="metatron:highlight" content="/highlight/">
     <title>metatron — PhaseShift Studio</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='11' r='7' fill='none' stroke='%23970207' stroke-width='2'/%3E%3Ccircle cx='12' cy='19' r='7' fill='none' stroke='%23c9d1d9' stroke-width='2'/%3E%3Ccircle cx='20' cy='19' r='7' fill='none' stroke='%238b949e' stroke-width='2'/%3E%3C/svg%3E">
+    <link rel="icon"
+          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='11' r='7' fill='none' stroke='%23970207' stroke-width='2'/%3E%3Ccircle cx='12' cy='19' r='7' fill='none' stroke='%23c9d1d9' stroke-width='2'/%3E%3Ccircle cx='20' cy='19' r='7' fill='none' stroke='%238b949e' stroke-width='2'/%3E%3C/svg%3E">
     <meta name="metatron:style" content="/css/splash.css">
+    <meta name="metatron:page" content="">
     <link id="metatron-style" rel="stylesheet" href="/css/splash.css">
     <script>
         /* one place for the design: docs/website/css/splash.css. ?css= or the meta
            tag can point elsewhere; the critical block below keeps the page readable
            if the stylesheet's mount is absent. */
         (function () {
-            var query = new URLSearchParams(location.search).get("css");
-            var meta = document.querySelector('meta[name="metatron:style"]');
-            var link = document.getElementById("metatron-style");
-            var href = query || (meta && meta.content);
+            const query = new URLSearchParams(location.search).get("css");
+            const meta = document.querySelector('meta[name="metatron:style"]');
+            const link = document.getElementById("metatron-style");
+            const href = query || (meta && meta.content);
             if (href && link.getAttribute("href") !== href) link.href = href;
         })();
     </script>
     <style>
         /* critical only — the design lives in /css/splash.css */
-        body { margin: 0; background: #0b0e13; color: #c9d1d9; font: 14px/1.55 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
-        .wrap { width: min(1180px, 100% - 2.5rem); margin: 0 auto; }
+        body {
+            margin: 0;
+            background: #0b0e13;
+            color: #c9d1d9;
+            font: 14px/1.55 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+        }
+
+        .wrap {
+            width: min(1180px, 100% - 2.5rem);
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -103,7 +114,8 @@
                     <circle cx="24" cy="38" r="14" fill="none" stroke="#c9d1d9" stroke-width="2.4" opacity=".9"/>
                     <circle cx="40" cy="38" r="14" fill="none" stroke="#8b949e" stroke-width="2.4" opacity=".9"/>
                 </svg>
-                <span class="brand-title"><a class="brand-name" href="http://metatron.phaseshift.studio" target="_blank" rel="noopener">metatron</a><span class="brand-tag">: a ring-oriented language and virtual machine</span></span>
+                <span class="brand-title"><a class="brand-name" href="http://metatron.phaseshift.studio" target="_blank"
+                                             rel="noopener">metatron</a><span class="brand-tag">: a ring-oriented language and virtual machine</span></span>
                 <span class="dot busy" id="pulse-dot" aria-hidden="true"></span>
                 <span class="sr" id="pulse" aria-live="polite">probing surfaces</span>
             </div>
@@ -122,6 +134,8 @@
             </div>
             <div class="status-meta">
                 served by <code>http_server::T</code>
+                <span class="sep">·</span> data from <span id="instance">this machine</span>
+                <a href="#" id="instance-local" hidden title="back to this page's own machine">local</a>
             </div>
         </div>
     </div>
@@ -131,39 +145,12 @@
         <div class="grid page-loaded" id="page-loaded" hidden></div>
         <!-- ── 1. surfaces ───────────────────────────────────── -->
         <div class="grid" aria-label="surfaces">
-
-            <section class="card" data-tid="http_server" data-label="http server" data-col="1" aria-labelledby="h-http">
-                <header><span class="dot busy" id="d-http"></span><h2 id="h-http">http_server</h2><span class="meta" id="m-http">probing…</span></header>
-                <p class="lede">one socket, namespaces by path</p>
-                <table>
-                    <tbody>
-                    <tr><td class="addr"><a href="./">/</a></td><td class="note">this page</td><td class="st" id="r-root">—</td></tr>
-                    <tr><td class="addr"><a href="/mcp">/mcp</a></td><td class="note">mcp_server over http</td><td class="st" id="r-mcp">—</td></tr>
-                    </tbody>
-                </table>
-                <p class="hint">mounts are the exposure boundary — a full boot adds
-                    <code>/usr</code> <code>/mfs</code> <code>/docker</code> <code>/message</code></p>
-            </section>
-
-            <section class="card" data-tid="ws_server" data-label="ws server" data-col="1" aria-labelledby="h-ws">
-                <header><span class="dot busy" id="d-ws"></span><h2 id="h-ws">ws_server</h2><span class="meta" id="m-ws">probing…</span></header>
-                <p class="lede">one connection, protocols by path</p>
-                <table>
-                    <tbody>
-                    <tr><td class="addr">/mtron</td><td class="note">expression in, answer out</td><td class="st" id="r-mtron">—</td></tr>
-                    <tr><td class="addr">/mcp</td><td class="note">mcp_server over ws</td><td class="st" id="r-wsmcp">—</td></tr>
-                    </tbody>
-                </table>
-                <p class="hint">a full boot also mounts <code>/drstynx</code> — the dr.stynx agent as an
-                    <code>mcp_server</code></p>
-            </section>
-
         </div>
-
         <!-- ── 2. console ────────────────────────────────────── -->
-        <section class="card wide" id="console-card" data-tid="console" data-label="console" data-col="4" data-row="2" aria-labelledby="h-console">
+        <section class="card wide" id="console-card" data-tid="console" data-label="console" data-col="4" data-row="2"
+                 aria-labelledby="h-console">
             <div class="console-head">
-                <span class="dot busy" id="d-console"></span>
+                <span class="dot up" id="d-console"></span>
                 <h2 id="h-console">console</h2>
                 <span class="hl-note" id="hl-note">syntax: loading</span>
                 <span class="meta" id="m-console">one message is one expression</span>
@@ -195,23 +182,9 @@
                 <span class="chip" data-expr="!math:datetime_now()">!math:datetime_now()</span>
             </div>
         </section>
-
         <!-- ── pinned object cards ───────────────────────────── -->
         <div class="grid" id="pinned" hidden aria-label="pinned object cards"></div>
-
-        <!-- ── 3. explore ─────────────────────────────────────── -->
-        <div class="grid" aria-label="explore">
-
-            <section class="card" data-tid="mcp_client" data-label="mcp tools" data-col="2" aria-labelledby="h-tools">
-                <header><span class="dot busy" id="d-toolpanel"></span><h2 id="h-tools">mcp tools</h2><span class="meta" id="m-tools">0</span></header>
-                <p class="lede">an <code>mcp_client</code>'s tools — pick one, fill its args, and the call is
-                    <code>/tool/&lt;name&gt;/inst(…)</code> over the mtron socket</p>
-                <div id="mcp-panel-host"></div>
-            </section>
-
-        </div>
     </main>
-
     <footer>
         <div class="brand">
             <a href="http://phaseshift.studio" target="_blank" rel="noopener">PhaseShift Studio</a> presents
@@ -234,9 +207,14 @@
     </header>
     <p class="expr" id="popup-expr"></p>
     <div class="popup-tabs" role="tablist" aria-label="view">
-        <button type="button" class="popup-tab" id="tab-panel" data-tab="panel" role="tab" aria-selected="false" hidden>panel</button>
-        <button type="button" class="popup-tab" id="tab-mtron" data-tab="mtron" role="tab" aria-selected="true">mtron</button>
-        <button type="button" class="popup-tab" id="tab-json" data-tab="json" role="tab" aria-selected="false" disabled>json</button>
+        <button type="button" class="popup-tab" id="tab-panel" data-tab="panel" role="tab" aria-selected="false" hidden>
+            panel
+        </button>
+        <button type="button" class="popup-tab" id="tab-mtron" data-tab="mtron" role="tab" aria-selected="true">mtron
+        </button>
+        <button type="button" class="popup-tab" id="tab-json" data-tab="json" role="tab" aria-selected="false" disabled>
+            json
+        </button>
     </div>
     <div id="popup-out" class="popup-out" role="tabpanel" aria-labelledby="tab-mtron">evaluating…</div>
     <div class="actions">
@@ -274,6 +252,7 @@
     import * as MtronEnvelope from '/js/mtron-envelope.js';
     import * as MtronIO from '/js/mtron-io.js';
     import * as MtronPanels from '/js/mtron-panels.js';
+
     "use strict";
 
     /* ── configuration ─────────────────────────────────────────────────────── */
@@ -287,6 +266,7 @@
     const offline = location.protocol === "file:";
     const httpBase = params.get("http") ||
         (offline ? "http://" + host + ":8777" : location.origin);
+
     /* bin/wsplus appends the codecs it speaks to the endpoint; so does the console, so the uri in the
        page is the uri you would hand the CLI. a ?ws= that already names codecs keeps its own. */
     function codecUrl(base) {
@@ -308,9 +288,41 @@
         }
     }
 
+    /* the page object is the APP's, never the instance's: a deployment names it in
+       metatron:page, else it sits beside the app (the served directory), else the
+       shipped path. an instance only ever supplies the machine's objects. */
+    function defaultPage() {
+        const declared = metaContent("metatron:page");
+        if (declared) return declared;
+        const at = location.pathname || "/";
+        const mfs = at.match(/^\/mfs\/(.*)$/);
+        if (mfs) return "mfs:" + mfs[1] + "default.mtron";
+        return "mfs:boot/space/web/default.mtron";
+    }
+
     const wsBase = params.get("ws") || metaContent("metatron:ws") ||
         (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
     const wsUrl = codecUrl(wsBase);
+    /* the app's own machine: the page object (layout) and the save live here, never
+       on the instance the ?ws names -- the shell and the data are separate things */
+    const localBase = (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
+    const localUrl = codecUrl(localBase);
+    const onInstance = (() => {
+        try {
+            return new URL(wsBase, location.href).host !== new URL(localBase, location.href).host;
+        } catch (ignored) {
+            return false;
+        }
+    })();
+
+    /* the instance switch is URL state: the app is the shell, ?ws is the data */
+    function viewPeer(url) {
+        const at = new URL(location.href);
+        if (url) at.searchParams.set("ws", url);
+        else at.searchParams.delete("ws");
+        location.href = at.pathname + at.search + at.hash;
+    }
+
     const rootAddr = metaContent("metatron:root");
 
     const $ = (sel, root) => (root || document).querySelector(sel);
@@ -320,7 +332,7 @@
     function withTimeout(ms) {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), ms);
-        return { signal: ctrl.signal, done: () => clearTimeout(timer) };
+        return {signal: ctrl.signal, done: () => clearTimeout(timer)};
     }
 
     function setDot(el, state) {
@@ -356,7 +368,11 @@
         if (obj.isStr() || obj.isInt() || obj.isReal() || obj.isBool() || obj.isBytes() || obj.isFail()) return obj.js;
         if (obj.isLst()) return obj.js.map(plain);
         if (obj.isRel()) return [plain(obj.js[0]), plain(obj.js[1])];
-        if (obj.isRec()) { const o = {}; for (const [k, v] of obj.js) o[k.toString()] = plain(v); return o; }
+        if (obj.isRec()) {
+            const o = {};
+            for (const [k, v] of obj.js) o[k.toString()] = plain(v);
+            return o;
+        }
         return obj.js;
     }
 
@@ -376,7 +392,7 @@
 
     /* one place that turns a col/row pair into the grid placement */
     function applySpan(el, col, row) {
-        const span = spanOf({ col: col, row: row });
+        const span = spanOf({col: col, row: row});
         el.dataset.col = String(span.col);
         el.dataset.row = String(span.row);
         el.style.gridColumn = span.col > 1 ? "span " + span.col : "";
@@ -393,13 +409,13 @@
                 method: "GET",
                 cache: "no-store",
                 redirect: "follow",
-                headers: { "Accept": "application/json, text/plain;q=0.9, */*;q=0.8" },
+                headers: {"Accept": "application/json, text/plain;q=0.9, */*;q=0.8"},
                 signal: guard.signal
             });
             const body = await r.text();
-            return { reachable: true, status: r.status, body: body, ms: Math.round(performance.now() - t) };
+            return {reachable: true, status: r.status, body: body, ms: Math.round(performance.now() - t)};
         } catch (e) {
-            return { reachable: false, status: 0, body: "", ms: Math.round(performance.now() - t), error: e.name };
+            return {reachable: false, status: 0, body: "", ms: Math.round(performance.now() - t), error: e.name};
         } finally {
             guard.done();
         }
@@ -414,8 +430,11 @@
             const finish = (ok, why) => {
                 if (settled) return;
                 settled = true;
-                try { if (socket) socket.close(); } catch (ignored) { }
-                resolve({ ok: ok, ms: Math.round(performance.now() - t), why: why });
+                try {
+                    if (socket) socket.close();
+                } catch (ignored) {
+                }
+                resolve({ok: ok, ms: Math.round(performance.now() - t), why: why});
             };
             const timer = setTimeout(() => finish(false, "timeout"), msTimeout || 2200);
             try {
@@ -425,9 +444,18 @@
                 finish(false, "unsupported");
                 return;
             }
-            socket.onopen = () => { clearTimeout(timer); finish(true); };
-            socket.onerror = () => { clearTimeout(timer); finish(false, "error"); };
-            socket.onclose = (e) => { clearTimeout(timer); finish(false, "closed " + e.code); };
+            socket.onopen = () => {
+                clearTimeout(timer);
+                finish(true);
+            };
+            socket.onerror = () => {
+                clearTimeout(timer);
+                finish(false, "error");
+            };
+            socket.onclose = (e) => {
+                clearTimeout(timer);
+                finish(false, "closed " + e.code);
+            };
         });
     }
 
@@ -450,7 +478,7 @@
             const language = kind === "json" ? "json" : "mtron";
             if (language !== "json" || (HL.getLanguage && HL.getLanguage("json"))) {
                 try {
-                    el.innerHTML = HL.highlight(text, { language: language, ignoreIllegals: true }).value;
+                    el.innerHTML = HL.highlight(text, {language: language, ignoreIllegals: true}).value;
                     return;
                 } catch (ignored) {
                     // a grammar that cannot read a fragment is not a reason to lose the fragment
@@ -517,6 +545,7 @@
         line("sys", "in application/x-mtron  ·  out application/x-mtron-ui (pretty)  ·  one frame in, one frame out");
         line("sys", "try  *</sys/space>   or   !*boot/args");
     }
+
     welcome();
 
     let socket = null;
@@ -526,8 +555,8 @@
         if (socket && socket.readyState === WebSocket.OPEN) return Promise.resolve(socket);
         if (socket && socket.readyState === WebSocket.CONNECTING) {
             return new Promise((resolve, reject) => {
-                socket.addEventListener("open", () => resolve(socket), { once: true });
-                socket.addEventListener("error", () => reject(new Error("cannot reach " + wsUrl)), { once: true });
+                socket.addEventListener("open", () => resolve(socket), {once: true});
+                socket.addEventListener("error", () => reject(new Error("cannot reach " + wsUrl)), {once: true});
             });
         }
         return new Promise((resolve, reject) => {
@@ -595,8 +624,51 @@
 
     function evaluateThen(expr) {
         const pending = chain.then(() => evaluate(expr));
-        chain = pending.catch(() => { });
+        chain = pending.catch(() => {
+        });
         return pending;
+    }
+
+    let localSocket = null;
+
+    function connectLocal() {
+        if (localSocket && localSocket.readyState === WebSocket.OPEN) return Promise.resolve(localSocket);
+        return new Promise((resolve, reject) => {
+            const ws = new WebSocket(localUrl);
+            const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
+            ws.onopen = () => {
+                clearTimeout(timer);
+                localSocket = ws;
+                resolve(ws);
+            };
+            ws.onerror = () => {
+                clearTimeout(timer);
+                reject(new Error("cannot reach " + localUrl));
+            };
+            ws.onclose = () => {
+                localSocket = null;
+            };
+        });
+    }
+
+    function localEval(expr) {
+        return connectLocal().then((ws) => new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                ws.removeEventListener("message", answer);
+                reject(new Error("no local answer in 30 s"));
+            }, 30000);
+            const answer = async (ev) => {
+                clearTimeout(timer);
+                ws.removeEventListener("message", answer);
+                try {
+                    resolve(await frameText(ev.data));
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            ws.addEventListener("message", answer);
+            ws.send(String(expr == null ? "" : expr));
+        }));
     }
 
     function run(expr, echo) {
@@ -658,9 +730,10 @@
     /* readers: one socket per output codec. x-mtron is the machine form, x-mtron-ui the
        human form (clipped), json the structure. each keeps its own queue and cache. */
     const readers = new Map();
+    const localReaders = new Map();
 
-    function readerUrl(mime) {
-        const url = new URL(wsBase, location.href);
+    function readerUrlFor(base, mime) {
+        const url = new URL(base, location.href);
         const query = url.search.replace(/^\?/, "").split("&")
             .filter((part) => part && !/^in=/.test(part) && !/^out=/.test(part));
         query.push("in=application/x-mtron");
@@ -669,31 +742,40 @@
         return url.toString();
     }
 
-    function readerFor(mime) {
-        let reader = readers.get(mime);
+    function readerFor(mime, pool) {
+        let reader = pool.get(mime);
         if (!reader) {
-            reader = { socket: null, chain: Promise.resolve(), cache: new Map() };
-            readers.set(mime, reader);
+            reader = {socket: null, chain: Promise.resolve(), cache: new Map()};
+            pool.set(mime, reader);
         }
         return reader;
     }
 
-    function connectReader(mime) {
-        const reader = readerFor(mime);
+    function connectReader(mime, base, pool) {
+        const reader = readerFor(mime, pool);
         if (reader.socket && reader.socket.readyState === WebSocket.OPEN) return Promise.resolve(reader.socket);
         return new Promise((resolve, reject) => {
-            const socket = new WebSocket(readerUrl(mime));
+            const socket = new WebSocket(readerUrlFor(base, mime));
             const timer = setTimeout(() => reject(new Error(mime + " reader timeout")), 5000);
-            socket.onopen = () => { clearTimeout(timer); reader.socket = socket; resolve(socket); };
-            socket.onerror = () => { clearTimeout(timer); reject(new Error("cannot open the " + mime + " reader")); };
-            socket.onclose = () => { if (reader.socket === socket) reader.socket = null; };
+            socket.onopen = () => {
+                clearTimeout(timer);
+                reader.socket = socket;
+                resolve(socket);
+            };
+            socket.onerror = () => {
+                clearTimeout(timer);
+                reject(new Error("cannot open the " + mime + " reader"));
+            };
+            socket.onclose = () => {
+                if (reader.socket === socket) reader.socket = null;
+            };
         });
     }
 
-    function readAs(mime, vid) {
-        const reader = readerFor(mime);
+    function readVia(mime, vid, base, pool) {
+        const reader = readerFor(mime, pool);
         if (reader.cache.has(vid)) return Promise.resolve(reader.cache.get(vid));
-        const run = reader.chain.then(() => connectReader(mime)).then((socket) => new Promise((resolve, reject) => {
+        const run = reader.chain.then(() => connectReader(mime, base, pool)).then((socket) => new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
                 socket.removeEventListener("message", answer);
                 reject(new Error("no " + mime + " answer in 15 s"));
@@ -714,8 +796,19 @@
             socket.addEventListener("message", answer);
             socket.send(vid.charAt(0) === "<" ? "*" + vid : "*<" + vid + ">");
         }));
-        reader.chain = run.catch(() => { });
+        reader.chain = run.catch(() => {
+        });
         return run;
+    }
+
+    /* the instance's data */
+    function readAs(mime, vid) {
+        return readVia(mime, vid, wsBase, readers);
+    }
+
+    /* the app's own page object */
+    function localRead(mime, vid) {
+        return readVia(mime, vid, localBase, localReaders);
     }
 
     function readJson(vid) {
@@ -731,8 +824,8 @@
        projection (a tree, a count) instead of one object's value. */
     function evalJson(expr) {
         const mime = "application/json";
-        const reader = readerFor(mime);
-        const run = reader.chain.then(() => connectReader(mime)).then((socket) => new Promise((resolve, reject) => {
+        const reader = readerFor(mime, readers);
+        const run = reader.chain.then(() => connectReader(mime, wsBase, readers)).then((socket) => new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
                 socket.removeEventListener("message", answer);
                 reject(new Error("no json answer in 15 s"));
@@ -750,7 +843,8 @@
             socket.addEventListener("message", answer);
             socket.send(String(expr));
         }));
-        reader.chain = run.catch(() => { });
+        reader.chain = run.catch(() => {
+        });
         return run;
     }
 
@@ -759,7 +853,7 @@
        pinned card (title left, vid right, unpin). the card owns its views and
        reads; the codecs are shared. */
     function emptyCard() {
-        return { views: {}, tab: "mtron", env: null, prettyLoaded: false, jsonLoaded: false, panel: null, history: [] };
+        return {views: {}, tab: "mtron", env: null, prettyLoaded: false, jsonLoaded: false, panel: null, history: []};
     }
 
     function cardButton(host, tab) {
@@ -809,8 +903,8 @@
     }
 
     function setCardView(card, host, tab, value, kind) {
-        if (kind === "dom") card.views[tab] = { node: value, kind: "dom" };
-        else card.views[tab] = { text: value, kind: kind || "sys" };
+        if (kind === "dom") card.views[tab] = {node: value, kind: "dom"};
+        else card.views[tab] = {text: value, kind: kind || "sys"};
         const button = cardButton(host, tab);
         if (button) {
             button.disabled = false;
@@ -885,9 +979,13 @@
             eval: (expr) => evaluateThen(expr),
             evalJson: (expr) => evalJson(expr),
             read: (vid) => vid ? readJson(vid) : Promise.resolve(null),
+            view: (url) => viewPeer(url),
+            instance: wsBase,
             mtron: (expr) => evalMtron(expr),
             open: (env) => inspectReference(env || {}),
-            frame: (vid) => { pageFrame = (!vid || vid === "/.") ? null : String(vid); },
+            frame: (vid) => {
+                pageFrame = (!vid || vid === "/.") ? null : String(vid);
+            },
             paint: (el, text, kind) => paint(el, text, kind),
             announce: (tools) => announceMcpTools(tools)
         };
@@ -924,8 +1022,11 @@
         function highlightInto(el, seg) {
             if (!seg) return;
             if (window.hljs) {
-                try { el.innerHTML = window.hljs.highlight(seg, { language: "mtron", ignoreIllegals: true }).value; return; }
-                catch (ignored) { }
+                try {
+                    el.innerHTML = window.hljs.highlight(seg, {language: "mtron", ignoreIllegals: true}).value;
+                    return;
+                } catch (ignored) {
+                }
             }
             el.textContent = seg;
         }
@@ -946,7 +1047,7 @@
                     ev.preventDefault();
                     ev.stopPropagation();
                     if (ev.shiftKey && obj.vid) {
-                        open({ tid: null, vid: obj.vid + "?docq", raw: "!*<" + obj.vid + "?docq>", shortTid: "docs" });
+                        open({tid: null, vid: obj.vid + "?docq", raw: "!*<" + obj.vid + "?docq>", shortTid: "docs"});
                     } else {
                         open(obj);
                     }
@@ -1007,8 +1108,8 @@
             jsonLoaded: card.jsonLoaded,
             panel: card.panel
         });
-        inspectCard(card, host, { tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid },
-            { open: true, keepHistory: true, expr: "nested " + obj.tid });
+        inspectCard(card, host, {tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid},
+            {open: true, keepHistory: true, expr: "nested " + obj.tid});
     }
 
     function backCard(card, host) {
@@ -1041,7 +1142,7 @@
     const DIALOG = emptyCard();
 
     function inspectReference(env) {
-        inspectCard(DIALOG, dialogHost, env, { open: true });
+        inspectCard(DIALOG, dialogHost, env, {open: true});
     }
 
     function openNested(obj) {
@@ -1080,7 +1181,7 @@
             out: root.querySelector(".popup-out"),
             dot: null,
             back: null,
-            openObject: (obj) => inspectReference({ tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid })
+            openObject: (obj) => inspectReference({tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid})
         };
         const card = emptyCard();
         root.querySelector(".pin-unpin").addEventListener("click", () => {
@@ -1094,7 +1195,7 @@
                 root.dataset.view = button.dataset.tab;
             });
         });
-        inspectCard(card, host, env, { open: false });
+        inspectCard(card, host, env, {open: false});
         if (host.title) host.title.textContent = root.dataset.label;
         if (opts.view) cardTabTo(card, host, opts.view);
         const parent = opts.parent || $("#pinned");
@@ -1128,14 +1229,21 @@
         run(value);
     });
 
-    $("#clear").addEventListener("click", () => { welcome(); exprInput.focus(); });
+    $("#clear").addEventListener("click", () => {
+        welcome();
+        exprInput.focus();
+    });
 
     /* history — persisted so a reload keeps the last few expressions */
     const HISTORY_KEY = "metatron.console.history";
     /* named `commands`, not `history`: a top-level let would shadow window.history,
        and cleanActionParams() needs the real one */
     let commands = [];
-    try { commands = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch (ignored) { commands = []; }
+    try {
+        commands = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    } catch (ignored) {
+        commands = [];
+    }
     let cursor = commands.length;
 
     function remember(expr) {
@@ -1144,7 +1252,10 @@
         commands.push(expr);
         if (commands.length > 100) commands = commands.slice(-100);
         cursor = commands.length;
-        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(commands)); } catch (ignored) { }
+        try {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(commands));
+        } catch (ignored) {
+        }
     }
 
     exprInput.addEventListener("keydown", (ev) => {
@@ -1178,7 +1289,10 @@
     /* the mcp_server card is the surface readout of an mcp_client's tool catalog */
     function announceMcpTools(tools) {
         const count = tools.length;
-        const set = (sel, text) => { const el = $(sel); if (el) el.textContent = text; };
+        const set = (sel, text) => {
+            const el = $(sel);
+            if (el) el.textContent = text;
+        };
         set("#m-tools", count + (count === 1 ? " tool" : " tools"));
         set("#m-mcp", count + " tools");
         set("#note-tools", count + " exposed");
@@ -1201,7 +1315,7 @@
         const host = $("#mcp-panel-host");
         if (!factory || !host) return;
         host.appendChild(factory(
-            { tid: "mcp_client", vid: null, raw: "" },
+            {tid: "mcp_client", vid: null, raw: ""},
             {
                 eval: (expr) => evaluateThen(expr),
                 paint: (el, text, kind) => paint(el, text, kind),
@@ -1251,9 +1365,9 @@
         if (!expr) return;
         const surface = at && SURFACES[at] ? at : "web/console";
         if (at && !SURFACES[at]) line("sys", "unknown at=" + at + " — using web/console");
-        SURFACES[surface]({ expr: expr, at: surface });
+        SURFACES[surface]({expr: expr, at: surface});
         if (surface === "web/console")
-            $("#console-card").scrollIntoView({ behavior: "smooth", block: "center" });
+            $("#console-card").scrollIntoView({behavior: "smooth", block: "center"});
     }
 
     function actionHref(expr, at) {
@@ -1289,7 +1403,7 @@
         evaluateThen(action.expr).then((result) => {
             const env = MtronEnvelope ? MtronEnvelope.parse(result) : null;
             cardDot(host, "up");
-            inspectCard(DIALOG, host, env || { raw: result }, { open: true, expr: "mtron> " + action.expr });
+            inspectCard(DIALOG, host, env || {raw: result}, {open: true, expr: "mtron> " + action.expr});
         }).catch((error) => {
             cardDot(host, "bad");
             setCardView(DIALOG, host, "mtron", "!!! " + (error && error.message ? error.message : String(error)), "err");
@@ -1331,7 +1445,7 @@
     /* ── physical machine stats ─────────────────────────────────────────────
        evaluate sys_stat() on the x-mtron socket, so the byte values keep their
        unit — the json codec drops it. */
-    const BYTE_UNITS = { bB: 1, kB: 1024, mB: 1048576, gB: 1073741824, tB: 1099511627776, pB: 1125899906842624 };
+    const BYTE_UNITS = {bB: 1, kB: 1024, mB: 1048576, gB: 1073741824, tB: 1099511627776, pB: 1125899906842624};
 
     function statVal(v) {
         return v && typeof v === "object" && "js" in v ? v.js : v;
@@ -1369,7 +1483,10 @@
     function renderStats(s) {
         const el = $("#topbar-stats");
         if (!el || !s || !s.isRec || !s.isRec()) return;
-        const g = (key) => { for (const [k, v] of s.js) if (k.toString() === key) return v; return undefined; };
+        const g = (key) => {
+            for (const [k, v] of s.js) if (k.toString() === key) return v;
+            return undefined;
+        };
         const chips = [];
         if (location.host) chips.push(statChip("at", location.host));
         const memFree = statBytes(g("free_mem_phys"));
@@ -1397,7 +1514,10 @@
         const mime = "application/x-mtron";
         const reader = readerFor(mime);
         const run = reader.chain.then(() => connectReader(mime)).then((socket) => new Promise((resolve) => {
-            const timer = setTimeout(() => { socket.removeEventListener("message", answer); resolve(""); }, 8000);
+            const timer = setTimeout(() => {
+                socket.removeEventListener("message", answer);
+                resolve("");
+            }, 8000);
             const answer = (ev) => {
                 clearTimeout(timer);
                 socket.removeEventListener("message", answer);
@@ -1406,7 +1526,8 @@
             socket.addEventListener("message", answer);
             socket.send(String(expr));
         }));
-        reader.chain = run.catch(() => { });
+        reader.chain = run.catch(() => {
+        });
         return run;
     }
 
@@ -1424,6 +1545,23 @@
     function renderIdentity() {
         $("#ws-ep").textContent = wsBase;
         $("#ws-ep").title = wsUrl;
+        const instanceEl = $("#instance");
+        if (instanceEl) {
+            try {
+                instanceEl.textContent = new URL(wsBase, location.href).host;
+            } catch (ignored) {
+                instanceEl.textContent = "this machine";
+            }
+            instanceEl.title = wsUrl;
+        }
+        const localEl = $("#instance-local");
+        if (localEl) {
+            localEl.hidden = !onInstance;
+            localEl.onclick = (ev) => {
+                ev.preventDefault();
+                viewPeer("");
+            };
+        }
         const boot = metaContent("metatron:boot");
         const bootEl = $("#boot-file");
         if (boot && bootEl) bootEl.textContent = boot;
@@ -1481,7 +1619,9 @@
         } catch (ignored) {
             line("err", "clipboard unavailable");
         }
-        setTimeout(() => { button.textContent = "copy"; }, 1200);
+        setTimeout(() => {
+            button.textContent = "copy";
+        }, 1200);
     });
 
     /* an action carried on this page's own url waits for one click */
@@ -1490,8 +1630,12 @@
     if (actionExpr) showPending(actionExpr, actionAt);
 
     refresh();
-    setInterval(() => { if (!document.hidden) refresh(); }, 15000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+    setInterval(() => {
+        if (!document.hidden) refresh();
+    }, 15000);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) refresh();
+    });
 
     /* the page itself is the splash_page card: [panel][mtron][json].
        ?vid=<vid> or ?page=<url with ?vid=> loads that splash_page; save writes it back. */
@@ -1503,7 +1647,8 @@
         const out = $("#page-encoding-out");
         const pageSave = $("#page-save");
         const loadedGrid = $("#page-loaded");
-        let PAGE = "mfs:boot/space/web/default.mtron";
+        let PAGE = defaultPage();
+        let pageOrigin = "local";
         const cache = new Map();
         let currentView = "panel";
         let pageTitle = "metatron";
@@ -1512,10 +1657,20 @@
         const saveVid = $("#save-as-vid");
         const saveError = $("#save-as-error");
 
+        /* the page object lives on the app's own machine, so the layout and its
+           save never depend on what a peer happens to expose */
+        function pageRead(mime, vid) {
+            return localRead(mime, vid);
+        }
+
+        function pageEval(expr) {
+            return localEval(expr);
+        }
+
         const BEFORE = [
-            { tid: "/m/web/http/http_server", label: "http server", col: 1, row: 1, vid: "/sys/space/web/http" },
-            { tid: "/m/web/ws/ws_server", label: "ws server", col: 1, row: 1, vid: "/sys/space/web/ws" },
-            { tid: "/m/sys/ui/console", label: "console", col: 4, row: 2, vid: "/usr/marko/console" }
+            {tid: "/m/web/http/http_server", label: "http server", col: 1, row: 1, vid: "/sys/space/web/http"},
+            {tid: "/m/web/ws/ws_server", label: "ws server", col: 1, row: 1, vid: "/sys/space/web/ws"},
+            {tid: "/m/sys/ui/console", label: "console", col: 4, row: 2, vid: "/usr/marko/console"}
         ];
         const KNOWN = {
             http_server: ["/m/web/http/http_server", "/sys/space/web/http"],
@@ -1523,7 +1678,7 @@
             console: ["/m/sys/ui/console", "/usr/marko/console"]
         };
         const AFTER = [
-            { tid: "mcp_client", label: "mcp tools", col: 2, row: 1 }
+            {tid: "mcp_client", label: "mcp tools", col: 2, row: 1}
         ];
 
         /* the shipped page is read-only: saving it asks where the copy should live */
@@ -1588,8 +1743,8 @@
             }
             out.textContent = "reading " + PAGE + "…";
             const read = view === "json"
-                ? readJson(PAGE).then((value) => typeof value === "string" ? value : JSON.stringify(value, null, 2))
-                : readPretty(PAGE);
+                ? pageRead("application/json", PAGE).then((value) => typeof value === "string" ? value : JSON.stringify(value, null, 2))
+                : pageRead("application/x-mtron-ui", PAGE).then((value) => typeof value === "string" ? value : String(value));
             read.then((text) => {
                 cache.set(view, text);
                 paintPage(text, view);
@@ -1611,7 +1766,7 @@
                         row: Number(el.dataset.row) || 1
                     }));
             }
-            const cards = BEFORE.map((card) => ({ ...card }));
+            const cards = BEFORE.map((card) => ({...card}));
             $$("#pinned .pin-card").forEach((root) => {
                 if (!root.dataset.tid) return;
                 cards.push({
@@ -1623,7 +1778,7 @@
                     row: Number(root.dataset.row) || 1
                 });
             });
-            AFTER.forEach((card) => cards.push({ ...card }));
+            AFTER.forEach((card) => cards.push({...card}));
             return cards;
         }
 
@@ -1635,13 +1790,36 @@
                 const named = url.searchParams.get("vid");
                 if (named) vid = named;
                 if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
-            } catch (ignored) { }
+            } catch (ignored) {
+            }
             if (!MtronIO) throw new Error("mtron-io.js is not loaded");
-            /* the vid is used exactly as given: mfs:boot/... is the mfs scheme, not the /mfs space path */
-            const raw = await readAs("application/x-mtron", vid);
-            const parsed = MtronIO.read(String(raw == null ? "" : raw));
-            const page = plain(parsed);
-            if (!page || !page.layout) throw new Error("no splash_page object at " + vid);
+            /* the vid is used exactly as given: mfs:boot/... is the mfs scheme, not the /mfs space path.
+               only the app's own machine is asked for the page object; an older app build names
+               its source tree fs: where the current one says mfs:, so both spellings are tried.
+               when neither answers, the app's built-in layout (the static page) carries the page. */
+            const swapped = /^mfs:/.test(vid) ? "fs:" + vid.slice(4)
+                : /^fs:/.test(vid) ? "mfs:" + vid.slice(3) : null;
+            const attempts = [{origin: "local", vid}];
+            if (swapped) attempts.push({origin: "local", vid: swapped});
+            let last = null;
+            let page = null;
+            let loaded = null;
+            for (const attempt of attempts) {
+                try {
+                    const raw = await localRead("application/x-mtron", attempt.vid);
+                    const sourceText = String(raw == null ? "" : raw).trim();
+                    if (!sourceText || sourceText === "noobj" || /^fail::/.test(sourceText))
+                        throw new Error(sourceText || "noobj");
+                    const value = plain(MtronIO.read(sourceText));
+                    if (!value || !value.layout) throw new Error("no splash_page object at " + attempt.vid);
+                    page = value;
+                    loaded = attempt;
+                    break;
+                } catch (error) {
+                    last = error;
+                }
+            }
+            if (!page) throw last || new Error("no page at " + vid);
             const layout = Array.isArray(page.layout) ? page.layout : [];
             loadedGrid.textContent = "";
             layout.forEach((rec) => {
@@ -1655,7 +1833,7 @@
                 const span = spanOf(rec.span);
                 const view = wordOf(rec.view) || "panel";
                 if (cardVid) {
-                    mountPinnedCard({ tid: cardTid, vid: cardVid, raw: "" }, {
+                    mountPinnedCard({tid: cardTid, vid: cardVid, raw: ""}, {
                         label: rec.label ? String(rec.label) : tid,
                         view: view,
                         col: span.col,
@@ -1673,20 +1851,29 @@
                     loadedGrid.appendChild(card);
                 }
             });
-            $$("#page-panel main > *").forEach((el) => { if (el !== loadedGrid) el.hidden = true; });
+            $$("#page-panel main > *").forEach((el) => {
+                if (el !== loadedGrid) el.hidden = true;
+            });
             loadedGrid.hidden = false;
-            PAGE = vid;
+            PAGE = loaded.vid;
+            pageOrigin = loaded.origin;
             const barVid = $(".page-vid");
-            if (barVid) barVid.textContent = vid;
+            if (barVid) barVid.textContent = loaded.vid;
             updateSaveButton();
-            if (page.title) { pageTitle = String(page.title); document.title = pageTitle; }
+            if (page.title) {
+                pageTitle = String(page.title);
+                document.title = pageTitle;
+            }
             cache.clear();
             if (!encoding.hidden) show(currentView);
         }
 
         async function savePage(destination) {
             const vid = String(destination == null ? PAGE : destination);
-            if (pageSave) { pageSave.disabled = true; pageSave.textContent = "saving…"; }
+            if (pageSave) {
+                pageSave.disabled = true;
+                pageSave.textContent = "saving…";
+            }
             try {
                 const layout = pageCards().map((card) => {
                     const parts = ["tid=><" + card.tid + ">"];
@@ -1704,7 +1891,7 @@
                 const value = "[title=>'" + String(pageTitle).replace(/'/g, "\\'") + "',layout=>[" + layout.join(",") + "]]";
                 const target = String(vid).charAt(0) === "<" ? String(vid) : "<" + vid + ">";
                 const expr = target + " -> splash_page::" + value;
-                const result = await evaluate(expr);
+                const result = await pageEval(expr);
                 const text = String(result == null ? "" : result);
                 if (/^fail::/.test(text)) throw new Error(text);
                 cache.clear();
@@ -1762,7 +1949,8 @@
             });
         } else {
             /* no source in the url: load the saved default page, falling back to the static page */
-            loadPage(PAGE).catch(() => { });
+            loadPage(PAGE).catch(() => {
+            });
         }
     })();
 </script>

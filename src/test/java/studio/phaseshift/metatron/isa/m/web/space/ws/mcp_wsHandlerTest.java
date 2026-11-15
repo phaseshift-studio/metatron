@@ -183,6 +183,18 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
         assertTrue(result.isNoObj(), "notification should produce noobj (no response)");
     }
 
+    /**
+     * A client's roots/list_changed notification must not be answered — the ws carrier sends a frame only for
+     * a non-noobj result, so noobj here is the wire behaviour (nothing sent), not just an internal convention.
+     */
+    @Test
+    public void testRootsListChangedSendsNoFrame() {
+        final Obj result = server.at(uri(ON_MESSAGE)).apply(rec(
+                uri(JSONRPC), uri("2.0"),
+                uri("method"), uri("notifications/roots/list_changed")));
+        assertTrue(result.isNoObj(), "roots/list_changed should produce noobj (no frame): " + result);
+    }
+
     @Test
     public void testUnknownMethodProducesError() {
         final Rec res = mcpRequest(rec(
