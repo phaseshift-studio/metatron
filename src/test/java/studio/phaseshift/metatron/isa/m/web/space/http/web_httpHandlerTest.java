@@ -60,7 +60,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         this.contentSpace = memSpace.of(rec(
                 uri(PATTERN), uri("mem:test-pages/#"),
                 uri(ROUTE), rec()
-        ), f("/sys/space/test/web-content/" + getClass().getSimpleName()));
+        ), f("/memory/space/test/web-content/" + getClass().getSimpleName()));
         // Populate with test content
         Machine.write(f("mem:test-pages/index.html"), str("<html><body><h1>Hello World</h1></body></html>"));
         Machine.write(f("mem:test-pages/about.html"), str("<html><body><h1>About</h1></body></html>"));
@@ -177,7 +177,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
             this.contentSpace = memSpace.of(rec(
                     uri(PATTERN), uri("mem:test-pages/#"),
                     uri(ROUTE), rec()
-            ), f("/sys/space/test/web-int/" + getClass().getSimpleName()));
+            ), f("/memory/space/test/web-int/" + getClass().getSimpleName()));
             Machine.write(f("mem:test-pages/index.html"),
                     str("<html><body><h1>Hello World</h1></body></html>", HTML_TID, null));
             Machine.write(f("mem:test-pages/about.html"),

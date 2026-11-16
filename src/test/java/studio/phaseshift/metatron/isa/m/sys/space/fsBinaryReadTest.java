@@ -70,7 +70,7 @@ class fsBinaryReadTest extends AbstractMetatronTest {
         fsSpace.of(FileSystems.getDefault(), rec(
                         uri(PATTERN), uri(f("mfs:#")),
                         uri(ROUTE), rec(uri(f("mfs:")), uri(f(WEBSITE.toAbsolutePath().toString())))),
-                f("/sys/space/test/fsBinaryRead"));
+                f("/memory/space/test/fsBinaryRead"));
     }
 
     /**

@@ -66,7 +66,7 @@ public class PendingWritesTest extends AbstractMetatronTest {
      * The address the scratch space is indexed at. It is a vid rather than a data path: it names the space itself, and
      * nothing in the tree mounts under it.
      */
-    private static final fURI SCRATCH_VID = f("/sys/space/test/pendingwrites");
+    private static final fURI SCRATCH_VID = f("/memory/space/test/pendingwrites");
 
     /**
      * The address root the drains publish under — a real, writable jurisdiction, so a drained write can be read back

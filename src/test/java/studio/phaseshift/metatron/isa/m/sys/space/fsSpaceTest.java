@@ -72,7 +72,7 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
                                 uri("perl"), uri("/usr/bin/perl"),
                                 uri("mtron"), uri("/bin/mtron")),
                         uri(ROUTE), rec(uri("test:"), uri("/tmp/fsspace_test"))),
-                f("/sys/space/fs")));
+                f("/memory/space/fs")));
     }
 
     private static void wipeFsSpaceDir() {

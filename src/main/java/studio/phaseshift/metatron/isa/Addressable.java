@@ -26,13 +26,12 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.Tokens.QPROC;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
 /**
  * Something a {@code vid} can be read from and written to — the one contract every data source a
@@ -74,19 +73,16 @@ public interface Addressable {
      * performs on itself by calling its own {@code read}/{@code write} directly.
      */
     default Lst qs() {
-        if (this instanceof Rec rec) {
-            final Obj qs = rec.at(uri(QPROC));
-            if (!qs.isNoObj())
-                return qs.asLst();
-        }
-        return lst(mutableList());
+        return this instanceof Rec rec ? rec.at(uri(QPROC)).orElse(lst0()) : lst0();
     }
 
     /**
-     * Does this source declare the given q-proc, matched by its pattern?
+     * Does this source declare a q-proc whose pattern MATCHES {@code qPattern}? The test is directional: the
+     * declared pattern is the pattern, and the query is the candidate — so {@code +/#} asks whether the source
+     * declares ANY q-proc at all, and a source that declares none answers false for every query.
      */
     default boolean hasQ(final fURI qPattern) {
-        return qPattern.equals(ALL) || this.qs().lstValue().stream().anyMatch(q -> qPattern.test(q.<QProc>as().pattern()));
+        return this.qs().lstValue().stream().anyMatch(q -> q.<QProc>as().pattern().test(qPattern));
     }
 
     /**
@@ -98,7 +94,7 @@ public interface Addressable {
      */
     default Addressable addQ(final QProc qProc) {
         if (!(this instanceof Rec rec))
-            throw MTronException.of("source %s cannot carry q-procs: it has no rec to declare them in", this.pattern());
+            throw MTronException.of("source %s cannot carry qprocs: it has no rec to declare them in", this.pattern());
         final Obj key = uri(QPROC);
         if (rec.at(key).isNoObj())
             rec.at(key, lst(), MUTABLE);

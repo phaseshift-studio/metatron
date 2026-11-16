@@ -114,7 +114,7 @@ public class CommonUtilTest extends AbstractMetatronTest {
     public void testTreeConsumer() {
         final fsSpace space = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("local:#"),
-                uri(ROUTE), rec(uri("local:"), uri("/tmp/common_utils_test"))).vid(f("/sys/space/local")))).apply(noobj()).as();
+                uri(ROUTE), rec(uri("local:"), uri("/tmp/common_utils_test"))).vid(f("/memory/space/local")))).apply(noobj()).as();
         LOG.warn(space);
         Machine.current().memory().addSpace(space);
         final List<CommonUtil.TreeEntry> nodes = new ArrayList<>();

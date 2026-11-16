@@ -163,16 +163,16 @@ public class MachineSpaceTest extends AbstractMetatronTest {
 
     @Test
     public void testASpaceBeneathSysStillGainsItsAddresses() {
-        // a space mounted beneath ~/sys (a tbleSpace's schema instset at /sys/space/<name>/instset/# is one) claims its
+        // a space mounted beneath ~/sys (a tbleSpace's schema instset at /memory/space/<name>/instset/# is one) claims its
         // addresses more specifically than the machine's space does, so it answers them
-        final fURI vid = f("/sys/space/beneath/space");
-        final memSpace beneath = memSpace.of(f("/sys/space/beneath/#"), vid);
+        final fURI vid = f("/memory/space/beneath/space");
+        final memSpace beneath = memSpace.of(f("/memory/space/beneath/#"), vid);
         try {
-            Machine.write(f("/sys/space/beneath/tally"), jnt(4));
-            assertSame(beneath, Machine.root().memory().findSpace(f("/sys/space/beneath/tally")), "the more specific space gains it");
-            checkEquality(LOG, jnt(4), beneath.read(f("/sys/space/beneath/tally")), true);
-            assertTrue(spaceOf(Machine.root()).read(f("/sys/space/beneath/tally")).isNoObj(), "the machine's space holds no copy");
-            checkEquality(LOG, jnt(4), Machine.read(f("/sys/space/beneath/tally")), true);
+            Machine.write(f("/memory/space/beneath/tally"), jnt(4));
+            assertSame(beneath, Machine.root().memory().findSpace(f("/memory/space/beneath/tally")), "the more specific space gains it");
+            checkEquality(LOG, jnt(4), beneath.read(f("/memory/space/beneath/tally")), true);
+            assertTrue(spaceOf(Machine.root()).read(f("/memory/space/beneath/tally")).isNoObj(), "the machine's space holds no copy");
+            checkEquality(LOG, jnt(4), Machine.read(f("/memory/space/beneath/tally")), true);
             // the rest of ~/sys is still the machine's space's
             assertSame(spaceOf(Machine.root()), Machine.root().memory().findSpace(f("/sys/tally")));
         } finally {

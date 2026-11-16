@@ -76,7 +76,7 @@ public abstract class AbstractHTTPServerTest extends AbstractMetatronTest {
         this.testSpace = memSpace.of(rec(
                 uri(PATTERN), uri(testSpacePattern()),
                 uri(ROUTE), rec()
-        ), f("/sys/space/test/http/" + getClass().getSimpleName()));
+        ), f("/memory/space/test/http/" + getClass().getSimpleName()));
         this.handler = createHandler(createTestVid());
     }
 

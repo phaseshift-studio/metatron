@@ -79,7 +79,7 @@ public class TreeWidgetTest extends AbstractMetatronTest {
     @BeforeAll
     static void setUp() {
         AbstractMetatronTest.begin();
-        final memSpace space = memSpace.of(rec(uri(PATTERN), uri("local:#")), f("/sys/space/local"));
+        final memSpace space = memSpace.of(rec(uri(PATTERN), uri("local:#")), f("/memory/space/local"));
         Machine.current().memory().addSpace(space);
         // Build a deterministic tree in memory
         Machine.write(f("local:docs"), str("docs/"));

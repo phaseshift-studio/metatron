@@ -21,13 +21,13 @@ package studio.phaseshift.metatron.isa;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.ArrayList;
@@ -37,11 +37,12 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
-    protected final fURI pattern;
+    protected fURI pattern;
     protected SJVM sjvm;
     protected GraphittyLogger LOG;
 
@@ -54,6 +55,10 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         InstSet.JREService.Helper.verifyClass(this.getClass(), vid);
         this.sjvm = sjvm;
         this.at(PATTERN, uri(this.pattern = this.at(PATTERN).apply().uriValue()), MUTABLE);
+        // A SPACE ALWAYS CARRIES ITS Q-PROC SLOT: an addressable list is what lets `@<space>/q >>= …` append a q-proc
+        // after boot (an absent slot reads noobj, and an update on noobj has nothing to write back)
+        if (this.at(uri(QPROC)).isNoObj())
+            this.at(uri(QPROC), lst(), MUTABLE);
         LOG = Graphitty.log(this);
         // Don't auto-register InstSets - they're registered via import AFTER full construction.
         // A space self-registers into the memory of the machine being constructed IN (current), not the root.
@@ -125,7 +130,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
             final Obj rootConstraint = this.at(uri(ROOT)).orElse(null);
             if (rootConstraint != null && !rootConstraint.isNoObj()
                     && !vid.isBranch()
-                    && vid.segments().size() >= 1 && vid.segments().size() <= 2
+                    && !vid.segments().isEmpty() && vid.segments().size() <= 2
                     && !obj.test(rootConstraint.as())) {
                 return fail("space %s requires %s at root; got %s", this.vid(), rootConstraint, obj.type());
             }

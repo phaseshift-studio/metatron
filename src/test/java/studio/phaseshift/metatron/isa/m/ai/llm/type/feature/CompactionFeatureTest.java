@@ -65,7 +65,7 @@ public class CompactionFeatureTest extends AbstractMetatronTest {
 
     @BeforeAll
     public static void mountCompactionSpace() {
-        memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
+        memSpace.of(f("/usr/test/#"), f("/memory/space/usr/test")).addQ(incrQ());
     }
 
     // ── Message factories ────────────────────────────────────────────

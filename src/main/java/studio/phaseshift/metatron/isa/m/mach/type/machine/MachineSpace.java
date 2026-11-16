@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * machine's memory at {@code <vid>/#} (the root's is {@code /#}), so memory's ordinary routing reaches it (Marko,
  * 2026-11-05: the sphere and the machine's data level are one space, "necessary and sufficient"). The innermost level
  * answers first ({@link studio.phaseshift.metatron.isa.m.mach.type.memory.MemoryUnion}), {@code ~} resolves there, and
- * a more specific space — a schema instset at {@code /sys/space/<name>/instset/#}, a space mounted beneath the vid —
+ * a more specific space — a schema instset at {@code ~/memory/space/<name>/instset/#}, a space mounted beneath the vid —
  * wins its own addresses, as the most specific space always does. What it answers itself:
  * <ul>
  *     <li>{@code <vid>} — the machine itself, live;</li>
@@ -63,9 +63,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     that ran it ({@code computer/<n>/fail}), whose {@code ?incrq} keys this space's q-processors mint;</li>
  *     <li>{@code <vid>/compiler/…} — written in place: the typer's state lives at
  *     {@code <vid>/compiler/typer/check};</li>
- *     <li>{@code <vid>/<component>/analyzer/…} — any component's analyzer, the network's included: read live through
- *     the component that carries it, written in place (a write declares its settings, never replaces it), and
- *     subscribed to here, so one {@code ?subq} registry hears every analyzer's publication;</li>
+ *     <li>{@code <vid>/<component>/analyzer/…} — a measuring component's analyzer (the network's, the processor's): read
+ *     live through the component that carries it, written in place (a write declares its settings, never replaces it),
+ *     and subscribed to here, so one {@code ?subq} registry hears every analyzer's publication. A data space's metrics
+ *     are its {@code ?analq} q-proc, not a component analyzer;</li>
  *     <li>{@code <vid>/<component>/…} — any component, read live; a branch pattern answers each match at its address
  *     ({@code vid => obj}), as a space's does, which is what {@code @} needs to anchor a value. What the component
  *     does not hold, the store answers: a write under {@code ~/memory} or {@code ~/instset} that is no part of it
@@ -155,6 +156,7 @@ public final class MachineSpace extends memSpace {
         // machine's to answer, as every component's is: one ?subq registry then hears every analyzer
         // (~/+/analyzer/analysis?subq), and the analyzer is read live through the component that carries it
         if (NETWORK.equals(part) && this.below(vid) && !this.analyzes(vid))
+            // the network IS a space now: its own read applies the layer, so bracketing here would double the hooks
             return this.owner.network().read(vid);
         // ~/sys, and a query on the machine or a component, are the store's: the component itself is no doc
         if (SYS.equals(part) || vid.hasQ())
@@ -224,13 +226,29 @@ public final class MachineSpace extends memSpace {
         // a component is the machine's own rec, so its write folds there — through the COMPONENT's own rec, which is
         // the object the machine holds (writing the machine rec itself would re-type the whole machine). The compiler
         // holds the typer's state; the processor indexes its computers and holds the fail stacks, written through the
-        // q-processors this space speaks so a fail's ?incrq mints its key in the stack it is filed in
-        final boolean folds = (COMPILER.equals(part) && !vid.hasQ())
+        // q-processors this space speaks so a fail's ?incrq mints its key in the stack it is filed in. THE MEMORY holds
+        // the space index at <vid>/memory/space, so a write below it is applied to that index in place
+        final boolean folds = (MEMORY.equals(part) && this.below(vid))
+                || (COMPILER.equals(part) && !vid.hasQ())
                 || (PROCESSOR.equals(part) && (!vid.hasQ() || vid.hasQ(QCollection.INCRQ)));
         if (!folds)
             return super.write(vid, obj);
         final List<String> segments = vid.qLess().resolve().segments();
         final Obj below = uri(String.join("/", segments.subList(this.depth + 1, segments.size())));
+        if (MEMORY.equals(part))
+            // THE MEMORY IS THE SOLE OWNER OF ITS SPACES: <vid>/memory/space/<mount> reads the LIVE space out of the
+            // memory rec, so a write there must land on that space too.
+            return QProc.Layer.write(this, vid, obj, () -> {
+                // A MOUNT IS THE CONSTRUCTION'S REGISTRATION: addSpace recorded the live space under its mount key,
+                // and the value the mount expression carries IS that space. Store it through the index (not as a
+                // nested data rec) so the address and the index name the same object.
+                if (obj instanceof Space mounted) {
+                    this.owner.memory().addSpace(mounted);
+                    return obj;
+                }
+                this.owner.memory().at(below, obj, MUTABLE);
+                return obj;
+            });
         if (COMPILER.equals(part)) {
             // A COMPILER WRITE IS CHECKED BY THE COMPILER IN FORCE, NEVER BY ITSELF. compiler::T's predicate runs
             // through the processor, and runtime resolution asks the machine's own resolver, so a write typed IN PLACE

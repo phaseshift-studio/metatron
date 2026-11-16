@@ -62,12 +62,12 @@ public class llmInstSetTest extends AbstractInstSetTest {
         fsSpace.of(FileSystems.getDefault(), rec(
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri("src/test/resources/isa/sys/space/llm/"))
-        ), f("/sys/space/fs"));
+        ), f("/memory/space/fs"));
     }
 
     @AfterAll
     public static void unloadFileSystem() {
-        Machine.current().memory().removeSpace(f("/sys/space/fs"));
+        Machine.current().memory().removeSpace(f("/memory/space/fs"));
     }
 
     @ParameterizedTest

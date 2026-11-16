@@ -462,7 +462,7 @@ public class webInstSet extends AbstractInstSet {
                                         fd 1 is the wire, so the VM's ordinary output (logs, banners, renders) is moved to stderr.
                                         the session ends at EOF on stdin, which is how a client shuts the server down.
                                         """,
-                                "mcp_stdio::[server => !*</sys/space/mcp/basic_server>]@/sys/io/mcp/stdio"),
+                                "mcp_stdio::[server => !*<~/memory/space/mcp/basic_server>]@/sys/io/mcp/stdio"),
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
                         docWrap(MCP_MTRON_SERVER_TYPE, "a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, machine_info, find_inst)"),

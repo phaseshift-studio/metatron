@@ -73,7 +73,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         super(() -> {
             return dckrSpace.of(rec(
                     uri(PATTERN), uri("dtest:#"),
-                    uri(ROUTE), rec(uri("dtest:"), uri(""))), f("/sys/space/docker_test"));
+                    uri(ROUTE), rec(uri("dtest:"), uri(""))), f("/memory/space/docker_test"));
         });
         dockerAvailable = probeDocker();
     }
@@ -354,12 +354,12 @@ public class dckrSpaceTest extends AbstractSpaceTest {
     @Test
     @Order(6)
     void testOnCloseRunsWhenTheSpaceCloses() {
-        memSpace.of(f("dtocprobe:#"), f("/sys/space/dtocprobe"));
+        memSpace.of(f("dtocprobe:#"), f("/memory/space/dtocprobe"));
         final dckrSpace closing = dckrSpace.of(rec(
                         uri(PATTERN), uri("dtoc:#"),
                         uri(ROUTE), rec(uri("dtoc:"), uri("")),
                         uri(ON_CLOSE), mParser.parse("dtocprobe:reaped -> 42")),
-                f("/sys/space/docker_onclose"));
+                f("/memory/space/docker_onclose"));
 
         closing.close();
 
@@ -382,7 +382,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
                         uri(ROUTE), rec(uri("ddown:"), uri("")),
                         uri("owner"), uri(owner),
                         uri(ON_CLOSE), mParser.parse("ddown:compose/" + stack + " -> noobj")),
-                f("/sys/space/docker_owned"));
+                f("/memory/space/docker_owned"));
 
         owned.write(f("ddown:compose/" + stack), rec(uri("services"),
                 rec(uri("probe"), rec(uri("image"), str("alpine:latest"),

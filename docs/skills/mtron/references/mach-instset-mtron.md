@@ -254,12 +254,26 @@ evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught
 
 ### analyzer
 
-The `analyzer::T` is any component's statistics, in the typer's and the tracer's form: a producer records in Java
-(`incr`/`record`/`set`) where the thing it counts happens, and anyone reads the live `analysis::T` — derived from the
-meters as it is read — at `~/<component>/analyzer/analysis`. The meters are `counter::T` (a `nat`, non-negative and
+The `analyzer::T` is a measuring component's statistics, in the typer's and the tracer's form: a producer records in
+Java (`incr`/`record`/`set`) where the thing it counts happens, and anyone reads the live `analysis::T` — derived from
+the meters as it is read — at `~/<component>/analyzer/analysis`. The meters are `counter::T` (a `nat`, non-negative and
 monotonic in practice), `gauge::T` (a point-in-time `real`) and `timer::T` (`count`/`total`/`min`/`max` of nanos); the
 settings `step`, `profile` and `enabled` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
 machine's components, a cluster's machines).
+
+A **data space** is not a component, and its metrics are its `?analq` q-proc rather than a `~/<space>/analyzer` field:
+the q-proc holds the `analyzer::T`, so it travels with the space, and `read`/`write`/`delete` counts and latencies are
+read flat at the space's `?analq` (e.g. `*/t/#?analq` → `read => [count, latency], write => [count, latency, delete =>
+[count, latency]]`). A space records when it declares the q-proc; nothing is recorded for a space that does not.
+
+A **server is an addressable source too**, and its metrics are its own `?analq`. A listener is instrumented at
+construction, so `<scheme>://host:port/#?analq` answers that socket's analysis: a request or a received message is a
+`read` at its wire address, a sent message a `write` there, a hang-up a write of `noobj` (the `delete` subset), and
+`connections` a gauge beside them. Each socket's q-proc holds its own analyzer, so two servers on one machine never
+share meters — and the network's `~/network/analyzer` still counts the WIRE (`wire/sent`, `wire/recv`, every frame
+either way), which is a different question from the work one server did. An `?analq` read of a local socket is
+answered locally even while a peer is declared at that origin: the meters of a socket this machine holds are not a
+peer's to answer.
 
 A metric no analyzable emits can be attached to the analyzer as a **derived `!` field** — a live computation over the
 analysis, pulled on demand (the mtron form of a recording rule):
@@ -529,7 +543,7 @@ connects the receiving peer to the same backend:
 [db   =>tblespace::[pattern=></usr/data/#>,
                     host=><mariadb://…>,
                     driver=><org.mariadb.jdbc.Driver>,
-                    route=>[</usr/data>=><>]]@/sys/space/data,
+                    route=>[</usr/data>=><>]]@~/memory/space/data,
  xyz  =>'east',
  code =>|(*</usr/data/${*workload/xyz}/+/amount>.sum().to(</usr/data/result/${*workload/xyz}/total>))](workload=>_){ !*workload/code.apply() }
 ```

@@ -88,7 +88,7 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
         this.testSpace = memSpace.of(rec(
                         uri(PATTERN), uri(testSpacePattern()),
                         uri(QPROC), lst(QCollection.incrQ())),
-                f("/sys/space/test"));
+                f("/memory/space/test"));
         this.mcp = createMcpServer();
     }
 

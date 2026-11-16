@@ -37,16 +37,16 @@ print("{{y}}fs: => . (cwd) | mfs: => . (cwd)
 {{X}}");
 fsspace::[pattern => fs:#,
           q       => [mimeq::[=>]],
-    route => [fs: => <.>]]@/sys/space/fs/root;
+    route => [fs: => <.>]]@~/memory/space/fs/root;
 fsspace::[pattern => mfs:#,
           q       => [mimeq::[=>],
                       lineq::[=>]],
-    route => [mfs: => <.>]]@/sys/space/fs/metatron;
+    route => [mfs: => <.>]]@~/memory/space/fs/metatron;
 
 memspace::[pattern => </usr/marko/#>,
            q       => [docq::[=>], subq::[=>],
                        mimeq::[=>], lineq::[=>], lockq::[=>], incrq::[=>]]]
-  @</sys/space/usr/marko>;
+  @<~/memory/space/usr/marko>;
 
 print("{{y}}log : /log/metatron/# on ${*boot/args/log_file}
 {{X}}");
@@ -57,7 +57,7 @@ tblespace::[pattern    => </log/metatron/#>,
             q          => [incrq::[=>],
                            subq::[=>],
                            mimeq::[=>]],
-            route      => [/log/metatron/ => <>]]@/sys/space/log/metatron;
+            route      => [/log/metatron/ => <>]]@~/memory/space/log/metatron;
 
 print("{{y}}web : ${*boot/args/web/http}  ${*boot/args/web/ws}
 {{X}}");

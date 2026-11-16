@@ -349,7 +349,7 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   covers it (`readAbsolute`/`writeAbsolute`) — which is why a bulk wildcard write reaches the space it names rather
   than the argument stack — and a covering space's answer is final, empty or not. The machine-key fallback
   (`machine.at(…)`) answers only where no space covers, a machine with no vid. A more specific space (a schema instset
-  at `/sys/space/<name>/instset/#`) still gains its own addresses.
+  at `~/memory/space/<name>/instset/#`) still gains its own addresses.
 - **`~/sys` is in the machine's space's own store** (Marko, 2026-10-25: "sys/# simply go into MachineSpace"), with
   the q-procs the machine's addresses speak (docq, decq, subq, incrq, mimeq, lockq). A closing root REMOVES its space
   with memory's other spaces and never closes its values: the system thread's executor lives in `~/sys`, and closing
@@ -470,12 +470,12 @@ InstSet, and data spaces in Memory."
 * **The vocabulary's pattern is the members' "lowest common denominator"** (Marko: "thus /m/#").
     - `BasicInstSet.refer` writes the deepest path every referred ISA's pattern lies beneath.
     - A level that refers nothing reports its enclosing machine's.
-    - With a schema instset at `/sys/space/…` among the members, the pattern is `/#` until schema instsets leave
-      `/sys/space`.
+    - With a schema instset at `~/memory/space/…` among the members, the pattern is `/#` until schema instsets leave
+      `~/memory/space`.
 * **Inherited references resolve through the enclosing levels** (`BasicInstSet.resolve`), not memory's index.
 * **Code enumerating instruction sets asks `instset().members()`**, never `memory().spaces()` (`catInstSetTest`).
 * `~/sys` yields to a deeper claimant named by memory's lookup (`MachineSpace.yields`), an ISA included, so a schema
-  instset at `/sys/space/<name>/instset/#` keeps its table types.
+  instset at `~/memory/space/<name>/instset/#` keeps its table types.
 * **The registration — an ISA also being a space — is the last artifact of that era.** Removing it is blocked on three
   measured things: migration writes that find the owning ISA by address, spaces that must decline a vid they cannot
   interpret instead of throwing, and documentation ownership, which resolves the owning space through the address index

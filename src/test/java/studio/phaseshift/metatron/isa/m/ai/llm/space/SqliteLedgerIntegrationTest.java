@@ -63,7 +63,7 @@ public class SqliteLedgerIntegrationTest extends AbstractMetatronTest {
      */
     private static final fURI SESSION_VID = f("sqlite:llm_ledger/1");
 
-    private static final fURI SPACE_VID = f("/sys/space/test_llm_ledger_int");
+    private static final fURI SPACE_VID = f("/memory/space/test_llm_ledger_int");
 
     private tbleSpace space;
 

@@ -104,7 +104,7 @@ public class ObjZipSerializerTest extends AbstractSerializerTest<ByteBuffer> {
     @AfterEach
     public void unmountTempFs() {
         if (null != this.root) {
-            Machine.current().memory().removeSpace(f("/sys/space/fs/objzip"));
+            Machine.current().memory().removeSpace(f("/memory/space/fs/objzip"));
             CommonUtil.deleteDirectory(this.root);
             this.root = null;
         }
@@ -122,7 +122,7 @@ public class ObjZipSerializerTest extends AbstractSerializerTest<ByteBuffer> {
                 uri(PATTERN), uri(FS_PATTERN),
                 uri(QPROC), lst(QCollection.mimeQ()),
                 uri(ROUTE), rec(uri("objzip:"), uri(this.root.toAbsolutePath().toString()))),
-                f("/sys/space/fs/objzip"));
+                f("/memory/space/fs/objzip"));
     }
 
     /**

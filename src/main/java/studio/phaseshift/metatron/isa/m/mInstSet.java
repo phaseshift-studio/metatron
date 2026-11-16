@@ -563,7 +563,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(SCHEME).maybe(), "an instset defining the type structure of the space objs",
                     uri(ON_CLOSE).maybe(), "an optional shutdown down hook"))
             .desc("storage systems structured as uri addressed objs")
-            .example("memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@/sys/space/usr/marko")
+            .example("memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@~/memory/space/usr/marko")
             .create();
 
     public static final fURI EXPLANATION_TID = EXPLAIN_INST_TID.extend("explanation");
@@ -842,6 +842,7 @@ public class mInstSet extends AbstractInstSet {
                         SUB_TYPE,
                         PUB_TYPE,
                         LOCK_TYPE,
+                        ANALQ_TYPE,
                         docWrap(TYPEQ_TYPE, "addr type constraint qproc",
                                 "abc?typeq -> int::T       [-- abc can only reference a single integer --]",
                                 "abc?typeq -> 'not an int' [-- yields a fail::T --]"),
