@@ -337,7 +337,9 @@ age, position 1 a zipcode) and fails `lst[zipcode,age]::T`, where the coordinate
 Two consequences, and they are the same consequence twice: there is no lifting *into* a tensor's positions (`lst[int]`
 hands a call no second candidate), and a tensor's entries name no other type (`lst[int]` is never an `int` — a list of
 ints is not an int). The coefficient is where extent lives, not another coordinate: `lst[int{4}]` is ONE position
-holding four ints, while `lst[int,int,int,int]` is four positions.
+holding four ints, while `lst[int,int,int,int]` is four positions. A TEST lays every entry as a run of positions, its
+span times its point, the way ranged var args take their arguments: `[1,2,3,4]` and `[{4}1]` both satisfy
+`lst[int{4}]`.
 
 **A fibered type's entries are distinct objects.** `person[ninja]` is a person *and* a ninja; the ninja is not the
 bundle's content but an object the bundle exposes. So a value of that type is acceptable where `ninja::T` is
@@ -351,7 +353,8 @@ the fiber's value as if it had been declared top-level.
 A bracket entry is a *position* (a tensor position, a path vertex), so a **suffix coefficient is the multiplicity of the
 value at that position** — not another position, and not another hop. `lst[int{2},str]` is a two-position list whose
 FIRST position holds two ints; `rel[int,person{2}]` is a two-vertex chain whose SECOND vertex holds two people
-(`1=>{bob,marko}`, two people at that vertex — not two hops):
+(`1=>{bob,marko}`, two people at that vertex — not two hops). A lst under test lays that multiplicity as a run, so
+`[1,2,'a']` satisfies `lst[int{2},str]` as `[{1,2},'a']` does:
 
 ```mtron_pre
 [HEADER] a suffix coefficient is the multiplicity of the value AT that position / vertex

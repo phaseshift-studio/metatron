@@ -492,6 +492,65 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkMatches(LOG, list, type, matches);
     }
 
+    /**
+     * A LST TESTS A LST RUN BY RUN, the way ranged var args take their arguments (Marko, 2026-11-16). An entry lays its
+     * span times its point (and a type's own {@code T{n}}) as that many indices of its slot, on either side, so
+     * {@code [{3}int::T]}, {@code [int{2}::T,int::T]} and {@code [int::T,int::T,int::T]} are the same three ints, and a
+     * range takes any count in it. The lhs stays open past the last rhs index, but only between entries. Each row is
+     * {@code lhs.isa?#{*}<=#{*}(rhs)}: the whole lhs comes back on a match, noobj otherwise.
+     */
+    @ParameterizedTest
+    @TestData(value = {"age -> int::T@age"})
+    @CsvSource(value = {
+            // ---- a span is a run of slots, and a point unfolds into the run the same way ----
+            "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [{3}int::T]",
+            "[{3}int::T].isa?#{*}<=#{*}([int{2}::T,int::T])                                        % [{3}int::T]",
+            "[int::T,int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                    % [int::T,int::T,int::T]",
+            "[{2}1{3}].isa?#{*}<=#{*}([{2}1,{2}1,{2}1])                                            % [{2}1{3}]",
+            "[{2}1].isa?#{*}<=#{*}([1,1])                                                          % [{2}1]",
+            "[1,1].isa?#{*}<=#{*}([{2}1])                                                          % [1,1]",
+            "[3{2}].isa?#{*}<=#{*}([int::T,int::T])                                                % [3{2}]",
+            // ---- a type's own count, T{n}, unfolds as well ----
+            "[int::T{3}].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [int::T{3}]",
+            "[{2}age::T,{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,{2}str::T,str::T,str::T])         % [{2}age::T,{4}'hello']",
+            "[age::T{2},{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,str::T{2},str::T,str::T])         % [age::T{2},{4}'hello']",
+            // ---- a range takes any count in it, on either side ----
+            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([str::T])                                        % [{2}int{?}::T,str::T]",
+            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([int::T,str::T])                                 % [{2}int{?}::T,str::T]",
+            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([int::T,int::T,str::T])                          % [{2}int{?}::T,str::T]",
+            "[int{?}::T{2},str::T].isa?#{*}<=#{*}([int::T,int::T,str::T])                          % [int{?}::T{2},str::T]",
+            "[int::T,int::T,int::T].isa?#{*}<=#{*}([{?}int::T,{2}int::T])                          % [int::T,int::T,int::T]",
+            "['a'].isa?#{*}<=#{*}([{*}int::T,str::T])                                              % ['a']",
+            // ---- a zero run is no index at all ----
+            "[int{0}::T,[3=>'x',5=>'stuff']].isa?#{*}<=#{*}([noobj,[int::T=>str::T]])              % [int{0}::T,[3=>'x',5=>'stuff']]",
+            "[,].isa?#{*}<=#{*}([int{?}::T])                                                       % [,]",
+            // ---- the lhs is open past the last rhs index, between entries ----
+            "[int::T,str::T].isa?#{*}<=#{*}([int::T])                                              % [int::T,str::T]",
+            "[1,'a',2].isa?#{*}<=#{*}([{*}int::T,str::T])                                          % [1,'a',2]",
+            "[{2}4].isa?#{*}<=#{*}([int{2}::T])                                                    % [{2}4]",
+            "['a',1,'b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                        % ['a',1,'b']",
+            "['a'].isa?#{*}<=#{*}([str::T,{?}int::T])                                              % ['a']",
+            // ---- a trailing run that lays nothing leaves the lhs where it found it: no open tail behind it ----
+            "['a','b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                          % noobj",
+            "[1,2].isa?#{*}<=#{*}([int::T,noobj])                                                  % noobj",
+            "[{2}1].isa?#{*}<=#{*}([int{?}::T])                                                    % noobj",
+            // ---- what does not lay ----
+            "[{3}4].isa?#{*}<=#{*}([int{2}::T])                                                    % noobj",
+            "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,str::T])                                    % noobj",
+            "[{2}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % noobj",
+            "[int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                           % noobj",
+            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([int::T,int::T,int::T,str::T])                   % noobj",
+            "[{2}age::T,{4}'hello'].isa?#{*}<=#{*}([int::T,{5}str::T])                             % noobj",
+            "[{2}age::T].isa?#{*}<=#{*}([str::T,str::T])                                           % noobj",
+            "[1,2,'a'].isa?#{*}<=#{*}([{2}int::T,{2}str::T])                                       % noobj",
+            "[{2}1].isa?#{*}<=#{*}([1,2])                                                          % noobj",
+            "[{*}int::T].isa?#{*}<=#{*}([{*}int::T,str::T])                                        % noobj",
+            "[,].isa?#{*}<=#{*}([int::T])                                                          % noobj",
+    }, delimiter = '%')
+    public void testRuns(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
 
     /**
      * A GENERIC list poly BINDS at construction: the poly written with a value is that value's shape position by

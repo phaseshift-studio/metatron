@@ -1782,6 +1782,10 @@ public class TypeTest extends AbstractMetatronTest {
      *   lst[{4}int{4}]::T         FOUR indices, whose values are int{4}        (indices 0-3 hold four ints)
      * </pre>
      * <p>
+     * A test lays every entry as a run of slots, its span times its point, the way ranged var args take their
+     * arguments (Marko, 2026-11-16): lst[int{4}] and lst[{4}int] accept the same lists, as [{4}1] and [1,2,3,4] each lay
+     * four ints.
+     * <p>
      * The distinction is what lets one construct serve both as a generic (List&lt;Integer&gt;) and as a
      * tuple, because position is significant and each index carries its own type: lst[age,zipcode] is a
      * two-index signature, not a bag of two either-or values.
@@ -1806,8 +1810,9 @@ public class TypeTest extends AbstractMetatronTest {
             "[1,2,3]             % lst[int,int,int,int]::T     % false",
             // ---- but MORE elements pass: the signature is a containment, not an equality ----
             "[1,2,3,4]           % lst[int,int]::T             % true",
-            // ---- the element coefficient: index 0 must itself hold an int{4} ----
-            "[1,2,3,4]           % lst[int{4}]::T              % false",
+            // ---- the element coefficient lays as a run: four plain ints lay an int{4} ----
+            "[1,2,3,4]           % lst[int{4}]::T              % true",
+            "[1,2,3]             % lst[int{4}]::T              % false",
             // ---- a tuple is a simply typed list: each index carries its type ----
             "[29,'94103']        % lst[age,zipcode]::T         % true",
             "[29,'94103']        % lst[zipcode,age]::T         % false",
@@ -2169,12 +2174,9 @@ public class TypeTest extends AbstractMetatronTest {
      * violation, because the surplus elements are outside what the type speaks to, while a shorter one IS,
      * because an index the type requires has nothing at it.
      * <p>
-     * The RANGING forms range over the ELEMENT, not over the index list. A coefficient inside a bracket is
-     * always the multiplicity of the value at that index, checked with within(), so a plain value only
-     * qualifies when it falls in the range by itself: a lone 1 is an int{1}, which is out of {2,4} but
-     * inside {*}. Supplying a multiplicity instead — see testTypeTestElementCoefficient — is what satisfies
-     * the bounded form. No spelling here expresses "between 2 and 4 ints IN THE LIST", which is what
-     * ranging var args and ranging generics would need.
+     * The RANGING forms lay as runs, the way ranged var args take their arguments (Marko, 2026-11-16). A coefficient
+     * inside a bracket is a run of slots, so lst[int{2,4}] is "between 2 and 4 ints IN THE LIST": plain values lay it
+     * one slot each, and a multiplicity at one index lays it at once (see testTypeTestElementCoefficient).
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
@@ -2190,11 +2192,12 @@ public class TypeTest extends AbstractMetatronTest {
             // ---- open world: the type mandates the indices it lists, and is silent about the rest ----
             "[1,2,3,4]               % lst[int,int]::T             % true",
             "[1,2,3]                 % lst[int,int,int,int]::T     % false",
-            // ---- the index holds an ELEMENT COEFFICIENT, so a plain value is out of range: a lone 1 is
-            //      an int{1}, which is not within {2,4}. The index wants a multiplicity, not a value. ----
-            "[1,2,3]                 % lst[int{2,4}]::T            % false",
-            "[1,2]                   % lst[int{2,4}]::T            % false",
-            "[1,2,3,4]               % lst[int{2,4}]::T            % false",
+            // ---- the element coefficient lays as a run of 2 to 4 ints, one plain value per slot ----
+            "[1,2,3]                 % lst[int{2,4}]::T            % true",
+            "[1,2]                   % lst[int{2,4}]::T            % true",
+            "[1,2,3,4]               % lst[int{2,4}]::T            % true",
+            "[1]                     % lst[int{2,4}]::T            % false",
+            "[1,'a']                 % lst[int{2,4}]::T            % false",
             // ---- and an unbounded one accepts a plain value, because 1 IS within {*} ----
             "[1,2,3]                 % lst[int{*}]::T              % true",
             "[1,2,3]                 % lst[int{+}]::T              % true"},
@@ -2233,7 +2236,7 @@ public class TypeTest extends AbstractMetatronTest {
      * <pre>
      *   int{2,4}          the BASE type's coefficient range  — 2 to 4 ints
      *   int{2,4}::T{5}    the TYPE's own coefficient        — five of that type
-     *   lst[int{4}]       the INDEX's element coefficient   — index 0 holds an int{4}
+     *   lst[int{4}]       the INDEX's element coefficient   — index 0 holds an int{4}, which a test lays as four ints
      * </pre>
      * The first is implemented and tested; this pins what the second one actually carries.
      */
