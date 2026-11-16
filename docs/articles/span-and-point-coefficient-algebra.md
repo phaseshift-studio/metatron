@@ -101,8 +101,8 @@ a^0 = 1 \quad \text{and} \quad a^{n+1} = a^n \cdot a.
 $$
 In mtron it is written before the instruction, `{n}a`, and stays on it: `{3}a` is
 one instruction whose run `a.a.a` is walked when it applies, never written out
-into the code, and `{0}a` is no instruction at all. A term with both
-coefficients, `{n}a{c}`, is $(ca)^n$.
+into the code, and `{0}a` is $a^0 = 1$, the identity `id()`, whatever its point.
+A term with both coefficients, `{n}a{c}`, is $(ca)^n$.
 :::
 
 An mtron chain is read as a stream ring expression:
@@ -400,12 +400,21 @@ $(c1)^n = c^n 1$. ◻
 :::
 
 ::: **Corollary 5** ($0^0 = 1$). $(0a)^0 = 1$: a zero run of the
-annihilator is no step at all.
+annihilator is the unity, not the zero.
 :::
 
 ::: *Proof.* $t^0 = 1$ for every term $t$ by Definition 2, and $0a = 0$ is
 a term (Theorem 4). ◻
 :::
+
+So a zero point annihilates only a step that runs: $(0a)^n = 0^n a^n$ is $0$ for
+$n \geq 1$ and $1$ for $n = 0$ (Theorem 7), and a span range, a sum of such runs
+(Definition 3, below), is $0$ only if it holds no zero-step run. In mtron, `{0}a{c}` is written
+`id()` whatever $c$, and an instruction is `noobj` only when its point is zero
+and its span holds no zero-step run. Tested by the product $c \cdot n$, which is
+the count of a value's copies, the zero span read as the zero: a branch member
+`{0}a` dropped its object, $\langle 5 \rangle (a^0 + b)$ answering
+$\langle 5 \rangle b$ alone.
 
 **Live proof.**
 
@@ -414,6 +423,9 @@ a term (Theorem 4). ◻
 5.{2}id().id{3}()
 5.{3}id{2}()
 5.{0}id{0}()
+5.{0}plus{0}(1)
+5.plus{0}(1)
+5.branch({0}plus(1),plus(2))
 ```
 
 ::: **Theorem 8** (A span does not distribute over a branch). If
@@ -736,6 +748,44 @@ answered $\langle (6)1 \rangle$. The compilation tables of the span and of the c
 0.plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).explain()>>format
 ```
 
+A span is mtron's own `repeat` written as a coefficient. `repeat(code=>a,emit=>p,until=>q)` applies `a` to its object
+again and again. Before each application it emits the object if `p` holds, and once `q` holds it stops and passes the
+object on; `loop()` reads how many times `a` has applied. The emit predicate is the lower bound of the sum of
+Definition 3, and the until predicate is its upper bound:
+
+| span     | repeat                                                             | the sum                      |
+|----------|--------------------------------------------------------------------|------------------------------|
+| `{n}a`   | `repeat(code=>a,until=>loop().is(eq(n)))`                          | $a^n$                        |
+| `{0,n}a` | `repeat(code=>a,emit=>true,until=>loop().is(eq(n)))`               | $1 + a + \cdots + a^n$       |
+| `{m,n}a` | `repeat(code=>a,emit=>loop().is(gte(m)),until=>loop().is(eq(n)))` | $a^m + \cdots + a^n$         |
+| `{m,}a`  | `repeat(code=>a,emit=>loop().is(gte(m)))`                          | $a^m + a^{m+1} + \cdots$     |
+| `{*}a`   | `repeat(code=>a,emit=>true)`                                       | $a^* = 1 + a + a^2 + \cdots$ |
+
+The until predicate passes on the object it stops at, so `{n}a` needs no emit. An open span has no until: its repeat
+ends where a run is empty, which is where the walk halts (Corollary 8). The walk is this repeat with its loop count kept
+on the instruction rather than in a loop frame, and an engine that loops natively runs the same repeat: a span range on
+a graph step is pushed down as the graph's own repeat.
+
+```mtron_pre
+0.{2,4}plus(1)
+0.repeat(code=>plus(1),emit=>loop().is(gte(2)),until=>loop().is(eq(4)))
+1.{4}mult(2)
+1.repeat(code=>mult(2),until=>loop().is(eq(4)))
+[a=>[a=>[b=>5]]].{*}rshift(a)
+[a=>[a=>[b=>5]]].repeat(code=>rshift(a),emit=>true)
+```
+
+An engine that does not loop takes no span. A rewrite matches a pattern of single applications, and a spanned step is a
+run: `{2}count()` is $c^2$, the count of a count, and a native count that took it for $c$ answered the count of the rows.
+So a spanned step stays in the plan and walks over the native answer, as the rewriter's own laws leave a run where it
+is: the unit law drops the identity `plus(0)`, a single application, and leaves the run `{2}plus(0)` to the walk.
+
+```mtron_pre
+5.plus(0).explain()>>desc>>insts
+5.{2}plus(0).explain()>>desc>>insts
+5.{2}plus(0)
+```
+
 ## Point and Span Coefficients Type Systems
 
 If $a (x) = y$, then $\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle$ by
@@ -765,6 +815,9 @@ point, which is the count of a value's copies (`{3}5{3}` counts nine):
 - The rewriter applies two of them as normal forms: like terms sum their points (`branch_collapse`), and shared prefixes
   factor (`branch_factor`). The processor applies the second to every span: its walk is the factored form of its
   unrolls (Theorem 10).
+- A zero point annihilates, while a zero span is the unity (Corollary 5): `{0}a` is `id()`. A span is a `repeat` whose
+  emit is its lower bound and whose until is its upper, so an engine that loops runs it, and no rewrite takes a run for
+  a single application.
 - Where it leads: a span range as one walk of its unrolls, so `{*}` is a
   generator that halts where its runs leave the domain (Corollary 8); layouts
   in space once a vid can be branched; and code as paths that sum like branched

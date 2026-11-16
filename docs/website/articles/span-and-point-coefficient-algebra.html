@@ -595,8 +595,8 @@ a^0 = 1 \quad \text{and} \quad a^{n+1} = a^n \cdot a.
 \]
 In mtron it is written before the instruction, <code>{n}a</code>, and stays on it: <code>{3}a</code> is
 one instruction whose run <code>a.a.a</code> is walked when it applies, never written out
-into the code, and <code>{0}a</code> is no instruction at all. A term with both
-coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
+into the code, and <code>{0}a</code> is \(a^0 = 1\), the identity <code>id()</code>, whatever its point.
+A term with both coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
 :::</p>
 <p>An mtron chain is read as a stream ring expression:</p>
 <table>
@@ -875,11 +875,19 @@ multiplication, and \((ca)^n = c^n a^n\) by Theorem 7. The two agree only where
 \((c1)^n = c^n 1\). ◻
 :::</p>
 <p>::: <strong>Corollary 5</strong> (\(0^0 = 1\)). \((0a)^0 = 1\): a zero run of the
-annihilator is no step at all.
+annihilator is the unity, not the zero.
 :::</p>
 <p>::: <em>Proof.</em> \(t^0 = 1\) for every term \(t\) by Definition 2, and \(0a = 0\) is
 a term (Theorem 4). ◻
 :::</p>
+<p>So a zero point annihilates only a step that runs: \((0a)^n = 0^n a^n\) is \(0\) for
+\(n \geq 1\) and \(1\) for \(n = 0\) (Theorem 7), and a span range, a sum of such runs
+(Definition 3, below), is \(0\) only if it holds no zero-step run. In mtron, <code>{0}a{c}</code> is written
+<code>id()</code> whatever \(c\), and an instruction is <code>noobj</code> only when its point is zero
+and its span holds no zero-step run. Tested by the product \(c \cdot n\), which is
+the count of a value's copies, the zero span read as the zero: a branch member
+<code>{0}a</code> dropped its object, \(\langle 5 \rangle (a^0 + b)\) answering
+\(\langle 5 \rangle b\) alone.</p>
 <p><strong>Live proof.</strong></p>
 <pre><code class="language-mtron">mtron&gt; 5.{2}id{3}()
 ==&gt;{9}5
@@ -889,6 +897,12 @@ mtron&gt; 5.{3}id{2}()
 ==&gt;{8}5
 mtron&gt; 5.{0}id{0}()
 ==&gt;5
+mtron&gt; 5.{0}plus{0}(1)
+==&gt;5
+mtron&gt; 5.plus{0}(1)
+mtron&gt; 5.branch({0}plus(1),plus(2))
+==&gt;5
+==&gt;7
 </code></pre>
 <p>::: <strong>Theorem 8</strong> (A span does not distribute over a branch). If
 \(a,b \in \mathcal{F}\), then
@@ -1121,7 +1135,7 @@ prefixes, and a shared prefix factors. Factored all at once, the sum is Horner's
 <p>::: <strong>Theorem 10</strong> (A span range is one walk). If \(a \in \mathcal{F}\) is pure and \(m \leq n\), then
 \[
 \begin{equation*}
-a^{[m,n]} = a^m \cdot (1 + a \cdot (1 + a \cdot ( \cdots (1 + a)))),
+a^{[m,n]} = a^m \cdot (1 + a \cdot (1 + a \cdot (\cdots (1 + a)))),
 \end{equation*}
 \]
 with \(n - m\) factors of \(a\) after \(a^m\). So if \(\langle x_0 \rangle = \langle x \rangle\) and
@@ -1175,7 +1189,8 @@ mtron&gt; 0.{1,1000}plus(1).sum()
 over the whole stream, while a branch that feeds \(s\) one object at a time sums each alone,
 \(\langle (2)1, (2)2, (2)3 \rangle\). If \(c\) counts a stream, then
 \(\langle 1, 2, 3 \rangle c^{[1,2]} = \langle 3 \rangle + \langle 1 \rangle\). A step that takes one object at a time
-walks object by object: \(\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \rangle + \langle 3, 4 \rangle\).</p>
+walks object by
+object: \(\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \rangle + \langle 3, 4 \rangle\).</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.{0,1}sum()
 ==&gt;1
 ==&gt;2
@@ -1215,12 +1230,13 @@ mtron&gt; {1,2,3}.is(gt(5)).{1,2}count()
 past the last, the runs from \(m\) on kept, until the run \(n\) or a run that leaves the domain of <code>a</code>. How much of a run a
 step takes is the coefficient of its domain: <code>sum?int&lt;=int{*}()</code> takes a run whole, and <code>plus?int&lt;=int()</code> one object at
 a time, as the swarm feeds them. A step compiled for the type of its first run is resolved again for a run of another
-type, as each copy of an unrolled chain was compiled against its own input: <code>1.{2}as(str)</code> casts an <code>int</code> to the uri
-<code>&lt;1&gt;</code>, and its second run casts that uri, which the cast compiled for an <code>int</code> never was.</p>
-<pre><code class="language-mtron">mtron&gt; 1.{2}as(str)
-==&gt;&lt;1&gt;
-mtron&gt; 1.as(str).as(str)
-==&gt;&lt;1&gt;
+type, as each copy of an unrolled chain was compiled against its own input: <code>1.{2}as(str::T)</code> casts an <code>int</code> to the
+<code>str</code>
+<code>'1'</code>, and its second run casts that <code>str</code>, which the cast compiled for an <code>int</code> never was.</p>
+<pre><code class="language-mtron">mtron&gt; 1.{2}as(str::T)
+==&gt;'1'
+mtron&gt; 1.as(str::T).as(str::T)
+==&gt;'1'
 </code></pre>
 <p>The walk replaced two naive evaluations of a span. The parser wrote an exact span out as its compose chain, so
 <code>0.{10}plus(4)</code> compiled to eleven instructions, where it now compiles to two. A closed range recomputed every unroll
@@ -1249,6 +1265,58 @@ mtron&gt; 0.plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus
     plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
    &quot;&quot;&quot;
 </code></pre>
+<p>A span is mtron's own <code>repeat</code> written as a coefficient. <code>repeat(code=&gt;a,emit=&gt;p,until=&gt;q)</code> applies <code>a</code> to its object
+again and again. Before each application it emits the object if <code>p</code> holds, and once <code>q</code> holds it stops and passes the
+object on; <code>loop()</code> reads how many times <code>a</code> has applied. The emit predicate is the lower bound of the sum of
+Definition 3, and the until predicate is its upper bound:</p>
+<table>
+<thead>
+<tr><th>span</th><th>repeat</th><th>the sum</th></tr>
+</thead>
+<tbody>
+<tr><td><code>{n}a</code></td><td><code>repeat(code=&gt;a,until=&gt;loop().is(eq(n)))</code></td><td>\(a^n\)</td></tr>
+<tr><td><code>{0,n}a</code></td><td><code>repeat(code=&gt;a,emit=&gt;true,until=&gt;loop().is(eq(n)))</code></td><td>\(1 + a + \cdots + a^n\)</td></tr>
+<tr><td><code>{m,n}a</code></td><td><code>repeat(code=&gt;a,emit=&gt;loop().is(gte(m)),until=&gt;loop().is(eq(n)))</code></td><td>\(a^m + \cdots + a^n\)</td></tr>
+<tr><td><code>{m,}a</code></td><td><code>repeat(code=&gt;a,emit=&gt;loop().is(gte(m)))</code></td><td>\(a^m + a^{m+1} + \cdots\)</td></tr>
+<tr><td><code>{*}a</code></td><td><code>repeat(code=&gt;a,emit=&gt;true)</code></td><td>\(a^* = 1 + a + a^2 + \cdots\)</td></tr>
+</tbody>
+</table>
+<p>The until predicate passes on the object it stops at, so <code>{n}a</code> needs no emit. An open span has no until: its repeat
+ends where a run is empty, which is where the walk halts (Corollary 8). The walk is this repeat with its loop count kept
+on the instruction rather than in a loop frame, and an engine that loops natively runs the same repeat: a span range on
+a graph step is pushed down as the graph's own repeat.</p>
+<pre><code class="language-mtron">mtron&gt; 0.{2,4}plus(1)
+==&gt;2
+==&gt;3
+==&gt;4
+mtron&gt; 0.repeat(code=&gt;plus(1),emit=&gt;loop().is(gte(2)),until=&gt;loop().is(eq(4)))
+==&gt;2
+==&gt;3
+==&gt;4
+mtron&gt; 1.{4}mult(2)
+==&gt;16
+mtron&gt; 1.repeat(code=&gt;mult(2),until=&gt;loop().is(eq(4)))
+==&gt;16
+mtron&gt; [a=&gt;[a=&gt;[b=&gt;5]]].{*}rshift(a)
+==&gt;[a=&gt;[a=&gt;[b=&gt;5]]]
+==&gt;[a=&gt;[b=&gt;5]]
+==&gt;[b=&gt;5]
+mtron&gt; [a=&gt;[a=&gt;[b=&gt;5]]].repeat(code=&gt;rshift(a),emit=&gt;true)
+==&gt;[a=&gt;[a=&gt;[b=&gt;5]]]
+==&gt;[a=&gt;[b=&gt;5]]
+==&gt;[b=&gt;5]
+</code></pre>
+<p>An engine that does not loop takes no span. A rewrite matches a pattern of single applications, and a spanned step is a
+run: <code>{2}count()</code> is \(c^2\), the count of a count, and a native count that took it for \(c\) answered the count of the rows.
+So a spanned step stays in the plan and walks over the native answer, as the rewriter's own laws leave a run where it
+is: the unit law drops the identity <code>plus(0)</code>, a single application, and leaves the run <code>{2}plus(0)</code> to the walk.</p>
+<pre><code class="language-mtron">mtron&gt; 5.plus(0).explain()&gt;&gt;desc&gt;&gt;insts
+==&gt;1
+mtron&gt; 5.{2}plus(0).explain()&gt;&gt;desc&gt;&gt;insts
+==&gt;2
+mtron&gt; 5.{2}plus(0)
+==&gt;5
+</code></pre>
 <h3>Point and Span Coefficients Type Systems</h3>
 <p>If \(a (x) = y\), then \(\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle\) by
 Theorem 7 and the apply axiom. So the coefficient of the inferred type is
@@ -1274,6 +1342,9 @@ and proved live in this article.</li>
 <li>The rewriter applies two of them as normal forms: like terms sum their points (<code>branch_collapse</code>), and shared prefixes
 factor (<code>branch_factor</code>). The processor applies the second to every span: its walk is the factored form of its
 unrolls (Theorem 10).</li>
+<li>A zero point annihilates, while a zero span is the unity (Corollary 5): <code>{0}a</code> is <code>id()</code>. A span is a <code>repeat</code> whose
+emit is its lower bound and whose until is its upper, so an engine that loops runs it, and no rewrite takes a run for
+a single application.</li>
 <li>Where it leads: a span range as one walk of its unrolls, so <code>{*}</code> is a
 generator that halts where its runs leave the domain (Corollary 8); layouts
 in space once a vid can be branched; and code as paths that sum like branched
