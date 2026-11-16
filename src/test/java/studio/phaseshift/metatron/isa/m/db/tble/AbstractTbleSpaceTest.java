@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -2771,7 +2772,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      * step as one application. {@code fURI.test} judges a step's point, never its span, so a plain pattern step matched
      * a spanned one, and {@code sql_where_count} answered {@code 5} for {@code isa(...).{2}count()} where the walk
      * answers {@code 1}. The rows are {@code code % what the walk answers}: a point ({@code count{2}()}) keeps its
-     * copies, and a span after a fused op walks over the native answer.
+     * copies, and a span after a fused op walks over the native answer. The plan answers it too, applied as a fresh
+     * code: the evaluation runs the memoized walk (see {@code CommonRewritesTestContract.runRewriteTest}).
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -2787,12 +2789,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     })
     public void testASpannedStepIsNeverOneNativeOp(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
     }
 
     /**
      * The plan as well as the answer: the plain count folded {@code {2}count()} too, into a native op that answered
      * {@code {2}10} against its declared {@code int}. Applied alone, that plan fails its range check, and the right
-     * answer above reached the caller only because the evaluation recovered from the failure. The rows are
+     * answer above reached the caller only because the evaluation ran the memoized walk, never the plan (see
+     * {@code CommonRewritesTestContract.runRewriteTest}). The rows are
      * {@code code % the spanned op the rewrite must leave in the plan}.
      */
     @ParameterizedTest
@@ -2816,8 +2822,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      * {@code >>value.sum{2}()} summed the rows into one rec. The columns are the keys the shift looks up: siblings
      * ({@code >>{value,name}}) narrow to both. A shift that names no column is not narrowed, and the walk answers it:
      * the str {@code >>'value'}, the lst key {@code >>[value,name]} (Marko, 2026-11-16), the path {@code >>value/name}.
-     * The plan is also applied on its own, because the evaluation recovered the walk's answer whenever the native op
-     * was last. The rows are {@code code % what the walk answers % the op the plan reads with}.
+     * The plan is also applied on its own, as a fresh code: the evaluation runs the memoized walk rather than the plan,
+     * and so does the plan applied as itself (see {@code CommonRewritesTestContract.runRewriteTest}). The rows are
+     * {@code code % what the walk answers % the op the plan reads with}.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -2834,7 +2841,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
         assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
         final Obj want = Machine.parse(expected);
-        checkEquality(LOG, want.isCall() ? want.apply() : want, plan.apply(), true);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
     }
 
     /**

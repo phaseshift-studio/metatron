@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
@@ -134,24 +135,29 @@ public interface CommonRewritesTestContract {
 
     /**
      * Executes a single rewrite test case. Call this from your parameterized test method.
+     * <p>
+     * THE PLAN AS WELL AS THE ANSWER. An evaluation can answer the walk while its plan is broken, because it does not
+     * always run the plan: a rule's typing probe ({@code Rewriter.Helper.carriers}, which {@code branch_factor} reads)
+     * resolves the chain through the resolver's memo, which keys a chain by its IDENTITY, and the native rewrite then
+     * turns that same code object into the plan ({@code selfJVM}). The resolve stage hands back the memoized walk, so
+     * the plan is never run. A plan that failed its range check ({@code {2}count()} folded into {@code sql_count}) and
+     * one that answered rows for values ({@code >>value} folded into {@code sql_select}) reached the caller as the walk's
+     * answer. So the plan is also applied on its own, as a FRESH code over its instructions: applied as itself, a plan of
+     * more than one instruction compiles again and hits the same memo.
      *
      * @param description Human-readable test description
      * @param code        The mtron code to evaluate
      * @param expected    The expected result
      */
-    default void runRewriteTest(String description, String code, Obj expected) throws Exception {
-        final Obj parsed = ObjmtronSerializer.parse(code);
-        final Obj result = parsed.apply();
-        assertEquals(expected, result, description);
-        // Also verify the expression was actually rewritten to the native instruction set —
-        // not merely that the mtron fallback produced the right answer.
+    default void runRewriteTest(final String description, final String code, final Obj expected) throws Exception {
+        assertEquals(expected, ObjmtronSerializer.parse(code).apply(), description);
+        final Code plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code)).asCode();
+        assertEquals(expected, MCode.of(plan.insts()).apply(), description + ": the plan on its own: " + plan);
+        // Also verify the expression was actually rewritten to the native instruction set
         final String prefix = getNativeInstructionPrefix();
-        if (prefix != null && !prefix.isEmpty()) {
-            final Code rewritten = Machine.current().compiler().rewriter().apply(parsed).asCode();
-            final boolean nativeRewrite = rewritten.insts().stream()
-                    .anyMatch(inst -> inst.tid().name().startsWith(prefix));
-            assertTrue(nativeRewrite, description + ": expected native rewrite (" + prefix + "*)");
-        }
+        if (prefix != null && !prefix.isEmpty())
+            assertTrue(plan.insts().stream().anyMatch(inst -> inst.tid().name().startsWith(prefix)),
+                    description + ": expected native rewrite (" + prefix + "*): " + plan);
     }
 
     // ========================================================================
