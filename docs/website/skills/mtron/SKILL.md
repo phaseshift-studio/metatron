@@ -37,7 +37,7 @@ A system that exposes a subset of the metatron graph is called a `space`. In the
 implementation is responsible for the declared `/a/#` subset of the uri address space (`#` is recursive wildcard).
 
 ```mtron
-mtron> memspace::[pattern=>/a/#]@/sys/space/a
+mtron> memspace::[pattern=>/a/#]@~/memory/space/a
 ```
 <!-- figure source: assets/tikz/mtron-graph.tex (render recipe in that file) -->
 <div style="display:flex; gap:1.5em; align-items:center; flex-wrap:wrap; margin:0.4em 0">
@@ -324,20 +324,7 @@ mtron> import(/m/math,math)                     [-- module import, namespaced ma
 mtron> int::T[?>0]@posint                       [-- a new type: positive integers --]
 mtron> rec::T[?[name=>str::T, age=>int::T]]@being
 mtron> person::[name=>'marko', age=>29]         [-- the stock person type, constructed --]
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'marko',age=>29]
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'marko'=>==>str::T,
-      age=>(==>age)=>29=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'marko', age=>29]]
+==>person::[name=>'marko',age=>29]
 mtron> being::[name=>'stynx', age=>33]
 ==>being::[name=>'stynx',age=>33]
 ```
@@ -454,7 +441,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   remote hosts, `owner`-labelled ownership with `on_close` reaping, and an end-to-end SQLite container + tbleSpace
   walkthrough.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's
-  prefixes from `*/sys/space/...`, `!*` lazy references, validation, and common failures.
+  prefixes from `*~/memory/space/...`, `!*` lazy references, validation, and common failures.
 
 ### protocol & services
 

@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -827,7 +825,7 @@ There is no lookup beside memory's: <code>BasicMemory.read</code>/<code>write</c
 covers it (<code>readAbsolute</code>/<code>writeAbsolute</code>) — which is why a bulk wildcard write reaches the space it names rather
 than the argument stack — and a covering space's answer is final, empty or not. The machine-key fallback
 (<code>machine.at(…)</code>) answers only where no space covers, a machine with no vid. A more specific space (a schema instset
-at <code>/sys/space/&lt;name&gt;/instset/#</code>) still gains its own addresses.</li>
+at <code>~/memory/space/&lt;name&gt;/instset/#</code>) still gains its own addresses.</li>
 <li><strong><code>~/sys</code> is in the machine's space's own store</strong> (Marko, 2026-10-25: &quot;sys/# simply go into MachineSpace&quot;), with
 the q-procs the machine's addresses speak (docq, decq, subq, incrq, mimeq, lockq). A closing root REMOVES its space
 with memory's other spaces and never closes its values: the system thread's executor lives in <code>~/sys</code>, and closing
@@ -949,14 +947,14 @@ is what removing it from the index used to do. A re-mount routes it again.</li>
 <ul>
 <li><code>BasicInstSet.refer</code> writes the deepest path every referred ISA's pattern lies beneath.</li>
 <li>A level that refers nothing reports its enclosing machine's.</li>
-<li>With a schema instset at <code>/sys/space/…</code> among the members, the pattern is <code>/#</code> until schema instsets leave
-<code>/sys/space</code>.</li>
+<li>With a schema instset at <code>~/memory/space/…</code> among the members, the pattern is <code>/#</code> until schema instsets leave
+<code>~/memory/space</code>.</li>
 </ul>
 </li>
 <li><strong>Inherited references resolve through the enclosing levels</strong> (<code>BasicInstSet.resolve</code>), not memory's index.</li>
 <li><strong>Code enumerating instruction sets asks <code>instset().members()</code></strong>, never <code>memory().spaces()</code> (<code>catInstSetTest</code>).</li>
 <li><code>~/sys</code> yields to a deeper claimant named by memory's lookup (<code>MachineSpace.yields</code>), an ISA included, so a schema
-instset at <code>/sys/space/&lt;name&gt;/instset/#</code> keeps its table types.</li>
+instset at <code>~/memory/space/&lt;name&gt;/instset/#</code> keeps its table types.</li>
 <li><strong>The registration — an ISA also being a space — is the last artifact of that era.</strong> Removing it is blocked on three
 measured things: migration writes that find the owning ISA by address, spaces that must decline a vid they cannot
 interpret instead of throwing, and documentation ownership, which resolves the owning space through the address index

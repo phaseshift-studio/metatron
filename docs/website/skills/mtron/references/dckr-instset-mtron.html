@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -555,11 +553,11 @@ mtron&gt; !*dckrspace?docq
             host      =&gt; &lt;tcp://192.168.1.100:2375&gt;,          [-- optional remote host --]
             owner     =&gt; /usr/avatar,                          [-- optional: who owns what this space creates --]
             on_close  =&gt; docker:compose/session-db -&gt; noobj,   [-- optional: run when the space closes --]
-            progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker   [-- console only: see Gotchas --]
+            progress  =&gt; progress_table::[=&gt;]]@~/memory/space/docker   [-- console only: see Gotchas --]
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern   =&gt; docker:#,
                    route     =&gt; [docker: =&gt; &lt;&gt;],
-                   progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker
+                   progress  =&gt; progress_table::[=&gt;]]@~/memory/space/docker
 </code></pre>
 <table>
 <thead>
@@ -596,7 +594,7 @@ shutdown hook, which is what makes reaping declarative rather than hard-coded in
 dckrspace::[pattern  =&gt; docker:#,
             route    =&gt; [docker: =&gt; &lt;&gt;],
             owner    =&gt; /usr/avatar,
-            on_close =&gt; *docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;] -&gt; noobj]@/sys/space/docker
+            on_close =&gt; *docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;] -&gt; noobj]@~/memory/space/docker
 </code></pre>
 <p><strong>When it runs.</strong> <code>close()</code> is the space's farewell, and it is called wherever a space is released:
 <code>Machine.close()</code> closes a level's memory (so a frame's spaces go with it), <code>Machine.pop()</code> gives a frame back, and the
@@ -743,7 +741,7 @@ second concurrent compose run on the same project will deadlock against.</li>
 </code></pre>
 <h3>remote docker hosts</h3>
 <p>Connect to a remote Docker daemon by specifying <code>host</code> in the space config:</p>
-<pre><code class="language-mtron">dckrspace::[host =&gt; &lt;tcp://192.168.1.100:2375&gt;, ...]@/sys/space/remote
+<pre><code class="language-mtron">dckrspace::[host =&gt; &lt;tcp://192.168.1.100:2375&gt;, ...]@~/memory/space/remote
 </code></pre>
 <p>All Docker CLI commands are prefixed with <code>-H &lt;host&gt;</code>. Supports <code>tcp://</code>, <code>unix://</code>, and <code>ssh://</code> schemes.</p>
 <h3>gotchas</h3>
@@ -804,7 +802,7 @@ mtron&gt; tblespace::[pattern =&gt; mydb:#,
                    host    =&gt; &lt;sqlite:/tmp/mtron-dbs/mydb.sqlite&gt;,
                    table   =&gt; [,],
                    route   =&gt; [mydb: =&gt; &lt;&gt;],
-                   driver  =&gt; &lt;org.sqlite.JDBC&gt;]@/sys/space/mydb
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;]@~/memory/space/mydb
 </code></pre>
 <h4>step 3: create tables and insert data</h4>
 <pre><code class="language-mtron">mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
@@ -927,7 +925,7 @@ mtron write.</p>
 <tr><th>Task</th><th>Expression</th></tr>
 </thead>
 <tbody>
-<tr><td>Mount space</td><td><code>dckrspace::[pattern=&gt;docker:#,route=&gt;[docker:=&gt;...]]@/sys/space/docker</code></td></tr>
+<tr><td>Mount space</td><td><code>dckrspace::[pattern=&gt;docker:#,route=&gt;[docker:=&gt;...]]@~/memory/space/docker</code></td></tr>
 <tr><td>Run container</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img:tag']</code></td></tr>
 <tr><td>Run with ports</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img', ports =&gt; [&lt;8080:80&gt;]]</code></td></tr>
 <tr><td>Run with env</td><td><code>[image =&gt; 'img', environment =&gt; [KEY =&gt; val]]</code></td></tr>

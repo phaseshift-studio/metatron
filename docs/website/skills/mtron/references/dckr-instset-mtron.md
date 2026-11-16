@@ -51,13 +51,13 @@ dckrspace::[pattern   => docker:#,
             host      => <tcp://192.168.1.100:2375>,          [-- optional remote host --]
             owner     => /usr/avatar,                          [-- optional: who owns what this space creates --]
             on_close  => docker:compose/session-db -> noobj,   [-- optional: run when the space closes --]
-            progress  => progress_table::[=>]]@/sys/space/docker   [-- console only: see Gotchas --]
+            progress  => progress_table::[=>]]@~/memory/space/docker   [-- console only: see Gotchas --]
 ```
 
 ```mtron
 mtron> dckrspace::[pattern   => docker:#,
                    route     => [docker: => <>],
-                   progress  => progress_table::[=>]]@/sys/space/docker
+                   progress  => progress_table::[=>]]@~/memory/space/docker
 ```
 | Field      | Required | Description                                                                                        |
 |------------|----------|----------------------------------------------------------------------------------------------------|
@@ -98,7 +98,7 @@ shutdown hook, which is what makes reaping declarative rather than hard-coded in
 dckrspace::[pattern  => docker:#,
             route    => [docker: => <>],
             owner    => /usr/avatar,
-            on_close => *docker:container/+.?[owner=></usr/avatar>] -> noobj]@/sys/space/docker
+            on_close => *docker:container/+.?[owner=></usr/avatar>] -> noobj]@~/memory/space/docker
 ```
 
 **When it runs.** `close()` is the space's farewell, and it is called wherever a space is released:
@@ -305,7 +305,7 @@ docker:compose/my-stack -> noobj     [-- compose down if the file is there, labe
 Connect to a remote Docker daemon by specifying `host` in the space config:
 
 ```mtron
-dckrspace::[host => <tcp://192.168.1.100:2375>, ...]@/sys/space/remote
+dckrspace::[host => <tcp://192.168.1.100:2375>, ...]@~/memory/space/remote
 ```
 
 All Docker CLI commands are prefixed with `-H <host>`. Supports `tcp://`, `unix://`, and `ssh://` schemes.
@@ -378,7 +378,7 @@ mtron> tblespace::[pattern => mydb:#,
                    host    => <sqlite:/tmp/mtron-dbs/mydb.sqlite>,
                    table   => [,],
                    route   => [mydb: => <>],
-                   driver  => <org.sqlite.JDBC>]@/sys/space/mydb
+                   driver  => <org.sqlite.JDBC>]@~/memory/space/mydb
 ```
 ### step 3: create tables and insert data
 
@@ -507,7 +507,7 @@ mtron write.
 
 | Task                  | Expression                                                                             |
 |-----------------------|----------------------------------------------------------------------------------------|
-| Mount space           | `dckrspace::[pattern=>docker:#,route=>[docker:=>...]]@/sys/space/docker`               |
+| Mount space           | `dckrspace::[pattern=>docker:#,route=>[docker:=>...]]@~/memory/space/docker`               |
 | Run container         | `docker:container/<name> -> [image => 'img:tag']`                                      |
 | Run with ports        | `docker:container/<name> -> [image => 'img', ports => [<8080:80>]]`                    |
 | Run with env          | `[image => 'img', environment => [KEY => val]]`                                        |

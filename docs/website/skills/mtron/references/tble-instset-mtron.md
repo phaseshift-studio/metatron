@@ -30,7 +30,7 @@ mtron> tblespace::[pattern => tbledoc:#,
                                docq::[tbledoc:person => docs::[
                                  desc    => "a person row: name, age, and a skill once one is written",
                                  example => ["*tbledoc:person/+.count()"]]]],
-                   route   => [tbledoc: => <>]]@/sys/space/tbledoc
+                   route   => [tbledoc: => <>]]@~/memory/space/tbledoc
 ```
 The two `q` entries are the space's **query processors**, and both earn their place: `docq` is what lets *a space
 document its own tables* — so `?docq` on a table tells an agent what it is looking at before it queries it — and `incrq`
@@ -41,7 +41,7 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 | type           | vid                                  | tid        | meaning                                                             |
 |----------------|--------------------------------------|------------|---------------------------------------------------------------------|
 | `tblespace::T` | `/m/db/tble/space/tblespace`            | `space::T` | a JDBC database as a space; isa `rec[host=>uri::T,driver=>uri::T]`  |
-| table types    | `/sys/space/<space>/instset/<table>` | `rec::T`   | one per discovered table, published into the space's schema instset |
+| table types    | `~/memory/space/<space>/instset/<table>` | `rec::T`   | one per discovered table, published into the space's schema instset |
 
 ```mtron
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
@@ -60,6 +60,7 @@ mtron> *</m/db/tble/helper>    [-- the instset's helper rec: the llm chat schema
 | `driver`     | `uri::T` | the JDBC driver class — `<org.sqlite.JDBC>`, `<org.postgresql.Driver>`, `<org.mariadb.jdbc.Driver>`                  |
 | `route`      | `rec::T` | scheme → path inside the space: `[tbledoc: => <>]` strips the scheme; a value can point a subtree elsewhere          |
 | `q`          | `rec::T` | query processors — `incrq::[=>]` for `_?incrq` key assignment, `docq` to document tables (above)                     |
+| `infer`      | `rec::T` | how inferred tables are typed: `required=>false` makes every column `{?}`, `widen=>false` refuses a row the inferred type does not hold, `discover=>eager` types every table at mount |
 | `serializer` | `uri::T` | the serializer the key/value side uses; defaults to mtron's own                                                      |
 | `table`      | `lst::T` | **deprecated and ignored** — table mapping is always on (older boot files still carry `table => [,]`)                |
 
@@ -87,7 +88,7 @@ SQL column types follow the obj types, and the column catalog is readable as dat
 keeps what SQL cannot say:
 
 ```mtron
-mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM _mtron_meta')
+mtron> *~/memory/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM _mtron_meta')
 ==>[table_name=>'person',
     column_name=>'$table',
     base_vid=>'/m/rec',
@@ -200,15 +201,19 @@ the anchored form is the one to keep when the rows might be written back:
 
 ```mtron
 mtron> *tbledoc:person/+.take(2)     [-- clone path --]
-==>person::[name=>'marko',
-            age=>29]@tbledoc:person/1
-==>person::[name=>'grant',
-            age=>25]@tbledoc:person/2
+==>/memory/space/tbledoc/instset/person::[
+    name=>'marko',
+    age=>29]@tbledoc:person/1
+==>/memory/space/tbledoc/instset/person::[
+    name=>'grant',
+    age=>25]@tbledoc:person/2
 mtron> @tbledoc:person/+.take(2)     [-- anchor path --]
-==>person::[name=>'marko',
-            age=>29]@tbledoc:person/1
-==>person::[name=>'grant',
-            age=>25]@tbledoc:person/2
+==>/memory/space/tbledoc/instset/person::[
+    name=>'marko',
+    age=>29]@tbledoc:person/1
+==>/memory/space/tbledoc/instset/person::[
+    name=>'grant',
+    age=>25]@tbledoc:person/2
 ```
 ## the rewrites — reads that become SQL
 
@@ -258,20 +263,26 @@ mtron> *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM per
 ==>'xilo'
 ==>'vela'
 mtron> *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
-==>person::[name=>'marko',
-            age=>29]@tbledoc:person/1
-==>person::[name=>'grant',
-            age=>25]@tbledoc:person/2
+==>/memory/space/tbledoc/instset/person::[
+    name=>'marko',
+    age=>29]@tbledoc:person/1
+==>/memory/space/tbledoc/instset/person::[
+    name=>'grant',
+    age=>25]@tbledoc:person/2
 mtron> *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
-==>person::[name=>'grant',
-            age=>25]@tbledoc:person/2
-==>person::[name=>'metis',
-            age=>41]@tbledoc:person/3
-==>person::[name=>'xilo',
-            age=>33,
-            skill=>'graph']@tbledoc:person/4
-==>person::[name=>'vela',
-            age=>53]@tbledoc:person/5
+==>/memory/space/tbledoc/instset/person::[
+    name=>'grant',
+    age=>25]@tbledoc:person/2
+==>/memory/space/tbledoc/instset/person::[
+    name=>'metis',
+    age=>41]@tbledoc:person/3
+==>/memory/space/tbledoc/instset/person::[
+    name=>'xilo',
+    age=>33,
+    skill=>'graph']@tbledoc:person/4
+==>/memory/space/tbledoc/instset/person::[
+    name=>'vela',
+    age=>53]@tbledoc:person/5
 ```
 | rewrite                  | mtron                                   | sql                                                 |
 |--------------------------|-----------------------------------------|-----------------------------------------------------|
@@ -305,13 +316,13 @@ mtron> */m/db/tble?docq
              pattern=>docq,
              pre_read=>inst(uri::T){<j>},
              pre_write=>inst(uri::T,#::T){<j>},
-             obj=>memspace::[pattern=><#>],
-             inst=>/m/instset::[=>]],
+             obj=>memspace::[pattern=><#>,q=>[,]],
+             inst=>/m/instset::[q=>[,]]],
             /m/qproc/decq::[
              pattern=>decq,
              pre_read=>inst(uri::T){<j>},
              pre_write=>inst(uri::T,#::T){<j>},
-             obj=>/m/instset::[=>]]],
+             obj=>/m/instset::[q=>[,]]]],
            const=>[[llm_chat_schema=>inst?<=#{*}(){<j>}]@/m/web/helper],
            type=>[/m/space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/db/tble/space/tblespace],
            inst=>[sql?rec{*}<=tblespace(str::T){<j>}],
@@ -352,10 +363,10 @@ When the vocabulary is not enough, go to the backend. `sql` takes a `str` — te
 which mtron then treats like any other objs.
 
 ```mtron
-mtron> */sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')
+mtron> *~/memory/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')
 ==>[name=>'marko',age=>29]
 ==>[name=>'grant',age=>25]
-mtron> */sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')>>age.sum()
+mtron> *~/memory/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')>>age.sum()
 ==>54
 ```
 A `sql` str may carry several statements: all but the last run as updates, the last is the query whose result set comes
@@ -392,24 +403,27 @@ kinds may sit in one row.
 ## the schema of what you are querying
 
 ```mtron
-mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
-==>/sys/space/tbledoc/instset/#
-mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
-==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-            recipient=>isa(person/+/id).!*id(),
-            uri{?}::T=><#>::T]]@/sys/space/tbledoc/instset/award
-==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri{?}::T=><#>::T]]@/sys/space/tbledoc/instset/note
-==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
-            {?}age=>int::T,
+mtron> *~/memory/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
+==>/memory/space/tbledoc/instset/#
+mtron> *~/memory/space/tbledoc/instset/+/          [-- the types as addressed objs --]
+==>/memory/space/tbledoc/instset/person=>rec::T[?[name=>str::T,
+            age=>int::T,
             {?}skill=>str::T,
-            uri{?}::T=><#>::T]]@/sys/space/tbledoc/instset/person
+            uri{?}::T=><#>::T]]@/memory/space/tbledoc/instset/person
+==>/memory/space/tbledoc/instset/award=>rec::T[?[trophy=>str::T,
+            recipient=>isa(person/+/id).!*id(),
+            uri{?}::T=><#>::T]]@/memory/space/tbledoc/instset/award
+==>/memory/space/tbledoc/instset/note=>rec::T[?[body=>str::T,uri{?}::T=><#>::T]]@/memory/space/tbledoc/instset/note
 ```
-Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
-of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*id()` — the column *is* the pointer.
-A table's type is replaced when the table widens.
+Reading the schema is how you meet a table you have never seen: each entry is a refinement of `rec::T` naming every
+column, `name=>str::T` when every row holds a name and `{?}name=>str::T` when some row does not (a SQL NULL is an absent
+field), each typed by the LCD of the values its rows hold. A foreign-key column appears as
+`recipient=>isa(person/+/id).!*id()` — the column *is* the pointer. A write the type does not hold widens it, so the
+type holds every row; a type written to the table's path (`tbledoc:person -> person::T`) declares the table instead,
+and a declared table refuses a row its type does not hold. Every database space types its collections this way.
 
 Discovery is **lazy**, and it is worth knowing exactly what fires it: the catalog walk runs on the first *write*, or on
-a read of the space's instset (`*/sys/space/<space>/instset/+/`). Until it has run, the space does not know which
+a read of the space's instset (`*~/memory/space/<space>/instset/+/`). Until it has run, the space does not know which
 collections are tables, so a table read falls through to the key/value side and comes back empty — a freshly mounted
 space answers `0` to a count that the database file can prove is not zero (see *taking the space down* below).
 
@@ -459,20 +473,28 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/13
+==>[body=>'a note with a database-assigned key']@tbledoc:note/21
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/14
+==>[body=>'another one']@tbledoc:note/22
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>8
 ==>12
+==>21
+==>18
+==>15
 ==>9
 ==>11
 ==>14
 ==>3
+==>17
 ==>6
+==>20
 ==>4
+==>16
 ==>7
+==>19
 ==>1
+==>22
 ==>2
 ==>5
 ==>13
@@ -487,23 +509,25 @@ lazy that mount is: the rows are there from the first statement, but the space o
 something walks the catalog:
 
 ```mtron
-mtron> /sys/space/tbledoc -> noobj                 [-- unmount --]
+mtron> ~/memory/space/tbledoc -> noobj                 [-- unmount --]
 mtron> tblespace::[pattern => tbledoc:#,
                    host    => <sqlite:/tmp/mtron-tbledoc.db>,
                    driver  => <org.sqlite.JDBC>,
-                   route   => [tbledoc: => <>]]@/sys/space/tbledoc
+                   route   => [tbledoc: => <>]]@~/memory/space/tbledoc
 mtron> *tbledoc:person/+.count()                   [-- 0: a fresh mount has not discovered its tables yet --]
 ==>5
-mtron> */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
-==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-            recipient=>isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
-==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T]]@/sys/space/tbledoc/instset/note
-==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
-            {?}age=>int::T,
-            {?}skill=>str::T]]@/sys/space/tbledoc/instset/person
+mtron> *~/memory/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
+==>/memory/space/tbledoc/instset/award=>rec::T[?[trophy=>str::T,
+            recipient=>isa(person/+/id).!*id(),
+            uri{?}::T=><#>::T]]@/memory/space/tbledoc/instset/award
+==>/memory/space/tbledoc/instset/note=>rec::T[?[body=>str::T,uri{?}::T=><#>::T]]@/memory/space/tbledoc/instset/note
+==>/memory/space/tbledoc/instset/person=>rec::T[?[name=>str::T,
+            age=>int::T,
+            {?}skill=>str::T,
+            uri{?}::T=><#>::T]]@/memory/space/tbledoc/instset/person
 mtron> *tbledoc:person/+.count()                   [-- the rows were in the file all along --]
 ==>5
-mtron> /sys/space/tbledoc -> noobj                 [-- leave the graph as we found it --]
+mtron> ~/memory/space/tbledoc -> noobj                 [-- leave the graph as we found it --]
 ```
 Unmount before re-mounting the same scheme under a different configuration: while a space is mounted it owns its
 pattern, and reads of an unmounted scheme fall through to the router's catch-all rather than failing loudly.

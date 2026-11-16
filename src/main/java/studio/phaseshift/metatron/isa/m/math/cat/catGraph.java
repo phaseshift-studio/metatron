@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
@@ -48,37 +47,61 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class catGraph {
 
     /// //////////////////////////////////////////////////////////////
-    // the graph — derived from every registered inst, memoized, invalidated on registration writes
-
-    private static volatile List<Inst> CACHED_INSTS;
-    private static final Map<String, Lst> POSITION_MEMO = new ConcurrentHashMap<>();
-    private static final Map<String, Lst> CONTESTED_MEMO = new ConcurrentHashMap<>();
-    private static final Map<String, Obj> ORBIT_MEMO = new ConcurrentHashMap<>();
-    private static final Map<String, Lst> FAMILY_MEMO = new ConcurrentHashMap<>();
+    // the graph — derived from every registered inst, memoized per thread and inst set
 
     /**
-     * drop every derived map — call on any inst-registration write
+     * THE CACHES ARE THE MACHINE'S, NOT THE JVM'S. What they derive is the machine's inst set — the union of the
+     * ISAs THIS frame sees — and a fork runs several test classes at once against one root, mounting ISAs at
+     * different moments (and each frame seeing its own union). The machine of reference is per thread, so the
+     * derived tables are too, and a change of the current inst set drops them, as a registration write does. A
+     * JVM-wide table let whichever frame asked first answer for every other: a class that ran before {@code /m/math}
+     * was mounted froze an 11-inst {@code plus} family and an orbit with no {@code datetime}, and every later
+     * reader (a full-suite run) inherited it.
+     */
+    private static final ThreadLocal<InstSet> CACHED_FOR = new ThreadLocal<>();
+    private static final ThreadLocal<List<Inst>> CACHED_INSTS = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String, Lst>> POSITION_MEMO = ThreadLocal.withInitial(HashMap::new);
+    private static final ThreadLocal<Map<String, Lst>> CONTESTED_MEMO = ThreadLocal.withInitial(HashMap::new);
+    private static final ThreadLocal<Map<String, Obj>> ORBIT_MEMO = ThreadLocal.withInitial(HashMap::new);
+    private static final ThreadLocal<Map<String, Lst>> FAMILY_MEMO = ThreadLocal.withInitial(HashMap::new);
+
+    /**
+     * drop this thread's derived maps — a registration write at this machine, or a move to another inst set
      */
     public static void invalidate() {
-        CACHED_INSTS = null;
-        POSITION_MEMO.clear();
-        CONTESTED_MEMO.clear();
-        ORBIT_MEMO.clear();
-        FAMILY_MEMO.clear();
+        CACHED_FOR.remove();
+        CACHED_INSTS.remove();
+        POSITION_MEMO.remove();
+        CONTESTED_MEMO.remove();
+        ORBIT_MEMO.remove();
+        FAMILY_MEMO.remove();
     }
 
     /**
-     * every registered instruction across every inst set
+     * Point this thread's caches at the machine's current inst set, dropping them when it has changed: a table
+     * derived from one union cannot answer for another.
+     */
+    private static InstSet ensureCurrent() {
+        final InstSet current = Machine.current().instset();
+        if (CACHED_FOR.get() != current) {
+            invalidate();
+            CACHED_FOR.set(current);
+        }
+        return current;
+    }
+
+    /**
+     * every registered instruction across every inst set the current machine's union holds
      */
     public static List<Inst> instructions() {
-        final List<Inst> cached = CACHED_INSTS;
+        final InstSet union = ensureCurrent();
+        final List<Inst> cached = CACHED_INSTS.get();
         if (null != cached)
             return cached;
         // INSTRUCTION MEMORY IS THE SOURCE, not the data index: the machine's own instset is the union of every
         // ISA this frame uses, and insts() already merges the members' tables by tid identity, nearest level
         // first. (The scan over memory().spaces() for instanceof InstSet was the old Router-era route, and it is
         // exactly the binding the instruction-memory/data-memory split removes.)
-        final InstSet union = Machine.current().instset();
         final List<Inst> all = new ArrayList<>(union.insts());
         for (final InstSet instSet : union.members()) {
             // old-style instsets (e.g. mInstSet) hold their insts in the jvm map under /inst — their insts()
@@ -88,7 +111,7 @@ public class catGraph {
                 live.lstValue().stream().filter(Obj::isObjInst).map(Obj::<Inst>as).forEach(all::add);
         }
         final List<Inst> distinct = all.stream().distinct().toList();
-        CACHED_INSTS = distinct;
+        CACHED_INSTS.set(distinct);
         return distinct;
     }
 
@@ -167,8 +190,9 @@ public class catGraph {
      * the position labels of the inst — where the edge sits among the others
      */
     public static Lst position(final Inst inst) {
+        ensureCurrent();
         final String key = inst.tid().toString();
-        final Lst cached = POSITION_MEMO.get(key);
+        final Lst cached = POSITION_MEMO.get().get(key);
         if (null != cached)
             return cached;
         final List<Inst> all = instructions();
@@ -210,7 +234,7 @@ public class catGraph {
                 kinds.add(Position.retract);
         }
         final Lst result = kinds.stream().map(k -> uri(k.name())).collect(new CommonUtil.LstCollector());
-        POSITION_MEMO.put(key, result);
+        POSITION_MEMO.get().put(key, result);
         return result;
     }
 
@@ -222,8 +246,9 @@ public class catGraph {
      * the witness edges behind the ambiguous/incomparable labels — the contesting siblings
      */
     public static Lst contested(final Inst inst) {
+        ensureCurrent();
         final String key = inst.tid().toString();
-        final Lst cached = CONTESTED_MEMO.get(key);
+        final Lst cached = CONTESTED_MEMO.get().get(key);
         if (null != cached)
             return cached;
         final List<Inst> all = instructions();
@@ -244,7 +269,7 @@ public class catGraph {
                 witnesses.add(other.tid());
         }
         final Lst result = witnesses.stream().map(MUri::uri).collect(new CommonUtil.LstCollector());
-        CONTESTED_MEMO.put(key, result);
+        CONTESTED_MEMO.get().put(key, result);
         return result;
     }
 
@@ -254,8 +279,9 @@ public class catGraph {
     public static Obj orbit(final Inst inst) {
         if (inst.isNoObj())
             return inst;
+        ensureCurrent();
         final String key = inst.tid().toString();
-        final Obj cached = ORBIT_MEMO.get(key);
+        final Obj cached = ORBIT_MEMO.get().get(key);
         if (null != cached && !cached.isNoObj())
             return cached;
         final Map<fURI, Set<fURI>> reversible = reversible(graph(instructions()));
@@ -269,7 +295,7 @@ public class catGraph {
             reversible.getOrDefault(node, Set.of()).forEach(stack::push);
         }
         final Obj result = objs(seen.stream().sorted().map(f -> rec(mutableMap(uri(OBJ), T(f)), OBJECT_TID, null)));
-        ORBIT_MEMO.put(key, result);
+        ORBIT_MEMO.get().put(key, result);
         return result;
     }
 
@@ -277,15 +303,16 @@ public class catGraph {
      * the same-op sibling registrations — the inst's own family
      */
     public static Lst family(final Inst inst) {
+        ensureCurrent();
         final String key = inst.tid().toString();
-        final Lst cached = FAMILY_MEMO.get(key);
+        final Lst cached = FAMILY_MEMO.get().get(key);
         if (null != cached)
             return cached;
         final Lst result = instructions().stream()
                 .filter(i -> i.tid().basePath().equals(inst.tid().basePath()))
                 .map(Obj::<Obj>as)
                 .collect(new CommonUtil.LstCollector());
-        FAMILY_MEMO.put(key, result);
+        FAMILY_MEMO.get().put(key, result);
         return result;
     }
 

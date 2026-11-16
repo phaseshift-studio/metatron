@@ -131,9 +131,16 @@ public abstract class AbstractMetatronTest {
     /**
      * The space the current machine's memory has mounted at {@code vid}, or noobj. Ask the index, not a read:
      * {@code [..]@vid} anchors the config rec at the vid whether or not the construction it feeds succeeds.
+     * <p>
+     * The index is keyed by the space's MOUNT — the path below {@code <machine>/memory/space}
+     * ({@code BasicMemory.mountKey}) — so a space mounted at {@code /memory/space/<name>} is indexed under
+     * {@code <name>}. The address is therefore matched against each mounted space's own vid, never used as the key.
      */
     protected static Obj mounted(final String vid) {
-        return Machine.current().memory().spaces().jvm().getOrDefault(f(vid).toUri(), noobj());
+        final fURI address = f(vid);
+        return Machine.current().memory().spaces().jvm().values().stream()
+                .filter(space -> space.isSpace() && address.equals(space.vid()))
+                .findFirst().orElse(noobj());
     }
 
     // The VM is a process-wide singleton: BootLoader.load()/close() and the router they install are global to the

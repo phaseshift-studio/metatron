@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -528,7 +526,7 @@ one machine can send a <code>ws_client</code> to another, and the receiver ends 
 crosses the wire is an address.</p>
 <p>The block builds a websocket rec here, with no far side (<code>ws_handler</code> is <code>ws_client</code> without the dial), and reads it
 twice:</p>
-<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/fascination/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/fascination
+<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/fascination/#, q=&gt;[mimeq::[=&gt;]]]@~/memory/space/fascination
 mtron&gt; ws_handler::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/fascination/socket
 ==&gt;ws_handler::[host=&gt;ws://localhost:8555/mtron,
                 send=&gt;λ(){&lt;j&gt;},

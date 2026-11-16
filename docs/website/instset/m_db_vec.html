@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -548,13 +546,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pattern=&gt;docq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-               inst=&gt;/m/instset::[=&gt;]],
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;,q=&gt;[,]],
+               inst=&gt;/m/instset::[q=&gt;[,]]],
               /m/qproc/decq::[
                pattern=&gt;decq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-               obj=&gt;/m/instset::[=&gt;]]],
+               obj=&gt;/m/instset::[q=&gt;[,]]]],
              const=&gt;[imaginary::NaN@/m/db/vec/imaginary],
              inst=&gt;[
               sqrt?real&lt;=real(){&lt;j&gt;},
@@ -695,6 +693,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     {?}pre_write=&gt;inst::T,
                     {?}post_write=&gt;inst::T,
                     {?}qless_write=&gt;inst::T,
+                    {?}qless_read=&gt;inst::T,
                     {?}pre_read=&gt;inst::T,
                     {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],

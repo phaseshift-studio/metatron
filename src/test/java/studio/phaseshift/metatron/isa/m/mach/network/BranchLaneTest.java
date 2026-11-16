@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.isa.m.mach.network;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -38,6 +40,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -52,6 +55,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * on its own {@code virtual::T}, so the lanes run concurrently. The clients here are this machine's own (their far side is this JVM), so the rows need no socket.
  */
 public class BranchLaneTest extends AbstractMetatronTest {
+
+    /**
+     * A KEY'S {@code ?timeout} IS A {@code time::T} ({@code second::n}) and its await converts it with
+     * {@code as(millis::T)}: those types are {@code /m/math}'s, so the test mounts the ISA it reads rather than
+     * relying on whichever class in the fork happened to mount it first (an unmounted type converts nothing, and the
+     * key waited its {@code second::20} as 20 ms).
+     */
+    @BeforeAll
+    public static void importMathInstSet() {
+        InstSet.importInstSet(MATH_ISA_TID);
+    }
 
     /**
      * a client at {@code host} that serves exactly the instructions in {@code inst}, indexed as a peer of this machine

@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -518,7 +516,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the collection of mathematical instructions, algebraic and numeric data types, and associated constants</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">33</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">21</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">consts</span></div><div class="instset-stat"><span class="instset-stat-n">24</span><span class="instset-stat-l">defined elsewhere</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">33</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">22</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">consts</span></div><div class="instset-stat"><span class="instset-stat-n">24</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/math-instset-mtron.md">md</a></div>
             <span class="instset-built">built November 16, 2026</span>
@@ -548,13 +546,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pattern=&gt;docq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-               inst=&gt;/m/instset::[=&gt;]],
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;,q=&gt;[,]],
+               inst=&gt;/m/instset::[q=&gt;[,]]],
               /m/qproc/decq::[
                pattern=&gt;decq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-               obj=&gt;/m/instset::[=&gt;]]],
+               obj=&gt;/m/instset::[q=&gt;[,]]]],
              type=&gt;[
               int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
               int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
@@ -604,6 +602,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               inv?cmplx&lt;=cmplx(){&lt;j&gt;},
               zero?cmplx&lt;=cmplx(){&lt;j&gt;},
               one?cmplx&lt;=cmplx(){&lt;j&gt;},
+              timeout?B{*}&lt;=A(B{*}::T,time::T){&lt;j&gt;},
               abs?real&lt;=cmplx(){&lt;j&gt;},
               arg?real&lt;=cmplx(){&lt;j&gt;},
               plus?datetime&lt;=datetime(time::T){&lt;j&gt;},
@@ -809,6 +808,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__math__inst__tan" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tan</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__math__timeout" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">timeout</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div><div class="mb-3">
@@ -1408,7 +1410,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">21</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">22</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
         An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
@@ -1420,7 +1422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
-            aria-live="polite" aria-atomic="true">showing 21 of 21</span>
+            aria-live="polite" aria-atomic="true">showing 22 of 22</span>
     </div>
 </div>
     <div class="card mb-3 instset-inst-card" id="__m__math__inst__abs">
@@ -1959,6 +1961,32 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">tan(1.0)   [-- 1.557407724654902 --]</code></pre>
+</div>
+</div><div class="card mb-3 instset-inst-card" id="__m__math__timeout">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">timeout</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">B{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/math/timeout</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__timeout-doc-0-tab').click();document.getElementById('__m__math__timeout-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">timeout?B{*}&lt;=A(B{*}::T,time::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a time-bounded function \(f(x) \mapsto \mathrm{code}(x)\): the code&#39;s answer if it gives one
+within the time, and a catchable fail::T otherwise. The time runs out by interrupting the
+evaluating thread, so the code stops where it next looks: a span walk once a run, a sleep or
+a wait at once.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs obj" class="text-info">the lhs obj</a> <span class="text-light">=&gt;</span> <a href="#the rhs obj: the code's answer, or a fail::T once the time runs out" class="text-success">the rhs obj: the code&#39;s answer, or a fail::T once the time runs out</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">1.timeout(plus(1),second::1.0)               [-- 2 --]
+1.timeout({*}plus(0),millis::100.0).catch(0) [-- 0: the endless walk is cut off --]</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="defined">

@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -815,13 +813,12 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;11
+==&gt;10
 mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;ha:#
 ==&gt;loc:#
 ==&gt;g:#
 ==&gt;farm:#
-==&gt;mtronfs:#
 ==&gt;local:#
 ==&gt;/usr/#
 ==&gt;fs:#
@@ -832,7 +829,6 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
 ==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
 ==&gt;{3}[=&gt;]
 ==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
-==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
 ==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
 ==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,
            fs:=&gt;/home/killswitch/]]
