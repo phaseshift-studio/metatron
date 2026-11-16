@@ -49,6 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -180,9 +181,10 @@ public final class wsServer extends Listener {
                     lst(T(REC_TID)), (_, inst) -> wsServer.of(inst.arg(0).asRec()))).create();
 
     /**
-     * a connection's lot: the route it took, its session, and the inbound peer it minted there (null when declined)
+     * a connection's lot: the route it took, its session, the inbound peer it minted there (null when declined), and the
+     * thread evaluating its message (empty between messages, and once a hang-up has interrupted it)
      */
-    private record Session(Route route, WebSocketRec rec, fURI peer) {
+    private record Session(Route route, WebSocketRec rec, fURI peer, AtomicReference<Thread> evaluating) {
     }
 
     /**
@@ -353,11 +355,12 @@ public final class wsServer extends Listener {
         as(taken.machine(), () -> {
             final WebSocketRec session = session(RouteLane.resolve(taken.target(), request), request, null);
             session.setWebSocket(conn);
-            this.sessions.put(conn, new Session(taken, session, null));
+            final AtomicReference<Thread> evaluating = new AtomicReference<>();
+            this.sessions.put(conn, new Session(taken, session, null, evaluating));
             session.onOpen(conn, handshake);
             final fURI peer = this.admit(taken, conn, session);
             if (null != peer)
-                this.sessions.put(conn, new Session(taken, session, peer));
+                this.sessions.put(conn, new Session(taken, session, peer, evaluating));
             Analyzable.Helper.set(this, f("connections"), this.sessions.size());
         });
     }
@@ -378,6 +381,17 @@ public final class wsServer extends Listener {
         final Session session = this.sessions.remove(conn);
         if (null == session)
             return;
+        // A HANG-UP ENDS THE EVALUATION OF ITS MESSAGE (2026-11-16): the session evaluates on the socket's worker, where
+        // nothing else ends an endless evaluation (an open span's walk asks its thread once a run), and its answer has
+        // no one to reach now. Given under the lock message() ends it under, the interrupt reaches this message and
+        // never the next one the worker takes. A connection closed by its own evaluation interrupts nothing.
+        synchronized (session.evaluating()) {
+            final Thread evaluating = session.evaluating().get();
+            if (null != evaluating && Thread.currentThread() != evaluating) {
+                session.evaluating().set(null);
+                evaluating.interrupt();
+            }
+        }
         Analyzable.Helper.set(this, f("connections"), this.sessions.size());
         as(session.route().machine(), () -> {
             session.rec().onClose(conn, code, reason, remote);
@@ -389,9 +403,21 @@ public final class wsServer extends Listener {
 
     private void message(final WebSocket conn, final String message) {
         final Session session = this.sessions.get(conn);
-        if (null != session) {
-            Analyzable.Helper.incr(this, f("messages"), 1L);
-            as(session.route().machine(), () -> session.rec().onMessage(conn, message));
+        if (null == session)
+            return;
+        Analyzable.Helper.incr(this, f("messages"), 1L);
+        session.evaluating().set(Thread.currentThread());
+        try {
+            // a hang-up between the lookup and here found no thread to interrupt, so the session is asked for again
+            if (session == this.sessions.get(conn))
+                as(session.route().machine(), () -> session.rec().onMessage(conn, message));
+        } finally {
+            // THE HANG-UP'S INTERRUPT ENDS WITH THE EVALUATION: the worker serves the socket's other connections, and
+            // Java-WebSocket's worker loop exits on an interrupt left set
+            synchronized (session.evaluating()) {
+                if (null == session.evaluating().getAndSet(null))
+                    Thread.interrupted();
+            }
         }
     }
 
@@ -491,6 +517,19 @@ public final class wsServer extends Listener {
                     Thread.currentThread().interrupt();
                 throw MTronException.of(e, "%s did not start: %s", this.getAddress(), e.getClass().getSimpleName());
             }
+        }
+
+        /**
+         * A SPARE BUFFER PER CONNECTION (2026-11-16). The selector reads into a pooled buffer and the connection's
+         * worker holds it until its callback returns, so a frame under evaluation holds one. The library pools one per
+         * connection, so a lone connection's endless evaluation left the selector none to read the client's hang-up
+         * with: the session never heard it, and the socket served no one. Two per connection, to the library's cap of
+         * two per worker and one, always leave the selector one.
+         */
+        @Override
+        protected void allocateBuffers(final WebSocket conn) throws InterruptedException {
+            super.allocateBuffers(conn);
+            super.allocateBuffers(conn);
         }
 
         @Override

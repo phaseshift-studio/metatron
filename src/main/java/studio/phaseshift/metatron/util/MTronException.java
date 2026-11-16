@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.DEBUG;
 
@@ -122,6 +123,24 @@ public class MTronException extends RuntimeException {
         if (target.getStackTrace().length > 0)
             return target.getStackTrace()[0];
         return t.getStackTrace().length > 0 ? t.getStackTrace()[0] : null;
+    }
+
+    /**
+     * KEEP THE INTERRUPT A THROWABLE CARRIES (2026-11-16). A library that answers an interrupt by throwing CLEARS the
+     * thread's flag as it throws (TinkerPop's steps a {@code TraversalInterruptedException}, a wait an
+     * {@code InterruptedException}), so whatever catches the throwable (a fallback, a fail value, a log line) ended the
+     * interrupt there while the evaluation it was meant to end ran on. A door that lets such a throwable through
+     * interrupts its thread again first: {@code throw MTronException.keepInterrupt(e)}. An interruption is known by
+     * its name, so no library is a dependency, and the cause chain is walked a bounded way, as a fail's chain can close
+     * on itself.
+     *
+     * @return the throwable, to be thrown
+     */
+    public static <T extends Throwable> T keepInterrupt(final T thrown) {
+        if (Stream.iterate((Throwable) thrown, cause -> null != cause, Throwable::getCause).limit(16)
+                .anyMatch(cause -> cause.getClass().getSimpleName().endsWith("InterruptedException")))
+            Thread.currentThread().interrupt();
+        return thrown;
     }
 
     /**

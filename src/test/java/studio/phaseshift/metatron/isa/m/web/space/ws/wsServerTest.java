@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.web.space.ws;
 
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ServerHandshake;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,9 +36,12 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
@@ -166,6 +170,63 @@ public class wsServerTest extends AbstractMetatronTest {
         };
         probe.connectBlocking(2, TimeUnit.SECONDS);
         assertEquals(4004, closed.get(2, TimeUnit.SECONDS), "a path no machine routes is closed, not served");
+    }
+
+    /**
+     * A HANG-UP ENDS THE EVALUATION OF ITS MESSAGE (2026-11-16). A session evaluates a frame on the socket's worker, and
+     * {@code 1.{*}plus(0)} never leaves plus's domain, so its walk loops on, as the expression says. The client hangs up
+     * without a closing handshake (a handshake would wait in the worker's queue behind the evaluation): the socket's
+     * close interrupts the worker, and the walk, which asks its thread once a run, answers a fail. The connection is
+     * the server's only one, so the selector reads the hang-up with the spare buffer its connection brought (the frame
+     * under evaluation holds the other). The worker serves the server's other connections too, so it must outlive the
+     * interrupt: a flag left set would end its loop.
+     */
+    @Test
+    void testAHangUpEndsTheEvaluationOfItsMessage() throws Exception {
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final WebSocketClient client = new WebSocketClient(URI.create(this.socket + "/mtron")) {
+            @Override
+            public void onOpen(final ServerHandshake handshake) {
+            }
+
+            @Override
+            public void onMessage(final String message) {
+            }
+
+            @Override
+            public void onClose(final int code, final String reason, final boolean remote) {
+            }
+
+            @Override
+            public void onError(final Exception ex) {
+            }
+        };
+        assertTrue(client.connectBlocking(2, TimeUnit.SECONDS), "the client dials the route");
+        client.send("1.{*}plus(0)");
+        // the worker evaluating the frame is the thread with wsServer.message on its stack
+        final Predicate<StackTraceElement> evaluating = frame ->
+                wsServer.class.getName().equals(frame.getClassName()) && "message".equals(frame.getMethodName());
+        final long found = System.currentTimeMillis() + 5000;
+        Thread worker = null;
+        while (null == worker && System.currentTimeMillis() < found) {
+            Thread.sleep(50);
+            worker = Thread.getAllStackTraces().entrySet().stream()
+                    .filter(entry -> Arrays.stream(entry.getValue()).anyMatch(evaluating))
+                    .map(Map.Entry::getKey).findFirst().orElse(null);
+        }
+        assertNotNull(worker, "the server evaluates the frame");
+        Thread.sleep(250);
+        assertTrue(Arrays.stream(worker.getStackTrace()).anyMatch(evaluating), "the walk is still walking before the hang-up");
+        client.closeConnection(CloseFrame.ABNORMAL_CLOSE, "hung up");
+        // the worker leaves the evaluation and parks in its queue again, or dies if the interrupt outlived the evaluation
+        final long ended = System.currentTimeMillis() + 5000;
+        while (System.currentTimeMillis() < ended && worker.isAlive()
+                && (Thread.State.WAITING != worker.getState() || Arrays.stream(worker.getStackTrace()).anyMatch(evaluating)))
+            Thread.sleep(50);
+        final StackTraceElement[] stack = worker.getStackTrace();
+        assertFalse(Arrays.stream(stack).anyMatch(evaluating),
+                "the hang-up ends the evaluation within five seconds, not at " + Arrays.toString(stack));
+        assertTrue(worker.isAlive(), "the worker outlives the interrupt: it serves the server's other connections");
     }
 
     @Test

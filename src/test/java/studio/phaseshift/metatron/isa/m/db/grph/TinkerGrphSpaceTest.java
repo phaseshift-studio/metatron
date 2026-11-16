@@ -35,6 +35,11 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,6 +48,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.db.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -296,6 +302,86 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
     }, delimiter = '%')
     void testARangedSpanFusesAsARepeat(final String code, final String expected) {
         assertEquals(expected, script(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(code).asCode().rewrite()));
+    }
+
+    /**
+     * A PUSHED-DOWN OPEN SPAN IS INTERRUPTIBLE (2026-11-16): {@code {*}both()} from marko never runs out of vertices (the
+     * modern graph walked both ways is a cycle), and as Gremlin's {@code repeat()} it loops inside the traversal, where
+     * the processor's walk never asks its thread. TinkerPop asks once a traverser and throws, which the gremlin call
+     * answered as a fail, but two things lost the interrupt: a bulked traverser is handed out once per bulk without
+     * asking ({@code {30,}both()}'s first carries every path of thirty steps, some 3.6e10), and TinkerPop CLEARS the flag
+     * as it throws, so a mapped call, one traversal per element ({@code {-1}both()} hands it three), looped on in the
+     * next element. The traversal asks once an element, and an interrupted one answers a fail with the flag still set,
+     * as the walk leaves it. The interrupt comes once the traversal runs; one that comes before the code runs is
+     * {@link #testAnInterruptBeforeAGraphCodeIsKept}'s.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1.{*}both()",
+            "*/g/V/1.{*}both()>>name",
+            "*/g/V/1.{30,}both()>>name",
+            "*/g/V/1.{-1}both().{*}both()>>name",
+    }, delimiter = '%')
+    void testAPushedDownOpenSpanStopsWhenItsThreadIsInterrupted(final String code) throws InterruptedException {
+        final Machine machine = Machine.current();
+        final AtomicReference<Obj> answer = new AtomicReference<>();
+        final AtomicBoolean flagged = new AtomicBoolean();
+        final Thread walker = new Thread(() -> {
+            answer.set(Machine.Helper.evalAt(machine, () -> Machine.parse(code).apply(noobj())));
+            flagged.set(Thread.currentThread().isInterrupted());
+        });
+        // a daemon, so a loop that never stops fails this test rather than holding the test JVM open
+        walker.setDaemon(true);
+        walker.start();
+        final Predicate<StackTraceElement> traversing = frame ->
+                grphInstSet.class.getName().equals(frame.getClassName()) && "runGremlin".equals(frame.getMethodName());
+        final long compiled = System.currentTimeMillis() + 5000;
+        while (walker.isAlive() && System.currentTimeMillis() < compiled
+                && Arrays.stream(walker.getStackTrace()).noneMatch(traversing))
+            Thread.sleep(10);
+        Thread.sleep(250);
+        assertTrue(Arrays.stream(walker.getStackTrace()).anyMatch(traversing), "the open span is still looping in its traversal");
+        walker.interrupt();
+        walker.join(5000);
+        assertFalse(walker.isAlive(), () -> "the loop ends within five seconds of its thread's interrupt, not at "
+                + Arrays.toString(walker.getStackTrace()));
+        assertTrue(null != answer.get() && answer.get().stream()
+                        .anyMatch(o -> o.isFail() && o.asFail().message().contains("interrupted")),
+                () -> "an interrupted loop answers the interrupt's fail, it does not throw: " + answer.get());
+        assertTrue(flagged.get(), "the flag stays set for the callers above, as the walk leaves it");
+    }
+
+    /**
+     * AN INTERRUPT GIVEN BEFORE A GRAPH CODE RUNS IS KEPT (2026-11-16). Resolving {@code *}/g/V/1 reads the vertex to
+     * type the read, so the first graph read comes as the code compiles. TinkerPop clears the flag as it throws, and
+     * resolution answered the exception with a fallback: the read then answered marko, and the pushed-down open span
+     * looped until a second interrupt. Each row runs on a thread interrupted before it starts, and ends within five
+     * seconds with a fail and the thread still interrupted.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1",
+            "*/g/V/1.{*}both()",
+            "*/g/V/1.{*}both()>>name",
+            "/g/V/1 -> person::[name=>'tinker',age=>9]",
+    }, delimiter = '%')
+    void testAnInterruptBeforeAGraphCodeIsKept(final String code) throws InterruptedException {
+        final Machine machine = Machine.current();
+        final AtomicReference<Obj> answer = new AtomicReference<>();
+        final AtomicBoolean flagged = new AtomicBoolean();
+        final Thread walker = new Thread(() -> {
+            Thread.currentThread().interrupt();
+            answer.set(Machine.Helper.evalAt(machine, () -> Machine.parse(code).apply(noobj())));
+            flagged.set(Thread.currentThread().isInterrupted());
+        });
+        walker.setDaemon(true);
+        walker.start();
+        walker.join(5000);
+        assertFalse(walker.isAlive(), () -> "an interrupted code ends within five seconds, not at "
+                + Arrays.toString(walker.getStackTrace()));
+        assertTrue(null != answer.get() && answer.get().stream().anyMatch(Obj::isFail),
+                () -> "an interrupted code answers a fail: " + answer.get());
+        assertTrue(flagged.get(), "the thread is still interrupted after it");
     }
 
     /** The adjacency step names a fused run may carry — used to prove none survives the fusion. */

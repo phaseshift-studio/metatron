@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalInterruptedException;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
@@ -662,6 +663,12 @@ public class grphInstSet extends AbstractInstSet {
 
     /**
      * One script, one space: the traversal engine's single door, mapping elements back to this space's recs.
+     * <p>
+     * AN INTERRUPT ENDS THE TRAVERSAL AS A FAIL, AND STAYS SET (2026-11-16), as the span walk answers one: an open span
+     * on a cycle ({@code {*}both()}) is a {@code repeat()} that never runs dry. TinkerPop asks once a traverser and
+     * clears the flag as it throws, so the flag is set again for the callers above (a mapped call is one traversal per
+     * element, and the next one would loop on). A bulked traverser hands out its object once per bulk without asking, so
+     * the walk asks once an element.
      */
     private static Obj runGremlin(final grphSpace space, final String script) {
         try {
@@ -669,11 +676,18 @@ public class grphInstSet extends AbstractInstSet {
             engine.put("g", space.sjvm());
             final Object result = engine.eval(script);
             if (result instanceof Traversal<?, ?> traversal)
-                return objs(IteratorUtils.stream(traversal.asAdmin()).map(o -> o instanceof Vertex v
-                        // a !route vertex is a pointer: answer what it points at, as inV/outV does
-                        ? EdgeRec.dereference(space, v)
-                        : o instanceof Edge e ? new EdgeRec(e, space) : MObjFactory.single().toObj(o)));
+                return objs(IteratorUtils.stream(traversal.asAdmin()).map(o -> {
+                    if (Thread.currentThread().isInterrupted())
+                        throw new TraversalInterruptedException();
+                    return o instanceof Vertex v
+                            // a !route vertex is a pointer: answer what it points at, as inV/outV does
+                            ? EdgeRec.dereference(space, v)
+                            : o instanceof Edge e ? new EdgeRec(e, space) : MObjFactory.single().toObj(o);
+                }));
             return MObjFactory.single().toObj(result);
+        } catch (final TraversalInterruptedException e) {
+            Thread.currentThread().interrupt();
+            return fail("gremlin traversal interrupted: %s", script);
         } catch (final Exception e) {
             return fail(e);
         }
