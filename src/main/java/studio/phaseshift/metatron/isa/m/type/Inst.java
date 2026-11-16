@@ -330,6 +330,7 @@ public interface Inst extends Call {
                 base.equals(UPDATE_INST_TID) ||
                 base.equals(GROUP_INST_TID) ||
                 base.equals(REPEAT_INST_TID) ||
+                base.equals(TIMEOUT_INST_TID) ||
                 base.equals(BRANCH_INST_TID) ||
                 base.equals(ELSE_INST_TID) ||
                 base.equals(CATCH_INST_TID);
