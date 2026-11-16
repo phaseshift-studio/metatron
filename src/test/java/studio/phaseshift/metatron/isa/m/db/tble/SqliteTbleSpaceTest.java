@@ -23,12 +23,20 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.TestReport;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.SchemaSpaceTestContract;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,7 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 @TestReport
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
+public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest implements SchemaSpaceTestContract {
 
     private static final String DB_PATH = "target/test-tabledb-space.db";
 
@@ -68,6 +76,38 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
     @AfterAll
     public static void cleanupSqliteDatabase() throws Exception {
         cleanupDatabase();
+    }
+
+    @Override
+    public fURI schemaCollection(final String name) {
+        return f("db:" + name);
+    }
+
+    /**
+     * A column whose values share one mono type is declared with its SQL type, and a mixed one with none, so SQLite
+     * keeps each value's own storage class (an INTEGER column would hand 'old' back as text and 3 as an int, but a TEXT
+     * column hands 3 back as '3').
+     */
+    @Override
+    public void seedCollection(final String name, final List<Rec> records) {
+        if (records.isEmpty())
+            return;
+        final Map<String, Set<String>> columns = new LinkedHashMap<>();
+        records.forEach(record -> record.recValue().forEach((key, value) ->
+                columns.computeIfAbsent(key.uriValue().name(), column -> new LinkedHashSet<>())
+                        .add(value.isInt() ? "INTEGER" : value.isReal() ? "REAL" : "TEXT")));
+        final StringBuilder sql = new StringBuilder("CREATE TABLE " + name + " (id INTEGER PRIMARY KEY");
+        columns.forEach((column, types) -> sql.append(", ").append(column).append(types.size() == 1 ? " " + types.iterator().next() : ""));
+        sql.append(");");
+        for (int i = 0; i < records.size(); i++) {
+            sql.append("INSERT INTO ").append(name).append(" (id");
+            records.get(i).recValue().keySet().forEach(key -> sql.append(", ").append(key.uriValue().name()));
+            sql.append(") VALUES (").append(i + 1);
+            records.get(i).recValue().values().forEach(value -> sql.append(", ")
+                    .append(value.isStr() ? "'" + value.strValue().replace("'", "''") + "'" : value.toString()));
+            sql.append(");");
+        }
+        MTronException.wrap(() -> ((tbleSpace) this.space).sql(sql.toString()));
     }
 
     // All common tests are inherited from AbstractTbleSpaceTest

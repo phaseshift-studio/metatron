@@ -67,7 +67,7 @@ public abstract class AbstractDataPathSpaceTest extends AbstractDataPathTest {
     /**
      * Drop the deduced test collection so tests stay order-independent.
      */
-    protected void dropDeducedCollection(final String collectionName) {
+    public void dropDeducedCollection(final String collectionName) {
     }
 
     /**

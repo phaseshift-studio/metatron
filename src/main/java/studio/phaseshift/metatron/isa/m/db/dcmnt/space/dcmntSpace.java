@@ -34,8 +34,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.domain.CollectionSchemaInstSet;
-import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.domain.ExistingCollectionSchema;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -97,8 +95,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     ).jvm(),
  *     f("/sys/space/mongo")
  * );
- * // After construction, space.at(ROOT) is a structured rec::T[?[{?}users=>users::T, ...]]
- * // and space.at(SCHEMA) is a CollectionSchemaInstSet auto-discovered from the live database.
+ * // A collection's type is at space.at(SCHEMA)/<collection>: declared, or inferred from its documents
+ * // when it is first read (SchemaSpace.Helper).
  * }</pre>
  *
  * <h2>Document Access</h2>
@@ -157,7 +155,6 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
     protected MongoDatabase database;
     protected String databaseName;
     protected Supplier<ObjBSONSerializer> serializer;
-    protected ExistingCollectionSchema existingCollectionSchema;
     protected dcmntSpaceSubQ dcmntSpaceSubQ;
     protected dcmntIncrQ dcmntIncrQ;
 
@@ -227,38 +224,7 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
         }
         LOG.info("initialized {{g}}change stream subscription{{X}} support: %s", this.dcmntSpaceSubQ);
 
-        // Schema discovery always runs at startup — root and schema are always populated.
-        this.existingCollectionSchema = new ExistingCollectionSchema(this);
-        this.existingCollectionSchema.initialize(this.database);
-        final CollectionSchemaInstSet schemaInstset =
-                this.existingCollectionSchema.generateSchemaInstset(this.vid().extend(INSTSET));
-        Machine.current().memory().addSpace(schemaInstset);
-        schemaInstset.setup();
-
-        // Wire schema instset into existingCollectionSchema so that collection
-        // dereferences return instset-encoded Types (single source of truth)
-        // instead of dcmnt-specific COLLECTION_TID URIs.
-        this.existingCollectionSchema.setSchemaInstset(schemaInstset);
-
-        this.at(uri(SCHEMA), schemaInstset, MUTABLE);
-
-        // Build a structured root type encoding the per-collection type map.
-        // Each collection type is a rec::T refinement (space-agnostic, not tied to MongoDB).
-        // Keys are {?}collectionName (optional = open world; unknown collections pass through).
-        // Collection names come from the last segment of each type's VID (schemaVid/type/NAME).
-        final LinkedHashMap<Obj, Obj> rootPredicate = new LinkedHashMap<>();
-        for (final Type collectionType : schemaInstset.types()) {
-            final String colName = collectionType.vid().segments().getLast();
-            rootPredicate.put(uri(colName).maybe(), collectionType);
-        }
-        final Type rootType = TypeBuilder.build()
-                .tid(REC_TID)
-                .isaPredicate(rec(rootPredicate))
-                .create();
-        this.jvm().put(uri(ROOT), rootType);
-
-        LOG.info("initialized {{g}}collection schema{{X}} for %d collections",
-                this.existingCollectionSchema.getCollectionNames().size());
+        SchemaSpace.Helper.mount(this);
     }
 
     @Override
@@ -299,17 +265,26 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
     // =======================================================================
 
     /**
-     * Resolve a space-relative fURI into a {@link DataPath}.
-     * Delegates to {@link ExistingCollectionSchema} when the collection is known;
-     * otherwise falls back to structural decomposition via {@link DataPath#of(fURI)}.
+     * Resolve a space-relative fURI into a {@link DataPath}: the database, then collection/document/field.
      */
     private DataPath resolveDataPath(final fURI relativePath) {
-        if (this.existingCollectionSchema != null) {
-            final DataPath dp = this.existingCollectionSchema.resolveDataPath(relativePath);
-            if (dp != null)
-                return dp;
-        }
-        return DataPath.of(f(this.database.getName()).extend(relativePath));
+        return DataPath.of(f(this.database.getName()).extend(relativePath.asNode()));
+    }
+
+    @Override
+    public Stream<String> collections() {
+        return IteratorUtil.stream(this.database.listCollectionNames().iterator()).filter(name -> !KV_STORE.equals(name));
+    }
+
+    /**
+     * The documents of a collection, folded: each as the rec a read answers (its {@code _id} stripped, its tid the one
+     * it was written with).
+     */
+    @Override
+    public Rec fields(final String collection) {
+        return SchemaSpace.Helper.fields(IteratorUtil.stream(this.database.getCollection(collection).find().iterator())
+                .map(this::processDocument)
+                .filter(Obj::isRec));
     }
 
     // =======================================================================
@@ -352,6 +327,12 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
             // Route from the space's external address pattern to the internal relative path
             final fURI relativePath = Space.Helper.routeFromSpace(pattern, this.routes());
 
+            // a type written to a collection's path declares the collection (SchemaSpace.Helper)
+            if (obj.isType() && 1 == relativePath.segments().size()) {
+                Machine.write(this.schema().vid().extend(relativePath.name()), obj);
+                return obj;
+            }
+
             // Flat key-value address space (mirrors tbleSpace's kv_store table):
             //   - reserved kv_store first segment → always flat (any value), or
             //   - unknown collection + non-Rec value → flat (deduced).
@@ -373,6 +354,17 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
             if (obj.isRec() && !this.isStructuredCollection(relativePath))
                 this.migrateFlatToStructured(dp.collection());
 
+            // WHAT THE COLLECTION IS ASKED TO HOLD: the document a rec write replaces, or the document a field write leaves
+            if (obj.isRec() && !dp.hasField())
+                SchemaSpace.Helper.admit(this, dp.collection(), obj);
+            else if (dp.hasField() && dp.hasEntry() && !dp.entryIsWildcard()) {
+                final Document current = this.database.getCollection(dp.collection())
+                        .find(Filters.eq(ID_FIELD, parseObjectId(dp.entry()))).first();
+                final Obj document = null == current ? rec() : this.processDocument(current);
+                if (document.isRec())
+                    SchemaSpace.Helper.admit(this, dp.collection(),
+                            document.asRec().at(uri(f(dp.fieldPathStr().replace('.', '/'))), obj, IMMUTABLE));
+            }
             resolveCollectionStream(dp.collection()).findFirst().ifPresent(collection -> {
                 LOG.debug("WRITING: %s %s", dp.collection(), dp.entry());
                 if (!dp.hasField()) {
@@ -381,36 +373,6 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
                     writeField(collection, dp.entry(), dp.fieldPathStr(), obj);
                 }
             });
-            // Track field types for schema update
-            if (obj.isRec() && dp.hasCollection()) {
-                final String collName = dp.collection();
-                final Map<String, Obj> existing =
-                        this.existingCollectionSchema.getLogicalTypes()
-                                .get(collName.toLowerCase());
-                final boolean isNewCollection = existing == null;
-                boolean hasNewFields = isNewCollection;
-                for (final Map.Entry<Obj, Obj> entry : obj.asRec().jvm().entrySet()) {
-                    if (entry.getValue().isAuto() || entry.getValue().isNoObj()
-                            || entry.getValue().isNone())
-                        continue;
-                    final String fieldName = entry.getKey().isUri()
-                            ? entry.getKey().asUri().uriValue().name()
-                            : entry.getKey().toString();
-                    this.existingCollectionSchema.trackFieldType(
-                            collName, fieldName, entry.getValue());
-                    if (!isNewCollection && !existing.containsKey(
-                            fieldName.toLowerCase()))
-                        hasNewFields = true;
-                }
-                // Register the collection even when the Rec is empty (no fields),
-                // so subsequent reads recognize it as structured rather than
-                // falling through to the flat key-value store.
-                this.existingCollectionSchema.getLogicalTypes()
-                        .computeIfAbsent(collName.toLowerCase(), k -> new LinkedHashMap<>());
-                if (hasNewFields)
-                    this.existingCollectionSchema.onCollectionChanged(
-                            collName, isNewCollection);
-            }
             return obj;
         };
     }
@@ -863,14 +825,15 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
     }
 
     /**
-     * Whether a space-relative path names a collection this space manages as a
-     * document collection (discovered at startup or tracked from a prior Rec
-     * write).  Unknown collections fall back to the flat kv namespace.
+     * Whether a space-relative path names a document collection: one the database holds, or one declared.
+     * Unknown collections fall back to the flat kv namespace.
      */
     @Override
     protected boolean isStructuredCollection(final fURI relativePath) {
-        return this.existingCollectionSchema != null
-                && this.existingCollectionSchema.resolveDataPath(relativePath) != null;
+        final DataPath dp = this.resolveDataPath(relativePath);
+        return null != dp.collection() && (dp.collectionIsWildcard()
+                || this.collections().anyMatch(dp.collection()::equals)
+                || null != SchemaSpace.Helper.declared(this, dp.collection()));
     }
 
     @Override

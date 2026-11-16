@@ -1130,6 +1130,34 @@ public class TypeTest extends AbstractMetatronTest {
                 description + ": typeB coeff " + typeB.c() + " within LCD coeff " + lcd.c());
     }
 
+    /**
+     * THE LCD IS THE NEAREST ANCESTOR ON EVERY TYPE'S OWN CHAIN, whatever the order of the types (Marko, 2026-11-16):
+     * a refinement and its parent meet at the parent, two siblings at their shared parent, disjoint hierarchies at the
+     * root. Before, a parent "refined" its child and a sibling its sibling, so [larva, int] answered larva.
+     */
+    @Training.SkipTraining(reason = "asserts the Java-computed least common denominator of two types")
+    @ParameterizedTest
+    @TestData(value = {
+            "larva -> int::T[?>0]@larva",
+            "pupa  -> int::T[?>0]@pupa",
+    })
+    @CsvSource(value = {
+            "larva::T | int::T   | int",
+            "int::T   | larva::T | int",
+            "larva::T | pupa::T  | int",
+            "pupa::T  | larva::T | int",
+            "larva::T | larva::T | larva",
+            "larva::T | str::T   | root",
+            "int::T   | str::T   | root",
+    }, delimiter = '|')
+    public void testFindLCDCommonAncestor(final String typeA, final String typeB, final String expected) {
+        final Type lcd = Type.Helper.findLCD(List.of(ObjmtronSerializer.<Type>parse(typeA), ObjmtronSerializer.<Type>parse(typeB)));
+        if ("root".equals(expected))
+            assertTrue(lcd.isRootType(), typeA + " and " + typeB + " share no ancestor, got " + lcd);
+        else
+            assertEquals(expected, lcd.vid().name(), typeA + " and " + typeB);
+    }
+
     @Training.SkipTraining(reason = "asserts only that a typed literal constructs without a fail; there is no output value")
     @ParameterizedTest
     @TestData(value = {

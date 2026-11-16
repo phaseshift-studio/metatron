@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.db.grph;
 
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -35,8 +36,10 @@ import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.SchemaSpaceTestContract;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.db.grph.space.GraphLoader;
+import studio.phaseshift.metatron.isa.m.db.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.m.db.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.db.grph.space.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -49,6 +52,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,7 +90,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         // created, which is no label (long-standing; TinkerGraph and JanusGraph alike)
         @SkipRegexTest.Skip(method = "testSchemaTraversal", params = {"\\*/g/\\+/\\+"})
 })
-public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract {
+public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract, SchemaSpaceTestContract {
 
     // ========================================================================
     //  Backend configuration — set by subclass @BeforeAll
@@ -172,10 +176,25 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     @Override
-    protected void dropDeducedCollection(final String collectionName) {
+    public void dropDeducedCollection(final String collectionName) {
         final Space space = Machine.current().memory().getSpaceFor(f("/g"));
         if (space instanceof grphSpace gs)
             gs.sjvm().V().hasLabel(collectionName).drop().toList();
+    }
+
+    @Override
+    public fURI schemaCollection(final String name) {
+        return f("/g/" + name);
+    }
+
+    @Override
+    public void seedCollection(final String name, final List<Rec> records) {
+        final grphSpace graph = Machine.current().memory().getSpaceFor(f("/g"));
+        records.forEach(record -> {
+            final GraphTraversal<Vertex, Vertex> vertex = graph.sjvm().addV(name);
+            record.recValue().forEach((key, value) -> vertex.property(key.uriValue().name(), ObjTP3Serializer.tp3Value(value)));
+            vertex.next();
+        });
     }
 
     @Override

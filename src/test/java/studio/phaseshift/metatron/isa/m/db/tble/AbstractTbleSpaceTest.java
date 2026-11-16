@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
 import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewritesTestContract;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -120,7 +121,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     @Override
-    protected void dropDeducedCollection(final String collectionName) {
+    public void dropDeducedCollection(final String collectionName) {
         // Drop the table so the shared DataPathSpace tests stay order-independent.
         if (this.space instanceof tbleSpace ts) {
             try {
@@ -1310,9 +1311,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     rec(uri("name"), str("marko"), uri("age"), nat29));
 
             // Verify instset schema shows nat::T (not int::T)
-            final Type personType = space.schemaInstset.types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                    .findFirst().orElse(null);
+            final Type personType = SchemaSpace.Helper.type(space, tableName);
             assertNotNull(personType, "person type should exist in schema instset");
             final Obj fields = personType.isPredicateObj();
             assertNotNull(fields, "person type should have an isa predicate");
@@ -1406,9 +1405,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     rec(uri("name"), str("alice"), uri("homepage"), uri("http://example.com")));
 
             // Verify homepage is uri::T (not str::T) in the instset
-            final Type type1 = space.schemaInstset.types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                    .findFirst().orElse(null);
+            final Type type1 = SchemaSpace.Helper.type(space, tableName);
             assertNotNull(type1, "table type should exist");
             final Obj hpField = type1.isPredicateObj().asRec().at(uri("homepage"));
             assertTrue(hpField.isType());
@@ -1420,9 +1417,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             // === Edge case 2: already-typed rec → re-type is no-op ==========
             // typeRow calls rec.tid(tableTypeVid).  If the rec is already
             // typed to the same type, tid() returns 'this' — zero cost.
-            final Type personType = space.schemaInstset.types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                    .findFirst().orElseThrow();
+            final Type personType = SchemaSpace.Helper.type(space, tableName);
             final Rec alreadyTyped = rec(
                     uri("name"), str("bob"),
                     uri("homepage"), uri("http://bob.com"))
@@ -1449,9 +1444,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             }
             assertTrue(cols.contains("email"), "email column should have been added on the fly");
 
-            final Type type3 = space.schemaInstset.types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                    .findFirst().orElseThrow();
+            final Type type3 = SchemaSpace.Helper.type(space, tableName);
             final Obj emailField = type3.isPredicateObj().asRec().at(uri("email"));
             assertTrue(emailField.isType());
             assertEquals("uri", emailField.asType().vid().name(),
@@ -1495,9 +1488,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         space.write(f("db:" + tableName), lockedType);
 
         // Verify it appears in the schema instset
-        final Type registered = space.schemaInstset.types().stream()
-                .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                .findFirst().orElse(null);
+        final Type registered = SchemaSpace.Helper.type(space, tableName);
         assertNotNull(registered, "locked type should be in schema instset");
         assertNotNull(registered.isPredicateObj(), "should have isa predicate");
 
@@ -1513,18 +1504,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 .create();
         space.write(f("db:" + openName), openType);
 
-        final Type registeredOpen = space.schemaInstset.types().stream()
-                .filter(t -> t.vid().name().equalsIgnoreCase(openName))
-                .findFirst().orElse(null);
+        final Type registeredOpen = SchemaSpace.Helper.type(space, openName);
         assertNotNull(registeredOpen, "open type should be in schema instset");
 
-        // -- Verify isTableDeclared plumbing works ---------------
-        assertTrue(space.isTableDeclared(tableName),
-                "isTableDeclared should see the locked type");
-        assertTrue(space.isTableDeclared(openName),
-                "isTableDeclared should see the open type");
-        assertFalse(space.isTableDeclared("nonexistent"),
-                "isTableDeclared should return false for unknown collections");
+        // -- Verify the declared-collection plumbing works ---------------
+        assertTrue(null != SchemaSpace.Helper.declared(space, tableName),
+                "the locked type should declare its collection");
+        assertTrue(null != SchemaSpace.Helper.declared(space, openName),
+                "the open type should declare its collection");
+        assertFalse(null != SchemaSpace.Helper.declared(space, "nonexistent"),
+                "an unknown collection is not declared");
 
         // Clean up
         space.sql("DROP TABLE IF EXISTS " + openName + "; DROP TABLE IF EXISTS " + tableName);
@@ -1563,9 +1552,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         space.write(f("db:" + autoTable + "/1"),
                 rec(uri("name"), str("alice"), uri("age"), jnt(30)));
         // Verify schema exists with wildcard
-        final Type autoType = space.schemaInstset().types().stream()
-                .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
-                .findFirst().orElse(null);
+        final Type autoType = SchemaSpace.Helper.type(space, autoTable);
         assertNotNull(autoType, "A1: auto type should exist");
         assertNotNull(autoType.isPredicateObj(), "A1: should have predicate");
         final Obj autoPred = autoType.isPredicateObj();
@@ -1584,9 +1571,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         space.write(f("db:" + autoTable + "/2"),
                 rec(uri("name"), str("bob"), uri("age"), jnt(25),
                         uri("skill"), str("coding")));
-        final Type autoType2 = space.schemaInstset().types().stream()
-                .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
-                .findFirst().orElseThrow();
+        final Type autoType2 = SchemaSpace.Helper.type(space, autoTable);
         final Obj pred2 = autoType2.isPredicateObj();
         assertFalse(pred2.asRec().at(uri("skill")).isNoObj(),
                 "A2: skill should be added to schema");
@@ -1622,7 +1607,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
         // Declare type
         final Type declType = TypeBuilder.build()
-                .tid(INT_TID).vid(f(declTable))
+                .tid(REC_TID).vid(f(declTable))
                 .isaPredicate(rec(uri("name"), STR_TYPE, uri("age"), INT_TYPE))
                 .create();
         space.write(f("db:" + declTable), declType);
@@ -1633,19 +1618,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         final Obj rowD1 = space.read(f("db:" + declTable + "/1"));
         assertEquals("alice", rowD1.asRec().at(uri("name")).strValue());
 
-        // D2: extra column — metatron structural typing accepts it.
-        // addColumnOnTheFly adds it, schema refreshed.
+        // D2: extra column — metatron structural typing accepts it, and addColumnOnTheFly adds it.
+        // A DECLARED TYPE STAYS DECLARED (Marko, 2026-11-16): the column does not widen it.
         space.write(f("db:" + declTable + "/2"),
                 rec(uri("name"), str("bob"), uri("age"), jnt(25),
                         uri("skill"), str("coding")));
         final Obj rowD2 = space.read(f("db:" + declTable + "/2"));
         assertEquals("bob", rowD2.asRec().at(uri("name")).strValue());
-        // Schema should include the new column
-        final Type d2type = space.schemaInstset().types().stream()
-                .filter(t -> t.vid().name().equalsIgnoreCase(declTable))
-                .findFirst().orElseThrow();
-        assertFalse(d2type.isPredicateObj().asRec().at(uri("skill")).isNoObj(),
-                "D2: schema should be refreshed with skill column");
+        // The collection's type is still the declared one, without the new column
+        final Type d2type = SchemaSpace.Helper.type(space, declTable);
+        assertEquals(declType.vid(), d2type.vid(), "D2: the declared type should still type the collection");
+        assertTrue(d2type.isPredicateObj().asRec().at(uri("skill")).isNoObj(),
+                "D2: a declared type is not widened by a write");
 
         // D3: wrong type for declared column — typeAndValidate rejects
         assertThrows(Exception.class, () ->
@@ -1653,11 +1637,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                         rec(uri("name"), str("charlie"), uri("age"), str("old")))
         );
 
-        // D4: write without optional column — succeeds, age is NULL
-        space.write(f("db:" + declTable + "/4"),
-                rec(uri("name"), str("diana")));
-        final Obj rowD4 = space.read(f("db:" + declTable + "/4"));
-        assertEquals("diana", rowD4.asRec().at(uri("name")).strValue());
+        // D4: write without a required column — the declared type refuses it, and nothing is stored
+        assertThrows(Exception.class, () ->
+                space.write(f("db:" + declTable + "/4"),
+                        rec(uri("name"), str("diana"))));
+        assertTrue(space.read(f("db:" + declTable + "/4")).isNoObj(), "D4: a refused write stores nothing");
 
         LOG.info("D: declared matrix passed");
         try {
@@ -2372,9 +2356,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                             websiteRow.asRec().at(uri("base_vid")));
 
             // -- Verify schema instset renders website as uri::T --------------
-            final Type tableType = space2.schemaInstset().types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                    .findFirst().orElse(null);
+            final Type tableType = SchemaSpace.Helper.type(space2, tableName);
             assertNotNull(tableType,
                     "table type should exist in schema instset after restart");
             final Obj wsField = tableType.isPredicateObj().asRec().at(uri("website"));
@@ -2428,9 +2410,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "$table sentinel should store the rec's TID");
 
             // -- Verify schema instset Type uses the custom TID ----------------
-            final Type tableType = space.schemaInstset().types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                    .findFirst().orElse(null);
+            final Type tableType = SchemaSpace.Helper.type(space, tableName);
             assertNotNull(tableType, "table type should exist in schema instset");
             assertEquals(customTid, tableType.tid(),
                     "schema instset type TID should match the rec's TID, got: " +

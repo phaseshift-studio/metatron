@@ -48,7 +48,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         // the rated edge's score is not found over remote JanusGraph (count 0, expected 1)
         @SkipRegexTest.Skip(method = "testAddEdge", params = {"outE\\(rated\\)>>score"}),
         // person::T over remote JanusGraph: age reads back as an instruction, not an int, so the match fails to parse
-        @SkipRegexTest.Skip(method = "testInstructionCallTraversals", params = {"\\?person::\\[name=>'marko',age=>_\\]"})
+        @SkipRegexTest.Skip(method = "testInstructionCallTraversals", params = {"\\?person::\\[name=>'marko',age=>_\\]"}),
+        // JanusGraph types a property key once for the whole graph (the modern dataset makes age an Integer), so a key
+        // never holds two storage types: a refined int is written as its mtron string (ObjTP3Serializer) and 'old' is a
+        // String, and the store refuses both before the field's type can widen
+        @SkipRegexTest.Skip(method = "testSchemaInference", params = {"hive|apiary|coop"})
 })
 public class JanusGrphSpaceTest extends AbstractGrphSpaceTest {
 
