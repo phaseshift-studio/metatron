@@ -70,7 +70,9 @@ public class MFiberedRec extends MRec implements FiberedRec {
             final Inst cinst = inst.hasf() ? inst : inst.resolve(value);
             if (!FiberedRec.Helper.applicable(false, value, cinst, inst))
                 continue;
-            final Obj rhs = Processor.Helper.invoke(value, cinst, inst);
+            // a SPANNED call walks its runs on the fiber's value (Inst.Helper.runs), as each copy of an unrolled run was
+            // lifted: invoked whole, its span folded into the answer's point. Any other call is invoked as bound
+            final Obj rhs = cinst.tid().b().isOne() ? Processor.Helper.invoke(value, cinst, inst) : cinst.apply(value);
             if (rhs.isUncaughtFail())
                 return rhs;
             if (!rhs.isNoObj())

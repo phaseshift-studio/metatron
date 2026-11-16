@@ -243,6 +243,21 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
                 "the table is what the rewrite compiles from");
     }
 
+    /**
+     * AN EXACT SPAN IS PUSHED DOWN AS ITS RUN (Marko, 2026-11-15): the code keeps {@code {2}out()}, a run the
+     * processor walks, and the pushdown lays it out as that many Gremlin steps, so it is the one traversal
+     * {@code out().out()} is.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1.{2}out()>>name             % g.V(1).out().out().values('name')",
+            "*/g/V/1.out().out()>>name          % g.V(1).out().out().values('name')",
+            "*/g/V/1.out(knows).{2}out()>>name  % g.V(1).out('knows').out().out().values('name')",
+    }, delimiter = '%')
+    void testAnExactSpanFusesAsItsRun(final String code, final String expected) {
+        assertEquals(expected, script(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(code).asCode().rewrite()));
+    }
+
     /** The adjacency step names a fused run may carry — used to prove none survives the fusion. */
     private static boolean isAdjacencyName(final String name) {
         return switch (name) {

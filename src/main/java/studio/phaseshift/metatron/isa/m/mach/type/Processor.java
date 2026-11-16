@@ -18,8 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type;
 
-import studio.phaseshift.metatron.algebra.PendingWrites;
-import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
@@ -29,21 +27,16 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.transientFail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -135,74 +128,16 @@ public interface Processor extends Component {
         }
 
         /**
-         * The machine's single entry for applying one inst against a runtime lhs: let the {@link Selector} say which
+         * The machine's single entry for applying one STEP against a runtime lhs: let the {@link Selector} say which
          * instruction the call refers to ({@link Selector.Helper#resolve}) and run it (guards, computeArgs,
-         * f().apply, checks, coefficient).
+         * f().apply, checks, coefficient). A spanned instruction never arrives here whole: {@link Inst#apply} walks
+         * its runs ({@link Inst.Helper#runs}), and each step of them lands here.
          */
         public static Obj apply(final Obj lhs, final Inst inst) {
             // A ZERO POINT ANNIHILATES (0a = 0, Marko 2026-11-10): the inst's output, times zero, is nothing for any
             // lhs, so the inst is neither resolved nor run
             if (inst.isNoObj())
                 return noobj();
-            // A SPAN IS A RUN, COMPUTED, NEVER WRITTEN INTO THE CODE (Marko, 2026-11-10): for each length i the span admits,
-            // the lhs runs i steps of the inst without its span, and the runs' results append. {2,3}plus(1) at 1 is the
-            // branch of its unrolls, plus(1).plus(1) and plus(1).plus(1).plus(1), merging at noobj: {3,4}. Each step keeps
-            // the inst's point, as {2}plus{3}(34) is plus{3}(34).plus{3}(34) (Theorem 7), and the zero-step run is the lhs.
-            // The code keeps the span, so a code pattern still reads {?}neg() as a run of none or one.
-            // AN OPEN SPAN LOOPS UNTIL NOOBJ (Marko, 2026-11-13): {*} is _ + a + aa + ... and {+} is a + aa + ..., each run
-            // one step past the last, until a run is noobj. A tree halts where its links run out, and a cycle in the data
-            // loops, as the expression says. (An open span applied once, 2026-11-10: it has no last run, but it has a
-            // first noobj.)
-            final cInt span = inst.tid().b();
-            if (!span.isOne() && null != span.min()) {
-                final Inst step = inst.tid(inst.tid().b(null));
-                // a step that gathers, the swarm's barrier, reduces the whole stream: {1,2,3}.{0,1}sum() is {1,2,3,6}.
-                // Any other step maps over it obj by obj, as the swarm runs it, so a flatmap's stream feeds the next
-                // step one obj at a time
-                final Function<Inst, UnaryOperator<Obj>> stepping = s -> current -> s.isGather()
-                        ? apply(current, s)
-                        : current.stream().map(o -> apply(o, s)).reduce(noobj(), Obj::append);
-                Obj result = noobj();
-                // A NEGATIVE SPAN RUNS BACKWARD (Marko, 2026-11-13): a run of -k steps is k steps of the instruction's
-                // CONVERSE -- the relation it states, reversed: its dom and rng flipped, the same arguments (plus(2)
-                // backward is minus(2), out() is in()) -- as its ?decq claim names it for the contract the lhs dispatches
-                // to. An instruction that declares none has no backward run to compute, so that part of the span stays
-                // as code on its lhs, start(x).{m,-1}inst: in limbo
-                final Obj sample = lhs.stream().findFirst().orElse(null);
-                if (span.min() < 0 && null != sample) {
-                    final long nearest = null == span.max() ? 1L : Math.max(1L, -span.max());
-                    final Inst contract = step.hasf() ? step : Selector.Helper.resolve(sample, step);
-                    final Obj claim = contract.isNoObj() ? noobj() : Machine.read(PendingWrites.decq(Inst.Helper.operationTid(contract.tid())));
-                    final fURI converse = claim.isRec() ? TheoryHelper.roleAddress(claim.asRec(), CONVERSE) : null;
-                    // the limbo is BLOCKED: run, it answers itself, so a stream that iterated it would never end
-                    // (Code.iterator). Its instruction is built as the parser builds one (instB): a retyping clone reads
-                    // its new tid from memory, and a tid with a negative span is no address that read can take
-                    result = null == converse
-                            ? objs(lhs.stream().map(o -> (Obj) MCode.of(List.of(instB(START_INST_TID, lst(o)),
-                            instB(inst.tid().b(cInt.of(span.min(), -nearest)), inst.args())), CODE_TID.addQ(BLOCK), null)))
-                            // the converse is declared as its contract (minus?int<=int(int)), and called as any call is
-                            // keyed: that operation, with the call's own arguments
-                            : runs(lhs, stepping.apply(instB(Inst.Helper.operationTid(converse), step.args())), nearest, -span.min(), result);
-                    if (null != span.max() && span.max() < 0)
-                        return result;
-                }
-                final long first = Math.max(0L, span.min());
-                final UnaryOperator<Obj> once = stepping.apply(step);
-                if (null == span.max()) {
-                    Obj current = lhs;
-                    for (long i = 0; !current.isNoObj(); i++) {
-                        final boolean emitted = i >= first;
-                        result = objs(Stream.concat(result.stream(), current.stream().filter(o -> emitted || o.isUncaughtFail())));
-                        // A FAIL IS NO LINK TO FOLLOW: stepped again it answers itself, never noobj, so it ends the walk,
-                        // surfacing even short of the first emitted run
-                        if (current.stream().anyMatch(Obj::isUncaughtFail))
-                            return result;
-                        current = once.apply(current);
-                    }
-                    return result;
-                }
-                return runs(lhs, once, first, span.max(), result);
-            }
             // A ONE-MEMBER STREAM IS ITS MEMBER. `objs()` collapses a single element everywhere else, but a BARRIER
             // (a reducer/gather) accumulates its input into a stream, so a single upstream value arrives wrapped in a
             // one-member objs. Unwrap it, so the call is resolved against the value the reducer gathered rather than
@@ -211,24 +146,6 @@ public interface Processor extends Component {
                     ? lhs.objsValue().iterator().next()
                     : lhs;
             return invoke(subject, Selector.Helper.resolve(subject, inst), inst);
-        }
-
-        /**
-         * A span's CLOSED RUNS of one step, of lengths {@code from..to}, each from the lhs as it came and appended after
-         * what came {@code before}: the forward runs of the instruction, and the backward runs of its converse. The runs
-         * gather into a FRESH stream: an Objs appends in place, and the zero-step run is the lhs itself, a barrier's bag
-         * that every later run starts from again. Appended into, the bag grew by each run, and {1,2,3}.{0,2}sum() was
-         * {1,2,3,6,12}.
-         */
-        private static Obj runs(final Obj lhs, final UnaryOperator<Obj> once, final long from, final long to, final Obj before) {
-            Obj result = before;
-            for (long i = from; i <= to; i++) {
-                Obj current = lhs;
-                for (long j = 0; j < i; j++)
-                    current = once.apply(current);
-                result = objs(Stream.of(result, current).flatMap(Obj::stream));
-            }
-            return result;
         }
 
         /**

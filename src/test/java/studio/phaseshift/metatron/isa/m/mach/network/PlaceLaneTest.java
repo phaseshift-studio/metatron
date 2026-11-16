@@ -342,6 +342,26 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE RUN PARTITION SPLITS BY THE WORK OF A WALK (Marko, 2026-11-15): each lane walks its runs from the whole seed,
+     * each step once, so a share {@code {a,b}} costs the {@code b} steps it walks and the {@code b - a + 1} runs it
+     * emits, and the lane nearer the top takes fewer runs. Each row: the chain % the lanes' narrowed spans, home first.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start?place=[local,peer](0).{0,4}plus(1).sum()   % 0..2|3..4",
+            "start?place=[local,peer](0).{1,4}plus(1).sum()   % 1..3|4..4",
+            "start?place=[local,peer](0).{0,9}plus(1).sum()   % 0..6|7..9",
+    }, delimiter = '%')
+    void testTheRunPartitionSplitsByTheWorkOfAWalk(final String source, final String expected) {
+        Network.Helper.connect(Machine.current().network(), PEER);
+        final DistributedSweep.Layout layout = DistributedSweep.layout(lower(homeAndPeer(), source));
+        assertEquals(expected, layout.lanes().stream()
+                .map(lane -> lane.code().insts().stream().map(inst -> inst.tid().b()).filter(span -> !span.isOne())
+                        .map(span -> span.min() + ".." + span.max()).findFirst().orElse("no span"))
+                .collect(java.util.stream.Collectors.joining("|")), "the shares of the unroll index: " + layout.emitted());
+    }
+
+    /**
      * THE CUTLESS RUN PARTITION — the branch IS the recombination: no combiner, the lanes' narrowed spans are the
      * additive terms, and the value is the unroll's formal sum.
      */

@@ -243,8 +243,8 @@ public final class Shard {
     /**
      * THE RUN PARTITION: factor a span range of the run over the roster. One lane per distinct place, each carrying the
      * whole seed and the run with its span narrowed to that lane's share of the unroll index — a contiguous subrange
-     * chosen by WORK, because unroll {@code k} costs {@code k} applications and an index-even split leaves the last lane
-     * with almost all of it. The branch recombines the terms; the chain's tail (from {@code runEnd}) runs at home over
+     * chosen by WORK ({@link #splitByCost}): a lane walks its runs from the seed, so the lane nearer the top walks
+     * further and takes fewer runs. The branch recombines the terms; the chain's tail (from {@code runEnd}) runs at home over
      * the branch's bag, so a reducer after the run folds the union exactly as it folds the serial unroll.
      */
     private static Code unroll(final Code code, final List<Inst> insts, final int runEnd, final Inst head,
@@ -304,25 +304,23 @@ public final class Shard {
     }
 
     /**
-     * THE UNROLL INDEX, SPLIT BY WORK. Unroll {@code k} applies the step {@code k} times, so a subrange's cost is
-     * {@code Σ k}; the boundaries solve {@code T(p) = (lane / lanes) · T(n)} on the triangular numbers, which places
-     * them at the square root of the work rather than at even indices. Every range is non-empty and contiguous (a lane's
-     * program is one narrowed span), and the ranges cover {@code [min, max]} exactly once.
+     * THE UNROLL INDEX, SPLIT BY WORK. A lane walks its runs from the whole seed, each step once, the runs sharing their
+     * steps (Inst.Helper.runs, Marko 2026-11-15), so a subrange {@code [a, b]} costs the {@code b} steps it walks and
+     * the {@code b - a + 1} runs it emits. No split shortens the top lane's walk to {@code max}, so the work balances in
+     * the runs: equal costs {@code b + (b - a + 1)} halve a lane's share at each lane up, the shares from the top being
+     * {@code w, 2w, 4w, …} of the {@code 2^lanes - 1} parts. {@code {0,4}} over two lanes is {@code [0,2]} and
+     * {@code [3,4]}, costing 5 and 6. Every range is non-empty and contiguous (a lane's program is one narrowed span),
+     * and the ranges cover {@code [min, max]} exactly once.
      */
     private static List<long[]> splitByCost(final long min, final long max, final int lanes) {
         final List<long[]> ranges = new ArrayList<>(lanes);
-        if (1 >= lanes) {
-            ranges.add(new long[]{min, max});
-            return ranges;
-        }
-        final double below = min <= 0 ? 0.0 : ((double) (min - 1) * min) / 2.0;
-        final double total = ((double) max * (max + 1)) / 2.0 - below;
         long start = min;
         for (int lane = 0; lane < lanes - 1; lane++) {
-            final double target = ((double) (lane + 1) * total) / lanes;
-            final long bound = Math.min(max - (lanes - 1 - lane), max);
-            final long at = Math.round((Math.sqrt(1.0 + 8.0 * (below + target)) - 1.0) / 2.0);
-            final long end = Math.max(start, Math.min(at, bound));
+            // of the lanes left, this one holds 2^(left-1) of the 2^left - 1 parts of the runs left, and leaves a run to
+            // each lane above it
+            final int left = lanes - lane;
+            final double share = (max - start + 1) * Math.pow(2, left - 1) / (Math.pow(2, left) - 1);
+            final long end = Math.max(start, Math.min(start + Math.round(share) - 1, max - (left - 1)));
             ranges.add(new long[]{start, end});
             start = end + 1;
         }

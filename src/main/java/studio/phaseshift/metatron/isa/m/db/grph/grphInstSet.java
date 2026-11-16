@@ -450,7 +450,15 @@ public class grphInstSet extends AbstractInstSet {
      * ({@code te:hot}) labels are left alone: the space routes those, not Gremlin.
      */
     private static Code fuseGremlinRuns(final Code code) {
-        final List<Inst> insts = code.insts();
+        // AN EXACT SPAN ON A GREMLIN STEP IS THAT MANY GREMLIN STEPS ({2}out() is out().out()): the code keeps the span,
+        // a run Inst.Helper.runs walks, and one Gremlin step says no run, so the run is laid out where it is pushed down.
+        // A ranged or negative span stays for the processor (isPushable)
+        final List<Inst> insts = code.insts().stream()
+                .flatMap(inst -> inst.tid().b().isExact() && null != inst.tid().b().min() && 1L < inst.tid().b().min()
+                        && !getGremlinRewrite(inst.tid().name()).isNoObj()
+                        ? Collections.nCopies(inst.tid().b().min().intValue(), inst.tid(inst.tid().b(null))).stream()
+                        : Stream.of(inst))
+                .toList();
         final List<Inst> fused = new ArrayList<>(insts.size());
         boolean changed = false;
         for (int i = 0; i < insts.size(); i++) {

@@ -1231,7 +1231,9 @@ public class mInstSet extends AbstractInstSet {
                         // multiplication itself. A call member splices in by its insts, a non-call member lifts to the map that
                         // emits it, stream-transparent either way. A REMOTE LANE IS NOT A ONE-TERM SUM: inlining a lane keyed to
                         // another host would drop the place and run the program here. A lone addressless lane runs here anyway,
-                        // so it inlines as a positional one does
+                        // so it inlines as a positional one does. A SPANNED ONE-TERM SUM IS A RUN of the frame, never a point
+                        // on its member (Marko, 2026-11-15): {2}branch(b) is b.b, so it stays for Inst.Helper.runs to walk, where
+                        // folding its c() (span x point) in made {2}branch(plus{3}(34)) one plus{6}(34)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_inline"), code -> {
                             final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
                             if (null == op)
@@ -1239,7 +1241,7 @@ public class mInstSet extends AbstractInstSet {
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
-                                if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && !Inst.Helper.hasRemoteLane(inst)) {
+                                if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)) {
                                     final Obj lone = inst.args().isRec() ? inst.args().asRec().recValue().values().iterator().next() : inst.arg(0);
                                     final cInt c = inst.c();
                                     final Obj member;

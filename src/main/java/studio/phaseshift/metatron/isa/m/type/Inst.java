@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -29,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -40,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -49,9 +53,11 @@ import static studio.phaseshift.metatron.isa.m.mach.machInstSet.REPLY_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -506,8 +512,10 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         // [Compiler] resolution + [Processor] computeArgs + f().apply + runtime check/coefficient
-        // all live on the machine now (Processor.Helper); the type layer's apply is a handoff.
-        return Processor.Helper.apply(lhs, this);
+        // all live on the machine now (Processor.Helper); the type layer's apply is a handoff. A SPANNED instruction
+        // is the sum of its runs (Helper.runs), and each step of a run is that handoff
+        final cInt span = this.tid().b();
+        return span.isOne() || null == span.min() ? Processor.Helper.apply(lhs, this) : Helper.runs(lhs, this);
     }
 
     default boolean isCatch() {
@@ -622,6 +630,103 @@ public interface Inst extends Call {
          */
         public static fURI operationTid(final fURI tid) {
             return null == tid || !tid.hasQ(ARGS) ? tid : tid.removeQ(ARGS);
+        }
+
+        /**
+         * A SPAN IS A RUN, COMPUTED, NEVER WRITTEN INTO THE CODE (Marko, 2026-11-10), AND WALKED ONCE (Marko,
+         * 2026-11-15): {@code {m,n}inst} is the sum of the runs of lengths m to n of the inst without its span, each
+         * run one step past the last, so a step runs once however many runs share it and {@code {1,1000}f} costs a
+         * thousand steps. The zero-step run is the lhs, each step keeps the inst's point ({@code {2}plus{3}(34)} is
+         * {@code {9}69}, Theorem 7), {@code {2,3}plus(1)} at 1 is {@code {3,4}}, and an exact span is the same walk with
+         * one run kept. The code keeps the span, so a code pattern still reads {@code {?}neg()} as a run of none or one.
+         * <p>
+         * A NEGATIVE SPAN RUNS BACKWARD (Marko, 2026-11-13): a run of -k steps is k steps of the instruction's CONVERSE,
+         * the relation it states reversed: its dom and rng flipped, the same arguments ({@code plus(2)} backward is
+         * {@code minus(2)}, {@code out()} is {@code in()}), as its ?decq claim names it for the contract the lhs
+         * dispatches to. An instruction that declares none has no backward run to compute, so that part of the span
+         * stays as code on its lhs, {@code start(x).{m,-1}inst}: in limbo.
+         */
+        public static Obj runs(final Obj lhs, final Inst inst) {
+            final cInt span = inst.tid().b();
+            final Inst step = inst.tid(inst.tid().b(null));
+            Obj result = noobj();
+            final Obj sample = lhs.stream().findFirst().orElse(null);
+            if (span.min() < 0 && null != sample) {
+                final long nearest = null == span.max() ? 1L : Math.max(1L, -span.max());
+                final Inst contract = step.hasf() ? step : Selector.Helper.resolve(sample, step);
+                final Obj claim = contract.isNoObj() ? noobj() : Machine.read(PendingWrites.decq(Helper.operationTid(contract.tid())));
+                final fURI converse = claim.isRec() ? TheoryHelper.roleAddress(claim.asRec(), CONVERSE) : null;
+                // the limbo is BLOCKED: run, it answers itself, so a stream that iterated it would never end
+                // (Code.iterator). Its instruction is built as the parser builds one (instB): a retyping clone reads
+                // its new tid from memory, and a tid with a negative span is no address that read can take
+                result = null == converse
+                        ? objs(lhs.stream().map(o -> (Obj) MCode.of(List.of(instB(START_INST_TID, lst(o)),
+                        instB(inst.tid().b(cInt.of(span.min(), -nearest)), inst.args())), CODE_TID.addQ(BLOCK), null)))
+                        // the converse is declared as its contract (minus?int<=int(int)), and called as any call is
+                        // keyed: that operation, with the call's own arguments
+                        : walk(lhs, instB(Helper.operationTid(converse), step.args()), nearest, -span.min(), result);
+            }
+            return null != span.max() && span.max() < 0 ? result : walk(lhs, step, Math.max(0L, span.min()), span.max(), result);
+        }
+
+        /**
+         * The runs of lengths {@code from..to} of one step ({@code to} null: open), walked from the lhs: each run one
+         * step past the last, kept from {@code from} on, and appended after what came {@code before} in a FRESH stream.
+         * An Objs appends in place, and the zero-step run is the lhs itself, a barrier's bag the next step reads:
+         * appended into, {1,2,3}.{0,2}sum() was {1,2,3,6,12}.
+         * <p>
+         * A RUN THAT LEAVES THE STEP'S DOMAIN HALTS (Marko, 2026-11-15), as out() halts on noobj where a tree's links
+         * run out. noobj steps on only into a step whose dom admits {0} (count() counts it, start(x) starts from it),
+         * and halts there too when the step answers nothing again. A FAIL IS NO LINK TO FOLLOW: stepped again it answers
+         * itself, never noobj, so it ends the walk and surfaces once, even short of the first kept run. A cycle in the
+         * data loops, as the expression says.
+         */
+        private static Obj walk(final Obj lhs, final Inst step, final long from, final Long to, final Obj before) {
+            Obj result = before;
+            Obj current = lhs;
+            for (long k = 0; ; k++) {
+                final boolean kept = k >= from;
+                result = objs(Stream.concat(result.stream(), current.stream().filter(o -> kept || o.isUncaughtFail())));
+                if ((null != to && k == to) || current.stream().anyMatch(Obj::isUncaughtFail))
+                    return result;
+                if (current.isNoObj()) {
+                    // a step left to run time is resolved against nothing, to say whether it takes it
+                    final Inst taker = step.hasDom() ? step : Selector.Helper.resolve(current, step);
+                    if (!taker.hasDom() || !taker.dom().c().isZeroable())
+                        return result;
+                    current = taker.apply(current);
+                    if (current.isNoObj())
+                        return result;
+                } else {
+                    // HOW MUCH OF A RUN A STEP TAKES IS ITS DOM'S COEFFICIENT (Marko, 2026-11-15), as the swarm feeds it:
+                    // inst?A<=A{*}() takes the run whole ({1,2,3}.{0,1}sum() is {1,2,3,6}), as does a dom of more than one,
+                    // and plus?int<=int() takes one obj at a time, so a flatmap's stream feeds the next step obj by obj
+                    final cInt takes = step.dom().c();
+                    current = null == takes.max() || 1L < takes.max()
+                            ? admitted(current, step)
+                            : current.stream().map(o -> admitted(o, step)).reduce(noobj(), Obj::append);
+                }
+            }
+        }
+
+        /**
+         * One step on what a run holds. A step that takes one obj at a time takes each copy of a bulked one alone
+         * ({@code {3}35} is three 35s, as invoke compresses it), so its dom is asked of one copy and it resolves for one.
+         * The step was compiled for the type the run came in with, so what its dom refuses is resolved again for what it
+         * is, as each copy of an unrolled run was (Marko, 2026-11-15): its f set to null and its dom kept, and where that
+         * resolves nothing, its dom dropped. {@code 1.{2}as(str)} compiles {@code as?uri<=int}, and its second run is the
+         * {@code as?uri<=uri} the first never was. What no overload of the call takes has left the step's domain: its
+         * walk halts there. A step left to run time has no domain to leave, and resolves, or fails, as any call does.
+         */
+        private static Obj admitted(final Obj obj, final Inst step) {
+            final cInt takes = step.dom().c();
+            final Obj one = null != takes.max() && 1L >= takes.max() ? obj.c(cInt.ONE()) : obj;
+            if (!step.hasDom() || Helper.filterOnDomainAllowUnique(one, step))
+                return step.apply(obj);
+            final Inst call = step.f(null);
+            final Inst kept = Selector.Helper.resolve(one, call);
+            final Inst again = kept.hasf() ? kept : Selector.Helper.resolve(one, call.tid(call.tid().removeQ(DOM)));
+            return again.hasf() ? again.apply(obj) : noobj();
         }
 
         public static Inst fullSignature(final Inst inst) {

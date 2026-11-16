@@ -379,19 +379,22 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{plus(4),plus(10)}            % 1..{plus(4),plus(10)}",
             "1.{plus(4),plus(10)}            % 1.branch(plus(4),plus(10))",
             "1.{7,3}                         % 1.branch(7,3)",
-            "1.{2}plus(1)                    % 1.plus(1).plus(1)",
+            // a span stays on its instruction (Marko, 2026-11-15): an exact span is the closed range of one length, and
+            // a zero span is no step at all
+            "1.{2}plus(1)                    % 1.{2,2}plus(1)",
+            "1.{0}plus(1).plus(2)            % 1.plus(2)",
             "1.{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
             "1..{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
             "1.plus(1).{2}{plus(1),mult(2)}  % 1.plus(1).{2}branch(plus(1),mult(2))",
             "1.{?}{plus(1),mult(2)}          % 1.{?}branch(plus(1),mult(2))",
             // a deref's leading coefficient is its span, as a named instruction's is (Marko, 2026-11-10: read left to
             // right, greedy until a syntax error), never the point of a bare uri *a
-            "{2}*a                           % from(a).from(a)",
             "{2}*a                           % {2}from(a)",
-            "{3}*/x/y                        % from(/x/y).from(/x/y).from(/x/y)",
-            "1.{2}*a                         % 1.from(a).from(a)",
-            "1.{2}*a.plus(1)                 % 1.from(a).from(a).plus(1)",
-            "{2}!*a                          % auto_from(a).auto_from(a)",
+            "{2}*a                           % {2,2}from(a)",
+            "{3}*/x/y                        % {3}from(/x/y)",
+            "1.{2}*a                         % 1.{2}from(a)",
+            "1.{2}*a.plus(1)                 % 1.{2}from(a).plus(1)",
+            "{2}!*a                          % {2}auto_from(a)",
             "{0}*a                           % {0}from(a)",
             // a value is {point}value{span} (Marko, 2026-11-10): a span of one is no span (testValueSpans has the rest)
             "2{1}                            % 2",
@@ -492,9 +495,44 @@ public class mParserTest extends AbstractMetatronTest {
             "{1,2,3}.{0,2}sum()                       % {1,2,3,{2}6}",
             "{1,2}.{0,2}plus(1)                       % {1,{2}2,{2}3,4}",
             "{1,2,3}.{2,3}count()                     % {2}1",
+            // ... from one step too: one copy over {1,2} has no quotient, so the read that resolves the call threw, the
+            // reducer was left to run time, and it ran one obj at a time ({1,2,3}.{1,2}count() was {6}1)
+            "{1,2,3}.{1,2}count()                     % {3,1}",
+            "{1,2,3}.{1,3}count()                     % {3,{2}1}",
+            "{1,2,3}.{1,2}sum()                       % {2}6",
+            "{1,2,3}.{1,3}sum()                       % {3}6",
+            "{1,2,3}.{1,2}sum().plus(1)               % {2}7",
+            "{1,2,3}.{1,2}count().count()             % 2",
+            "{1,2,3}.{1,2}count{2}()                  % {{2}3,{2}2}",
+            "{1,2,3}.is(gt(5)).{1,2}count()           % {0,1}",
+            // ... and a step that takes one obj at a time answers as it did
+            "{1,2,3}.{1,2}plus(1)                     % {2,{2}3,{2}4,5}",
+            "{1,2,3}.{1,2}is(gt(1))                   % {{2}2,{2}3}",
+            "1.{1,2}plus(1)                           % {2,3}",
+            // AN EXACT SPAN IS THE SAME WALK WITH ONE RUN KEPT (Marko, 2026-11-15): the code keeps {2}count(), a run of a
+            // reducer still gathers the whole stream, and the resolver types the run, never span x point copies
+            "{1,2,3}.{2}count()                       % 1",
+            "{1,2,3}.{3}sum()                         % 6",
+            "0.{10}plus(4)                            % 40",
+            "0.{10}plus(4).count()                    % 1",
+            "0.{10}plus(4).plus(1)                    % 41",
+            "{1,2}.{2}plus(10).count()                % 2",
+            // a run that leaves the step's domain halts (Marko, 2026-11-15): 5>>a takes no step, so the walk ends at 5
+            "[a=>[a=>5]].{0,5}rshift(a)               % {[a=>[a=>5]],[a=>5],5}",
+            // ... and a run of another type resolves the call again, as each copy of an unrolled run did: as(str) casts
+            // to the uri str names, and 1.as(str).as(str) is <1> (its second cast an as?uri<=uri the first never was)
+            "1.{2}as(str)                             % <1>",
+            "1.{2}branch(as(str))                     % <1>",
+            "1.{2}{as(str),as(str)}                   % {4}<1>",
+            "[[1,2],[3]].{2}merge().plus(1)           % {2,3,4}",
+            "[[1,2],[3]].{0,2}merge().count()         % 6",
+            // a fail ends a closed walk too, surfacing once
+            "1.{2,3}plus('x')                         % <ERROR>",
             // (a + a + a)^2 = 9a^2, the point inside the span; the brace with one dot
             "1.{2}{plus(34),plus(34),plus(34)}        % {9}69",
             "1.{plus(34),plus(34),plus(34)}           % {3}35",
+            // a spanned one-term sum is a run of the branch, never a point on its member: (a + a)^k = 2^k a^k
+            "1.{2,3}{plus(1),plus(1)}                 % {{4}3,{8}4}",
             "1.{?}{plus(1),mult(2)}                   % {1,{2}2}",
             // an open span loops until noobj (Marko, 2026-11-13): {*} is _ + a + aa + ..., {+} is a + aa + ..., each run
             // one step past the last, so a tree halts where it runs out ([b=>5]>>a is noobj)
