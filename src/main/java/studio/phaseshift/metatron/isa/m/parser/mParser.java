@@ -667,15 +667,15 @@ public class mParser {
             if (null == first)
                 return second;
             // A SPAN STAYS ON ITS INSTRUCTION (Marko, 2026-11-15), at the head of an expression as in a chain (m_code):
-            // {2}*a is one from(a), a run of two that applying it walks (Inst.Helper.runs). A ZERO SPAN IS NO STEP, so
-            // {0}*a is no instruction at all
-            final List<Inst> head = !first.isInst() || first.asInst().tid().b().isZero() ? List.of() : List.of(first.asInst());
+            // {2}*a is one from(a), a run of two that applying it walks (Inst.Helper.runs). A ZERO SPAN IS id() (Marko,
+            // 2026-11-16): {0}*a is f to the zero, the identity, never the noobj that annihilated the chain after it
+            final Obj lead = first.isInst() && first.asInst().tid().b().isZero() ? instB(ID_INST_TID, lst()) : first;
             if (null == second)
-                return !first.isInst() || head.size() == 1 ? first : MCode.of(head, Tokens.CODE_TID, pick(t, 3)).tryToInst();
+                return lead;
             final List<Inst> newCode = new ArrayList<>();
-            if (first.isNoObj() || !first.isInst())
-                newCode.add(instB(headTID, lst(first.isInst() ? noobj() : first)));
-            else newCode.addAll(head);
+            if (lead.isNoObj() || !lead.isInst())
+                newCode.add(instB(headTID, lst(lead.isInst() ? noobj() : lead)));
+            else newCode.add(lead.asInst());
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
             return MCode.of(startAfterEnd(newCode), Tokens.CODE_TID, pick(t, 3)).tryToInst();
         });
@@ -1646,10 +1646,10 @@ public class mParser {
                 opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix());
         return choice(prefixed, plain)
                 .map(t -> {
-                    // a span stays on its instruction, a run that applying it walks, and a zero span is no step at all:
-                    // {0}plus(1) is no instruction (Inst.Helper.runs)
+                    // a span stays on its instruction, a run that applying it walks (Inst.Helper.runs), and a zero span
+                    // is id() (Marko, 2026-11-16): {0}plus(1) is plus(1) to the zero, the identity, whatever its point
                     final List<Object> elements = mParser.<List<Object>>pick(t, 2).stream()
-                            .filter(e -> !(e instanceof Inst inst && inst.tid().b().isZero()))
+                            .map(e -> e instanceof Inst inst && inst.tid().b().isZero() ? instB(ID_INST_TID, lst()) : e)
                             .toList();
                     return elements.size() == 1 ? elements.getFirst() : new MCode((List) startAfterEnd(elements
                             .stream()
