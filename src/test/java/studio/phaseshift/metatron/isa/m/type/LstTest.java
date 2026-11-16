@@ -500,7 +500,7 @@ public class LstTest extends AbstractAlgebraTest {
      * {@code lhs.isa?#{*}<=#{*}(rhs)}: the whole lhs comes back on a match, noobj otherwise.
      */
     @ParameterizedTest
-    @TestData(value = {"age -> int::T@age"})
+    @TestData(value = {"import(/m/math)", "age -> int::T@age"})
     @CsvSource(value = {
             // ---- a span is a run of slots, and a point unfolds into the run the same way ----
             "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [{3}int::T]",
@@ -512,6 +512,8 @@ public class LstTest extends AbstractAlgebraTest {
             "[3{2}].isa?#{*}<=#{*}([int::T,int::T])                                                % [3{2}]",
             // ---- a type's own count, T{n}, unfolds as well ----
             "[int::T{3}].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [int::T{3}]",
+            "[{2}nat::T,{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,{2}str::T,str::T,str::T])         % [{2}nat::T,{4}'hello']",
+            "[nat::T{2},{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,str::T{2},str::T,str::T])         % [nat::T{2},{4}'hello']",
             "[{2}age::T,{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,{2}str::T,str::T,str::T])         % [{2}age::T,{4}'hello']",
             "[age::T{2},{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,str::T{2},str::T,str::T])         % [age::T{2},{4}'hello']",
             // ---- a range takes any count in it, on either side ----
@@ -521,6 +523,7 @@ public class LstTest extends AbstractAlgebraTest {
             "[int{?}::T{2},str::T].isa?#{*}<=#{*}([int::T,int::T,str::T])                          % [int{?}::T{2},str::T]",
             "[int::T,int::T,int::T].isa?#{*}<=#{*}([{?}int::T,{2}int::T])                          % [int::T,int::T,int::T]",
             "['a'].isa?#{*}<=#{*}([{*}int::T,str::T])                                              % ['a']",
+            "[5,6].isa?#{*}<=#{*}([{2}nat::T])                                                     % [5,6]",
             // ---- a zero run is no index at all ----
             "[int{0}::T,[3=>'x',5=>'stuff']].isa?#{*}<=#{*}([noobj,[int::T=>str::T]])              % [int{0}::T,[3=>'x',5=>'stuff']]",
             "[,].isa?#{*}<=#{*}([int{?}::T])                                                       % [,]",
@@ -540,8 +543,9 @@ public class LstTest extends AbstractAlgebraTest {
             "[{2}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % noobj",
             "[int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                           % noobj",
             "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([int::T,int::T,int::T,str::T])                   % noobj",
-            "[{2}age::T,{4}'hello'].isa?#{*}<=#{*}([int::T,{5}str::T])                             % noobj",
-            "[{2}age::T].isa?#{*}<=#{*}([str::T,str::T])                                           % noobj",
+            "[{2}nat::T,{4}'hello'].isa?#{*}<=#{*}([int::T,{5}str::T])                             % noobj",
+            "[{2}nat::T].isa?#{*}<=#{*}([str::T,str::T])                                           % noobj",
+            "[5,-1].isa?#{*}<=#{*}([{2}nat::T])                                                    % noobj",
             "[1,2,'a'].isa?#{*}<=#{*}([{2}int::T,{2}str::T])                                       % noobj",
             "[{2}1].isa?#{*}<=#{*}([1,2])                                                          % noobj",
             "[{*}int::T].isa?#{*}<=#{*}([{*}int::T,str::T])                                        % noobj",
