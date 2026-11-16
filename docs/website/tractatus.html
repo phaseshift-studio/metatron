@@ -2641,7 +2641,7 @@ The MCP notifications specification notes the following method specs:
 🧱 `prompts/list_changed`   🧱 Sent when the list of available prompt templates has changed.
 🧱 `tools/list_changed`     🧱 Sent when the list of available tools has changed (typically when the server declares the listChanged capability).
 🧱 `logging/message`        🧱 Sent by the server to provide log output to the client, triggered when the client has configured logging via logging/setLevel.
-🧱 `roots/list_changed`     🧱 Sent when the list of filesystem roots accessible to the server has changed.
+🧱 `roots/list_changed`     🧱 _Client -> server_ (not a server notification): sent by the client when its list of filesystem roots changes. Metatron accepts it and never answers it.
 |===
 
 If an MCP session is spawned at `ws://localhost:8555/mcp/0`, then writing an obj to `ws://localhost:8555/mcp/0/notification/x/y` will automatically be routed to the MCP client in a proper https://www.jsonrpc.org/[JSON-RPC 2.0] transport object.
@@ -3371,7 +3371,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{y}}E{{g}}T{{b}}A{{b}}T{{m}}r{{c}}O{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{b}}e{{b}}t{{g}}A{{y}}t{{g}}r{{g}}o{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5910,16 +5910,17 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
-==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6355852      7144   6348708   1% /run'
-==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 609564996 301392828  67% /'
-==&gt;'tmpfs           31779244      3520  31775724   1% /dev/shm'
-==&gt;'tmpfs               5120        20      5100   1% /run/lock'
-==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
-==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6355848       256   6355592   1% /run/user/1000'
-==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
+==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
+==&gt;'tmpfs                    6355852       6904   6348948   1% /run'
+==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
+==&gt;'/dev/nvme1n1p2         959786032  620610424 290347400  69% /'
+==&gt;'tmpfs                   31779244       7708  31771536   1% /dev/shm'
+==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
+==&gt;'tmpfs                   31779244          0  31779244   0% /run/qemu'
+==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
+==&gt;'tmpfs                    6355848        248   6355600   1% /run/user/1000'
+==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
+==&gt;'//192.168.1.72/beast1 1921208544 1324194048 597014496  69% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;'AGENTSWARM.md'
@@ -5932,8 +5933,10 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;dsh-plugins
 ==&gt;'dsh-usage-boot.log'
 ==&gt;dsh-usage-data
+==&gt;'HANDOFF-analyzer-analq.md'
 ==&gt;'language.properties'
 ==&gt;LICENSE
+==&gt;'metatron.iml'
 ==&gt;mvnw
 ==&gt;'mvnw.cmd'
 ==&gt;node_modules
@@ -5945,7 +5948,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').split(' ').count()
-==&gt;89</code></pre>
+==&gt;91</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -5982,10 +5985,10 @@ mtron&gt; fs:m/src &gt;&gt;     ​3​
 ==&gt;fs:m/src/test
 mtron&gt; fs:m/src &gt;&gt; 2     ​4​
 ==&gt;fs:m/src/main/python
-==&gt;fs:m/src/main/js
 ==&gt;fs:m/src/main/assembly
 ==&gt;fs:m/src/main/java
 ==&gt;fs:m/src/main/resources
+==&gt;fs:m/src/main/mtron
 ==&gt;fs:m/src/main/mpython
 ==&gt;fs:m/src/test/python
 ==&gt;fs:m/src/test/java
@@ -6133,7 +6136,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:1400/01/10/210?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:1600/41/54/851?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7976,7 +7979,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:1400/01/16/112?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1600/41/59/491?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7995,7 +7998,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:1400/01/16/112?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1600/41/59/491?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -8087,7 +8090,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:1400/00/50/369?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:1600/41/34/167?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8095,7 +8098,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:1400/00/50/369?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:1600/41/34/167?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -8816,11 +8819,13 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 ==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
+==&gt;'alex'
 ==&gt;'grant'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;2</code></pre>
+==&gt;2
+==&gt;3</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8864,7 +8869,21 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
+==&gt;rec::T[?[{?}trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[{?}player=&gt;str::T,
+            {?}points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            {?}age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            {?}parent=&gt;auto_from?args=[/m/uri]::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8874,7 +8893,21 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+</code></pre>
+mtron&gt; *lite:+
+==&gt;rec::T[?[{?}trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[{?}player=&gt;str::T,
+            {?}points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            {?}age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[{?}name=&gt;str::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            {?}parent=&gt;auto_from?args=[/m/uri]::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 </div>

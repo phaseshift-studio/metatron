@@ -628,7 +628,7 @@ prefixes, and a shared prefix factors. Factored all at once, the sum is Horner's
 ::: **Theorem 10** (A span range is one walk). If $a \in \mathcal{F}$ is pure and $m \leq n$, then
 $$
 \begin{equation*}
-a^{[m,n]} = a^m \cdot (1 + a \cdot (1 + a \cdot ( \cdots (1 + a)))),
+a^{[m,n]} = a^m \cdot (1 + a \cdot (1 + a \cdot (\cdots (1 + a)))),
 \end{equation*}
 $$
 with $n - m$ factors of $a$ after $a^m$. So if $\langle x_0 \rangle = \langle x \rangle$ and
@@ -690,7 +690,8 @@ If $s$ sums a stream, then $\langle 1, 2, 3 \rangle s^{[0,1]} = \langle 1, 2, 3 
 over the whole stream, while a branch that feeds $s$ one object at a time sums each alone,
 $\langle (2)1, (2)2, (2)3 \rangle$. If $c$ counts a stream, then
 $\langle 1, 2, 3 \rangle c^{[1,2]} = \langle 3 \rangle + \langle 1 \rangle$. A step that takes one object at a time
-walks object by object: $\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \rangle + \langle 3, 4 \rangle$.
+walks object by
+object: $\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \rangle + \langle 3, 4 \rangle$.
 
 ```mtron_pre
 {1,2,3}.{0,1}sum()
@@ -715,12 +716,13 @@ In mtron, `{n}a` and `{m,n}a` are each one instruction, and the processor walks 
 past the last, the runs from $m$ on kept, until the run $n$ or a run that leaves the domain of `a`. How much of a run a
 step takes is the coefficient of its domain: `sum?int<=int{*}()` takes a run whole, and `plus?int<=int()` one object at
 a time, as the swarm feeds them. A step compiled for the type of its first run is resolved again for a run of another
-type, as each copy of an unrolled chain was compiled against its own input: `1.{2}as(str)` casts an `int` to the uri
-`<1>`, and its second run casts that uri, which the cast compiled for an `int` never was.
+type, as each copy of an unrolled chain was compiled against its own input: `1.{2}as(str::T)` casts an `int` to the
+`str`
+`'1'`, and its second run casts that `str`, which the cast compiled for an `int` never was.
 
 ```mtron_pre
-1.{2}as(str)
-1.as(str).as(str)
+1.{2}as(str::T)
+1.as(str::T).as(str::T)
 ```
 
 The walk replaced two naive evaluations of a span. The parser wrote an exact span out as its compose chain, so
