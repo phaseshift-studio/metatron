@@ -28,10 +28,10 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -45,9 +45,9 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.ToLongFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -66,7 +66,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -191,7 +190,6 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REVERSE_INST_TID = M_ISA_INST_TID.extend("reverse");
     public static final fURI CLOSE_INST_TID = M_ISA_INST_TID.extend("close");
     public static final fURI REPEAT_INST_TID = M_ISA_INST_TID.extend("repeat");
-    public static final fURI TIMEOUT_INST_TID = M_ISA_INST_TID.extend("timeout");
     public static final fURI LOOP_INST_TID = M_ISA_INST_TID.extend("loop");
     public static final fURI PATH_INST_TID = M_ISA_INST_TID.extend("path");
     public static final fURI AT_INST_TID = M_ISA_INST_TID.extend("at");

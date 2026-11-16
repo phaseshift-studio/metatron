@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.math;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -27,10 +28,10 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
@@ -51,6 +52,38 @@ public class mathInstSetTest extends AbstractInstSetTest {
 
     public mathInstSetTest() {
         super(mathInstSet::new);
+    }
+
+    @ParameterizedTest
+    @Timeout(30)
+    @CsvSource(delimiter = '%', value = {
+            "1.timeout(plus(1),second::1.0)                                    % 2",
+            "1.timeout(plus(1).mult(3),millis::1000.0)                         % 6",
+            "{1,2,3}.timeout(plus(1),second::1.0)                              % {2,3,4}",
+            "1.timeout({0,3}plus(1),second::1.0)                               % {1,2,3,4}",
+            "1.timeout({*}plus(0),millis::100.0)                               % <ERROR>",
+            "1.timeout({*}plus(0),millis::100.0).catch(5)                      % 5",
+            "1.timeout({*}plus(0),millis::100.0).catch(5).plus(1)              % 6",
+            "1.timeout(timeout({*}plus(0),millis::100.0).catch(7),second::5.0) % 7",
+    })
+    public void testATimeoutAnswersInTimeOrFails(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * The alarm's interrupt must not outlive the timeout: the thread that evaluated it, a pooled one most often, goes on
+     * to evaluate the next program uninterrupted. An endless walk ends after its time, and soon after.
+     */
+    @Test
+    @Timeout(30)
+    public void testATimeoutEndsOnTimeAndLeavesNoInterruptBehind() {
+        final long start = System.nanoTime();
+        final Obj cut = Machine.parse("1.timeout({*}plus(0),millis::200.0)").apply(noobj());
+        final long elapsed = (System.nanoTime() - start) / 1_000_000L;
+        assertTrue(cut.isFail(), () -> "an endless walk under a timeout answers a fail: " + cut);
+        assertTrue(elapsed >= 200L && elapsed < 5_000L, () -> "it ends after its 200 ms, and soon after: " + elapsed + " ms");
+        assertFalse(Thread.currentThread().isInterrupted(), "the alarm's interrupt must not outlive the timeout");
+        checkCodeParseApply(LOG, "1.plus(1)", "2");
     }
 
     @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
