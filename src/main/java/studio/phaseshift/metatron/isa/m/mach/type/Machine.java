@@ -188,7 +188,15 @@ public interface Machine extends Rec, AutoCloseable {
         // place a read is turned into an address. An address an instruction set holds is routed there too: an ISA is
         // not a space in memory's index (it lives in the instset), but memory's lookup weighs the instset's libraries
         // against its own spaces, so the most specific claimant answers, as it always did.
-        final Obj inMemory = machine.memory().read(name);
+        // A READ THAT MEETS AN INTERRUPT KEEPS IT (2026-11-16): a graph read throws TinkerPop's interruption with the
+        // thread's flag cleared, and the catch above a read (resolution's fallback, a fail value) ended the interrupt
+        // there, so the door interrupts the thread again before the throwable passes (MTronException.keepInterrupt).
+        final Obj inMemory;
+        try {
+            inMemory = machine.memory().read(name);
+        } catch (final RuntimeException e) {
+            throw MTronException.keepInterrupt(e);
+        }
         if (!inMemory.isNoObj())
             return inMemory;
         // ... AND A READ READS INSTRUCTION MEMORY. A read is the language's ONE way in, so it answers from the
@@ -250,8 +258,13 @@ public interface Machine extends Rec, AutoCloseable {
             return dispatched;
         // Local pass-through to Memory (see read). An address an instruction set holds is written to it there:
         // memory's lookup weighs the instset's libraries, so "the most specific gains the write" (Marko, 2026-10-25)
-        // — /m/math/cat/… to /m/math/cat, /m/math/… to /m/math, the rest of /m/… to /m.
-        return machine.memory().write(name, obj);
+        // — /m/math/cat/… to /m/math/cat, /m/math/… to /m/math, the rest of /m/… to /m. A write that meets an interrupt
+        // keeps it, as a read does.
+        try {
+            return machine.memory().write(name, obj);
+        } catch (final RuntimeException e) {
+            throw MTronException.keepInterrupt(e);
+        }
     }
 
     static Obj write(final String vid, final Obj obj) {
