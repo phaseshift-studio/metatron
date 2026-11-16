@@ -689,7 +689,7 @@ public class tbleInstSet extends AbstractInstSet {
                                 tableGuard
                         ), "sql_where_offset(table,cond,800).take(10)", "sql_where_offset_limit(table, cond, 800, 10)", Map.of(), "fuses where, offset, and limit into a single native SELECT ... WHERE ... LIMIT n OFFSET m"),
 
-                        // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table
+                        // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table, and the >>{col1,col2} stays to project each row
                         docWrap(CommonRewrites.selectRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_select"),
@@ -731,7 +731,7 @@ public class tbleInstSet extends AbstractInstSet {
                                     }
                                 },
                                 tableGuard
-                        ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections"),
+                        ), "*table/+>>{name,age}", "sql_select(table, [name,age])>>{name,age}", Map.of(), "leverages native SELECT col1, col2 FROM table to narrow a projection's read"),
 
                         // Optimize: from(table/+).order(select(col)) → SELECT * FROM table ORDER BY col
                         docWrap(CommonRewrites.orderRewrite(

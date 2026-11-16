@@ -2810,6 +2810,34 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
+     * A NATIVE PROJECTION ONLY NARROWS THE READ: {@code >>value} on a row is the row's value, so {@code sql_select}
+     * reads the column and the walk's own {@code >>} still projects it. It stood in for the {@code >>} and handed the
+     * next step the rows ({@code [value=>1]}): {@code >>value.plus(1)} failed in an infinite fail-loop, and
+     * {@code >>value.sum{2}()} summed the rows into one rec. The columns are the keys the shift looks up: siblings
+     * ({@code >>{value,name}}) narrow to both. A shift that names no column is not narrowed, and the walk answers it:
+     * the str {@code >>'value'}, the lst key {@code >>[value,name]} (Marko, 2026-11-16), the path {@code >>value/name}.
+     * The plan is also applied on its own, because the evaluation recovered the walk's answer whenever the native op
+     * was last. The rows are {@code code % what the walk answers % the op the plan reads with}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+>>value.plus(1).sum()      % 65     % sql_select",
+            "*db:rewrite_test/+>>value.is(gt(8)).count()  % 2      % sql_select",
+            "*db:rewrite_test/+>>value.sum{2}()           % {2}55  % sql_select",
+            "*db:rewrite_test/+>>{value,name}.count()     % 20     % sql_select",
+            "*db:rewrite_test/+>>'value'                  % noobj  % from",
+            "*db:rewrite_test/+>>[value,name]             % noobj  % from",
+            "*db:rewrite_test/+>>value/name               % noobj  % from",
+    })
+    public void testANativeProjectionAnswersAsTheWalk(final String code, final String expected, final String reads) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, plan.apply(), true);
+    }
+
+    /**
      * The ORDER fusions are GATED on purpose — see the gate comment in {@code CommonRewrites} and
      * t-mw19gny3-hhgle5: the fused op returns its rows coefficient-shaped, so a chained {@code count()} counts
      * members (5 rows answered 15). Declining keeps the mtron path, which is CORRECT but not fused, so the
