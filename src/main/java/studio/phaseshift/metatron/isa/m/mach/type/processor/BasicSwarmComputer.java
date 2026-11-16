@@ -397,7 +397,8 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
                 if (null != barrier) {
                     barrier.countPropagation();
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
-                    final Obj result = Processor.Helper.apply(barrier.obj(), barrier.inst());
+                    // through the inst's own apply: a spanned reducer waits here too, and walks its runs
+                    final Obj result = barrier.inst().apply(barrier.obj());
                     // a gather emits one result monad carrying its coefficient — record its
                     // out-flow here (the barrier path bypasses StatefulMonad.next()).
                     final fURI barVid = barrier.inst().vid();

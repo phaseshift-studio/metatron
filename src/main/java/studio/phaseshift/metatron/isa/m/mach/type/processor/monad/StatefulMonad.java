@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.Monad;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -283,11 +282,11 @@ public interface StatefulMonad extends Monad<Lst> {
         final long t0 = null == profile ? 0L : System.nanoTime();
         // A SPAN IS A RUN, NOT A POINT: inst() writes the monad's multiplicity into the inst's coefficient with c(count),
         // which folds a span into the point. A spanned inst runs as written, on the obj at the monad's multiplicity, so
-        // the multiplicity counts once and never once a step (Processor.Helper.apply lays the run out)
+        // the multiplicity counts once and never once a step (Inst.apply walks the run)
         final Inst written = this.jvm().asLst().jvm().get(1).as();
         final Obj result = written.tid().b().isOne()
-                ? Processor.Helper.apply(input, this.inst())
-                : Processor.Helper.apply(this.c().isOne() ? input : input.c(c -> c.mult(this.c())), written);
+                ? this.inst().apply(input)
+                : written.apply(this.c().isOne() ? input : input.c(c -> c.mult(this.c())));
         if (null != profile) {
             final long elapsed = System.nanoTime() - t0;
             profile.record(f(APPLY), f(APPLY), elapsed);

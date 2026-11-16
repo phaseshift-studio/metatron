@@ -375,9 +375,11 @@ public abstract class AbstractfURI implements fURI {
         if (this.c().equals(count))
             return this;
         // the coefficient floats into the point, over what the point does not carry (the span and the branch
-        // points) when that divides it
+        // points) when that divides it. A RANGE NEVER DIVIDES ONE NONZERO COUNT: x·{1,2} is a single count only at
+        // x = 0, and div has no quotient to answer ({1}/{1,2} is {1,0}), so one() threw on a {1,n} span, the read
+        // that resolves a spanned call failed, and {1,2,3}.{1,2}count() was left to run one obj at a time
         final cInt rest = this.d(cInt.ONE()).c();
-        if (!rest.isZeroable() && rest.mult(count.div(rest)).equals(count))
+        if (!rest.isZeroable() && (rest.isExact() || count.isRange() || count.isZero()) && rest.mult(count.div(rest)).equals(count))
             return this.d(count.div(rest));
         return this.hasBranches() ? this.d(count) : this.b(cInt.ONE()).d(count);
     }

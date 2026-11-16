@@ -2205,6 +2205,17 @@ public class fURITest extends AbstractMetatronTest {
             "<a/{b,c}{2}>        % 8    % a/{b,c}{4}",
             "<a/{{2}b,c}>        % 5    % a/{{2}b,c}{5}",
             "<a/{b,c}{2}>        % 1    % a/{b,c}",
+            // a range never divides one nonzero count (x·{1,2} is a single count only at x = 0): the span is dropped.
+            // one() is the read a resolution makes, and {1}/{1,2} has no quotient ({1,0}), so it threw
+            "<{1,2}/m/inst/count> % 1   % /m/inst/count",
+            "<{1,3}/a/b>         % 6    % /a/b{6}",
+            "<{-3,-1}/a/b>       % 1    % /a/b",
+            "<{+}/a/b>           % 1    % /a/b",
+            "<{2,3}/a/b>         % 1    % /a/b",
+            // ... while a count a range does divide keeps it, the zero count included (x = 0)
+            "<{2,3}/a/b>         % 4,9  % {2,3}/a/b{2,3}",
+            "<{1,2}/a/b>         % 0    % {1,2}/a/b{0}",
+            "<{3}/a/b>           % 6    % {3}/a/b{2}",
     }, delimiter = '%')
     void testCountWrite(final String furi, final String count, final String expected) {
         final fURI written = f(furi).c(cInt.of(count));

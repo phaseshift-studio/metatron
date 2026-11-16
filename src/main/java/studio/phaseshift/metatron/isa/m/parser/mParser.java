@@ -666,9 +666,10 @@ public class mParser {
             final Obj second = mParser.pick(t, 2);
             if (null == first)
                 return second;
-            // a spanned instruction at the head of an expression is its run, as it is in a chain (m_code): {2}*a is
-            // from(a).from(a), never one from(a) that keeps the span
-            final List<Inst> head = !first.isInst() ? List.of() : runs(List.<Object>of(first)).stream().map(h -> (Inst) h).toList();
+            // A SPAN STAYS ON ITS INSTRUCTION (Marko, 2026-11-15), at the head of an expression as in a chain (m_code):
+            // {2}*a is one from(a), a run of two that applying it walks (Inst.Helper.runs). A ZERO SPAN IS NO STEP, so
+            // {0}*a is no instruction at all
+            final List<Inst> head = !first.isInst() || first.asInst().tid().b().isZero() ? List.of() : List.of(first.asInst());
             if (null == second)
                 return !first.isInst() || head.size() == 1 ? first : MCode.of(head, Tokens.CODE_TID, pick(t, 3)).tryToInst();
             final List<Inst> newCode = new ArrayList<>();
@@ -1330,7 +1331,8 @@ public class mParser {
     public static Parser m_inst_furi() {
         // AN INSTRUCTION IS {span}inst{point}, as a type is: a leading coefficient is a run of the instruction (Marko,
         // 2026-11-09: {2}plus{3}(34) is plus{3}(34).plus{3}(34)), so it is the tid's span, not the point m_furi_bare
-        // would read it as. m_code unfolds a finite run; a ranged one stays on the tid, a run a code pattern matches
+        // would read it as. Every span stays on the tid, a run a code pattern matches and applying walks (Marko,
+        // 2026-11-15), and m_code drops a zero one: a zero run is no step
         return seq(opt(m_furi_coefficient(), null), m_furi(REDUCED_FURI_CHARS, true, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
                 .map(t -> {
                     final fURI tid = mParser.<fURI>pick(t, 1).qString(mParser.pick(t, 2));
@@ -1644,34 +1646,17 @@ public class mParser {
                 opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix());
         return choice(prefixed, plain)
                 .map(t -> {
-                    final List<Object> elements = runs(pick(t, 2));
+                    // a span stays on its instruction, a run that applying it walks, and a zero span is no step at all:
+                    // {0}plus(1) is no instruction (Inst.Helper.runs)
+                    final List<Object> elements = mParser.<List<Object>>pick(t, 2).stream()
+                            .filter(e -> !(e instanceof Inst inst && inst.tid().b().isZero()))
+                            .toList();
                     return elements.size() == 1 ? elements.getFirst() : new MCode((List) startAfterEnd(elements
                             .stream()
                             .filter(x -> x instanceof Inst)
                             .map(x -> (Inst) x)
                             .toList()), pick(t, 0), pick(t, 4)).tryToInst();
                 });
-    }
-
-    /**
-     * A FINITE SPAN IS THAT MANY IN A ROW: {2}plus{3}(34) is plus{3}(34).plus{3}(34), and {0}plus(1) is no instruction at
-     * all. A ranged span ({?}, {2,3}, {+}, {*}) stays on its instruction: a code pattern reads it as a run, and applying
-     * the instruction computes its runs ({@code Processor.Helper.apply}). A chain's elements ({@link #m_code}) and an
-     * expression's head ({@link #m_call_prefix}) are laid out alike.
-     */
-    private static List<Object> runs(final List<Object> elements) {
-        final List<Object> runs = new ArrayList<>();
-        for (final Object element : elements) {
-            final cInt span = element instanceof Inst inst ? inst.tid().b() : cInt.ONE();
-            // a negative span runs the instruction BACKWARD (its converse), which no copies of it can write out:
-            // {-1}plus(1) laid out as zero copies was plus(1) gone, the identity
-            if (span.isOne() || null == span.min() || !span.min().equals(span.max()) || span.min() < 0)
-                runs.add(element);
-            else
-                for (long k = 0; k < span.min(); k++)
-                    runs.add(((Inst) element).tid(((Inst) element).tid().b(null)));
-        }
-        return runs;
     }
 
     public static Parser m_inst() {

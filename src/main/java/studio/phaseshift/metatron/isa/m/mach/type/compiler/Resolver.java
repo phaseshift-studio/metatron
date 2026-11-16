@@ -189,6 +189,7 @@ public interface Resolver extends Component {
             boolean fullResolution = true;
             int i = 0;
             for (final Inst inst : code.insts()) {
+                final Obj before = token;
                 try {
                     final boolean isBranchInst = false && inst.tid().basePath().equals(BRANCH_INST_TID);
                     final Inst bound = isBranchInst ? inst : inst.resolve(token, sel, binder);
@@ -224,13 +225,39 @@ public interface Resolver extends Component {
                         // can never reach the map — a filter that emits ∅ short-circuits the chain. So drop
                         // the 0 wing ({0,n} → {n,n}) for compile-time typing only, leaving rng() itself maybe
                         // so isFilter()/isPredicate()/gather-classification still read the filter cardinality.
-                        token = resolvedInst.isFilter() ? resolvedInst.rng().c(resolvedInst.c().max()) : resolvedInst.rng();
+                        token = resolvedInst.isFilter() ? resolvedInst.rng().c(resolvedInst.tid().d().max()) : resolvedInst.rng();
                         if (resolvedInst.isInitial() && !resolvedInst.hasRng() && resolvedInst.tid().basePath().equals(START_INST_TID)) {
                             LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
                             token = resolvedInst.arg(0).isType() ? resolvedInst.arg(0) : resolvedInst.arg(0).type();
                         }
                     }
-                    token = token.c(c -> c.mult(resolvedInst.c()));
+                    // A SPAN TYPES ITS RUNS (Marko, 2026-11-15), never span × point copies: c() counts a value's copies,
+                    // while a run of a one-to-one step emits one obj, at the step's point. The zero-step run is the lhs as
+                    // it came and a backward run returns to the lhs's type, so {10}plus(4) types one int, {2,3}plus(1) two,
+                    // and {?}plus(1) the lhs and one more. A step whose type changes between runs is resolved once per run
+                    // type, until the runs' common type stops changing
+                    final cInt span = resolvedInst.tid().b();
+                    if (span.isOne() || null == span.min())
+                        token = token.c(c -> c.mult(resolvedInst.c()));
+                    else {
+                        final boolean zero = span.min() <= 0 && (null == span.max() || span.max() >= 0);
+                        Type met = span.min() <= 0 ? before.c(cInt.ONE()).asType() : null;
+                        Obj run = token;
+                        for (long k = 1; null == span.max() || k <= span.max(); k++) {
+                            final Type joined = null == met ? run.c(cInt.ONE()).asType() : Type.Helper.findLCD(List.of(met, run.c(cInt.ONE()).asType()));
+                            if (joined.equals(met))
+                                break;
+                            met = joined;
+                            if (!resolvedInst.hasDom() || (null != span.max() && k == span.max()))
+                                break;
+                            final Inst again = inst.resolve(run, sel, binder);
+                            if (!again.hasDom())
+                                break;
+                            run = again.isFilter() ? again.rng().c(again.tid().d().max()) : again.rng();
+                        }
+                        final cInt runs = null == span.max() ? cInt.MAYBESOME() : cInt.of(span.max() - span.min() + (zero ? 0L : 1L));
+                        token = met.c(runs.mult(resolvedInst.tid().d()).plus(zero ? before.c() : cInt.ZERO()));
+                    }
                 } catch (final Exception e) {
                     resolvedCode.add(inst.clone().selfVID(f(i)).as());
                     LOG.debug("runtime resolution of %s required", inst);

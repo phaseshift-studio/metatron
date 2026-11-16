@@ -147,9 +147,10 @@ An unreadable `?split` is refused loudly (the key and the text), never defaulted
 on an instruction is the sum of its unrolls, `a^[m,n] = a^m + … + a^n`, and the unrolls are independent terms — so when
 the seed is a singleton and the run carries a closed range, `law_shard` factors the **unroll index**: one lane per
 distinct place, each carrying the **whole** seed and the run with its span narrowed to that place's share (`{p_i,q_i}`,
-a contiguous subrange chosen by WORK — unroll `k` costs `k` applications, so the boundaries are triangular, not
-index-even). The chain's tail (the first non-floatable instruction after the run, a reducer included) runs at home over
-the branch's bag.
+a contiguous subrange chosen by WORK — a lane walks its runs from the seed, each step once, so a share `{a,b}` costs the
+`b` steps it walks and the `b - a + 1` runs it emits, and the lane nearer the top takes fewer runs: `{0,4}` over two
+places is `{0,2}` and `{3,4}`). The chain's tail (the first non-floatable instruction after the run, a reducer included)
+runs at home over the branch's bag.
 
 ```mtron
 start(0).{0,10}plus(1).sum()
