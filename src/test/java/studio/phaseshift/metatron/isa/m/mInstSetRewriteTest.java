@@ -155,6 +155,11 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "theory_unit_removal     % 5.id()                              % start(5)",
             "theory_unit_removal     % 5.plus(1)                           % start(5).plus(1)",
             "theory_unit_removal     % 5.mult(0)                           % start(5).mult(0)",
+            // ... and a coefficient keeps a unit, the span and the point each: {-1}plus{-1}(0) is a backward run with a
+            // negated point, whose span x point is 1, and taking that product for "no coefficient" dropped it
+            "theory_unit_removal     % 5.{-1}plus{-1}(0)                   % start(5).{-1}plus{-1}(0)",
+            "theory_unit_removal     % 5.plus{-1}(0)                       % start(5).plus{-1}(0)",
+            "theory_unit_removal     % 5.{2}plus(0)                        % start(5).{2}plus(0)",
             // ... and end is the additive group's id, composition's zero: never the identity
             "theory_unit_removal     % 5.end()                             % start(5).end()",
             "theory_unit_removal     % 5.id().end()                        % start(5).end()",

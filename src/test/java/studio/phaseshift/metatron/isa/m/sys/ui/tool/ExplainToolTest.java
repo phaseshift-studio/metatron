@@ -150,4 +150,21 @@ public class ExplainToolTest extends AbstractMetatronTest {
         assertEquals(cDom, table.column(6).stream().map(cell -> Graphitty.strip(cell.toString())).collect(Collectors.joining(" ")), code.toString());
         assertEquals(cRng, table.column(7).stream().map(cell -> Graphitty.strip(cell.toString())).collect(Collectors.joining(" ")), code.toString());
     }
+
+    /**
+     * The op column writes an instruction as the language does, {@code {span}op{point}}, as explain()'s table does: a
+     * span of ten is {@code {10}plus}, never {@code plus{10}} (a point of ten), and a span and a point are each written
+     * in their place, never as their product ({@code {2}plus{3}} once printed as {@code plus{6}}).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "0.{10}plus(4)    % start {10}plus",
+            "1.{2}plus{3}(1)  % start {2}plus{3}",
+            "1.plus{3}(1)     % start plus{3}",
+            "1.plus(1)        % start plus"})
+    public void testTheOpColumnWritesTheSpanBeforeTheOp(final String expression, final String ops) {
+        final Code code = parse(expression).resolve(noobj()).asCode();
+        final TableWidget table = new ProfileTool(code, ProfileTool.ARGS_MIN_WIDTH).instTable;
+        assertEquals(ops, table.column(0).stream().map(cell -> Graphitty.strip(cell.toString())).collect(Collectors.joining(" ")), code.toString());
+    }
 }

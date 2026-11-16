@@ -313,10 +313,11 @@ public class DBRewriteBuilder<S extends Space> {
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
 
-                // Extract coefficient from the last instruction in the chain
+                // the point of the last instruction in the chain: the copies it emits. Not c(), which is span x point;
+                // a matched step's span is the pattern's (RewriterBuilder.instsMatch)
                 final C<?, ?> coeff = map.values().stream()
                         .reduce((first, second) -> second)
-                        .map(Inst::c)
+                        .map(inst -> inst.tid().d())
                         .orElse(cInt.C_ONE);
 
                 LOG.debug("evaluating native %s operation on %s in space %s", this.rewriteName, expandedfURI, space);
