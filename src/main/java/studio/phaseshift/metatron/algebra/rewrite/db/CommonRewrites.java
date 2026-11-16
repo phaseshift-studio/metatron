@@ -532,8 +532,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                // Extract field names from the rshift argument
-                // >>{name, age} -> arg(0) is a rec/lst with the field names
+                // the columns the rshift's keys name: >>name, or the siblings >>{name,age}
                 final Obj fieldsArg = rshiftInst.arg(0);
                 final java.util.List<String> fields = extractColumnNames(fieldsArg);
 
@@ -562,6 +561,10 @@ public final class CommonRewrites {
                         .map(c -> (Obj) str(c))
                         .toList();
 
+                // A NATIVE PROJECTION ONLY NARROWS THE READ (2026-11-16): the op reads the named columns, and the rshift
+                // stays after it to project them, so >>value answers each row's value as the walk does. Standing in
+                // for the rshift, the op handed the next step its rows ([value=>1]): >>value.plus(1) failed in a
+                // fail-loop, and >>value.sum{2}() summed the rows into one rec.
                 return java.util.List.of(
                         instC(
                                 this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
@@ -576,56 +579,28 @@ public final class CommonRewrites {
                                                 "failed to execute native select operation");
                                     }
                                 }
-                        )
-                );
+                        ),
+                        rshiftInst);
             };
         }
 
         /**
-         * Extract field names from the rshift argument.
-         * Handles both rec syntax {name, age} and list syntax [name, age].
+         * THE COLUMNS A SHIFT READS ARE THE KEYS IT LOOKS UP ({@code Rec.Helper.rshiftRec}): each member of the
+         * arg's stream is a key, and a branched key is its siblings. So {@code >>value} reads the column value and
+         * {@code >>{value,name}} the sibling columns value and name. {@code >>[value,name]} looks up the one key
+         * {@code lst::[value,name]} and {@code >>'value'} the str {@code 'value'} (Marko, 2026-11-16): neither names
+         * a column, so the read is not narrowed and the walk answers them, as it does a path ({@code >>value/name})
+         * and a pattern. Null when the arg is not a plain key of one segment, or a branch of them.
          */
         private java.util.List<String> extractColumnNames(final Obj fieldsArg) {
-            if (fieldsArg == null || fieldsArg.isNoObj()) {
+            if (null == fieldsArg || fieldsArg.isNoObj() || !fieldsArg.stream().allMatch(Obj::isUri))
                 return null;
-            }
-
-            final java.util.List<String> fields = new java.util.ArrayList<>();
-
-            if (fieldsArg.isRec()) {
-                // Rec syntax: {name, age} - keys are the field names
-                for (final var rel : (Iterable<studio.phaseshift.metatron.isa.m.type.Rel>) fieldsArg.asRec().elements()::iterator) {
-                    final Obj key = rel.first();
-                    if (key.isUri()) {
-                        fields.add(key.uriValue().name());
-                    } else if (key.isStr()) {
-                        fields.add(key.strValue());
-                    } else {
-                        return null; // Complex key, can't translate
-                    }
-                }
-            } else if (fieldsArg.isLst()) {
-                // List syntax: [name, age]
-                for (final Obj item : fieldsArg.asLst().lstValue()) {
-                    if (item.isUri()) {
-                        fields.add(item.uriValue().name());
-                    } else if (item.isStr()) {
-                        fields.add(item.strValue());
-                    } else {
-                        return null; // Complex item, can't translate
-                    }
-                }
-            } else if (fieldsArg.isUri()) {
-                // Single field: >>name
-                fields.add(fieldsArg.uriValue().name());
-            } else if (fieldsArg.isStr()) {
-                // Single field as string
-                fields.add(fieldsArg.strValue());
-            } else {
-                return null; // Unknown format
-            }
-
-            return fields;
+            final java.util.List<fURI> keys = fieldsArg.stream()
+                    .flatMap(key -> key.uriValue().hasBranches() ? key.uriValue().branches() : java.util.stream.Stream.of(key.uriValue()))
+                    .toList();
+            return keys.stream().allMatch(key -> !key.hasPattern() && 1 == key.path().size())
+                    ? keys.stream().map(fURI::name).distinct().toList()
+                    : null;
         }
     }
 

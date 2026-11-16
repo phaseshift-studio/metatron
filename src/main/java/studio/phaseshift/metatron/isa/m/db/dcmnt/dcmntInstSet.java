@@ -289,7 +289,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 }
                         ),
 
-                        // Optimize: from(collection/+).>>{field1,field2} → MongoDB projection
+                        // Optimize: from(collection/+).>>{field1,field2} → a MongoDB projection, and the >>{field1,field2} stays to project each document
                         CommonRewrites.selectRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_select"),

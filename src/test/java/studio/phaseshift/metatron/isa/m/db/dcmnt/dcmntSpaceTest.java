@@ -1367,6 +1367,28 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
+     * A NATIVE PROJECTION ONLY NARROWS THE READ, as on tble ({@code AbstractTbleSpaceTest}, which explains it): the
+     * shared select rewrite reads the fields the shift's keys name, and the walk's own {@code >>} still projects them,
+     * so the next step gets the values, not the documents. The rows are
+     * {@code code % what the walk answers % the op the plan reads with}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:rewrite_test/+>>value.plus(1).sum()      % 65     % mql_select",
+            "*mongo:rewrite_test/+>>value.is(gt(8)).count()  % 2      % mql_select",
+            "*mongo:rewrite_test/+>>value.sum{2}()           % {2}55  % mql_select",
+            "*mongo:rewrite_test/+>>{value,name}.count()     % 20     % mql_select",
+            "*mongo:rewrite_test/+>>'value'                  % noobj  % from",
+    })
+    public void testANativeProjectionAnswersAsTheWalk(final String code, final String expected, final String reads) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, plan.apply(), true);
+    }
+
+    /**
      * Parameterized test for all rewrite optimizations.
      * Tests count, limit, has, where, where+count, aggregations, and compositions.
      * Test data (rewrite_test collection with 10 docs) is created in @BeforeEach.
