@@ -472,4 +472,4 @@
 [0.03,"o","a"]
 [0.03,"o","t"]
 [0.12,"o","\r\n"]
-[0.3,"o","==>\"\"\"\r\n    op      dom          rng      args                                                 f    desc      c_dom  c_rng \r\n    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=>start?hop=0(0).{0,7}plus(1),   <j>  standard  {0}    {*}   \r\n                                   ws://localhost:1112=>start?hop=0(0).{8,10}plus(1)]                              \r\n    sum     #{*}::T      #::T                                                          <?>  reducer   {*}    {1}   \r\n   \"\"\"\r\n"]
+[0.3,"o","==>\"\"\"\r\n    op      dom          rng      args                                                 f    desc      c_dom  c_rng \r\n    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=>start?hop=0(0).{0,6}plus(1),   <j>  standard  {0}    {*}   \r\n                                   ws://localhost:1112=>start?hop=0(0).{7,10}plus(1)]                              \r\n    sum     #{*}::T      #::T                                                          <?>  reducer   {*}    {1}   \r\n   \"\"\"\r\n"]

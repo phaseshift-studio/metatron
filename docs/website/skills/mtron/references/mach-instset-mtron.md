@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}resolver=>'the third stage — the walk that th...',
-           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
-           {?}typer=>'the fourth stage — the per-machine...'],
+           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}resolver=>'the third stage — the walk that th...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -277,10 +277,10 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}result=>'the objs the last evaluation produ...',
-           {?}analyzer=>"the processor's statistics (analyz...",
-           {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
+           {?}state=>'the run state: stop, run or pause',
+           {?}analyzer=>"the processor's statistics (analyz...",
+           {?}result=>'the objs the last evaluation produ...',
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -334,13 +334,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}result=>'the last result produced by the th...',
-           {?}state=>'current state of the thread',
-           {?}timeout=>'how long a read of rhs waits for t...',
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}time=>'the datetime::T when the thread wa...',
+           {?}runtime=>"computes the thread's current runn...",
            code=>"the thread's executing code",
-           {?}runtime=>"computes the thread's current runn..."],
+           {?}time=>'the datetime::T when the thread wa...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}state=>'current state of the thread',
+           {?}result=>'the last result produced by the th...'],
           desc=>'the thread base type']
 ```
 | key       | value                                        |
@@ -397,11 +397,11 @@ mtron> */m/mach/component/network?docq
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
            {?}roster=>'known machines, connectionless: <h...',
-           {?}status=>'the health method — an auto inst c...',
-           {?}listener=>'the sockets this machine serves th...',
-           {?}pattern=>'the branch this network answers as...',
+           {?}analyzer=>"the network's statistics (analyzer...",
            {?}peer=>"machine's own connections, one per...",
-           {?}analyzer=>"the network's statistics (analyzer..."],
+           {?}pattern=>'the branch this network answers as...',
+           {?}listener=>'the sockets this machine serves th...',
+           {?}status=>'the health method — an auto inst c...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
@@ -488,17 +488,17 @@ network as `memspace::[pattern=>xyz/#]` indexes into memory.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>[pattern=>ws://localhost:8555/mtron,
-    host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    ...(1 more)]
+==>ws_client::[pattern=>ws://localhost:8555/mtron,
+               host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               ...(1 more)]
 ```
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
 its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client`
