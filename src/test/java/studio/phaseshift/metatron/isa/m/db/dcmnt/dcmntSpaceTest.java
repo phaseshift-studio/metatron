@@ -45,6 +45,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -538,7 +539,8 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     @Test
-    @Disabled
+    @Disabled("a structural merge of a shorter lst drops the tail: @mongo:users/user4 >>= [stats=>[[events=>[[score=>101]]]]] "
+            + "updates stats/0, but stats/1/events/0/score then reads noobj, not 88 (checked 2026-11-16)")
     public void testUpdateExistingNestedDocument() {
         LOG.info("Testing update existing nested document");
 
@@ -1385,7 +1387,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
         assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
         final Obj want = Machine.parse(expected);
-        checkEquality(LOG, want.isCall() ? want.apply() : want, plan.apply(), true);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
     }
 
     /**
