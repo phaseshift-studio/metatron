@@ -367,10 +367,16 @@
      //  I/O — readStream / writeStream (new API)
      // =========================================================================
 
+     /**
+      * THE ID AN ENTRY NAMES, as reads and writes look a vertex up alike: the modern graph loads Integer ids, so a number
+      * that fits an int is one, and a larger one (JanusGraph's) stays a Long. A Long lookup misses an Integer id, and the
+      * write path made one: an update of {@code /g/V/1} added a vertex and left vertex 1 as it was.
+      */
      private static Object coerceId(final Object entry) {
-         if (entry instanceof Number)
-             return ((Number) entry).intValue();
-         return CommonUtil.isInt(entry.toString()) ? Integer.parseInt(entry.toString()) : entry;
+         if (!(entry instanceof Number) && !CommonUtil.isInt(entry.toString()))
+             return entry;
+         final long id = entry instanceof Number number ? number.longValue() : Long.parseLong(entry.toString());
+         return id == (int) id ? (Object) Integer.valueOf((int) id) : (Object) Long.valueOf(id);
      }
 
      private Iterator<IdObj> readVertexTraversal(final DataPath dp) {
@@ -587,6 +593,8 @@
                          return this.readFlat(rel, pattern);
                  }
                  final DataPath dp = this.annotateTypes(routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed));
+                 // the field a read reaches into, with its extension when it has one: extend(null) threw, so */g/V/1/name failed
+                 final fURI field = !dp.hasField() ? null : dp.hasExtension() ? f(dp.field()).extend(dp.extension()) : f(dp.field());
                  if (!dp.hasCollection()) return IteratorUtil.of();
                  if (!dp.hasEntry()) return readCollection(dp);
                  // /g/+/+ → every label type under the configured schema route
@@ -620,7 +628,7 @@
                              .map(v -> IdObj.of(this.elementVID(v), new VertexRec(v, this)))
                              .map(idobj -> {
                                  if (dp.hasField()) {
-                                     return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())), idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
+                                     return IdObj.of(idobj.furi().extend(field), idobj.obj().asRec().at(field));
                                  } else {
                                      return idobj;
                                  }
@@ -640,7 +648,7 @@
                              .map(e -> IdObj.of(this.elementVID(e), new EdgeRec(e, this)))
                              .map(idobj -> {
                                  if (dp.hasField()) {
-                                     return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())), idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
+                                     return IdObj.of(idobj.furi().extend(field), idobj.obj().asRec().at(field));
                                  } else {
                                      return idobj;
                                  }
@@ -663,8 +671,8 @@
                                  .map(v -> IdObj.of(this.elementVID(v), new VertexRec(v, this)))
                                  .map(idobj -> {
                                      if (dp.hasField()) {
-                                         return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())),
-                                                 idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
+                                         return IdObj.of(idobj.furi().extend(field),
+                                                 idobj.obj().asRec().at(field));
                                      } else {
                                          return idobj;
                                      }
@@ -680,8 +688,8 @@
                                  .map(e -> IdObj.of(this.elementVID(e), new EdgeRec(e, this)))
                                  .map(idobj -> {
                                      if (dp.hasField()) {
-                                         return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())),
-                                                 idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
+                                         return IdObj.of(idobj.furi().extend(field),
+                                                 idobj.obj().asRec().at(field));
                                      } else {
                                          return idobj;
                                      }
@@ -874,7 +882,7 @@
          }
          if (!obj.isRec())
              throw MTronException.of("graph vertex requires a Rec; cannot promote %s", obj.type());
-         final Object id = Long.parseLong(dp.entry());
+         final Object id = coerceId(dp.entry());
          final String label = "V".equals(dp.collection())
                  ? (obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
                  ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()

@@ -43,6 +43,10 @@
         <!-- the inst `args`-in-tid switch, ON by default: disable for a byte-identical legacy spelling with
              -Dmtron.inst.args-in-tid=false (the tests run ON; a legacy run opts out) -->
         <mtron.inst.args-in-tid>true</mtron.inst.args-in-tid>
+        <!-- the hang guard: a forked test JVM still running after this many seconds is killed and its run fails.
+             The forks are reused, so it bounds each fork's whole share of the run, not one test: keep it well above
+             a healthy full suite (about 18.5 min in one JVM). Override per run with -Dsurefire.timeout=<seconds> -->
+        <surefire.timeout>2700</surefire.timeout>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
@@ -1191,6 +1195,7 @@
                         <threadCount>4</threadCount>
                         <forkCount>3</forkCount>
                         <reuseForks>true</reuseForks>
+                        <forkedProcessTimeoutInSeconds>${surefire.timeout}</forkedProcessTimeoutInSeconds>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow
                             --enable-native-access=ALL-UNNAMED
