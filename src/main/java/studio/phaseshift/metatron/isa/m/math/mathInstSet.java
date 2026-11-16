@@ -29,9 +29,9 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -40,6 +40,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -47,15 +48,16 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -85,6 +87,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_ARG_INST_TID = MATH_INST_TID.extend("arg");
     public static final fURI NAT_TID = MATH_ISA_TID.extend("nat");
     public static final fURI CMPLX_TID = MATH_ISA_TID.extend("cmplx");
+    public static final fURI TIMEOUT_INST_TID = MATH_ISA_TID.extend("timeout");
 
     public static final fURI MATH_PERCENT_TID = MATH_ISA_TID.extend("percent");
     public static final fURI MATH_DATASIZE_TID = MATH_ISA_TID.extend("datasize");
@@ -841,36 +844,36 @@ public class mathInstSet extends AbstractInstSet {
         // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
         if (null == DATETIME_TYPE)
             DATETIME_TYPE = TypeBuilder.build()
-                                .tid(URI_TID)
-                                .vid(MATH_DATETIME_TID, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>")
-                                .predicate((lhs, inst) -> {
-                                    final fURI dt = inst.arg(0).asUri().uriValue();
-                                    if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
-                                        return noobj();
-                                    if (!dt.hasHost() || !DT_HOST_PATTERN.matcher(dt.host()).matches())
-                                        return noobj();
-                                    final int month = Integer.parseInt(dt.host().substring(5, 7));
-                                    if (month < 1 || month > 12) return noobj();
-                                    if (!dt.hasPort()) return noobj();
-                                    final int day = dt.port();
-                                    if (day < 1 || day > 31) return noobj();
-                                    final List<String> path = dt.path();
-                                    if (path.size() < 4) return noobj();
-                                    try {
-                                        final int hour = Integer.parseInt(path.get(path.size() - 4));
-                                        if (hour < 0 || hour > 23) return noobj();
-                                        final int minute = Integer.parseInt(path.get(path.size() - 3));
-                                        if (minute < 0 || minute > 59) return noobj();
-                                        final int second = Integer.parseInt(path.get(path.size() - 2));
-                                        if (second < 0 || second > 59) return noobj();
-                                        Integer.parseInt(path.getLast()); // millis: any int OK
-                                    } catch (NumberFormatException e) {
-                                        return noobj();
-                                    }
-                                    if (!dt.qMap().containsKey("tz")) return noobj();
-                                    return inst.arg(0);
-                                })
-                                .create();
+                    .tid(URI_TID)
+                    .vid(MATH_DATETIME_TID, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>")
+                    .predicate((lhs, inst) -> {
+                        final fURI dt = inst.arg(0).asUri().uriValue();
+                        if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
+                            return noobj();
+                        if (!dt.hasHost() || !DT_HOST_PATTERN.matcher(dt.host()).matches())
+                            return noobj();
+                        final int month = Integer.parseInt(dt.host().substring(5, 7));
+                        if (month < 1 || month > 12) return noobj();
+                        if (!dt.hasPort()) return noobj();
+                        final int day = dt.port();
+                        if (day < 1 || day > 31) return noobj();
+                        final List<String> path = dt.path();
+                        if (path.size() < 4) return noobj();
+                        try {
+                            final int hour = Integer.parseInt(path.get(path.size() - 4));
+                            if (hour < 0 || hour > 23) return noobj();
+                            final int minute = Integer.parseInt(path.get(path.size() - 3));
+                            if (minute < 0 || minute > 59) return noobj();
+                            final int second = Integer.parseInt(path.get(path.size() - 2));
+                            if (second < 0 || second > 59) return noobj();
+                            Integer.parseInt(path.getLast()); // millis: any int OK
+                        } catch (NumberFormatException e) {
+                            return noobj();
+                        }
+                        if (!dt.qMap().containsKey("tz")) return noobj();
+                        return inst.arg(0);
+                    })
+                    .create();
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
@@ -1220,6 +1223,58 @@ public class mathInstSet extends AbstractInstSet {
                                         lhs.jvm(mutableList(real(1.0), real(0.0))))
                                 .example("cmplx::[1.0,2.0].one()   [-- cmplx::[1.0,0.0] --]")
                                 .law(Law.idempotent, Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(TIMEOUT_INST_TID)
+                                .dom(A, "the lhs obj")
+                                .rng(B.maybeSome(), "the rhs obj: the code's answer, or a fail::T once the time runs out")
+                                .argLst(T(B.maybeSome()), "the code to apply to the lhs obj", TIME_TYPE, "the time the code may take")
+                                .desc("""
+                                        a time-bounded function \\(f(x) \\mapsto \\mathrm{code}(x)\\): the code's answer if it gives one
+                                        within the time, and a catchable fail::T otherwise. The time runs out by interrupting the
+                                        evaluating thread, so the code stops where it next looks: a span walk once a run, a sleep or
+                                        a wait at once.""")
+                                .example("1.timeout(plus(1),second::1.0)               [-- 2 --]",
+                                        "1.timeout({*}plus(0),millis::100.0).catch(0) [-- 0: the endless walk is cut off --]")
+                                .body((lhs, inst) -> {
+                                    // THE DEADLINE INTERRUPTS THE EVALUATING THREAD. The code runs on the caller's thread, so the
+                                    // machine and the evaluation's state stay its own, and its answer is collected within the time
+                                    // (a lazy stream would outlive it). The code settling and the alarm firing race for `settled`:
+                                    // an alarm that lost stands down, and one that won is waited out and its interrupt consumed,
+                                    // so the thread, a pooled one most often, is never left interrupted.
+                                    final long millis = inst.arg(1).as(MILLIS_TYPE).realValue().longValue();
+                                    final Thread evaluator = Thread.currentThread();
+                                    final AtomicBoolean settled = new AtomicBoolean();
+                                    final Thread alarm = Thread.ofVirtual().start(() -> {
+                                        try {
+                                            Thread.sleep(millis);
+                                            if (settled.compareAndSet(false, true))
+                                                evaluator.interrupt();
+                                        } catch (final InterruptedException e) {
+                                            // stood down: the code settled first
+                                        }
+                                    });
+                                    Obj answer;
+                                    try {
+                                        answer = objs(inst.arg(0).apply(lhs).stream().toList());
+                                    } catch (final RuntimeException e) {
+                                        answer = fail(e);
+                                    }
+                                    if (settled.compareAndSet(false, true)) {
+                                        alarm.interrupt();
+                                        return answer;
+                                    }
+                                    while (alarm.isAlive()) {
+                                        try {
+                                            alarm.join();
+                                        } catch (final InterruptedException e) {
+                                            // the alarm's own interrupt, consumed below
+                                        }
+                                    }
+                                    Thread.interrupted();
+                                    return fail("%s took more than %s", inst.arg(0), inst.arg(1));
+                                })
+                                .law(Law.pure)
                                 .create(),
                         docWrap(instC(MATH_ABS_INST_TID.dom(CMPLX_TID).rng(REAL_TID), lst(), (lhs, inst) -> {
                                     final double a = lhs.asLst().at(0).asReal().realValue();
