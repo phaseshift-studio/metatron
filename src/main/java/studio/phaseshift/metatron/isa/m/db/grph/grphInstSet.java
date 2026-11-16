@@ -428,14 +428,26 @@ public class grphInstSet extends AbstractInstSet {
     private static final Set<String> BARRIER_STEPS = Set.of("count");
 
     /**
-     * A step a run can carry into Gremlin: the table has a step for it, and it has NO SPAN. A span is a run of steps,
-     * not a count ({@code {0,2}out()} is {@code _ + out() + out().out()}), and one Gremlin step says neither: the fold
-     * rendered it once and multiplied its answers by the span. So a spanned step BREAKS THE RUN (Marko, 2026-11-13):
-     * what comes before it is pushed down, and the processor runs the span. Until a span renders as Gremlin's
-     * {@code repeat()} or {@code union()}.
+     * A step a run can carry into Gremlin: the table has a step for it, and its span is one Gremlin says. A span is a
+     * run of steps, not a count ({@code {0,2}out()} is {@code _ + out() + out().out()}), and one Gremlin step says
+     * neither: the fold rendered it once and multiplied its answers by the span. So a span Gremlin cannot say BREAKS
+     * THE RUN (Marko, 2026-11-13): what comes before it is pushed down, and the processor runs the span. An exact span
+     * is laid out as its run before the run is found ({@link #fuseGremlinRuns}), and a ranged or open one is Gremlin's
+     * {@code repeat()} ({@link #gremlinSuffix}) when Gremlin walks each of its runs as the processor does: the step
+     * hands on the one level it takes (out/in/both, so no run leaves the step's domain, the zero-step run included,
+     * where outE's second run would walk an edge and count takes every level), and it has no point (the k-step run
+     * counts the point k times, and the call carries one coefficient). A negative span walks the step's converse, and
+     * stays for the processor.
      */
     private static boolean isPushable(final Inst inst) {
-        return inst.tid().b().isOne() && !getGremlinRewrite(inst.tid().name()).isNoObj();
+        if (getGremlinRewrite(inst.tid().name()).isNoObj())
+            return false;
+        final cInt span = inst.tid().b();
+        if (span.isOne())
+            return true;
+        final StepLevel level = GREMLIN_LEVELS.get(gremlinStep(inst));
+        return !span.isExact() && null != span.min() && 0L <= span.min() && inst.tid().d().isOne()
+                && null != level && Set.of(level.out()).equals(level.in());
     }
 
     /**
@@ -452,7 +464,8 @@ public class grphInstSet extends AbstractInstSet {
     private static Code fuseGremlinRuns(final Code code) {
         // AN EXACT SPAN ON A GREMLIN STEP IS THAT MANY GREMLIN STEPS ({2}out() is out().out()): the code keeps the span,
         // a run Inst.Helper.runs walks, and one Gremlin step says no run, so the run is laid out where it is pushed down.
-        // A ranged or negative span stays for the processor (isPushable)
+        // A ranged or open span stays on its step, spelled as Gremlin's repeat() (gremlinSuffix), and a negative span
+        // stays for the processor (isPushable)
         final List<Inst> insts = code.insts().stream()
                 .flatMap(inst -> inst.tid().b().isExact() && null != inst.tid().b().min() && 1L < inst.tid().b().min()
                         && !getGremlinRewrite(inst.tid().name()).isNoObj()
@@ -525,14 +538,18 @@ public class grphInstSet extends AbstractInstSet {
      * The single {@code gremlin(...)} call a run becomes. A folded seed makes it INITIAL — dom {@code noobj}, the
      * address as the first argument, and the complete script — so the read and the whole walk are one round trip.
      * Without a seed it maps the element lhs it is applied to. The rng follows the run's last step, and the run's
-     * multiplicity rides on the call, so {@code outE{2}(k).inV()} keeps its coefficient.
+     * points ride on the call, so {@code outE{2}(k).inV()} keeps its coefficient. A step's {@code c()} is its span
+     * times its point, and the script already walks the span ({@code repeat()}): the call counts the points alone.
      */
     private static Inst fusedGremlin(final List<Inst> run, final fURI seed) {
-        final cInt coefficient = run.stream().map(Inst::c).reduce(cInt.ONE(), cInt::mult);
+        final cInt coefficient = run.stream().map(inst -> inst.tid().d()).reduce(cInt.ONE(), cInt::mult);
         final cInt coefficiented = coefficient.isOne() ? null : coefficient;
         final String suffix = gremlinSuffix(run);
+        // a mapped call takes ONE element, as its first step does: the swarm feeds it each obj, and the processor
+        // carries a bulked element's count onto its walk ({2}josh walks as two joshes). A rec{*} dom made it a barrier
+        // whose body walked {2}josh once
         if (null == seed)
-            return instC(GREMLIN_INST_TID.dom(REC_TID.maybeSome()).rng(terminalType(run)).c(coefficiented),
+            return instC(GREMLIN_INST_TID.dom(REC_TID).rng(terminalType(run)).c(coefficiented),
                     lst(str(suffix)),
                     (lhs, inst) -> gremlin(lhs, inst.arg(0).strValue()));
         final DataPath address = elementPath(seed);
@@ -557,12 +574,23 @@ public class grphInstSet extends AbstractInstSet {
 
     /**
      * The run as a Gremlin traversal suffix — the artifact {@code explain()} shows and {@code gremlin()} accepts.
+     * <p>
+     * A RANGED OR OPEN SPAN IS GREMLIN'S {@code repeat()}, the walk {@link Inst.Helper#runs} takes: each loop is one
+     * step past the last, and the runs from the span's min on are emitted, the zero-step run by an {@code emit()}
+     * before the loop, the runs from one on by an {@code emit()} after it, and those from m on by
+     * {@code emit(loops().is(gte(m)))}. A max ends the loop after that many steps ({@code times(n)} hands on the last
+     * run), and an open span loops until no traverser is left, where the walk halts: {@code {0,2}out()} is
+     * {@code emit().repeat(out()).times(2)}, and {@code {2,}out()} is {@code repeat(out()).emit(loops().is(gte(2)))}.
      */
     private static String gremlinSuffix(final List<Inst> run) {
         final List<String> steps = new ArrayList<>(run.size());
         for (final Inst inst : run) {
             final String template = getGremlinRewrite(inst.tid().name()).strValue();
-            steps.add(template.contains("%s") ? template.formatted(quotedArguments(inst)) : template);
+            final String step = template.contains("%s") ? template.formatted(quotedArguments(inst)) : template;
+            final cInt span = inst.tid().b();
+            steps.add(span.isOne() ? step : (0L == span.min() ? "emit()." : "") + "repeat(" + step + ")"
+                    + (1L == span.min() ? ".emit()" : 1L < span.min() ? ".emit(loops().is(gte(" + span.min() + ")))" : "")
+                    + (null == span.max() ? "" : ".times(" + span.max() + ")"));
         }
         return String.join(".", steps);
     }

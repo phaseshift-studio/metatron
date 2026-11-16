@@ -35,8 +35,6 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -192,7 +190,7 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.out(knows).out(created)>>name                 % {'ripple','lop'}",
             "*/g/V/1.out(knows).out(created)>>name.count()         % 2",
             "*/g/V/1.out(knows)>>name.count()                      % 2",
-            // a SPAN is a run of steps, not a count ({0,2}out() is _ + out() + out().out()): it breaks the fused run
+            // a SPAN is a run of steps, not a count ({0,2}out() is _ + out() + out().out()): Gremlin's repeat() walks it
             "*/g/V/1.{0,2}out()>>name                              % {'marko','vadas','josh','lop','ripple','lop'}",
             "*/g/V/1.{1,2}out()>>name                              % {'vadas','josh','lop','ripple','lop'}",
             "*/g/V/1.{0,1}out()>>name                              % {'marko','vadas','josh','lop'}",
@@ -207,12 +205,30 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.{2,}out()>>name                               % {'ripple','lop'}",
             "*/g/V/6.{*}out()>>name                                % {'peter','lop'}",
             "*/g/V/+.{*}out().count()                              % 14",
+            // pushed down, the loop answers as the walk does: {0,2}in() is {-2,0}out(), a cycle counts each path, a
+            // min past the graph's depth emits nothing, and two spans are two loops
+            "*/g/V/5.{0,2}in()>>name                               % {'ripple','josh','marko'}",
+            "*/g/V/1.{0,2}both(knows)>>name                        % {{3}'marko','vadas','josh'}",
+            "*/g/V/1.{2,3}both(knows)>>name                        % {{2}'marko',{2}'vadas',{2}'josh'}",
+            "*/g/V/1.{*}out(knows)>>name                           % {'marko','vadas','josh'}",
+            "*/g/V/1.{3,4}out()>>name                              % noobj",
+            "*/g/V/1.{3,}out()>>name                               % noobj",
+            "*/g/V/1.{0,1}out().{1,2}in()>>name                    % {{4}'marko','josh','peter'}",
+            "*/g/V/+.?[name=>'marko'].{0,2}out()>>name             % {'marko','vadas','josh','lop','ripple','lop'}",
+            // a span Gremlin cannot say is the processor's: a step that hands on another level, or one with a point
+            "*/g/V/1.{0,1}outE(knows).count()                      % 3",
+            "*/g/V/1.out(knows).{0,1}outE(created).count()         % 4",
+            "*/g/V/1.{0,1}out{2}()>>name                           % {'marko',{2}'vadas',{2}'josh',{2}'lop'}",
+            // the walk's copies feed the mapped call after it, and each copy walks: {2}josh is two joshes
+            "*/g/V/1.{0,1}out{2}().out()>>name                     % {'vadas','josh',{3}'lop',{2}'ripple'}",
+            "*/g/V/1.{0,1}out{2}().{0,1}out()>>name                % {'marko',{3}'vadas',{3}'josh',{5}'lop',{2}'ripple'}",
             // a NEGATIVE span walks backward (Marko, 2026-11-13): out()'s declared converse is in(), both() is its own
             "*/g/V/4.{-1}out()>>name                               % \"marko\"",
             "*/g/V/5.{-2,0}out()>>name                             % {'ripple','josh','marko'}",
             "*/g/V/4.{-1,1}out()>>name                             % {'marko','josh','ripple','lop'}",
             "*/g/V/1.{-1}in()>>name                                % {'vadas','josh','lop'}",
             "*/g/V/1.{-1}both()>>name                              % {'vadas','josh','lop'}",
+            "*/g/V/4.{-1}out().{0,1}out()>>name                    % {'marko','vadas','josh','lop'}",
             // the escape hatch, in the same suffix form a fused run compiles to
             "*/g/V/1.gremlin('out(\"knows\").values(\"name\")')    % {'vadas','josh'}",
     }, delimiter = '%')
@@ -255,6 +271,30 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.out(knows).{2}out()>>name  % g.V(1).out('knows').out().out().values('name')",
     }, delimiter = '%')
     void testAnExactSpanFusesAsItsRun(final String code, final String expected) {
+        assertEquals(expected, script(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(code).asCode().rewrite()));
+    }
+
+    /**
+     * A RANGED OR OPEN SPAN IS PUSHED DOWN AS GREMLIN'S {@code repeat()}: {@code {m,n}out()} loops out() n times and
+     * emits the runs from m on, the zero-step run before the first loop, and an open span loops until no traverser is
+     * left, where the walk halts. Two spans in a run are two loops, and a span after one the processor walks (a
+     * negative span) is a mapped call.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1.{0,2}out()>>name                          % g.V(1).emit().repeat(out()).times(2).values('name')",
+            "*/g/V/1.{?}out()>>name                            % g.V(1).emit().repeat(out()).times(1).values('name')",
+            "*/g/V/1.{1,2}out()>>name                          % g.V(1).repeat(out()).emit().times(2).values('name')",
+            "*/g/V/1.{2,3}both(knows)>>name                    % g.V(1).repeat(both('knows')).emit(loops().is(gte(2))).times(3).values('name')",
+            "*/g/V/1.{*}out()>>name                            % g.V(1).emit().repeat(out()).values('name')",
+            "*/g/V/1.{+}out()>>name                            % g.V(1).repeat(out()).emit().values('name')",
+            "*/g/V/1.{2,}out()>>name                           % g.V(1).repeat(out()).emit(loops().is(gte(2))).values('name')",
+            "*/g/V/+.{*}out().count()                          % g.V().emit().repeat(out()).count()",
+            "*/g/V/1.out(knows).{0,1}out(created).out()>>name  % g.V(1).out('knows').emit().repeat(out('created')).times(1).out().values('name')",
+            "*/g/V/1.{0,1}out().{1,2}in()>>name                % g.V(1).emit().repeat(out()).times(1).repeat(in()).emit().times(2).values('name')",
+            "*/g/V/4.{-1}out().{0,1}out()>>name                % emit().repeat(out()).times(1).values('name')",
+    }, delimiter = '%')
+    void testARangedSpanFusesAsARepeat(final String code, final String expected) {
         assertEquals(expected, script(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(code).asCode().rewrite()));
     }
 
@@ -338,39 +378,43 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
     }
 
     /**
-     * A SPAN BREAKS THE RUN (Marko, 2026-11-13). {@code {0,2}out()} is the run {@code _ + out() + out().out()}, not a
-     * count, and one Gremlin step says neither: folded into the call, it walked once and every answer came back
-     * {@code {0,2}}. The steps before a spanned step are pushed down, the spanned step stays for the processor to run,
-     * and the steps after it fuse again.
+     * A SPAN GREMLIN CANNOT SAY BREAKS THE RUN (Marko, 2026-11-13): folded into the call as one step, it walked once and
+     * every answer came back counted by the span. A negative span walks the step's converse, a span on a step that
+     * hands on another level leaves the step's domain on its second run ({@code {0,2}outE()} would walk an edge's
+     * edges), and a span on a step with a point counts the point once per step of each run. Such a span stays on its
+     * step for the processor to run, the steps before it are one call, and the steps after it another: each row is the
+     * span left on its step and the scripts of the calls around it.
      */
-    @Test
-    public void testASpanBreaksTheRun() {
-        final Code head = studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer
-                .parse("*/g/V/1.{0,2}out()>>name").asCode().rewrite();
-        assertTrue(head.insts().stream().noneMatch(inst -> inst.tid().name().equals("gremlin")),
-                () -> "a span at the head leaves no run to push down: " + head);
-        assertTrue(head.insts().stream().anyMatch(inst -> cInt.of("0,2").equals(inst.tid().b())),
-                () -> "the span stays on its step: " + head);
-        final Code middle = studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer
-                .parse("*/g/V/1.out(knows).{0,1}out(created).out()>>name").asCode().rewrite();
-        assertEquals(List.of("g.V(1).out('knows')", "out().values('name')"), middle.insts().stream()
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/4.{-1}out()>>name                            % -1   % []",
+            "*/g/V/5.{-2,0}out()>>name                          % -2,0 % []",
+            "*/g/V/1.out(created).{-1}out(created).out()>>name  % -1   % [g.V(1).out('created'), out().values('name')]",
+            "*/g/V/1.out(knows).{0,1}outE(created).count()      % 0,1  % [g.V(1).out('knows')]",
+            "*/g/V/1.out(knows).{0,1}out{2}().out()>>name       % 0,1  % [g.V(1).out('knows'), out().values('name')]",
+    }, delimiter = '%')
+    void testASpanBreaksTheRun(final String code, final String span, final String scripts) {
+        final Code compiled = studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(code).asCode().rewrite();
+        assertTrue(compiled.insts().stream().anyMatch(inst -> cInt.of(span).equals(inst.tid().b())),
+                () -> "the span stays on its step: " + compiled);
+        assertEquals(scripts, compiled.insts().stream()
                         .filter(inst -> inst.tid().name().equals("gremlin"))
-                        .map(inst -> inst.arg((int) inst.args().count() - 1).strValue()).toList(),
-                "the steps before the span are one call, and the steps after it another");
-        assertEquals(3, middle.insts().size(), () -> "the span stays between the calls: " + middle);
-        assertEquals(cInt.of("0,1"), middle.insts().get(1).tid().b(), "and keeps its span for the processor to run");
+                        .map(inst -> inst.arg((int) inst.args().count() - 1).strValue()).toList().toString(),
+                () -> "the steps around the span are pushed down apart: " + compiled);
     }
 
     /**
      * THE DOM CHECK COUNTS NOTHING (Marko, 2026-11-13). The live server boots with the typer's dom check off, and there
      * >>name dropped the walk's {2}lop to one 'lop' (marko, lop, vadas, josh, ripple); the processor now carries the
-     * count with the check on or off.
+     * count with the check on or off. {*}out() is now Gremlin's repeat(), so the processor's walk is {-2,0}in(): in()'s
+     * converse, the same runs.
      */
     @Test
     public void testTheDomCheckOffKeepsTheWalksCount() {
         try {
             Machine.current().compiler().typer().at("check/inst_dom", BOOL_FALSE, Poly.MUTABLE);
             AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/1.{*}out()>>name", "{'marko','vadas','josh','lop','ripple','lop'}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/1.{-2,0}in()>>name", "{'marko','vadas','josh','lop','ripple','lop'}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/3.branch(id(),id())>>name", "{2}'lop'");
         } finally {
             Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
