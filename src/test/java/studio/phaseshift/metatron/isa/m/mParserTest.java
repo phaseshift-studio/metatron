@@ -579,6 +579,29 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     /**
+     * AN OPEN WALK IS INTERRUPTIBLE (2026-11-16): {@code 1.plus(0)} is 1, so {@code {*}plus(0)} never leaves the step's
+     * domain and walks on, as the expression says, inside one monad's apply, where the swarm's STOP check never comes
+     * round. The walk asks once a run whether its thread was interrupted (a machine's stop() interrupts it, as a console
+     * ctrl-c does) and answers a fail. The runs bulk into one {n}1, so the walk spins in constant memory until then.
+     */
+    @Test
+    void testAnOpenWalkStopsWhenItsThreadIsInterrupted() throws InterruptedException {
+        final Machine machine = Machine.current();
+        final Inst span = ObjmtronSerializer.parse("{*}plus(0)").asInst();
+        final java.util.concurrent.atomic.AtomicReference<Obj> answer = new java.util.concurrent.atomic.AtomicReference<>();
+        final Thread walker = new Thread(() -> answer.set(Machine.Helper.evalAt(machine, () -> span.apply(jnt(1)))));
+        // a daemon, so a walk that never stops fails this test rather than holding the test JVM open
+        walker.setDaemon(true);
+        walker.start();
+        walker.join(250);
+        assertTrue(walker.isAlive(), "the open walk is still walking before the interrupt");
+        walker.interrupt();
+        walker.join(5000);
+        assertFalse(walker.isAlive(), "the walk ends within five seconds of its thread's interrupt");
+        assertTrue(answer.get().isFail(), () -> "an interrupted walk answers a fail: " + answer.get());
+    }
+
+    /**
      * ';' SHARES NOTHING (Marko, 2026-11-13): end() answers noobj{0}, and every statement after it starts over with a
      * start() of its own, so a statement reads only what it names, as one program (apply) and statement by statement
      * (eval) alike. A statement led by an instruction used to take end()'s noobj{0} and never run in one program

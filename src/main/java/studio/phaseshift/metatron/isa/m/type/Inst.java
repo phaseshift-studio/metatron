@@ -685,6 +685,12 @@ public interface Inst extends Call {
             Obj result = before;
             Obj current = lhs;
             for (long k = 0; ; k++) {
+                // A WALK IS INTERRUPTIBLE (2026-11-16): a run that never leaves the step's domain walks on inside one
+                // monad's apply, where the swarm's STOP check never comes round, so the walk asks once a run whether
+                // its thread was interrupted (a machine's stop() interrupts it, as a console ctrl-c does). The flag
+                // stays set for the callers above it
+                if (Thread.currentThread().isInterrupted())
+                    return fail("span walk interrupted at run %s of %s", k, step);
                 final boolean kept = k >= from;
                 result = objs(Stream.concat(result.stream(), current.stream().filter(o -> kept || o.isUncaughtFail())));
                 if ((null != to && k == to) || current.stream().anyMatch(Obj::isUncaughtFail))
