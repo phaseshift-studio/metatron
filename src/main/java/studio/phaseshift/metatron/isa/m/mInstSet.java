@@ -1126,8 +1126,9 @@ public class mInstSet extends AbstractInstSet {
                         // code ring. Two members are the same term by Law.Helper.sameMember, the one test both laws read.
                         //
                         // THE LEFT-DISTRIBUTIVE FORM goes as far as the like-term normal form and no further: one shared
-                        // instruction a pass (the fixpoint reaches a longer prefix); every member alike in its head, span and
-                        // point included, so no point moves; every member keeping a remainder, so no unit is introduced; and the
+                        // instruction a pass (the fixpoint reaches a longer prefix); every member alike in its head and point, so
+                        // no point moves, and in its span, or sharing the shortest of exact runs; every member keeping a
+                        // remainder, so no unit is introduced; and the
                         // head pure, as it then runs once instead of once per member. A branch feeds its members one obj at a
                         // time, so the head must take one obj at a time too (a mapper, filter or flatmapper): a shared reducer
                         // would gather the whole stream ahead of the branch, and {1,2}.branch(count().plus(1),count().plus(2))
@@ -1146,21 +1147,35 @@ public class mInstSet extends AbstractInstSet {
                                 final List<Obj> members = op.basePath().equals(inst.tid().basePath()) && !inst.args().isRec() ? inst.args().elements().toList() : List.of();
                                 final Inst head = 2 > members.size() || !factorable.test(members.getFirst()) ? null : members.getFirst().asCode().insts().getFirst();
                                 final Rec declared = null == head ? noobjRec() : Law.Helper.declared(head.tid().basePath(), carriers.get(i));
+                                // HEADS ALIKE BUT FOR AN EXACT SPAN SHARE THEIR SHORTEST RUN (Marko, 2026-11-15: a span stays on its
+                                // instruction), a^m.b + a^n.c = a^m.(b + a^(n-m).c): {2}plus(1).mult(3) and {3}plus(1).mult(4) share
+                                // {2}plus(1), as their unrolled chains shared plus(1).plus(1), the longer keeping the rest of its run
+                                final boolean exact = null != head && members.stream().allMatch(m -> factorable.test(m)
+                                        && m.asCode().insts().getFirst().tid().b().isExact() && 0 < m.asCode().insts().getFirst().tid().b().min());
                                 if (declared.isNoObj()
                                         || !EnumSet.of(Inst.Form.mapper, Inst.Form.filter, Inst.Form.flatmapper).contains(Inst.Form.of(head.tid(declared.atDirect(OBJ).tid())).subring())
                                         || !Law.Helper.declares(declared, Law.pure) || !members.stream().allMatch(m -> factorable.test(m)
-                                        && Law.Helper.sameMember(m.asCode().insts().getFirst(), head) && m.asCode().insts().getFirst().tid().d().equals(head.tid().d()))) {
+                                        && Law.Helper.sameMember(exact ? m.asCode().insts().getFirst().tid(m.asCode().insts().getFirst().tid().b(head.tid().b())) : m.asCode().insts().getFirst(), head)
+                                        && m.asCode().insts().getFirst().tid().d().equals(head.tid().d()))) {
                                     out.add(inst);
                                     continue;
                                 }
+                                final long shortest = exact ? members.stream().mapToLong(m -> m.asCode().insts().getFirst().tid().b().min()).min().orElseThrow() : 0L;
                                 changed = true;
-                                out.add(head);
+                                // a narrowed span is a fresh instruction (instB writes the tid), never a clone (Shard.unroll)
+                                out.add(!exact || shortest == head.tid().b().min() ? head : instB(head.tid().b(cInt.of(shortest)), head.args()));
                                 out.add(inst.args(lst(members.stream()
-                                        .map(m -> (Obj) MCode.code(new ArrayList<>(m.asCode().insts().subList(1, m.asCode().insts().size()))).tryToInst())
+                                        .map(m -> {
+                                            final List<Inst> rest = new ArrayList<>(m.asCode().insts());
+                                            final Inst shared = rest.removeFirst();
+                                            if (exact && shortest < shared.tid().b().min())
+                                                rest.addFirst(instB(shared.tid().b(cInt.of(shared.tid().b().min() - shortest)), shared.args()));
+                                            return (Obj) MCode.code(rest).tryToInst();
+                                        })
                                         .toList())));
                             }
                             return changed ? MCode.code(out) : code;
-                        }), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their span and point and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
+                        }), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their point and to their span (exact runs sharing the shortest, \\(a^m b + a^n c \\leadsto a^m (b + a^{n-m} c)\\)) and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
                         // THE LIKE-TERM LAW: equal members of an occurrence of the op collapse to the member that first appeared,
                         // carrying the summed multiplicities, S(x,x,…,x) ⇝ S(x{n}). A REC ARGUMENT LIST IS A ROUTE TABLE: its
                         // members are SCHEDULED (each runs at its key's place), not free additive terms. Equal lanes under ONE
@@ -1554,8 +1569,10 @@ public class mInstSet extends AbstractInstSet {
         final List<List<String>> rows = new ArrayList<>();
         rows.add(headers);
         for (final Inst i : code.insts()) {
+            // AN INSTRUCTION IS {span}inst{point}, written as the language writes it: c() is span x point, a value's
+            // count of copies, so {10}plus(4) read as plus{10}, a point of ten, and {2}plus{3}(1) as plus{6}
             rows.add(List.of(
-                    i.tid().name() + (i.tid().c().isOne() ? "" : ("{" + i.tid().c() + "}")),
+                    (i.tid().b().isOne() ? "" : ("{" + i.tid().b() + "}")) + i.tid().name() + (i.tid().d().isOne() ? "" : ("{" + i.tid().d() + "}")),
                     i.dom().vid().small() + "::T",
                     i.rng().vid().small() + "::T",
                     explainArgs(i),
