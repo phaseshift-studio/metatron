@@ -28,12 +28,11 @@
  * /isa/doc/
  * ├── dcmntSpace.java                          // Main space implementation
  * ├── schema/
- * │   ├── storage/
- * │   │   └── DocumentSchema.java            // How mtron stores data in MongoDB
- * │   └── domain/
- * │       ├── ExistingCollectionSchema.java  // Discover collections & references
- * │       └── DocumentSchemaGenerator.java   // Generate mtron types from collections
+ * │   └── storage/
+ * │       └── ObjBSONSerializer.java         // How mtron stores data in MongoDB
  * </pre>
+ * A collection's type is inferred from its documents by {@link studio.phaseshift.metatron.isa.SchemaSpace.Helper},
+ * the one algorithm every database space shares.
  *
  * <h2>Key Concepts</h2>
  * <ul>

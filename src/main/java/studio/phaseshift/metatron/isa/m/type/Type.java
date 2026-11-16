@@ -456,9 +456,12 @@ public interface Type extends Obj {
                 t = t.parentType();
             }
             final cInt lcdC = types.stream().map(Type::c).reduce(cInt::span).orElse(cInt.ONE());
-            // Walk the chain outward; the first ancestor that ALL types share is the LCD
+            // Walk the chain outward; the first ancestor ON EVERY TYPE'S OWN ANCESTRY is the LCD (Marko, 2026-11-16).
+            // isRefinementOf would not do: it lets a parent refine its child and a sibling refine a sibling, so [pupa, int]
+            // answered pupa and [nat, pupa] answered nat, where both are int.
+            final List<List<fURI>> ancestries = types.stream().map(Helper::vidAncestryChain).toList();
             for (final Type candidate : chain) {
-                if (types.stream().allMatch(type -> type.isRefinementOf(candidate)))
+                if (candidate.hasVID() && ancestries.stream().allMatch(ancestry -> ancestry.contains(candidate.vid().basePath())))
                     return candidate.c(lcdC).as();
             }
             // No common ancestor — types are from disjoint hierarchies; fall back to the universal type

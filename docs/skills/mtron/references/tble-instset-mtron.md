@@ -58,6 +58,7 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 | `driver`     | `uri::T` | the JDBC driver class — `<org.sqlite.JDBC>`, `<org.postgresql.Driver>`, `<org.mariadb.jdbc.Driver>`                  |
 | `route`      | `rec::T` | scheme → path inside the space: `[tbledoc: => <>]` strips the scheme; a value can point a subtree elsewhere          |
 | `q`          | `rec::T` | query processors — `incrq::[=>]` for `_?incrq` key assignment, `docq` to document tables (above)                     |
+| `infer`      | `rec::T` | how inferred tables are typed: `required=>false` makes every column `{?}`, `widen=>false` refuses a row the inferred type does not hold, `discover=>eager` types every table at mount |
 | `serializer` | `uri::T` | the serializer the key/value side uses; defaults to mtron's own                                                      |
 | `table`      | `lst::T` | **deprecated and ignored** — table mapping is always on (older boot files still carry `table => [,]`)                |
 
@@ -224,9 +225,12 @@ kinds may sit in one row.
 */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ```
 
-Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
-of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*id()` — the column *is* the pointer.
-A table's type is replaced when the table widens.
+Reading the schema is how you meet a table you have never seen: each entry is a refinement of `rec::T` naming every
+column, `name=>str::T` when every row holds a name and `{?}name=>str::T` when some row does not (a SQL NULL is an absent
+field), each typed by the LCD of the values its rows hold. A foreign-key column appears as
+`recipient=>isa(person/+/id).!*id()` — the column *is* the pointer. A write the type does not hold widens it, so the
+type holds every row; a type written to the table's path (`tbledoc:person -> person::T`) declares the table instead,
+and a declared table refuses a row its type does not hold. Every database space types its collections this way.
 
 Discovery is **lazy**, and it is worth knowing exactly what fires it: the catalog walk runs on the first *write*, or on
 a read of the space's instset (`*/sys/space/<space>/instset/+/`). Until it has run, the space does not know which

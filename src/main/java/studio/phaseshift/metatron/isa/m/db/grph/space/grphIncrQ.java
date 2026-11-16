@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.db.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.db.grph.io.ObjTP3Serializer;
@@ -30,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
@@ -84,62 +86,26 @@ public class grphIncrQ extends BaseQ {
                                         : studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
                                         mutableMap(uri("val"), obj));
 
-                                // Determine element type: V, E, or label-level collection
+                                // an edge for E or a label the graph holds edges under; any other label is a vertex label
                                 final boolean isV = "V".equals(collection);
                                 final boolean isE = "E".equals(collection);
-                                final boolean isVertex = isV
-                                        || (!isE && space.existingGraphSchema.isVertexLabel(collection));
-                                final boolean isEdge = isE
-                                        || (!isV && !isVertex
-                                        && space.existingGraphSchema.isEdgeLabel(collection));
-                                // Label unknown: default to vertex (e.g. bootstrap write)
-                                final boolean isLabelVertex = !isV && !isE
-                                        && !isVertex && !isEdge;
+                                final boolean isEdge = isE || (!isV && !space.isVertexLabel(collection) && space.isEdgeLabel(collection));
 
-                                if (isVertex || isLabelVertex) {
+                                if (!isEdge) {
                                     // ── vertex: auto-generated ID ──
                                     final String label = isV ? extractLabel(rec) : collection;
+                                    final Map<Obj, Obj> record = new LinkedHashMap<>();
+                                    rec.jvm().forEach((key, value) -> {
+                                        if (!key.equals(grphInstSet.LABEL) && !value.isNoObj() && !value.isNone() && !value.isAuto())
+                                            record.put(key, value);
+                                    });
+                                    SchemaSpace.Helper.admit(space, label, studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(record));
                                     final Vertex vertex = space.sjvm().addV(label).next();
                                     space.logger().debug("created vertex with auto-id {{b}}%s{{X}} label {{b}}%s{{X}}",
                                             vertex.id(), label);
-                                    for (final Map.Entry<Obj, Obj> e : rec.jvm().entrySet()) {
-                                        if (e.getKey().equals(grphInstSet.LABEL)) continue;
-                                        final Obj value = e.getValue();
-                                        if (value.isNoObj() || value.isNone()
-                                                || value.isAuto())
-                                            continue;
-                                        final String propName = e.getKey().isUri()
-                                                ? e.getKey().asUri().uriValue().name()
-                                                : e.getKey().toString();
-                                        space.sjvm().V(vertex.id())
-                                                .property(propName,
-                                                        ObjTP3Serializer.tp3Value(value))
-                                                .next();
-                                    }
-                                    // Track field types for schema update
-                                    final Map<String, Obj> existing =
-                                            space.existingGraphSchema.getLogicalTypes()
-                                                    .get(label.toLowerCase());
-                                    final boolean isNewLabel = existing == null;
-                                    boolean hasNew = isNewLabel;
-                                    for (final Map.Entry<Obj, Obj> e : rec.jvm().entrySet()) {
-                                        if (e.getKey().equals(grphInstSet.LABEL)) continue;
-                                        final Obj value = e.getValue();
-                                        if (value.isNoObj() || value.isNone()
-                                                || value.isAuto())
-                                            continue;
-                                        final String propName = e.getKey().isUri()
-                                                ? e.getKey().asUri().uriValue().name()
-                                                : e.getKey().toString();
-                                        space.existingGraphSchema.trackPropertyType(
-                                                label, propName, value);
-                                        if (!isNewLabel && !existing.containsKey(
-                                                propName.toLowerCase()))
-                                            hasNew = true;
-                                    }
-                                    if (hasNew)
-                                        space.existingGraphSchema.onLabelChanged(
-                                                label, isNewLabel);
+                                    record.forEach((key, value) -> space.sjvm().V(vertex.id())
+                                            .property(key.isUri() ? key.uriValue().name() : key.toString(), ObjTP3Serializer.tp3Value(value))
+                                            .next());
                                     // Optional auto-commit
                                     space.at(uri("auto_tx")).ifPresent(x -> {
                                         if (x.boolValue())
@@ -190,6 +156,6 @@ public class grphIncrQ extends BaseQ {
     private static String extractLabel(final Rec rec) {
         if (rec.jvm().containsKey(grphInstSet.LABEL))
             return rec.jvm().get(grphInstSet.LABEL).uriValue().toString();
-        return rec.tid().basePath().toString();
+        return rec.tid().name();
     }
 }

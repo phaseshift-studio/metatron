@@ -184,6 +184,20 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
         return this.schemaInstset;
     }
 
+    @Override
+    public java.util.stream.Stream<String> collections() {
+        return MTronException.wrap(() -> this.sjvm().listCollections()).stream().map(VectorDBClient.CollectionData::name).filter(Objects::nonNull);
+    }
+
+    /**
+     * A vector collection's records have the one shape its type states: an id, a document, an embedding.
+     */
+    @Override
+    public Rec fields(final String collection) {
+        final Obj type = this.schemaInstset.readDeclared(this.schemaInstset.vid().extend(collection));
+        return type.isType() ? type.<Type>as().isPredicateObj().asRec() : rec0();
+    }
+
     private void onCollectionCreated(final String name) {
         if (this.schemaInstset == null) return;
         final Type type = collectionType(name, this.schemaInstset.vid());

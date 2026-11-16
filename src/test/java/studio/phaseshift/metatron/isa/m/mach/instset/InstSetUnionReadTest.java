@@ -358,7 +358,7 @@ public class InstSetUnionReadTest extends AbstractMetatronTest {
     /**
      * A FALLBACK READ MUST NOT CAUSE WORK. `Machine.read` asks instruction memory only after data memory has
      * missed, and it asks with the DECLARED form — so a member whose `read` materializes something is not dragged
-     * into an unrelated lookup. Measured before the split: `SQLSchemaInstSet.read` populates a table's schema on
+     * into an unrelated lookup. Measured before the split: a schema instset's `read` (SchemaSpace.Helper) infers a table's type on
      * demand (right for a deliberate read), and a logger's TYPE lookup during a tbleSpace's own construction
      * walked into the catalog and hit a database connection that was not open yet — fourteen errors in
      * SqliteTbleSpaceTest.

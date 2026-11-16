@@ -64,6 +64,7 @@
  import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
  /*
@@ -178,6 +179,7 @@
                          Graphitty.log(grphSpace.class).warn("unknown dataset key: %s", datasetUri);
                      }
                  });
+                 SchemaSpace.Helper.mount(space);
                  return space;
              });
          } catch (final RuntimeException e) {
@@ -252,51 +254,52 @@
                  Space.Helper.routeToSpace(f("E/" + element.id().toString()), this.routes());
      }
 
-     protected fURI schemaBaseVID() {
-         // Get the schema route value (e.g., /m/db/grph/schema/modern), not the route key (/g/S)
-         return this.at(ROUTE).asRec().elements()
-                 .filter(e -> e.first().uriValue().toString().endsWith("S"))
-                 .findFirst()
-                 .map(e -> e.second().uriValue())
-                 .orElse(null);
-     }
-
-     protected fURI schemaVID(final String label) {
-         final fURI base = this.schemaBaseVID();
-         return base != null ? base.extend(label) : null;
+     /**
+      * THE TID AN ELEMENT CARRIES: its label's declared type, else the bare label. An inferred label's type is not the
+      * element's own: >>= re-tags an element with its tid, and an inferred type there would refuse the very write that
+      * widens it (see {@link SchemaSpace.Helper}).
+      */
+     protected fURI elementTypeVid(final String label) {
+         final Type declared = SchemaSpace.Helper.declared(this, label);
+         return null == declared ? f(label) : declared.vid();
      }
 
      /**
-      * Whether {@code label} is a declared type in the configured schema route
-      * (e.g. modernSchema's person/software/knows/created), as opposed to an
-      * ad-hoc label minted by addV/addE at runtime. Detected via the type-name
-      * redirect registered when a schema type is imported (setup()).
+      * Whether a label names vertices, asked of the graph itself.
       */
-     protected boolean isSchemaType(final String label) {
-         final fURI redirected = Machine.current().memory().redirect(f(label), true);
-         return redirected != null && !redirected.basePath().test(f(label));
+     boolean isVertexLabel(final String label) {
+         return this.sjvm.V().hasLabel(label).hasNext();
      }
 
      /**
-      * Resolve a TinkerPop element label to its metatron Type VID via the
-      * schema InstSet; fall back to the configured schema route (e.g.
-      * modernSchema) when the label is a declared schema type, else the bare
-      * label — covers dataset labels loaded after space construction while
-      * keeping ad-hoc labels (addE(rates)) as their own bare type name.
+      * Whether a label names edges, asked of the graph itself.
       */
-     protected fURI elementTypeVid(final String label, final boolean vertex) {
-         final Iterator<IdObj> resolved = this.resolveCollectionSchema(label);
-         if (resolved.hasNext()) {
-             final Obj t = resolved.next().obj();
-             if (t instanceof Type type && type.vid() != null)
-                 return type.vid();
-         }
-         if (this.isSchemaType(label))
-             return this.schemaVID(label);
-         return f(label);
+     boolean isEdgeLabel(final String label) {
+         return this.sjvm.E().hasLabel(label).hasNext();
      }
 
-     protected ExistingGraphSchema existingGraphSchema;
+     @Override
+     public Stream<String> collections() {
+         return Stream.concat(IteratorUtil.stream(this.sjvm.V().label().dedup()), IteratorUtil.stream(this.sjvm.E().label().dedup()))
+                 .filter(label -> !KV_STORE.equals(label))
+                 .distinct();
+     }
+
+     /**
+      * The properties of every element of a label, folded: the vertices that carry it, else the edges. A poly property
+      * is stored under an {@code mtron:} key ({@link ElementMap}), and is the field its name says.
+      */
+     @Override
+     public Rec fields(final String label) {
+         final Iterator<? extends Element> elements = this.isVertexLabel(label)
+                 ? this.sjvm.V().hasLabel(label) : this.sjvm.E().hasLabel(label);
+         return SchemaSpace.Helper.fields(IteratorUtil.stream(elements).map(element -> {
+             final Map<Obj, Obj> properties = new LinkedHashMap<>();
+             new ElementMap<>(element).forEach((key, value) -> properties.put(uri(key.uriValue().name()), value));
+             return rec(properties);
+         }));
+     }
+
      protected grphIncrQ grphIncrQ;
 
      protected grphSpace(final GraphTraversalSource graph, final Map<Obj, Obj> config, final fURI vid,
@@ -316,8 +319,6 @@
          //this.graphClass = MTronException.wrap(() -> (Class<GraphFactory>) Class.forName(Str.Helper.cleanString(this.at("config/gremlin/graph"))));
          //LOG.info("connected to %s", this.graphClass);
          // graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
-         // ── schema discovery ──
-         this.existingGraphSchema = new ExistingGraphSchema(this);
          if (null == FACTORY) {
              LOG.warn("no obj factory specified. defaulting to an extended mobjfactory that assumes 64-bit long element ids");
              FACTORY = MObjFactory.of()
@@ -326,13 +327,6 @@
          }
          if (!this.at(f(CONFIG).extend(DATASET)).isNoObj()) {
              GraphLoader.get(this.at(f(CONFIG).extend(DATASET)).uriValue()).accept(this);
-         }
-
-         // ── schema discovery — only when no schema is provided in config ──
-         // (avoids full-graph label scan on large existing databases)
-         if (this.at(uri(SCHEMA)).isNoObj()) {
-             this.existingGraphSchema.initialize(graph);
-             this.existingGraphSchema.publishDiscoveredLabels();
          }
 
          // Snapshot + re-add QProcs through addQ() so the incrQ interceptor
@@ -469,84 +463,25 @@
      private Iterator<IdObj> readCollection(final DataPath dp) {
          if (!dp.hasCollection()) return IteratorUtil.of();
 
-         // -- wildcard: the V / E meta-collections, not the discovered label types --
-         if (dp.collectionIsWildcard()) {
-             final InstSet instSet = this.schema();
-             return instSet.types().stream()
-                     .filter(t -> "V".equals(t.vid().name()) || "E".equals(t.vid().name()))
-                     .map(t -> IdObj.of(t.vid(), t)).iterator();
-         }
+         // -- wildcard: the V / E meta-collections, not the label types --
+         if (dp.collectionIsWildcard())
+             return Stream.of(f("V"), f("E")).map(vid -> T(REC_TID, vid, null, null)).map(t -> IdObj.of(t.vid(), t)).iterator();
 
          // -- element-kind qualified collection: V:<label> / E:<label> --
-         // e.g. /g/V:person resolves the person vertex label type; /g/E:knows
-         // resolves the knows edge label type.
+         // e.g. /g/V:person resolves the person vertex label type; /g/E:knows the knows edge label type.
          final String collection = dp.collection();
          final int colon = collection.indexOf(':');
-         if (colon > 0) {
-             final String label = collection.substring(colon + 1);
-             final fURI schemaBase = this.schemaBaseVID();
-             if (schemaBase != null) {
-                 final Space schemaSpace = Machine.current().memory().getSpaceFor(schemaBase);
-                 if (schemaSpace instanceof InstSet isa)
-                     return isa.types().stream()
-                             .filter(t -> t.vid().name().equalsIgnoreCase(label))
-                             .map(t -> IdObj.of(t.vid(), t)).iterator();
-             }
-             return IteratorUtil.of();
-         }
+         if (colon > 0)
+             return this.resolveCollectionSchema(collection.substring(colon + 1));
 
-         // -- shared SchemaSpace collection-level resolution --
-         // Resolves exact label names (e.g. "person", "knows") against the
-         // schema InstSet at SCHEMA/INSTSET.
-         final Iterator<IdObj> schemaResults =
-                 resolveCollectionSchema(dp.collection());
-         if (schemaResults.hasNext())
-             return schemaResults;
-
-         // -- V / E meta-collection fallback --
-         // "V" and "E" aren't type names -- they're element-type categories.
-         // Filter the schema InstSet by vertex / edge type refinement.
-         final InstSet instSet = this.schema();
-         if (instSet.types().isEmpty())
-             return IteratorUtil.of();
-         return readCollectionFromInstSet(instSet, dp);
-     }
-
-     /**
-      * Filter an {@link InstSet} by element-type category ({@code V} / {@code E}).
-      * Extracted so both the wired schema and Router-fallback paths share logic.
-      */
-     private Iterator<IdObj> readCollectionFromInstSet(final InstSet instSet, final DataPath dp) {
-         final boolean wildcard = dp.collectionIsWildcard();
-         if (wildcard) {
-             return instSet.types().stream()
-                     .filter(t -> this.isVertexLabel(t.vid().name()) || this.isEdgeLabel(t.vid().name()))
+         // -- V / E meta-collections: the types of the vertex labels, of the edge labels --
+         if ("V".equals(collection) || "E".equals(collection))
+             return SchemaSpace.Helper.types(this)
+                     .filter(t -> "V".equals(collection) ? this.isVertexLabel(t.vid().name()) : this.isEdgeLabel(t.vid().name()))
                      .map(t -> IdObj.of(t.vid(), t)).iterator();
-         }
-         if ("V".equals(dp.collection()))
-             return instSet.types().stream().filter(t -> this.isVertexLabel(t.vid().name()))
-                     .map(t -> IdObj.of(t.vid(), t)).iterator();
-         if ("E".equals(dp.collection()))
-             return instSet.types().stream().filter(t -> this.isEdgeLabel(t.vid().name()))
-                     .map(t -> IdObj.of(t.vid(), t)).iterator();
-         return IteratorUtil.of();
-     }
 
-     /**
-      * Returns {@code true} when the given collection name is a known vertex
-      * label — i.e. a label-level collection like {@code g:person} rather than
-      * the meta-collections {@code V} / {@code E}.  The vertex/edge distinction
-      * is schema metadata (not a type hierarchy).
-      */
-     private boolean isVertexLabel(final String collectionName) {
-         return this.existingGraphSchema.isVertexLabel(collectionName);
-     }
-
-     /**
-      * Returns {@code true} when the given collection name is a known edge label.
-      */
-     private boolean isEdgeLabel(final String collectionName) {
-         return this.existingGraphSchema.isEdgeLabel(collectionName);
+         // -- a label: its declared or inferred type --
+         return this.resolveCollectionSchema(collection);
      }
 
      @Override
@@ -592,7 +527,7 @@
                      if (this.isFlatRead(rel))
                          return this.readFlat(rel, pattern);
                  }
-                 final DataPath dp = this.annotateTypes(routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed));
+                 final DataPath dp = routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed);
                  // the field a read reaches into, with its extension when it has one: extend(null) threw, so */g/V/1/name failed
                  final fURI field = !dp.hasField() ? null : dp.hasExtension() ? f(dp.field()).extend(dp.extension()) : f(dp.field());
                  if (!dp.hasCollection()) return IteratorUtil.of();
@@ -601,7 +536,7 @@
                  // (person, software, knows, created), unlike /g/+ which returns
                  // just the V/E meta-collections.
                  if (dp.collectionIsWildcard() && dp.entryIsWildcard()) {
-                     final fURI schemaBase = this.schemaBaseVID();
+                     final fURI schemaBase = SchemaSpace.Helper.schemaRoute(this);
                      if (schemaBase != null) {
                          final Space schemaSpace = Machine.current().memory().getSpaceFor(schemaBase);
                          if (schemaSpace instanceof InstSet isa)
@@ -655,12 +590,8 @@
                              })
                              .iterator();
                  } else {
-                     // ── label-level collection (e.g. g:person, g:knows) ──
-                     // Determine element type from the schema InstSet.
-                     final Type labelType = this.schema().types().stream()
-                             .filter(t -> t.vid().name().equalsIgnoreCase(dp.collection()))
-                             .findFirst().orElse(null);
-                     if (labelType != null && this.isVertexLabel(dp.collection())) {
+                     // ── label-level collection (e.g. g:person, g:knows): the graph says whose label it is ──
+                     if (this.isVertexLabel(dp.collection())) {
                          if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
                              return readVertexTraversal(dp);
                          }
@@ -677,7 +608,7 @@
                                          return idobj;
                                      }
                                  }).iterator();
-                     } else if (labelType != null && this.isEdgeLabel(dp.collection())) {
+                     } else if (this.isEdgeLabel(dp.collection())) {
                          if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
                              return readEdgeTraversal(dp);
                          }
@@ -727,6 +658,11 @@
              final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
              LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
              final fURI rel = this.relative(routed);
+             // a type written to a label's path declares the label (SchemaSpace.Helper)
+             if (obj.isType() && 1 == rel.segments().size()) {
+                 Machine.write(this.schema().vid().extend(rel.name()), obj);
+                 return obj;
+             }
              // Flat key-value namespace (reserved kv_store label, or deduced).
              if (this.isFlatWrite(rel, obj)) {
                  this.writeFlat(rel, obj);
@@ -801,32 +737,6 @@
          return f(routed.toString().substring(prefix.toString().length()));
      }
 
-     /**
-      * Annotate a positional DataPath with the metatron types resolved by the
-      * graph schema — the label type (collection) and the property type (field).
-      */
-     private DataPath annotateTypes(final DataPath dp) {
-         if (dp.collection() == null)
-             return dp;
-         DataPath typed = dp;
-         final Iterator<IdObj> schemaTypes = this.resolveCollectionSchema(dp.collection());
-         if (schemaTypes.hasNext()) {
-             final Obj t = schemaTypes.next().obj();
-             if (t instanceof Type type)
-                 typed = typed.type(DataPath.ROLE_COLLECTION, type);
-         }
-         if (dp.field() != null && this.existingGraphSchema != null) {
-             final Map<String, Obj> props =
-                     this.existingGraphSchema.getLogicalTypes().get(dp.collection().toLowerCase());
-             if (props != null) {
-                 final Obj pt = props.get(dp.field().toLowerCase());
-                 if (pt instanceof Type t)
-                     typed = typed.type(DataPath.ROLE_FIELD, t);
-             }
-         }
-         return typed;
-     }
-
      @Override
      protected void writeFlat(final fURI relativePath, final Obj obj) {
          final String key = relativePath.toString();
@@ -868,11 +778,11 @@
 
      @Override
      protected void writeStructured(final fURI relativePath, final Obj obj) {
-         final DataPath dp = this.annotateTypes(DataPath.withoutDB(relativePath));
+         final DataPath dp = DataPath.withoutDB(relativePath);
          if (dp.collection() == null || dp.entry() == null)
              return;
          // Edges are created via addE (Phase 3); skip edge-label collections.
-         if ("E".equals(dp.collection()) || isEdgeLabel(dp.collection()))
+         if ("E".equals(dp.collection()) || this.isEdgeLabel(dp.collection()))
              return;
          if (!CommonUtil.isInt(dp.entry())) {
              // A rec at a non-integer entry is not a vertex id — park it in the
@@ -882,19 +792,28 @@
          }
          if (!obj.isRec())
              throw MTronException.of("graph vertex requires a Rec; cannot promote %s", obj.type());
-         final Object id = coerceId(dp.entry());
-         final String label = "V".equals(dp.collection())
-                 ? (obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
-                 ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
-                 : obj.tid().basePath().toString())
-                 : dp.collection();
+         final Vertex existing = IteratorUtil.stream(this.sjvm.V(coerceId(dp.entry()))).findFirst().orElse(null);
+         // a vertex keeps its label; a new one takes its collection's, else the rec's LABEL, else its type's name
+         final String label = null != existing ? existing.label()
+                 : !"V".equals(dp.collection()) ? dp.collection()
+                 : obj.asRec().jvm().containsKey(grphInstSet.LABEL) ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
+                 : obj.tid().name();
+         // A WRITE MERGES INTO THE VERTEX: what its label's type is asked to hold is the vertex as the write leaves it
+         final Map<Obj, Obj> record = new LinkedHashMap<>();
+         if (null != existing)
+             new ElementMap<>(existing).forEach((key, value) -> record.put(uri(key.uriValue().name()), value));
+         obj.asRec().jvm().forEach((key, value) -> {
+             if (value.isNoObj() || value.isNone())
+                 record.remove(key);
+             else if (!key.equals(grphInstSet.LABEL) && !value.isAuto())
+                 record.put(key, value);
+         });
+         SchemaSpace.Helper.admit(this, label, rec(record));
          try {
-             // Promote parked flat entries before the first write of a new label.
-             if (obj.isRec()
-                     && this.existingGraphSchema.getLogicalTypes().get(label.toLowerCase()) == null)
+             // Promote parked flat entries before the first vertex of a new label.
+             if (null == existing && !this.isVertexLabel(label))
                  this.migrateFlatToStructured(label);
-             final Vertex vertex = IteratorUtil.stream(this.sjvm.V(id)).findFirst()
-                     .orElseGet(() -> this.sjvm.addV(label).next());
+             final Vertex vertex = null != existing ? existing : this.sjvm.addV(label).next();
              obj.asRec().jvm().entrySet().stream()
                      .filter(e -> !e.getKey().equals(grphInstSet.LABEL))
                      .forEach(e -> {
@@ -906,24 +825,6 @@
                                      e.getKey().uriValue().toString(), ObjTP3Serializer.tp3Value(value)).next();
                          }
                      });
-             // Track field types for schema update
-             final Map<String, Obj> existing =
-                     this.existingGraphSchema.getLogicalTypes().get(label.toLowerCase());
-             final boolean isNewLabel = existing == null;
-             boolean hasNew = isNewLabel;
-             for (final Map.Entry<Obj, Obj> e : obj.asRec().jvm().entrySet()) {
-                 if (e.getKey().equals(grphInstSet.LABEL)) continue;
-                 final Obj value = e.getValue();
-                 if (value.isNoObj() || value.isNone() || value.isAuto()) continue;
-                 final String propName = e.getKey().isUri()
-                         ? e.getKey().asUri().uriValue().name()
-                         : e.getKey().toString();
-                 this.existingGraphSchema.trackPropertyType(label, propName, value);
-                 if (!isNewLabel && !existing.containsKey(propName.toLowerCase()))
-                     hasNew = true;
-             }
-             if (hasNew)
-                 this.existingGraphSchema.onLabelChanged(label, isNewLabel);
              this.at(AUTO_TX).ifPresent(x -> {
                  if (x.boolValue())
                      this.sjvm.tx().commit();

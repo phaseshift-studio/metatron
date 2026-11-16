@@ -39,6 +39,7 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.SchemaSpaceTestContract;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.space.dcmntSpaceSubQ;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -92,7 +93,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M17", "M44:", "M48", "M32"})
 })
 @TestReport
-public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract {
+public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract, SchemaSpaceTestContract {
 
     protected static MongoServer mongoServer;
     protected static String connectionString;
@@ -166,9 +167,27 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     @Override
-    protected void dropDeducedCollection(final String collectionName) {
+    public void dropDeducedCollection(final String collectionName) {
         try (final MongoClient client = MongoClients.create(connectionString)) {
             client.getDatabase(DB_NAME).getCollection(collectionName).drop();
+        }
+    }
+
+    @Override
+    public fURI schemaCollection(final String name) {
+        return f("mongo:" + name);
+    }
+
+    @Override
+    public void seedCollection(final String name, final List<Rec> records) {
+        if (records.isEmpty())
+            return;
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection(name).insertMany(records.stream().map(record -> {
+                final Document document = new Document();
+                record.recValue().forEach((key, value) -> document.put(key.uriValue().name(), value.jvm()));
+                return document;
+            }).toList());
         }
     }
 
@@ -324,6 +343,32 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             assertEquals(bool(true), ObjmtronSerializer.parse("*mongo:users/user4/sports/skating").apply());
             assertEquals(bool(false), ObjmtronSerializer.parse("*mongo:users/user4/sports/shooting").apply());
 
+        } finally {
+            space.close();
+        }
+    }
+
+    /**
+     * THE INFER SWITCHES (SchemaSpace.Helper), on a second space over the same database: {@code discover=>eager} types
+     * every collection when the space mounts, before anything reads a type; {@code required=>false} makes every field
+     * {@code {?}}; {@code widen=>false} refuses a record the inferred type does not hold, and stores none of it.
+     */
+    @Test
+    public void testInferSwitches() {
+        this.dropDeducedCollection("sett");
+        this.seedCollection("sett", List.of(rec(uri("name"), str("brock"), uri("age"), jnt(4))));
+        final dcmntSpace space = dcmntSpace.of(rec(
+                uri(PATTERN), uri("sett:#"),
+                uri(HOST), uri(connectionString + "/" + DB_NAME),
+                uri(ROUTE), rec(uri("sett:"), uri("")),
+                uri(INFER), rec(uri(REQUIRED), bool(false), uri(WIDEN), bool(false), uri(DISCOVER), uri(EAGER))).jvm(),
+                f("/sys/space/doc/test_infer"));
+        try {
+            final fURI address = space.vid().extend(INSTSET).extend("sett");
+            assertTrue(space.schema().readDeclared(address).isType(), "discover=>eager types a collection at mount");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{[name=>'boris'],[age=>2],[name=>'bill',age=>'old']}.isa(" + address + "::T).count()", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "sett:sett/9001 -> [name=>'bodger',age=>'old']", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*sett:sett/+.count()", "1");
         } finally {
             space.close();
         }

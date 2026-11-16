@@ -23,6 +23,7 @@ import org.bson.Document;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -84,6 +85,7 @@ public class dcmntIncrQ extends BaseQ {
                                         : studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
                                         mutableMap(uri("val"), obj));
 
+                                SchemaSpace.Helper.admit(space, dp.collection(), rec);
                                 final MongoCollection<Document> collection =
                                         space.getDatabase().getCollection(dp.collection());
 
@@ -106,28 +108,6 @@ public class dcmntIncrQ extends BaseQ {
                                 space.logger().debug("inserted document with auto-id {{b}}%s{{X}} in collection {{b}}%s{{X}}",
                                         generatedId.toHexString(), dp.collection());
 
-                                // Track field types for incremental schema update
-                                final String collName = dp.collection();
-                                final Map<String, Obj> existing = space.existingCollectionSchema
-                                        .getLogicalTypes().get(collName.toLowerCase());
-                                final boolean isNewCollection = existing == null;
-                                boolean hasNewFields = isNewCollection;
-                                for (final Map.Entry<Obj, Obj> entry : rec.jvm().entrySet()) {
-                                    if (entry.getValue().isAuto() || entry.getValue().isNoObj()
-                                            || entry.getValue().isNone())
-                                        continue;
-                                    final String fieldName = entry.getKey().isUri()
-                                            ? entry.getKey().asUri().uriValue().name()
-                                            : entry.getKey().toString();
-                                    space.existingCollectionSchema.trackFieldType(
-                                            collName, fieldName, entry.getValue());
-                                    if (!isNewCollection && !existing.containsKey(
-                                            fieldName.toLowerCase()))
-                                        hasNewFields = true;
-                                }
-                                if (hasNewFields)
-                                    space.existingCollectionSchema.onCollectionChanged(
-                                            collName, isNewCollection);
                             } catch (final Exception e) {
                                 throw MTronException.of(e);
                             }

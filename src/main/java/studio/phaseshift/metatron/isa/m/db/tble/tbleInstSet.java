@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.SQLRewriteUtils;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -247,9 +248,7 @@ public class tbleInstSet extends AbstractInstSet {
                                         // body by design (the PK lives in the URI), so the PK
                                         // values are read straight off the ResultSet — reading
                                         // them from the row produced "db:users/noobj".
-                                        final Type tableType = space.schemaInstset().types().stream()
-                                                .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                                                .findFirst().orElse(null);
+                                        final Type tableType = SchemaSpace.Helper.type(space, tableName.toLowerCase());
                                         final Objs rows = objs0();
                                         while (rs.next()) {
                                             final Rec row = space.existingTableSchema.readRow(rs, tableName);
@@ -305,9 +304,7 @@ public class tbleInstSet extends AbstractInstSet {
 
                                         // Rows carry the table type + a routable VID — see
                                         // the LIMIT rewrite above.
-                                        final Type tableType = space.schemaInstset().types().stream()
-                                                .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                                                .findFirst().orElse(null);
+                                        final Type tableType = SchemaSpace.Helper.type(space, tableName.toLowerCase());
                                         final Objs rows = objs0();
                                         while (rs.next()) {
                                             final Rec row = space.existingTableSchema.readRow(rs, tableName);

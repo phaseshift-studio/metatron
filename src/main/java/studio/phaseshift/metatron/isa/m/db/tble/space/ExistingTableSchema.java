@@ -21,11 +21,13 @@ package studio.phaseshift.metatron.isa.m.db.tble.space;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.m.web.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.storage.TableSchema;
@@ -42,7 +44,15 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -92,41 +102,16 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     private final tbleSpace space;
     private final Map<String, TableMetadata> tableSchemas = new LinkedHashMap<>();
-    private SQLSchemaGenerator schemaGenerator;
 
     /**
-     * Inject the schema generator so that table dereferences return instset-encoded
-     * Types instead of SQL-specific TABLE_TID URIs.
+     * THE FOREIGN KEYS: {@code table.column} (lowercase) → the path the column points into ({@code office/+/officeCode}),
+     * from the JDBC metadata, {@link #MTRON_META_TABLE}, or the naming convention. A foreign-key column's type is the
+     * pointer itself.
      */
-    public void setSchemaGenerator(final SQLSchemaGenerator schemaGenerator) {
-        this.schemaGenerator = schemaGenerator;
-        for (final FKInfo fk : pendingFKs)
-            schemaGenerator.registerFK(fk.fromTable(), fk.fromColumn(), fk.toTable(), fk.toColumn());
-        pendingFKs.clear();
-    }
+    private final Map<String, String> foreignKeys = new LinkedHashMap<>();
 
     private final String excludeTableName;
 
-    /**
-     * Table-level TIDs discovered from the {@code $table} sentinel row in
-     * {@link #_mtron_meta}.  Keyed by lowercase table name.
-     */
-    private final Map<String, fURI> tableTids = new LinkedHashMap<>();
-
-    /**
-     * Exposed for {@link SQLSchemaGenerator} so it can produce correct instset types.
-     */
-    public Map<String, Map<String, fURI>> getLogicalTypes() {
-        return logicalTypes;
-    }
-
-    /**
-     * Table-level TIDs discovered from the {@code $table} sentinel in
-     * {@link #MTRON_META_TABLE}.  Exposed for {@link SQLSchemaGenerator}.
-     */
-    public Map<String, fURI> getTableTids() {
-        return tableTids;
-    }
 
     public record TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns,
                                 List<String> primaryKeys) {
@@ -202,18 +187,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
     }
 
-    /**
-     * Temporary FK storage for FKs discovered before the schema generator is set.
-     * Cleared once all FKs are registered with the generator.
-     */
-    private final List<FKInfo> pendingFKs = new ArrayList<>();
-
-    /**
-     * Simple FK info holder used during discovery before the generator is available.
-     */
-    private record FKInfo(String fromTable, String fromColumn, String toTable, String toColumn) {
-    }
-
     public ExistingTableSchema(final tbleSpace space, final String excludeTableName) {
         super(new LinkedHashMap<>());  // logicalTypes shared with parent ObjSQLSerializer
         this.excludeTableName = excludeTableName;
@@ -269,7 +242,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     }
                 }
 
-                // Discover FKs and store temporarily — will register with schemaGenerator later
                 discoverReferencesAndRegister(conn, catalog, tableName);
 
                 this.tableSchemas.put(tableName.toLowerCase(),
@@ -307,7 +279,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 if (meta.primaryKeys().stream().anyMatch(pk -> pk.equalsIgnoreCase(colName)))
                     continue;
                 // Already registered (from JDBC metadata or _mtron_meta)
-                if (isFKAlreadyRegistered(srcTbl, colName))
+                if (null != this.getFKTarget(srcTbl, colName))
                     continue;
                 // Try matching column name to table name (with convention variants).
                 // Skip when the matched table is the same table — a column named
@@ -315,7 +287,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 // column, not a self-referencing FK.
                 final String refTable = findReferencedTable(colName, tableNames);
                 if (refTable != null && !refTable.equalsIgnoreCase(srcTbl)) {
-                    registerOrPendingFK(meta.tableName(), col.name(), refTable, "id");
+                    this.registerFK(meta.tableName(), col.name(), refTable, "id");
                     this.space.logger().debug("inferred FK by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
                             meta.tableName(), col.name(), refTable);
                 }
@@ -372,15 +344,14 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
-     * Discover FK references from JDBC metadata and register them with the schema
-     * generator (or store temporarily if the generator isn't set yet).
+     * Discover FK references from JDBC metadata and register them.
      */
     private void discoverReferencesAndRegister(final Connection conn, final String catalog,
                                                final String tableName) throws SQLException {
         final DatabaseMetaData metaData = conn.getMetaData();
         try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
             while (fks.next()) {
-                registerOrPendingFK(tableName,
+                this.registerFK(tableName,
                         fks.getString("FKCOLUMN_NAME"),
                         fks.getString("PKTABLE_NAME"),
                         fks.getString("PKCOLUMN_NAME"));
@@ -393,8 +364,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * and register them with the schema generator (or store temporarily if the
      * generator isn't set yet).
      * <p>
-     * Also populates {@link #logicalTypes} and {@link #tableTids} from the
-     * persisted metadata so types survive restarts.
+     * Also populates {@link #logicalTypes} from the persisted metadata so types
+     * survive restarts.
      */
     private void loadMetaTable(final Connection conn) {
         try (final Statement stmt = conn.createStatement();
@@ -415,44 +386,37 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * Lazy FK inference by naming convention, triggered at read time.
      * If a column name matches another table (e.g. "company" in "people"
      * matches table "companies"), registers the FK on the fly and returns
-     * the FKTarget.  This catches tables created after init.
+     * its target.  This catches tables created after init.
      */
-    private SQLSchemaGenerator.FKTarget inferFKByConvention(final String tableName, final String columnName) {
-        if (schemaGenerator == null)
-            return null;
-        final Set<String> knownTables = this.tableSchemas.keySet();
-        final String colName = columnName.toLowerCase();
-        final String refTable = findReferencedTable(colName, knownTables);
+    private String inferFKByConvention(final String tableName, final String columnName) {
+        final String refTable = findReferencedTable(columnName.toLowerCase(), this.tableSchemas.keySet());
         if (refTable != null && !refTable.equalsIgnoreCase(tableName)) {
-            schemaGenerator.registerFK(tableName, columnName, refTable, "id");
+            this.registerFK(tableName, columnName, refTable, "id");
             this.space.logger().debug("lazy foreign key by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
                     tableName, columnName, refTable);
-            return schemaGenerator.getFKTarget(tableName, columnName);
+            return this.getFKTarget(tableName, columnName);
         }
         return null;
     }
 
     /**
      * Process a single row from {@link #MTRON_META_TABLE}, populating
-     * {@link #tableTids}, {@link #logicalTypes}, and FK registrations.
+     * {@link #logicalTypes} and FK registrations.
      * Shared by {@link #loadMetaTable} and {@link #registerTable}.
      */
     private void processMetaRow(final String tbl, final String col,
                                 final String objTidStr, final String ref) {
-        // $table sentinel — table-level TID
-        if ("$table".equalsIgnoreCase(col)) {
-            if (objTidStr != null && !objTidStr.isBlank())
-                this.tableTids.put(tbl.toLowerCase(), f(objTidStr));
+        // $table sentinel — the table-level TID; a table's type takes its tid from its rows' own
+        if ("$table".equalsIgnoreCase(col))
             return;
-        }
 
         // FK registration — skip rows where column, table, and ref are all
         // identical (e.g. concept.concept→concept — a naming collision, not
         // a real FK).  Legitimate self-refs like manager_id→employee have
         // different column names and are allowed through.
-        if (ref != null && !ref.isBlank() && !isFKAlreadyRegistered(tbl, col)
+        if (ref != null && !ref.isBlank() && null == this.getFKTarget(tbl, col)
                 && !(ref.equalsIgnoreCase(tbl) && col.equalsIgnoreCase(tbl)))
-            registerOrPendingFK(tbl, col, ref, "id");
+            this.registerFK(tbl, col, ref, "id");
 
         // Populate logical type overrides
         if (objTidStr != null && !objTidStr.isBlank()) {
@@ -462,27 +426,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
     }
 
-    /**
-     * Register an FK with the schema generator, or store temporarily in
-     * {@link #pendingFKs} if the generator hasn't been set yet.
-     */
-    private void registerOrPendingFK(final String tableName, final String columnName,
-                                     final String toTable, final String toColumn) {
-        if (schemaGenerator != null)
-            schemaGenerator.registerFK(tableName, columnName, toTable, toColumn);
-        else
-            pendingFKs.add(new FKInfo(tableName, columnName, toTable, toColumn));
-    }
-
-    /**
-     * Check if an FK is already registered (either in generator or pending list).
-     */
-    private boolean isFKAlreadyRegistered(final String tbl, final String col) {
-        if (schemaGenerator != null && schemaGenerator.getFKTarget(tbl, col) != null) {
-            return true;
-        }
-        return pendingFKs.stream().anyMatch(fk ->
-                fk.fromTable.equalsIgnoreCase(tbl) && fk.fromColumn.equalsIgnoreCase(col));
+    private void registerFK(final String tableName, final String columnName,
+                            final String toTable, final String toColumn) {
+        this.foreignKeys.put(tableName.toLowerCase() + "." + columnName.toLowerCase(), toTable + "/+/" + toColumn);
     }
 
     /**
@@ -497,19 +443,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (!dp.collectionIsWildcard()
                 && !this.tableSchemas.containsKey(dp.collection().toLowerCase()))
             return null;
-        // Annotate the positional decomposition with the resolved metatron types.
-        DataPath typed = dp;
-        if (this.schemaGenerator != null)
-            typed = typed.type(DataPath.ROLE_COLLECTION, this.schemaGenerator.getTableType(dp.collection()));
-        if (dp.hasField()) {
-            final Map<String, fURI> cols = this.logicalTypes.get(dp.collection().toLowerCase());
-            if (cols != null) {
-                final fURI fieldTid = cols.get(dp.field().toLowerCase());
-                if (fieldTid != null)
-                    typed = typed.type(DataPath.ROLE_FIELD, MType.T(fieldTid));
-            }
-        }
-        return typed;
+        return dp;
     }
 
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata, final String... rowNames) throws SQLException {
@@ -560,7 +494,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col,
                                        final String tableName) throws SQLException {
         // Check registered FKs (from JDBC metadata, _mtron_meta, or naming convention)
-        SQLSchemaGenerator.FKTarget fk = getFKTarget(tableName, col.name);
+        String fk = this.getFKTarget(tableName, col.name);
         // Lazy naming-convention check: tables may have been added after init
         if (fk == null) {
             fk = inferFKByConvention(tableName, col.name);
@@ -578,7 +512,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     if (fkStr.startsWith("/") || fkStr.indexOf(':') >= 0) {
                         return uri(fkStr);
                     }
-                    final fURI referencedPath = buildFKReferencePath(fk.targetPath(), fkStr);
+                    final fURI referencedPath = buildFKReferencePath(fk, fkStr);
                     return auto_from_(referencedPath).tryToInst();
                 }
                 // JSON list: fall through to type-aware reader below
@@ -927,7 +861,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final ColumnMetadata widened = new ColumnMetadata(column.name, Types.VARCHAR, "TEXT");
         metadata.columns.replaceAll(c -> c.name.equalsIgnoreCase(column.name) ? widened : c);
         trackLogicalType(conn, metadata, column.name, value, Types.VARCHAR);
-        this.space.onTableChanged(metadata.tableName);
         return widened;
     }
 
@@ -1146,7 +1079,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final ColumnMetadata newCol = new ColumnMetadata(columnName, jdbcType, sqlType);
         metadata.columns.add(newCol);
         trackLogicalType(conn, metadata, columnName, value, jdbcType);
-        this.space.onTableChanged(metadata.tableName);
         return newCol;
     }
 
@@ -1329,10 +1261,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (metadata == null)
             throw new java.sql.SQLException("failed to create table: " + tableName);
         final int generatedKey = insertRowAuto(conn, metadata, rec);
-        // Update the instset type AFTER the first insert so logical type
-        // tracking (e.g. URI stored in TEXT) has already fired.
-        if (isNew)
-            this.space.onTableChanged(tableName);
         return generatedKey;
     }
 
@@ -1659,11 +1587,92 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
-     * Query the schema generator for FK info for the given table+column.
-     * Returns the FK target (e.g., "office/+/officeCode") or null if not an FK.
+     * The path a foreign-key column points into (e.g. {@code office/+/officeCode}), or null when it is no foreign key.
      */
-    public SQLSchemaGenerator.FKTarget getFKTarget(final String tableName, final String columnName) {
-        if (schemaGenerator == null) return null;
-        return schemaGenerator.getFKTarget(tableName, columnName);
+    public String getFKTarget(final String tableName, final String columnName) {
+        return this.foreignKeys.get(tableName.toLowerCase() + "." + columnName.toLowerCase());
+    }
+
+    /**
+     * A TABLE'S ROWS, FOLDED ({@link SchemaSpace.Helper#fields}): every row as a read answers it. A foreign-key column
+     * is the pointer its key declares; any other column is the LCD of its values' types and the type its writes recorded
+     * (a read can hand a value back narrower than it was written: a uri that passes datetime::T comes back a datetime). A
+     * column no row holds a value in is typed by its column alone, and is required only of a table with no rows (every
+     * one of none holds it).
+     */
+    public Rec fields(final Connection conn, final String tableName) throws SQLException {
+        if (!this.tableSchemas.containsKey(tableName.toLowerCase()))
+            this.registerTable(conn, tableName);
+        final TableMetadata metadata = this.tableSchemas.get(tableName.toLowerCase());
+        final long[] rows = {0L};
+        final Rec folded;
+        try (final Statement statement = conn.createStatement();
+             final ResultSet rs = statement.executeQuery("SELECT * FROM " + this.q(metadata.tableName))) {
+            folded = SchemaSpace.Helper.fields(IteratorUtil.stream(new Iterator<Rec>() {
+                private boolean ahead = MTronException.wrap(rs::next);
+
+                @Override
+                public boolean hasNext() {
+                    return this.ahead;
+                }
+
+                @Override
+                public Rec next() {
+                    rows[0]++;
+                    final Rec row = MTronException.wrap(() -> readRow(rs, metadata.tableName));
+                    this.ahead = MTronException.wrap(rs::next);
+                    return row;
+                }
+            }));
+        }
+        final Map<Obj, Obj> fields = new LinkedHashMap<>(folded.jvm());
+        for (final ColumnMetadata column : metadata.columns) {
+            if (TID_COLUMN.equalsIgnoreCase(column.name) || metadata.primaryKeys.contains(column.name))
+                continue;
+            final Obj required = uri(column.name);
+            final Obj key = fields.containsKey(required) ? required
+                    : fields.containsKey(required.maybe()) ? required.maybe()
+                    : 0 == rows[0] ? required : required.maybe();
+            final String foreignKey = this.getFKTarget(tableName, column.name);
+            if (null != foreignKey) {
+                fields.remove(required);
+                fields.remove(required.maybe());
+                fields.put(key, isa_(uri(foreignKey)).auto_from_(id_()).tryToInst());
+            } else
+                fields.put(key, fields.containsKey(key)
+                        ? Type.Helper.findLCD(List.of(fields.get(key).asType(), this.columnType(tableName, column)))
+                        : this.columnType(tableName, column));
+        }
+        return rec(fields, folded.tid(), null);
+    }
+
+    /**
+     * THE TYPE A COLUMN DECLARES: the logical type its writes recorded in {@link #MTRON_META_TABLE} when that refines
+     * its SQL type, else the type its SQL type maps to (a JSON column by its default: {@code {}} a rec, else a lst).
+     */
+    private Type columnType(final String tableName, final ColumnMetadata column) {
+        final Map<String, fURI> logical = this.logicalTypes.get(tableName.toLowerCase());
+        final fURI tid = null == logical ? null : logical.get(column.name().toLowerCase());
+        if (null != tid && !switch (column.sqlType()) {
+            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> "int".equals(tid.name());
+            case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> "real".equals(tid.name());
+            case Types.BOOLEAN, Types.BIT -> "bool".equals(tid.name());
+            case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR,
+                 Types.CLOB, Types.NCLOB, Types.DATE, Types.TIME, Types.TIMESTAMP, Types.TIME_WITH_TIMEZONE,
+                 Types.TIMESTAMP_WITH_TIMEZONE, Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY, Types.BLOB ->
+                    "str".equals(tid.name());
+            default -> false;
+        })
+            return MType.T(tid);
+        if ("BOOLEAN".equalsIgnoreCase(column.typeName()))
+            return BOOL_TYPE;
+        if ("JSON".equalsIgnoreCase(column.typeName()) || column.isDefaultJSONArray() || column.isDefaultJSONObject())
+            return column.isDefaultJSONObject() ? REC_TYPE : LST_TYPE;
+        return switch (column.sqlType()) {
+            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> INT_TYPE;
+            case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> REAL_TYPE;
+            case Types.BOOLEAN, Types.BIT -> BOOL_TYPE;
+            default -> STR_TYPE; // character, date/time and binary (base64) columns, and every other kind
+        };
     }
 }

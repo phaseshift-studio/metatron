@@ -74,10 +74,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         @SkipRegexTest.Skip(method = "testEdgePropertyIsa"),
         // the list of vertices this row stores keeps vadas' vid (@/g/V/2), which the expected */g/V/2 reads without, as
         // testAddVertex finds
-        @SkipRegexTest.Skip(method = "testVertexUpdate", params = {"likes=>\\[!"}),
-        // @/g/V/1>>=[age=>none] is accepted: nothing enforces a route-declared type (person: age required) on a write.
-        // These rows passed only while an inferred person enforced age. See THE OPEN QUESTION in ExistingGraphSchema
-        @SkipRegexTest.Skip(method = "testGraphMutations|testVertexUpdate", params = {"age=>none"})
+        @SkipRegexTest.Skip(method = "testVertexUpdate", params = {"likes=>\\[!"})
 })
 public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
 
@@ -617,21 +614,23 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
     }
 
     /**
-     * A WRITE THAT ADDS A PROPERTY TO ONE ELEMENT LEAVES ITS LABEL'S OTHER ELEMENTS IN THE TYPE, inferred as tble and dcmnt
-     * infer: a property not on every element is optional. Two pets nothing declares, one given an age, are both pets.
-     * A declared label keeps its declared type (Marko, 2026-11-16): marko given likes, vadas is still a person. That the
-     * declared person also refuses marko dropping his age is the open question in ExistingGraphSchema. Before,
-     * the write regenerated the label's type with every property required, and vadas, fido and every later test's
-     * persons fell out of it.
+     * A WRITE THAT ADDS A PROPERTY TO ONE ELEMENT LEAVES ITS LABEL'S OTHER ELEMENTS IN THE TYPE, as every SchemaSpace
+     * infers (SchemaSpace.Helper): a property not on every element is optional. Two pets nothing declares, one given an
+     * age, are both pets, reached by the inferred type's address (an inferred type has no name a graph element's label
+     * could resolve to). A declared label keeps its declared type (Marko, 2026-11-16): marko given likes, vadas is still
+     * a person, and the declared person refuses marko dropping his age (testVertexUpdate). Before, the write regenerated
+     * the label's type with every property required, and vadas, fido and every later test's persons fell out of it.
      */
     @Test
     public void testAPropertyAddedToOneElementLeavesTheRestInTheType() {
         final studio.phaseshift.metatron.isa.m.db.grph.space.grphSpace gs =
                 (studio.phaseshift.metatron.isa.m.db.grph.space.grphSpace) Machine.current().memory().getSpaceFor(f("/g"));
+        final String pet = gs.vid().extend(INSTSET).extend("pet") + "::T";
         gs.sjvm().addV("pet").property(org.apache.tinkerpop.gremlin.structure.T.id, 100).property("name", "rex").next();
         gs.sjvm().addV("pet").property(org.apache.tinkerpop.gremlin.structure.T.id, 101).property("name", "fido").next();
-        AbstractMetatronTest.checkCodeEvaluate(LOG, "@/g/V/100>>=+[age=>3]", "*/g/V/100.?pet::T>>age", "3");
-        AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/101.?pet::T>>name", "'fido'");
+        AbstractMetatronTest.checkCodeEvaluate(LOG, "@/g/V/100>>=+[age=>3]", "*/g/V/100.?" + pet + ">>age", "3");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/101.?" + pet + ">>name", "'fido'");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "{[name=>'kit'],[age=>2]}.isa(" + pet + ").count()", "1");
         AbstractMetatronTest.checkCodeEvaluate(LOG, "@/g/V/1>>=+[likes=>food]", "*/g/V/1.?person::T>>likes", "food");
         AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/2.?person::T>>name", "'vadas'");
     }

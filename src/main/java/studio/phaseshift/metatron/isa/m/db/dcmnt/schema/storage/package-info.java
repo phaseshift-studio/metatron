@@ -33,12 +33,11 @@
  *
  * <h2>Contrast with Domain Schema</h2>
  * <p>
- * Storage schema is about <b>how metatron stores data</b>, while domain schema
- * (in {@link studio.phaseshift.metatron.isa.m.db.dcmnt.schema.domain}) is about
+ * Storage schema is about <b>how metatron stores data</b>, while a collection's type
+ * ({@link studio.phaseshift.metatron.isa.SchemaSpace.Helper}) is about
  * <b>how users' existing collections are structured</b>.
  * </p>
  *
- * @see studio.phaseshift.metatron.isa.m.db.dcmnt.schema.domain Domain schema package
  * @see studio.phaseshift.metatron.isa.m.db.tble.schema.storage SQL storage schema reference
  */
 package studio.phaseshift.metatron.isa.m.db.dcmnt.schema.storage;

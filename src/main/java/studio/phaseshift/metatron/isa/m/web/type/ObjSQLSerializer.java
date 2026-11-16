@@ -341,7 +341,10 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                         ? raw.substring(1, raw.length() - 1)
                         : raw;
                 final Obj uriObj = uri(f(clean));
-                if (uriObj.test(T(MATH_DATETIME_TID)))
+                // a datetime only where datetime::T is a type: where /m/math is not imported it is a name over nothing,
+                // which constrains nothing, and every uri read back (https://alice.example.com) came back a datetime
+                final Type datetime = T(MATH_DATETIME_TID);
+                if (!datetime.isEphemeral() && uriObj.test(datetime))
                     return uri(f(clean), MATH_DATETIME_TID, null);
                 return uriObj;
             }

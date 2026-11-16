@@ -28,10 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.SCHEMA;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /**
  * Base class for {@link DataPath}-backed spaces (document stores, SQL tables,
@@ -174,18 +171,18 @@ public abstract class AbstractDataPathSpace<SJVM> extends AbstractSpace<SJVM> {
 
     /**
      * The flat namespace accepts any Obj at its root, so the document/row-level
-     * Rec requirement does not apply to flat-destined writes.
+     * Rec requirement does not apply to flat-destined writes. Nor does it apply to a
+     * type written to a collection's path: that declares the collection
+     * ({@link SchemaSpace.Helper}), it is not a document.
      */
     @Override
     protected boolean enforceRootConstraint(final fURI vid, final Obj obj) {
+        if (obj.isType())
+            return false;
         final fURI relative = Space.Helper.routeFromSpace(vid, this.routes());
         if (this.isFlatWrite(relative, obj))
             return false;
         return super.enforceRootConstraint(vid, obj);
     }
 
-
-    protected Obj getCollectionType(final fURI vid) {
-        return objs(this.at(SCHEMA).orElse(rec()).at("type").orElse(lst()).elements().filter(t -> t.vid().test(vid)));
-    }
 }

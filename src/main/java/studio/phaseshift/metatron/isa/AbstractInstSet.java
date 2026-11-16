@@ -413,11 +413,11 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     /**
      * THE DECLARED READ — this set's tables, and nothing else. A subclass may make {@link #read(fURI)} do
-     * more than answer: {@code SQLSchemaInstSet.read} populates a table's schema on demand, which is right
+     * more than answer: a SchemaSpace's schema instset ({@link SchemaSpace.Helper#schema}) infers a collection's type on demand, which is right
      * for a DELIBERATE read of that schema. This form never does, and it is what a FALLBACK read uses,
      * because a machine reaching for instruction memory after a data-memory miss must not cause work on
      * the reader's behalf. Measured: a logger's type lookup during tbleSpace's own construction walked
-     * into schemaInstset -> ensureTables and hit a database connection that was not open yet.
+     * into the schema instset's catalog walk and hit a database connection that was not open yet.
      */
     public Obj readDeclared(final fURI pattern) {
         return this.readTables(pattern);

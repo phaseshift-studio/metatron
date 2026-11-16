@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.db.tble.tbleSpace;
@@ -81,6 +82,7 @@ public class tbleIncrQ extends BaseQ {
                                                 : studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
                                                 studio.phaseshift.metatron.util.CommonUtil.mutableMap(
                                                         studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("val"), obj));
+                                SchemaSpace.Helper.admit(space, dp.collection().toLowerCase(), rec);
                                 final int generatedKey = space.existingTableSchema().ensureTableAndInsert(
                                         space.sjvm(), dp.collection(), rec);
                                 // Replace the _ placeholder entry with the actual auto-generated key
