@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -145,6 +146,15 @@ public final class QCollection {
             .tid(QPROC_TID)
             .vid(EMBEDQ_TID)
             .constructor(QCollection::embedQ)
+            .create();
+    //
+    public static final String ANALQ = "analq";
+    public static final fURI ANALQ_PATTERN = f(ANALQ);
+    public static final fURI ANALQ_TID = QPROC_TID.extend(ANALQ_PATTERN);
+    public static final Type ANALQ_TYPE = TypeBuilder.build()
+            .tid(QPROC_TID)
+            .vid(ANALQ_TID)
+            .constructor(QCollection::analQ)
             .create();
     //
     public static final String DOCQ = "docq";
@@ -556,6 +566,55 @@ public final class QCollection {
      */
     public static volatile java.util.function.Function<Rec, Obj> VALIDATE = declaration -> noobj();
 
+    /**
+     * THE METRIC RECORDER: every read and write handed to the declaring source through {@link QProc.Layer} lands in a
+     * held {@code analyzer::T}, read flat at the space's {@code ?analq}:
+     * <pre>
+     * read  => [count => counter, latency => timer]
+     * write => [count => counter, latency => timer, delete => [count => counter, latency => timer]]
+     * </pre>
+     * {@code write/count} counts every write including deletes, and the {@code delete} subset counts the {@code noobj}
+     * writes; {@code write/latency} likewise times every write, deletes included. {@code latency} is the nanos of the
+     * source's OWN access — the pre/post hooks, the qless guards and the meters themselves are outside the clock.
+     * <p>
+     * An access that CARRIES a query ({@code /t/a?docq}, {@code /t/a?subq}) is metadata traffic, not data traffic, and
+     * so is pulling the analysis itself: neither is counted nor timed. A source that runs its own q-proc sequence
+     * ({@code mqttSpace}, an instset) is counted but not timed, and a streamed read ({@code readStream}) bypasses the
+     * layer and is not recorded at all yet.
+     */
+    public static QProc analQ() {
+        final BasicAnalyzer analyzer = new BasicAnalyzer();
+        return QProc.Helper.build(ANALQ_TID, ANALQ_PATTERN)
+                .obj(f(OBJ), analyzer)
+                .preRead(vid -> analyzer.analysis())
+                .qlessRead((vid, obj) -> {
+                    if (vid.hasQ() || !analyzer.enabled())
+                        return noobj();
+                    final long nanos = QProc.Layer.elapsedNanos();
+                    analyzer.incr(f(""), f("read/count"), 1L);
+                    if (nanos >= 0L)            // no Layer bracket (a source with its own sequence) is not a 0ns read
+                        analyzer.record(f(""), f("read/latency"), nanos);
+                    return noobj();
+                })
+                .broadcast((vid, obj) -> {
+                    if (vid.hasQ() || !analyzer.enabled())
+                        return noobj();
+                    // write/latency times EVERY write, deletes included, exactly as write/count counts them: the
+                    // delete subset is a second view of the same accesses, not a mutually exclusive bucket
+                    final long nanos = QProc.Layer.elapsedNanos();
+                    analyzer.incr(f(""), f("write/count"), 1L);
+                    if (nanos >= 0L)
+                        analyzer.record(f(""), f("write/latency"), nanos);
+                    if (obj.isNoObj()) {
+                        analyzer.incr(f(""), f("write/delete/count"), 1L);
+                        if (nanos >= 0L)
+                            analyzer.record(f(""), f("write/delete/latency"), nanos);
+                    }
+                    return noobj();
+                })
+                .create();
+    }
+
     public static QProc docQ() {
         return docQ(noobj());
     }
@@ -850,7 +909,7 @@ public final class QCollection {
                                 (subID != null && null != existingSub.vid() && existingSub.vid().bimatches(subID)) ||
                                         vid.basePath().bimatches(existingSub.asRec().at(TARGET).uriValue()));
                         if (unsubscribed) {
-                            subscriptions.logger().info("unsubscribing from %s", vid.basePath());
+                            LOG.status(DEBUG, "unsubscribed from %s", vid.basePath());
                         }
                         return bool(unsubscribed);
                     } else if (obj.tid().basePath().equals(SUBQ_SUB_TID)) {
@@ -859,12 +918,12 @@ public final class QCollection {
                             subscription.asRec().at(TARGET, uri(vid.basePath()), MUTABLE);
                         if (subscriptions.lstValue().stream().noneMatch(subscription::equals)) {
                             subscriptions.lstValue().add(subscription);
-                            subscription.logger().info("subscribing to %s", vid.basePath());
+                            LOG.status(DEBUG, "subscribed to %s", vid.basePath());
                         }
                     } else {
                         subscription = rec(mutableMap(uri(TARGET), uri(vid.basePath()), uri(CODE), obj), SUBQ_SUB_TID, null);
                         subscriptions.lstValue().add(subscription);
-                        subscription.logger().info("subscribing to %s", vid.basePath());
+                        LOG.status(DEBUG, "subscribed to %s", vid.basePath());
                     }
                     //LOG.debug("current subscriptions: %s", subscriptions);
                     return subscription;

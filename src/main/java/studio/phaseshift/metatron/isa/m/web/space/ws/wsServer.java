@@ -21,10 +21,11 @@ package studio.phaseshift.metatron.isa.m.web.space.ws;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzable;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -174,8 +175,7 @@ public final class wsServer extends Listener {
                     uri(ROUTE).maybe().asUri(), rec(URI_TYPE, T(ALL)),
                     // the socket bound, and whether it is still served — the server's own fields once constructed
                     uri(ORIGIN).maybe().asUri(), URI_TYPE,
-                    uri(STATUS).maybe().asUri(), BOOL_TYPE,
-                    uri(ANALYZER).maybe().asUri(), URI_TYPE))
+                    uri(STATUS).maybe().asUri(), BOOL_TYPE))
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_SERVER_TID),
                     lst(T(REC_TID)), (_, inst) -> wsServer.of(inst.arg(0).asRec()))).create();
 
@@ -266,10 +266,14 @@ public final class wsServer extends Listener {
      */
     private final Map<WebSocket, Session> sessions = Collections.synchronizedMap(new IdentityHashMap<>());
 
-    private wsServer(final Map<Obj, Obj> jvm, final Network owner, final Obj analyzer) {
+    private wsServer(final Map<Obj, Obj> jvm, final Network owner) {
         super(jvm, WS_SERVER_TID, owner);
-        this.analyze(analyzer);
         this.socket = new Socket(this.at(ORIGIN).uriValue());
+    }
+
+    @Override
+    public fURI protocol() {
+        return f("ws");
     }
 
     /**
@@ -281,7 +285,7 @@ public final class wsServer extends Listener {
         if (!origin.isUri())
             throw MTronException.of("a ws_server serves a socket: origin=><ws://origin:port> required, got %s", origin);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec(), config.at(uri(ANALYZER)));
+        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec());
     }
 
     /**
@@ -289,10 +293,6 @@ public final class wsServer extends Listener {
      * or above this one already holds, or bind it here. Answers the server.
      */
     public static Listener serve(final fURI origin, final Rec routes) {
-        return serve(origin, routes, noobj());
-    }
-
-    private static Listener serve(final fURI origin, final Rec routes, final Obj analyzer) {
         final Network level = Machine.current().network();
         final Listener held = Network.Helper.listenerFor(origin);
         if (null != held) {
@@ -304,7 +304,7 @@ public final class wsServer extends Listener {
         // a route table is ABSENT rather than empty while the machine serves nothing through it (listener::T)
         if (!routes.isEmpty())
             jvm.put(uri(ROUTE), routes);
-        final wsServer server = new wsServer(jvm, level, analyzer);
+        final wsServer server = new wsServer(jvm, level);
         try {
             Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {
@@ -353,12 +353,15 @@ public final class wsServer extends Listener {
         as(taken.machine(), () -> {
             final WebSocketRec session = session(RouteLane.resolve(taken.target(), request), request, null);
             session.setWebSocket(conn);
+            // ADOPTED BY THE SOCKET THAT SERVED IT: the session's frames are counted in this server's analyzer, at the
+            // wire address its route answers (the handshake path under the socket's origin)
+            session.servedBy(this, request.origin(this.origin()).qLess());
             this.sessions.put(conn, new Session(taken, session, null));
             session.onOpen(conn, handshake);
             final fURI peer = this.admit(taken, conn, session);
             if (null != peer)
                 this.sessions.put(conn, new Session(taken, session, peer));
-            Analyzable.Helper.set(this, f("connections"), this.sessions.size());
+            Analyzer.Recorder.Helper.set(this, f("connections"), this.sessions.size());
         });
     }
 
@@ -378,7 +381,10 @@ public final class wsServer extends Listener {
         final Session session = this.sessions.remove(conn);
         if (null == session)
             return;
-        Analyzable.Helper.set(this, f("connections"), this.sessions.size());
+        // A HANG-UP IS A DELETE: a write of noobj at the wire address the session served — the analq's write/delete
+        // subset, counted and timed like any other write through the socket
+        QProc.Layer.write(this, session.rec().wire(), noobj(), () -> noobj());
+        Analyzer.Recorder.Helper.set(this, f("connections"), this.sessions.size());
         as(session.route().machine(), () -> {
             session.rec().onClose(conn, code, reason, remote);
             // the inbound peer dies with its socket: reach is a capability, retracted with the connection
@@ -389,10 +395,10 @@ public final class wsServer extends Listener {
 
     private void message(final WebSocket conn, final String message) {
         final Session session = this.sessions.get(conn);
-        if (null != session) {
-            Analyzable.Helper.incr(this, f("messages"), 1L);
+        // the frame is counted where it is handled — the session's on_message read (WebSocketRec), in this socket's
+        // analyzer — so there is no second meter here
+        if (null != session)
             as(session.route().machine(), () -> session.rec().onMessage(conn, message));
-        }
     }
 
     private void error(final WebSocket conn, final Exception ex) {

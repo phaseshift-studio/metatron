@@ -30,7 +30,7 @@ tblespace::[pattern => tbledoc:#,/
                         docq::[tbledoc:person => docs::[/
                           desc    => "a person row: name, age, and a skill once one is written",/
                           example => ["*tbledoc:person/+.count()"]]]],/
-            route   => [tbledoc: => <>]]@/sys/space/tbledoc
+            route   => [tbledoc: => <>]]@~/memory/space/tbledoc
 ```
 
 The two `q` entries are the space's **query processors**, and both earn their place: `docq` is what lets *a space
@@ -42,7 +42,7 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 | type           | vid                                  | tid        | meaning                                                             |
 |----------------|--------------------------------------|------------|---------------------------------------------------------------------|
 | `tblespace::T` | `/m/db/tble/space/tblespace`            | `space::T` | a JDBC database as a space; isa `rec[host=>uri::T,driver=>uri::T]`  |
-| table types    | `/sys/space/<space>/instset/<table>` | `rec::T`   | one per discovered table, published into the space's schema instset |
+| table types    | `~/memory/space/<space>/instset/<table>` | `rec::T`   | one per discovered table, published into the space's schema instset |
 
 ```mtron_pre
 *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
@@ -82,7 +82,7 @@ SQL column types follow the obj types, and the column catalog is readable as dat
 keeps what SQL cannot say:
 
 ```mtron_pre
-*/sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM _mtron_meta')
+*~/memory/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM _mtron_meta')
 ```
 
 A structural obj (`tags=>['a','b']`) rides in a `TEXT` column with its type preserved in `obj_tid`, so a read
@@ -190,8 +190,8 @@ When the vocabulary is not enough, go to the backend. `sql` takes a `str` — te
 which mtron then treats like any other objs.
 
 ```mtron_pre
-*/sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')
-*/sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')>>age.sum()
+*~/memory/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')
+*~/memory/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')>>age.sum()
 ```
 
 A `sql` str may carry several statements: all but the last run as updates, the last is the query whose result set comes
@@ -220,8 +220,8 @@ kinds may sit in one row.
 ## the schema of what you are querying
 
 ```mtron_pre
-*/sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
-*/sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
+*~/memory/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
+*~/memory/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ```
 
 Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
@@ -229,7 +229,7 @@ of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*
 A table's type is replaced when the table widens.
 
 Discovery is **lazy**, and it is worth knowing exactly what fires it: the catalog walk runs on the first *write*, or on
-a read of the space's instset (`*/sys/space/<space>/instset/+/`). Until it has run, the space does not know which
+a read of the space's instset (`*~/memory/space/<space>/instset/+/`). Until it has run, the space does not know which
 collections are tables, so a table read falls through to the key/value side and comes back empty — a freshly mounted
 space answers `0` to a count that the database file can prove is not zero (see *taking the space down* below).
 
@@ -285,17 +285,17 @@ lazy that mount is: the rows are there from the first statement, but the space o
 something walks the catalog:
 
 ```mtron_pre
-/sys/space/tbledoc -> noobj                 [-- unmount --]
+~/memory/space/tbledoc -> noobj                 [-- unmount --]
 
 tblespace::[pattern => tbledoc:#,/
             host    => <sqlite:/tmp/mtron-tbledoc.db>,/
             driver  => <org.sqlite.JDBC>,/
-            route   => [tbledoc: => <>]]@/sys/space/tbledoc
+            route   => [tbledoc: => <>]]@~/memory/space/tbledoc
 *tbledoc:person/+.count()                   [-- 0: a fresh mount has not discovered its tables yet --]
-*/sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
+*~/memory/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 *tbledoc:person/+.count()                   [-- the rows were in the file all along --]
 
-/sys/space/tbledoc -> noobj                 [-- leave the graph as we found it --]
+~/memory/space/tbledoc -> noobj                 [-- leave the graph as we found it --]
 ```
 
 Unmount before re-mounting the same scheme under a different configuration: while a space is mounted it owns its

@@ -62,7 +62,7 @@ public class BaseQ extends MRec implements QProc {
         super(jvm, tid, null);
         this.jvm().put(uri(PATTERN), uri(queryPattern));
         this.queryPattern = queryPattern;
-        this.onRead = new BaseOnRead(this.at(PRE_READ).as(), this.at(POST_READ).as());
+        this.onRead = new BaseOnRead(this.at(PRE_READ).as(), this.at(POST_READ).as(), this.at(QLESS_READ).as());
         this.onWrite = new BaseOnWrite(this.at(PRE_WRITE).as(), this.at(POST_WRITE).as(), this.at(QLESS_WRITE).as(), broadcasts);
     }
 
@@ -112,8 +112,8 @@ public class BaseQ extends MRec implements QProc {
 
 
     public static class BaseOnRead extends MRec implements QProc.OnRead {
-        public BaseOnRead(final Inst preRead, final Inst postRead) {
-            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead), REC_TID, null);
+        public BaseOnRead(final Inst preRead, final Inst postRead, final Inst qlessRead) {
+            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead, uri(QLESS_READ), qlessRead), REC_TID, null);
         }
 
         public Optional<Obj> preRead(final fURI vid) {
@@ -132,6 +132,19 @@ public class BaseQ extends MRec implements QProc {
             // a handler that returns noobj says there is no such result -- that is a finding, not a no-op, so it
             // is carried out as noobj rather than dropped (which would fall back to the un-augmented read).
             return Optional.of(result);
+        }
+
+        public Optional<Obj> qlessRead(final fURI vid, final Obj obj) {
+            final Inst i = this.at(QLESS_READ);
+            if (i.isNoObj()) return Optional.empty();
+            final Inst withArgs = i.args(lst(uri(vid), obj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
+        }
+
+        @Override
+        public boolean hasQlessReadHandler() {
+            return !this.at(QLESS_READ).isNoObj();
         }
     }
 
@@ -189,7 +202,7 @@ public class BaseQ extends MRec implements QProc {
                                final BiFunction<fURI, Obj, Obj> preWrite,
                                final TriFunction<fURI, Obj, Obj, Obj> postWrite,
                                final BiFunction<fURI, Obj, Obj> qlessWrite) {
-        return create(tid, pattern, preRead, postRead, preWrite, postWrite, qlessWrite, false);
+        return create(tid, pattern, preRead, postRead, preWrite, postWrite, qlessWrite, null, false);
     }
 
     /**
@@ -202,6 +215,7 @@ public class BaseQ extends MRec implements QProc {
                                final BiFunction<fURI, Obj, Obj> preWrite,
                                final TriFunction<fURI, Obj, Obj, Obj> postWrite,
                                final BiFunction<fURI, Obj, Obj> qlessWrite,
+                               final BiFunction<fURI, Obj, Obj> qlessRead,
                                final boolean broadcasts) {
         return new BaseQ(cleanMap(mutableMap(
                 uri(PATTERN), uri(pattern),
@@ -209,6 +223,7 @@ public class BaseQ extends MRec implements QProc {
                 null == postRead ? noobj() : uri(POST_READ), null == postRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 null == preWrite ? noobj() : uri(PRE_WRITE), null == preWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 null == postWrite ? noobj() : uri(POST_WRITE), null == postWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (lhs, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
-                null == qlessWrite ? noobj() : uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1))))), pattern, tid, broadcasts);
+                null == qlessWrite ? noobj() : uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                null == qlessRead ? noobj() : uri(QLESS_READ), null == qlessRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessRead.apply(inst.arg(0).uriValue(), inst.arg(1))))), pattern, tid, broadcasts);
     }
 }

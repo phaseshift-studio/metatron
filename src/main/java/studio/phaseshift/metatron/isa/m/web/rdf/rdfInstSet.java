@@ -108,7 +108,7 @@ public class rdfInstSet extends AbstractInstSet {
                                 "a stream of named bindings",
                                 Map.of(jnt(0), "a sparql query"),
                                 "query a triple/quad store in native sparql and yield an mtron mapped result set",
-                                "/sys/space/wikipedia.sparql('SELECT ?x ?y WHERE ?x foaf:knows ?y') [-- a sparql query with named bindings --]")))));*/
+                                "~/memory/space/wikipedia.sparql('SELECT ?x ?y WHERE ?x foaf:knows ?y') [-- a sparql query with named bindings --]")))));*/
         /*docWrap(this,
                 "expose metatron to the semantic web through rdf stores (databases) and rdf documents (rdf/json)",
                 "*<wikipedia://www.wikidata.org/wiki/Q54872>.>>o");*/

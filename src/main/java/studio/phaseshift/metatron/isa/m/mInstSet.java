@@ -28,10 +28,10 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -45,9 +45,9 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.ToLongFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -66,7 +66,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -564,7 +563,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(SCHEME).maybe(), "an instset defining the type structure of the space objs",
                     uri(ON_CLOSE).maybe(), "an optional shutdown down hook"))
             .desc("storage systems structured as uri addressed objs")
-            .example("memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@/sys/space/usr/marko")
+            .example("memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@~/memory/space/usr/marko")
             .create();
 
     public static final fURI EXPLANATION_TID = EXPLAIN_INST_TID.extend("explanation");
@@ -843,6 +842,7 @@ public class mInstSet extends AbstractInstSet {
                         SUB_TYPE,
                         PUB_TYPE,
                         LOCK_TYPE,
+                        ANALQ_TYPE,
                         docWrap(TYPEQ_TYPE, "addr type constraint qproc",
                                 "abc?typeq -> int::T       [-- abc can only reference a single integer --]",
                                 "abc?typeq -> 'not an int' [-- yields a fail::T --]"),

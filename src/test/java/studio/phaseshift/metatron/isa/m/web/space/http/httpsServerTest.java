@@ -99,7 +99,7 @@ public class httpsServerTest extends AbstractHTTPServerIntegrationTest {
         }
         fsSpace.of(FileSystems.getDefault(), rec(
                 uri(PATTERN), uri("local:#"),
-                uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/sys/space/fs"));
+                uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/memory/space/fs"));
         return httpServer.of(rec(
                 uri(ORIGIN), uri("https://127.0.0.1:" + generatePort()),
                 uri(KEYSTORE), uri(TlsTestKeys.keystore().toAbsolutePath().toString()),

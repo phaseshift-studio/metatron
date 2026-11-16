@@ -48,7 +48,7 @@ class httpWildcardMountTest extends AbstractHTTPServerIntegrationTest {
     @Override
     protected Listener createHTTPServer() {
         // what the wildcard mount serves: a memspace over /wild/#, holding a person beneath the mount's root
-        memSpace.of(rec(uri(PATTERN), uri(f("/wild/#"))), f("/sys/space/test/wild"));
+        memSpace.of(rec(uri(PATTERN), uri(f("/wild/#"))), f("/memory/space/test/wild"));
         Machine.write(f("/wild/people/34"), rec(uri("name"), str("Ada")));
         return httpServer.of(rec(
                 uri(ORIGIN), uri(f("http://127.0.0.1:" + generatePort())),

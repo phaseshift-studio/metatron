@@ -37,7 +37,7 @@ A system that exposes a subset of the metatron graph is called a `space`. In the
 implementation is responsible for the declared `/a/#` subset of the uri address space (`#` is recursive wildcard).
 
 ```mtron_pre
-memspace::[pattern=>/a/#]@/sys/space/a
+memspace::[pattern=>/a/#]@~/memory/space/a
 ```
 
 <!-- figure source: assets/tikz/mtron-graph.tex (render recipe in that file) -->
@@ -345,7 +345,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   remote hosts, `owner`-labelled ownership with `on_close` reaping, and an end-to-end SQLite container + tbleSpace
   walkthrough.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's
-  prefixes from `*/sys/space/...`, `!*` lazy references, validation, and common failures.
+  prefixes from `*~/memory/space/...`, `!*` lazy references, validation, and common failures.
 
 ### protocol & services
 

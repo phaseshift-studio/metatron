@@ -37,22 +37,22 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * analyzable — the owner side of {@link Analyzer}: the {@link Analyzable.Helper} verbs record through a gated,
- * group-scoped path, and {@link Analyzable.Helper#locateBase} resolves an {@code analyzer => path} binding into the
+ * analyzable — the owner side of {@link Analyzer}: the {@link Analyzer.Recorder.Helper} verbs record through a gated,
+ * group-scoped path, and {@link Analyzer.Recorder.Helper#locateBaseAnalyzer} resolves an {@code analyzer => path} binding into the
  * analyzer that path names and the group it leaves below it (the {@code locateBasePoly} walk, for analyzers).
  */
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
-public class AnalyzableTest extends AbstractMetatronTest {
+public class RecorderTest extends AbstractMetatronTest {
 
     /**
      * a minimal analyzable: a rec that carries an analyzer and a group, and nothing else
      */
-    private static final class TestAnalyzable extends MRec implements Analyzable {
+    private static final class TestRecorder extends MRec implements Analyzer.Recorder {
         private final Analyzer analyzer;
         private final fURI group;
 
-        TestAnalyzable(final Analyzer analyzer, final fURI group) {
+        TestRecorder(final Analyzer analyzer, final fURI group) {
             super(new LinkedHashMap<>(), MACH_ANALYZER_TID, null);
             this.analyzer = analyzer;
             this.group = group;
@@ -81,7 +81,7 @@ public class AnalyzableTest extends AbstractMetatronTest {
     void shouldLocateTheBaseAnalyzerAndRetractTheGroup() {
         final Machine machine = Machine.current().push(f("analyzable_locate"));
         try {
-            final Analyzable.Helper.Located located = Analyzable.Helper.locateBase(f("~/network/analyzer/web_analyzer/http"));
+            final Analyzer.Recorder.Helper.Located located = Analyzer.Recorder.Helper.locateBaseAnalyzer(f("~/network/analyzer/web_analyzer/http"));
             assertNotNull(located, "the path names an analyzer");
             assertInstanceOf(Analyzer.class, located.analyzer(), "the base is the network's analyzer");
             assertNotNull(located.group(), "the retracted tail is the group");
@@ -99,11 +99,11 @@ public class AnalyzableTest extends AbstractMetatronTest {
     void shouldRecordThroughTheHelperUnderTheGroup() {
         final Machine machine = Machine.current().push(f("analyzable_helper"));
         try {
-            final Analyzable.Helper.Located located = Analyzable.Helper.locateBase(f("~/network/analyzer/web_analyzer/http"));
-            final Analyzable analyzable = new TestAnalyzable(located.analyzer(), located.group());
-            Analyzable.Helper.incr(analyzable, f("requests"), 3L);
-            Analyzable.Helper.set(analyzable, f("connections"), 4.0d);
-            final String worked = Analyzable.Helper.timed(analyzable, f("latency"), () -> "done");
+            final Analyzer.Recorder.Helper.Located located = Analyzer.Recorder.Helper.locateBaseAnalyzer(f("~/network/analyzer/web_analyzer/http"));
+            final Analyzer.Recorder analyzable = new TestRecorder(located.analyzer(), located.group());
+            Analyzer.Recorder.Helper.incr(analyzable, f("requests"), 3L);
+            Analyzer.Recorder.Helper.set(analyzable, f("connections"), 4.0d);
+            final String worked = Analyzer.Recorder.Helper.timed(analyzable, f("latency"), () -> "done");
             assertEquals("done", worked, "timed returns the work's result");
             final Analysis analysis = located.analyzer().analysis();
             assertEquals(3L, read(analysis, "web_analyzer/http/requests"), "the counter nests under the group: " + analysis);
@@ -120,11 +120,11 @@ public class AnalyzableTest extends AbstractMetatronTest {
      */
     @Test
     void shouldNoopWhenUnbound() {
-        final Analyzable unbound = new TestAnalyzable(null, null);
-        Analyzable.Helper.incr(unbound, f("requests"), 1L);
-        Analyzable.Helper.set(unbound, f("connections"), 2.0d);
-        Analyzable.Helper.record(unbound, f("latency"), 5L);
-        assertEquals("done", Analyzable.Helper.timed(unbound, f("latency"), () -> "done"),
+        final Analyzer.Recorder unbound = new TestRecorder(null, null);
+        Analyzer.Recorder.Helper.incr(unbound, f("requests"), 1L);
+        Analyzer.Recorder.Helper.set(unbound, f("connections"), 2.0d);
+        Analyzer.Recorder.Helper.record(unbound, f("latency"), 5L);
+        assertEquals("done", Analyzer.Recorder.Helper.timed(unbound, f("latency"), () -> "done"),
                 "a muted analyzable runs the work bare and records nothing");
     }
 
@@ -137,10 +137,10 @@ public class AnalyzableTest extends AbstractMetatronTest {
     void shouldNestAMultiSegmentProbeUnderTheGroup() {
         final Machine machine = Machine.current().push(f("analyzable_probe"));
         try {
-            final Analyzable.Helper.Located located = Analyzable.Helper.locateBase(f("~/network/analyzer/web_analyzer/mqtt"));
-            final Analyzable analyzable = new TestAnalyzable(located.analyzer(), located.group());
-            Analyzable.Helper.incr(analyzable, f("messages/sent"), 9L);
-            Analyzable.Helper.incr(analyzable, f("packets/sent"), 4L);
+            final Analyzer.Recorder.Helper.Located located = Analyzer.Recorder.Helper.locateBaseAnalyzer(f("~/network/analyzer/web_analyzer/mqtt"));
+            final Analyzer.Recorder analyzable = new TestRecorder(located.analyzer(), located.group());
+            Analyzer.Recorder.Helper.incr(analyzable, f("messages/sent"), 9L);
+            Analyzer.Recorder.Helper.incr(analyzable, f("packets/sent"), 4L);
             final Analysis analysis = located.analyzer().analysis();
             assertEquals(9L, read(analysis, "web_analyzer/mqtt/messages/sent"), "the probe nests under the group: " + analysis);
             assertEquals(4L, read(analysis, "web_analyzer/mqtt/packets/sent"), "and its sibling: " + analysis);

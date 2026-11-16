@@ -90,8 +90,8 @@ public class WidgetTypeContractTest extends AbstractInstSetTest {
             case "xref" -> jvm.put(uri(XREF), rec(uri(MAX), jnt(2)));
             // the tree_select tool writes expand exactly like this: objs() collapses a
             // single uri to that uri, so one and many are both legal rec values
-            case "expand-one" -> jvm.put(uri(EXPAND), objs(uri("/sys/space")));
-            case "expand-many" -> jvm.put(uri(EXPAND), objs(uri("/sys/space"), uri("/m")));
+            case "expand-one" -> jvm.put(uri(EXPAND), objs(uri("/memory/space")));
+            case "expand-many" -> jvm.put(uri(EXPAND), objs(uri("/memory/space"), uri("/m")));
             default -> { /* root and max only */ }
         }
         assertDoesNotThrow(() -> new TreeWidget(jvm, UI_TREE_TID, null).format(),

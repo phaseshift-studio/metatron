@@ -18,12 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.iot.space.mqtt;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzable;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
@@ -106,8 +106,7 @@ public final class mqttServer extends Listener {
     public static final Type MQTT_SERVER_TYPE = TypeBuilder.build()
             .tid(LISTENER_TID)
             .vid(MQTT_SERVER_TID)
-            .isaPredicate(rec(SYS_KEY.maybe().asUri(), rec(URI_TYPE, T(ALL)),
-                    uri(ANALYZER).maybe().asUri(), URI_TYPE))
+            .isaPredicate(rec(SYS_KEY.maybe().asUri(), rec(URI_TYPE, T(ALL))))
             .constructor(config -> mqttServer.of(config.asRec().apply().asRec()))
             .create();
 
@@ -146,9 +145,8 @@ public final class mqttServer extends Listener {
     private final MqttQueue queue = new MqttQueue();
     private final CoreThread dispatcher;
 
-    private mqttServer(final Map<Obj, Obj> jvm, final Network owner, final Obj analyzer) throws IOException {
+    private mqttServer(final Map<Obj, Obj> jvm, final Network owner) throws IOException {
         super(jvm, MQTT_SERVER_TID, owner);
-        this.analyze(analyzer);
         this.machine = Machine.current();
         this.socket = new ServerSocket();
         this.socket.setReuseAddress(true);
@@ -165,6 +163,11 @@ public final class mqttServer extends Listener {
         }));//, this.machine.vid().extend("network").extend("mqtt-server-" + origin + "-dispatcher"));
         ThreadExecutor.instance().execute(this.dispatcher);
         LOG.info("mqtt_server listening: %s", this.at(ORIGIN).uriValue());
+    }
+
+    @Override
+    public fURI protocol() {
+        return f("mqtt");
     }
 
     /**
@@ -222,7 +225,7 @@ public final class mqttServer extends Listener {
         if (!host.isUri())
             throw MTronException.of("an mqtt_server serves a socket: host=><mqtt://host:port> required, got %s", host);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec(), config.at(uri(ANALYZER)));
+        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec());
     }
 
     /**
@@ -230,7 +233,7 @@ public final class mqttServer extends Listener {
      * one already holds, or bind it here.
      */
     public static Listener serve(final fURI origin) {
-        return serve(origin, rec(), noobj());
+        return serve(origin, rec());
     }
 
     /**
@@ -238,10 +241,6 @@ public final class mqttServer extends Listener {
      * {@link Listener#route(fURI)} walks it live, and on this server's rec, where it is introspectable.
      */
     public static Listener serve(final fURI origin, final Rec routes) {
-        return serve(origin, routes, noobj());
-    }
-
-    private static Listener serve(final fURI origin, final Rec routes, final Obj analyzer) {
         final Network level = Machine.current().network();
         final Listener held = Network.Helper.listenerFor(origin);
         if (null != held)
@@ -253,7 +252,7 @@ public final class mqttServer extends Listener {
             // a route table is ABSENT rather than empty while the machine serves nothing through it (listener::T)
             if (!routes.isEmpty())
                 jvm.put(uri(ROUTE), routes);
-            server = new mqttServer(jvm, level, analyzer);
+            server = new mqttServer(jvm, level);
         } catch (final IOException e) {
             throw MTronException.of(e, "unable to bind mqtt server %s", origin);
         }
@@ -341,7 +340,7 @@ public final class mqttServer extends Listener {
             this.sessions.put(conn, session);
             this.sessionsByVid.put(vid, session);
             session.start();
-            Analyzable.Helper.set(this, f("connections"), this.sessionCount());
+            Analyzer.Recorder.Helper.set(this, f("connections"), this.sessionCount());
             this.pushSys(); // a session opening is a moment: the client count its $SYS watchers cover has moved
         } catch (final Exception e) {
             LOG.debug("mqtt connection from %s dropped: %s", conn.getRemoteSocketAddress(), e.getMessage());
@@ -362,7 +361,7 @@ public final class mqttServer extends Listener {
         synchronized (this.sysSubs) {
             this.sysSubs.remove(session);
         }
-        Analyzable.Helper.set(this, f("connections"), this.sessionCount());
+        Analyzer.Recorder.Helper.set(this, f("connections"), this.sessionCount());
         this.pushSys(); // the remaining watchers see the count the retirement leaves behind
     }
 
@@ -375,8 +374,10 @@ public final class mqttServer extends Listener {
 
     /**
      * THE PROJECTION'S WRITE HALF: an mqtt topic IS a metatron address, so a PUBLISH is a write to the space graph,
-     * resolved by {@link Machine#write} to whichever space claims the address. Runs as the machine that owns this
-     * socket, where a session thread otherwise stands in no machine.
+     * resolved by {@link Machine#write} to whichever space claims the address. The received message is a READ at its
+     * topic in this broker's own analysis — the layer brackets the write, so read/count and read/latency are the
+     * messages this broker took. Runs as the machine that owns this socket, where a session thread otherwise stands in
+     * no machine.
      */
     void publish(final fURI topic, final Obj obj) {
         // the $SYS namespace belongs to the broker — a client publish there is counted, never served
@@ -384,8 +385,11 @@ public final class mqttServer extends Listener {
             LOG.debug("mqtt $SYS publish dropped: %s is the broker's own namespace", topic);
             return;
         }
-        Analyzable.Helper.incr(this, f("messages/received"), 1L);
-        this.machine.memory().write(topic, obj);
+        Analyzer.Recorder.Helper.incr(this, f("messages/received"), 1L);
+        QProc.Layer.read(this, topic, () -> {
+            this.machine.memory().write(topic, obj);
+            return noobj();
+        });
         this.pushSys();
     }
 
@@ -393,11 +397,11 @@ public final class mqttServer extends Listener {
      * a session's read and write each pass through one — the broker's packet counters, in and out
      */
     void packetIn() {
-        Analyzable.Helper.incr(this, f("packets/received"), 1L);
+        Analyzer.Recorder.Helper.incr(this, f("packets/received"), 1L);
     }
 
     void packetOut() {
-        Analyzable.Helper.incr(this, f("packets/sent"), 1L);
+        Analyzer.Recorder.Helper.incr(this, f("packets/sent"), 1L);
     }
 
     /**
@@ -433,17 +437,14 @@ public final class mqttServer extends Listener {
                         return noobj();
                     });
             if (filter.equals(ALL)) {
-                this.machine.memory().spaces()
-                        .elements()
-                        .map(Rel::second)
+                Memory.spaces(this.machine.memory().spaces()).stream()
                         // the fan-out is over DATA spaces: the machine's own space (<vid>/#) claims the VM's internals,
                         // and the delivery machinery saves its own thread object there — a subscription on it would
                         // fire on that save, spawn another delivery thread, and recurse to StackOverflowError
-                        .filter(second -> !(second.as() instanceof MachineSpace))
-                        .filter(second -> second.<Space>as().hasQ(SUBQ_PATTERN))
-                        .map(Obj::<Space>as)
-                        .forEach(s -> {
-                            Machine.write(s.pattern().addQ(SUBQ), code.clone());
+                        .filter(space -> !(space instanceof MachineSpace))
+                        .filter(space -> space.hasQ(SUBQ_PATTERN))
+                        .forEach(space -> {
+                            Machine.write(space.pattern().addQ(SUBQ), code.clone());
                         });
             } else {
                 Machine.write(topic.addQ(SUBQ), code);
@@ -603,8 +604,15 @@ public final class mqttServer extends Listener {
                 continue;
             }
             try {
-                session.deliver(args.get(0).asLst());
-                Analyzable.Helper.incr(this, f("messages/sent"), 1L);
+                // the delivery is a WRITE at the topic it carries in this broker's own analysis, the payload its value
+                final Lst pub = args.get(0).asLst();
+                final fURI topic = pub.at(0).uriValue();
+                final Obj payload = pub.at(1);
+                QProc.Layer.write(this, topic, payload, () -> {
+                    session.deliver(pub);
+                    return payload;
+                });
+                Analyzer.Recorder.Helper.incr(this, f("messages/sent"), 1L);
             } catch (final Exception e) {
                 LOG.debug("mqtt delivery to %s failed: %s", session.vid(), e.getMessage());
             }

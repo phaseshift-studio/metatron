@@ -629,9 +629,9 @@ after which instruction memory answers the address.</p>
      {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
            {?}resolver=&gt;'the third stage — the walk that th...',
-           {?}rewriter=&gt;'the second stage — the code::T to ...',
+           {?}typer=&gt;'the fourth stage — the per-machine...',
            {?}parser=&gt;'the first stage — source text to o...',
-           {?}typer=&gt;'the fourth stage — the per-machine...'],
+           {?}rewriter=&gt;'the second stage — the code::T to ...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
            'compiler::[rewriter=&gt;fixpoint_rewr...',
@@ -769,9 +769,9 @@ write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the
      {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor,
           args=&gt;[
            {?}result=&gt;'the objs the last evaluation produ...',
-           {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
-           {?}state=&gt;'the run state: stop, run or pause',
            {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
+           {?}state=&gt;'the run state: stop, run or pause',
+           {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
            computer=&gt;'the computers this processor minte...',
            fail=&gt;&quot;the machine's fail stack: an uncau...&quot;],
           desc=&gt;'the processor contract of machine:...']
@@ -795,12 +795,23 @@ stacks: an evaluation's uncaught fail is filed at <code>~/processor/computer/&lt
 evaluation at <code>~/processor/fail/&lt;k&gt;</code>. A fail read from a stack is still uncaught, so it is used as a value through
 <code>catch(_)</code>. A read with <code>@</code> keeps each fail's address, so catching it removes it; <code>*</code> returns a detached copy.</p>
 <h4>analyzer</h4>
-<p>The <code>analyzer::T</code> is any component's statistics, in the typer's and the tracer's form: a producer records in Java
-(<code>incr</code>/<code>record</code>/<code>set</code>) where the thing it counts happens, and anyone reads the live <code>analysis::T</code> — derived from the
-meters as it is read — at <code>~/&lt;component&gt;/analyzer/analysis</code>. The meters are <code>counter::T</code> (a <code>nat</code>, non-negative and
+<p>The <code>analyzer::T</code> is a measuring component's statistics, in the typer's and the tracer's form: a producer records in
+Java (<code>incr</code>/<code>record</code>/<code>set</code>) where the thing it counts happens, and anyone reads the live <code>analysis::T</code> — derived from
+the meters as it is read — at <code>~/&lt;component&gt;/analyzer/analysis</code>. The meters are <code>counter::T</code> (a <code>nat</code>, non-negative and
 monotonic in practice), <code>gauge::T</code> (a point-in-time <code>real</code>) and <code>timer::T</code> (<code>count</code>/<code>total</code>/<code>min</code>/<code>max</code> of nanos); the
 settings <code>step</code>, <code>profile</code> and <code>enabled</code> sit beside them. <code>Analysis.Helper.merge</code> folds one analysis into another (a
 machine's components, a cluster's machines).</p>
+<p>A <strong>data space</strong> is not a component, and its metrics are its <code>?analq</code> q-proc rather than a <code>~/&lt;space&gt;/analyzer</code> field:
+the q-proc holds the <code>analyzer::T</code>, so it travels with the space, and <code>read</code>/<code>write</code>/<code>delete</code> counts and latencies are
+read flat at the space's <code>?analq</code> (e.g. <code>*/t/#?analq</code> → <code>read =&gt; [count, latency], write =&gt; [count, latency, delete =&gt; [count, latency]]</code>). A space records when it declares the q-proc; nothing is recorded for a space that does not.</p>
+<p>A <strong>server is an addressable source too</strong>, and its metrics are its own <code>?analq</code>. A listener is instrumented at
+construction, so <code>&lt;scheme&gt;://host:port/#?analq</code> answers that socket's analysis: a request or a received message is a
+<code>read</code> at its wire address, a sent message a <code>write</code> there, a hang-up a write of <code>noobj</code> (the <code>delete</code> subset), and
+<code>connections</code> a gauge beside them. Each socket's q-proc holds its own analyzer, so two servers on one machine never
+share meters — and the network's <code>~/network/analyzer</code> still counts the WIRE (<code>wire/sent</code>, <code>wire/recv</code>, every frame
+either way), which is a different question from the work one server did. An <code>?analq</code> read of a local socket is
+answered locally even while a peer is declared at that origin: the meters of a socket this machine holds are not a
+peer's to answer.</p>
 <p>A metric no analyzable emits can be attached to the analyzer as a <strong>derived <code>!</code> field</strong> — a live computation over the
 analysis, pulled on demand (the mtron form of a recording rule):</p>
 <pre><code class="language-mtron">mtron&gt; ~/network/analyzer/total -&gt; !*~/network/analyzer/analysis/wire/sent.plus(*~/network/analyzer/analysis/wire/recv)
@@ -820,13 +831,13 @@ analysis, pulled on demand (the mtron form of a recording rule):</p>
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           {?}result=&gt;'the last result produced by the th...',
-           {?}state=&gt;'current state of the thread',
-           {?}timeout=&gt;'how long a read of rhs waits for t...',
-           {?}loop=&gt;'delay to repeat code evaluation (d...',
-           {?}time=&gt;'the datetime::T when the thread wa...',
+           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            code=&gt;&quot;the thread's executing code&quot;,
-           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;],
+           {?}time=&gt;'the datetime::T when the thread wa...',
+           {?}loop=&gt;'delay to repeat code evaluation (d...',
+           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}state=&gt;'current state of the thread',
+           {?}result=&gt;'the last result produced by the th...'],
           desc=&gt;'the thread base type']
 </code></pre>
 <table>
@@ -880,11 +891,11 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      ...(2 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
            {?}roster=&gt;'known machines, connectionless: &lt;h...',
-           {?}status=&gt;'the health method — an auto inst c...',
-           {?}listener=&gt;'the sockets this machine serves th...',
-           {?}pattern=&gt;'the branch this network answers as...',
+           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
            {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
-           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;],
+           {?}pattern=&gt;'the branch this network answers as...',
+           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}status=&gt;'the health method — an auto inst c...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
@@ -1116,7 +1127,7 @@ connects the receiving peer to the same backend:</p>
 <pre><code class="language-mtron">[db   =&gt;tblespace::[pattern=&gt;&lt;/usr/data/#&gt;,
                     host=&gt;&lt;mariadb://…&gt;,
                     driver=&gt;&lt;org.mariadb.jdbc.Driver&gt;,
-                    route=&gt;[&lt;/usr/data&gt;=&gt;&lt;&gt;]]@/sys/space/data,
+                    route=&gt;[&lt;/usr/data&gt;=&gt;&lt;&gt;]]@~/memory/space/data,
  xyz  =&gt;'east',
  code =&gt;|(*&lt;/usr/data/${*workload/xyz}/+/amount&gt;.sum().to(&lt;/usr/data/result/${*workload/xyz}/total&gt;))](workload=&gt;_){ !*workload/code.apply() }
 </code></pre>
@@ -1148,7 +1159,7 @@ timeout fail (<code>future get timed out after 2000 ms</code>) in that peer's pl
 <p><code>*~/network/host</code> answers the host the current machine runs on; peers forked on one host are told apart by their
 service authority.</p>
 <pre><code class="language-mtron">mtron&gt; *~/network/host
-==&gt;booger
+==&gt;de17b73bd433
 </code></pre>
 <h3>appendix — registered types</h3>
 <table>

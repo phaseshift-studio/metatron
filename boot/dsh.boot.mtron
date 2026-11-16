@@ -58,16 +58,16 @@ import(/m/sys/ui,ui);
 tblespace::[pattern => </usr/dsh/#>,
             host    => <sqlite:/tmp/dsh.sqlite>,
             driver  => <org.sqlite.JDBC>,
-            q       => [incrq::[=>], subq::[=>]]]@/sys/space/usr/dsh;
+            q       => [incrq::[=>], subq::[=>]]]@~/memory/space/usr/dsh;
 
 [== 2. files: a short scheme, with a route table into the Linux tree ==]
 fsspace::[pattern => fs:#,
           q       => [mimeq::[=>]],
-          route   => [fs: => <.>]]@/sys/space/fs;
+          route   => [fs: => <.>]]@~/memory/space/fs;
 
 [== 3. scratch: staging and probes, dropped on restart by design ==]
 memspace::[pattern => </usr/mem/#>,
-           q       => [docq::[=>], subq::[=>], incrq::[=>]]]@/sys/space/usr/mem;
+           q       => [docq::[=>], subq::[=>], incrq::[=>]]]@~/memory/space/usr/mem;
 
 [== the boot marker: a tblespace has NO schema until something is written, so ==]
 [== this first write materialises it. An unwritable or misconfigured medium   ==]
@@ -90,7 +90,7 @@ mcp_server::[tool => [
   {{g}}dsh boot complete{{X}} — events land at {{y}}/usr/dsh/event/#{{X}}
     write: {{y}}http://<host>:8777/dsh{{X}}   (write_event, write_events)
     query: {{y}}http://<host>:8777/mcp{{X}}   (mcp_mtron: eval, find, spaces)
-    check: {{y}}*/usr/dsh/event/+{{X}}  ·  {{y}}*/sys/space/usr/dsh/schema{{X}}
+    check: {{y}}*/usr/dsh/event/+{{X}}  ·  {{y}}*~/memory/space/usr/dsh/schema{{X}}
 """@help_message;
 
 css::"""
@@ -146,7 +146,7 @@ http_server::[origin => <http://0.0.0.0:8777>,
                          /usr  => /usr,
                          /fs   => fs:,
                          /help => help_html,
-                         /     => /fs ]]@/sys/space/web/http;
+                         /     => /fs ]]@~/memory/space/web/http;
 
 [===================================================================]
 [== 6. a console, so a bad boot is debuggable instead of silent      ==]
@@ -162,11 +162,11 @@ http_server::[origin => <http://0.0.0.0:8777>,
 [== handshake, no session id, one shot:                               ==]
 [==                                                                    ==]
 [==   bin/wsplus -e '*/usr/dsh/event/+' ws://booger.local:8555/mtron  ==]
-[==   bin/wsplus -e '*/sys/space/usr/dsh/schema' …                   ==]
+[==   bin/wsplus -e '*~/memory/space/usr/dsh/schema' …                   ==]
 [==   bin/wsplus -e '[kind=>t].to(/usr/dsh/event/_?incrq)' …         ==]
 [==                                                                    ==]
 ws_server::[origin => <ws://0.0.0.0:8555>,
             route  => [/mtron => mtron_ws,
-                       /dsh   => mcp_dsh_mirror]]@/sys/space/web/ws;
+                       /dsh   => mcp_dsh_mirror]]@~/memory/space/web/ws;
 
 print(*help_message)

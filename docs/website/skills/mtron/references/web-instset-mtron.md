@@ -14,14 +14,17 @@ description: |
 types, and *endpoint* types that provide the server logic. The two servers of `/m/web` are
 `http_server` and `ws_server` — each a listener: constructed, it is the machine's presence at
 `~/network/listener/<key>` — each carrying a `route` rec for routing connections to mounted services.
+A listener is an addressable source, so a socket's own metrics are read at `<origin>/#?analq`
+(a request is a `read`, a reply a `write`, `connections` a gauge); the network's
+`~/network/analyzer` counts the wire, which is a different question from the work one server did.
 Reading the web is a client's: `http_client::[host => <http://#>]` (and `<https://#>`) is the gateway, a peer every
 http(s) read goes through. A read never dials, so a machine with no gateway reads no web.
 
 ```mtron
-mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
-mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
+mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@~/memory/space/docker
+mtron> mcp_server::[tool => [!*eval]]@~/memory/space/mcp/web_basic
 ==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
-                status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/web_basic
+                status=>!λstatus?bool<=(){<j>}]@/memory/space/mcp/web_basic
 mtron> http_server::[origin => http://localhost:8777,
                      route => [/mcp    => mcp_mtron,
                                /docker => docker:,
@@ -31,7 +34,10 @@ mtron> http_server::[origin => http://localhost:8777,
                   /mcp=>mcp_mtron,
                   /docker=>docker:,
                   /usr=>/usr],
-                 status=>!λstatus?bool<=(){<j>}]
+                 status=>!λstatus?bool<=(){<j>},
+                 q=>[analq::[pattern=>analq,pre_read=>inst(uri::T){<j>},qless_write=>inst(uri::T,
+                                                                                          #::T){<j>},qless_read=>inst(uri::T,
+                                                                                                                      #::T){<j>},obj=>analyzer::[analysis=>!λ(#{*}::T){<j>}]]]]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,inst=>[/m/inst/from=>*uri::T,
                                        /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
@@ -39,10 +45,12 @@ mtron> http_client::[host => <https://#>]
 ==>http_client::[host=>https://#,inst=>[/m/inst/from=>*uri::T,
                                         /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
 mtron> ws_server::[origin  => ws://localhost:8555,
-                   route  => [/basic   => !*</sys/space/mcp/web_basic>]]
+                   route  => [/basic   => !*<~/memory/space/mcp/web_basic>]]
 ==>ws_server::[origin=>ws://localhost:8555,
-               route=>[/basic=>!*/sys/space/mcp/web_basic],
-               status=>!λstatus?bool<=(){<j>}]
+               route=>[/basic=>!*~/memory/space/mcp/web_basic],
+               status=>!λstatus?bool<=(){<j>},
+               q=>[analq::[pattern=>analq,pre_read=>inst(uri::T){<j>},qless_write=>inst(uri::T,#::T){<j>},qless_read=>inst(uri::T,
+                                                                                                                           #::T){<j>},obj=>analyzer::[analysis=>!λ(#{*}::T){<j>}]]]]
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -93,37 +101,13 @@ A mount is only as real as the space behind it, so this document builds one firs
 blocks are executed by the docs pipeline and inlined with their results; a plain `mtron` block is only shown.)
 
 ```mtron
-mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
+mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@~/memory/space/usr
 mtron> person::[name=>'marko',age=>29]@/usr/person/1
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'marko',age=>29]@/usr/person/1
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'marko'=>==>str::T,
-      age=>(==>age)=>29=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'marko',age=>29]@/usr/person/1]
+==>person::[name=>'marko',
+            age=>29]@/usr/person/1
 mtron> person::[name=>'grant',age=>25]@/usr/person/2
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'grant',age=>25]@/usr/person/2
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'grant'=>==>str::T,
-      age=>(==>age)=>25=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'grant',age=>25]@/usr/person/2]
+==>person::[name=>'grant',
+            age=>25]@/usr/person/2
 ```
 ## types
 
@@ -242,9 +226,9 @@ binding step, and a route is debuggable by looking at the request uri.
 
 ```mtron
 mtron> */usr/person/1                                              [-- straight from the space --]
-==>[name=>'marko',age=>29]
+==>person::[name=>'marko',age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==>"[name=>'marko',age=>29]@/usr/person/1"
+==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
 ==>
    json::'{"name":"marko","age":29}'

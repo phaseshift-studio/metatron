@@ -437,10 +437,30 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
         return path.startsWith("/") ? path.substring(1) : path;
     }
 
+    /**
+     * EVERY SPACE THE INDEX HOLDS, walking the mount tree: a mounted space lives at its MOUNT ADDRESS
+     * ({@code ~/memory/space/web/http} is {@code space => web => http => space}), so an intermediate node is a
+     * grouping rec, not a space. One walk for every consumer — find/get/has/remove and the tools — so no caller casts
+     * an index VALUE and dies on a grouping.
+     */
+    static java.util.List<Space> spaces(final Rec index) {
+        final java.util.List<Space> spaces = new java.util.ArrayList<>();
+        collectSpaces(index, spaces);
+        return spaces;
+    }
+
+    private static void collectSpaces(final Rec level, final java.util.List<Space> spaces) {
+        // snapshot: the index is mutable and a mount can land on another thread mid-iteration
+        new java.util.ArrayList<Obj>(level.jvm().values()).forEach(value -> {
+            if (value instanceof Space space)
+                spaces.add(space);
+            else if (value.isRec())
+                collectSpaces(value.asRec(), spaces);
+        });
+    }
+
     static <SPACE extends Space> SPACE mostSpecific(final Rec spaces, final fURI vid) {
-        // snapshot first: the space index is a mutable LinkedHashMap, and addSpace can land a space on another
-        // thread mid-iteration (or re-entrantly during boot), which trips the map's fail-fast iterator
-        return mostSpecific(new java.util.ArrayList<Obj>(spaces.jvm().values()).stream().map(Obj::<Space>as).toList(), vid);
+        return mostSpecific(spaces(spaces), vid);
     }
 
     /**

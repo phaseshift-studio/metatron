@@ -52,7 +52,7 @@ public class SqliteLLMSessionIntegrationTest extends AbstractLLMSessionIntegrati
 
     private static final String DB_PATH = "target/test-llm-session-int.db";
     private static final String MEM_TABLE = "llm_session";
-    private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int");
+    private static final fURI SPACE_VID = f("/memory/space/test_llm_mem_int");
     private static final fURI MEM_VID = f("sqlite:" + MEM_TABLE + "/1");
 
     private tbleSpace space;

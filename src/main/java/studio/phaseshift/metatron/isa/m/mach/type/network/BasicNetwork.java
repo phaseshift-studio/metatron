@@ -18,13 +18,13 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.network;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -37,6 +37,7 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -101,6 +102,11 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
             throw MTronException.of(e);
         }
         jvm.putIfAbsent(uri(PATTERN), uri(UNMOUNTED));
+        // THE WIRE'S METERS: every level carries its own analyzer, exactly as a processor does. The frame taps count
+        // into it where the frame crosses (WebSocketRec/WebSocketObj), and the machine's space answers it at
+        // ~/network/analyzer. It is a CONSTRUCTED component field, never a config the caller supplies -- a network
+        // with no meters could not record the sockets it holds, and every wire read would throw in the tap.
+        jvm.putIfAbsent(uri(ANALYZER), new BasicAnalyzer(NETWORK));
         return jvm;
     }
 
@@ -128,9 +134,6 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
                 });
         // the status METHOD is an entry like any other: `*/network/status` evaluates it, closing over this level
         this.write(f(STATUS), this.status());
-        // THE WIRE'S METERS (wire/sent, recv, trip, timeout): the frames each way on this level's sockets, the round trips
-        // they completed and the deadlines they missed (WebSocketObj), read at ~/network/analyzer/analysis/wire
-        this.jvm().putIfAbsent(Analyzer.KEY, new BasicAnalyzer(NETWORK));
     }
 
     /**
@@ -190,7 +193,7 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
     public Obj read(final fURI vid) {
         final fURI at = this.cached(vid);
         if (null == at)
-            return Network.super.read(vid);
+            return this.reach(vid, () -> Network.super.read(vid), listener -> listener.read(vid));
         // THE TABLE ANSWERS WHAT THIS FRAME SEES, shadowing included -- the question a reader standing in a frame
         // actually asks: the frame's OWN table may be empty while the root's names resolve there. Marked, because a
         // name is spoken `//ginger`; the stored spelling is one strip away (prefixes()), and the write below makes
@@ -203,11 +206,38 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
         // (Space.Helper#unrollPoly), which is the read path this branch documents.
         if (f(PEER).equals(at))
             return this.peers();
+        // THE q-PROCS ARE THE REC'S, not the cache's: they are a config field (addQ put them at `q`), so
+        // `@~/network/q` must read the list the layer actually consults
+        if (f(QPROC).equals(at))
+            return this.at(uri(QPROC));
         final Obj read = this.cache.read(at);
         // a branch read answers rels at the cache's addresses: they are named where the caller asked (what @ anchors with)
         return vid.isBranch() && !vid.isRelative()
                 ? objs(read.stream().map(kv -> rel(uri(this.asked(vid, kv.asRel().first().uriValue())), kv.asRel().second())))
                 : read;
+    }
+
+    /**
+     * A WIRE ADDRESS THIS LEVEL DOES NOT KEEP (see {@link #cached}) — what answers it, in order: a query the local
+     * socket DECLARES (a socket's own meters are not a peer's to answer), then a declared PEER (an explicit reach into
+     * the origin, which is what {@code ws://host:port/path} has always meant), then a socket THIS machine binds at that
+     * origin (what no peer serves is the local server's). That last rung is why {@code *<origin>/#?analq} is the
+     * server's own analysis rather than a noobj. The address never dials — a read never dials, and the local socket is
+     * the authority standing at it. An address with no host is nobody's wire and declines untouched.
+     */
+    private Obj reach(final fURI vid, final Supplier<Obj> authority, final Function<Listener, Obj> local) {
+        if (null == vid.host())
+            return authority.get();
+        final Listener listener = Network.Helper.listenerFor(vid.origin());
+        // A QUERY THE SOCKET DECLARES IS THE SOCKET'S TO ANSWER, before any peer is asked: *<origin>/#?analq asks THIS
+        // machine's server for its own analysis, and shipping the question to a peer would be asking the peer for the
+        // meters of a socket it does not hold.
+        if (null != listener && vid.hasQ() && QProc.Helper.declaresQProcs(listener, vid))
+            return local.apply(listener);
+        final Obj dispatched = authority.get();
+        if (!dispatched.isNoObj() || null == listener)
+            return dispatched;
+        return local.apply(listener);
     }
 
     @Override
@@ -231,10 +261,19 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
     public Obj write(final fURI vid, final Obj obj) {
         final fURI at = this.cached(vid);
         if (null == at)
-            return Network.super.write(vid, obj);
+            return obj.isFail() // a fail is not shippable, and no socket serves it either: it stays local
+                    ? noobj()
+                    : this.reach(vid, () -> Network.super.write(vid, obj), listener -> listener.write(vid, obj));
         // a q-proc's registration is the cache's, which speaks this level's q-procs
         if (at.hasQ())
             return this.cache.write(at, obj);
+        // THE q-PROCS ARE THE REC'S: `@~/network/q >>= …` declares the level's processors, and the layer reads them
+        // from here. The cache mirrors them so a registration below a branch speaks the same set.
+        if (f(QPROC).equals(at)) {
+            this.at(uri(QPROC), obj, MUTABLE);
+            this.cache.at(uri(QPROC), obj, MUTABLE);
+            return obj;
+        }
         final String field = at.segments().isEmpty() ? "" : at.segments().getFirst();
         final boolean members = PEER.equals(field) || LISTENER.equals(field);
         if (obj.isNoObj()) {

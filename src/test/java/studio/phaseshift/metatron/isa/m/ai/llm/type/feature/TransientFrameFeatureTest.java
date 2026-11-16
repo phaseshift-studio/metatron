@@ -53,7 +53,7 @@ public class TransientFrameFeatureTest extends AbstractMetatronTest {
     @BeforeAll
     public static void mountSpace() {
         InstSet.importInstSet(LLM_ISA_TID);
-        memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
+        memSpace.of(f("/usr/test/#"), f("/memory/space/usr/test")).addQ(incrQ());
     }
 
     @Test

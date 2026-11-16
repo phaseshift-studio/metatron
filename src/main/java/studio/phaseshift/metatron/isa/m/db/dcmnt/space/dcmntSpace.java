@@ -95,7 +95,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
  *         uri(ROUTE), rec(uri("mongo:"), uri("/mongo/"))
  *     ).jvm(),
- *     f("/sys/space/mongo")
+ *     f("~/memory/space/mongo")
  * );
  * // After construction, space.at(ROOT) is a structured rec::T[?[{?}users=>users::T, ...]]
  * // and space.at(SCHEMA) is a CollectionSchemaInstSet auto-discovered from the live database.

@@ -32,4 +32,4 @@
      driver  => <org.mariadb.jdbc.Driver>,
      table   => [,],
      q       => [incrq::[=>],subq::[=>]],
-     route   => -< [metatron: => <>]]@</sys/space/mariadb>.as(tblespace::T) }
+     route   => -< [metatron: => <>]]@</memory/space/mariadb>.as(tblespace::T) }

@@ -96,7 +96,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     protected static MongoServer mongoServer;
     protected static String connectionString;
     protected static final String DB_NAME = "testdb";
-    protected static final fURI SPACE_VID = f("/sys/space/doc/test");
+    protected static final fURI SPACE_VID = f("/memory/space/doc/test");
 
     public dcmntSpaceTest() {
         super(f("mongo:test_collection/rewrite_test"), () -> dcmntSpace.of(
@@ -346,7 +346,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                 MongoClients.create(connectionString + "/" + DB_NAME),
                 config,
                 DCMNT_SPACE_TID,
-                f("/sys/space/doc/test_pushdown")
+                f("/memory/space/doc/test_pushdown")
         ) {
             @Override
             protected Obj processDocument(final Document doc) {
@@ -1927,7 +1927,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     @Test
     public void testCrossSpaceAutoFromRoundTrip() {
         final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
-        final fURI memSpaceVid = f("/sys/space/mem/dcmnt_xspace_target");
+        final fURI memSpaceVid = f("/memory/space/mem/dcmnt_xspace_target");
         final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
         Machine.current().memory().addSpace(targetSpace);
         try {

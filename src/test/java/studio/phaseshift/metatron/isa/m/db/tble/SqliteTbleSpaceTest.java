@@ -97,7 +97,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                         uri(ROUTE), rec(uri("db:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/sys/space/tabledb/test2")
+                f("/memory/space/tabledb/test2")
         );
 
         try {
@@ -149,7 +149,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                         uri(ROUTE), rec(uri("tblekv:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/sys/space/tble/typed")
+                f("/memory/space/tble/typed")
         );
 
         try {
@@ -226,7 +226,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                         uri(ROUTE), rec(uri("db:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/sys/space/tble/polytest")
+                f("/memory/space/tble/polytest")
         );
 
         try {

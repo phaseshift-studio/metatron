@@ -436,7 +436,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
      */
     @Test
     void testEventFilterByAction() {
-        final memSpace space = memSpace.of(f("evt:#"), f("/sys/space/evt"));
+        final memSpace space = memSpace.of(f("evt:#"), f("/memory/space/evt"));
         space.write(f("evt:0"), S.readEvent(eventLine("die", "137")));
         space.write(f("evt:1"), S.readEvent(eventLine("create", null)));
         space.write(f("evt:2"), S.readEvent(eventLine("die", "0")));
@@ -474,7 +474,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
      */
     @Test
     void testEventFilterNumericRefinement() {
-        final memSpace space = memSpace.of(f("evt2:#"), f("/sys/space/evt2"));
+        final memSpace space = memSpace.of(f("evt2:#"), f("/memory/space/evt2"));
         space.write(f("evt2:0"), S.readEvent(eventLine("die", "137")));
         space.write(f("evt2:1"), S.readEvent(eventLine("create", null)));
         space.write(f("evt2:2"), S.readEvent(eventLine("die", "0")));

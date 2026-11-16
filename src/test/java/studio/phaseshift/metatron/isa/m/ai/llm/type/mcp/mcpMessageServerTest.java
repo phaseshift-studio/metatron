@@ -146,7 +146,7 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
      */
     private static String ledgerRoot(final String scenario) {
         final fURI root = f("/busmsg/" + scenario);
-        memSpace.of(root.extend("#"), f("/sys/space/busmsg/" + scenario)).addQ(incrQ());
+        memSpace.of(root.extend("#"), f("/memory/space/busmsg/" + scenario)).addQ(incrQ());
         return root.toString();
     }
 

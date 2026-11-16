@@ -386,7 +386,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     @Test
     public void testABackendsLoginIsNeverAnnounced() {
         final fURI listening = f("ws://0.0.0.0:" + generatePort());
-        final fURI backend = f("/sys/space/mdns-backend");
+        final fURI backend = f("/memory/space/mdns-backend");
         // patterned as the boot's are: a <vid>/# pattern would retract onto the vid, and the cache a web space
         // indexes beside itself would evict the listener from the index
         final Listener listener = wsServer.of(rec(mutableMap(

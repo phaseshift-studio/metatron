@@ -64,7 +64,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  */
 public class FieldAutoResolveTest extends AbstractMetatronTest {
 
-    private static final String FIELD = "/sys/space/probe/autofield/rec";
+    private static final String FIELD = "/memory/space/probe/autofield/rec";
 
     /**
      * the auto-wrapped field is a method under invocation

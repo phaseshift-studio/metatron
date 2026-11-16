@@ -69,7 +69,7 @@ public class MidChatFeatureTest extends AbstractMetatronTest {
         // the two-arg form also registers the math: scheme — pushMidChatMessage
         // evaluates !math:datetime_now() to stamp how long a message waited
         InstSet.importInstSet(MATH_ISA_TID, f("math"));
-        memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
+        memSpace.of(f("/usr/test/#"), f("/memory/space/usr/test")).addQ(incrQ());
     }
 
     // ── inbound: the user speaking mid-turn ────────────────────────

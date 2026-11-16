@@ -61,7 +61,7 @@ import(/m/dev/dckr);
 [== module files — pull the boot modules out of the repo (cwd under bin/metatron) ==]
 fsspace::[pattern => fs:#,
           q       => [mimeq::[=>]],
-          route   => [fs: => <.>]]@/sys/space/fs/root;
+          route   => [fs: => <.>]]@~/memory/space/fs/root;
 [== the docker space itself ==]
 print("{{y}}dckrspace via the docker socket\n{{X}}");
 <unix:///var/run/docker.sock>.<fs:boot/space/dckr/socket.mtron>();
@@ -91,9 +91,9 @@ embed:notes -> [msg=>'metatron docker boot', n=>1];
 [== console ==]
 console::[header=>!*boot/args/header]@/usr/avatar/console;
 ["",
- "*/sys/space/+/+/.<<",
+ "*~/memory/space/+/+/.<<",
  "*g:V.count()",
- "*/sys/space/+/.<<"].mapp(|plus("\n"))>-.sum?str<=str{*}().to(body);
+ "*~/memory/space/+/.<<"].mapp(|plus("\n"))>-.sum?str<=str{*}().to(body);
 panel::[title=>"{{y}}expression to explore{{b}}",
         style=>[border=>continuous,foreground=>"{{b}}"],
         body=>!*body].display();

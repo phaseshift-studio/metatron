@@ -68,7 +68,7 @@ public class mcpHttpHandlerSseTest extends AbstractMetatronTest {
         this.testSpace = memSpace.of(rec(
                         uri(PATTERN), uri("/test/sse/#"),
                         uri(QPROC), lst(QCollection.subQ())),
-                f("/sys/space/sse_test"));
+                f("/memory/space/sse_test"));
         this.server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
     }
 

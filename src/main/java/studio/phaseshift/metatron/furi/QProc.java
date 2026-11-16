@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
 
 import java.util.*;
+import java.util.stream.Stream;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -57,6 +58,7 @@ public interface QProc extends Rec {
     fURI PRE_WRITE = f("pre_write");
     fURI POST_WRITE = f("post_write");
     fURI QLESS_WRITE = f("qless_write");
+    fURI QLESS_READ = f("qless_read");
     fURI ON_READ = f("on_read");
     fURI PRE_READ = f("pre_read");
     fURI POST_READ = f("post_read");
@@ -67,6 +69,7 @@ public interface QProc extends Rec {
                     uri(PRE_WRITE).maybe(), INST_TYPE,
                     uri(POST_WRITE).maybe(), INST_TYPE,
                     uri(QLESS_WRITE).maybe(), INST_TYPE,
+                    uri(QLESS_READ).maybe(), INST_TYPE,
                     uri(PRE_READ).maybe(), INST_TYPE,
                     uri(POST_READ).maybe(), INST_TYPE))
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(QPROC_TID),
@@ -161,6 +164,14 @@ public interface QProc extends Rec {
             return Optional.empty();
         }
 
+        default Optional<Obj> qlessRead(final fURI vid, final Obj obj) {
+            return Optional.empty();
+        }
+
+        default boolean hasQlessReadHandler() {
+            return false;
+        }
+
         @Override
         default Rec clone(final Object jvm, final fURI tid, final fURI vid) {
             return this;
@@ -225,7 +236,7 @@ public interface QProc extends Rec {
         public static boolean checkQProcs(final Addressable source, final fURI vid) {
             if (vid.hasQ()) {
                 final List<String> qSpace = source.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
-                vid.qMap().keySet().stream().filter(k -> k.endsWith("q")).filter(k -> !k.equals(DOCQ)).forEach(k -> {
+                queries(vid).forEach(k -> {
                     if (!qSpace.contains(k))
                         throw MTronException.of("no %s query processor attached to %s", k, source.pattern());
                 });
@@ -233,10 +244,38 @@ public interface QProc extends Rec {
             return true;
         }
 
+        /**
+         * Does {@code source} DECLARE every q-proc {@code vid} asks for? The question {@link #checkQProcs} refuses on,
+         * asked WITHOUT refusing — a dispatcher that has to choose between sources (a local socket and a dialed peer
+         * standing at one origin) needs the answer rather than an exception.
+         */
+        public static boolean declaresQProcs(final Addressable source, final fURI vid) {
+            final List<String> qSpace = source.qs().lstValue().stream()
+                    .map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
+            return queries(vid).allMatch(qSpace::contains);
+        }
+
+        /**
+         * the query keys that name a q-PROC ({@code /t/a?docq}, {@code ?subq}) — every q-suffixed key but the docq
+         * exemption, which is documentation and not a processor a source declares
+         */
+        private static Stream<String> queries(final fURI vid) {
+            return vid.qMap().keySet().stream().filter(k -> k.endsWith("q")).filter(k -> !k.equals(DOCQ));
+        }
+
+        /**
+         * THE DECLARED q-procs, and nothing else: a source's q list is configuration, so a stray value in it (a type,
+         * a rec) must not take down every access through the source with a cast — it simply is not a processor.
+         * Every hook walks the list through here, so the filter has one home.
+         */
+        private static Stream<QProc> qProcs(final Lst qs) {
+            return qs.lstValue().stream().filter(QProc.class::isInstance).map(Obj::<QProc>as);
+        }
+
         public static Optional<Obj> processPreWrite(final Lst qs, final fURI vid, final Obj obj) {
             if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
             Obj acc = null;
-            for (final QProc q : qs.<QProc>elements().toList()) {
+            for (final QProc q : qProcs(qs).toList()) {
                 if (vid.hasQ(q.pattern()) && q.onWrite().isPresent()) {
                     final Optional<Obj> r = q.onWrite().get().preWrite(vid, obj);
                     if (r.isPresent())
@@ -249,7 +288,7 @@ public interface QProc extends Rec {
         public static Optional<Obj> processPreRead(final Lst qs, final fURI vid) {
             if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
             Obj acc = null;
-            for (final QProc q : qs.<QProc>elements().toList()) {
+            for (final QProc q : qProcs(qs).toList()) {
                 if (vid.hasQ(q.pattern()) && q.onRead().isPresent()) {
                     final Optional<Obj> r = q.onRead().get().preRead(vid);
                     if (r.isPresent())
@@ -267,7 +306,7 @@ public interface QProc extends Rec {
             if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
             Obj acc = current;
             boolean found = false;
-            for (final QProc q : qs.<QProc>elements().toList()) {
+            for (final QProc q : qProcs(qs).toList()) {
                 if (vid.hasQ(q.pattern()) && q.onRead().isPresent()) {
                     final Optional<Obj> r = q.onRead().get().postRead(vid, current);
                     if (r.isPresent()) {
@@ -290,6 +329,17 @@ public interface QProc extends Rec {
         }
 
         /**
+         * Every qless read handler, in declaration order: a side-effect on each read through the source (the
+         * {@code ?analq} recording), with no answer to give — the read already happened.
+         */
+        public static void processQlessRead(final Lst qs, final fURI vid, final Obj obj) {
+            for (final QProc q : qProcs(qs).toList()) {
+                if (q.onRead().filter(QProc.OnRead::hasQlessReadHandler).isPresent())
+                    q.onRead().get().qlessRead(vid, obj);
+            }
+        }
+
+        /**
          * The qless GUARDS, before the access: an answer stands in for the write, which then never happens.
          */
         public static Optional<Obj> processQlessGuards(final Lst qs, final fURI vid, final Obj obj) {
@@ -306,7 +356,7 @@ public interface QProc extends Rec {
         private static Optional<Obj> processQless(final Lst qs, final fURI vid, final Obj obj,
                                                   final Predicate<QProc.OnWrite> kind) {
             Obj acc = null;
-            for (final QProc q : qs.<QProc>elements().toList()) {
+            for (final QProc q : qProcs(qs).toList()) {
                 if (q.onWrite().filter(QProc.OnWrite::hasQlessHandler).filter(kind).isPresent()) {
                     final Optional<Obj> r = q.onWrite().get().qlessWrite(vid, obj);
                     if (r.isPresent())
@@ -319,7 +369,7 @@ public interface QProc extends Rec {
         public static Optional<Obj> processPostWrite(final Lst qs, final fURI vid, final Obj obj) {
             if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
             Obj acc = null;
-            for (final QProc q : qs.<QProc>elements().toList()) {
+            for (final QProc q : qProcs(qs).toList()) {
                 if (vid.hasQ(q.pattern()) && q.onWrite().isPresent()) {
                     final Optional<Obj> r = q.onWrite().get().postWrite(vid, obj, obj);
                     if (r.isPresent())
@@ -388,6 +438,11 @@ public interface QProc extends Rec {
                 return this.qlessWrite(broadcast);
             }
 
+            public Builder qlessRead(final BiFunction<fURI, Obj, Obj> qlessRead) {
+                this.jvm.put(QLESS_READ, qlessRead);
+                return this;
+            }
+
             public Builder obj(final fURI key, final Obj value) {
                 this.jvm.put(key, value);
                 return this;
@@ -400,6 +455,7 @@ public interface QProc extends Rec {
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(PRE_WRITE),
                         (TriFunction<fURI, Obj, Obj, Obj>) this.jvm.get(POST_WRITE),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_WRITE),
+                        (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_READ),
                         this.broadcasts);
                 if (jvm.containsKey(f(OBJ)))
                     qProc.jvm().put(uri(OBJ), (Obj) jvm.get(f(OBJ)));
@@ -427,8 +483,40 @@ public interface QProc extends Rec {
      */
     final class Layer {
 
+        /**
+         * THE NANOS THE ACCESS ITSELF TOOK, stated to the post hooks of that one access: a {@code qless_read} and a
+         * write's broadcast are handed the result, never the start, so the elapsed time travels beside them rather
+         * than through every hook signature. Saved and restored, because an access may nest (a read that reads).
+         */
+        private static final ThreadLocal<Long> ELAPSED = new ThreadLocal<>();
+
         private Layer() {
             // static only
+        }
+
+        /**
+         * @return the nanos the access being post-processed took, or -1 when no {@link Layer} access brackets it (a
+         * source that runs its own q-proc sequence, {@code mqttSpace}, has not been measured)
+         */
+        public static long elapsedNanos() {
+            final Long nanos = ELAPSED.get();
+            return null == nanos ? -1L : nanos;
+        }
+
+        /**
+         * run ONE access's post hooks with its elapsed time stated, restoring any enclosing access's.
+         */
+        private static void withElapsed(final long nanos, final Runnable hooks) {
+            final Long enclosing = ELAPSED.get();
+            ELAPSED.set(nanos);
+            try {
+                hooks.run();
+            } finally {
+                if (null == enclosing)
+                    ELAPSED.remove();
+                else
+                    ELAPSED.set(enclosing);
+            }
         }
 
         /**
@@ -438,6 +526,9 @@ public interface QProc extends Rec {
          * finally handles the address ({@code AbstractSpace} calls {@link Helper#checkQProcs}); a source the
          * dispatch merely OFFERS an address to — the network, which declines everything without a host — must not
          * refuse a {@code ?incrq} that belongs to the space the write is on its way to.
+         * <p>
+         * THE SOURCE'S OWN READ IS THE ACCESS THAT IS TIMED — the {@code qless_read} hooks see its nanos and not
+         * the hooks' own (a meter that measured its own bookkeeping would report the recorder, not the source).
          *
          * @param source the source the q-procs are declared on
          * @param vid    the address read
@@ -445,10 +536,18 @@ public interface QProc extends Rec {
          * @return the q-proc's answer, or the source's post-processed read
          */
         public static Obj read(final Addressable source, final fURI vid, final Supplier<Obj> read) {
-            if (!source.hasQ(ALL))
+            // `+/#` (one or more segments) asks whether the source declares ANY q-proc: hasQ tests each DECLARED
+            // pattern against the query, so a source that declares none takes the straight-to-the-source exit.
+            if (!source.hasQ(f("+/#")))
                 return read.get();             // the hot path: one map lookup, no list, straight to the source
             final Lst qs = source.qs();
-            return Helper.processPreRead(qs, vid).orElseGet(() -> Helper.processPostRead(qs, vid, read.get()));
+            return Helper.processPreRead(qs, vid).orElseGet(() -> {
+                final long t0 = System.nanoTime();
+                final Obj result = read.get();
+                final long nanos = System.nanoTime() - t0;
+                withElapsed(nanos, () -> Helper.processQlessRead(qs, vid, result));
+                return Helper.processPostRead(qs, vid, result);
+            });
         }
 
         /**
@@ -469,13 +568,15 @@ public interface QProc extends Rec {
          * @return the q-proc's answer, or the source's post-processed write
          */
         public static Obj write(final Addressable source, final fURI vid, final Obj obj, final Supplier<Obj> write) {
-            if (!source.hasQ(ALL))
+            if (!source.hasQ(f("+/#")))         // see read: any declared q-proc at all
                 return write.get();            // the hot path: one map lookup, no list, straight to the source
             final Lst qs = source.qs();
             return Helper.processPreWrite(qs, vid, obj)
                     .orElseGet(() -> Helper.processQlessGuards(qs, vid, obj).orElseGet(() -> {
+                        final long t0 = System.nanoTime();
                         final Obj result = write.get();
-                        Helper.processQlessBroadcasts(qs, vid, obj);
+                        final long nanos = System.nanoTime() - t0;
+                        withElapsed(nanos, () -> Helper.processQlessBroadcasts(qs, vid, obj));
                         return Helper.processPostWrite(qs, vid, result).orElse(result);
                     }));
         }
