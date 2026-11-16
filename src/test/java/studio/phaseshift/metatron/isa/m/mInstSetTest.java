@@ -1504,6 +1504,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.plus(2).explain()>>per_inst>>1>>c_rng             % 1            % per-inst range coefficient",
             "1.plus(2).explain()>>format.count()                 % 1            % one report table (a bulk analysis dom applied it twice)",
             "1.plus(2).explain()>>format.type()                  % str::T       % the table is a plain str, not a str{2} multiplicity",
+            // a span is one instruction (Marko, 2026-11-15), and the table writes it {span}inst{point}, as the language does
+            "0.{10}plus(4).explain()>>desc>>insts                % 2            % a span is one instruction, its run walked when it applies",
+            "0.{10}plus(4).explain()>>format.has('[{]10[}]plus').count() % 1    % the span is written before the op",
+            "0.{10}plus(4).explain()>>format.has('plus[{]10').count()    % 0    % ... never after it, where a point is written",
+            "1.{2}plus{3}(1).explain()>>format.has('[{]2[}]plus[{]3[}]').count() % 1 % span and point each in its place, never their product",
             // THE REWRITE CHAIN IS WIRED — desc.rewrite used to be hardcoded noobj, so there was no way to reach the
             // pre-analysis stage at all. Each row here fails on that older code. The COMPILED-vs-SUBMITTED staging
             // itself cannot be exhibited in this suite: the only rules mounted here are /m's, and explain_analysis is

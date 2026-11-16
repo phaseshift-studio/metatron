@@ -1637,8 +1637,14 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2}.branch(plus(1).count(),plus(1).sum())       % start({1,2}).plus(1).branch(count(),sum())                % {{2}1,2,3}",
             // a shared reducer is never shared: ahead of the branch it would count the stream, 2, where each member counts 1
             "{1,2}.branch(count().plus(1),count().plus(2))     % start({1,2}).branch(count().plus(1),count().plus(2))      % {{2}2,{2}3}",
-            // equal instructions under different spans: the shorter run is the prefix, reached through the fixpoint
-            "1.branch({2}plus(1).mult(3),{3}plus(1).mult(4))   % start(1).plus(1).plus(1).branch(mult(3),plus(1).mult(4))  % {9,16}",
+            // equal instructions under different spans share the shorter run, the longer keeping the rest of its own (a span
+            // stays on its instruction, Marko 2026-11-15: a^m.b + a^n.c = a^m.(b + a^(n-m).c))
+            "1.branch({2}plus(1).mult(3),{3}plus(1).mult(4))   % start(1).{2}plus(1).branch(mult(3),plus(1).mult(4))       % {9,16}",
+            "1.branch({3}plus(1).mult(4),{2}plus(1).mult(3))   % start(1).{2}plus(1).branch(plus(1).mult(4),mult(3))       % {16,9}",
+            "1.branch({2}plus(1).mult(3),{3}plus(1).mult(4),{4}plus(1).mult(5)) % start(1).{2}plus(1).branch(mult(3),plus(1).mult(4),{2}plus(1).mult(5)) % {9,16,25}",
+            "1.branch({2}plus(1).mult(3),{2}plus(1).mult(4))   % start(1).{2}plus(1).branch(mult(3),mult(4))               % {9,12}",
+            // a range is no prefix of a run: a ranged span beside an exact one stays as written
+            "1.branch({?}plus(1).mult(3),{2}plus(1).mult(4))   % start(1).branch({?}plus(1).mult(3),{2}plus(1).mult(4))    % {3,6,12}",
             // unlike heads, heads at different points, and a member with no remainder stay as written
             "1.branch(plus(1).mult(2),plus(2).mult(3))         % start(1).branch(plus(1).mult(2),plus(2).mult(3))          % {4,9}",
             "1.branch(plus{2}(1).mult(2),plus(1).mult(3))      % start(1).branch(plus{2}(1).mult(2),plus(1).mult(3))       % {{2}4,6}",

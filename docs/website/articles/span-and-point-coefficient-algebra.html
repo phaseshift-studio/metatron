@@ -593,9 +593,10 @@ na = \underbrace{1a + \cdots + 1a}_{n}.
 a^0 = 1 \quad \text{and} \quad a^{n+1} = a^n \cdot a.
 \end{equation*}
 \]
-In mtron it is written before the instruction, <code>{n}a</code>, and the parser lays the
-run out: <code>{3}a</code> is <code>a.a.a</code>, and <code>{0}a</code> is no instruction at all. A term with
-both coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
+In mtron it is written before the instruction, <code>{n}a</code>, and stays on it: <code>{3}a</code> is
+one instruction whose run <code>a.a.a</code> is walked when it applies, never written out
+into the code, and <code>{0}a</code> is no instruction at all. A term with both
+coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
 :::</p>
 <p>An mtron chain is read as a stream ring expression:</p>
 <table>
@@ -632,8 +633,9 @@ iterating \(+\) and the
 span iterating \(\cdot\). In mtron, extension of instructions is function composition <code>(a.b.c)</code>, where the locality of
 composition is in a uri address space. For example, <code>plus(1).plus(2)</code> compiles to <code>plus(1)@&lt;0&gt;.plus(2)@&lt;1&gt;</code>, where
 <code>&lt;0&gt;</code> and <code>&lt;1&gt;</code> are <em>relative uri addresses</em> in the virtual machine's <em>variable stack</em>. It's important to realize
-that composition is not application. A span lays one instruction
-along the axis of sequential addresses such that: <code>{3}plus(1)</code> is <code>plus(1)@&lt;0&gt;.plus(1)@&lt;1&gt;.plus(1)@&lt;2&gt;</code>.</p>
+that composition is not application. A span lays one instruction along the axis of sequential addresses, so that
+<code>{3}plus(1)</code> means <code>plus(1)@&lt;0&gt;.plus(1)@&lt;1&gt;.plus(1)@&lt;2&gt;</code>, and it compresses that axis as the point compresses copies:
+the compiled code holds the one instruction <code>{3}plus(1)@&lt;0&gt;</code>, whose run is walked when it applies (Theorem 10).</p>
 <p><strong>NOTES</strong>:</p>
 <ul>
 <li>The mirror: instructions and types write <code>{span}x{point}</code>, values write
@@ -811,8 +813,8 @@ Then \(k^{n+1} = k^n \cdot k = k \cdot k = k\) by induction, and \(k^0 = 1\) by
 Definition 2. ◻
 :::</p>
 <p><strong>Live proof.</strong> A dereference reads its address, never its input, so <code>*a</code> is
-such a \(k\). Read left to right and greedy, <code>{2}*a</code> is <code>{2}from(a)</code>, the run
-<code>from(a).from(a)</code>.</p>
+such a \(k\). Read left to right and greedy, <code>{2}*a</code> is <code>{2}from(a)</code>, one
+instruction whose run is <code>from(a).from(a)</code>.</p>
 <pre><code class="language-mtron">mtron&gt; a -&gt; 7
 ==&gt;7
 mtron&gt; {2}*a
@@ -821,19 +823,24 @@ mtron&gt; *a.*a
 ==&gt;7
 </code></pre>
 <p>A span on an object lays it out in space: \(n\) copies of \(x\) at the addresses
-\(0, 1, \ldots, n-1\), each copy keeping the point of \(x\). In mtron a value
-writes its span after it, <code>x{n}</code>, and until an address can be a branched uri
-the layout is the list of the copies, whose slots are those addresses:
-<code>2{3}</code> is <code>[2,2,2]</code>.</p>
+\(0, 1, \ldots, n-1\), each copy keeping the point of \(x\), so \((c)x\) along \(n\)
+slots counts \(c \cdot n\) objects. In mtron a value writes its span after it,
+<code>x{n}</code>, and keeps it curled on its type: <code>2{3}</code> is one 2 that counts three, and
+<code>{3}5{3}</code> counts nine and sums to 45. A space with an axis is what lays it out.</p>
 <pre><code class="language-mtron">mtron&gt; 2{3}
 ==&gt;2{3}
 mtron&gt; {2}2{3}
 ==&gt;{2}2{3}
+mtron&gt; 2{3}.count()
+==&gt;3
+mtron&gt; {3}5{3}.count()
+==&gt;9
+mtron&gt; {3}5{3}.sum()
+==&gt;45
 </code></pre>
-<p>NOTES: spans on a value. Once branched uris read and write a layout, is
-<code>2{3}</code> the one value <code>2@&lt;{0,1,2}&gt;</code> rather than the lst <code>[2,2,2]</code>? And is a laid
-value one obj or \(n\)? A ranged value span, <code>2{?}</code>, has no layout yet and does
-not parse. Would <code>2{2,3}</code> be the sum of its layouts, as a span range on an
+<p>NOTES: spans on a value. A value's span is curled on its tid (Marko, 2026-11-11): <code>2{3}</code> is one value, not the lst
+<code>[2,2,2]</code>, and only a space with an axis unrolls it (<code>5{3}@xyz</code> at <code>xyz/0..2</code>, still to come). A ranged value span,
+<code>2{?}</code>, has no layout yet and does not parse. Would <code>2{2,3}</code> be the sum of its layouts, as a span range on an
 instruction is?</p>
 <h3>The Algebra Relating Point and Span Coefficients</h3>
 <p>::: <strong>Theorem 7</strong> (The span exponentiates the point). If
@@ -958,8 +965,11 @@ near-ring is not right distributive [1]. ◻
 <p><strong>Live proof.</strong> Two parallel expressions are one expression branched where
 their instructions differ. Runs of <code>plus(1)</code> under the spans 2 and 3 share the
 shorter run; a shared suffix merges after the branch; a shared reducer does
-not merge after it, and does not factor ahead of it. The cat instruction set's
-<code>branch_factor</code> rewrite applies the first equality as a normal form.</p>
+not merge after it, and does not factor ahead of it. The <code>branch_factor</code> rewrite
+of the <code>/m</code> instruction set applies both equalities as normal forms: runs of one
+instruction under different exact spans share the shortest, so
+<code>branch({2}plus(1).mult(3),{3}plus(1).mult(4))</code> rewrites to
+<code>{2}plus(1).branch(mult(3),plus(1).mult(4))</code>.</p>
 <pre><code class="language-mtron">mtron&gt; 1.branch({2}plus(1).mult(3),{3}plus(1).mult(4))
 ==&gt;9
 ==&gt;16
@@ -1012,7 +1022,9 @@ the split axiom,
 so paths of different lengths meet only in that sum, at the end of every path.
 A range is no uncertainty over its unrolls: every unroll is taken, and the
 multiplicities are not weights that sum to one. The zero-step unroll is the
-unity, \(a^0 = 1\), which passes its object on.</p>
+unity, \(a^0 = 1\), which passes its object on. Independent as terms, the unrolls
+need not be computed apart: they share their prefixes, and Theorem 10 takes them
+all in one walk.</p>
 <p>::: <strong>Corollary 6</strong> (Each unroll carries its own power of the point).
 If \(c \in \mathcal{C}\) and \(m \leq n\), then
 \((ca)^{[m,n]} = \sum_{k=m}^{n} c^k a^k\).
@@ -1021,12 +1033,10 @@ If \(c \in \mathcal{C}\) and \(m \leq n\), then
 \((ca)^k = c^k a^k\) by Theorem 7. ◻
 :::</p>
 <p>In mtron, <code>{2,3}a</code> answers what the branch of its unrolls, <code>branch(a.a,a.a.a)</code>,
-answers, and <code>{?}a</code> what <code>branch(id(),a)</code> answers. The sum is computed when the
-instruction applies and is never written into the code: a path ends where its
-monad's instruction pointer reaches noobj, and the objects of the halted monads
-sum there. A monad whose object is noobj is killed instead, the zero point of
-Theorem 4. As the code keeps the span, code read as a pattern still matches
-<code>{?}neg()</code> as a run of none or one <code>neg()</code>.</p>
+answers when <code>a</code> takes one object at a time, and <code>{?}a</code> what <code>branch(id(),a)</code>
+answers. The sum is computed when the instruction applies and is never written
+into the code (see <em>Evaluating a Span</em>). As the code keeps the span, code read
+as a pattern still matches <code>{?}neg()</code> as a run of none or one <code>neg()</code>.</p>
 <p><strong>Live proof.</strong> If \(a (x) = x + 1\), then
 \(\langle 1 \rangle a^{[2,3]} = \langle 1 \rangle (a^2 + a^3) = \langle 3, 4 \rangle\)
 and \(\langle 1 \rangle a^{[0,1]} = \langle 1, 2 \rangle\). By Corollary 6,
@@ -1096,17 +1106,157 @@ mtron&gt; 0.{0,6}plus{2}(1)
 \(\langle 0 \rangle a^* = \langle 0, 1, 2, 3, \ldots \rangle\): every natural at
 once, the bounded generations above being its prefixes. A span range is a
 generator. In mtron it is <code>0.{*}plus(1)</code>, which is
-<code>start(0).branch(id(),plus(1),plus(1).plus(1),...)</code>.</p>
-<p><strong>NOTES</strong>: an open range has no last unroll, so <code>0.{*}plus(1)</code> (now <code>{*}1</code>)
-needs its unrolls on demand, \(a^* = 1 + a \cdot a^*\); <code>repeat</code> already runs
-the bounded form. To settle here: how a point range such as <code>{?}3</code> reads now
-that a range is no uncertainty, and the type of a generator.</p>
+<code>start(0).branch(id(),plus(1),plus(1).plus(1),...)</code>. An open range has no last
+unroll, so it is taken as \(a^* = 1 + a \cdot a^*\), its unrolls on demand, each
+one step past the last (Theorem 10), and it ends only where a run leaves the
+domain of \(a\) (Corollary 8). <code>0.{*}plus(1)</code> never does.</p>
+<p><strong>NOTES</strong>: to settle here: how a point range such as <code>{?}3</code> reads now that a
+range is no uncertainty, the type of a generator, and a lazy reader that takes
+a prefix of <code>0.{*}plus(1)</code> without walking all of it.</p>
+<h3>Evaluating a Span</h3>
+<p>Definition 3 sums independent unrolls, and the plain way to compute the sum takes them one at a time: the unroll
+\(a^k\) applies \(a\) to the input \(k\) times, so \(a^{[m,n]}\) costs \(\sum_{k=m}^{n} k\) applications, and an exact span
+written out as its compose chain \(a \cdot \cdots \cdot a\) is a term \(n\) functions long. The unrolls share their
+prefixes, and a shared prefix factors. Factored all at once, the sum is Horner's rule.</p>
+<p>::: <strong>Theorem 10</strong> (A span range is one walk). If \(a \in \mathcal{F}\) is pure and \(m \leq n\), then
+\[
+\begin{equation*}
+a^{[m,n]} = a^m \cdot (1 + a \cdot (1 + a \cdot ( \cdots (1 + a)))),
+\end{equation*}
+\]
+with \(n - m\) factors of \(a\) after \(a^m\). So if \(\langle x_0 \rangle = \langle x \rangle\) and
+\(\langle x_{k+1} \rangle = \langle x_k \rangle a\), then
+\(\langle x \rangle a^{[m,n]} = \sum_{k=m}^{n} \langle x_k \rangle\): each unroll is one step past the last.
+:::</p>
+<p>::: <em>Proof.</em> A pure prefix factors on a stream whatever it does to the stream, by the split axiom: if
+\(\langle x \rangle a = \langle y \rangle\), then
+\(\langle x \rangle (a \cdot b + a \cdot c) = \langle y \rangle b + \langle y \rangle c = \langle y \rangle (b + c) = \langle x \rangle a \cdot (b + c)\).
+So
+\[
+\begin{equation*}
+\begin{array}{lclll}
+a^{[m,n]} &amp;=&amp; \sum_{k=m}^{n} a^m \cdot a^{k-m} &amp;&amp; [\text{Definition 3, Theorem 5}] \\
+&amp;=&amp; a^m \cdot \sum_{j=0}^{n-m} a^j = a^m \cdot a^{[0,n-m]} &amp;&amp; [\text{shared prefix}] \\
+a^{[0,j]} &amp;=&amp; 1 + \sum_{i=1}^{j} a \cdot a^{i-1} = 1 + a \cdot a^{[0,j-1]} &amp;&amp; [\text{Definition 3, Theorem 5, shared prefix}],
+\end{array}
+\end{equation*}
+\]
+and unfolding \(a^{[0,j]}\) down to \(a^{[0,0]} = 1\) nests the \(n - m\) factors. ◻
+:::</p>
+<p>Purity is the one condition, as in Theorem 9: the factored prefix runs once for every unroll it heads. The other
+condition of Theorem 9, that the prefix take one object at a time, does not arise. The sum of Definition 3 is the split
+axiom applied to the whole stream \(\langle x \rangle\), so a reducer heads its unrolls as any function does. It is
+mtron's branch, feeding its members one object at a time, that is not this sum.</p>
+<p>::: <strong>Corollary 7</strong> (The cost of a walk). A walk of \(a^{[m,n]}\) applies \(a\) \(n\) times, where the unrolls taken one at a
+time apply it \(\sum_{k=m}^{n} k = \frac{(n-m+1)(m+n)}{2}\) times.
+:::</p>
+<p>::: <em>Proof.</em> Each \(\langle x_k \rangle\) is one application past \(\langle x_{k-1} \rangle\), for \(k = 1, \ldots, n\), and
+the unroll \(a^k\) alone applies \(a\) \(k\) times. ◻
+:::</p>
+<p>::: <strong>Corollary 8</strong> (A walk halts where its run leaves the domain). Read \(a\) as partial on its domain \(D\), with
+\(\langle x \rangle a = \langle\rangle\) for \(x \notin D\). If a run \(\langle x_k \rangle\) holds no object of \(D\), then
+\(\langle x_{k+1} \rangle = \langle\rangle\), and \(\langle\rangle a^j = \langle\rangle\) for every \(j\), so every later
+unroll adds \(0\): the walk halts there. A reducer is the exception, as its domain is the streams themselves: it runs on
+the empty stream by the reduce apply axiom of [1], \(\langle\rangle r = \langle r (\langle\rangle) \rangle\), and its walk
+steps on.
+:::</p>
+<p>::: <em>Proof.</em> A function that is no reducer applies to a run object by object (the split axiom), each object outside
+\(D\) adding \(\langle\rangle\), and it maps the empty stream to the empty stream. ◻
+:::</p>
+<p><strong>Live proof.</strong> If \(a (x) = x + 1\), then the unroll \(a^k\) from \(0\) holds \(k\) (Corollary 1), which is also what it costs
+taken alone: the thousand runs of \(a^{[1,1000]}\) sum to the \(\sum_{k=1}^{1000} k = 500{,}500\) applications of its
+unrolls one at a time. The walk takes \(1{,}000\).</p>
+<pre><code class="language-mtron">mtron&gt; 0.{1,1000}plus(1).count()
+==&gt;1000
+mtron&gt; 0.{1,1000}plus(1).sum()
+==&gt;500500
+</code></pre>
+<p>If \(s\) sums a stream, then \(\langle 1, 2, 3 \rangle s^{[0,1]} = \langle 1, 2, 3 \rangle + \langle 6 \rangle\), the split
+over the whole stream, while a branch that feeds \(s\) one object at a time sums each alone,
+\(\langle (2)1, (2)2, (2)3 \rangle\). If \(c\) counts a stream, then
+\(\langle 1, 2, 3 \rangle c^{[1,2]} = \langle 3 \rangle + \langle 1 \rangle\). A step that takes one object at a time
+walks object by object: \(\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \rangle + \langle 3, 4 \rangle\).</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3}.{0,1}sum()
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;6
+mtron&gt; {1,2,3}.branch(id(),sum())
+==&gt;{2}1
+==&gt;{2}2
+==&gt;{2}3
+mtron&gt; {1,2,3}.{1,2}count()
+==&gt;3
+==&gt;1
+mtron&gt; {1,2}.{0,2}plus(1)
+==&gt;1
+==&gt;{2}2
+==&gt;{2}3
+==&gt;4
+</code></pre>
+<p>If \(f\) reads the field \(a\) of a record, then
+\(\langle [a \Rightarrow [a \Rightarrow 5]] \rangle f^{[0,5]} = \langle [a \Rightarrow [a \Rightarrow 5]], [a \Rightarrow 5], 5 \rangle\):
+\(5\) is no record, so the walk halts there, three runs short of five (Corollary 8). The open walk halts the same way at a
+record without the field, and a count steps on from nothing:
+\(\langle\rangle c^{[1,2]} = \langle 0 \rangle + \langle 1 \rangle\).</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;[a=&gt;5]].{0,5}rshift(a)
+==&gt;[a=&gt;[a=&gt;5]]
+==&gt;[a=&gt;5]
+==&gt;5
+mtron&gt; [a=&gt;[a=&gt;[b=&gt;5]]].{*}rshift(a)
+==&gt;[a=&gt;[a=&gt;[b=&gt;5]]]
+==&gt;[a=&gt;[b=&gt;5]]
+==&gt;[b=&gt;5]
+mtron&gt; {1,2,3}.is(gt(5)).{1,2}count()
+==&gt;0
+==&gt;1
+</code></pre>
+<p>In mtron, <code>{n}a</code> and <code>{m,n}a</code> are each one instruction, and the processor walks it: the input, then each run one step
+past the last, the runs from \(m\) on kept, until the run \(n\) or a run that leaves the domain of <code>a</code>. How much of a run a
+step takes is the coefficient of its domain: <code>sum?int&lt;=int{*}()</code> takes a run whole, and <code>plus?int&lt;=int()</code> one object at
+a time, as the swarm feeds them. A step compiled for the type of its first run is resolved again for a run of another
+type, as each copy of an unrolled chain was compiled against its own input: <code>1.{2}as(str)</code> casts an <code>int</code> to the uri
+<code>&lt;1&gt;</code>, and its second run casts that uri, which the cast compiled for an <code>int</code> never was.</p>
+<pre><code class="language-mtron">mtron&gt; 1.{2}as(str)
+==&gt;&lt;1&gt;
+mtron&gt; 1.as(str).as(str)
+==&gt;&lt;1&gt;
+</code></pre>
+<p>The walk replaced two naive evaluations of a span. The parser wrote an exact span out as its compose chain, so
+<code>0.{10}plus(4)</code> compiled to eleven instructions, where it now compiles to two. A closed range recomputed every unroll
+from its input, so <code>{1,1000}</code> took 500,500 steps, an effectful step ran once per unroll it headed rather than once per
+step, and a range on a reducer that started at one ran the reducer one object at a time: <code>{1,2,3}.{1,2}count()</code>
+answered \(\langle (6)1 \rangle\). The compilation tables of the span and of the chain the parser used to write out:</p>
+<pre><code class="language-mtron">mtron&gt; 0.{10}plus(4).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op        dom          rng     args  f    desc     c_dom  c_rng 
+    start     noobj{0}::T  int::T  [0]   &lt;j&gt;  initial  {0}    {1}   
+    {10}plus  int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+   &quot;&quot;&quot;
+mtron&gt; 0.plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).plus(4).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op     dom          rng     args  f    desc     c_dom  c_rng 
+    start  noobj{0}::T  int::T  [0]   &lt;j&gt;  initial  {0}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  [4]   &lt;j&gt;  mapper   {1}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
 <h3>Point and Span Coefficients Type Systems</h3>
 <p>If \(a (x) = y\), then \(\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle\) by
 Theorem 7 and the apply axiom. So the coefficient of the inferred type is
 \(c^n\): <code>type()</code> reads the point of a term off its run, and <code>cc()</code> reads the
 coefficient of that type. In the console, <code>5.{2}plus{3}(1).type()</code> is
-<code>int{9}::T</code>.</p>
+<code>int{9}::T</code>. The compiler types a span by its runs, never by its span times its
+point, which is the count of a value's copies (<code>{3}5{3}</code> counts nine):
+<code>0.{10}plus(4)</code> is typed one <code>int</code>, not ten.</p>
 <pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1).type().cc()
 ==&gt;9
 mtron&gt; 5.plus(1).id{3}().type().cc()
@@ -1122,10 +1272,12 @@ binds them.</li>
 <li>Every law here is pinned in metatron's <code>AbstractAlgebraTest</code> on nine carriers
 and proved live in this article.</li>
 <li>The rewriter applies two of them as normal forms: like terms sum their points (<code>branch_collapse</code>), and shared prefixes
-factor (<code>branch_factor</code>).</li>
-<li>Where it leads: a span range as the branch of its unrolls, merging at noobj,
-so <code>{*}</code> is a generator; layouts in space once a vid can be branched; and
-code as paths that sum like branched uris.]</li>
+factor (<code>branch_factor</code>). The processor applies the second to every span: its walk is the factored form of its
+unrolls (Theorem 10).</li>
+<li>Where it leads: a span range as one walk of its unrolls, so <code>{*}</code> is a
+generator that halts where its runs leave the domain (Corollary 8); layouts
+in space once a vid can be branched; and code as paths that sum like branched
+uris.]</li>
 </ul>
 <h2>References</h2>
 <ol>
