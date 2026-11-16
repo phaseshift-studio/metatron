@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
@@ -178,9 +179,9 @@ public final class mcpMetatronBuilder {
                             toolTid("list_space").dom(ALL.maybe()).rng(ALL.maybe()),
                             lst(), (lhs, inst) -> {
                                 final Map<Obj, Obj> spaces = new LinkedHashMap<>();
-                                Machine.current().memory().spaces().jvm().entrySet().forEach(kv -> {
-                                    spaces.put(kv.getKey(), uri(kv.getValue().<Space>as().pattern()));
-                                });
+                                Memory.spaces(Machine.current().memory().spaces()).forEach(space -> spaces.put(
+                                        null == space.vid() ? uri(space.pattern()) : uri(space.vid()),
+                                        uri(space.pattern())));
                                 return rec(spaces);
                             }), "noobj lhs", "a rec index of currently accessible spaces",
                     Map.of(), "returns a rec identifying all active metatron spaces"), MUTABLE);
@@ -198,7 +199,7 @@ public final class mcpMetatronBuilder {
                                 final Obj redirect = Machine.read(f("/memory/redirect"));
                                 return rec(
                                         uri(MACHINE), rec(uri(VID), uri(machine.vid()), uri(TID), uri(machine.tid())),
-                                        uri("spaces"), jnt(machine.memory().spaces().jvm().size()),
+                                        uri("spaces"), jnt(Memory.spaces(machine.memory().spaces()).size()),
                                         // the spellings the vocabulary answers to (math:cos, web:…), and their homes
                                         uri(PREFIX), isaPrefix.isRec() ? isaPrefix : rec(),
                                         // the peers this machine can NAME instead of dial (//ginger/a) — the SPELLING, so a

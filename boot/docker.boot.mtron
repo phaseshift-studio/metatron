@@ -37,7 +37,7 @@ import(/m/dev/dckr);
 
 fsspace::[pattern => fs:#,
           q       => [mimeq::[=>]],
-          route   => [fs: => <.>]]@/sys/space/fs/root;
+          route   => [fs: => <.>]]@~/memory/space/fs/root;
 
 [== calls boot modules to load spaces ==]
 [== deployment identity: home.mtron builds /usr/${*boot/args/user}/# from this; override via the CMD: user=><name> ==]

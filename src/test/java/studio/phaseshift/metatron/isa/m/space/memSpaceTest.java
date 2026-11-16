@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DecQTest;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
+import studio.phaseshift.metatron.furi.q.AnalQTest;
 import studio.phaseshift.metatron.furi.q.LineQTest;
 import studio.phaseshift.metatron.furi.q.LockQTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -47,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 @TestReport
-public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest, LockQTest, IncrQTest, DecQTest {
+public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest, LockQTest, IncrQTest, DecQTest, AnalQTest {
 
     public memSpaceTest() {
         super(() -> {
@@ -55,7 +56,7 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
             final File file = new File("/tmp/memspace-test.mtron");
             if (file.exists())
                 file.delete();*/
-            final Space space = memSpace.of(rec(uri(PATTERN), uri("/t/#")), /*uri(PERSIST), uri("/tmp/memspace-test.mtron"),*/ f("/sys/space/mem"));
+            final Space space = memSpace.of(rec(uri(PATTERN), uri("/t/#")), /*uri(PERSIST), uri("/tmp/memspace-test.mtron"),*/ f("/memory/space/mem"));
             space.addQ(QCollection.subQ());
             space.addQ(QCollection.lockQ());
             return space;
@@ -72,20 +73,25 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
         return f(this.baseURI.toString() + "/decq");
     }
 
+    @Override
+    public fURI analQBaseURI() {
+        return f(this.baseURI.toString() + "/analq");
+    }
+
     @Test
     public void testPersistence() {
         File file = new File("/tmp/memspace-test.mtron");
         assert !file.exists() || file.delete();
         final memSpace space = memSpace.of(rec(
                 uri(DATA), uri("/tmp/memspace-test.mtron"),
-                uri(PATTERN), uri("/tt/#")), f("/sys/space/mem_persist_1"));
+                uri(PATTERN), uri("/tt/#")), f("/memory/space/mem_persist_1"));
         final Map<fURI, Obj> data = generateRandomData(space.pattern().retractPattern(), 10);
         data.forEach(Machine::write);
         data.forEach((k, v) -> assertEquals(v, Machine.read(k)));
         space.close();
         final memSpace space2 = memSpace.of(rec(
                 uri(DATA), uri("/tmp/memspace-test.mtron"),
-                uri(PATTERN), uri("/tt/#")), f("/sys/space/mem_persist_2"));
+                uri(PATTERN), uri("/tt/#")), f("/memory/space/mem_persist_2"));
         data.forEach((k, v) -> assertEquals(v, Machine.read(k)));
         space2.close();
     }
@@ -177,7 +183,7 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
     @ParameterizedTest()
     @TestData(value = {
             // branches in different spaces are written to, and read from, each their own space
-            "memspace::[pattern=>/u/#]@/sys/space/mem_u",
+            "memspace::[pattern=>/u/#]@/memory/space/mem_u",
             "/{t,u}/br -> 23"
     }, oneTime = true)
     @CsvSource(value = {

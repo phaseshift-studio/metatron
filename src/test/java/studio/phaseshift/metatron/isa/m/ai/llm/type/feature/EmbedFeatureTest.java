@@ -66,7 +66,7 @@ public class EmbedFeatureTest extends AbstractMetatronTest {
     public static void mountEmbedSpace() {
         InstSet.importInstSet(f("/m/ai/llm"));
         InstSet.importInstSet(MATH_ISA_TID, f("math"));
-        memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
+        memSpace.of(f("/usr/test/#"), f("/memory/space/usr/test")).addQ(incrQ());
     }
 
     /**

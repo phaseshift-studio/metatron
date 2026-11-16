@@ -1,5 +1,5 @@
 [== boot args ==]
-[space  => /sys/space,
+[space  => /memory/space,
  web    => [
    http/origin  => <http://localhost:8777>,
    ws/origin    => <ws://localhost:8555>],
@@ -39,12 +39,12 @@ import(/m/web);
    
 [== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 
-       q              => [typeq::[=>],mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;
+       q              => [typeq::[=>],mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@~/memory/space/usr;
  fsspace::[pattern    => local:#,
             route     => [local:=><~/>],
-            script    => !*boot/script]@/sys/space/fs;         
+            script    => !*boot/script]@~/memory/space/fs;         
  fsspace::[pattern    => mtronfs:#,
-           route      => [mtronfs:=><.metatron>]]@/sys/space/mtronfs;
+           route      => [mtronfs:=><.metatron>]]@~/memory/space/mtronfs;
            
 print(*boot/args/header)          
 

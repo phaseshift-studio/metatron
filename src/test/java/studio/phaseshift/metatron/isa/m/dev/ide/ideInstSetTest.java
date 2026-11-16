@@ -81,7 +81,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         createSearchTree();
         final fsSpace space = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("isearch:#"),
-                uri(ROUTE), rec(uri("isearch:"), uri(SEARCH_ROOT.toString()))).vid(f("/sys/space/isearch")))).apply(noobj()).as();
+                uri(ROUTE), rec(uri("isearch:"), uri(SEARCH_ROOT.toString()))).vid(f("/memory/space/isearch")))).apply(noobj()).as();
         Machine.current().memory().addSpace(space);
     }
 
@@ -309,7 +309,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         };
         final fsSpace repoSrc = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("probe:#"),
-                uri(ROUTE), rec(uri("probe:"), uri(System.getProperty("user.dir")))).vid(f("/sys/space/repoProbe")))).apply(noobj()).as();
+                uri(ROUTE), rec(uri("probe:"), uri(System.getProperty("user.dir")))).vid(f("/memory/space/repoProbe")))).apply(noobj()).as();
         Machine.current().memory().addSpace(repoSrc);
 
         final String root = "src/test/resources/scratch";

@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
+           {?}resolver=>'the third stage — the walk that th...',
            {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
-           {?}rewriter=>'the second stage — the code::T to ...',
-           {?}resolver=>'the third stage — the walk that th...'],
+           {?}rewriter=>'the second stage — the code::T to ...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -277,10 +277,10 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
+           {?}result=>'the objs the last evaluation produ...',
            {?}tracer=>"the processor's diagnostics (trace...",
            {?}state=>'the run state: stop, run or pause',
            {?}analyzer=>"the processor's statistics (analyz...",
-           {?}result=>'the objs the last evaluation produ...',
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -303,12 +303,26 @@ evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught
 
 ### analyzer
 
-The `analyzer::T` is any component's statistics, in the typer's and the tracer's form: a producer records in Java
-(`incr`/`record`/`set`) where the thing it counts happens, and anyone reads the live `analysis::T` — derived from the
-meters as it is read — at `~/<component>/analyzer/analysis`. The meters are `counter::T` (a `nat`, non-negative and
+The `analyzer::T` is a measuring component's statistics, in the typer's and the tracer's form: a producer records in
+Java (`incr`/`record`/`set`) where the thing it counts happens, and anyone reads the live `analysis::T` — derived from
+the meters as it is read — at `~/<component>/analyzer/analysis`. The meters are `counter::T` (a `nat`, non-negative and
 monotonic in practice), `gauge::T` (a point-in-time `real`) and `timer::T` (`count`/`total`/`min`/`max` of nanos); the
 settings `step`, `profile` and `enabled` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
 machine's components, a cluster's machines).
+
+A **data space** is not a component, and its metrics are its `?analq` q-proc rather than a `~/<space>/analyzer` field:
+the q-proc holds the `analyzer::T`, so it travels with the space, and `read`/`write`/`delete` counts and latencies are
+read flat at the space's `?analq` (e.g. `*/t/#?analq` → `read => [count, latency], write => [count, latency, delete =>
+[count, latency]]`). A space records when it declares the q-proc; nothing is recorded for a space that does not.
+
+A **server is an addressable source too**, and its metrics are its own `?analq`. A listener is instrumented at
+construction, so `<scheme>://host:port/#?analq` answers that socket's analysis: a request or a received message is a
+`read` at its wire address, a sent message a `write` there, a hang-up a write of `noobj` (the `delete` subset), and
+`connections` a gauge beside them. Each socket's q-proc holds its own analyzer, so two servers on one machine never
+share meters — and the network's `~/network/analyzer` still counts the WIRE (`wire/sent`, `wire/recv`, every frame
+either way), which is a different question from the work one server did. An `?analq` read of a local socket is
+answered locally even while a peer is declared at that origin: the meters of a socket this machine holds are not a
+peer's to answer.
 
 A metric no analyzable emits can be attached to the analyzer as a **derived `!` field** — a live computation over the
 analysis, pulled on demand (the mtron form of a recording rule):
@@ -488,17 +502,17 @@ network as `memspace::[pattern=>xyz/#]` indexes into memory.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>ws_client::[pattern=>ws://localhost:8555/mtron,
-               host=>ws://localhost:8555/mtron,
-               send=>λ(){<j>},
-               send_recv=>λ(){<j>},
-               inst=>[
-                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-                /m/inst/from=>*uri::T,
-                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-               status=>!λstatus?bool<=(){<j>},
-               close=>λ(){<j>},
-               ...(1 more)]
+==>[pattern=>ws://localhost:8555/mtron,
+    host=>ws://localhost:8555/mtron,
+    send=>λ(){<j>},
+    send_recv=>λ(){<j>},
+    inst=>[
+     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+     /m/inst/from=>*uri::T,
+     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+    status=>!λstatus?bool<=(){<j>},
+    close=>λ(){<j>},
+    ...(1 more)]
 ```
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
 its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client`
@@ -650,7 +664,7 @@ connects the receiving peer to the same backend:
 [db   =>tblespace::[pattern=></usr/data/#>,
                     host=><mariadb://…>,
                     driver=><org.mariadb.jdbc.Driver>,
-                    route=>[</usr/data>=><>]]@/sys/space/data,
+                    route=>[</usr/data>=><>]]@~/memory/space/data,
  xyz  =>'east',
  code =>|(*</usr/data/${*workload/xyz}/+/amount>.sum().to(</usr/data/result/${*workload/xyz}/total>))](workload=>_){ !*workload/code.apply() }
 ```
@@ -694,7 +708,7 @@ service authority.
 
 ```mtron
 mtron> *~/network/host
-==>booger
+==>de17b73bd433
 ```
 ## appendix — registered types
 

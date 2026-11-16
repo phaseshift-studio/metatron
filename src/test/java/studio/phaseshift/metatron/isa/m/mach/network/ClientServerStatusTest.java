@@ -71,6 +71,11 @@ public class ClientServerStatusTest extends AbstractMetatronTest {
         protected void unbind() {
             // no socket to release
         }
+
+        @Override
+        public fURI protocol() {
+            return f("test");
+        }
     }
 
     @Test

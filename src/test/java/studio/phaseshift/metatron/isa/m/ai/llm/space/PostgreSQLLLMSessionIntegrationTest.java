@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_TID;
 public class PostgreSQLLLMSessionIntegrationTest extends AbstractLLMSessionIntegrationTest {
 
     private static final String MEM_TABLE = "llm_session";
-    private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int_pg");
+    private static final fURI SPACE_VID = f("/memory/space/test_llm_mem_int_pg");
     private static final fURI MEM_VID = f("pg:" + MEM_TABLE + "/1");
 
     private PostgreSQLDatabaseConfig dbConfig;

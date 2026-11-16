@@ -95,7 +95,7 @@ import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_TID;
  *     uri(HOST),    uri("postgresql://localhost:5432/mydb"),
  *     uri(DRIVER),  uri("org.postgresql.Driver"),
  *     uri(ROUTE),   rec(uri("db:"), uri(""))
- * ).jvm(), f("/sys/space/tble"));
+ * ).jvm(), f("~/memory/space/tble"));
  * }</pre>
  * The {@code TABLE} config key is deprecated and ignored — table mapping is
  * always on.  All collection paths except {@code "kv_store"}, {@code "_mtron_meta"},

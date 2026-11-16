@@ -192,7 +192,7 @@ project root:
 fsspace::[/
   pattern => <mfs:#>, /
   q       => [mimeq::[=>], lineq::[=>]], /
-  route   => [mfs: => <.>]]@/sys/space/mfs
+  route   => [mfs: => <.>]]@~/memory/space/mfs
 ```
 
 The three keys: `pattern` is the uri space this instance owns (`mfs:#`, `#` the
@@ -209,7 +209,7 @@ bash('mkdir -p /tmp/mtron-docs-scratch')
 fsspace::[/
   pattern => <scratch:#>, /
   q       => [lineq::[=>]], /
-  route   => [scratch: => /tmp/mtron-docs-scratch]]@/sys/space/scratch
+  route   => [scratch: => /tmp/mtron-docs-scratch]]@~/memory/space/scratch
 ```
 
 ## typed reads
@@ -312,8 +312,8 @@ The doc leaves the graph as it found it — the two mounts it added are removed,
 the scratch directory goes with `bash`, the tool that made it:
 
 ```mtron_pre
-/sys/space/scratch -> noobj
-/sys/space/mfs     -> noobj
+~/memory/space/scratch -> noobj
+~/memory/space/mfs     -> noobj
 bash('rm -rf /tmp/mtron-docs-scratch')
 ```
 

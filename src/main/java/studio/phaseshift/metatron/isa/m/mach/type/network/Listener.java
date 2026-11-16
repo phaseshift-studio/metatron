@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.network;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzable;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -34,6 +36,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -50,8 +54,21 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * {@link #route(fURI)}: the walk over every sharer's table, answered by the MOST SPECIFIC route
  * ({@link #SPECIFICITY}). No two machines can claim one key on a socket — the second is refused when it mounts
  * ({@link #refuseClaimed}) — so the walk never has to choose between equals.
+ * <p>
+ * A LISTENER IS AN ADDRESSABLE SOURCE: its own address, {@code <origin>/#}, is its jurisdiction (the socket is the
+ * server's, never a place data is stored). It carries a q-proc slot from birth and declares {@code ?analq} in it, so
+ * every server is instrumented by default and {@code *<origin>/#?analq} answers THIS socket's metrics — its reads,
+ * writes and latencies — instead of every server sharing the network's analyzer through a {@code recorder} reference.
+ * A request, a received message and a fetched frame are READS at their wire address; a sent message is a WRITE there;
+ * a hang-up is a write of {@code noobj} (a delete); connections is the one gauge. {@link #analyzer()} is the analyzer
+ * that q-proc holds, so {@link Analyzer.Recorder.Helper} records into this socket's own meters.
+ * <p>
+ * The door is where access is RECORDED, not where a protocol is performed: a server hands its event to
+ * {@link studio.phaseshift.metatron.furi.QProc.Layer} with the work as the supplier, so the access is timed where it
+ * happens (one layer, as every source applies it), while {@link #read}/{@link #write} answer the address-level
+ * questions a reader asks of the socket's space ({@code ?analq}, and the analysis itself).
  */
-public abstract class Listener extends MRec implements Analyzable, Closeable {
+public abstract class Listener extends MRec implements Addressable, Analyzer.Recorder, Closeable {
 
     /**
      * Where a connection lands: the level whose table holds the matched route, the route's key, and its target. The
@@ -80,12 +97,6 @@ public abstract class Listener extends MRec implements Analyzable, Closeable {
      */
     private final Set<Network> sharers = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<>()));
     private final AtomicBoolean closed = new AtomicBoolean(false);
-    /**
-     * this listener's analyzer, and the group it records under inside it — bound from its {@code analyzer => path}
-     * config (see {@link #analyze}), null when it carries none (recording is a noop)
-     */
-    private Analyzer analyzer;
-    private fURI group;
 
     protected Listener(final Map<Obj, Obj> jvm, final fURI tid, final Network owner) {
         super(new LinkedHashMap<>(jvm), tid, null);
@@ -93,6 +104,10 @@ public abstract class Listener extends MRec implements Analyzable, Closeable {
         this.owner = owner;
         // THE STATUS every server answers — live until the socket is released, derived on read (Network.Helper.status)
         this.jvm().put(uri(STATUS), Network.Helper.statusOf(() -> !this.closed()));
+        // INSTRUMENTED FROM BIRTH: the q slot carries the ACCESS analyzer, so the socket's own metrics are answered at
+        // *<origin>/#?analq without a server opting in. A data space records only when it declares the q-proc; a
+        // server is the thing whose traffic there is to count, so it always does.
+        this.addQ(QCollection.analQ());
     }
 
     /**
@@ -109,29 +124,67 @@ public abstract class Listener extends MRec implements Analyzable, Closeable {
         return this.owner;
     }
 
-    @Override
-    public Analyzer analyzer() {
-        return this.analyzer;
-    }
+    /**
+     * this listener's protocol — {@code http}, {@code ws}, {@code mqtt} — what the socket speaks (later a
+     * {@code protocol::T}, once protocol typing is enforced)
+     */
+    public abstract fURI protocol();
 
+    /**
+     * THE JURISDICTION: the socket's own address and everything below it — {@code <origin>/#}. The socket is the
+     * component, never a place data is stored, so a read at {@code <origin>} itself declines (see {@link #read}).
+     */
     @Override
-    public fURI group() {
-        return this.group;
+    public fURI pattern() {
+        return this.origin.extend(ALL);
     }
 
     /**
-     * bind this listener's analyzer from its {@code analyzer => path} config: the path resolves (via
-     * {@link Analyzable.Helper#locateBase}) to the analyzer it names, and the retracted tail is the group. Absent, the
-     * listener carries none and every recording is a noop.
+     * THE ACCESS ANALYZER: the analyzer the listener's {@code ?analq} q-proc holds — this socket's own meters, never a
+     * reference to a component's. Null when the q-proc has been retracted, which mutes recording.
      */
-    protected void analyze(final Obj analyzerConfig) {
-        if (!analyzerConfig.isUri())
-            return;
-        final Analyzable.Helper.Located located = Analyzable.Helper.locateBase(analyzerConfig.uriValue());
-        if (null == located)
-            return;
-        this.analyzer = located.analyzer();
-        this.group = located.group();
+    @Override
+    public Analyzer analyzer() {
+        for (final Obj q : this.qs().lstValue()) {
+            if (q instanceof QProc qProc && QCollection.ANALQ_PATTERN.equals(qProc.pattern())
+                    && qProc.asRec().at(uri(OBJ)) instanceof Analyzer analyzer)
+                return analyzer;
+        }
+        return null;
+    }
+
+    /**
+     * The group the access meters are read under: EMPTY, so a probe sits flat at the analysis root
+     * ({@code read => [count, latency]}, {@code write => [...]}, {@code connections => gauge}) — the shape a space's
+     * {@code ?analq} answers.
+     */
+    @Override
+    public fURI group() {
+        return f("");
+    }
+
+    /**
+     * READ the socket's address space: {@code ?analq} answers this socket's analysis (the layer's pre-read), and
+     * every other address below the listener is an access through it, recorded in its analyzer. A read at the
+     * listener's own origin declines — the component is not data.
+     */
+    @Override
+    public Obj read(final fURI vid) {
+        if (!vid.hasQ() && vid.qLess().equals(this.origin))
+            return noobj();
+        QProc.Helper.checkQProcs(this, vid);
+        return QProc.Layer.read(this, vid, () -> noobj());
+    }
+
+    /**
+     * WRITE the socket's address space: the access is recorded in this socket's analyzer, and the listener itself
+     * stores nothing (a member is constructed, not written; the wire's write is the protocol's, timed at its call
+     * site by the layer the server hands it to).
+     */
+    @Override
+    public Obj write(final fURI vid, final Obj obj) {
+        QProc.Helper.checkQProcs(this, vid);
+        return QProc.Layer.write(this, vid, obj, () -> noobj());
     }
 
     /**

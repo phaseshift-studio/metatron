@@ -82,7 +82,7 @@ public class BasicMemory extends MRec implements Memory {
      * the vocabulary a short name is preferred from when it denotes several paths ({@code /m}): the primary
      * vocabulary wins, then the shortest path
      */
-    private fURI primary = M_ISA_TID;
+    private final fURI primary = M_ISA_TID;
 
     /**
      * THE PROJECTION — never the resolver's source. {@code *</memory/redirect>} is how the language reads the table,
@@ -235,20 +235,50 @@ public class BasicMemory extends MRec implements Memory {
         // parent's real spaces from inside a frame. Only addressable (vid'd) spaces enter the index.
         //if (null == space.vid())
         //   return; // TODO: spaces with null vids should not be indexed
-        final Obj key = null == space.vid() ? space.pattern().retractPattern().toUri() : space.vid().toUri();
+        final Obj key = null == space.vid() ? space.pattern().retractPattern().toUri() : this.mountKey(space.vid()).toUri();
+        // the index is keyed by the space's MOUNT (the path below <machine>/memory/space, else its vid), and holds the
+        // LIVE space object: ~/memory/space/<name> reads that object, so reads and writes below it reach the space.
         final Obj displaced = this.spaces().jvm().put(key, space);
-        // journaled, so a construction that fails after mounting can retract the mount (Space.Helper.construct)
         Space.Helper.mounted(this, key, displaced, space);
+    }
+
+    /**
+     * A space's key in the index: the path below {@code <machine-vid>/memory/space} for a space mounted there, so
+     * {@code /memory/space/dev} is indexed as {@code dev} and is addressed as {@code ~/memory/space/dev}; the space's
+     * whole vid otherwise (a space mounted anywhere else keeps its own address as its key).
+     * <p>
+     * The relative key is what makes the memory the SOLE owner of its spaces: the index at {@code ~/memory/space} is
+     * the address, the space it holds is the live object, and a mount ({@code memspace::[…]}<code>@~/memory/space/dev</code>)
+     * writes that entry rather than a copy into some store beside it.
+     */
+    private fURI mountKey(final fURI mountVID) {
+        final Machine machine = this.machine();
+        // a machine-relative mount (~/memory/space/dev) is resolved before keying: the constructor receives the spelling
+        // the mount expression used, and an unresolved ~ would key the space beside its own address
+        final fURI vid = mountVID.hasPrefix(f("~")) && null != Machine.current() && null != Machine.current().vid()
+                ? Machine.current().vid().extend(mountVID.pretract(1)).resolve()
+                : mountVID;
+        final fURI mount = null == machine || null == machine.vid()
+                ? null
+                : machine.vid().resolve().extend(MEMORY).extend(SPACE);
+        return null != mount && vid.hasPrefix(mount) && vid.segmentLength() > mount.segmentLength()
+                ? vid.removePrefix(mount)
+                : vid;
     }
 
     @Override
     public void removeSpace(final fURI pattern) {
         if (null == pattern)
             return;
-        this.spaces().jvm().keySet().stream()
-                .filter(k -> k.isUri() && k.uriValue().test(pattern))
-                .toList()
-                .forEach(k -> Space.Helper.spaceCloseLog(this, (Space) this.spaces().jvm().remove(k)));
+        // a space is removed by its VID or by the mount key it was registered under
+        new ArrayList<>(this.spaces().jvm().entrySet()).forEach(kv -> {
+            final Obj value = kv.getValue();
+            if (value instanceof Space space && ((null != space.vid() && space.vid().test(pattern))
+                    || (kv.getKey().isUri() && kv.getKey().uriValue().test(pattern)))) {
+                this.spaces().jvm().remove(kv.getKey());
+                Space.Helper.spaceCloseLog(this, space);
+            }
+        });
         // an instruction set this level's machine mounted is UNMOUNTED here too: no longer routed by address, still a
         // member of the vocabulary — what removing it from this index used to do while ISAs were indexed here
         if (this.vocabulary() instanceof BasicInstSet vocabulary)
@@ -277,19 +307,15 @@ public class BasicMemory extends MRec implements Memory {
 
     @Override
     public <SPACE extends Space> SPACE findSpace(final fURI vid) {
-        // snapshot first: the space index is a mutable LinkedHashMap, and addSpace can land a space on another thread
-        // mid-iteration (or re-entrantly during boot), which trips the map's fail-fast iterator
-        final List<Space> candidates = new ArrayList<>();
-        new ArrayList<Obj>(this.spaces().jvm().values()).forEach(space -> candidates.add(space.as()));
+        final List<Space> candidates = new ArrayList<>(Memory.spaces(this.spaces()));
         candidates.addAll(this.libraries());
         return Memory.mostSpecific(candidates, vid);
     }
 
     @Override
     public <SPACE extends Space> SPACE getSpace(final fURI vid) {
-        final Space indexed = this.spaces().jvm().values().stream()
-                .map(Obj::<Space>as)
-                .filter(s -> s.vid().test(vid))
+        final Space indexed = Memory.spaces(this.spaces()).stream()
+                .filter(s -> null != s.vid() && s.vid().test(vid))
                 .findFirst()
                 .orElse(null);
         if (null != indexed)
@@ -307,18 +333,16 @@ public class BasicMemory extends MRec implements Memory {
      */
     @Override
     public void close() {
-        this.spaces().jvm().values().stream()
-                .filter(v -> v instanceof AutoCloseable)
-                .forEach(CommonUtil::close);
+        Memory.spaces(this.spaces()).stream()
+                .filter(s -> s instanceof AutoCloseable)
+                .forEach(space -> CommonUtil.close((AutoCloseable) space));
         this.spaces().jvm().clear();
         LOG.info("closing memory for machine %s", this.machine().vid());
     }
 
     @Override
     public boolean hasSpaceFor(final fURI vid) {
-        return this.spaces().jvm().values().stream()
-                .map(Obj::<Space>as)
-                .anyMatch(s -> vid.test(s.pattern()))
+        return Memory.spaces(this.spaces()).stream().anyMatch(s -> vid.test(s.pattern()))
                 || this.libraries().stream().anyMatch(s -> vid.test(s.pattern()));
     }
 

@@ -744,7 +744,7 @@ public class mcpServer extends MRec {
          * resolve their {@code server}/route values with, so a "server" cannot mean three different things.
          */
         public static Obj resolve(final Obj target) {
-            // a boot file writes `server => !*</sys/space/mcp/basic_server>` — dereference the pointer before
+            // a boot file writes `server => !*<~/memory/space/mcp/basic_server>` — dereference the pointer before
             // deciding which of the three shapes this is
             final Obj dereferenced = null == target ? null : target.dereference();
             final Obj pointer = null != dereferenced && !dereferenced.isNoObj() ? dereferenced : target;

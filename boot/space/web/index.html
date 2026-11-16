@@ -175,7 +175,7 @@
             <div class="chips" aria-label="example expressions">
                 <span class="chip" data-expr="1.plus(2)">1.plus(2)</span>
                 <span class="chip" data-expr="!*boot/args">!*boot/args</span>
-                <span class="chip" data-expr="*&lt;/sys/space&gt;">*&lt;/sys/space&gt;</span>
+                <span class="chip" data-expr="*&lt;/memory/space&gt;">*&lt;/memory/space&gt;</span>
                 <span class="chip" data-expr="*&lt;/sys/network/listener&gt;">*&lt;/sys/network/listener&gt;</span>
                 <span class="chip" data-expr="*&lt;/m/instset&gt;">*&lt;/m/instset&gt;</span>
                 <span class="chip" data-expr="*&lt;/usr/dr&gt;">*&lt;/usr/dr&gt;</span>
@@ -543,7 +543,7 @@
         line("sys", "metatron console — one message is one expression, evaluated on this machine");
         line("sys", "same endpoint as bin/wsplus:  " + wsBase);
         line("sys", "in application/x-mtron  ·  out application/x-mtron-ui (pretty)  ·  one frame in, one frame out");
-        line("sys", "try  *</sys/space>   or   !*boot/args");
+        line("sys", "try  *</memory/space>   or   !*boot/args");
     }
 
     welcome();
@@ -1668,13 +1668,13 @@
         }
 
         const BEFORE = [
-            {tid: "/m/web/http/http_server", label: "http server", col: 1, row: 1, vid: "/sys/space/web/http"},
-            {tid: "/m/web/ws/ws_server", label: "ws server", col: 1, row: 1, vid: "/sys/space/web/ws"},
+            {tid: "/m/web/http/http_server", label: "http server", col: 1, row: 1, vid: "/memory/space/web/http"},
+            {tid: "/m/web/ws/ws_server", label: "ws server", col: 1, row: 1, vid: "/memory/space/web/ws"},
             {tid: "/m/sys/ui/console", label: "console", col: 4, row: 2, vid: "/usr/marko/console"}
         ];
         const KNOWN = {
-            http_server: ["/m/web/http/http_server", "/sys/space/web/http"],
-            ws_server: ["/m/web/ws/ws_server", "/sys/space/web/ws"],
+            http_server: ["/m/web/http/http_server", "/memory/space/web/http"],
+            ws_server: ["/m/web/ws/ws_server", "/memory/space/web/ws"],
             console: ["/m/sys/ui/console", "/usr/marko/console"]
         };
         const AFTER = [

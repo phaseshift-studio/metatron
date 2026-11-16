@@ -56,7 +56,7 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
                         uri(ROUTE), rec(uri("db:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/sys/space/dt-diag/" + vid)
+                f("/memory/space/dt-diag/" + vid)
         );
     }
 
@@ -124,7 +124,7 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
                         uri(ROUTE), rec(uri("db:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/sys/space/dt-diag/b2")
+                f("/memory/space/dt-diag/b2")
         );
         final Obj bBack = Machine.read(f("db:stamps/7/ts")).selfVID(null);
         LOG.info("caseB pre-seeded read-back: {} tid={} class={}", bBack, bBack.tid(), bBack.getClass().getSimpleName());

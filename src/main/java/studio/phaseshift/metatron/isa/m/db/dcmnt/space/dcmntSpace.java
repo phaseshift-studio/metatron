@@ -93,7 +93,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
  *         uri(ROUTE), rec(uri("mongo:"), uri("/mongo/"))
  *     ).jvm(),
- *     f("/sys/space/mongo")
+ *     f("~/memory/space/mongo")
  * );
  * // A collection's type is at space.at(SCHEMA)/<collection>: declared, or inferred from its documents
  * // when it is first read (SchemaSpace.Helper).

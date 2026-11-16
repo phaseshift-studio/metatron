@@ -14,15 +14,18 @@ description: |
 types, and *endpoint* types that provide the server logic. The two servers of `/m/web` are
 `http_server` and `ws_server` — each a listener: constructed, it is the machine's presence at
 `~/network/listener/<key>` — each carrying a `route` rec for routing connections to mounted services.
+A listener is an addressable source, so a socket's own metrics are read at `<origin>/#?analq`
+(a request is a `read`, a reply a `write`, `connections` a gauge); the network's
+`~/network/analyzer` counts the wire, which is a different question from the work one server did.
 Reading the web is a client's: `http_client::[host => <http://#>]` (and `<https://#>`) is the gateway, a peer every
 http(s) read goes through. A read never dials, so a machine with no gateway reads no web.
 
 ```mtron_pre
 [HIDDEN] </network/listener/http/localhost/8777> -> noobj
 [HIDDEN] </network/listener/ws/localhost/8555> -> noobj
-dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
+dckrspace::[pattern => docker:#, route => [docker: => <>]]@~/memory/space/docker
 [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
-mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
+mcp_server::[tool => [!*eval]]@~/memory/space/mcp/web_basic
 http_server::[origin => http://localhost:8777,     /
               route => [/mcp    => mcp_mtron,      /
                         /docker => docker:,        /
@@ -33,7 +36,7 @@ http_client::[host => <https://#>]
 [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 ws_server::[origin  => ws://localhost:8555,        /
-            route  => [/basic   => !*</sys/space/mcp/web_basic>]]
+            route  => [/basic   => !*<~/memory/space/mcp/web_basic>]]
 ```
 
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
@@ -54,7 +57,7 @@ blocks are executed by the docs pipeline and inlined with their results; a plain
 
 ```mtron_pre
 [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
-memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
+memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@~/memory/space/usr
 person::[name=>'marko',age=>29]@/usr/person/1
 person::[name=>'grant',age=>25]@/usr/person/2
 ```

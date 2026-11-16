@@ -138,7 +138,7 @@ public class tbleInstSet extends AbstractInstSet {
                                 "a result set as a stream of rows in mtron",
                                 mutableMap(jnt(0), "an sql query"),
                                 "query a relational database in native sql and yield an mtron mapped result set",
-                                "*/sys/space/netflix.sql('SELECT * FROM movie WHERE runtime < ${*next_event} - time(now)') [-- str templates are useful --]"))),
+                                "*~/memory/space/netflix.sql('SELECT * FROM movie WHERE runtime < ${*next_event} - time(now)') [-- str templates are useful --]"))),
                 uri(REWRITE), lst(
                         // Optimize: *table.count() → SELECT COUNT(*)
                         docWrap(CommonRewrites.countRewrite(

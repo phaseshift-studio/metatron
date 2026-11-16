@@ -72,7 +72,7 @@ import static studio.phaseshift.metatron.isa.m.db.vec.vecInstSet.VEC_ISA_TID;
 })
 public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
 
-    protected static final fURI SPACE_VID = f("/sys/space/vctr/test");
+    protected static final fURI SPACE_VID = f("/memory/space/vctr/test");
     protected static final String COLL = "test";
     protected static VectorDBClient staticClient;
 

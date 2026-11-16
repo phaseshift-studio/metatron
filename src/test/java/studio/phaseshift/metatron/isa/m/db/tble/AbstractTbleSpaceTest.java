@@ -132,7 +132,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         }
     }
 
-    protected static final fURI SPACE_VID = f("/sys/space/tabledb/test");
+    protected static final fURI SPACE_VID = f("/memory/space/tabledb/test");
     protected static DatabaseConfig staticDbConfig;
     protected final DatabaseConfig dbConfig;
     private static final AtomicInteger testSpaceCounter = new AtomicInteger(0);
@@ -379,7 +379,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                         uri(ROUTE), rec(uri("db:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/sys/space/tble/test/" + testSpaceCounter.getAndIncrement())
+                f("/memory/space/tble/test/" + testSpaceCounter.getAndIncrement())
         );
     }
 
@@ -770,7 +770,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @Test
     public void testAutoFromWriteReadRoundTrip() throws Exception {
-        final fURI spaceVid = f("/sys/space/tble/autofrom_test");
+        final fURI spaceVid = f("/memory/space/tble/autofrom_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("pfk:#"),
@@ -835,7 +835,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
              final Statement s = c.createStatement()) {
             s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
         }
-        final fURI spaceVid = f("/sys/space/tble/metacheck_test");
+        final fURI spaceVid = f("/memory/space/tble/metacheck_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("pmk:#"),
@@ -917,7 +917,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
              final Statement s = c.createStatement()) {
             s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
         }
-        final fURI spaceVid = f("/sys/space/tble/xspace_test");
+        final fURI spaceVid = f("/memory/space/tble/xspace_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("play:#"),
@@ -998,8 +998,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
              final Statement s = c.createStatement()) {
             s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
         }
-        final fURI memSpaceVid = f("/sys/space/mem/xspace_target");
-        final fURI tbleSpaceVid = f("/sys/space/tble/xspace_source");
+        final fURI memSpaceVid = f("/memory/space/mem/xspace_target");
+        final fURI tbleSpaceVid = f("/memory/space/tble/xspace_source");
 
         // Target space: memSpace with pattern grph:#
         final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
@@ -1077,7 +1077,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
              final Statement s = c.createStatement()) {
             s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
         }
-        final fURI spaceVid = f("/sys/space/tble/intraspace_test");
+        final fURI spaceVid = f("/memory/space/tble/intraspace_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("net:#"),
@@ -1157,7 +1157,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     @Test
     public void testNoneWriteToNotNullColumnThrowsException() throws Exception {
         final String tableName = "notnull_test";
-        final fURI spaceVid = f("/sys/space/tble/nn_test");
+        final fURI spaceVid = f("/memory/space/tble/nn_test");
 
         // Create table with explicit NOT NULL constraint
         try (final Connection conn = staticDbConfig.getConnection();
@@ -2286,7 +2286,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     @Test
     public void testMtronMetaSurvivesRestart() throws Exception {
         final String tableName = "meta_restart";
-        final fURI spaceVid = f("/sys/space/tble/metarestart_test");
+        final fURI spaceVid = f("/memory/space/tble/metarestart_test");
 
         final tbleSpace space1 = tbleSpace.of(
                 rec(
@@ -2544,7 +2544,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @Test
     public void testFKAbsoluteURIStoredAsPlainUri() throws Exception {
-        final fURI spaceVid = f("/sys/space/tble/fk_abs_uri_test");
+        final fURI spaceVid = f("/memory/space/tble/fk_abs_uri_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("x:#"),
@@ -2592,7 +2592,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @Test
     public void testFKBarePKProducesAutoFrom() throws Exception {
-        final fURI spaceVid = f("/sys/space/tble/fk_bare_pk_test");
+        final fURI spaceVid = f("/memory/space/tble/fk_bare_pk_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("x:#"),
@@ -2647,7 +2647,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @Test
     public void testFKColumnWithJSONListNotWrapped() throws Exception {
-        final fURI spaceVid = f("/sys/space/tble/fk_json_list_test");
+        final fURI spaceVid = f("/memory/space/tble/fk_json_list_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("x:#"),
@@ -2877,7 +2877,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @Test
     public void testLongPrefixCountAndWhereRewrites() throws Exception {
-        final fURI spaceVid = f("/sys/space/tble/long_prefix_test");
+        final fURI spaceVid = f("/memory/space/tble/long_prefix_test");
 
         // Single space, three route entries — each strips a different long prefix.
         final tbleSpace testSpace = tbleSpace.of(
@@ -3058,7 +3058,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
              final Statement s = c.createStatement()) {
             s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
         }
-        final fURI spaceVid = f("/sys/space/tble/subtype_deser_test");
+        final fURI spaceVid = f("/memory/space/tble/subtype_deser_test");
         final tbleSpace space = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("sst:#"),

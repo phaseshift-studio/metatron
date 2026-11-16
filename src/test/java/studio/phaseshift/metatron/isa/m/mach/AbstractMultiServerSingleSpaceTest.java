@@ -70,7 +70,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * CONSTRUCTION IS CONNECTION. Each satellite is sent a WORKLOAD -- a rec of config and code -- and evaluates it in a
  * closure:
  * <pre>
- *   [db=>tblespace::[...]@/sys/space/data, xyz=>'east', code=>|(...)](workload=>_){ !*workload/code.apply() }
+ *   [db=>tblespace::[...]@/memory/space/data, xyz=>'east', code=>|(...)](workload=>_){ !*workload/code.apply() }
  * </pre>
  * Evaluating the workload constructs the space it carries, so the satellite binds its own connection to the same
  * backend -- as though the master's connection had travelled -- and the code then reads its partition through the
@@ -101,7 +101,7 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
     /**
      * where every machine registers its space
      */
-    protected static final fURI DATA_VID = f("/sys/space/data");
+    protected static final fURI DATA_VID = f("/memory/space/data");
 
     /**
      * the partitions, one per satellite, in satellite order

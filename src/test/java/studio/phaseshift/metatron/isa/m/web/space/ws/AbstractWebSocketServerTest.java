@@ -85,7 +85,7 @@ public abstract class AbstractWebSocketServerTest extends AbstractMetatronTest {
         InstSet.importInstSet(WEB_ISA_TID);
         // a store for the handlers under test (written at their vids, read back by serverType()) — it never needed a
         // socket, only the space a wsspace used to be
-        this.testSpace = memSpace.of(testSpacePattern(), f("/sys/space/test"));
+        this.testSpace = memSpace.of(testSpacePattern(), f("/memory/space/test"));
         this.server = createServer(createTestVid());
     }
 

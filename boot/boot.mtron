@@ -34,9 +34,9 @@ import(/m/ai/llm);
 import(/m/db/tble);
 [== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 
-                  q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;       
+                  q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@~/memory/space/usr;       
  fsspace::[pattern    => local:#,
-            route     => [local:=><~/>]]@/sys/space/fs/home;
+            route     => [local:=><~/>]]@~/memory/space/fs/home;
  http_server::[origin => !*boot/args/web/http/origin,
                route  => [/ => <metatronfs:docs/website>]];
  http_client::[host   => <http://#>];

@@ -33,4 +33,4 @@
       <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
       <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
       <gremlin.remote.remoteTraversalSourceName> => g],
-     route   => -< [g: => <>]]@</sys/space/grph/gremlin>.as(grphspace::T) }
+     route   => -< [g: => <>]]@</memory/space/grph/gremlin>.as(grphspace::T) }

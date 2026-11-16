@@ -22,7 +22,7 @@ A simple chat bot is constructed as such:
 
 ```mtron_pre
 memspace::[pattern => /usr/chatter/#,                   /
-           q       => [incrq::[=>]]]@/sys/space/chatter
+           q       => [incrq::[=>]]]@~/memory/space/chatter
 model::[provider=> ollama,                              /
         protocol=> ollama,                              /
         host    => <http://localhost:11434>,            /
@@ -68,7 +68,7 @@ live carrier the way a boot file does, at `http://localhost:8777` and `ws://loca
 import(/m/ai/llm)
 import(/m/web,web)
 [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
-mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server
+mcp_server::[tool => [!*eval]]@~/memory/space/mcp/basic_server
 ```
 
 What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
@@ -77,7 +77,7 @@ just defined:
 
 ```mtron
 [-- a carrier is a server (http_server, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
-*</network/listener/http/localhost/8777>.else(http_server::[origin => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]])
+*</network/listener/http/localhost/8777>.else(http_server::[origin => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*<~/memory/space/mcp/basic_server>, / => /usr]])
 *</network/listener/ws/localhost/8555>.else(ws_server::[origin => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]])
 ```
 
@@ -140,7 +140,7 @@ And the custom server defined above — one instruction — is reachable the sam
 
 ```mtron
 [-- the same for a server you defined: its vid is the route target, and a client reaches it like any other --]
-/basic => !*</sys/space/mcp/basic_server>
+/basic => !*<~/memory/space/mcp/basic_server>
 mcp_client::[host=>http://localhost:8777/basic]@/usr/ai/mcp/b
 /usr/ai/mcp/b>>tool                                          [-- => [m_inst_eval => tool::[…]] --]
 /usr/ai/mcp/b/tool/m_inst_eval/inst("[1,2,3,4]>-.sum()")     [-- => 10 --]
@@ -234,8 +234,8 @@ transport-agnostic: mount it, and the carrier supplies the bytes.
 Because a tool is an instruction, a server is a **selection over instructions**, and that selection is boot data:
 
 ```mtron_pre
-mcp_server::[tool => [!*eval, !*eval]]@/sys/space/mcp/two_say
-*/sys/space/mcp/two_say>>tool     [-- one entry: a collection is keyed by the instruction --]
+mcp_server::[tool => [!*eval, !*eval]]@~/memory/space/mcp/two_say
+*~/memory/space/mcp/two_say>>tool     [-- one entry: a collection is keyed by the instruction --]
 ```
 
 Three rules follow, and the third is the one that surprises people:
@@ -257,7 +257,7 @@ A server can be built from a skill instead: its instructions become tools and it
 
 ```mtron
 [-- a skill as a server; `.as(mcp_server::T)` is the whole mapping --]
-*<mtronfs:skills/mtron>.as(skill::T).as(mcp_server::T)@/sys/space/mcp/mtron_skill
+*<mtronfs:skills/mtron>.as(skill::T).as(mcp_server::T)@~/memory/space/mcp/mtron_skill
 ```
 
 #### resources and prompts
@@ -307,7 +307,7 @@ it yields the type, and the carrier builds one:
 ```mtron
 /mcp       => mcp_mtron                               [-- the router's redirect table: a type with a ctor --]
 /message   => mcp_message
-/basic     => !*</sys/space/mcp/basic_server>         [-- an instance already built --]
+/basic     => !*<~/memory/space/mcp/basic_server>         [-- an instance already built --]
 /drstynx   => *dr.as(skill::T).as(mcp_server::T)      [-- an evaluated expression: built at mount time --]
 ```
 
@@ -325,7 +325,7 @@ A profile mounts the carrier like any other, and the `mcp => stdio` boot arg is 
 claim fd 1 *before* the boot file runs:
 
 ```mtron
-[space       => /sys/space,
+[space       => ~/memory/space,
  log         => warn,
  mcp         => stdio,
  typer/stage => [code_resolve => false]]
@@ -333,10 +333,10 @@ claim fd 1 *before* the boot file runs:
 import(/m/web);
 import(/m/web,web);
 import(/m/ai/llm);
-fsspace::[pattern => mfs:#, q => [mimeq::[=>]], route => [mfs: => <.>]]@/sys/space/fs/metatron;
-memspace::[pattern => </usr/#>, q => [docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;
-mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server;
-mcp_stdio::[server => !*</sys/space/mcp/basic_server>]@/sys/io/mcp/stdio;
+fsspace::[pattern => mfs:#, q => [mimeq::[=>]], route => [mfs: => <.>]]@~/memory/space/fs/metatron;
+memspace::[pattern => </usr/#>, q => [docq::[=>],subq::[=>],incrq::[=>]]]@~/memory/space/usr;
+mcp_server::[tool => [!*eval]]@~/memory/space/mcp/basic_server;
+mcp_stdio::[server => !*<~/memory/space/mcp/basic_server>]@/sys/io/mcp/stdio;
 ```
 
 Three properties are worth stating because none of them is obvious:

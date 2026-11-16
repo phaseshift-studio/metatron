@@ -69,6 +69,11 @@ public class NetworkFunnelTest extends AbstractMetatronTest {
         protected void unbind() {
             this.unbinds.incrementAndGet();
         }
+
+        @Override
+        public fURI protocol() {
+            return f("test");
+        }
     }
 
     @AfterEach

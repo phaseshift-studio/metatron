@@ -522,12 +522,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 types, and <em>endpoint</em> types that provide the server logic. The two servers of <code>/m/web</code> are
 <code>http_server</code> and <code>ws_server</code> — each a listener: constructed, it is the machine's presence at
 <code>~/network/listener/&lt;key&gt;</code> — each carrying a <code>route</code> rec for routing connections to mounted services.
+A listener is an addressable source, so a socket's own metrics are read at <code>&lt;origin&gt;/#?analq</code>
+(a request is a <code>read</code>, a reply a <code>write</code>, <code>connections</code> a gauge); the network's
+<code>~/network/analyzer</code> counts the wire, which is a different question from the work one server did.
 Reading the web is a client's: <code>http_client::[host =&gt; &lt;http://#&gt;]</code> (and <code>&lt;https://#&gt;</code>) is the gateway, a peer every
 http(s) read goes through. A read never dials, so a machine with no gateway reads no web.</p>
-<pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
-mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
+<pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@~/memory/space/docker
+mtron&gt; mcp_server::[tool =&gt; [!*eval]]@~/memory/space/mcp/web_basic
 ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
-                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/web_basic
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/memory/space/mcp/web_basic
 mtron&gt; http_server::[origin =&gt; http://localhost:8777,
                      route =&gt; [/mcp    =&gt; mcp_mtron,
                                /docker =&gt; docker:,
@@ -537,7 +540,10 @@ mtron&gt; http_server::[origin =&gt; http://localhost:8777,
                   /mcp=&gt;mcp_mtron,
                   /docker=&gt;docker:,
                   /usr=&gt;/usr],
-                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+                 q=&gt;[analq::[pattern=&gt;analq,pre_read=&gt;inst(uri::T){&lt;j&gt;},qless_write=&gt;inst(uri::T,
+                                                                                          #::T){&lt;j&gt;},qless_read=&gt;inst(uri::T,
+                                                                                                                      #::T){&lt;j&gt;},obj=&gt;analyzer::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;}]]]]
 mtron&gt; http_client::[host =&gt; &lt;http://#&gt;]
 ==&gt;http_client::[host=&gt;http://#,inst=&gt;[/m/inst/from=&gt;*uri::T,
                                        /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
@@ -545,10 +551,12 @@ mtron&gt; http_client::[host =&gt; &lt;https://#&gt;]
 ==&gt;http_client::[host=&gt;https://#,inst=&gt;[/m/inst/from=&gt;*uri::T,
                                         /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; ws_server::[origin  =&gt; ws://localhost:8555,
-                   route  =&gt; [/basic   =&gt; !*&lt;/sys/space/mcp/web_basic&gt;]]
+                   route  =&gt; [/basic   =&gt; !*&lt;~/memory/space/mcp/web_basic&gt;]]
 ==&gt;ws_server::[origin=&gt;ws://localhost:8555,
-               route=&gt;[/basic=&gt;!*/sys/space/mcp/web_basic],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
+               route=&gt;[/basic=&gt;!*~/memory/space/mcp/web_basic],
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+               q=&gt;[analq::[pattern=&gt;analq,pre_read=&gt;inst(uri::T){&lt;j&gt;},qless_write=&gt;inst(uri::T,#::T){&lt;j&gt;},qless_read=&gt;inst(uri::T,
+                                                                                                                           #::T){&lt;j&gt;},obj=&gt;analyzer::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;}]]]]
 </code></pre>
 <p>The organizing idea is that <strong>a protocol is a projection of an obj, not a copy of it</strong>. An <code>mcp_server</code> rides http,
 websockets and stdio alike; a <code>str</code> that is css is <code>css::T</code> whoever asks for it. A mount then only has to say which
@@ -594,37 +602,13 @@ mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-ins
 <p>A mount is only as real as the space behind it, so this document builds one first. Everything below addresses
 <code>/usr/person/1</code> and <code>/usr/person/2</code>, and every block after this one runs against these objs. (<code>mtron_pre</code>
 blocks are executed by the docs pipeline and inlined with their results; a plain <code>mtron</code> block is only shown.)</p>
-<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/usr/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/usr
+<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/usr/#, q=&gt;[mimeq::[=&gt;]]]@~/memory/space/usr
 mtron&gt; person::[name=&gt;'marko',age=&gt;29]@/usr/person/1
-==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=&gt;'marko',age=&gt;29]@/usr/person/1
-         X=&gt;
-     rec[role,position]::T[?[name=&gt;str::T,
-                             age=&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=&gt;rec::T,
-                             position=&gt;rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=&gt;(==&gt;name)=&gt;'marko'=&gt;==&gt;str::T,
-      age=&gt;(==&gt;age)=&gt;29=&gt;==&gt;nat::T,
-      noobj=&gt;(X=&gt;role)=&gt;noobj=&gt;X=&gt;rec::T,
-      noobj=&gt;(X=&gt;position)=&gt;noobj=&gt;X=&gt;rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=&gt;'marko',age=&gt;29]@/usr/person/1]
+==&gt;person::[name=&gt;'marko',
+            age=&gt;29]@/usr/person/1
 mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/usr/person/2
-==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=&gt;'grant',age=&gt;25]@/usr/person/2
-         X=&gt;
-     rec[role,position]::T[?[name=&gt;str::T,
-                             age=&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=&gt;rec::T,
-                             position=&gt;rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=&gt;(==&gt;name)=&gt;'grant'=&gt;==&gt;str::T,
-      age=&gt;(==&gt;age)=&gt;25=&gt;==&gt;nat::T,
-      noobj=&gt;(X=&gt;role)=&gt;noobj=&gt;X=&gt;rec::T,
-      noobj=&gt;(X=&gt;position)=&gt;noobj=&gt;X=&gt;rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=&gt;'grant',age=&gt;25]@/usr/person/2]
+==&gt;person::[name=&gt;'grant',
+            age=&gt;25]@/usr/person/2
 </code></pre>
 <h3>types</h3>
 <table>
@@ -726,9 +710,9 @@ client, resolved <em>target</em>) — never per address, since a templated mount
 request while the same protocol engine serves them all.</li>
 </ul>
 <pre><code class="language-mtron">mtron&gt; */usr/person/1                                              [-- straight from the space --]
-==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;person::[name=&gt;'marko',age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==&gt;&quot;[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
+==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
 ==&gt;
    json::'{&quot;name&quot;:&quot;marko&quot;,&quot;age&quot;:29}'

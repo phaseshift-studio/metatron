@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.ANALQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -74,8 +75,8 @@ public class NetworkQProcTest extends AbstractMetatronTest {
      */
     @BeforeEach
     void resetNetworkSubscriptions() {
-        if (Machine.read(f("/sys/space/tnet")).isNoObj())
-            memSpace.of(f("/t/net/#"), f("/sys/space/tnet"));
+        if (Machine.read(f("/memory/space/tnet")).isNoObj())
+            memSpace.of(f("/t/net/#"), f("/memory/space/tnet"));
         Machine.current().network().qs().lstValue().stream()
                 .filter(q -> q.tid().equals(SUBQ_TID))
                 .forEach(q -> q.asRec().at(uri(OBJ)).asLst().lstValue().clear());
@@ -111,6 +112,28 @@ public class NetworkQProcTest extends AbstractMetatronTest {
         final Network network = Machine.current().network();
         assertTrue(network.hasQ(f("subq")), "the network declares the processor a peer subscription needs");
         assertTrue(network.hasQ(ALL), "and the layer's fast path sees it");
+    }
+
+    /**
+     * A q-proc attached AFTER boot at the network's own {@code q} address: {@code @~/network/q >>= +[analq::[=>]]}
+     * lands on the LIVE network's processor list, and the layer then records the level's accesses into it (read back
+     * at {@code ~/network/q?analq}). No peer is needed: the read is addressed at an unreachable authority, which the
+     * network declines locally.
+     */
+    @Test
+    void shouldAcceptAQProcAttachedAtTheNetworkQ() {
+        final Network network = Machine.current().network();
+        assertFalse(network.hasQ(ANALQ_PATTERN), "no analq processor yet");
+        Machine.evaluate("@~/network/q >>= +[analq::[=>]]");
+        assertTrue(network.hasQ(ANALQ_PATTERN), "the update landed on the LIVE network's q");
+        try {
+            Machine.read(f(UNREACHABLE + "/probe"));
+            final Obj analysis = Machine.read(f("~/network/q?analq"));
+            assertEquals(1L, analysis.asRec().at(uri("read")).asRec().at(uri("count")).intValue(),
+                    "the network read was recorded under read/count");
+        } finally {
+            network.qs().lstValue().removeIf(q -> ANALQ_PATTERN.equals(q.<QProc>as().pattern()));
+        }
     }
 
     /**
