@@ -380,9 +380,13 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{plus(4),plus(10)}            % 1.branch(plus(4),plus(10))",
             "1.{7,3}                         % 1.branch(7,3)",
             // a span stays on its instruction (Marko, 2026-11-15): an exact span is the closed range of one length, and
-            // a zero span is no step at all
+            // a zero span is id() (Marko, 2026-11-16), f to the zero, whatever its point, alone, at the head, in a branch
             "1.{2}plus(1)                    % 1.{2,2}plus(1)",
-            "1.{0}plus(1).plus(2)            % 1.plus(2)",
+            "1.{0}plus(1).plus(2)            % 1.id().plus(2)",
+            "1.{0}plus{3}(1)                 % 1.id()",
+            "{0}plus(1)                      % id()",
+            "{0}plus(9).plus(1)              % id().plus(1)",
+            "1.branch({0}plus(1),plus(2))    % 1.branch(id(),plus(2))",
             "1.{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
             "1..{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
             "1.plus(1).{2}{plus(1),mult(2)}  % 1.plus(1).{2}branch(plus(1),mult(2))",
@@ -554,6 +558,12 @@ public class mParserTest extends AbstractMetatronTest {
             // an instruction that declares no converse leaves its backward runs as code on the lhs, in limbo
             "start('marko').{-2,0}plus('a').count()   % 2",
             "6.{-1}mult(2).count()                    % 1",
+            // a zero span is id() (Marko, 2026-11-16), even at the head of a code, where it read as noobj and
+            // annihilated the chain after it, and even of a zero point, which annihilates only a step that runs
+            "5.map({0}plus(9).plus(1))                % 6",
+            "5.map({0}plus{0}(9).plus(1))             % 6",
+            "5.map(plus{0}(9).plus(1))                % noobj",
+            "5.branch({0}plus(1),plus(2))             % {5,7}",
     }, delimiter = '%')
     void testApply(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);

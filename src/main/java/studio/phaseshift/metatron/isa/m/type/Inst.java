@@ -335,6 +335,17 @@ public interface Inst extends Call {
                 base.equals(CATCH_INST_TID);
     }
 
+    /**
+     * A SPAN OF ZERO IS id() (Marko, 2026-11-16): {@code {0}f} is f⁰, the identity, so an instruction is the zero only
+     * when its point annihilates ({@code f{0}} emits nothing) and its span holds no zero-step run. {@link Obj#isNoObj()}
+     * tests c(), which is span x point, and read {@code {0}f} as noobj, so a {@code {0}f} built after parsing (a lane
+     * narrowed to [0,0]) was taken for nothing.
+     */
+    @Override
+    default boolean isNoObj() {
+        return this.tid().d().isZero() && !this.tid().b().isZeroable();
+    }
+
     @Override
     default boolean isAuto() {
         if (this.isNoObj())
