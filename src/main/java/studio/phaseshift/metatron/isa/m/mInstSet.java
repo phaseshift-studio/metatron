@@ -191,6 +191,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REVERSE_INST_TID = M_ISA_INST_TID.extend("reverse");
     public static final fURI CLOSE_INST_TID = M_ISA_INST_TID.extend("close");
     public static final fURI REPEAT_INST_TID = M_ISA_INST_TID.extend("repeat");
+    public static final fURI TIMEOUT_INST_TID = M_ISA_INST_TID.extend("timeout");
     public static final fURI LOOP_INST_TID = M_ISA_INST_TID.extend("loop");
     public static final fURI PATH_INST_TID = M_ISA_INST_TID.extend("path");
     public static final fURI AT_INST_TID = M_ISA_INST_TID.extend("at");

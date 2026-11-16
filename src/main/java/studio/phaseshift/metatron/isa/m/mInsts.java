@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,12 +39,15 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -1300,6 +1304,58 @@ public final class mInsts {
                                 every monad the run produced up to the marker is aggregated into one compressed report (stages, per-instruction times, rewrite rules, flow, cache)""")
                         .example("*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()",
                                 "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()>>format")
+                        .create(),
+                InstBuilder.build()
+                        .tid(TIMEOUT_INST_TID)
+                        .dom(A, "the lhs obj")
+                        .rng(B.maybeSome(), "the rhs obj: the code's answer, or a fail::T once the time runs out")
+                        .argLst(T(B.maybeSome()), "the code to apply to the lhs obj", TIME_TYPE, "the time the code may take")
+                        .desc("""
+                                a time-bounded function \\(f(x) \\mapsto \\mathrm{code}(x)\\): the code's answer if it gives one
+                                within the time, and a catchable fail::T otherwise. The time runs out by interrupting the
+                                evaluating thread, so the code stops where it next looks: a span walk once a run, a sleep or
+                                a wait at once.""")
+                        .example("1.timeout(plus(1),second::1.0)               [-- 2 --]",
+                                "1.timeout({*}plus(0),millis::100.0).catch(0) [-- 0: the endless walk is cut off --]")
+                        .body((lhs, inst) -> {
+                            // THE DEADLINE INTERRUPTS THE EVALUATING THREAD. The code runs on the caller's thread, so the
+                            // machine and the evaluation's state stay its own, and its answer is collected within the time
+                            // (a lazy stream would outlive it). The code settling and the alarm firing race for `settled`:
+                            // an alarm that lost stands down, and one that won is waited out and its interrupt consumed,
+                            // so the thread, a pooled one most often, is never left interrupted.
+                            final long millis = inst.arg(1).as(MILLIS_TYPE).realValue().longValue();
+                            final Thread evaluator = Thread.currentThread();
+                            final AtomicBoolean settled = new AtomicBoolean();
+                            final Thread alarm = Thread.ofVirtual().start(() -> {
+                                try {
+                                    Thread.sleep(millis);
+                                    if (settled.compareAndSet(false, true))
+                                        evaluator.interrupt();
+                                } catch (final InterruptedException e) {
+                                    // stood down: the code settled first
+                                }
+                            });
+                            Obj answer;
+                            try {
+                                answer = objs(inst.arg(0).apply(lhs).stream().toList());
+                            } catch (final RuntimeException e) {
+                                answer = fail(e);
+                            }
+                            if (settled.compareAndSet(false, true)) {
+                                alarm.interrupt();
+                                return answer;
+                            }
+                            while (alarm.isAlive()) {
+                                try {
+                                    alarm.join();
+                                } catch (final InterruptedException e) {
+                                    // the alarm's own interrupt, consumed below
+                                }
+                            }
+                            Thread.interrupted();
+                            return fail("%s took more than its %s ms", inst.arg(0), millis);
+                        })
+                        .law(Law.pure)
                         .create()));
     }
 }
