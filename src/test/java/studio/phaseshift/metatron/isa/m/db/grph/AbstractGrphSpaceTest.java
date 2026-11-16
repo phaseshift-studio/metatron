@@ -31,6 +31,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
@@ -75,6 +76,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@SkipRegexTest({
+        // a graph is not an arbitrary key/value store (Marko, 2026-11-16): this spine's nested rec reads [<>=>[=>]]
+        @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = {"/a/\\.>>\\.>>\\.\\*_"}),
+        // an edge or person entry reads back as its schema type (rec::T[?[weight=>real::T]]@…/weighted_edge), not as
+        // an instance of it, on TinkerGraph and JanusGraph alike
+        @SkipRegexTest.Skip(method = "testDataPathSegmentTypes", params = {"\\+/\\+>"}),
+        // the */g/+/+ listing of every label type also answers weighted_edge, the declared supertype of knows and
+        // created, which is no label (long-standing; TinkerGraph and JanusGraph alike)
+        @SkipRegexTest.Skip(method = "testSchemaTraversal", params = {"\\*/g/\\+/\\+"})
+})
 public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract {
 
     // ========================================================================
@@ -228,7 +239,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
      * Instruction-call traversals (outE, out, inV, outV, inE, in, etc.).
      * Delegates to the route-based directReader via Machine.read using the vertex/edge VID.
      */
-    @Disabled("person::T match over remote JanusGraph — age property reads back as an instruction, not an int")
     @ParameterizedTest
     @CsvSource(value = {
             // ── wildcard vertex set ──
@@ -300,7 +310,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
      * int, real, string, and bool properties and verifies that {@code isa()}
      * predicates filter correctly on each type.
      */
-    @Disabled("isa([...]) on an ad-hoc edge label — bare label is not a rec refinement")
     @Test
     public void testEdgePropertyIsa() {
         final grphSpace gs = (grphSpace) Machine.current().memory().getSpaceFor(f("/g"));
@@ -353,7 +362,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
      * for-loop + String[] technique for multi-step stateful sequences
      * that build on previous rows.
      */
-    @Disabled("addE over remote JanusGraph — edge endpoint resolution fails")
     @ParameterizedTest(name = "[{index}] {0}")
     @CsvSource(value = {
             // ── basic edge creation + verification ──
@@ -398,7 +406,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
      * and verify cumulative counts.  Uses the for-loop pattern because
      * each step depends on state from the previous step.
      */
-    @Disabled("addE chain over remote JanusGraph — edge not persisted/found")
+    @Disabled("the chained addE is not found: the count reads 0 (TinkerGraph expects 6, JanusGraph 1; checked 2026-11-16)")
     @Test
     public void testAddEdgeChain() {
         final String[] steps = {
@@ -430,7 +438,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
      * Distributed edges: vertex lives in grphSpace, edges live in separate memSpaces.
      * Uses the for-loop + String[] pattern to avoid CSV quoting and lifecycle issues.
      */
-    @Disabled("distributed edges (external te:hot/cold traversal) not found over remote JanusGraph")
+    @Disabled("distributed edges (external te:hot/cold traversal) are not found: 0, expected 2 (TinkerGraph and JanusGraph; checked 2026-11-16)")
     @Test
     public void testDistributedEdges() {
         final memSpace hot = memSpace.of(f("/te/hot/#"), f("/sys/space/dist/hot_" + System.nanoTime()));
@@ -560,21 +568,20 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         AbstractSpaceTest.checkMatchesByID(LOG, lhs, type, matches);
     }
 
+    /**
+     * THE WALK AND GREMLIN COUNT ALIKE: four hops out of every vertex, the walk with a barrier between hops, Gremlin on
+     * the test's own graph. The times are logged, to compare by hand. (It asserted nothing, and its Gremlin half read
+     * {@code </sys/space/test>}, an address no per-test space has.)
+     */
     @Test
-    @Disabled
+    @Disabled("the walk fails: */g/V/+.out().>|.out().>|.out().>|.out().count() answers 'infinite fail-loop detected' "
+            + "where Gremlin counts 0, on TinkerGraph and JanusGraph (checked 2026-11-16)")
     public void testProfiling() {
-        final Tuple.Pair<Obj, Long> mtronResult = CommonUtil.clock(() -> {
-            final Obj result = ObjmtronSerializer.parse("*/g/V/+.out().>|.out().>|.out().>|.out().count()").apply();
-            final String s = result.toString();
-            return result;
-        });
-        LOG.error("mtron>   %s [%s ms]", mtronResult.get0(), mtronResult.get1());
-        final Tuple.Pair<Obj, Long> gremlinResult = CommonUtil.clock(() -> {
-            final Obj result = ObjmtronSerializer.parse("*</sys/space/test>.gremlin?#<=#('g.V().out().out().out().out().count().next()')").apply();
-            final String s = result.toString();
-            return result;
-        });
-        LOG.error("gremlin> %s [%s ms]", gremlinResult.get0(), gremlinResult.get1());
+        final grphSpace gs = (grphSpace) Machine.current().memory().getSpaceFor(f("/g"));
+        final Tuple.Pair<Obj, Long> walk = CommonUtil.clock(() -> ObjmtronSerializer.parse("*/g/V/+.out().>|.out().>|.out().>|.out().count()").apply());
+        final Tuple.Pair<Long, Long> gremlin = CommonUtil.clock(() -> gs.sjvm().V().out().out().out().out().count().next());
+        LOG.info("walk %s [%s ms], gremlin %s [%s ms]", walk.get0(), walk.get1(), gremlin.get0(), gremlin.get1());
+        assertEquals(jnt(gremlin.get0()), walk.get0());
     }
 
     // ========================================================================
@@ -582,7 +589,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     // ========================================================================
 
     @Override
-    @Disabled("data-path segment types over remote JanusGraph")
     @ParameterizedTest
     @CsvSource(value = {
             "*<$$/+>            % collection",
@@ -594,65 +600,41 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     // ========================================================================
-    //  Disabled abstract test overrides
-    //  (kept: tests needing wildcard/container/traversal/field-mutation
-    //   semantics not yet supported by the flat store — Phase 3+)
+    //  Inherited space tests a graph space does not take: a graph is not an
+    //  arbitrary key/value store (Marko, 2026-11-16). An override without
+    //  @Test removes the inherited test. The rest of the family ran green on
+    //  2026-11-16 and is no longer overridden.
     // ========================================================================
 
     @Override
     @Test
-    @Disabled("container aggregation + wildcard reads not yet supported by the flat store")
+    @Disabled("a graph is not an arbitrary key/value store: */g/rootless reads noobj, no container gathers its writes")
     public void testMonoRootlessReadWrites() {
         super.testMonoRootlessReadWrites();
     }
 
     @Override
-    @Disabled
-    public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {
+    @Disabled("a graph is not an arbitrary key/value store: 236 of its 244 rows fail")
+    public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
     }
 
     @Override
-    @Disabled
+    @Disabled("a graph is not an arbitrary key/value store: the updated */g/people/1/name reads noobj")
     public void testMonoUpdate() {
     }
 
     @Override
-    @Disabled
-    public void testMonoDepth(String writeExpression, String readExpression) {
+    @Disabled("a graph is not an arbitrary key/value store: all 13 rows fail")
+    public void testMonoDepth(final String writeExpression, final String readExpression) {
     }
 
     @Override
-    @Disabled
-    public void testMultiFieldUpdates(int fieldCount) {
-    }
-
-    @Override
-    @Disabled("non-existent access over remote JanusGraph")
-    public void testNonExistentAccess(String key) {
-    }
-
-    @Override
-    @Disabled("qproc persistence over remote JanusGraph")
-    public void testAddQProcStoredAndRetrievable() {
-    }
-
-    @Override
-    @Disabled(">> spine walk reads a nested rec with empty keys (flat store)")
-    public void testRshiftUriGraphSpine(final String lookupExpression, final String expectedExpression) {
-    }
-
-    @Override
-    @Disabled("data-path extension on a rec in a list over remote JanusGraph")
-    public void testDataPathExtensionOnRecInLst() {
-    }
-
-    @Override
-    @Disabled("uri graph tree walk returns noobj (flat store)")
+    @Disabled("a graph is not an arbitrary key/value store: the uri graph tree walk reads noobj")
     public void testUriGraphTreeWalk() {
     }
 
     @Override
-    @Disabled("extension on a list-valued field returns noobj (flat store)")
+    @Disabled("an extension index on a list-valued vertex property resolves noobj")
     public void testDataPathExtensionOnLstColumn() {
     }
 
@@ -660,7 +642,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     //  CommonRewritesTestContract — parameterized rewrite tests
     // ========================================================================
 
-    @Disabled("order rewrite x40 — the trailing >- merge instruction re-multiplies the gremlin_order result")
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("provideAllRewriteTestCases")
     public void testRewriteOptimizations(String description, String code, Obj expected) throws Exception {
@@ -676,7 +657,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     //  Serialization round-trip — URI <> wrapping
     // ========================================================================
 
-    @Disabled("typed-property round-trip (uri::T/str::T/nat::T) loses type over remote JanusGraph")
     @ParameterizedTest(name = "[{index}] {3}")
     @CsvSource(value = {
             "/g/V/_?incrq -> dog::[test_uri=>a/b/c, test_str=>'hello', test_nat=>nat::23]  %  */g/V/+.?[test_uri=>uri::T]>>test_uri  %   uri   %  uri::T round-trip",

@@ -271,7 +271,6 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
      * This test uses the main test space, so it works for all databases.
      */
     @Test
-    @Disabled
     public void testPolyUnrollingKeyValueSchema() throws Exception {
         // Store a Record in the key-value schema
         final Obj testRecord = rec(
@@ -279,20 +278,20 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                 uri("age"), jnt(25),
                 uri("city"), str("New York")
         );
-        Machine.write(f("tble:person/123"), testRecord);
+        Machine.write(this.testUri("person/123"), testRecord);
 
         // Read the entire record first
-        final Obj entireRecord = Machine.read(f("tble:person/123"));
+        final Obj entireRecord = Machine.read(this.testUri("person/123"));
         assertEquals(testRecord, entireRecord, "Should return the entire record");
 
         // Now read individual fields using poly unrolling
-        final Obj nameField = Machine.read(f("tble:person/123/name"));
+        final Obj nameField = Machine.read(this.testUri("person/123/name"));
         assertEquals(str("Bob"), nameField, "Should return just the name field value");
 
-        final Obj ageField = Machine.read(f("tble:person/123/age"));
+        final Obj ageField = Machine.read(this.testUri("person/123/age"));
         assertEquals(jnt(25), ageField, "Should return just the age field value");
 
-        final Obj cityField = Machine.read(f("tble:person/123/city"));
+        final Obj cityField = Machine.read(this.testUri("person/123/city"));
         assertEquals(str("New York"), cityField, "Should return just the city field value");
     }
 
@@ -300,7 +299,6 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
      * Test that poly unrolling works with nested Records.
      */
     @Test
-    @Disabled
     public void testPolyUnrollingNestedRecords() {
         // Store a nested Record
         final Obj nestedRecord = rec(
@@ -310,16 +308,16 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                 ),
                 uri(STATUS), str("active")
         );
-        Machine.write(f("tble:data/789"), nestedRecord);
+        Machine.write(this.testUri("data/789"), nestedRecord);
 
         // Access nested field
-        final Obj userName = Machine.read(f("tble:data/789/user/name"));
+        final Obj userName = Machine.read(this.testUri("data/789/user/name"));
         assertEquals(str("Charlie"), userName, "Should return nested field value");
 
-        final Obj userAge = Machine.read(f("tble:data/789/user/age"));
+        final Obj userAge = Machine.read(this.testUri("data/789/user/age"));
         assertEquals(jnt(35), userAge, "Should return nested field value");
 
-        final Obj status = Machine.read(f("tble:data/789/status"));
+        final Obj status = Machine.read(this.testUri("data/789/status"));
         assertEquals(str("active"), status, "Should return top-level field value");
     }
 }
