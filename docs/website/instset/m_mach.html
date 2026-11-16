@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -548,13 +546,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pattern=&gt;docq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-               inst=&gt;/m/instset::[=&gt;]],
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;,q=&gt;[,]],
+               inst=&gt;/m/instset::[q=&gt;[,]]],
               /m/qproc/decq::[
                pattern=&gt;decq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-               obj=&gt;/m/instset::[=&gt;]]],
+               obj=&gt;/m/instset::[q=&gt;[,]]]],
              type=&gt;[
               rec::T[?[
                pattern=&gt;uri::T,
@@ -562,6 +560,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                   {?}pre_write=&gt;inst::T,
                                   {?}post_write=&gt;inst::T,
                                   {?}qless_write=&gt;inst::T,
+                                  {?}qless_read=&gt;inst::T,
                                   {?}pre_read=&gt;inst::T,
                                   {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
                {?}route=&gt;[uri{?}::T=&gt;uri::T],
@@ -942,9 +941,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a component&#39;s statistics, at ~/&lt;component&gt;/analyzer: its analysis (what it has measured, derived as it is read), the step it publishes that analysis at to ~/+/analyzer/analysis?subq subscribers, and whether the component&#39;s costly instrumentation is on. The producer records in java, where the thing it counts happens, and never through a write.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}step" class="text-light">{?}step</a> <span class="text-light">=&gt;</span> <a href="#'the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step'" class="text-info">&#39;the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step&#39;</a>
-  <a href="#{?}profile" class="text-light">{?}profile</a> <span class="text-light">=&gt;</span> <a href="#"whether the component's costly instrumentation is on (default false): the processor's per-monad timings"" class="text-info">&quot;whether the component&#39;s costly instrumentation is on (default false): the processor&#39;s per-monad timings&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}profile" class="text-light">{?}profile</a> <span class="text-light">=&gt;</span> <a href="#"whether the component's costly instrumentation is on (default false): the processor's per-monad timings"" class="text-info">&quot;whether the component&#39;s costly instrumentation is on (default false): the processor&#39;s per-monad timings&quot;</a>
   <a href="#{?}analysis" class="text-light">{?}analysis</a> <span class="text-light">=&gt;</span> <a href="#'the analysis::T the component has measured, built from its meters each time it is read'" class="text-info">&#39;the analysis::T the component has measured, built from its meters each time it is read&#39;</a>
+  <a href="#{?}step" class="text-light">{?}step</a> <span class="text-light">=&gt;</span> <a href="#'the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step'" class="text-info">&#39;the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1204,10 +1203,10 @@ the local read.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
   <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
-  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1594,10 +1593,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
-  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
@@ -1704,10 +1703,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> the swarm processor&#39;s computer: monads move along the instruction chain independently, a barrier gathers them, and the halted monads are the result</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache__barrier" class="text-light">barrier</a> <span class="text-light">=&gt;</span> <a href="#'the ordered barriers of the code, a lst[monad]'" class="text-info">&#39;the ordered barriers of the code, a lst[monad]&#39;</a>
-  <a href="#{?}cache__halted" class="text-light">halted</a> <span class="text-light">=&gt;</span> <a href="#'the monads that halted, the result (inst0 x obj)'" class="text-info">&#39;the monads that halted, the result (inst0 x obj)&#39;</a>
-  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the three monad streams that are the state of the computation'" class="text-info">&#39;the three monad streams that are the state of the computation&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the three monad streams that are the state of the computation'" class="text-info">&#39;the three monad streams that are the state of the computation&#39;</a>
   <a href="#{?}cache__run" class="text-light">run</a> <span class="text-light">=&gt;</span> <a href="#'the monads still computing (inst x obj)'" class="text-info">&#39;the monads still computing (inst x obj)&#39;</a>
+  <a href="#{?}cache__barrier" class="text-light">barrier</a> <span class="text-light">=&gt;</span> <a href="#'the ordered barriers of the code, a lst[monad]'" class="text-info">&#39;the ordered barriers of the code, a lst[monad]&#39;</a>
+  <a href="#{?}cache__halted" class="text-light">halted</a> <span class="text-light">=&gt;</span> <a href="#'the monads that halted, the result (inst0 x obj)'" class="text-info">&#39;the monads that halted, the result (inst0 x obj)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__swarm_processor">
@@ -1759,10 +1758,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a distribution of durations, in nanoseconds: how many were observed and their total, least and greatest</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#total" class="text-light">total</a> <span class="text-light">=&gt;</span> <a href="#'their sum, in nanoseconds (total__count is the mean)'" class="text-info">count is the mean)&#39;</a>
-  <a href="#count" class="text-light">count</a> <span class="text-light">=&gt;</span> <a href="#'how many durations were observed'" class="text-info">&#39;how many durations were observed&#39;</a>
-  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the shortest, in nanoseconds'" class="text-info">&#39;the shortest, in nanoseconds&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the shortest, in nanoseconds'" class="text-info">&#39;the shortest, in nanoseconds&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the longest, in nanoseconds'" class="text-info">&#39;the longest, in nanoseconds&#39;</a>
+  <a href="#total" class="text-light">total</a> <span class="text-light">=&gt;</span> <a href="#'their sum, in nanoseconds (total__count is the mean)'" class="text-info">count is the mean)&#39;</a>
+  <a href="#count" class="text-light">count</a> <span class="text-light">=&gt;</span> <a href="#'how many durations were observed'" class="text-info">&#39;how many durations were observed&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__tracer">

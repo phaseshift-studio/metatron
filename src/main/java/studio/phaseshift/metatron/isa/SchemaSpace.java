@@ -226,6 +226,13 @@ public interface SchemaSpace extends Space {
         /**
          * THE FOLD a store infers a collection with: over every record, a field is required when every record holds it,
          * and its type is the LCD of the types of its values; the rec's tid is the records' own type, when they agree.
+         * <p>
+         * WHAT IT ANSWERS IS A TYPE DESCRIPTION — each field keyed by its name and valued by the field's TYPE — not an
+         * instance of the records' type, so the records' tid is stamped with {@link Obj#selfTID(fURI)} rather than
+         * given to {@code rec(...)}: constructing the description WITH that tid made the type system test it as an
+         * INSTANCE, so a typed record (an {@code ai::T} ledger row, whose type carries a predicate) ran its predicate
+         * against the field types and refused the very first write to the collection. A serializer strips a tid it
+         * cannot reconstruct on write and applies it with {@code selfTID} on read, for the same reason.
          */
         public static Rec fields(final Stream<? extends Obj> records) {
             final Map<Obj, Set<Type>> types = new LinkedHashMap<>();
@@ -245,7 +252,7 @@ public interface SchemaSpace extends Space {
             final Map<Obj, Obj> fields = new LinkedHashMap<>();
             types.forEach((key, valueTypes) -> fields.put(present.get(key) == count[0] ? key : key.maybe(),
                     Type.Helper.findLCD(new ArrayList<>(valueTypes))));
-            return rec(fields, 1 == tids.size() ? tids.iterator().next() : REC_TID, null);
+            return rec(fields, REC_TID, null).selfTID(1 == tids.size() ? tids.iterator().next() : REC_TID).asRec();
         }
 
         /**
@@ -291,7 +298,8 @@ public interface SchemaSpace extends Space {
                         : Type.Helper.findLCD(List.of(fieldType.asType(), value.type())));
             });
             values.forEach((name, value) -> fields.put(uri(name).maybe(), value.type()));
-            return rec(fields, type.tid().equals(record.tid()) ? type.tid() : REC_TID, null);
+            // a type description, not an instance of the records' type — the tid names it (see fields(Stream))
+            return rec(fields, REC_TID, null).selfTID(type.tid().equals(record.tid()) ? type.tid() : REC_TID).asRec();
         }
 
         /**

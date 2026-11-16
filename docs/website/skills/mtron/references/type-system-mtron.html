@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -802,7 +800,9 @@ age, position 1 a zipcode) and fails <code>lst[zipcode,age]::T</code>, where the
 Two consequences, and they are the same consequence twice: there is no lifting <em>into</em> a tensor's positions (<code>lst[int]</code>
 hands a call no second candidate), and a tensor's entries name no other type (<code>lst[int]</code> is never an <code>int</code> — a list of
 ints is not an int). The coefficient is where extent lives, not another coordinate: <code>lst[int{4}]</code> is ONE position
-holding four ints, while <code>lst[int,int,int,int]</code> is four positions.</p>
+holding four ints, while <code>lst[int,int,int,int]</code> is four positions. A TEST lays every entry as a run of positions, its
+span times its point, the way ranged var args take their arguments: <code>[1,2,3,4]</code> and <code>[{4}1]</code> both satisfy
+<code>lst[int{4}]</code>.</p>
 <p><strong>A fibered type's entries are distinct objects.</strong> <code>person[ninja]</code> is a person <em>and</em> a ninja; the ninja is not the
 bundle's content but an object the bundle exposes. So a value of that type is acceptable where <code>ninja::T</code> is
 expected (its base or any fiber — see <em>acceptance and covariance</em>), and an instruction declared on <code>ninja</code> applies to
@@ -812,7 +812,8 @@ the fiber's value as if it had been declared top-level.</p>
 <p>A bracket entry is a <em>position</em> (a tensor position, a path vertex), so a <strong>suffix coefficient is the multiplicity of the
 value at that position</strong> — not another position, and not another hop. <code>lst[int{2},str]</code> is a two-position list whose
 FIRST position holds two ints; <code>rel[int,person{2}]</code> is a two-vertex chain whose SECOND vertex holds two people
-(<code>1=&gt;{bob,marko}</code>, two people at that vertex — not two hops):</p>
+(<code>1=&gt;{bob,marko}</code>, two people at that vertex — not two hops). A lst under test lays that multiplicity as a run, so
+<code>[1,2,'a']</code> satisfies <code>lst[int{2},str]</code> as <code>[{1,2},'a']</code> does:</p>
 <pre><code class="language-mtron">a suffix coefficient is the multiplicity of the value AT that position / vertex
 mtron&gt; wayfarer -&gt; rec::T@wayfarer
 mtron&gt; lst[int{2},str]::[{1,2},'a']              [-- position 0 is an int{2}: one position, two ints --]

@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -513,7 +511,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">tble-space-java</h1>
-        <small>Java-side tbleSpace architecture — relational-database space, dual-path reads (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown, schema generation, dialect handling, VID stamping</small><br/>
+        <small>Java-side tbleSpace architecture — relational-database space, dual-path reads (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown, a table's type via SchemaSpace.Helper, dialect handling, VID stamping</small><br/>
         <a href="tble-space-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>tble-space-java.md</a>
     </div>
     <div class="markdown-body">
@@ -523,9 +521,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 isa/tble/tbleInstSet.java            ← instruction set + SQL rewrite registration
 isa/tble/KVStoreUtil.java            ← key-value URI-to-SQL LIKE translation
 isa/tble/schema/SQLRewriteUtils.java ← SQL condition formatting (equality, comparison, AND-joiner)
-isa/tble/space/ExistingTableSchema.java  ← table metadata, ALTER TABLE, type coercion
-isa/tble/space/SQLSchemaGenerator.java   ← generates per-database SQLSchemaInstSet
-isa/tble/space/SQLSchemaInstSet.java     ← per-database schema instset (Types for table columns)
+isa/tble/space/ExistingTableSchema.java  ← table metadata, ALTER TABLE, type coercion, foreign keys, fields()
+isa/SchemaSpace.java (Helper)            ← a table's type: declared, or inferred from its rows (every SchemaSpace)
 isa/tble/space/tbleIncrQ.java            ← DB-backed increment queue
 isa/tble/schema/storage/TableSchema.java ← table-mapped read path
 isa/tble/schema/storage/TypedKeyValueSchema.java  ← KV-store read path with type coercion
@@ -546,8 +543,7 @@ coercion.</p>
 │  databaseName → catalog name                      │
 │  schema       → TableSchema | TypedKeyValueSchema │
 │  existingTableSchema → ExistingTableSchema        │
-│  schemaGenerator     → SQLSchemaGenerator         │
-│  schemaInstset       → SQLSchemaInstSet           │
+│  schema (SCHEMA)     → &lt;vid&gt;/instset (Helper)     │
 │  routes              → URI-prefix routing map     │
 ├───────────────────────────────────────────────────┤
 │  directReader:  dual-path (table-mapped + KV)     │
@@ -565,11 +561,11 @@ coercion.</p>
 <li><strong>Extract backend name</strong> from <code>DatabaseMetaData.getDatabaseProductName().toLowerCase()</code></li>
 <li><strong>Initialize schema</strong>: introspects existing tables via <code>ExistingTableSchema</code>, builds <code>TableSchema</code> for known tables
 and <code>TypedKeyValueSchema</code> for KV paths</li>
-<li><strong>Initialize table mapping</strong>: scans <code>_mtron_meta</code> for TID entries, maps table names to their declared metatron types</li>
-<li><strong>Generate schema instset</strong>: <code>SQLSchemaGenerator.generateSchemaInstset()</code> creates a per-database <code>SQLSchemaInstSet</code>
-with <code>Type</code> objects for every table column, registered as a Router space for type resolution</li>
-<li><strong>Wire SCHEMA</strong>: stores the schema instset at <code>uri(SCHEMA)</code> on the space itself (<code>SchemaSpace.schema()</code> resolves from
-here)</li>
+<li><strong>Initialize table mapping</strong>: creates the <code>ExistingTableSchema</code>; its catalog walk (<code>ensureTables()</code>) runs on the first
+table-mapped access</li>
+<li><strong>Mount the schema instset</strong>: <code>SchemaSpace.Helper.mount(this)</code> registers the space's schema instset at
+<code>&lt;vid&gt;/instset</code> and stores it at <code>uri(SCHEMA)</code>. It holds no types yet: a table's type is inferred when it is first
+read (see <em>A table's type</em> below), or at mount with <code>infer=&gt;[discover=&gt;eager]</code></li>
 </ol>
 <pre><code class="language-java">// Backend detection
 public String backend() {
@@ -620,8 +616,10 @@ serialized as JSON blobs, deserialized on read.</p>
 <li><strong><code>addColumnOnTheFly(tableName, columnName, value)</code></strong> — <code>ALTER TABLE ADD COLUMN</code> when a write introduces a new field
 (race-safe: falls back to <code>DatabaseMetaData</code> re-read on concurrent column add)</li>
 </ul>
-<p>Column types are stored in <code>_mtron_meta</code> as <code>$table</code> sentinel rows. When a table has no meta row, the schema generator
-infers types from JDBC metadata.</p>
+<p>Column types are stored in <code>_mtron_meta</code> (with a <code>$table</code> sentinel row for the first record's tid), and a read gives a
+value back its recorded type. <strong><code>fields(conn, table)</code></strong> is the table's side of <code>SchemaSpace.fields</code>: it folds every row
+as a read answers it (<code>SchemaSpace.Helper.fields</code>), types a foreign-key column as its pointer, and types a column no row
+holds a value in by its SQL type.</p>
 <h3>SQL rewrite pushdown</h3>
 <p>Registered in <code>tbleInstSet.setup()</code> under <code>uri(REWRITE)</code>. All rewrites follow the <code>DBRewriteBuilder</code> pattern
 (space-aware
@@ -745,19 +743,19 @@ final fURI rowVID = Space.Helper.routeToSpace(
 append(rawRow.selfVID(rowVID));
         }
 </code></pre>
-<h3>SQLSchemaInstSet</h3>
-<p>A per-database <code>InstSet</code> that holds <code>Type</code> objects for every table column. Generated by
-<code>SQLSchemaGenerator.generateSchemaInstset()</code> during construction:</p>
-<pre><code class="language-java">// VID is in /m/ namespace → writes route to memSpace, not back into tbleSpace
-public SQLSchemaInstSet(final fURI schemaVid, final Collection&lt;Type&gt; types) {
-    super(mutableMap(
-            uri(PATTERN), uri(schemaVid.extend(ALL)),
-            uri(TYPE), lst(types.stream().map(t -&gt; (Obj) t).toList())
-    ), INSTSET_TID, schemaVid);
-}
-</code></pre>
-<p>The generated Types encode column-level metatron types (int, str, bool, etc.) and foreign key references in their
-<code>isaPredicate</code>. The schema instset is registered as a Router space so type resolution can find it.</p>
+<h3>A table's type</h3>
+<p>tble infers a table's type with the algorithm every database space shares, <code>SchemaSpace.Helper</code> (Marko, 2026-11-16):</p>
+<ul>
+<li>the type is at <code>&lt;vid&gt;/instset/&lt;table&gt;</code> (lowercased), its vid that address; <code>*db:&lt;table&gt;</code> reads it</li>
+<li>a column is required when every row holds a value in it (a NULL is an absent field), counted over every row, and
+<code>{?}</code> otherwise; its type is the LCD of its values' types (<code>Type.Helper.findLCD</code>); the type is open
+(<code>{?}uri::T=&gt;_</code>)</li>
+<li>a write to an undeclared table widens the type before the row is stored (<code>SchemaSpace.Helper.admit</code>): a new column
+is <code>{?}</code>, a column the row leaves out becomes <code>{?}</code>, a value of another type widens the column to the LCD</li>
+<li>a type written to a collection path (<code>db:people -&gt; person::T</code>) declares the table: it is held at the table's address
+under its own vid, is never inferred over, and refuses a row it does not hold</li>
+<li>the store still refuses what it cannot hold: <code>validateColumnWrite</code> refuses a non-numeric str in a numeric column</li>
+</ul>
 <h3>KVStoreUtil</h3>
 <p>Translates URI patterns into SQL <code>LIKE</code> clauses for the key-value storage path:</p>
 <pre><code class="language-java">// URI: /col/user123/profile/email
@@ -893,7 +891,7 @@ the path-based pattern can't distinguish them — both look like path segments.<
 </ol>
 <h4>FK persistence in <code>_mtron_meta</code></h4>
 <p><code>persistColumnType()</code> writes FK info to <code>_mtron_meta.ref_table</code>. When reading rows, <code>processMetaRow()</code> calls
-<code>registerOrPendingFK()</code> which registers with <code>SQLSchemaGenerator.registerFK()</code>. The <code>ref_table</code> column stores
+<code>registerFK()</code>, which records the key in the foreign keys <code>ExistingTableSchema</code> keeps. The <code>ref_table</code> column stores
 only the target table name (e.g. <code>&quot;session&quot;</code>), not a full path — <code>buildFKReferencePath()</code> reconstructs the path
 at read time.</p>
 <h4>When to avoid FK columns</h4>

@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -69,14 +69,14 @@ mtron> bash('ls')
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(18 more)]
+    ...(19 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.8M ...',
+    'tmpfs                  6.1G  6.9M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  592G ...',
+    '/dev/nvme1n1p2         916G  595G ...',
     'tmpfs                   31G  7.6M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -110,7 +110,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           ...(18 more)]]
+           ...(19 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -120,7 +120,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(19 more)]
+    ...(20 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -161,7 +161,7 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    ...(18 more)]
+    ...(19 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 26815     	Blocks: 56     ...',
@@ -185,7 +185,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    ...(18 more)]
+    ...(19 more)]
 ```
 Unit values test against each other's units:
 
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>210
+==>66
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::768.0,
-    free_mem_jvm=>mB::402.2092,
+==>[total_mem_jvm=>mB::712.0,
+    free_mem_jvm=>mB::307.4532,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::365.7907,
+    used_mem_jvm=>mB::404.5467,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
@@ -285,7 +285,7 @@ project root:
 mtron> fsspace::[
          pattern => <mfs:#>,
          q       => [mimeq::[=>], lineq::[=>]],
-         route   => [mfs: => <.>]]@/sys/space/mfs
+         route   => [mfs: => <.>]]@~/memory/space/mfs
 ```
 The three keys: `pattern` is the uri space this instance owns (`mfs:#`, `#` the
 recursive wildcard); `route` maps the `mfs:` prefix onto the path the files live at;
@@ -302,7 +302,7 @@ mtron> bash('mkdir -p /tmp/mtron-docs-scratch')
 mtron> fsspace::[
          pattern => <scratch:#>,
          q       => [lineq::[=>]],
-         route   => [scratch: => /tmp/mtron-docs-scratch]]@/sys/space/scratch
+         route   => [scratch: => /tmp/mtron-docs-scratch]]@~/memory/space/scratch
 ```
 ## typed reads
 
@@ -417,7 +417,7 @@ the shape; it is read here, never run:
 mtron> *<mfs:bin/metatron>
 ...
 mtron> *<mfs:bin/metatron>.tid()
-==>/sys/space/fs/mfs/exec/metatron?rng=#{*}&dom=#{?}&args=[#{*}]
+==>/memory/space/fs/mfs/exec/metatron?rng=#{*}&dom=#{?}&args=[#{*}]
 ```
 ## taking the mounts down
 
@@ -425,8 +425,8 @@ The doc leaves the graph as it found it — the two mounts it added are removed,
 the scratch directory goes with `bash`, the tool that made it:
 
 ```mtron
-mtron> /sys/space/scratch -> noobj
-mtron> /sys/space/mfs     -> noobj
+mtron> ~/memory/space/scratch -> noobj
+mtron> ~/memory/space/mfs     -> noobj
 mtron> bash('rm -rf /tmp/mtron-docs-scratch')
 ==>['']
 ```

@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -939,16 +937,11 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |&lt;1&gt;?int&lt;=#{?}(){1}@&lt;1&gt;   [-- 1 --]
 ==&gt;1
 mtron&gt; &lt;1&gt;()                     [-- 2 --]
+==&gt;1
 mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
-==&gt;fail::[unable to determine inst function:
-   	10          =&gt; /sys/space/cold/instset/1?&lt;=/m/int()@&lt;1&gt;   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]
+==&gt;1
 mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
-==&gt;fail::[unable to determine inst function:
-   	12          =&gt; /sys/space/cold/instset/1?&lt;=/m/int()   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]</code></pre>
+==&gt;13</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -986,7 +979,6 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
-==&gt;person=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T,city=&gt;str::T]]@person
 ==&gt;boot=&gt;[args=&gt;[
      log=&gt;info,
      boot=&gt;&lt;boot/docs.mtron&gt;,
@@ -999,10 +991,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;v2=&gt;[name=&gt;'vadas']
 ==&gt;v3=&gt;[name=&gt;'josh']
 ==&gt;&lt;2&gt;=&gt;as?&lt;=bytes(str::T){&lt;j&gt;}
-==&gt;&lt;1&gt;=&gt;plus?int&lt;=int(fail::[unable to determine inst function:
-   	12          =&gt; /sys/space/cold/instset/1?&lt;=/m/int()   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]){&lt;j&gt;}
+==&gt;&lt;1&gt;=&gt;plus?int&lt;=int(1){&lt;j&gt;}
 ==&gt;v5=&gt;[name=&gt;'ripple',lang=&gt;java]
 ==&gt;v6=&gt;[name=&gt;'peter',
     age=&gt;35,
@@ -1013,10 +1002,6 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;out=&gt;out?rec{*}&lt;=rec(label=&gt;uri{*}::T){
      rshift(outE_).rshift(*label).
      rshift(inV_) }
-==&gt;animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,
-            name=&gt;str::T,
-            age=&gt;int::T,
-            {?}shelter=&gt;rec::T]]@animals
 ==&gt;equipment=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment</code></pre>
 </div>
 </div>
@@ -1816,12 +1801,12 @@ mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
                      pattern  =&gt; &lt;http://#&gt;,
                      route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                    /       =&gt; &lt;&gt;]]
-==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
-   	while parsing: http_server::[origin     =&gt; http://localhost:8777,
-                        q        =&gt; [mimeq::[=&gt;]],
-                        pattern  =&gt; &lt;http://#&gt;,
-                        route    =&gt; [/mcp     =&gt; mcp_mtron_http,
-                                      /       =&gt; &lt;&gt;]]]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;],
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+                 q=&gt;[analq::[pattern=&gt;analq,pre_read=&gt;inst(uri::T){&lt;j&gt;},qless_write=&gt;inst(uri::T,
+                                                                                          #::T){&lt;j&gt;},qless_read=&gt;inst(uri::T,
+                                                                                                                      #::T){&lt;j&gt;},obj=&gt;analyzer::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;}]]]]
 mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
                    pattern  =&gt; &lt;ws://#&gt;,
                    q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -2306,8 +2291,8 @@ mtron> wsspace::[host     => ws://localhost:8555,
                pattern=>docq,
                pre_read=>inst(uri::T){<j>},
                pre_write=>inst(uri::T,#::T){<j>},
-               obj=>memspace::[pattern=><#>],
-               inst=>/m/instset::[=>]],
+               obj=>memspace::[pattern=><#>,q=>[,]],
+               inst=>/m/instset::[q=>[,]]],
               subq::[pattern=>subq,pre_read=>inst(uri::T){<j>},pre_write=>inst(uri::T,#::T){<j>},qless_write=>inst(uri::T,
                                                                                                                    #::T){<j>},obj=>[,]]],
              route=>[/mcp=>mcp_mtron_ws]]@/sys/space/web/ws
@@ -2320,70 +2305,8 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>mcp_client::[host=>ws://localhost:8555/mcp,
-                status=>!λstatus?bool<=(){<j>},
-                tool=>[
-                 m_web_mcp_mcp_mtron_write_memory=>tool::[
-                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                  name=>m_web_mcp_mcp_mtron_write_memory,
-                  desc=>'(experimental) returns a memory re...',
-                  arg=>[
-                   current_memory=>'the memory to remember -- e.g. a s...',
-                   previous_memory=>'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=>tool::[
-                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                  name=>m_web_mcp_mcp_mtron_read_memory,
-                  desc=>'(experimental) returns the result ...',
-                  arg=>[memory_vid=>'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-                  inst=>inst(code=>'/m/code',<>=>'<no description>'){<j>},
-                  name=>m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=>'<no description>',
-                  arg=>[code=>'/m/code',<>=>'<no description>']],
-                 m_web_mcp_mcp_mtron_list_space=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_list_space,
-                  desc=>'returns a rec identifying all acti...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_machine_info=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_machine_info,
-                  desc=>'returns what the running machine i...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_find_inst=>tool::[
-                  inst=>inst(pattern=>'the inst tid to match',
-                             dom=>'the dom of inst to match (can be added to pattern arg)',
-                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                  name=>m_web_mcp_mcp_mtron_find_inst,
-                  desc=>'returns a lst of all instruction p...',
-                  arg=>[
-                   pattern=>'the inst tid to match',
-                   dom=>'the dom of inst to match (can be a...',
-                   rng=>'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                             on_message=>'the function to evaluate on every received message'){<j>},
-                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=>'create a websocket client with pro...',
-                  arg=>[
-                   host=>'the full ws:// uri of the websocke...',
-                   on_message=>'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=>[
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                       previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',
-                                                                     <>=>'<no description>'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
-                                                                    dom=>'the dom of inst to match (can be added to pattern arg)',
-                                                                    rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                                                                         on_message=>'the function to evaluate on every received message'){<j>},
-                 ...(1 more)]]@/usr/ai/mcp/mtron
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
@@ -2411,27 +2334,6 @@ And since, metatron is able to map common data formats to `obj`, its possible to
 [source,mtron]
 ----
 mtron> *<fs:skills/mtron/SKILL.md>
-==>
-   markdown::"---
-   name: mtron
-   description: understanding the language used to control metatron
-   ---
-
-   # mtron: traversing the metatron graph
-
-   mtron is a functional, fluent, monadic language that manipulates the metatron environment.
-
-   To understand mtron, it's necessary to first understand how language, structure, and process are organized in metatron.
-
-   metatron's **structure** is abstractly defined as a [split graph](https://en.wikipedia.org/wiki/Split_graph) composed of
-   two vertex sets:
-   $V = U \cup O$. The set $U$ is the set of [uris](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) (**uniform
-   resource identifiers**) and they maintain an _intra-edge_ set defined by uri **path adjacency**. The set $O$ is the set
-   of objs (objects) whose _intra-edge_ set denote **shared/coupled state**. Finally, there exists a bi-directional
-   **inter-edge** set linking the uris in $U$ to
-   the objs in $O$ in a **reference/referent** relationship.
-
-   ...
 ----
 
 [discrete]
@@ -3371,7 +3273,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{b}}e{{b}}t{{g}}A{{y}}t{{g}}r{{g}}o{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{g}}E{{m}}T{{y}}a{{m}}T{{g}}R{{r}}O{{y}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5911,16 +5813,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355852       6904   6348948   1% /run'
+==&gt;'tmpfs                    6355852       7000   6348852   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  620610424 290347400  69% /'
-==&gt;'tmpfs                   31779244       7708  31771536   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  622949820 288008004  69% /'
+==&gt;'tmpfs                   31779244       7704  31771540   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779244          0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355848        248   6355600   1% /run/user/1000'
+==&gt;'tmpfs                    6355848        256   6355592   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1324194048 597014496  69% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1326561572 594646972  70% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;'AGENTSWARM.md'
@@ -5934,6 +5836,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'dsh-usage-boot.log'
 ==&gt;dsh-usage-data
 ==&gt;'HANDOFF-analyzer-analq.md'
+==&gt;'HANDOFF-listener-addressable.md'
 ==&gt;'language.properties'
 ==&gt;LICENSE
 ==&gt;'metatron.iml'
@@ -5948,7 +5851,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').split(' ').count()
-==&gt;91</code></pre>
+==&gt;92</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -6136,7 +6039,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:1600/41/54/851?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:1614/52/26/676?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -6328,7 +6231,11 @@ mtron&gt; *g:V/+     ​3​
 ==&gt;person::[age=&gt;35,name=&gt;'peter']@g:V/6
 ==&gt;software::[lang=&gt;'java',
               name=&gt;'ripple']@g:V/5
-mtron&gt; *g:person/+     ​4​</code></pre>
+mtron&gt; *g:person/+     ​4​
+==&gt;person::[name=&gt;'josh',age=&gt;32]@g:V/4
+==&gt;person::[name=&gt;'marko',age=&gt;29]@g:V/1
+==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
+==&gt;person::[age=&gt;35,name=&gt;'peter']@g:V/6</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6639,12 +6546,13 @@ The following examples demonstrate selection and filtering using multi-segment u
             address/home/city=&gt;'santa fe',
             address/work/city=&gt;'nomansland']
 mtron&gt; *g:V/1/address/home/city     ​2​
+==&gt;'santa fe'
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
 ==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     ​6​
-==&gt;{8}'nomansland'
-==&gt;{8}'santa fe'
+==&gt;{7}'nomansland'
+==&gt;{7}'santa fe'
 mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 ==&gt;'nomansland'
 ==&gt;'santa fe'</code></pre>
@@ -6707,17 +6615,24 @@ shown for reference — the where-clause filter over multi-segment wildcard keys
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1==[_=&gt;_]     ​1​
-==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;[address/work/city=&gt;{'nomansland',none},
+    address/home/city=&gt;{'santa fe',none},
+    name=&gt;'marko',
+    age=&gt;29]
 mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]     ​2​
-==&gt;person::[name=&gt;'marko',
+==&gt;person::[address/work/city=&gt;{'nomansland',none},
+            address/home/city=&gt;{'santa fe',none},
+            name=&gt;'marko',
             age=&gt;29,
             address=&gt;[
              home=&gt;[city=&gt;'santa fe',state=&gt;NM],
              work=&gt;!*&lt;../home&gt;]]
-mtron&gt; *g:V/1/address/home/city     ​3​</code></pre>
+mtron&gt; *g:V/1/address/home/city     ​3​
+==&gt;'santa fe'
+==&gt;none</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -6839,10 +6754,16 @@ To unify these two contrasting perspectives, metatron capitalizes on each&#8217;
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[name=&gt;'marko',age=&gt;29]
+==&gt;person::[address/work/city=&gt;{'nomansland',none},
+            address/home/city=&gt;{'santa fe',none},
+            address=&gt;[
+             home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+             work=&gt;!*&lt;../home&gt;],
+            name=&gt;'marko',
+            age=&gt;29]
 mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
-==&gt;consulted::[=&gt;]@g:E/29
+==&gt;consulted::[=&gt;]@g:E/31
 mtron&gt; *g:V/1/OUT/consulted/IN     ​4​
 mtron&gt; *g:V/1/OUT/consulted/IN.matches(vrtx::T)     ​5​
 ==&gt;false</code></pre>
@@ -7979,7 +7900,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:1600/41/59/491?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1614/52/31/031?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7998,7 +7919,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:1600/41/59/491?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1614/52/31/031?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -8090,7 +8011,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:1600/41/34/167?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:1614/52/04/867?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8098,7 +8019,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:1600/41/34/167?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:1614/52/04/867?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -8576,7 +8497,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/db/dcmnt/sc
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals]] at root; got str::T]@/processor/fail/1
+==&gt;fail::[space /sys/space/farm requires rec::T[?[animals=&gt;rec{*}::T[?[name=&gt;str::T,age=&gt;int::T]]@animal,equipment=&gt;rec{*}::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment]] at root; got str::T]@/processor/fail/1
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​
@@ -8870,19 +8791,19 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
+==&gt;rec::T[?[trophy=&gt;str::T,
             recipient=&gt;isa(person/+/id).!*id(),
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
+==&gt;rec::T[?[player=&gt;str::T,
+            points=&gt;int::T,
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
+==&gt;rec::T[?[name=&gt;str::T,
+            age=&gt;int::T,
             {?}skill=&gt;uri::T,
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
-==&gt;rec::T[?[{?}name=&gt;str::T,
+==&gt;rec::T[?[name=&gt;str::T,
+            {?}parent=&gt;&lt;#&gt;::T,
             location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from?args=[/m/uri]::T,
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
@@ -8894,19 +8815,19 @@ mtron&gt; *lite:person/+/id     ​6​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
 mtron&gt; *lite:+
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
+==&gt;rec::T[?[trophy=&gt;str::T,
             recipient=&gt;isa(person/+/id).!*id(),
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
+==&gt;rec::T[?[player=&gt;str::T,
+            points=&gt;int::T,
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
+==&gt;rec::T[?[name=&gt;str::T,
+            age=&gt;int::T,
             {?}skill=&gt;uri::T,
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
-==&gt;rec::T[?[{?}name=&gt;str::T,
+==&gt;rec::T[?[name=&gt;str::T,
+            {?}parent=&gt;&lt;#&gt;::T,
             location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from?args=[/m/uri]::T,
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
@@ -9577,7 +9498,7 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 ==&gt;/sys/env/COLORTERM=&gt;'truecolor'
 ==&gt;/sys/env/XDG_SESSION_CLASS=&gt;'user'
 ==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;' site'
-==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'</code></pre>
+==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/69fdc689_e818_4652_8e6d_e7ea00840d3f'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

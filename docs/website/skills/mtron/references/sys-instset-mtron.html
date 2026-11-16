@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -569,14 +567,14 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(17 more)]
+    ...(19 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.8M ...',
+    'tmpfs                  6.1G  6.9M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  583G ...',
+    '/dev/nvme1n1p2         916G  595G ...',
     'tmpfs                   31G  7.6M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -605,7 +603,7 @@ the same <code>==</code> projection:</p>
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           ...(17 more)]]
+           ...(19 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
@@ -615,7 +613,7 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(18 more)]
+    ...(20 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -651,13 +649,13 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    ...(17 more)]
+    ...(19 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
     '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,3	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-14 15:29:16.659593...',
+    'Access: 2026-11-15 23:30:36.685707...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -672,7 +670,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    ...(17 more)]
+    ...(19 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -729,10 +727,10 @@ no input to take, so it is shown rather than run:</p>
 mtron&gt; */sys/thread/+.count()
 ==&gt;66
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::528.0,
-    free_mem_jvm=&gt;mB::255.0475,
+==&gt;[total_mem_jvm=&gt;mB::712.0,
+    free_mem_jvm=&gt;mB::307.4532,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::272.9524,
+    used_mem_jvm=&gt;mB::404.5467,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-43-generic',
     arch=&gt;'amd64',
@@ -752,7 +750,7 @@ project root:</p>
 <pre><code class="language-mtron">mtron&gt; fsspace::[
          pattern =&gt; &lt;mfs:#&gt;,
          q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
-         route   =&gt; [mfs: =&gt; &lt;.&gt;]]@/sys/space/mfs
+         route   =&gt; [mfs: =&gt; &lt;.&gt;]]@~/memory/space/mfs
 </code></pre>
 <p>The three keys: <code>pattern</code> is the uri space this instance owns (<code>mfs:#</code>, <code>#</code> the
 recursive wildcard); <code>route</code> maps the <code>mfs:</code> prefix onto the path the files live at;
@@ -766,7 +764,7 @@ conversation:</p>
 mtron&gt; fsspace::[
          pattern =&gt; &lt;scratch:#&gt;,
          q       =&gt; [lineq::[=&gt;]],
-         route   =&gt; [scratch: =&gt; /tmp/mtron-docs-scratch]]@/sys/space/scratch
+         route   =&gt; [scratch: =&gt; /tmp/mtron-docs-scratch]]@~/memory/space/scratch
 </code></pre>
 <h3>typed reads</h3>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md&gt;.tid()          [-- markdown's mime --]
@@ -856,13 +854,13 @@ the shape; it is read here, never run:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:bin/metatron&gt;
 ...
 mtron&gt; *&lt;mfs:bin/metatron&gt;.tid()
-==&gt;/sys/space/fs/mfs/exec/metatron?rng=#{*}&amp;dom=#{?}&amp;args=[#{*}]
+==&gt;/memory/space/fs/mfs/exec/metatron?rng=#{*}&amp;dom=#{?}&amp;args=[#{*}]
 </code></pre>
 <h3>taking the mounts down</h3>
 <p>The doc leaves the graph as it found it — the two mounts it added are removed, and
 the scratch directory goes with <code>bash</code>, the tool that made it:</p>
-<pre><code class="language-mtron">mtron&gt; /sys/space/scratch -&gt; noobj
-mtron&gt; /sys/space/mfs     -&gt; noobj
+<pre><code class="language-mtron">mtron&gt; ~/memory/space/scratch -&gt; noobj
+mtron&gt; ~/memory/space/mfs     -&gt; noobj
 mtron&gt; bash('rm -rf /tmp/mtron-docs-scratch')
 ==&gt;['']
 </code></pre>

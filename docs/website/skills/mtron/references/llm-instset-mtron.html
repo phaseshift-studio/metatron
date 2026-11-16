@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -526,7 +524,7 @@ chat loop (<code>tool_feature</code>,
 <code>system_feature</code>, <code>cost_feature</code>, <code>compaction_feature</code>, …), where inst <code>chat?chat_result&lt;=agent()</code> runs the loop.</p>
 <p>A simple chat bot is constructed as such:</p>
 <pre><code class="language-mtron">mtron&gt; memspace::[pattern =&gt; /usr/chatter/#,
-                  q       =&gt; [incrq::[=&gt;]]]@/sys/space/chatter
+                  q       =&gt; [incrq::[=&gt;]]]@~/memory/space/chatter
 mtron&gt; model::[provider=&gt; ollama,
                protocol=&gt; ollama,
                host    =&gt; &lt;http://localhost:11434&gt;,
@@ -562,15 +560,15 @@ out. The examples that <em>talk to a carrier</em> — a client reaching a mounte
 live carrier the way a boot file does, at <code>http://localhost:8777</code> and <code>ws://localhost:8555</code>.</p>
 <pre><code class="language-mtron">mtron&gt; import(/m/ai/llm)
 mtron&gt; import(/m/web,web)
-mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server
+mtron&gt; mcp_server::[tool =&gt; [!*eval]]@~/memory/space/mcp/basic_server
 ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
-                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/basic_server
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/memory/space/mcp/basic_server
 </code></pre>
 <p>What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
 per server, <code>mcp_mtron</code> for the metatron-native tools, <code>mcp_message</code> for the ledger, and <code>/basic</code> for the server
 just defined:</p>
 <pre><code class="language-mtron">[-- a carrier is a server (http_server, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
-*&lt;/network/listener/http/localhost/8777&gt;.else(http_server::[origin =&gt; http://localhost:8777, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message, /basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;, / =&gt; /usr]])
+*&lt;/network/listener/http/localhost/8777&gt;.else(http_server::[origin =&gt; http://localhost:8777, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message, /basic =&gt; !*&lt;~/memory/space/mcp/basic_server&gt;, / =&gt; /usr]])
 *&lt;/network/listener/ws/localhost/8555&gt;.else(ws_server::[origin =&gt; ws://localhost:8555, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message]])
 </code></pre>
 <h3>types</h3>
@@ -627,7 +625,7 @@ vocabulary to learn:</p>
 </code></pre>
 <p>And the custom server defined above — one instruction — is reachable the same way through its own mount:</p>
 <pre><code class="language-mtron">[-- the same for a server you defined: its vid is the route target, and a client reaches it like any other --]
-/basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;
+/basic =&gt; !*&lt;~/memory/space/mcp/basic_server&gt;
 mcp_client::[host=&gt;http://localhost:8777/basic]@/usr/ai/mcp/b
 /usr/ai/mcp/b&gt;&gt;tool                                          [-- =&gt; [m_inst_eval =&gt; tool::[…]] --]
 /usr/ai/mcp/b/tool/m_inst_eval/inst(&quot;[1,2,3,4]&gt;-.sum()&quot;)     [-- =&gt; 10 --]
@@ -700,9 +698,10 @@ one. <code>close()</code> releases it; <code>clone()</code> returns the same cli
 <p>An <code>mcp_server::T</code> is a rec with three optional collections — <code>tool</code>, <code>resource</code>, <code>prompt</code> — and it is
 transport-agnostic: mount it, and the carrier supplies the bytes.</p>
 <p>Because a tool is an instruction, a server is a <strong>selection over instructions</strong>, and that selection is boot data:</p>
-<pre><code class="language-mtron">mtron&gt; mcp_server::[tool =&gt; [!*eval, !*eval]]@/sys/space/mcp/two_say
-==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/two_say
-mtron&gt; */sys/space/mcp/two_say&gt;&gt;tool     [-- one entry: a collection is keyed by the instruction --]
+<pre><code class="language-mtron">mtron&gt; mcp_server::[tool =&gt; [!*eval, !*eval]]@~/memory/space/mcp/two_say
+==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/memory/space/mcp/two_say
+mtron&gt; *~/memory/space/mcp/two_say&gt;&gt;tool     [-- one entry: a collection is keyed by the instruction --]
 ==&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}]
 </code></pre>
 <p>Three rules follow, and the third is the one that surprises people:</p>
@@ -722,7 +721,7 @@ not a pointer the server carries.</li>
 </ul>
 <p>A server can be built from a skill instead: its instructions become tools and its documents become resources.</p>
 <pre><code class="language-mtron">[-- a skill as a server; `.as(mcp_server::T)` is the whole mapping --]
-*&lt;mtronfs:skills/mtron&gt;.as(skill::T).as(mcp_server::T)@/sys/space/mcp/mtron_skill
+*&lt;mtronfs:skills/mtron&gt;.as(skill::T).as(mcp_server::T)@~/memory/space/mcp/mtron_skill
 </code></pre>
 <h5>resources and prompts</h5>
 <ul>
@@ -764,7 +763,7 @@ heartbeats, so a <code>?subq</code>-driven <code>notifications/resources/updated
 it yields the type, and the carrier builds one:</p>
 <pre><code class="language-mtron">/mcp       =&gt; mcp_mtron                               [-- the router's redirect table: a type with a ctor --]
 /message   =&gt; mcp_message
-/basic     =&gt; !*&lt;/sys/space/mcp/basic_server&gt;         [-- an instance already built --]
+/basic     =&gt; !*&lt;~/memory/space/mcp/basic_server&gt;         [-- an instance already built --]
 /drstynx   =&gt; *dr.as(skill::T).as(mcp_server::T)      [-- an evaluated expression: built at mount time --]
 </code></pre>
 <h5>stdio: the carrier with no carrier</h5>
@@ -775,7 +774,7 @@ bin/metatron --mcp -b some.boot.mtron    # another profile, the same stdio disci
 </code></pre>
 <p>A profile mounts the carrier like any other, and the <code>mcp =&gt; stdio</code> boot arg is what tells the BootLoader to
 claim fd 1 <em>before</em> the boot file runs:</p>
-<pre><code class="language-mtron">[space       =&gt; /sys/space,
+<pre><code class="language-mtron">[space       =&gt; ~/memory/space,
  log         =&gt; warn,
  mcp         =&gt; stdio,
  typer/stage =&gt; [code_resolve =&gt; false]]
@@ -783,10 +782,10 @@ claim fd 1 <em>before</em> the boot file runs:</p>
 import(/m/web);
 import(/m/web,web);
 import(/m/ai/llm);
-fsspace::[pattern =&gt; mfs:#, q =&gt; [mimeq::[=&gt;]], route =&gt; [mfs: =&gt; &lt;.&gt;]]@/sys/space/fs/metatron;
-memspace::[pattern =&gt; &lt;/usr/#&gt;, q =&gt; [docq::[=&gt;],subq::[=&gt;],incrq::[=&gt;]]]@/sys/space/usr;
-mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server;
-mcp_stdio::[server =&gt; !*&lt;/sys/space/mcp/basic_server&gt;]@/sys/io/mcp/stdio;
+fsspace::[pattern =&gt; mfs:#, q =&gt; [mimeq::[=&gt;]], route =&gt; [mfs: =&gt; &lt;.&gt;]]@~/memory/space/fs/metatron;
+memspace::[pattern =&gt; &lt;/usr/#&gt;, q =&gt; [docq::[=&gt;],subq::[=&gt;],incrq::[=&gt;]]]@~/memory/space/usr;
+mcp_server::[tool =&gt; [!*eval]]@~/memory/space/mcp/basic_server;
+mcp_stdio::[server =&gt; !*&lt;~/memory/space/mcp/basic_server&gt;]@/sys/io/mcp/stdio;
 </code></pre>
 <p>Three properties are worth stating because none of them is obvious:</p>
 <ul>

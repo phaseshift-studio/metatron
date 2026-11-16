@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -613,6 +611,7 @@ A term with both coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
 <tr><td><code>a{c}</code></td><td>\(ca\)</td></tr>
 <tr><td><code>{n}a</code></td><td>\(a^n\)</td></tr>
 <tr><td><code>{n}a{c}</code></td><td>\((ca)^n\)</td></tr>
+<tr><td><code>{-n}a</code></td><td>\((a^{\smile})^n\)</td></tr>
 </tbody>
 </table>
 <p>Where a coefficient is written depends on what it is written on:</p>
@@ -881,8 +880,8 @@ annihilator is the unity, not the zero.
 a term (Theorem 4). ◻
 :::</p>
 <p>So a zero point annihilates only a step that runs: \((0a)^n = 0^n a^n\) is \(0\) for
-\(n \geq 1\) and \(1\) for \(n = 0\) (Theorem 7), and a span range, a sum of such runs
-(Definition 3, below), is \(0\) only if it holds no zero-step run. In mtron, <code>{0}a{c}</code> is written
+\(n \geq 1\) and \(1\) for \(n = 0\) (Theorem 7), and a span range, a sum of such runs (Definition 3, below), is \(0\) only if
+it holds no zero-step run. In mtron, <code>{0}a{c}</code> is written
 <code>id()</code> whatever \(c\), and an instruction is <code>noobj</code> only when its point is zero
 and its span holds no zero-step run. Tested by the product \(c \cdot n\), which is
 the count of a value's copies, the zero span read as the zero: a branch member
@@ -1307,7 +1306,8 @@ mtron&gt; [a=&gt;[a=&gt;[b=&gt;5]]].repeat(code=&gt;rshift(a),emit=&gt;true)
 ==&gt;[b=&gt;5]
 </code></pre>
 <p>An engine that does not loop takes no span. A rewrite matches a pattern of single applications, and a spanned step is a
-run: <code>{2}count()</code> is \(c^2\), the count of a count, and a native count that took it for \(c\) answered the count of the rows.
+run: <code>{2}count()</code> is \(c^2\), the count of a count, and a native count that took it for \(c\) answered the count of the
+rows.
 So a spanned step stays in the plan and walks over the native answer, as the rewriter's own laws leave a run where it
 is: the unit law drops the identity <code>plus(0)</code>, a single application, and leaves the run <code>{2}plus(0)</code> to the walk.</p>
 <pre><code class="language-mtron">mtron&gt; 5.plus(0).explain()&gt;&gt;desc&gt;&gt;insts
@@ -1316,6 +1316,182 @@ mtron&gt; 5.{2}plus(0).explain()&gt;&gt;desc&gt;&gt;insts
 ==&gt;2
 mtron&gt; 5.{2}plus(0)
 ==&gt;5
+</code></pre>
+<h3>Negative Spans: the Converse</h3>
+<p>A span counts the steps of a run, and a negative span counts them backward. The backward step is not an inverse that
+cancels the forward one, as a function that sends two objects to one place cannot be undone. It is the function's
+<em>converse</em>: the relation the function states, read from its other end [4].</p>
+<p>Read a function as that relation, with multiplicities. If \(a \in \mathcal{F}\), let \(\mu_a (x,y)\) be the coefficient of
+\(y\) in \(\langle x \rangle a\), so that \(\langle x \rangle a = \sum_y \mu_a (x,y)\, y\), each output once by the bulk axiom.
+By the apply, split and bulk axioms, composition multiplies these relations as matrices,
+\(\mu_{a \cdot b} (x,z) = \sum_y \mu_a (x,y)\, \mu_b (y,z)\); by the split and merge axioms, a branch adds them,
+\(\mu_{a + b} = \mu_a + \mu_b\); and a point scales them, \(\mu_{ca} = c\, \mu_a\).</p>
+<p>::: <strong>Definition 4</strong> (Converse). The <em>converse</em> \(a^{\smile}\) of \(a \in \mathcal{F}\) is the relation of \(a\) read from its
+other end, \(\mu_{a^{\smile}} (y,x) = \mu_a (x,y)\):
+\[
+\begin{equation*}
+\langle y \rangle a^{\smile} = \sum_x \mu_a (x,y)\, x,
+\end{equation*}
+\]
+every object that \(a\) sends to \(y\), as often as \(a\) sends it there.
+:::</p>
+<p>The converse is a stream function only where each object has finitely many preimages. A constant has every object as a
+preimage of its value, and a count every stream of its size, so neither converse can be listed.</p>
+<p>::: <strong>Definition 5</strong> (Negative span). If \(n \in \mathbb{N}\), then \(a^{-n} = (a^{\smile})^n\), and a span range
+\(a^{[m,n]} = \sum_{k=m}^{n} a^k\) (Definition 3) may cross zero. In mtron a negative span is written <code>{-n}a</code>, and a range
+<code>{-m,n}a</code>.
+:::</p>
+<p>::: <strong>Theorem 11</strong> (The converse is an involution). If \(a,b \in \mathcal{F}\) and \(c \in \mathcal{C}\), with
+\(\mathcal{C}\) commutative, then
+\[
+\begin{equation*}
+(a + b)^{\smile} = a^{\smile} + b^{\smile}, \quad (a \cdot b)^{\smile} = b^{\smile} \cdot a^{\smile}, \quad
+(ca)^{\smile} = c\, a^{\smile}, \quad (a^{\smile})^{\smile} = a, \quad 1^{\smile} = 1, \quad 0^{\smile} = 0.
+\end{equation*}
+\]
+:::</p>
+<p>::: <em>Proof.</em> Each equality is one of the relations read from its other end:
+\[
+\begin{equation*}
+\begin{array}{lclll}
+\mu_{(a + b)^{\smile}} (y,x) &amp;=&amp; \mu_a (x,y) + \mu_b (x,y) = \mu_{a^{\smile} + b^{\smile}} (y,x) &amp;&amp; [\mu_{a+b} = \mu_a + \mu_b] \\
+\mu_{(a \cdot b)^{\smile}} (z,x) &amp;=&amp; \sum_y \mu_a (x,y)\, \mu_b (y,z) &amp;&amp; [\text{composition}] \\
+&amp;=&amp; \sum_y \mu_{b^{\smile}} (z,y)\, \mu_{a^{\smile}} (y,x) = \mu_{b^{\smile} \cdot a^{\smile}} (z,x) &amp;&amp; [\text{$\mathcal{C}$ commutes, Definition 4}] \\
+\mu_{(ca)^{\smile}} (y,x) &amp;=&amp; c\, \mu_a (x,y) = \mu_{c\, a^{\smile}} (y,x) &amp;&amp; [\mu_{ca} = c\, \mu_a].
+\end{array}
+\end{equation*}
+\]
+Read twice from the other end, a relation reads from its first end again, and \(\mu_1 (x,y)\), which is \(1\) where
+\(x = y\) and \(0\) elsewhere, reads the same from both ends, as \(\mu_0 = 0\) does. ◻
+:::</p>
+<p>So the stream ring with its converse is a ring with an involution, a \(*\)-ring. Over the complex numbers the involution
+conjugates the coefficient as well, \((ca)^{\smile} = \bar{c}\, a^{\smile}\), and the converse of a quantum walk is its
+adjoint: the conjugate transpose with which [1] inverts a wave. The adjoint of a unitary is its inverse.</p>
+<p>::: <strong>Corollary 9</strong> (A converse is no inverse). If \(a\) is a bijection, then \(a \cdot a^{\smile} = a^{\smile} \cdot a = 1\),
+and \(a^{-1}\) is the inverse of \(a\). In general \(a \cdot a^{\smile} \neq 1\).
+:::</p>
+<p>::: <em>Proof.</em> If \(a\) is a bijection, then \(\mu_a (x,y)\) is \(1\) where \(y = a (x)\) and \(0\) elsewhere, so
+\(\mu_{a \cdot a^{\smile}} (x,x') = \sum_y \mu_a (x,y)\, \mu_a (x',y)\) is \(1\) where \(a (x) = a (x')\), which is where
+\(x = x'\), as \(a\) is injective. That is \(\mu_1\), and the other order is the same with the bijection \(a^{\smile}\). If
+instead \(a\) sends two objects to one, \(a (x) = a (x') = y\) with \(x \neq x'\), then
+\(\langle x \rangle a \cdot a^{\smile} = \langle y \rangle a^{\smile} = \langle x, x' \rangle \neq \langle x \rangle\). ◻
+:::</p>
+<p>The forward run and the backward run cancel only at a bijection, where the converse is the inverse. In a graph, <code>out()</code>
+read backward is <code>in()</code>, and <code>out().in()</code> reaches the siblings of a vertex, not the vertex alone.</p>
+<p>::: <strong>Theorem 12</strong> (Signed spans add when their signs agree). If \(a \in \mathcal{F}\) and \(m,n \in \mathbb{Z}\) with
+\(mn \geq 0\), then \(a^m \cdot a^n = a^{m+n}\).
+:::</p>
+<p>::: <em>Proof.</em> If \(m,n \geq 0\), this is Theorem 5. If \(m,n \leq 0\), then
+\(a^m \cdot a^n = (a^{\smile})^{-m} \cdot (a^{\smile})^{-n} = (a^{\smile})^{-m-n} = a^{m+n}\) by Definition 5 and Theorem 5
+for \(a^{\smile}\). If \(m &gt; 0 &gt; n\), the law holds for a bijection and fails in general, as \(a \cdot a^{-1} \neq a^0\)
+(Corollary 9). ◻
+:::</p>
+<p>::: <strong>Theorem 13</strong> (A negative span keeps the power of the point). If \(a \in \mathcal{F}\), \(c \in \mathcal{C}\), with
+\(\mathcal{C}\) commutative, and \(n \in \mathbb{N}\), then \((ca)^{-n} = c^n a^{-n}\).
+:::</p>
+<p>::: <em>Proof.</em>
+\[
+\begin{equation*}
+\begin{array}{lclll}
+(ca)^{-n} &amp;=&amp; ((ca)^{\smile})^n &amp;&amp; [\text{Definition 5}] \\
+&amp;=&amp; (c\, a^{\smile})^n &amp;&amp; [\text{Theorem 11}] \\
+&amp;=&amp; c^n (a^{\smile})^n = c^n a^{-n} &amp;&amp; [\text{Theorem 7, Definition 5}].
+\end{array}
+\end{equation*}
+\]
+◻
+:::</p>
+<p>The point does not invert: a run backward follows as many paths as the run forward, so Theorem 7 holds for every
+integer span, with the point to the power \(|n|\).</p>
+<p>::: <strong>Corollary 10</strong> (A range across zero walks both ways). If \(m,n \in \mathbb{N}\), then
+\(a^{[-m,n]} = (a^{\smile})^{[1,m]} + a^{[0,n]}\): from its input, the walk of Theorem 10 runs backward through
+\(a^{\smile}\) and forward through \(a\).
+:::</p>
+<p>::: <em>Proof.</em> Definition 3, with the sum split at zero, and Definition 5. ◻
+:::</p>
+<p>::: <strong>Theorem 14</strong> (A filter is its own converse). If \(f \in \mathcal{F}\) is a filter,
+\(\langle x \rangle f \in \{\langle x \rangle, \langle\rangle\}\), then \(f^{\smile} = f\).
+:::</p>
+<p>::: <em>Proof.</em> \(\mu_f (x,y) = 0\) wherever \(y \neq x\), and a relation that holds only where \(x = y\) reads the same from both
+ends. ◻
+:::</p>
+<p>Each coefficient carries its own sign. A negative point is the additive inverse: \(a + (-1)a = (1 - 1)a = 0\) by
+Theorems 1 and 4, so copies of opposite sign cancel. A negative span is the converse, which reverses and cancels only at
+a bijection. The point's sign belongs to \(+\) and the span's to \(\cdot\), as the coefficients themselves do.</p>
+<p><strong>Live proof.</strong> If \(a (x) = x + 2\), then \(a^{\smile} (x) = x - 2\), a bijection's converse being its inverse, so
+\(\langle 4 \rangle a^{-1} = \langle 2 \rangle\), and if \(b (x) = x + 1\), then $\langle 5 \rangle b^{-1} \cdot b =
+\langle 5 \rangle$ (Corollary 9). Runs of one sign add, \(b^{-1} \cdot b^{-1} = b^{-2}\) (Theorem 12). Negation is its own
+converse, and a real doubling's converse is a halving.</p>
+<pre><code class="language-mtron">mtron&gt; 4.{-1}plus(2)
+==&gt;2
+mtron&gt; 5.{-1}plus(1).{1}plus(1)
+==&gt;5
+mtron&gt; 5.{-2}plus(1)
+==&gt;3
+mtron&gt; 5.{-1}plus(1).{-1}plus(1)
+==&gt;3
+mtron&gt; 5.{-1}neg()
+==&gt;-5
+mtron&gt; 5.0.{-1}mult(2.0)
+==&gt;2.5
+mtron&gt; 5.0.{-1}mult(2.0).mult(2.0)
+==&gt;5.0
+</code></pre>
+<p>A range across zero walks both ways (Corollary 10): \(\langle 5 \rangle b^{[-1,1]} = \langle 4, 5, 6 \rangle\) and
+\(\langle 0 \rangle b^{[-3,3]} = \langle -3, \ldots, 3 \rangle\). In a graph, <code>{-1,1}out()</code> is <code>in()</code>, <code>id()</code> and <code>out()</code>
+at once.</p>
+<pre><code class="language-mtron">mtron&gt; 5.{-1,1}plus(1)
+==&gt;4
+==&gt;5
+==&gt;6
+mtron&gt; 0.{-3,3}plus(1)
+==&gt;-1
+==&gt;-2
+==&gt;-3
+==&gt;0
+==&gt;1
+==&gt;2
+==&gt;3
+</code></pre>
+<p>A negative point cancels and a negative span reverses: \(3 + (-1)3 = 0\), and
+\(\langle 5 \rangle (b + (-1)b) = \langle 6, (-1)6 \rangle = \langle\rangle\), while \(\langle 5 \rangle b^{-1} = \langle 4 \rangle\).</p>
+<pre><code class="language-mtron">mtron&gt; {3,{-1}3}.count()
+==&gt;0
+mtron&gt; 5.branch(plus(1),plus{-1}(1)).count()
+==&gt;0
+mtron&gt; 5.{-1}plus(1)
+==&gt;4
+</code></pre>
+<p>In mtron, an instruction declares its converse in its <code>?decq</code> claim, as the contract it runs backward:
+<code>plus?int&lt;=int(int)</code> names <code>minus?int&lt;=int(int)</code>, and <code>neg</code> names itself. The walk of Theorem 10 splits a span at zero
+and runs a negative length as that many steps of the converse. An instruction that declares none has no backward run to
+compute, and that part of its span stays as code on its input, <code>start(x).{-n}inst</code>: in limbo. Integer <code>mult</code> declares
+none, as division truncates, and the converse of a count cannot be listed. A claim's <em>inverse</em> is another thing, a
+one-way retraction that the rewriter cancels, \(f \cdot g = 1\), where a converse never cancels. A value is a constant
+(Corollary 2), whose converse relates its value to every object, so a value takes no negative span: <code>3{-1}</code> does not
+parse. A type used as a step is a filter, and so its own converse (Theorem 14).</p>
+<p><strong>NOTES</strong>:</p>
+<ul>
+<li><code>is()</code> declares no converse, so <code>5.{-1}is(gt(3))</code> stays in limbo where Theorem 14 gives <code>5.is(gt(3))</code>. A rule by
+form, every filter its own converse, would cover <code>is()</code> and every type used as a step.</li>
+<li>A lst read as a word: is its converse its reversal, so that <code>[1,2,3]{-1}</code> is <code>[3,2,1]</code>? <code>reverse()</code> is declared an
+involution, as a converse is. Today <code>[1,2,3]{-1}</code> does not parse.</li>
+<li>On a rel, mtron's <code>neg()</code> swaps the ends, so <code>(1=&gt;2).neg()</code> is <code>2=&gt;1</code>. The arrow \(x \Rightarrow y\) is the matrix
+with a \(1\) at row \(x\) and column \(y\) [2], so the swap is its transpose, the converse
+\((x \Rightarrow y)^{\smile} = y \Rightarrow x\), and not its additive inverse, which is the point <code>{-1}(1=&gt;2)</code>.</li>
+<li>A lst under test lays an entry's span times its point as slots. A negative count lays none and is skipped, so
+<code>[{-1}3,4]</code> passes for <code>[int::T]</code>. A run of like slots read backward is the same run, so a negative span could lay its
+length, while a negative point, an anti-entry, should neither lay nor be skipped.</li>
+<li>By Theorem 13, <code>5.{-1}plus{3}(1)</code> is <code>{3}4</code> and <code>5.{-2}plus{3}(1)</code> is <code>{9}3</code>, as <code>5.{2}plus{3}(1)</code> is <code>{9}7</code>. Today
+mtron answers <code>4</code> and <code>3</code>: the walk builds the converse step from its declared contract (<code>Inst.Helper.runs</code>) and
+leaves the step's point behind.</li>
+</ul>
+<pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1)
+==&gt;{9}7
+mtron&gt; 5.{-1}plus{3}(1)
+==&gt;4
+mtron&gt; 5.{-2}plus{3}(1)
+==&gt;3
 </code></pre>
 <h3>Point and Span Coefficients Type Systems</h3>
 <p>If \(a (x) = y\), then \(\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle\) by
@@ -1345,6 +1521,9 @@ unrolls (Theorem 10).</li>
 <li>A zero point annihilates, while a zero span is the unity (Corollary 5): <code>{0}a</code> is <code>id()</code>. A span is a <code>repeat</code> whose
 emit is its lower bound and whose until is its upper, so an engine that loops runs it, and no rewrite takes a run for
 a single application.</li>
+<li>Each coefficient has its own sign. A negative point is the additive inverse, which cancels; a negative span is the
+converse, which reverses and cancels only at a bijection (Corollary 9). With its converse the stream ring is a
+\(*\)-ring (Theorem 11), whose involution over the complex numbers is the adjoint that inverts a wave in [1].</li>
 <li>Where it leads: a span range as one walk of its unrolls, so <code>{*}</code> is a
 generator that halts where its runs leave the domain (Corollary 8); layouts
 in space once a vid can be branched; and code as paths that sum like branched
@@ -1354,9 +1533,10 @@ uris.]</li>
 <ol>
 <li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red Herring's Ship's Log: Chronicles in the Sea
 of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.</li>
-<li>Rodriguez, M.A., Claude, &quot;<a href="./parametric-identities-in-ring-theory.html">Parametric Identities in Ring Theory</a>.&quot;</li>
+<li>Rodriguez, M.A., Stynx, D.R., &quot;<a href="./parametric-identities-in-ring-theory.html">Parametric Identities in Ring Theory</a>.&quot;</li>
 <li>Kleene, S.C., &quot;Representation of Events in Nerve Nets and Finite Automata,&quot;
 Automata Studies, Princeton University Press, 1956.</li>
+<li>Tarski, A., &quot;On the Calculus of Relations,&quot; The Journal of Symbolic Logic, 6(3), pages 73–89, 1941.</li>
 </ol>
 
     </div>

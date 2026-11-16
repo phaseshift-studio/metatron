@@ -27,7 +27,7 @@ The block builds a websocket rec here, with no far side (`ws_handler` is `ws_cli
 twice:
 
 ```mtron
-mtron> memspace::[pattern=>/fascination/#, q=>[mimeq::[=>]]]@/sys/space/fascination
+mtron> memspace::[pattern=>/fascination/#, q=>[mimeq::[=>]]]@~/memory/space/fascination
 mtron> ws_handler::[host=><ws://localhost:8555/mtron>]@/fascination/socket
 ==>ws_handler::[host=>ws://localhost:8555/mtron,
                 send=>λ(){<j>},

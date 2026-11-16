@@ -348,13 +348,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -542,7 +540,7 @@ language and compiled and executed using any of the various types of <em>machine
 <h3>space: storage</h3>
 <p>A system that exposes a subset of the metatron graph is called a <code>space</code>. In the example below, a simple in-memory space
 implementation is responsible for the declared <code>/a/#</code> subset of the uri address space (<code>#</code> is recursive wildcard).</p>
-<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/a/#]@/sys/space/a
+<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/a/#]@~/memory/space/a
 </code></pre>
 <!-- figure source: assets/tikz/mtron-graph.tex (render recipe in that file) -->
 <div style="display:flex; gap:1.5em; align-items:center; flex-wrap:wrap; margin:0.4em 0">
@@ -916,7 +914,7 @@ marker to reshape), and the three insts <code>display</code>/<code>nano</code>/<
 remote hosts, <code>owner</code>-labelled ownership with <code>on_close</code> reaping, and an end-to-end SQLite container + tbleSpace
 walkthrough.</li>
 <li><a href="references/connecting-datasources.html">Connecting Data Sources</a> -- the pattern + route model, discovering a space's
-prefixes from <code>*/sys/space/...</code>, <code>!*</code> lazy references, validation, and common failures.</li>
+prefixes from <code>*~/memory/space/...</code>, <code>!*</code> lazy references, validation, and common failures.</li>
 </ul>
 <h4>protocol &amp; services</h4>
 <ul>
