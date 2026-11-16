@@ -2767,6 +2767,49 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
+     * A SPAN IS A RUN OF ITS STEP: {@code {2}count()} is {@code count().count()}, so no native op may take a spanned
+     * step as one application. {@code fURI.test} judges a step's point, never its span, so a plain pattern step matched
+     * a spanned one, and {@code sql_where_count} answered {@code 5} for {@code isa(...).{2}count()} where the walk
+     * answers {@code 1}. The rows are {@code code % what the walk answers}: a point ({@code count{2}()}) keeps its
+     * copies, and a span after a fused op walks over the native answer.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+.{2}count()                              % 1",
+            "*db:rewrite_test/+.{1,2}count()                            % {10,1}",
+            "*db:rewrite_test/+.isa([value=>?>5]).{2}count()            % 1",
+            "*db:rewrite_test/+.{2}take(3).count()                      % 3",
+            "*db:rewrite_test/+.{3}skip(2).count()                      % 4",
+            "*db:rewrite_test/+.{2}count{2}()                           % {2}2",
+            "*db:rewrite_test/+.isa([value=>?>5]).count().{2}plus(1)    % 7",
+            "*db:rewrite_test/+.count{2}()                              % {2}10",
+            "*db:rewrite_test/+.isa([value=>?>5]).count{2}()            % {2}5",
+    })
+    public void testASpannedStepIsNeverOneNativeOp(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * The plan as well as the answer: the plain count folded {@code {2}count()} too, into a native op that answered
+     * {@code {2}10} against its declared {@code int}. Applied alone, that plan fails its range check, and the right
+     * answer above reached the caller only because the evaluation recovered from the failure. The rows are
+     * {@code code % the spanned op the rewrite must leave in the plan}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+.{2}count()                    % count",
+            "*db:rewrite_test/+.{1,2}count()                  % count",
+            "*db:rewrite_test/+.isa([value=>?>5]).{2}count()  % count",
+            "*db:rewrite_test/+.{2}take(3)                    % take",
+            "*db:rewrite_test/+.{3}skip(2)                    % skip",
+    })
+    public void testASpannedStepStaysInThePlan(final String code, final String op) {
+        final Obj compiled = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertTrue(compiled.asCode().insts().stream().anyMatch(i -> op.equals(i.tid().name()) && !i.tid().b().isOne()),
+                "the spanned " + op + " must stay in the plan, not fold into a native op: " + compiled);
+    }
+
+    /**
      * The ORDER fusions are GATED on purpose — see the gate comment in {@code CommonRewrites} and
      * t-mw19gny3-hhgle5: the fused op returns its rows coefficient-shaped, so a chained {@code count()} counts
      * members (5 rows answered 15). Declining keeps the mtron path, which is CORRECT but not fused, so the

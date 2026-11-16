@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.algebra;
 
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
@@ -1218,7 +1217,7 @@ public enum Law {
                         || scanned.insts().stream().anyMatch(inst -> inst.tid().basePath().test(element.tid().basePath()))))
                     continue;
                 final List<Inst> next = Call.Helper.update(scanned.insts(), rec(equation.first(), equation.second()), (start, length) ->
-                        scanned.insts().subList(start, start + length).stream().allMatch(inst -> cInt.ONE().equals(inst.c()))
+                        scanned.insts().subList(start, start + length).stream().allMatch(inst -> inst.tid().b().isOne() && inst.tid().d().isOne())
                                 && admits.apply(scanned, start, length));
                 out = next.equals(scanned.insts()) ? scanned : code(next);
             }

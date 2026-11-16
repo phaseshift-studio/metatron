@@ -110,8 +110,11 @@ public class RewriterBuilder extends MRec {
             return false;
         if(!source.rng().test(match.rng()))
             return false;*/
-       /* if (!match.c().equals(source.c())) // equals or within?
-            return false;*/
+        // A SPAN IS A RUN OF THE OPERATION, NOT THE OPERATION: {2}count() is count().count(), so a pattern step matches
+        // a source step only at the same span. fURI.test judges the point (within the pattern's), never the span, and
+        // sql_where_count took isa(...).{2}count() as one count: 5 where the walk answers 1.
+        if (!source.tid().b().equals(match.tid().b()))
+            return false;
         if (match.args().isEmpty())
             return true;
         if (match.args().count() != source.args().count())
