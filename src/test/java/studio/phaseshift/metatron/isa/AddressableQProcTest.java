@@ -202,7 +202,7 @@ public class AddressableQProcTest extends AbstractMetatronTest {
      */
     @Test
     void shouldNameAnUndeclaredQueryProcessor() {
-        final Space space = memSpace.of(f("/t/ledgerq/#"), f("/sys/space/ledgerq"));
+        final Space space = memSpace.of(f("/t/ledgerq/#"), f("/memory/space/ledgerq"));
         space.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove")).create());
         final fURI vid = f("/t/ledgerq/x").addQ("subq");
         final MTronException thrown = assertThrows(MTronException.class, () -> Machine.write(vid, jnt(1)));

@@ -26,8 +26,10 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -69,6 +71,23 @@ public interface WebSocketObj extends Rec, Closeable {
 
     default boolean state(final WebSocket conn) {
         return conn.isOpen();
+    }
+
+    /**
+     * THE SERVER THIS SESSION ARRIVED ON, when it arrived on one — the socket whose metrics its frames are counted
+     * in. A session is held by its socket, so the server is a JAVA reference and never a field of the rec: a client
+     * session carries none, and its frames are the network's wire, counted there.
+     */
+    default Listener listener() {
+        return null;
+    }
+
+    /**
+     * THE WIRE ADDRESS this session's frames travel at — the route it took, under the socket's origin
+     * ({@code ws://host:port/mtron}). null for a client, which serves no route.
+     */
+    default fURI wire() {
+        return null;
     }
 
     void onOpen(final WebSocket conn, final Handshakedata handshake);
@@ -154,6 +173,11 @@ public interface WebSocketObj extends Rec, Closeable {
             // THE WIRE IS COUNTED WHERE IT IS: below the q-procs, which see only the writes this machine addresses at a
             // peer — never a reply, never an inbound push — so a ?subq could not feed these meters
             Machine.current().network().analyzer().incr(f(WIRE), f(SENT), 1L);
+            // ... AND A SERVER COUNTS ITS OWN REPLY AS A WRITE AT THE ROUTE IT SERVED, in the socket's own analyzer:
+            // the network's wire meters say what crossed this vm's sockets, the listener's say what one server did
+            final Listener served = this.listener();
+            if (null != served)
+                QProc.Layer.write(served, this.wire(), frame, () -> frame);
         } catch (final Exception e) {
             this.logger().status(ERROR, "error sending %s to %s: %s", frame, this.getWebSocket().getRemoteSocketAddress(), e);
         }

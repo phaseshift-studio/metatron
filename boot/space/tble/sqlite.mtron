@@ -14,4 +14,4 @@
      driver  => <org.sqlite.JDBC>,
      table   => [,],
      q       => [incrq::[=>], subq::[=>]],
-     route   => -< [</usr/${!*user}> => <>]]@</sys/space/usr/user>.as(tblespace::T) }
+     route   => -< [</usr/${!*user}> => <>]]@</memory/space/usr/user>.as(tblespace::T) }

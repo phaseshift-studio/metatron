@@ -54,7 +54,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @SkipWhenPortUnavailable(value = 11434)
 public class MemSpaceLLMSessionIntegrationTest extends AbstractLLMSessionIntegrationTest {
 
-    private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int");
+    private static final fURI SPACE_VID = f("/memory/space/test_llm_mem_int");
     private static final fURI SESSION_VID = f("/mem/example/llm_session/1");
 
     private memSpace space;

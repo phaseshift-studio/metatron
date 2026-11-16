@@ -101,7 +101,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testAMountedListenersHostIsAnAuthority(final String scheme, final String desc) {
         final fURI host = f(scheme + "://0.0.0.0:" + generatePort());
-        final fURI vid = f("/sys/space/network-identity-" + scheme);
+        final fURI vid = f("/memory/space/network-identity-" + scheme);
         assertFalse(Network.Helper.authorities().contains(host), "nothing has claimed that authority yet");
         final Closeable listener = mountListener(scheme, host, vid);
         try {
@@ -129,7 +129,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
             "ws://ginger.local:8182/gremlin                                          % ginger.local  % and a ws backend is still a backend",
     }, delimiter = '%')
     public void testABackendsHostIsNeverAnAuthority(final String host, final String forbidden, final String desc) {
-        final fURI vid = f("/sys/space/network-identity-backend");
+        final fURI vid = f("/memory/space/network-identity-backend");
         mountSpaceWithHost(vid, f(host));
         try {
             assertFalse(Network.Helper.authorities().contains(f(host)), desc + ": " + Network.Helper.authorities());

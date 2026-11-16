@@ -28,7 +28,7 @@ twice:
 
 ```mtron_pre
 [-- a space for this page, with the mimeq q-proc so a read can choose its rendering --]
-memspace::[pattern=>/fascination/#, q=>[mimeq::[=>]]]@/sys/space/fascination
+memspace::[pattern=>/fascination/#, q=>[mimeq::[=>]]]@~/memory/space/fascination
 [-- a built websocket rec: its constructor derives status, send, close and the overrides in Java --]
 ws_handler::[host=><ws://localhost:8555/mtron>]@/fascination/socket
 [-- the derived status, computed on read from a socket that is not open --]

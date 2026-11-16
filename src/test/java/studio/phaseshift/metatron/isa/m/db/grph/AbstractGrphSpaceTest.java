@@ -99,7 +99,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     // ========================================================================
 
     protected static final fURI REWRITE_TEST_SPACE_URI = f("/grt");
-    protected static final fURI REWRITE_TEST_SPACE_VID = f("/sys/space/grph/rewrite_test");
+    protected static final fURI REWRITE_TEST_SPACE_VID = f("/memory/space/grph/rewrite_test");
 
     /**
      * Create the rewrite test space from {@link #rewriteTestConfigRec}.
@@ -203,7 +203,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
                 throw new IllegalStateException(
                         "perTestConfigRec not initialized. @BeforeAll method must run first.");
             }
-            final fURI vid = f("/sys/space/test_" + System.nanoTime());
+            final fURI vid = f("/memory/space/test_" + System.nanoTime());
             final grphSpace graph = grphSpace.of(perTestConfigRec, vid);
             GraphLoader.get(MODERN).accept(graph);
             return graph;
@@ -433,8 +433,8 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     @Disabled("distributed edges (external te:hot/cold traversal) not found over remote JanusGraph")
     @Test
     public void testDistributedEdges() {
-        final memSpace hot = memSpace.of(f("/te/hot/#"), f("/sys/space/dist/hot_" + System.nanoTime()));
-        final memSpace cold = memSpace.of(f("/te/cold/#"), f("/sys/space/dist/cold_" + System.nanoTime()));
+        final memSpace hot = memSpace.of(f("/te/hot/#"), f("/memory/space/dist/hot_" + System.nanoTime()));
+        final memSpace cold = memSpace.of(f("/te/cold/#"), f("/memory/space/dist/cold_" + System.nanoTime()));
         try {
             // seed: hot edges for vertex 1, cold edges for vertex 1
             // external edges with auto_from pointers back to grphSpace
@@ -570,7 +570,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         });
         LOG.error("mtron>   %s [%s ms]", mtronResult.get0(), mtronResult.get1());
         final Tuple.Pair<Obj, Long> gremlinResult = CommonUtil.clock(() -> {
-            final Obj result = ObjmtronSerializer.parse("*</sys/space/test>.gremlin?#<=#('g.V().out().out().out().out().count().next()')").apply();
+            final Obj result = ObjmtronSerializer.parse("*</memory/space/test>.gremlin?#<=#('g.V().out().out().out().out().count().next()')").apply();
             final String s = result.toString();
             return result;
         });

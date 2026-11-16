@@ -53,7 +53,7 @@ public class sysInstSetTest extends AbstractInstSetTest {
         fsSpace.of(FileSystems.getDefault(), rec(
                 uri(PATTERN), uri("test:#"),
                 uri(ROUTE), rec(uri("test:"), uri("src/test/resources/isa/sys/space/sys"))
-        ), f("/sys/space/test/fs"));
+        ), f("/memory/space/test/fs"));
     }
 
     @Test

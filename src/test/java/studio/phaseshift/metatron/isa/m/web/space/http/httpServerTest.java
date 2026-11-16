@@ -26,12 +26,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.sys.space.fsSpace;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -45,6 +47,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -64,6 +67,11 @@ public class httpServerTest extends AbstractMetatronTest {
     private static final String GATEWAY = "http://#";
 
     /**
+     * the server this class serves through — what {@code httpServer.of} answers
+     */
+    private static Listener SERVER;
+
+    /**
      * Isolated copy of test resources — writes land here, not in src/test/resources/.
      */
     private static final Path WEB_DATA_DIR = Path.of("target", "test-web-data");
@@ -74,8 +82,8 @@ public class httpServerTest extends AbstractMetatronTest {
         fsSpace.of(FileSystems.getDefault(), rec(
                 uri(QPROC), lst(QCollection.mimeQ()),
                 uri(PATTERN), uri("local:#"),
-                uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/sys/space/fs"));
-        httpServer.of(rec(
+                uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/memory/space/fs"));
+        SERVER = httpServer.of(rec(
                 uri(ORIGIN), uri(BASE_URL),
                 uri(ROUTE), rec(uri("/"), uri("local:web"))));
         // the web gateway: a read never dials, so the http addresses below answer through the client constructed here
@@ -255,5 +263,33 @@ public class httpServerTest extends AbstractMetatronTest {
         assertTrue(direct.isStr(), "html should be a str, got: " + direct.tid());
         assertTrue(direct.test(HTML_TYPE), "should be html::T");
         assertEquals(HTML_TID, direct.tid().basePath());
+    }
+
+    /**
+     * A SERVER'S METRICS ARE ITS OWN. The socket is an addressable source on its own address ({@code <origin>/#}),
+     * instrumented at birth: a served request is a READ there, timed where the handling ran — in the analyzer the
+     * socket's own {@code ?analq} holds, never the network's shared one.
+     */
+    @Test
+    public void testEachSocketAnswersItsOwnAnalysis() {
+        assertNotNull(SERVER, "the http server this class serves through");
+        assertNotNull(SERVER.analyzer(), "a socket carries an access analyzer from birth");
+        assertNotSame(Machine.current().network().analyzer(), SERVER.analyzer(),
+                "and it is the socket's own, not the network's shared one");
+        // one request served through the socket
+        assertNotEquals(noobj(), Machine.read(BASE_URL + "/index.html"), "the socket serves a request");
+        final fURI analysisAddress = f(BASE_URL).extend(ALL).addQ("analq");
+        assertTrue(Machine.read(analysisAddress).isRec(), "the socket answers its analysis at its own address");
+        // the request is answered on a socket thread, so the meter may land a moment after the client returns
+        for (int waited = 0; waited < 5_000
+                && Machine.read(analysisAddress).asRec().at(uri("read")).asRec().at(uri("count")).intValue() < 1L
+                ; waited += 50)
+            CommonUtil.sleepThread(50);
+        final Rec analysis = Machine.read(analysisAddress).asRec();
+        final Rec read = analysis.at(uri("read")).asRec();
+        assertTrue(read.at(uri("count")).intValue() >= 1L,
+                "the request is a read in the socket's analysis: " + analysis);
+        assertTrue(read.at(uri("latency")).asRec().at(uri("count")).intValue() >= 1L,
+                "and the read is timed where the handling ran");
     }
 }

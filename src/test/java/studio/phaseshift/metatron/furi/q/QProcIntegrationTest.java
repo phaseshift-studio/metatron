@@ -51,7 +51,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
 
     @BeforeEach
     public void setup() {
-        space = memSpace.of(BASE.extend("#"), f("/sys/space/qc"));
+        space = memSpace.of(BASE.extend("#"), f("/memory/space/qc"));
         space.addQ(QCollection.constQ());
         space.addQ(QCollection.typeQ());
         space.addQ(QCollection.incrQ());

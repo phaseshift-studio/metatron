@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.URI;
 import java.util.LinkedHashMap;
@@ -42,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -186,5 +188,51 @@ public class wsServerTest extends AbstractMetatronTest {
         } finally {
             child.pop();
         }
+    }
+
+    /**
+     * A SERVER'S METRICS ARE ITS OWN. Every socket is an addressable source on its own address
+     * ({@code <origin>/#}), instrumented at birth: a frame it handles is a READ there, the reply it sends is a
+     * WRITE, connections is the one gauge, and a hang-up is a write of noobj (a delete) — all in the analyzer the
+     * socket's own {@code ?analq} holds, never the network's shared one.
+     */
+    @Test
+    void testEachSocketAnswersItsOwnAnalysis() throws Exception {
+        final Listener server = wsServer.serve(this.socket, mtron("/mtron"));
+        assertEquals(f("ws"), server.protocol(), "a ws server says ws");
+        assertNotNull(server.analyzer(), "a socket carries an access analyzer from birth");
+        assertNotSame(Machine.current().network().analyzer(), server.analyzer(),
+                "and it is the socket's own, not the network's shared one");
+        final fURI analysisAddress = this.socket.extend(ALL).addQ("analq");
+        assertTrue(Machine.read(analysisAddress).isRec(), "the socket answers its analysis at its own address");
+
+        // one round trip through the socket: the server reads the request and writes the answer
+        final Network network = Machine.current().network();
+        Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
+        final Obj answer = network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)"));
+        assertFalse(answer.isFail(), "the socket answered: " + answer);
+
+        final Rec analysis = Machine.read(analysisAddress).asRec();
+        assertTrue(analysis.at(uri("read")).asRec().at(uri("count")).intValue() >= 1L,
+                "the request is a read in the socket's analysis: " + analysis);
+        assertTrue(analysis.at(uri("read")).asRec().at(uri("latency")).asRec().at(uri("count")).intValue() >= 1L,
+                "and the read is timed where the handler ran");
+        assertTrue(analysis.at(uri("write")).asRec().at(uri("count")).intValue() >= 1L,
+                "the reply is a write at the route it served");
+        assertEquals(1.0d, analysis.at(uri("connections")).realValue(), "connections is a gauge, one live session");
+
+        // INDEPENDENT OF THE NETWORK'S: the wire meters are the network's, the accesses are the socket's
+        final Rec wireAnalysis = Machine.current().network().analyzer().analysis();
+        assertTrue(wireAnalysis.at(uri("read")).isNoObj(), "the network records wire frames, not the socket's reads");
+
+        // A HANG-UP IS A DELETE: the socket records it as a write of noobj, whose subset is write/delete
+        network.drop(this.socket);
+        for (int waited = 0; waited < 5_000 && Machine.read(analysisAddress).asRec()
+                .at(uri("write")).asRec().at(uri("delete")).isNoObj(); waited += 50)
+            CommonUtil.sleepThread(50);
+        final Rec after = Machine.read(analysisAddress).asRec();
+        assertEquals(1L, after.at(uri("write")).asRec().at(uri("delete")).asRec().at(uri("count")).intValue(),
+                "the session's hang-up is a delete: " + after);
+        assertEquals(0.0d, after.at(uri("connections")).realValue(), "and the gauge falls with it");
     }
 }

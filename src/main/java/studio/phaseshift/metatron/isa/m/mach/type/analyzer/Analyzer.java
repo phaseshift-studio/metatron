@@ -19,8 +19,12 @@
 package studio.phaseshift.metatron.isa.m.mach.type.analyzer;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.ANALYZER;
 import static studio.phaseshift.metatron.Tokens.ENABLED;
@@ -28,8 +32,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * analyzer::T — the INSTRUMENT that measures, in the form of the compiler's typer and the processor's tracer (Marko,
- * 2026-11-13). The thing that carries it is an {@link Analyzable}; the analyzer's STATE is the {@link Analysis} it has
- * measured, derived as it is read, and its SETTINGS sit beside that state:
+ * 2026-11-13). Its STATE is the {@link Analysis} it has measured, derived as it is read, and its SETTINGS sit beside
+ * that state:
  * <pre>
  * analyzer::[analysis => analysis::T, step => int::T, profile => bool::T, enabled => bool::T]
  * </pre>
@@ -44,6 +48,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   which is off by default; <b>{@code enabled}</b> switches recording itself off, so a producer's one {@link
  *   #enabled()} read elides the meter work entirely.</li>
  * </ul>
+ * <p>
+ * An analyzer is used two ways, named by the two sub-interfaces below: an {@link Aggregator} OWNS one (a component, at
+ * {@code ~/<component>/analyzer} in the machine's space), and a {@link Recorder} RECORDS into one (a server). Analyzers
+ * live only in the machine's component space — the meta-construct, never sprinkled through a data address. A DATA SPACE
+ * records through the {@code ?analq} q-proc instead, and so does a SERVER: a {@code listener::T} is an addressable
+ * source carrying its own {@code ?analq}, so the analyzer it records into is the one its q-proc holds rather than a
+ * resolved {@code analyzer => path} reference into a shared component's meters.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -89,5 +100,141 @@ public interface Analyzer extends Rec {
     default boolean enabled() {
         final Obj enabled = this.at(uri(ENABLED));
         return !enabled.isBool() || enabled.boolValue();
+    }
+
+    /**
+     * AGGREGATOR — the OWNER role: a component whose analyzer is the aggregation point its recorders send their meters
+     * into, held at {@code ~/<component>/analyzer}. The analyzer is the meta-construct in the machine's space; the
+     * aggregator's {@code analysis::T} is the union of everything recorded into it.
+     */
+    interface Aggregator extends Rec {
+
+        /**
+         * THIS COMPONENT'S STATISTICS — its {@code analyzer} entry, read at {@code ~/<component>/analyzer}. A direct
+         * map read, because a producer asks it where the thing it counts happens. A component that measures nothing
+         * carries none, and asking it for one is a mistake, not an empty answer.
+         */
+        default Analyzer analyzer() {
+            if (this.jvm().get(KEY) instanceof Analyzer analyzer)
+                return analyzer;
+            throw MTronException.of("%s carries no analyzer", this.tid());
+        }
+    }
+
+    /**
+     * RECORDER — the RECORDING role: a thing (a server) that records into an analyzer. Its {@link #analyzer()} is the
+     * analyzer it carries (null when it carries none, and recording is then a noop) and its {@link #group()} is the
+     * group its probes read under inside it — a server's is the empty group, since its analyzer is its own and its
+     * probes sit flat at the analysis root.
+     * <p>
+     * Recording goes through {@link Helper#incr}/{@link Helper#set}/{@link Helper#record}/{@link Helper#timed}, which
+     * gate it: a producer pays one {@code null} read and one {@link Analyzer#enabled()} read and nothing else when its
+     * analyzer is absent or muted. {@link Helper#locateBaseAnalyzer} resolves an {@code analyzer => path} binding into
+     * the analyzer that path names and the group that path leaves below it — the {@code locateBasePoly} walk, for
+     * analyzers.
+     */
+    interface Recorder extends Rec {
+
+        /**
+         * the analyzer this thing records into, or {@code null} when it carries none (recording is a noop)
+         */
+        Analyzer analyzer();
+
+        /**
+         * the group this thing records under inside its analyzer, or {@code null} when it carries none
+         */
+        fURI group();
+
+        /**
+         * whether recording is on — a reader switches it off at the analyzer's {@code enabled} setting
+         */
+        default boolean enabled() {
+            final Analyzer analyzer = this.analyzer();
+            return null != analyzer && analyzer.enabled();
+        }
+
+        /**
+         * the recording verbs, gated — one algorithm, one place: a producer calls these and never considers whether its
+         * analyzer is absent or muted, nor where the group lives.
+         */
+        final class Helper {
+            private Helper() {
+            }
+
+            /**
+             * count {@code delta} more at {@code <group>/<probe>} — the one obvious line for a counter.
+             */
+            public static void incr(final Recorder recorder, final fURI probe, final long delta) {
+                final Analyzer analyzer = recorder.analyzer();
+                final fURI group = recorder.group();
+                if (null == analyzer || null == group || !analyzer.enabled())
+                    return;
+                analyzer.incr(group, probe, delta);
+            }
+
+            /**
+             * the value at {@code <group>/<probe>} now — the one obvious line for a gauge.
+             */
+            public static void set(final Recorder recorder, final fURI probe, final double value) {
+                final Analyzer analyzer = recorder.analyzer();
+                final fURI group = recorder.group();
+                if (null == analyzer || null == group || !analyzer.enabled())
+                    return;
+                analyzer.set(group, probe, value);
+            }
+
+            /**
+             * one more observation of {@code nanos} at {@code <group>/<probe>} — the raw timer, when the elapsed time
+             * was measured outside {@link #timed}.
+             */
+            public static void record(final Recorder recorder, final fURI probe, final long nanos) {
+                final Analyzer analyzer = recorder.analyzer();
+                final fURI group = recorder.group();
+                if (null == analyzer || null == group || !analyzer.enabled())
+                    return;
+                analyzer.record(group, probe, nanos);
+            }
+
+            /**
+             * time {@code work}, recording the elapsed nanos at {@code <group>/<probe>}. Muted, the clock is never read
+             * and {@code work} runs bare — the t0/record/nanoTime-skip idiom is here, not at the call site.
+             */
+            public static <R> R timed(final Recorder recorder, final fURI probe, final Supplier<R> work) {
+                final Analyzer analyzer = recorder.analyzer();
+                final fURI group = recorder.group();
+                if (null == analyzer || null == group || !analyzer.enabled())
+                    return work.get();
+                final long t0 = System.nanoTime();
+                try {
+                    return work.get();
+                } finally {
+                    analyzer.record(group, probe, System.nanoTime() - t0);
+                }
+            }
+
+            /**
+             * THE BASE ANALYZER A PATH NAMES, and the group it leaves below it — the {@code locateBasePoly} walk, for
+             * analyzers: retract up from {@code path} until an {@link Analyzer} is read at a component's {@code
+             * analyzer} door ({@code ~/<component>/analyzer}); the retracted tail is the group. {@code
+             * ~/network/analyzer/web_analyzer/http} resolves to the network's analyzer with group
+             * {@code web_analyzer/http}. Answers {@code null} when the path names no component's analyzer.
+             */
+            public static Located locateBaseAnalyzer(final fURI path) {
+                fURI candidate = path;
+                while (!candidate.segments().isEmpty()) {
+                    final Obj read = Machine.read(candidate);
+                    if (read instanceof Analyzer analyzer && ANALYZER.equals(candidate.segments().getLast()))
+                        return new Located(analyzer, path.removePrefix(candidate));
+                    candidate = candidate.retract(1);
+                }
+                return null;
+            }
+
+            /**
+             * an analyzer and the group within it a path resolves to
+             */
+            public record Located(Analyzer analyzer, fURI group) {
+            }
+        }
     }
 }

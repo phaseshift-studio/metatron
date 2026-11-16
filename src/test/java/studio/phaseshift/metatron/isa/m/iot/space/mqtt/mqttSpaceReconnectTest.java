@@ -162,7 +162,7 @@ public class mqttSpaceReconnectTest extends AbstractMetatronTest {
         // there is no connection yet to redial, so the dial is not retried into the connect timeout
         final MTronException refused = assertThrows(MTronException.class, () -> mqttSpace.of(rec(
                 uri(HOST), uri("mqtt://127.0.0.1"),
-                uri(PATTERN), uri("/t/cellar/#")), f("/sys/space/t/cellar")));
+                uri(PATTERN), uri("/t/cellar/#")), f("/memory/space/t/cellar")));
         assertTrue(causes(refused).contains("127.0.0.1:1883"), "the dial must go to 1883: " + causes(refused));
         assertTrue(System.currentTimeMillis() - start < 5_000, "a refused first dial must fail at once");
     }
@@ -175,7 +175,7 @@ public class mqttSpaceReconnectTest extends AbstractMetatronTest {
                 uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                 uri(PATTERN), uri(root + "/#"),
                 uri(SERIALIZER), ObjmtronSerializer.single());
-        final fURI vid = f("/sys/space" + root);
+        final fURI vid = f("/memory/space" + root);
         return switch (kind) {
             case "miot" -> miotSpace.of(config, vid);
             case "haos" -> haosSpace.of(config, vid);

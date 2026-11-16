@@ -41,6 +41,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
@@ -72,9 +73,9 @@ public class mqttServerTest extends AbstractMetatronTest {
     private static final fURI PLAIN = f("/plain");
 
     public mqttServerTest() {
-        final memSpace foundry = memSpace.of(FOUNDRY.extend(ALL), f("~/sys/space/mqtt/foundry"));
+        final memSpace foundry = memSpace.of(FOUNDRY.extend(ALL), f("~/memory/space/mqtt/foundry"));
         foundry.addQ(QCollection.subQ());
-        memSpace.of(PLAIN.extend(ALL), f("~/sys/space/mqtt/plain"));
+        memSpace.of(PLAIN.extend(ALL), f("~/memory/space/mqtt/plain"));
     }
 
     // ======================== one exchange at a time ========================
@@ -338,6 +339,48 @@ public class mqttServerTest extends AbstractMetatronTest {
         }
     }
 
+    // ======================== the socket's own analysis: message directions are accesses ========================
+
+    /**
+     * A MESSAGE'S DIRECTION IS ITS ACCESS. A received message is a READ at its topic, the delivery it earns a WRITE
+     * at the topic it carries, a live connection the one gauge — all in the analyzer the socket's own {@code ?analq}
+     * holds. The MQTT-standard counters ({@code messages/received}, {@code messages/sent}) are recorded beside them,
+     * and the {@code $SYS} leaves mirror those same probes.
+     */
+    @Test
+    public void theSocketAnalysisCountsMessagesInAndOut() throws Exception {
+        final fURI topic = FOUNDRY.extend("press/1/temp");
+        try (final Live live = serve()) {
+            try (final Socket client = open(live.port())) {
+                MqttCodec.write(client.getOutputStream(), connect("meter-minder"));
+                readConnAck(client);
+                // a subscriber, so the message in earns a message out — both directions of the access
+                MqttCodec.write(client.getOutputStream(), new MqttPacket.Subscribe(12,
+                        List.of(new MqttPacket.Subscription(FOUNDRY.extend("press/#"), AT_MOST_ONCE))));
+                readSubAck(client, 12, List.of(0));
+                final byte[] payload = "{\"temp\":907}".getBytes(StandardCharsets.UTF_8);
+                MqttCodec.write(client.getOutputStream(), new MqttPacket.Publish(topic, payload, AT_MOST_ONCE, false, false, 0));
+                // the delivery rides the queue and the dispatch thread — drain it, then poll the analysis it moved
+                assertInstanceOf(MqttPacket.Publish.class, readWithin(client, WINDOW_MS));
+                final fURI analysisAddress = live.server().origin().extend(ALL).addQ("analq");
+                assertTrue(awaitsAnalysis(analysisAddress, analysis ->
+                                count(analysis, "read/count") >= 1L
+                                        && count(analysis, "write/count") >= 1L
+                                        && count(analysis, "messages/received") >= 1L
+                                        && count(analysis, "messages/sent") >= 1L
+                                        && analysis.at(uri("connections")).realValue() >= 1.0d),
+                        "the socket's own analysis counts the message in, the delivery out and the live connection");
+                final Rec analysis = Machine.read(analysisAddress).asRec();
+                assertInstanceOf(Rec.class, analysis.at(uri("messages")), "messages is a rec of its own probes: " + analysis);
+                assertTrue(analysis.at(uri("messages")).asRec().at(uri("received")).isInt(),
+                        "the received message is a counter: " + analysis);
+                // THE $SYS SOURCE IS THE SAME ANALYZER: the leaf the wire serves resolves the flat probe
+                assertTrue(live.server().sys().at(uri("broker/messages/received")).intValue() >= 1L,
+                        "the $SYS leaf mirrors the analyzer's messages/received: " + live.server().sys());
+            }
+        }
+    }
+
     // ======================== stress: many parallel subscribers and publishers ========================
 
     @Test
@@ -551,5 +594,28 @@ public class mqttServerTest extends AbstractMetatronTest {
             Thread.sleep(20);
         }
         return false;
+    }
+
+    /**
+     * Poll a socket's own access analysis until its meters satisfy the condition — the message and the delivery are
+     * counted on their own threads, so a probe cannot judge the counters the moment the wire goes quiet.
+     */
+    private static boolean awaitsAnalysis(final fURI analysisAddress, final Predicate<Rec> ready) throws InterruptedException {
+        final long deadline = System.currentTimeMillis() + WINDOW_MS;
+        while (System.currentTimeMillis() < deadline) {
+            final Obj analysis = Machine.read(analysisAddress);
+            if (analysis.isRec() && ready.test(analysis.asRec()))
+                return true;
+            Thread.sleep(20);
+        }
+        return false;
+    }
+
+    /**
+     * One counter's value at a nested probe ({@code read/count}, {@code messages/received}), 0 while the probe is absent.
+     */
+    private static long count(final Rec analysis, final String probe) {
+        final Obj meter = analysis.at(uri(probe));
+        return meter.isInt() ? meter.intValue() : 0L;
     }
 }

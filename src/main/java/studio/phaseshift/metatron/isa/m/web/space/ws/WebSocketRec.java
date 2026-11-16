@@ -22,9 +22,11 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.Handshakedata;
 import org.java_websocket.handshake.ServerHandshake;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -55,6 +57,31 @@ public class WebSocketRec extends MRec implements WebSocketObj {
 
     protected WebSocket socket = null;
     protected final GraphittyLogger LOG = Graphitty.log(this);
+    /**
+     * the server that served this session, and the wire address its frames travel at — JAVA references, adopted by
+     * {@link wsServer} when it opens a connection and never part of the rec's data (a session is not an address)
+     */
+    private Listener listener;
+    private fURI wire;
+
+    /**
+     * ADOPTED by the server whose route this session took: every frame it handles or sends is counted in that
+     * socket's analyzer, at the route it serves. A client session is never adopted (its frames are the network's wire).
+     */
+    public void servedBy(final Listener listener, final fURI wire) {
+        this.listener = listener;
+        this.wire = wire;
+    }
+
+    @Override
+    public Listener listener() {
+        return this.listener;
+    }
+
+    @Override
+    public fURI wire() {
+        return this.wire;
+    }
 
     public WebSocketRec(final Map<Obj, Obj> map, final fURI vid) {
         this(map, wsServer.WS_WEBSOCKET_TID, vid);
@@ -189,14 +216,30 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             // counts every frame that arrived on any socket, handled or not -- into the network of the machine the
             // frame arrived in (a server session runs in its route's machine)
             Machine.current().network().analyzer().incr(f(WIRE), f(RECV), 1L);
-            // A FAIL IS CAUGHT BEFORE THE HANDLER IS ASKED TO RUN. An uncaught fail lhs skips a non-catch
-            // instruction's function (Processor.applyFunction's "a fail lhs skips the function" gate), so a frame
-            // whose answer is a fail would never reach on_message at all — not the socket's round-trip router, not a
-            // user handler. The answer's address is untouched: catching changes what the fail IS, not where it is.
-            this.at(uri(ON_MESSAGE)).apply(message.isFail() ? message.asFail().caughtTransient() : message);
+            // A SERVER ALSO COUNTS THE FRAME AS A READ AT THE ROUTE IT SERVED, and the READ IS THE HANDLING: the
+            // layer brackets on_message, so read/count is the frames this server took and read/latency the time it
+            // spent answering them. Two meter sets, two questions (what crossed the wire, what the server did).
+            final Listener served = this.listener();
+            if (null == served)
+                this.handle(message);
+            else
+                QProc.Layer.read(served, this.wire(), () -> {
+                    this.handle(message);
+                    return noobj();
+                });
         } catch (final Exception e) {
             LOG.error("error processing message: %s", e);
         }
+    }
+
+    /**
+     * A FAIL IS CAUGHT BEFORE THE HANDLER IS ASKED TO RUN. An uncaught fail lhs skips a non-catch instruction's
+     * function (Processor.applyFunction's "a fail lhs skips the function" gate), so a frame whose answer is a fail
+     * would never reach on_message at all — not the socket's round-trip router, not a user handler. The answer's
+     * address is untouched: catching changes what the fail IS, not where it is.
+     */
+    private void handle(final Obj message) {
+        this.at(uri(ON_MESSAGE)).apply(message.isFail() ? message.asFail().caughtTransient() : message);
     }
 
     @Override

@@ -2,7 +2,7 @@
 [port   => 8555,
  port2  => 8556,
  host   => localhost:${!*boot/args/port},
- space  => /sys/space,
+ space  => /memory/space,
  web    => [
    http/origin  => <http://0.0.0.0:8777>,
    ws/origin    => <ws://0.0.0.0:8555>],
@@ -42,12 +42,12 @@ memspace::[
         q => [mintq::[=>],
               docq::[=>],
               subq::[=>],
-              incrq::[=>]]]@/sys/space/usr;       
+              incrq::[=>]]]@~/memory/space/usr;       
 fsspace::[
   pattern => local:#,
         q => [subq::[=>],
               mimeq::[=>]],
-    route => [local: => <~>]]@/sys/space/local; 
+    route => [local: => <~>]]@~/memory/space/local; 
         [=====================]  
         [======== WEB ========]
         [=====================]   
@@ -65,7 +65,7 @@ ws_server::[origin  => !*boot/args/web/ws/origin,
 mqttspace::[pattern  => <z2m:#>,
             host     => <mqtt://localhost:1883>,
             q        => [subq::[=>]],
-            route    => [z2m:=><>]]@/sys/space/mqtt;   
+            route    => [z2m:=><>]]@~/memory/space/mqtt;   
 [===================================================================================================]
 [===================================================================================================]
 console::[header=>!*boot/args/header]@/usr/ui/console;

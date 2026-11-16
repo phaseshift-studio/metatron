@@ -6,5 +6,5 @@ import(/m/web,web);
 [== all peer to discover peers ==]
 mdns_discovery::[=>];
 fsspace::[pattern=>fs:#,
-          route  => [fs: => <~>]]@/sys/space/fs;
+          route  => [fs: => <~>]]@~/memory/space/fs;
 

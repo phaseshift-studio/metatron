@@ -30,15 +30,15 @@ uri will be provided to you and thus, this section can be skipped.
   pattern => </dev/scratch/#>,                                              / 
         q => [mintq::[=>],docq::[=>],subq::[=>],                            /
               mimeq::[=>], lineq::[=>],lockq::[=>],                         /
-              incrq::[=>]]]@</sys/space/dev/metatron>
+              incrq::[=>]]]@<~/memory/space/dev/metatron>
 [MAXOUTPUT 5] fsspace::[pattern      => mfs:#,                              /
-           route       => [mfs:=><.>]]@/sys/space/fs/mfs
+           route       => [mfs:=><.>]]@~/memory/space/fs/mfs
 [MAXOUTPUT 5] tblespace::[pattern    => </log/scratch/#>,                   /
             host       => <sqlite:target/log_scratch.sqlite>,               /
             driver     => <org.sqlite.JDBC>,                                /
             table      => [,],                                              /
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],             /
-            route      => [/log/scratch/ => <>]]@</sys/space/log/scratch>
+            route      => [/log/scratch/ => <>]]@<~/memory/space/log/scratch>
 ```
 
 ## understanding source embeddings

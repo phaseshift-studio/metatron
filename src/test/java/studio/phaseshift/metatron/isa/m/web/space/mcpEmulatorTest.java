@@ -73,7 +73,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
         // if (existing == null || existing.isNoObj()) {
         this.homeSpace = memSpace.of(
                 rec(uri(PATTERN), uri("home:#")),
-                f("/sys/space/test-home"));
+                f("/memory/space/test-home"));
         //}
     }
 

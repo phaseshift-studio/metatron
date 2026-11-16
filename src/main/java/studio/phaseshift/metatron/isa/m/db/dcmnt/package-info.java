@@ -52,7 +52,7 @@
  *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
  *         uri(ROUTE), rec(uri("mongo:"), uri("/mongo/"))
  *     ).jvm(),
- *     f("/sys/space/mongo")
+ *     f("~/memory/space/mongo")
  * );
  *
  * // Read a document

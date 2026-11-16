@@ -70,7 +70,7 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
     public static void mountLedgerSpace() {
         InstSet.importInstSet(f("/m/ai/llm"));
         InstSet.importInstSet(MATH_ISA_TID, f("math"));
-        memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
+        memSpace.of(f("/usr/test/#"), f("/memory/space/usr/test")).addQ(incrQ());
     }
 
     @Test

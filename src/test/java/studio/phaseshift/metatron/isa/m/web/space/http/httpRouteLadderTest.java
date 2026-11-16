@@ -87,7 +87,7 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
         // The space the templated mounts below actually address: a memspace over /data/#, holding people. Without
         // it the route expands to an address nothing owns and every request is a 404 — a mount is only as real as
         // the space behind it.
-        memSpace.of(rec(uri(PATTERN), uri(f("/data/#"))), f("/sys/space/test/data"));
+        memSpace.of(rec(uri(PATTERN), uri(f("/data/#"))), f("/memory/space/test/data"));
         studio.phaseshift.metatron.isa.m.mach.type.Machine.write(f("/data/person/34"),
                 rec(uri("name"), str("Ada"), uri("born"), jnt(1815)));
         studio.phaseshift.metatron.isa.m.mach.type.Machine.write(f("/data/person/35"),

@@ -151,7 +151,7 @@ public class mcp_stdioHandler extends MRec {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>(config.jvm());
         final Obj target = jvm.remove(uri(HOST));
         if (null == target || target.isNoObj())
-            return fail(MTronException.of("mcp_stdio requires a host (the server to carry) — e.g. mcp_stdio::[host=>!*</sys/space/mcp/basic_server>]"));
+            return fail(MTronException.of("mcp_stdio requires a host (the server to carry) — e.g. mcp_stdio::[host=>!*<~/memory/space/mcp/basic_server>]"));
         // the type a host is checked against lives in /m/web; without it there is no mcp_server::T to test
         // against, and a null type here used to throw out of the boot thread instead of failing (2026-09-26)
         if (null == webInstSet.MCP_SERVER_TYPE)

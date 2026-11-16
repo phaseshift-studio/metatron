@@ -496,7 +496,7 @@ public class AgentTest extends AbstractMetatronTest {
                         uri(TABLE), lst(uri(MEM_TABLE)),
                         uri(ROUTE), rec(uri("sqlite:"), uri(""))
                 ),
-                f("/sys/space/test_llm_mem")
+                f("/memory/space/test_llm_mem")
         );
     }
 

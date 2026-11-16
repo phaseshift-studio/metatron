@@ -8,4 +8,4 @@
                                                   border        => continuous,
                                                   anchor        => bottom_left,
                                                   width         => 70]],
-    route    => [docker: => <>]]@</sys/space/docker>.as(dckrspace::T) }
+    route    => [docker: => <>]]@</memory/space/docker>.as(dckrspace::T) }

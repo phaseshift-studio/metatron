@@ -55,17 +55,19 @@ import(/m/dev/ide,ide);
         [======== HOME =======]
         [=====================]
 
+[-- @~/network/q >>= +[analq::[=>]]; --]
 
 memspace::[
-  pattern => </usr/marko/#>,                                 
-        q => [mintq::[=>],
+  pattern  => </usr/marko/#>,
+         q => [mintq::[=>],
                docq::[=>],
                subq::[=>],
-              mimeq::[=>],
-              lineq::[=>],
-              lockq::[=>],
-              refq::[=>],
-              incrq::[=>]]]@</sys/space/usr/marko>;    
+               mimeq::[=>],
+               lineq::[=>],
+               lockq::[=>],
+               analq::[=>],
+               refq::[=>],
+               incrq::[=>]]]@<~/memory/space/usr/marko>;
 memspace::[
   pattern => </dev/#>,                                 
         q => [mintq::[=>],
@@ -75,18 +77,18 @@ memspace::[
               lineq::[=>],
               lockq::[=>],
               refq::[=>],
-              incrq::[=>]]]@</sys/space/dev>;                 
+              incrq::[=>]]]@<~/memory/space/dev>;
         [=====================]  
         [====== FILE SYS =====]
         [=====================]    
 fsspace::[
   pattern => root:#,
         q => [mimeq::[=>]],
-    route => [root: => /usr/bin]]@</sys/space/fs/root>; 
+    route => [root: => /usr/bin]]@<~/memory/space/fs/root>; 
 fsspace::[
   pattern => mfs:#,
   q       => [mimeq::[=>],lineq::[=>]],
-    route => [mfs: => <~/software/metatron>]]@</sys/space/fs/metatron>;  
+    route => [mfs: => <~/software/metatron>]]@<~/memory/space/fs/metatron>;  
         [=====================]
         [======== WEB ========]
         [=====================]
@@ -95,17 +97,16 @@ mcp_server::[tool => [
   write_events => inst(events => ?lst::T) { *events.>-.to(/usr/dsh/event/_?incrq) }
 ]]@mcp_dsh_mirror;
 http_server::[origin   => !*<boot/args/external/web/http>,
-              analyzer => ~/network/analyzer/web_analyzer/http,
+              q        => [analq::[=>]],
               route    => [/dsh       => mcp_dsh_mirror,
                            /mcp       => mcp_mtron,
                            /docker    => docker:,
                            /usr       => /usr,
                            /splash    => mfs:boot/space/web,
                            /message   => mcp_message,
-                           /          => mfs:docs/website/]]@/sys/space/web/http;
+                           /          => mfs:docs/website/]]@~/network/web/http;
 [== the same table over tls: an https host serves the certificate in its keystore (a pkcs12 with a private key), opened with its pass ==]
 http_server::[origin   => !*<boot/args/external/web/https>,
-              analyzer => ~/network/analyzer/web_analyzer/http/tls,
               keystore => *<mfs:conf/server.p12>,
               pass     => 'changeit',
               route    => [/dsh       => mcp_dsh_mirror,
@@ -114,11 +115,11 @@ http_server::[origin   => !*<boot/args/external/web/https>,
                            /usr       => /usr,
                            /splash    => mfs:boot/space/web,
                            /message   => mcp_message,
-                           /          => mfs:docs/website/]]@/sys/space/web/https;
+                           /          => mfs:docs/website/]]@~/network/web/https;
 [== the web gateway: a peer for every http(s) authority, so the web tool's *<url> reads the web ==]
 http_client::[host => <http://#>];
 http_client::[host => <https://#>];
-mqtt_server::[origin => <mqtt://0.0.0.0:1883>, analyzer => ~/network/analyzer/web_analyzer/mqtt]@/sys/space/web/mqtt;
+mqtt_server::[origin => <mqtt://0.0.0.0:1883>, q=>[analq::[=>]]]@~/network/web/mqtt;
 [==
   spawn a series of sibling jvms on current physical machine.
   make spawns ws_client::T peers.
@@ -145,7 +146,7 @@ dckrspace::[host     => <unix:///var/run/docker.sock>,
                                                           border        => continuous,
                                                           anchor        => bottom_left,
                                                           width         => 70]],
-            route   => [docker: => <>]]@</sys/space/docker>;
+            route   => [docker: => <>]]@<~/memory/space/docker>;
 
 
 [== *docker:container/dr_sqlite.else([image   => keinos/sqlite3:latest,
@@ -161,38 +162,37 @@ dckrspace::[host     => <unix:///var/run/docker.sock>,
         [=====================]
         [======== HOME =======]
         [=====================]
-[==memspace::[pattern=>/usr/dr/#,q          => [incrq::[=>],subq::[=>]],router=>[/usr/dr/ => <>]]@/sys/space/usr/dr==]
+[==memspace::[pattern=>/usr/dr/#,q          => [incrq::[=>],subq::[=>]],router=>[/usr/dr/ => <>]]@~/memory/space/usr/dr==]
 tblespace::[pattern    => </usr/dr/#>,
             host       => <sqlite:/home/killswitch/software/metatron/.metatron/skills/drstynx/assets/drstynx.sqlite>,
             driver     => <org.sqlite.JDBC>,
             table      => [frame],
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
-            route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
+            route      => [/usr/dr/ => <>]]@<~/memory/space/usr/dr>;
 tblespace::[pattern    => </usr/dsh/#>,
             host       => <sqlite:/home/killswitch/.metatron/dsh.sqlite>,
             driver     => <org.sqlite.JDBC>,
             table      => [,],
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
-            route      => [/usr/dsh/ => <>]]@</sys/space/usr/dsh>;
+            route      => [/usr/dsh/ => <>]]@<~/memory/space/usr/dsh>;
 tblespace::[pattern    => </log/metatron/#>,
             host       => <sqlite:/home/killswitch/.metatron/log_metatron.sqlite>,
             driver     => <org.sqlite.JDBC>,
             table      => [,],
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
-            route      => [/log/metatron/ => <>]]@</sys/space/log/metatron>;
+            route      => [/log/metatron/ => <>]]@<~/memory/space/log/metatron>;
 ws_server::[origin     => !*<boot/args/external/web/ws>,
-            analyzer  => ~/network/analyzer/web_analyzer/ws,
             route    => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
                          /mcp     => mcp_mtron,
                          /message => mcp_message,
-                         /mtron   => mtron_ws]]@/sys/space/web/ws;
+                         /mtron   => mtron_ws]]@~/network/web/ws;
 [== discovery is LAST of the listeners: it announces every surface mounted above, so it must
     come after the web servers or it publishes an incomplete set (http but not ws) ==]
 mdns_discovery::[=>];
 mqttspace::[host    => <mqtt://ginger.local:1883>,
             pattern => z2m:#,
             q       => [subq::[=>]],
-            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;
+            route   => [z2m: => z2m/]]@~/network/iot/z2m;
         [=====================]
         [======== LLM ========]
         [=====================]                
@@ -206,7 +206,7 @@ vecspace::[pattern     => embed:#,
  [------------------------------------^--]
  chat_result => inst?lst[real]<=#{?}(doc=>#::T){ *dr/feature/+.filter(tid().has(embed)).>>model.embed(*doc) }
  [------------------------------------^--]                                  
-                          ]]]@/sys/space/vec/embed;
+                          ]]]@~/memory/space/vec/embed;
 grphspace::[pattern   => h:#,
              host     => !*<boot/args/external/knowgraph>,
              q        => [incrq::[=>],subq::[=>]],
@@ -217,7 +217,7 @@ grphspace::[pattern   => h:#,
                <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
                <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
                <gremlin.remote.remoteTraversalSourceName> => g],
-             route    => [h: => <>]]@</sys/space/grph/h>;
+             route    => [h: => <>]]@<~/memory/space/grph/h>;
 
 grphspace::[pattern  => g:#,
              q        => [incrq::[=>],subq::[=>]],
@@ -225,7 +225,7 @@ grphspace::[pattern  => g:#,
              config   => [
                dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
                <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
-             route    => [g:   => <>]]@</sys/space/grph/g>;
+             route    => [g:   => <>]]@<~/memory/space/grph/g>;
         [======================]
         [========= IDE ========]
         [======================]     
@@ -414,8 +414,8 @@ agent::[
                                         out => usd_currency::0.870]],
   system_feature:::::[              => ]]]@<dr>;
 [-- end::asciidoc_tag[] --]
-@/sys/space/web/http/route  >>= +[/drstynx => |*dr.as(skill::T).as(mcp_server::T)];
-@/sys/space/web/https/route >>= +[/drstynx => |*dr.as(skill::T).as(mcp_server::T)];
+@~/memory/space/web/http/route  >>= +[/drstynx => |*dr.as(skill::T).as(mcp_server::T)];
+@~/memory/space/web/https/route >>= +[/drstynx => |*dr.as(skill::T).as(mcp_server::T)];
 [== user console ==] 
 console::[header=>!*boot/args/header]@/usr/marko/console;
 [==label_line_widget::[body   =>"[{{r}}m{{b}}]enu bar",

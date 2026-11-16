@@ -65,7 +65,7 @@ public class SpaceConstructionTest extends AbstractMetatronTest {
     /**
      * the vid every scenario constructs at, unmounted after each one
      */
-    private static final String VID = "/sys/space/test/construction";
+    private static final String VID = "/memory/space/test/construction";
     private static final Path CORRUPT = Path.of("target", "space-construction-test", "corrupt.mtron").toAbsolutePath();
 
     @BeforeAll
@@ -92,8 +92,8 @@ public class SpaceConstructionTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "mqttspace::[pattern=></t/construction/#>,host=><mqtt://127.0.0.1:{{port}}>]@/sys/space/test/construction                       % <ERROR>",
-            "memspace::[pattern=></t/construction/#>,data=><{{corrupt}}>]@/sys/space/test/construction                                       % <ERROR>",
+            "mqttspace::[pattern=></t/construction/#>,host=><mqtt://127.0.0.1:{{port}}>]@/memory/space/test/construction                       % <ERROR>",
+            "memspace::[pattern=></t/construction/#>,data=><{{corrupt}}>]@/memory/space/test/construction                                       % <ERROR>",
     }, delimiter = '%')
     public void testFailedConstructionMountsNothing(final String construction, final String expected) throws IOException {
         final int port = generatePort();
@@ -112,9 +112,9 @@ public class SpaceConstructionTest extends AbstractMetatronTest {
     @Test
     public void testFailedConstructionPutsThePredecessorBack() {
         this.script(
-                "[STATE] memspace::[pattern=></t/construction/#>]@/sys/space/test/construction",
+                "[STATE] memspace::[pattern=></t/construction/#>]@/memory/space/test/construction",
                 "[STATE] /t/construction/kept -> 42",
-                "[STATE] memspace::[pattern=></t/construction/#>,data=><{{corrupt}}>]@/sys/space/test/construction",
+                "[STATE] memspace::[pattern=></t/construction/#>,data=><{{corrupt}}>]@/memory/space/test/construction",
                 "*/t/construction/kept  % 42",
                 "*/t/construction/stale % noobj");
     }
