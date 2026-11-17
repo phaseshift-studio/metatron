@@ -338,25 +338,34 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
     }
 
     /**
-     * THE POINT AND THE SPAN — the span exponentiates the point: {@code {n}x{p} = xⁿ{pⁿ}}, because points are central
-     * and gather to the front. So their order matters (a point on a run is p, a run of a pointed instruction is pⁿ), an
-     * idempotent instruction collapses its span into its point ({@code {n}e{p} = e{pⁿ}}), a zero run is the identity
-     * even of the annihilator, and a span does not distribute over a branch.
+     * THE POINT AND THE SPAN — a point is parallel, a span serial (Marko, 2026-11-17): {@code {n}x{p}} is p lanes of the
+     * n-step run, {@code p·xⁿ}, the point applied once, as map and a trailing id carry it, so {@code {n}x{p}} is
+     * {@code {n}x.id{p}()} and {@code map{p}(x.….x)}. Only a run of a sum compounds, every step of it a branch:
+     * {@code {n}branch(x,x)} is {@code 2ⁿxⁿ}, Theorem 7's {@code (cx)ⁿ = cⁿxⁿ}. A zero run is the identity with the point
+     * kept, so a zero point annihilates whatever the span, and a span does not distribute over a branch.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            // the span exponentiates the point, on values and in the inferred type
-            "*a.{2}id{3}()                                   % *a.id{9}()                                  % -",
-            "*a.{2}id{3}().type()                            % *a.id{9}().type()                           % -",
-            "*a.{2}plus{3}(*a)                               % *a.plus(*a).plus(*a).id{9}()                % plus",
-            // order matters: a point on the run is p, a run of the pointed instruction is pⁿ
+            // the point is applied once, on values and in the inferred type: lanes of a run, never a run of lanes
+            "*a.{2}id{3}()                                   % *a.id{3}()                                  % -",
+            "*a.{2}id{3}().type()                            % *a.id{3}().type()                           % -",
+            "*a.{2}plus{3}(*a)                               % *a.plus(*a).plus(*a).id{3}()                % plus",
+            "*a.{2}plus{3}(*a)                               % *a.map{3}(plus(*a).plus(*a))                % plus",
+            // the point floats to the end of the run: on the run, on its last step, or on the spanned step, it is one
             "*a.{2}id().id{3}()                              % *a.id{3}()                                  % -",
             "*a.plus(*a).plus{3}(*a)                         % *a.plus(*a).plus(*a).id{3}()                % plus",
-            // an idempotent instruction collapses its span into its point
-            "*a.{3}id{2}()                                   % *a.id{8}()                                  % -",
-            "*a.{3}id{2}().type()                            % *a.id{8}().type()                           % -",
-            // a zero run of anything is the identity, even a run of the annihilator
-            "*a.{0}id{0}()                                   % *a                                          % -",
+            "*a.{3}id{2}()                                   % *a.id{2}()                                  % -",
+            "*a.{3}id{2}().type()                            % *a.id{2}().type()                           % -",
+            "*a.branch({3}id(),{3}id())                      % *a.id{2}()                                  % -",
+            // a run of a sum compounds, every step of it a branch (Theorem 7)
+            "*a.{2}branch(id(),id())                         % *a.id{4}()                                  % -",
+            "*a.{3}branch(id(),id())                         % *a.id{8}()                                  % -",
+            // a zero run is the identity with its point kept, so a zero point annihilates whatever the span
+            "*a.{0}id{3}()                                   % *a.id{3}()                                  % -",
+            "*a.{0}plus{3}(*a)                               % *a.id{3}()                                  % plus",
+            "*a.{0}id{0}()                                   % noobj                                       % -",
+            // a range takes the point on each of its runs, the zero run too
+            "*a.{0,1}plus{3}(*a)                             % *a.branch(id(),plus(*a)).id{3}()            % plus",
             // a span does not distribute over a branch: the square of a sum keeps its cross terms
             "*a.{2}branch(plus(*a),id())                     % *a.branch(plus(*a).plus(*a),plus(*a),plus(*a),id())   % plus",
     }, delimiter = '%')

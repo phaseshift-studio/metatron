@@ -2752,7 +2752,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      * step as one application. {@code fURI.test} judges a step's point, never its span, so a plain pattern step matched
      * a spanned one, and {@code sql_where_count} answered {@code 5} for {@code isa(...).{2}count()} where the walk
      * answers {@code 1}. The rows are {@code code % what the walk answers}: a point ({@code count{2}()}) keeps its
-     * copies, and a span after a fused op walks over the native answer. The plan answers it too, applied as a fresh
+     * copies, taken once by the run ({@code {2}count{2}()} is two lanes of {@code count().count()}, Marko, 2026-11-17),
+     * and a span after a fused op walks over the native answer. The plan answers it too, applied as a fresh
      * code: the evaluation runs the memoized walk (see {@code CommonRewritesTestContract.runRewriteTest}).
      */
     @ParameterizedTest
@@ -2762,7 +2763,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             "*db:rewrite_test/+.isa([value=>?>5]).{2}count()            % 1",
             "*db:rewrite_test/+.{2}take(3).count()                      % 3",
             "*db:rewrite_test/+.{3}skip(2).count()                      % 4",
-            "*db:rewrite_test/+.{2}count{2}()                           % {2}2",
+            "*db:rewrite_test/+.{2}count{2}()                           % {2}1",
             "*db:rewrite_test/+.isa([value=>?>5]).count().{2}plus(1)    % 7",
             "*db:rewrite_test/+.count{2}()                              % {2}10",
             "*db:rewrite_test/+.isa([value=>?>5]).count{2}()            % {2}5",

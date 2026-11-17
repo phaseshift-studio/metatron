@@ -89,7 +89,7 @@ public class GenericBinder extends MRec implements Binder {
             Inst bound = input.isObjInst() ? unaddressed : Inst.Helper.bindGenerics(input, unaddressed, userInst, generics, new HashMap<>());
             if (null == bound)
                 return null;
-            if (!input.isObjInst() && !Inst.Helper.filterOnDomainAllowUnique(input, bound))
+            if (!input.isObjInst() && !Inst.Helper.filterOnDomainAllowUnique(input, bound.dom()))
                 return null;
             // 2. arguments: resolve the user's args against the bound candidate (this is where nested
             //    code arguments are compiled), then seed an initial inst's range from its own argument

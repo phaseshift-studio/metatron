@@ -435,10 +435,14 @@ public class LstTest extends AbstractAlgebraTest {
             "[,].plus([a])                                                       % [a]",
             "[a].plus([,])                                                       % [a]",
             "[,].plus([,])                                                       % [,]",
-            // coefficients: the lhs's is the stream's, so it stays on the lst; the argument's is read into its slots, once
+            // coefficients: the lhs's is the stream's, so it stays on the lst. ONE LST APPENDS ONE LST (Marko,
+            // 2026-11-17): lst{2}::[2,3] is two lsts, {[2,3],[2,3]}, no argument for one, as {2,4} is none for int plus,
+            // while a lst whose index holds two 2s is one lst
             "lst{2}::[1,2].plus([3])                                             % lst{2}::[1,2,3]",
-            "[1].plus(lst{2}::[2,3])                                             % [1,{2}2,{2}3]",
-            "[1].plus(lst{2}::[{3}2])                                            % [1,{6}2]",
+            "[1].plus(lst{2}::[2,3])                                             % <ERROR>",
+            "[1].plus(lst{2}::[{3}2])                                            % <ERROR>",
+            "[1].plus({[2,3],[4]})                                               % <ERROR>",
+            "[1].plus([{3}2])                                                    % [1,{3}2]",
     }, delimiter = '%')
     public void testPlus(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -493,65 +497,103 @@ public class LstTest extends AbstractAlgebraTest {
     }
 
     /**
-     * A LST TESTS A LST RUN BY RUN, the way ranged var args take their arguments (Marko, 2026-11-16). An entry lays its
-     * span times its point (and a type's own {@code T{n}}) as that many indices of its slot, on either side, so
-     * {@code [{3}int::T]}, {@code [int{2}::T,int::T]} and {@code [int::T,int::T,int::T]} are the same three ints, and a
-     * range takes any count in it. The lhs stays open past the last rhs index, but only between entries. Each row is
+     * A LST TESTS A LST INDEX BY INDEX (Marko, 2026-11-17). An index is an address that is not the obj, so a point is
+     * mass at an index and a span a run of indices: {@code [{2}3]} is two 3s at index 0, a lst of one index, and
+     * {@code [3{2}]} a 3 at each of indices 0 and 1, which a lst lays as {@code [3,3]}. Only a value's span lays
+     * indices: an instruction's span is its run and a type's a run of its filter, P·P = P, so {@code [{2}int::T]} is
+     * {@code [int::T]}, while a type's point, and its own count {@code ::T{n}}, are mass. An index passes when its mass
+     * is within the pattern's and its copies are the pattern's. Past the last pattern index the lhs is open, even inside
+     * a value's run, and a pattern index the lhs leaves empty passes only if its mass admits zero. Each row is
      * {@code lhs.isa?#{*}<=#{*}(rhs)}: the whole lhs comes back on a match, noobj otherwise.
      */
     @ParameterizedTest
     @TestData(value = {"import(/m/math)", "age -> int::T@age"})
     @CsvSource(value = {
-            // ---- a span is a run of slots, and a point unfolds into the run the same way ----
-            "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [{3}int::T]",
-            "[{3}int::T].isa?#{*}<=#{*}([int{2}::T,int::T])                                        % [{3}int::T]",
+            // ---- Marko's relations: a value's span lays indices, its point is mass at one ----
+            "[3{2},5].isa?#{*}<=#{*}([int::T,int::T,int::T])                                       % [3,3,5]",
+            "[3{2},5{2}].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [3,3,5,5]",
+            "[3{2}].isa?#{*}<=#{*}([int::T,int::T,int::T])                                         % noobj",
+            "[3{2}].isa?#{*}<=#{*}([int::T])                                                       % [3,3]",
+            "[3{2}].isa?#{*}<=#{*}([{2}int::T])                                                    % [3,3]",
+            "[3{2}].isa?#{*}<=#{*}([{2}3])                                                         % noobj",
+            "[3{2}].isa?#{*}<=#{*}([int{2}::T])                                                    % noobj",
+            "[{2}3].isa?#{*}<=#{*}([int{2}::T])                                                    % [{2}3]",
+            "[{2}3].isa?#{*}<=#{*}([{2}3])                                                         % [{2}3]",
+            "[{2}3,5].isa?#{*}<=#{*}([int::T,int::T,int::T])                                       % noobj",
+            "['a',1,1].isa?#{*}<=#{*}([str::T,int{2}::T])                                          % noobj",
+            "['a',1,1].isa?#{*}<=#{*}([str::T,{2}int::T])                                          % ['a',1,1]",
+            "['a',1,'b'].isa?#{*}<=#{*}([str::T,{2}int::T])                                        % ['a',1,'b']",
+            "['a',1,1].isa?#{*}<=#{*}([str::T,{2}int{2}::T])                                       % noobj",
+            "['a',{2}1].isa?#{*}<=#{*}([str::T,{2}int{2}::T])                                      % ['a',{2}1]",
+            // ---- the span is a run, the point parallel: {2}int{3}::T is three parallel int::T checks, never nine ----
+            "[{3}6].isa?#{*}<=#{*}([{2}int{3}::T])                                                 % [{3}6]",
+            "[{9}6].isa?#{*}<=#{*}([{2}int{3}::T])                                                 % noobj",
+            // ---- a value's span is its run written out ----
+            "[{2}1{3}].isa?#{*}<=#{*}([{2}1,{2}1,{2}1])                                            % [{2}1,{2}1,{2}1]",
+            "[1,1].isa?#{*}<=#{*}([1{2}])                                                          % [1,1]",
+            "[1{2}].isa?#{*}<=#{*}([1,1])                                                          % [1,1]",
+            "[{2}1].isa?#{*}<=#{*}([1,1])                                                          % noobj",
+            "[1,1].isa?#{*}<=#{*}([{2}1])                                                          % noobj",
+            // ---- a type's span is a run of its filter, one index; its point and its own count are mass ----
+            "[{3}int::T].isa?#{*}<=#{*}([int::T])                                                  % [{3}int::T]",
+            "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % noobj",
             "[int::T,int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                    % [int::T,int::T,int::T]",
-            "[{2}1{3}].isa?#{*}<=#{*}([{2}1,{2}1,{2}1])                                            % [{2}1{3}]",
-            "[{2}1].isa?#{*}<=#{*}([1,1])                                                          % [{2}1]",
-            "[1,1].isa?#{*}<=#{*}([{2}1])                                                          % [1,1]",
-            "[3{2}].isa?#{*}<=#{*}([int::T,int::T])                                                % [3{2}]",
-            // ---- a type's own count, T{n}, unfolds as well ----
-            "[int::T{3}].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [int::T{3}]",
-            "[{2}nat::T,{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,{2}str::T,str::T,str::T])         % [{2}nat::T,{4}'hello']",
-            "[nat::T{2},{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,str::T{2},str::T,str::T])         % [nat::T{2},{4}'hello']",
-            "[{2}age::T,{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,{2}str::T,str::T,str::T])         % [{2}age::T,{4}'hello']",
-            "[age::T{2},{4}'hello'].isa?#{*}<=#{*}([int::T,int::T,str::T{2},str::T,str::T])         % [age::T{2},{4}'hello']",
-            // ---- a range takes any count in it, on either side ----
-            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([str::T])                                        % [{2}int{?}::T,str::T]",
-            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([int::T,str::T])                                 % [{2}int{?}::T,str::T]",
-            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([int::T,int::T,str::T])                          % [{2}int{?}::T,str::T]",
-            "[int{?}::T{2},str::T].isa?#{*}<=#{*}([int::T,int::T,str::T])                          % [int{?}::T{2},str::T]",
-            "[int::T,int::T,int::T].isa?#{*}<=#{*}([{?}int::T,{2}int::T])                          % [int::T,int::T,int::T]",
-            "['a'].isa?#{*}<=#{*}([{*}int::T,str::T])                                              % ['a']",
+            "[int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                           % [int::T,int::T]",
+            "[{3}int::T].isa?#{*}<=#{*}([int{2}::T,int::T])                                        % noobj",
+            "[int::T{3}].isa?#{*}<=#{*}([int{3}::T])                                               % [int::T{3}]",
+            "[int::T{3}].isa?#{*}<=#{*}([int::T])                                                  % noobj",
             "[5,6].isa?#{*}<=#{*}([{2}nat::T])                                                     % [5,6]",
-            // ---- a zero run is no index at all ----
+            "[5,6].isa?#{*}<=#{*}([nat::T,nat::T])                                                 % [5,6]",
+            "[5,-1].isa?#{*}<=#{*}([nat::T,nat::T])                                                % noobj",
+            "[5,6].isa?#{*}<=#{*}([age::T,age::T])                                                 % [5,6]",
+            "[{2}nat::T].isa?#{*}<=#{*}([str::T,str::T])                                           % noobj",
+            // ---- a stream at an index is mass there, and each of its copies is tested ----
+            "[{1,2},'a'].isa?#{*}<=#{*}([int{2}::T,str::T])                                        % [{1,2},'a']",
+            "[{1,'b'},'a'].isa?#{*}<=#{*}([int{2}::T,str::T])                                      % noobj",
+            // ---- mass zero is an empty index, and an index the lhs leaves out is one ----
             "[int{0}::T,[3=>'x',5=>'stuff']].isa?#{*}<=#{*}([noobj,[int::T=>str::T]])              % [int{0}::T,[3=>'x',5=>'stuff']]",
             "[,].isa?#{*}<=#{*}([int{?}::T])                                                       % [,]",
-            // ---- the lhs is open past the last rhs index, between entries ----
-            "[int::T,str::T].isa?#{*}<=#{*}([int::T])                                              % [int::T,str::T]",
-            "[1,'a',2].isa?#{*}<=#{*}([{*}int::T,str::T])                                          % [1,'a',2]",
-            "[{2}4].isa?#{*}<=#{*}([int{2}::T])                                                    % [{2}4]",
-            "['a',1,'b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                        % ['a',1,'b']",
-            "['a'].isa?#{*}<=#{*}([str::T,{?}int::T])                                              % ['a']",
-            // ---- a trailing run that lays nothing leaves the lhs where it found it: no open tail behind it ----
-            "['a','b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                          % noobj",
+            "[,].isa?#{*}<=#{*}([int::T])                                                          % noobj",
+            "['a'].isa?#{*}<=#{*}([str::T,int{?}::T])                                              % ['a']",
+            "['a'].isa?#{*}<=#{*}([str::T,int::T])                                                 % noobj",
             "[1,2].isa?#{*}<=#{*}([int::T,noobj])                                                  % noobj",
             "[{2}1].isa?#{*}<=#{*}([int{?}::T])                                                    % noobj",
-            // ---- what does not lay ----
-            "[{3}4].isa?#{*}<=#{*}([int{2}::T])                                                    % noobj",
-            "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,str::T])                                    % noobj",
-            "[{2}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % noobj",
-            "[int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                           % noobj",
-            "[{2}int{?}::T,str::T].isa?#{*}<=#{*}([int::T,int::T,int::T,str::T])                   % noobj",
-            "[{2}nat::T,{4}'hello'].isa?#{*}<=#{*}([int::T,{5}str::T])                             % noobj",
-            "[{2}nat::T].isa?#{*}<=#{*}([str::T,str::T])                                           % noobj",
-            "[5,-1].isa?#{*}<=#{*}([{2}nat::T])                                                    % noobj",
+            "[{2}1].isa?#{*}<=#{*}([int{+}::T])                                                    % [{2}1]",
+            // ---- an instruction at an index is a predicate each copy meets ----
+            "[1,5].isa?#{*}<=#{*}([_,is(gt(3))])                                                   % [1,5]",
+            "[1,3].isa?#{*}<=#{*}([_,is(gt(3))])                                                   % noobj",
+            // ---- past the last pattern index the lhs is open ----
+            "[int::T,str::T].isa?#{*}<=#{*}([int::T])                                              % [int::T,str::T]",
+            "[1,'a',2].isa?#{*}<=#{*}([{*}int::T,str::T])                                          % [1,'a',2]",
+            "['a',1,'b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                        % ['a',1,'b']",
+            "['a','b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                          % noobj",
             "[1,2,'a'].isa?#{*}<=#{*}([{2}int::T,{2}str::T])                                       % noobj",
-            "[{2}1].isa?#{*}<=#{*}([1,2])                                                          % noobj",
             "[{*}int::T].isa?#{*}<=#{*}([{*}int::T,str::T])                                        % noobj",
-            "[,].isa?#{*}<=#{*}([int::T])                                                          % noobj",
     }, delimiter = '%')
-    public void testRuns(final String code, final String expected) {
+    public void testIndices(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A LST IS THE AXIS A VALUE'S SPAN UNFOLDS ALONG (Marko, 2026-11-17): {@code [3{2}]} is {@code [3,3]}, so a
+     * select's rules meet two indices and two lsts written one way and the other are equal, while a stream has no axis
+     * and keeps the span curled, and a point stays mass at its index.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[3{2}]                                       % [3,3]",
+            "[1,3,2,3{2}]                                 % [1,3,2,3,3]",
+            "[{2}1{3}]                                    % [{2}1,{2}1,{2}1]",
+            "[3{2}]==[plus(1),plus(2)]                    % [4,5]",
+            "[1,3,2,3,3].eq([1,3,2,3{2}])                 % true",
+            "[{2}3]==[plus(1),plus(2)]                    % [{2}4]",
+            "[{2}3,5]==[id(),plus(1)]                     % [{2}3,6]",
+            "[3]==[branch(id(),id())]                     % [{2}3]",
+            "[{2}1,{2}2].count()                          % 1",
+            "({2}[1,2]).count()                           % 2",
+            "{{2}1,{2}2}.count()                          % 4",
+    }, delimiter = '%')
+    public void testAValuesSpanLaysIndices(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

@@ -157,15 +157,17 @@ public class CodeTest extends AbstractMetatronTest {
 
     /**
      * AN INSTRUCTION IS {span}inst{point}, as a type is (Marko, 2026-11-09): a leading coefficient is a run of the
-     * instruction, so {@code {2}plus{3}(34)} is {@code plus{3}(34).plus{3}(34)}, and a trailing one is its point, how
-     * many it emits. The leading one was read as the code's coefficient (and lost) at the head of a chain, and as the
-     * point mid-chain.
+     * instruction and a trailing one its point, how many it emits. The leading one was read as the code's coefficient
+     * (and lost) at the head of a chain, and as the point mid-chain. The point is parallel, the span serial (Marko,
+     * 2026-11-17): {@code {2}plus{3}(34)} is three lanes of the run {@code plus(34).plus(34)}, the point once, so
+     * {@code plus(34).plus{3}(34)}; a point on every step of the run compounds, as a branch does.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "1.{2}plus{3}(34)                % {9}69",
+            "1.{2}plus{3}(34)                % {3}69",
+            "1.plus(34).plus{3}(34)          % {3}69",
             "1.plus{3}(34).plus{3}(34)       % {9}69",
-            "1.{2}plus{3}(34).count()        % 9",
+            "1.{2}plus{3}(34).count()        % 3",
             "1.{2}plus(34)                   % 69",
             "1.{3}plus(1)                    % 4",
             "1.{1}plus(1)                    % 2",

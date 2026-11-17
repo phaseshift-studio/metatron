@@ -356,16 +356,18 @@ public class NoObjTest extends AbstractMetatronTest {
     }
 
     /**
-     * A SPAN OF ZERO IS id() (Marko, 2026-11-16): {@code {0}f} is f⁰, the identity, so an instruction is noobj only
-     * when its point is zero ({@code f{0}} emits nothing) and its span holds no zero-step run. c() is span x point, so
-     * testing it read {@code {0}f} as noobj, and a {@code {0}f} built after parsing (a law_shard lane narrowed to
-     * [0,0]) was taken for nothing. The rows are {@code span min % span max % point % noobj}.
+     * A SPAN OF ZERO IS id() (Marko, 2026-11-16), AND A ZERO POINT ANNIHILATES WHATEVER THE SPAN (Marko, 2026-11-17):
+     * {@code {n}f{c}} is c·fⁿ, so {@code {0}f} is f⁰, the identity, and {@code {0}f{0}} is 0·f⁰, nothing: an instruction
+     * is noobj exactly when its point is zero. c() is span x point, so testing it read {@code {0}f} as noobj, and a
+     * {@code {0}f} built after parsing (a law_shard lane narrowed to [0,0]) was taken for nothing. The rows are
+     * {@code span min % span max % point % noobj}.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             "0  % 0  % 1 % false",
-            "0  % 0  % 0 % false",
-            "0  % 1  % 0 % false",
+            "0  % 0  % 0 % true",
+            "0  % 1  % 0 % true",
+            "0  % 1  % 1 % false",
             "1  % 1  % 0 % true",
             "2  % 2  % 0 % true",
             "-1 % -1 % 0 % true",

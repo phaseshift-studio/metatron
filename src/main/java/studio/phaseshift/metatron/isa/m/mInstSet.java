@@ -1278,6 +1278,29 @@ public class mInstSet extends AbstractInstSet {
                             }
                             return changed ? MCode.code(out) : code;
                         }), "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
+                        // THE POINT FLOATS OFF A MAP'S ARGUMENT (Marko, 2026-11-17): map(x{c}) ⇝ map{c}(x), the map emitting c
+                        // copies of what x emits once, so its range of one obj holds and map(int{2}::T) is map{2}(int::T).
+                        // branch(int::T,int::T) compiles to it: its like terms sum to branch(int{2}::T) and its one member
+                        // inlines as map(int{2}::T). A value or a type floats its point when the point is exact: a ranged one
+                        // is a quantifier, and a call keeps its points where its reducers count them
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_float"), code -> {
+                            boolean changed = false;
+                            final List<Inst> out = new ArrayList<>(code.insts().size());
+                            for (final Inst inst : code.insts()) {
+                                final Obj arg = MAP_INST_TID.equals(inst.tid().basePath()) && inst.args().isLst() &&
+                                        1 == inst.args().count() ? inst.arg(0) : noobj();
+                                final cInt point = arg.isNoObj() || arg.isCall() || (!arg.isType() && !arg.tid().b().isOne())
+                                        ? cInt.ONE() : arg.isType() ? arg.tid().d() : arg.c();
+                                if (point.isExact() && null != point.min() && !point.isOne() && !point.isZero()) {
+                                    final Obj once = arg.isType() ? arg.d(cInt.ONE()) : arg.c(cInt.ONE());
+                                    final Inst floated = (Inst) map_(once).tryToInst();
+                                    out.add(floated.tid(floated.tid().b(inst.tid().b()).d(inst.tid().d().mult(point))).asInst());
+                                    changed = true;
+                                } else
+                                    out.add(inst);
+                            }
+                            return changed ? MCode.code(out) : code;
+                        }), "the point floats off a map's argument: \\(\\mathrm{map}(x\\{c\\}) \\leadsto \\mathrm{map}\\{c\\}(x)\\), the map emitting \\(c\\) copies of what \\(x\\) emits once, for a value or a type \\(x\\) and an exact \\(c\\). e.g. \\(\\mathrm{map}(\\mathrm{int}\\{2\\}) \\leadsto \\mathrm{map}\\{2\\}(\\mathrm{int})\\)"),
 
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where

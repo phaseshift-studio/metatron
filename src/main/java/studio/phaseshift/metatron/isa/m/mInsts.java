@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
@@ -757,7 +758,13 @@ public final class mInsts {
                 InstBuilder.build().tid(PLUS_INST_TID, "append the slots of the argument lst onto the slots of the lhs lst")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID, "the concatenated lst")
                         .argLst(LST_TYPE, "the lst to append")
-                        .body((lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Obj>elements(), inst.arg(0).<Obj>elements()).map(o -> ((Obj) o).clone().<Obj>as()).collect(CommonUtil.ListCollector.single())))
+                        // ONE LST APPENDS ONE LST (Marko, 2026-11-17): lst{2}::[2,3] is two lsts, {[2,3],[2,3]}, never a lst
+                        // whose slots hold two of each, and two lsts are no argument for one, as {2,4} is none for int plus
+                        .body((lhs, inst) -> {
+                            if (!inst.arg(0).c().isOne())
+                                throw MTronException.of(Obj.xxxValue, inst.arg(0).toCleanString(), T(inst.arg(0).tid()), LST_TYPE);
+                            return lhs.jvm(Stream.concat(lhs.<Obj>elements(), inst.arg(0).<Obj>elements()).map(o -> ((Obj) o).clone().<Obj>as()).collect(CommonUtil.ListCollector.single()));
+                        })
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "remove the slots of the argument lst from the lhs lst")

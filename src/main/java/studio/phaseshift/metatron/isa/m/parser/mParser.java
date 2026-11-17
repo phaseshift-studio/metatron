@@ -40,6 +40,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.util.MTronException;
@@ -294,7 +295,8 @@ public class mParser {
                 labeled(lst_internal(), "an lst entry — a value, or an inst"),
                 labeledCloser(of(']').trim(), "']' to close the lst"),
                 m_vid_postfix())
-                .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
+                // a lst is the axis a value's span unfolds along (Lst.Helper.laid): the literal [3{2}] is [3,3]
+                .map(t -> new MLst(Lst.Helper.laid(pick(t, 2)), pick(t, 0), pick(t, 4))));
 
         rec_parser.set(seq(m_type_prefix(Tokens.REC_TID), of('[').trim(), labeled(rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), "a poly entry (a lst or a rec) — a value, key=>value, ',' or ']'"), labeledCloser(of(']').trim(), "']' to close the rec"), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
@@ -668,8 +670,9 @@ public class mParser {
                 return second;
             // A SPAN STAYS ON ITS INSTRUCTION (Marko, 2026-11-15), at the head of an expression as in a chain (m_code):
             // {2}*a is one from(a), a run of two that applying it walks (Inst.Helper.runs). A ZERO SPAN IS id() (Marko,
-            // 2026-11-16): {0}*a is f to the zero, the identity, never the noobj that annihilated the chain after it
-            final Obj lead = first.isInst() && first.asInst().tid().b().isZero() ? instB(ID_INST_TID, lst()) : first;
+            // 2026-11-16): {0}*a is f to the zero, the identity, never the noobj that annihilated the chain after it. ITS
+            // POINT STAYS (Marko, 2026-11-17): {0}f{c} is c·f⁰, id{c}()
+            final Obj lead = first.isInst() && first.asInst().tid().b().isZero() ? instB(ID_INST_TID.d(first.asInst().tid().d()), lst()) : first;
             if (null == second)
                 return lead;
             final List<Inst> newCode = new ArrayList<>();
@@ -1647,9 +1650,10 @@ public class mParser {
         return choice(prefixed, plain)
                 .map(t -> {
                     // a span stays on its instruction, a run that applying it walks (Inst.Helper.runs), and a zero span
-                    // is id() (Marko, 2026-11-16): {0}plus(1) is plus(1) to the zero, the identity, whatever its point
+                    // is id() (Marko, 2026-11-16): {0}plus(1) is plus(1) to the zero, the identity. The point stays
+                    // (Marko, 2026-11-17): {0}plus{3}(1) is c·f⁰, id{3}(), and {0}plus{0}(1) is the zero
                     final List<Object> elements = mParser.<List<Object>>pick(t, 2).stream()
-                            .map(e -> e instanceof Inst inst && inst.tid().b().isZero() ? instB(ID_INST_TID, lst()) : e)
+                            .map(e -> e instanceof Inst inst && inst.tid().b().isZero() ? instB(ID_INST_TID.d(inst.tid().d()), lst()) : e)
                             .toList();
                     return elements.size() == 1 ? elements.getFirst() : new MCode((List) startAfterEnd(elements
                             .stream()
