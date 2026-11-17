@@ -1185,6 +1185,15 @@ public final class mInsts {
                         .law(Law.pure, Law.idempotent, Law.involution, Law.unit)
                         .create(),
                 InstBuilder.build()
+                        .tid(MAP_INST_TID)
+                        .dom(A.maybe(), "maybe some obj")
+                        .rng(B.maybeSome(), "the lhs obj applied to the arg obj")
+                        .argLst(T(B.maybeSome()), "any obj")
+                        .desc("applies the lhs obj to the arg obj to yield the rhs obj")
+                        .body((lhs, inst) -> inst.arg(0).apply(lhs))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build()
                         .tid(BRANCH_INST_TID)
                         // THE DOM IS THE SHIPMENT GRAIN, but the INSTRUCTION'S OWN DEFAULT IS LOCAL: {?} feeds one obj
                         // at a time. {n} pages it; {*} gathers the whole lhs once (a barrier). A DISTRIBUTION REWRITE
