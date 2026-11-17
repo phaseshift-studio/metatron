@@ -25,23 +25,20 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.web.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.storage.TypedKeyValueSchema;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.storage.fURIAwareIndexedSchema;
 import studio.phaseshift.metatron.isa.m.db.tble.space.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.m.db.tble.space.tbleIncrQ;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.web.type.ObjSQLSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.sql.*;
 import java.util.*;
@@ -50,16 +47,13 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_TID;
 
 /**
  * A dual-mode JDBC-backed {@link Space} that provides both a key-value store and
@@ -116,17 +110,6 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
 
     public static fURI SQL_INST_TID = TBLE_ISA_INST_TID.extend(SQL);
     public static fURI TBLE_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tblespace");
-    public static final Type TBLE_SPACE_TYPE =
-            TypeBuilder.build()
-                    .tid(SPACE_TID)
-                    .vid(TBLE_SPACE_TID)
-                    .isaPredicate(rec(
-                            uri(HOST), URI_TYPE,
-                            uri(DRIVER), URI_TYPE))
-                    .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
-                            lst(mInstSet.REC_TYPE),
-                            (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
-                    .create();
 
     // ---- Instance state --------------------------------------------------------
 

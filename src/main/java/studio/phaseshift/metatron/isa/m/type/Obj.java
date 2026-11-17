@@ -344,9 +344,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default fURI baseTypeID() {
         if (this.type().isRootType()) return ALL.c(this.c());
-        // A VALUE IS {point}value{span} (Marko, 2026-11-10): a scalar's base type keeps its span and its point apart,
-        // as its tid does. c() is span times point, so the base type of 2{3} written c(3) read as the point form
-        // /m/int{3}, a different type than the value's own {3}/m/int (Marko, 2026-11-11: {3}5{3} is an int)
+            // A VALUE IS {point}value{span} (Marko, 2026-11-10): a scalar's base type keeps its span and its point apart,
+            // as its tid does. c() is span times point, so the base type of 2{3} written c(3) read as the point form
+            // /m/int{3}, a different type than the value's own {3}/m/int (Marko, 2026-11-11: {3}5{3} is an int)
         else if (this.isBool()) return BOOL_TID.b(this.tid().b()).d(this.tid().d());
         else if (this.isBytes()) return BYTES_TID.b(this.tid().b()).d(this.tid().d());
         else if (this.isInt()) return INT_TID.b(this.tid().b()).d(this.tid().d());
@@ -1875,15 +1875,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .body((lhs, inst) -> (inst.args().count() == 1 ? lhs.asInst() : lhs.asInst().args(inst.arg(1).asPoly())).apply(inst.arg(0)))
                             .create(),
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(ALL_MAYBE_TYPE), (lhs, inst) -> lhs.apply(inst.arg(0))),
-                    InstBuilder.build()
-                            .tid(MAP_INST_TID)
-                            .dom(A.maybe(), "maybe some obj")
-                            .rng(B.maybe(), "the lhs obj applied to the arg obj")
-                            .argLst(T(B.maybe()), "any obj")
-                            .desc("applies the lhs obj to the arg obj to yield the rhs obj")
-                            .body((lhs, inst) -> inst.arg(0).apply(lhs))
-                            .law(Law.pure)
-                            .create(),
                     InstBuilder.build()
                             .tid(FILTER_INST_TID)
                             .dom(A, "any obj")

@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.SQLRewriteUtils;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
@@ -41,7 +42,8 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.db.tble.tbleSpace.*;
+import static studio.phaseshift.metatron.isa.m.db.tble.tbleSpace.SQL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.db.tble.tbleSpace.TBLE_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -51,7 +53,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -64,14 +65,7 @@ public class tbleInstSet extends AbstractInstSet {
     public static final fURI TBLE_ISA_TID = DB_ISA_TID.extend("tble");
     public static final fURI TBLE_ISA_INST_TID = TBLE_ISA_TID.extend("inst");
     public static final fURI TBLE_ISA_REWRITE_TID = TBLE_ISA_INST_TID.extend("rewrite");
-    public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
-
-    public static final Type TABLE_TYPE = TypeBuilder.build()
-            .tid(URI_TID)
-            .vid(TABLE_TID)
-            .isaPredicate(T(REC_TID.maybeSome()))
-            .create();
-
+    public static Type TBLE_SPACE_TYPE;
 
     public tbleInstSet() {
         super(mutableMap(uri(PATTERN), uri(TBLE_ISA_TID.extend(ALL))), INSTSET_TID, TBLE_ISA_TID);
@@ -130,7 +124,17 @@ public class tbleInstSet extends AbstractInstSet {
                                                 instC(M_ISA_INST_TID.dom(ALL_STAR).rng(ALL_STAR), lst(), (lhs, inst) -> MTronException.wrap(() -> str(new String(new BufferedInputStream(Objects.requireNonNull(tbleInstSet.class.getResourceAsStream("llm_messages_schema.sql"))).readAllBytes()))))),
                                         REC_TID, TBLE_ISA_TID.extend("helper")),
                                 "a collection of tble related utilities")),
-                uri(TYPE), lst(docWrap(TBLE_SPACE_TYPE, "a metatron realization of a relational database", "*<http://metatron.phaseshift.studio/skills/mtron/references/tble-instset-mtron.md>")),
+                uri(TYPE), lst(
+                        TBLE_SPACE_TYPE = TypeBuilder.build()
+                                .tid(SPACE_TID)
+                                .vid(TBLE_SPACE_TID, "a metatron realization of a relational database")
+                                .isaPredicate(new TypeBuilder.DocArg(uri(HOST), URI_TYPE, "the location of the backing database"),
+                                        new TypeBuilder.DocArg(uri(DRIVER), URI_TYPE, "the provider-specific uri reference for the connecting to the database"))
+                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
+                                        lst(mInstSet.REC_TYPE),
+                                        (_, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
+                                .example("*<http://metatron.phaseshift.studio/skills/mtron/references/tble-instset-mtron.md>")
+                                .create()),
                 uri(INST), lst(Stream.of(
                         docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) ->
                                         MTronException.wrap(() -> lhs.<tbleSpace>as().sql(inst.arg(0).strValue()))
