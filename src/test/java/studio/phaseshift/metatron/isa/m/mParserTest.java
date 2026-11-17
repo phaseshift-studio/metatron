@@ -404,6 +404,9 @@ public class mParserTest extends AbstractMetatronTest {
             "{0}*a                           % {0}from(a)",
             // a value is {point}value{span} (Marko, 2026-11-10): a span of one is no span (testValueSpans has the rest)
             "2{1}                            % 2",
+            // an argument list lays a value's span (testAnArgumentListLaysAValuesSpan has the rest)
+            "1.branch(2{2})                  % 1.branch(2,2)",
+            "1.branch(mult(2{2}),3{2})       % 1.branch(mult(2,2),3,3)",
     }, delimiter = '%')
     void testParsesToTheSameObjAs(final String code, final String equivalent) {
         checkEquality(LOG, mParser.parse(code), mParser.parse(equivalent), true);
@@ -437,6 +440,34 @@ public class mParserTest extends AbstractMetatronTest {
         // stored through the one door every write takes (Machine.write), read back through the one every read takes
         Machine.write(f("value_span"), value);
         assertEquals(value.tid(), Machine.read(f("value_span")).tid(), code + ": a space stores it as written and gives it back as written");
+    }
+
+    /**
+     * AN ARGUMENT LIST IS A LST (Marko, 2026-11-17: {@code 1.xxx(2{2})} is {@code 1.xxx(2,2)}), so the parser lays a
+     * value's span along it as along a lst literal: an index for each step of the span, each holding the value without
+     * its span, and none at all for a zero span. A point is mass at its one index and stays there, and a type's span is
+     * a run of its filter, never laid. {@code start} keeps the span: its argument is the stream it starts, and a stream
+     * has no axis to lay it along. The first argument's tid is checked, since a laid span and a kept one are told apart
+     * only there, as in {@link #testValueSpans}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.branch(2{2})                  % 2 % 2",
+            "1.branch('a'{2},3)              % 3 % \"a\"",
+            "1.branch(2{0},3)                % 1 % 3",
+            "1.branch({2}2{3})               % 3 % {2}2",
+            "1.branch({2}2)                  % 1 % {2}2",
+            "1.{2}plus(3{2})                 % 2 % 3",
+            "1.branch(int{2}::T,{2}int::T)   % 2 % int{2}::T",
+            "1.branch({2}int::T)             % 1 % {2}int::T",
+            "start(2{3})                     % 1 % 2{3}",
+    }, delimiter = '%')
+    void testAnArgumentListLaysAValuesSpan(final String code, final int arity, final String first) {
+        final Inst inst = mParser.parse(code).asCall().insts().getLast();
+        final Obj expected = mParser.m_obj().parse(first).<Obj>get();
+        assertEquals(arity, inst.args().lstValue().size(), code + ": an index for each step of a value's span");
+        assertEquals(expected.tid(), inst.arg(0).tid(), code + ": the first index holds the value, its span laid and its point kept");
+        checkEquality(LOG, expected, inst.arg(0), true);
     }
 
     /**
@@ -591,6 +622,16 @@ public class mParserTest extends AbstractMetatronTest {
             "5.{0}plus{3}(9).plus(1)                  % {3}6",
             "5.map(plus{0}(9).plus(1))                % noobj",
             "5.branch({0}plus(1),plus(2))             % {5,7}",
+            // the map's range is any number of objs (Marko, 2026-11-17: map?B{*}<=A{?}), so the point of the run it maps
+            // comes out of it
+            "5.map(plus{3}(1))                        % {3}6",
+            "5.map(plus{3}(1)).count()                % 3",
+            "5.map({0}plus{3}(9).plus(1))             % {3}6",
+            // an argument list lays a value's span, and start keeps it (Marko, 2026-11-17)
+            "5.branch(6{2})                           % {2}6",
+            "5.branch(6{3},7)                         % {{3}6,7}",
+            "5.branch(6{0},7)                         % 7",
+            "start(2{3}).count()                      % 3",
     }, delimiter = '%')
     void testApply(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);

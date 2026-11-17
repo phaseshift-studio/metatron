@@ -545,6 +545,7 @@ public class LstTest extends AbstractAlgebraTest {
             "[5,6].isa?#{*}<=#{*}([{2}nat::T])                                                     % [5,6]",
             "[5,6].isa?#{*}<=#{*}([nat::T,nat::T])                                                 % [5,6]",
             "[5,-1].isa?#{*}<=#{*}([nat::T,nat::T])                                                % noobj",
+            "[5,-1].isa?#{*}<=#{*}([nat::T,{0}nat::T])                                             % [5,-1]",
             "[5,6].isa?#{*}<=#{*}([age::T,age::T])                                                 % [5,6]",
             "[{2}nat::T].isa?#{*}<=#{*}([str::T,str::T])                                           % noobj",
             // ---- a stream at an index is mass there, and each of its copies is tested ----
@@ -559,6 +560,13 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2].isa?#{*}<=#{*}([int::T,noobj])                                                  % noobj",
             "[{2}1].isa?#{*}<=#{*}([int{?}::T])                                                    % noobj",
             "[{2}1].isa?#{*}<=#{*}([int{+}::T])                                                    % [{2}1]",
+            // ---- a zero span is the filter run zero times, id(): it takes any obj its point takes ----
+            "['a'].isa?#{*}<=#{*}([{0}int::T])                                                     % ['a']",
+            "['a',1].isa?#{*}<=#{*}([{0}int::T,int::T])                                            % ['a',1]",
+            "['a',1].isa?#{*}<=#{*}([{0}int{2}::T,int::T])                                         % noobj",
+            "[{2}'a',1].isa?#{*}<=#{*}([{0}int{2}::T,int::T])                                      % [{2}'a',1]",
+            "[,].isa?#{*}<=#{*}([{0}int::T])                                                       % noobj",
+            "['a',1].isa?#{*}<=#{*}([int{0}::T,int::T])                                            % noobj",
             // ---- an instruction at an index is a predicate each copy meets ----
             "[1,5].isa?#{*}<=#{*}([_,is(gt(3))])                                                   % [1,5]",
             "[1,3].isa?#{*}<=#{*}([_,is(gt(3))])                                                   % noobj",

@@ -2449,7 +2449,8 @@ public class TypeTest extends AbstractMetatronTest {
      * A TYPE APPLIED IS A POINTED FILTER (Marko, 2026-11-17): a type is a predicate instruction, {@code A{?}<=A}, so as
      * a step it passes its own objs and no others, and its point is copies: {@code int{2}::T} is
      * {@code branch(int::T,int::T)}, 2P, while {@code {2}int::T} is a run of the filter, P·P = P, so
-     * {@code {2}int{3}::T} is {@code int{3}::T}, three parallel checks and never nine. The point floats,
+     * {@code {2}int{3}::T} is {@code int{3}::T}, three parallel checks and never nine. A zero span runs the filter no
+     * times, P⁰ = id, so {@code {0}int::T} takes every obj, while a zero point is nothing. The point floats,
      * {@code map(int{2}::T)} being {@code map{2}(int::T)}, and a branch of types sums its members' answers.
      */
     @ParameterizedTest
@@ -2480,6 +2481,25 @@ public class TypeTest extends AbstractMetatronTest {
             // a run of a sum compounds
             "1.{2}branch(int::T,int::T)                   % {4}1",
             "\"a\".{2}branch(int::T,int::T)                % noobj",
+            // a zero span is the filter run zero times, P⁰ = id (Marko, 2026-11-17): it takes any obj, and its point and
+            // its own count are copies
+            "start({0}int{3}::T)                          % {0}int{3}::T",
+            "\"a\".map({0}int::T)                          % \"a\"",
+            "\"a\".map({0}int{3}::T)                       % {3}\"a\"",
+            "5.map({0}int::T{2})                          % {2}5",
+            "-1.map(nat::T)                               % noobj",
+            "-1.map({0}nat::T)                            % -1",
+            "\"a\".map({0}int::T).map(int::T)              % noobj",
+            "\"a\".branch({0}int::T,str::T)                % {2}\"a\"",
+            "1.branch({0}int::T,{0}str::T)                % {2}1",
+            // a zero point is nothing, whatever the span
+            "\"a\".map(int{0}::T)                          % noobj",
+            "\"a\".map({0}int{0}::T)                       % noobj",
+            "\"a\".map(int::T{0})                          % noobj",
+            // as a test, a zero span holds what its point holds
+            "\"a\" ? {0}int::T                             % \"a\"",
+            "3 ? {0}int::T                                % 3",
+            "\"a\" ? {0}int{2}::T                          % noobj",
     }, delimiter = '%')
     public void testATypeIsAPointedFilter(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

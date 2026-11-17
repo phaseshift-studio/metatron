@@ -989,6 +989,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return rhs.tid().c().isZeroable();
             if (rhs.isNoObj())
                 return lhs.c().isZeroable();
+            // A SPAN OF ZERO IS id() (Marko, 2026-11-17): {0}P{c} runs its filter zero times, so it holds any obj its
+            // point does, {2}'a' being a {0}int{2}::T, as Type.apply and the lst index test read it. Its c(), span times
+            // point, is 0, which would hold nothing
+            if (rhs.isType() && rhs.tid().b().isZero())
+                return lhs.c().within(rhs.tid().d());
             // a fibered rec is also what the object at one of its fibers is; the fiber of a multiplicity of recs is
             // that multiplicity of objects, judged apart so the stored object is never re-typed
             if (rhs.isType() && lhs.isRec() && (lhs.tid().hasPoly() || !REC_TID.basePath().equals(lhs.tid().basePath()))) {
