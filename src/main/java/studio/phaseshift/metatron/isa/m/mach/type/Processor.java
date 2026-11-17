@@ -112,7 +112,11 @@ public interface Processor extends Component {
                                     // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
                                     final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
                                             (arg.isStr() && arg.asStr().hasTemplates());
-                                    if (!arg.isObjCall() && !isTemplateExpansion && !r.test(arg)) {
+                                    // A TYPE THAT DOES NOT HOLD THE LHS IS THE ARGUMENT ITSELF: a type applied answers
+                                    // nothing for a non-member (Type.apply), and nothing tests as a type that admits
+                                    // zero, so many -> int{*}::T@many wrote nothing
+                                    if (!arg.isObjCall() && !isTemplateExpansion &&
+                                            ((arg.isType() && r.isNoObj()) || !r.test(arg))) {
                                         return arg;
                                     }
                                     return r;

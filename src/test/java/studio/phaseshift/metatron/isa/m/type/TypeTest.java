@@ -2445,4 +2445,43 @@ public class TypeTest extends AbstractMetatronTest {
         assertEquals(ALL, T(ALL).typeId());
     }
 
+    /**
+     * A TYPE APPLIED IS A POINTED FILTER (Marko, 2026-11-17): a type is a predicate instruction, {@code A{?}<=A}, so as
+     * a step it passes its own objs and no others, and its point is copies: {@code int{2}::T} is
+     * {@code branch(int::T,int::T)}, 2P, while {@code {2}int::T} is a run of the filter, P·P = P, so
+     * {@code {2}int{3}::T} is {@code int{3}::T}, three parallel checks and never nine. The point floats,
+     * {@code map(int{2}::T)} being {@code map{2}(int::T)}, and a branch of types sums its members' answers.
+     */
+    @ParameterizedTest
+    @TestData(value = {"import(/m/math)"})
+    @CsvSource(value = {
+            // a type passes its own objs and nothing else
+            "1.map(int::T)                                % 1",
+            "true.map(int::T)                             % noobj",
+            "[true,1]==[int::T,int::T]                    % [noobj,1]",
+            "5.map(nat::T)                                % 5",
+            "\"a\".map(nat::T)                             % noobj",
+            "[5,-1]==[nat::T,nat::T]                      % [5,noobj]",
+            // its point is copies, and floats off the map
+            "1.map(int{2}::T)                             % {2}1",
+            "1.map{2}(int::T)                             % {2}1",
+            "1.map(int::T).id{2}()                        % {2}1",
+            "{2}3.map(int{3}::T)                          % {6}3",
+            // its span is a run of the filter, P·P = P
+            "1.map({2}int{3}::T)                          % {3}1",
+            // a branch of types sums its members' answers
+            "1.branch(int::T,int::T)                      % {2}1",
+            "1.branch(int::T,int::T,int::T)               % {3}1",
+            "1.branch(int::T,str::T)                      % 1",
+            "\"a\".branch(int::T,str::T)                   % \"a\"",
+            "true.branch(int::T,str::T)                   % noobj",
+            "1.branch(int::T,id())                        % {2}1",
+            "true.branch(int::T,id())                     % true",
+            // a run of a sum compounds
+            "1.{2}branch(int::T,int::T)                   % {4}1",
+            "\"a\".{2}branch(int::T,int::T)                % noobj",
+    }, delimiter = '%')
+    public void testATypeIsAPointedFilter(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 }

@@ -233,10 +233,11 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             // a span Gremlin cannot say is the processor's: a step that hands on another level, or one with a point
             "*/g/V/1.{0,1}outE(knows).count()                      % 3",
             "*/g/V/1.out(knows).{0,1}outE(created).count()         % 4",
-            "*/g/V/1.{0,1}out{2}()>>name                           % {'marko',{2}'vadas',{2}'josh',{2}'lop'}",
+            // each kept run takes the point once, the zero run too (Marko, 2026-11-17): {0,1}out{2}() is 2·(1 + out)
+            "*/g/V/1.{0,1}out{2}()>>name                           % {{2}'marko',{2}'vadas',{2}'josh',{2}'lop'}",
             // the walk's copies feed the mapped call after it, and each copy walks: {2}josh is two joshes
-            "*/g/V/1.{0,1}out{2}().out()>>name                     % {'vadas','josh',{3}'lop',{2}'ripple'}",
-            "*/g/V/1.{0,1}out{2}().{0,1}out()>>name                % {'marko',{3}'vadas',{3}'josh',{5}'lop',{2}'ripple'}",
+            "*/g/V/1.{0,1}out{2}().out()>>name                     % {{2}'vadas',{2}'josh',{4}'lop',{2}'ripple'}",
+            "*/g/V/1.{0,1}out{2}().{0,1}out()>>name                % {{2}'marko',{4}'vadas',{4}'josh',{6}'lop',{2}'ripple'}",
             // a NEGATIVE span walks backward (Marko, 2026-11-13): out()'s declared converse is in(), both() is its own
             "*/g/V/4.{-1}out()>>name                               % \"marko\"",
             "*/g/V/5.{-2,0}out()>>name                             % {'ripple','josh','marko'}",

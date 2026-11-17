@@ -380,10 +380,12 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{plus(4),plus(10)}            % 1.branch(plus(4),plus(10))",
             "1.{7,3}                         % 1.branch(7,3)",
             // a span stays on its instruction (Marko, 2026-11-15): an exact span is the closed range of one length, and
-            // a zero span is id() (Marko, 2026-11-16), f to the zero, whatever its point, alone, at the head, in a branch
+            // a zero span is id() (Marko, 2026-11-16), f to the zero, alone, at the head, in a branch, its point kept
+            // (Marko, 2026-11-17: {0}f{c} is c·f⁰)
             "1.{2}plus(1)                    % 1.{2,2}plus(1)",
             "1.{0}plus(1).plus(2)            % 1.id().plus(2)",
-            "1.{0}plus{3}(1)                 % 1.id()",
+            "1.{0}plus{3}(1)                 % 1.id{3}()",
+            "1.{0}plus{0}(1)                 % 1.id{0}()",
             "{0}plus(1)                      % id()",
             "{0}plus(9).plus(1)              % id().plus(1)",
             "1.branch({0}plus(1),plus(2))    % 1.branch(id(),plus(2))",
@@ -479,21 +481,44 @@ public class mParserTest extends AbstractMetatronTest {
             "2{?}                                     % <ERROR>",
             "2{-1}                                    % <ERROR>",
             // a span is a run, computed when it applies (Marko, 2026-11-10): 1.{2,3}plus(1) runs as its unrolls,
-            // plus(1).plus(1) and plus(1).plus(1).plus(1), which merge at noobj; the zero-step run is the lhs, each step
-            // keeps the point (Theorem 7), and a monad's multiplicity counts once, never once a step
+            // plus(1).plus(1) and plus(1).plus(1).plus(1), which merge at noobj; the zero-step run is the lhs, each kept
+            // run takes the point once (Marko, 2026-11-17), and a monad's multiplicity counts once, never once a step
             "1.{2,3}plus(1)                           % {3,4}",
             "1.branch(plus(1).plus(1),plus(1).plus(1).plus(1)) % {3,4}",
             "1.{?}plus(1)                             % {1,2}",
             "1.{?}neg()                               % {1,-1}",
             "1.{0,2}neg()                             % {{2}1,-1}",
-            "1.{2,3}plus{3}(1)                        % {{9}3,{27}4}",
+            "1.{2,3}plus{3}(1)                        % {{3}3,{3}4}",
             "1.{0,2}plus(1).mult(10)                  % {10,20,30}",
             "1.{2,3}plus(1).count()                   % 2",
             "{1,1}.{2,3}plus(1)                       % {{2}3,{2}4}",
-            "{2}1.{2,3}plus{3}(1)                     % {{18}3,{54}4}",
+            "{2}1.{2,3}plus{3}(1)                     % {{6}3,{6}4}",
+            // A POINT IS PARALLEL, A SPAN SERIAL (Marko, 2026-11-17): {n}a{c} is c lanes of the n-step run, c·aⁿ, the
+            // point taken once by each kept run, the zero run and the backward runs too, as a branch, a map and a
+            // trailing id carry it. Only a run of a sum compounds, every step of it a branch
+            "5.{2}plus{3}(1)                          % {3}7",
+            "5.branch({2}plus(1),{2}plus(1),{2}plus(1)) % {3}7",
+            "5.branch(plus(1).plus(1),plus(1).plus(1),plus(1).plus(1)) % {3}7",
+            "5.map{3}(plus(1).plus(1))                % {3}7",
+            "5.plus(1).plus(1).id{3}()                % {3}7",
+            "5.{3}id{2}()                             % {2}5",
+            "5.{3}plus{2}(0)                          % {2}5",
+            "5.branch({3}id(),{3}id())                % {2}5",
+            "5.{0}plus{3}(1)                          % {3}5",
+            "5.{0}id{0}()                             % noobj",
+            "5.{2}plus{0}(1)                          % noobj",
+            "5.{0,1}plus{3}(1)                        % {{3}5,{3}6}",
+            "5.{-1,1}plus{3}(1)                       % {{3}4,{3}5,{3}6}",
+            "5.{-1}plus{3}(1)                         % {3}4",
+            "5.{-2}plus{3}(1)                         % {3}3",
+            "5.{2}plus{-1}(1)                         % {-1}7",
+            "{3}5{3}.{2}plus{2}(1)                    % {6}7{3}",
+            "1.{2}branch(plus(0),plus(0))             % {4}1",
+            "1.plus{2}(0).plus{2}(0)                  % {4}1",
+            "1.{3}branch(plus(0),plus(0))             % {8}1",
             // a reducer counts a point as that many objs, and a span on a reducer runs it over the whole stream
-            "0.{0,6}plus{2}(1).sum()                  % 642",
-            "0.{0,6}plus{2}(1).count()                % 127",
+            "0.{0,6}plus{2}(1).sum()                  % 42",
+            "0.{0,6}plus{2}(1).count()                % 14",
             "{1,2,3}.{0,1}sum()                       % {1,2,3,6}",
             // every run starts from the lhs as it came: the zero-step run is that bag, never the bag the runs grew
             "{1,2,3}.{0,2}sum()                       % {1,2,3,{2}6}",
@@ -507,7 +532,7 @@ public class mParserTest extends AbstractMetatronTest {
             "{1,2,3}.{1,3}sum()                       % {3}6",
             "{1,2,3}.{1,2}sum().plus(1)               % {2}7",
             "{1,2,3}.{1,2}count().count()             % 2",
-            "{1,2,3}.{1,2}count{2}()                  % {{2}3,{2}2}",
+            "{1,2,3}.{1,2}count{2}()                  % {{2}3,{2}1}",
             "{1,2,3}.is(gt(5)).{1,2}count()           % {0,1}",
             // ... and a step that takes one obj at a time answers as it did
             "{1,2,3}.{1,2}plus(1)                     % {2,{2}3,{2}4,5}",
@@ -559,9 +584,11 @@ public class mParserTest extends AbstractMetatronTest {
             "start('marko').{-2,0}plus('a').count()   % 2",
             "6.{-1}mult(2).count()                    % 1",
             // a zero span is id() (Marko, 2026-11-16), even at the head of a code, where it read as noobj and
-            // annihilated the chain after it, and even of a zero point, which annihilates only a step that runs
+            // annihilated the chain after it. Its point stays (Marko, 2026-11-17), so a zero point annihilates whatever
+            // the span
             "5.map({0}plus(9).plus(1))                % 6",
-            "5.map({0}plus{0}(9).plus(1))             % 6",
+            "5.map({0}plus{0}(9).plus(1))             % noobj",
+            "5.{0}plus{3}(9).plus(1)                  % {3}6",
             "5.map(plus{0}(9).plus(1))                % noobj",
             "5.branch({0}plus(1),plus(2))             % {5,7}",
     }, delimiter = '%')

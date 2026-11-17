@@ -28,26 +28,19 @@ span counts multiplications, $a^n = a \cdot \cdots \cdot a$. A point can be unde
 memory address. The span is the _extent_ along a sequential series of addresses.
 
 Stream ring theory holds the bridge between them: the third equality of
-Theorem 6: $(ca)^n = c^n a^n$. In mtron, `{n}a{c}` is $(ca)^n = c^n a^n$:
-the span exponentiates the point.
+Theorem 6: $(ca)^n = c^n a^n$. A run of the pointed term exponentiates its point.
 
 **Live proof.** Two steps of `plus{3}(34)` from `1`: the value climbs to `69`,
 and the point squares to `9`. Thus, $(3a)^2$ and
 
 ```mtron_pre
-1.{2}plus{3}(34)
+1.plus{3}(34).plus{3}(34)
 ```
 
 In _branch normal form_, the point expanded, $3a = a + a + a$, so $(3a)^2 = (a + a + a)^2$:
 
 ```mtron_pre
 1.{2}{plus(34),plus(34),plus(34)}
-```
-
-In _compose normal form_, the span expanded, $(3a)^2 = 3a \cdot 3a$:
-
-```mtron_pre
-1.plus{3}(34).plus{3}(34)
 ```
 
 Finally, in both compose and branch normal form, the sum of the $3^2$ words $a \cdot a$:
@@ -62,6 +55,15 @@ Finally, in both compose and branch normal form, the sum of the $3^2$ words $a \
    plus(34).plus(34), /
    plus(34).plus(34), /
    plus(34).plus(34)}
+```
+
+Written on one instruction, the two coefficients are its two extents: `{2}plus{3}(34)` is three lanes of the run
+`plus(34).plus(34)`, $3a^2$, its point taken once, as `map{3}` takes it once for the run it maps:
+
+```mtron_pre
+1.{2}plus{3}(34)
+1.plus(34).plus{3}(34)
+1.map{3}(plus(34).plus(34))
 ```
 
 The purpose of this article is to prove that the laws of each coefficient alone and of the two together,
@@ -101,8 +103,9 @@ a^0 = 1 \quad \text{and} \quad a^{n+1} = a^n \cdot a.
 $$
 In mtron it is written before the instruction, `{n}a`, and stays on it: `{3}a` is
 one instruction whose run `a.a.a` is walked when it applies, never written out
-into the code, and `{0}a` is $a^0 = 1$, the identity `id()`, whatever its point.
-A term with both coefficients, `{n}a{c}`, is $(ca)^n$.
+into the code, and `{0}a` is $a^0 = 1$, the identity `id()`. A term with both
+coefficients, `{n}a{c}`, is $c$ lanes of its run, $c\,a^n$: the point is parallel and the span serial, so the
+point is taken once by the run, and `{0}a{c}` is `id{c}()`.
 :::
 
 An mtron chain is read as a stream ring expression:
@@ -117,7 +120,7 @@ An mtron chain is read as a stream ring expression:
 | `{c}x`        | $cx$                  |
 | `a{c}`        | $ca$                  |
 | `{n}a`        | $a^n$                 |
-| `{n}a{c}`     | $(ca)^n$              |
+| `{n}a{c}`     | $c\,a^n$              |
 | `{-n}a`       | $(a^{\smile})^n$      |
 
 Where a coefficient is written depends on what it is written on:
@@ -410,21 +413,24 @@ a term (Theorem 4). ◻
 
 So a zero point annihilates only a step that runs: $(0a)^n = 0^n a^n$ is $0$ for
 $n \geq 1$ and $1$ for $n = 0$ (Theorem 7), and a span range, a sum of such runs (Definition 3, below), is $0$ only if
-it holds no zero-step run. In mtron, `{0}a{c}` is written
-`id()` whatever $c$, and an instruction is `noobj` only when its point is zero
-and its span holds no zero-step run. Tested by the product $c \cdot n$, which is
-the count of a value's copies, the zero span read as the zero: a branch member
-`{0}a` dropped its object, $\langle 5 \rangle (a^0 + b)$ answering
-$\langle 5 \rangle b$ alone.
+it holds no zero-step run. In mtron, `{n}a{c}` is $c\,a^n$, the point on the run (Corollary 3), so `{0}a{c}` is
+`id{c}()` and an instruction is `noobj` exactly when its point is zero. The run of the pointed term, $(ca)^n$, is the
+pointed step written out, or a span on the branch its point stands for, so $(0a)^0 = 1$ is a zero span on the branch
+of no members. Tested by the product $c \cdot n$, which is the count of a value's copies, the zero span read as the
+zero: a branch member `{0}a` dropped its object, $\langle 5 \rangle (a^0 + b)$ answering $\langle 5 \rangle b$
+alone.
 
-**Live proof.**
+**Live proof.** The run of the pointed step exponentiates its point (Corollary 4), the point on the run does not
+(Corollary 3), and a zero point annihilates whatever its span.
 
 ```mtron_pre
+5.id{3}().id{3}()
 5.{2}id{3}()
 5.{2}id().id{3}()
+5.id{2}().id{2}().id{2}()
 5.{3}id{2}()
+5.{0}id{3}()
 5.{0}id{0}()
-5.{0}plus{0}(1)
 5.plus{0}(1)
 5.branch({0}plus(1),plus(2))
 ```
@@ -571,14 +577,16 @@ as a pattern still matches `{?}neg()` as a run of none or one `neg()`.
 **Live proof.** If $a (x) = x + 1$, then
 $\langle 1 \rangle a^{[2,3]} = \langle 1 \rangle (a^2 + a^3) = \langle 3, 4 \rangle$
 and $\langle 1 \rangle a^{[0,1]} = \langle 1, 2 \rangle$. By Corollary 6,
-$\langle 1 \rangle (3a)^{[2,3]} = \langle (9)3, (27)4 \rangle$, and a
-multiplicity on the input counts once:
-$\langle (2)1 \rangle (3a)^{[2,3]} = \langle (18)3, (54)4 \rangle$.
+$\langle 1 \rangle (3a)^{[2,3]} = \langle (9)3, (27)4 \rangle$, a range on the branch the point stands for, while
+the point on the range is taken once by each of its runs, $\langle 1 \rangle 3a^{[2,3]} = \langle (3)3, (3)4
+\rangle$, and a multiplicity on the input counts once:
+$\langle (2)1 \rangle 3a^{[2,3]} = \langle (6)3, (6)4 \rangle$.
 
 ```mtron_pre
 1.{2,3}plus(1)
 1.branch(plus(1).plus(1),plus(1).plus(1).plus(1))
 1.{?}plus(1)
+1.{2,3}{plus(1),plus(1),plus(1)}
 1.{2,3}plus{3}(1)
 {2}1.{2,3}plus{3}(1)
 ```
@@ -944,6 +952,17 @@ $\langle 5 \rangle (b + (-1)b) = \langle 6, (-1)6 \rangle = \langle\rangle$, whi
 5.{-1}plus(1)
 ```
 
+A negative span keeps the point as a positive one does: `{-n}a{c}` is $c$ lanes of the backward run, $c\,a^{-n}$,
+so `5.{-1}plus{3}(1)` is `{3}4` and `5.{-2}plus{3}(1)` is `{3}3`, as `5.{2}plus{3}(1)` is `{3}7`. The run of the
+pointed term backward, Theorem 13's $(ca)^{-n} = c^n a^{-n}$, is the converse step pointed at each step.
+
+```mtron_pre
+5.{2}plus{3}(1)
+5.{-1}plus{3}(1)
+5.{-2}plus{3}(1)
+5.minus{3}(1).minus{3}(1)
+```
+
 In mtron, an instruction declares its converse in its `?decq` claim, as the contract it runs backward:
 `plus?int<=int(int)` names `minus?int<=int(int)`, and `neg` names itself. The walk of Theorem 10 splits a span at zero
 and runs a negative length as that many steps of the converse. An instruction that declares none has no backward run to
@@ -962,31 +981,22 @@ parse. A type used as a step is a filter, and so its own converse (Theorem 14).
 - On a rel, mtron's `neg()` swaps the ends, so `(1=>2).neg()` is `2=>1`. The arrow $x \Rightarrow y$ is the matrix
   with a $1$ at row $x$ and column $y$ [2], so the swap is its transpose, the converse
   $(x \Rightarrow y)^{\smile} = y \Rightarrow x$, and not its additive inverse, which is the point `{-1}(1=>2)`.
-- A lst under test lays an entry's span times its point as slots. A negative count lays none and is skipped, so
-  `[{-1}3,4]` passes for `[int::T]`. A run of like slots read backward is the same run, so a negative span could lay its
-  length, while a negative point, an anti-entry, should neither lay nor be skipped.
-- By Theorem 13, `5.{-1}plus{3}(1)` is `{3}4` and `5.{-2}plus{3}(1)` is `{9}3`, as `5.{2}plus{3}(1)` is `{9}7`. Today
-  mtron answers `4` and `3`: the walk builds the converse step from its declared contract (`Inst.Helper.runs`) and
-  leaves the step's point behind.
-
-```mtron_pre
-5.{2}plus{3}(1)
-5.{-1}plus{3}(1)
-5.{-2}plus{3}(1)
-```
+- A lst under test lays only a value's span as indices, and reads a point as mass at its index, so `[{-1}3,4]` is no
+  `[int::T]`: its index 0 holds a mass of $-1$. A run of like slots read backward is the same run, so a value's
+  negative span could lay its length, but a value's span is never negative: `3{-1}` does not parse.
 
 ## Point and Span Coefficients Type Systems
 
-If $a (x) = y$, then $\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle$ by
-Theorem 7 and the apply axiom. So the coefficient of the inferred type is
-$c^n$: `type()` reads the point of a term off its run, and `cc()` reads the
-coefficient of that type. In the console, `5.{2}plus{3}(1).type()` is
-`int{9}::T`. The compiler types a span by its runs, never by its span times its
-point, which is the count of a value's copies (`{3}5{3}` counts nine):
-`0.{10}plus(4)` is typed one `int`, not ten.
+If $a (x) = y$, then $\langle x \rangle c\,a^n = \langle c\,a^n (x) \rangle$ and
+$\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle$ by Theorem 7 and the apply axiom. So the coefficient of
+the inferred type of `{n}a{c}` is $c$, and of the run of the pointed step $c^n$: `type()` reads the point of a term
+off its run, and `cc()` reads the coefficient of that type. In the console, `5.{2}plus{3}(1).type()` is
+`int{3}::T`. The compiler types a span by its runs, never by its span times its point, which is the count of a
+value's copies (`{3}5{3}` counts nine): `0.{10}plus(4)` is typed one `int`, not ten.
 
 ```mtron_pre
 5.{2}plus{3}(1).type().cc()
+5.plus{3}(1).plus{3}(1).type().cc()
 5.plus(1).id{3}().type().cc()
 ```
 

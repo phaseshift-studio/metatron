@@ -339,7 +339,8 @@ hands a call no second candidate), and a tensor's entries name no other type (`l
 ints is not an int). The coefficient is where extent lives, not another coordinate: `lst[int{4}]` is ONE position
 holding four ints, while `lst[int,int,int,int]` is four positions. A TEST lays every entry as a run of positions, its
 span times its point, the way ranged var args take their arguments: `[1,2,3,4]` and `[{4}1]` both satisfy
-`lst[int{4}]`.
+`lst[int{4}]`. A lst tested against a lst *value* reads index by index instead: a point there is mass at its index and
+only a value's span lays indices, so `[{2}3]` is an `[int{2}::T]` while `[3{2}]`, which a lst lays as `[3,3]`, is not.
 
 **A fibered type's entries are distinct objects.** `person[ninja]` is a person *and* a ninja; the ninja is not the
 bundle's content but an object the bundle exposes. So a value of that type is acceptable where `ninja::T` is

@@ -338,14 +338,14 @@ public interface Inst extends Call {
     }
 
     /**
-     * A SPAN OF ZERO IS id() (Marko, 2026-11-16): {@code {0}f} is f⁰, the identity, so an instruction is the zero only
-     * when its point annihilates ({@code f{0}} emits nothing) and its span holds no zero-step run. {@link Obj#isNoObj()}
-     * tests c(), which is span x point, and read {@code {0}f} as noobj, so a {@code {0}f} built after parsing (a lane
-     * narrowed to [0,0]) was taken for nothing.
+     * A SPAN OF ZERO IS id() (Marko, 2026-11-16), AND A ZERO POINT ANNIHILATES WHATEVER THE SPAN (Marko, 2026-11-17):
+     * {@code {n}f{c}} is c·fⁿ, so {@code {0}f} is f⁰, the identity, and {@code {0}f{0}} is 0·f⁰, nothing. An instruction
+     * is the zero exactly when its point is. {@link Obj#isNoObj()} tests c(), which is span x point, and read
+     * {@code {0}f} as noobj, so a {@code {0}f} built after parsing (a lane narrowed to [0,0]) was taken for nothing.
      */
     @Override
     default boolean isNoObj() {
-        return this.tid().d().isZero() && !this.tid().b().isZeroable();
+        return this.tid().d().isZero();
     }
 
     @Override
@@ -649,9 +649,16 @@ public interface Inst extends Call {
          * A SPAN IS A RUN, COMPUTED, NEVER WRITTEN INTO THE CODE (Marko, 2026-11-10), AND WALKED ONCE (Marko,
          * 2026-11-15): {@code {m,n}inst} is the sum of the runs of lengths m to n of the inst without its span, each
          * run one step past the last, so a step runs once however many runs share it and {@code {1,1000}f} costs a
-         * thousand steps. The zero-step run is the lhs, each step keeps the inst's point ({@code {2}plus{3}(34)} is
-         * {@code {9}69}, Theorem 7), {@code {2,3}plus(1)} at 1 is {@code {3,4}}, and an exact span is the same walk with
-         * one run kept. The code keeps the span, so a code pattern still reads {@code {?}neg()} as a run of none or one.
+         * thousand steps. The zero-step run is the lhs, {@code {2,3}plus(1)} at 1 is {@code {3,4}}, and an exact span is
+         * the same walk with one run kept. The code keeps the span, so a code pattern still reads {@code {?}neg()} as a
+         * run of none or one.
+         * <p>
+         * A POINT IS PARALLEL, A SPAN SERIAL (Marko, 2026-11-17): {@code {n}a{c}} is c lanes of the n-step run, c·aⁿ,
+         * never (ca)ⁿ. {@code 5.{2}plus{3}(1)} is {@code 5.branch({2}plus(1),{2}plus(1),{2}plus(1))}, so {@code {3}7}: the
+         * walk steps without the point, and each kept run takes it once, the zero-step run too ({@code 5.{0}plus{3}(1)} is
+         * {@code {3}5}, {@code 5.{0,1}plus{3}(1)} is {@code {{3}5,{3}6}}). It is the point as map carries it, floated to
+         * the end of the run ({@code map{3}(plus(1).plus(1))}). Only a run of a sum compounds, its every step a branch:
+         * {@code 1.{2}branch(plus(0),plus(0))} is {@code {4}1}.
          * <p>
          * A NEGATIVE SPAN RUNS BACKWARD (Marko, 2026-11-13): a run of -k steps is k steps of the instruction's CONVERSE,
          * the relation it states reversed: its dom and rng flipped, the same arguments ({@code plus(2)} backward is
@@ -661,8 +668,12 @@ public interface Inst extends Call {
          */
         public static Obj runs(final Obj lhs, final Inst inst) {
             final cInt span = inst.tid().b();
-            final Inst step = inst.tid(inst.tid().b(null));
-            Obj result = noobj();
+            final cInt point = inst.tid().d();
+            if (point.isZero())
+                return noobj();
+            final Inst step = inst.tid(inst.tid().b(null).cLess());
+            Obj limbo = noobj();
+            Obj lanes = noobj();
             final Obj sample = lhs.stream().findFirst().orElse(null);
             if (span.min() < 0 && null != sample) {
                 final long nearest = null == span.max() ? 1L : Math.max(1L, -span.max());
@@ -671,15 +682,22 @@ public interface Inst extends Call {
                 final fURI converse = claim.isRec() ? TheoryHelper.roleAddress(claim.asRec(), CONVERSE) : null;
                 // the limbo is BLOCKED: run, it answers itself, so a stream that iterated it would never end
                 // (Code.iterator). Its instruction is built as the parser builds one (instB): a retyping clone reads
-                // its new tid from memory, and a tid with a negative span is no address that read can take
-                result = null == converse
-                        ? objs(lhs.stream().map(o -> (Obj) MCode.of(List.of(instB(START_INST_TID, lst(o)),
-                        instB(inst.tid().b(cInt.of(span.min(), -nearest)), inst.args())), CODE_TID.addQ(BLOCK), null)))
-                        // the converse is declared as its contract (minus?int<=int(int)), and called as any call is
-                        // keyed: that operation, with the call's own arguments
-                        : walk(lhs, instB(Helper.operationTid(converse), step.args()), nearest, -span.min(), result);
+                // its new tid from memory, and a tid with a negative span is no address that read can take. It keeps
+                // the instruction whole, its point too, so the limbo takes the point when it runs, and only then
+                if (null == converse)
+                    limbo = objs(lhs.stream().map(o -> (Obj) MCode.of(List.of(instB(START_INST_TID, lst(o)),
+                            instB(inst.tid().b(cInt.of(span.min(), -nearest)), inst.args())), CODE_TID.addQ(BLOCK), null)));
+                else
+                    // the converse is declared as its contract (minus?int<=int(int)), and called as any call is
+                    // keyed: that operation, with the call's own arguments
+                    lanes = walk(lhs, instB(Helper.operationTid(converse), step.args()), nearest, -span.min(), lanes);
             }
-            return null != span.max() && span.max() < 0 ? result : walk(lhs, step, Math.max(0L, span.min()), span.max(), result);
+            if (null == span.max() || 0L <= span.max())
+                lanes = walk(lhs, step, Math.max(0L, span.min()), span.max(), lanes);
+            // each kept run takes the point once, as the processor puts an inst's point on its answer: the span of a
+            // mono value, curled on its tid, stays its span (Processor.Helper.apply)
+            return objs(Stream.concat(limbo.stream(), point.isOne() ? lanes.stream() : lanes.stream().map(o ->
+                    o.tid().b().isOne() || !o.isMono() ? o.c(c -> c.mult(point)) : o.d(o.tid().d().mult(point)))));
         }
 
         /**
@@ -740,7 +758,7 @@ public interface Inst extends Call {
         private static Obj admitted(final Obj obj, final Inst step) {
             final cInt takes = step.dom().c();
             final Obj one = null != takes.max() && 1L >= takes.max() ? obj.c(cInt.ONE()) : obj;
-            if (!step.hasDom() || Helper.filterOnDomainAllowUnique(one, step))
+            if (!step.hasDom() || Helper.filterOnDomainAllowUnique(one, step.dom()))
                 return step.apply(obj);
             final Inst call = step.f(null);
             final Inst kept = Selector.Helper.resolve(one, call);
@@ -813,10 +831,15 @@ public interface Inst extends Call {
             return recArgs.elements().map(r -> rel(r.first(), lstArgs.at(counter.getAndIncrement()))).collect(new CommonUtil.RecCollector());
         }
 
-        public static boolean filterOnDomainAllowUnique(final Obj lhs, final Inst apiInst) {
+        /**
+         * THE DOMAIN GATE: whether {@code lhs} is in {@code dom}, a bulk lhs of a one-obj domain asked one copy at a time
+         * ({@link #appliesPerObject}), so {@code {3}5.plus(_)} operates as {@code 5.plus(_)} does (Marko, 2026-11-17). A
+         * type applied as a filter asks its membership here too ({@link Type#apply}), as a lst asks each of its indices.
+         */
+        public static boolean filterOnDomainAllowUnique(final Obj lhs, final Obj dom) {
             if (lhs.isNoObj())
                 return true; // noobj lhs means "any domain is acceptable"
-            return (lhs.testByID(apiInst.dom()) || lhs.test(apiInst.dom())) || (Helper.appliesPerObject(lhs, apiInst.dom()) && lhs.c(cInt.ONE()).testByID(apiInst.dom()));
+            return (lhs.testByID(dom) || lhs.test(dom)) || (Helper.appliesPerObject(lhs, dom) && lhs.c(cInt.ONE()).testByID(dom));
         }
 
         /**

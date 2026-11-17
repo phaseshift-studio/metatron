@@ -29,7 +29,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -214,7 +216,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
     default boolean test(final Obj rhs) {
         if (this == rhs)
             return true;
-        return rhs.isLst() ? Lst.Helper.testRuns(this, rhs.asLst()) : Poly.super.test(rhs);
+        return rhs.isLst() ? Lst.Helper.testIndices(this, rhs.asLst()) : Poly.super.test(rhs);
     }
 
     public static final class LstType {
@@ -314,8 +316,73 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         }
 
         /**
-         * THE RUNS OF {@code lhs} LAID OVER THE RUNS OF {@code rhs}, the way ranged var args take their arguments
-         * (Marko, 2026-11-16). An entry covers a run of indices: its span times its point, times a type's own count
+         * A VALUE'S SPAN IS A RUN OF INDICES (Marko, 2026-11-17): a lst is the axis a value's span unfolds along, so it
+         * lays {@code 3{2}} as a 3 at each of two indices, {@code [3{2}]} is {@code [3,3]}, a lst of two, while
+         * {@code [{2}3]} keeps two 3s at its one index. A stream has no axis, so there the span stays curled; an
+         * instruction or a type keeps its span, a run of its own, at one index. The entries as they are when none lays.
+         */
+        public static List<Obj> laid(final List<Obj> entries) {
+            final Predicate<Obj> lays = entry -> (entry.isMono() || entry.isPoly()) && !entry.isType() &&
+                    !entry.tid().b().isOne() && entry.tid().b().isExact() && null != entry.tid().b().min();
+            return entries.stream().noneMatch(lays) ? entries : entries.stream()
+                    .flatMap(entry -> lays.test(entry) ?
+                            Stream.generate(() -> entry.tid(entry.tid().b(null))).limit(Math.max(0L, entry.tid().b().min())) :
+                            Stream.of(entry))
+                    .collect(Collectors.toCollection(ArrayList::new));
+        }
+
+        /**
+         * A LST TESTS A LST INDEX BY INDEX (Marko, 2026-11-17). An index is an address that is not the obj, so a point
+         * is mass AT an index and a span a run OF indices: {@code [{2}3]} is two 3s at index 0, a lst of one index, and
+         * {@code [3{2}]} a 3 at each of indices 0 and 1, a lst of two. Only a value's span lays indices, a value having no
+         * product of its own to be a power in: an instruction's span is its run, one step held at one index, and a
+         * type's is a run of a filter, P·P = P, so {@code [{2}int::T]} is {@code [int::T]}, with a zero span the
+         * identity, which takes any obj. An lhs index passes the rhs index at its place when its mass is within the rhs
+         * index's (a type's point times its own count {@code ::T{n}}, a value's point, a stream's count) and every copy
+         * it holds is one of the rhs index's, asked at the domain gate ({@link Inst.Helper#filterOnDomainAllowUnique}):
+         * {@code [{2}3]} is an {@code [int{2}::T]}, {@code [3{2}]} is not, and {@code [{2}3,5]} is no
+         * {@code [int::T,int::T,int::T]}. Past the last rhs index the
+         * lhs is open, even inside a value's run ({@code [3{2}]} is an {@code [int::T]}, {@code [3{2},5{2}]} an
+         * {@code [int::T,int::T,int::T]}), and an rhs index past the last lhs index is one the lhs leaves empty, so it
+         * passes only if its mass admits zero. A lst TYPE's bracket keeps its own reading ({@link #testRuns}).
+         */
+        public static boolean testIndices(final Lst lhs, final Lst rhs) {
+            final Function<Lst, List<Obj>> resolved = lst ->
+                    laid(lst.lstValue().stream().map(entry -> (Obj) entry.autoResolve(lhs)).toList());
+            final Function<Obj, cInt> mass = entry -> entry.isType() || entry.isCall() ? entry.tid().d().mult(entry.isType() &&
+                    null != entry.vid() && TYPE_TID.equals(entry.vid().basePath()) ? entry.vid().c() : cInt.ONE()) : entry.c();
+            final List<Obj> lefts = resolved.apply(lhs);
+            final List<Obj> rights = resolved.apply(rhs);
+            for (int i = 0; i < rights.size(); i++) {
+                final Obj right = rights.get(i);
+                if (i >= lefts.size()) {
+                    if (!mass.apply(right).isZeroable())
+                        return false;
+                    continue;
+                }
+                final Obj left = lefts.get(i);
+                final cInt has = mass.apply(left);
+                if (!has.within(mass.apply(right)))
+                    return false;
+                if (!has.isZero() && !(right.isType() && right.tid().b().isZero())) {
+                    // a type is asked at the domain gate, so {3}5 is an int as 5 is; an instruction or a value at the
+                    // index is asked as a pattern is, each copy alone (is(gt(3)) runs its predicate)
+                    final Obj unit = Type.Helper.unit(right);
+                    if (!left.stream().allMatch(copy -> right.isType() ?
+                            Inst.Helper.filterOnDomainAllowUnique(Type.Helper.unit(copy), unit) :
+                            Type.Helper.unit(copy).test(unit)))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * A LST TYPE'S BRACKET, READ AS RUNS (Marko, 2026-11-16), the reading {@code lst[…]::T} keeps while the notation
+         * inside its brackets is settled (Marko, 2026-11-17: its tokens may read as values, so that
+         * {@code lst[int{2},str]::T} is {@code [int::T,int::T,str::T]}); a lst against a lst tests index by index
+         * ({@link #testIndices}). THE RUNS OF {@code lhs} LAID OVER THE RUNS OF {@code rhs}, the way ranged var args take
+         * their arguments. An entry covers a run of indices: its span times its point, times a type's own count
          * ({@code int::T{3}}, which the parser writes on the type's vid {@code /m/type{3}}). Each index of a run holds the
          * entry's slot, the entry without those counts, so {@code [{3}int::T]}, {@code [int{2}::T,int::T]} and
          * {@code [int::T,int::T,int::T]} each lay three ints. A run whose count is a range ({@code {2}int{?}::T}: zero to
@@ -331,9 +398,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
             final Function<Obj, cInt> count = entry -> entry.c().mult(entry.isType() && null != entry.vid() &&
                     TYPE_TID.equals(entry.vid().basePath()) ? entry.vid().c() : cInt.ONE());
             // a slot drops the counts from its tid, and a type's from its vid as well: a base type is tested by its vid
-            final Function<Obj, Obj> slot = entry -> entry.isType() && null != entry.vid() ?
-                    entry.tid(entry.tid().cLess().b(null)).vid(entry.vid().cLess().b(null)) :
-                    entry.tid(entry.tid().cLess().b(null));
+            final Function<Obj, Obj> slot = Type.Helper::unit;
             final ToLongFunction<cInt> least = c -> null == c.min() ? 0L : Math.max(0L, c.min());
             // a count past the least of an unbounded run (and past one, so that laying something stays apart from laying
             // nothing) is one place, which keeps the walk finite

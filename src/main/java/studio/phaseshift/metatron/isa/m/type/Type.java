@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -423,20 +424,68 @@ public interface Type extends Obj {
         return !rhs.asType().hasPredicate() || Objects.equals(this.asType().predicate(), rhs.asType().predicate());
     }
 
+    /**
+     * A TYPE APPLIED IS A POINTED FILTER (Marko, 2026-11-17): a type is a predicate instruction, {@code A{?}<=A}, so
+     * applied to x it answers c·x where x is one of it, and noobj elsewhere, c its point. The point floats:
+     * {@code map(int{2}::T)} is {@code map{2}(int::T)}, so {@code 1.branch(int::T,int::T)} is {@code {2}1}, while
+     * {@code 1.branch(int::T,str::T)} is {@code 1} and {@code true.branch(int::T,str::T)} is nothing. A span is a run
+     * of the filter, P·P = P, so it tells only at zero, where {@code {0}P{c}} is c·id and takes every obj
+     * ({@code {2}int{3}::T} is {@code int{3}::T}). A type's own count, {@code ::T{n}}, is n copies of the filter. Only
+     * an exact point makes copies: a ranged one ({@code int{?}::T}, the {@code {*}} of an argument pattern) is a
+     * quantifier, how many objs a place takes, and passes the obj as it is.
+     * Membership is asked of each obj the stream holds at the domain gate
+     * ({@link Inst.Helper#filterOnDomainAllowUnique}), against the type without its counts ({@link Helper#unit}), so
+     * {@code {3}5} is an int as 5 is: a base type asks it of its base, a refinement of its parent and then its
+     * predicate. An uncaught fail passes, as it passes every step.
+     */
     @Override
     default Obj apply(final Obj obj) {
-        Type parentType = this.parentType();
-        if (!parentType.isRootType()) {
-            final Obj parentApply = parentType.apply(obj);
-            if (parentApply.isNoObj())
+        final cInt counted = this.tid().d().mult(null != this.vid() && Tokens.TYPE_TID.equals(this.vid().basePath()) ?
+                this.vid().c() : cInt.ONE());
+        // AN EXACT POINT IS COPIES, A RANGED ONE A QUANTIFIER: int{2}::T is two filters, while the {*} of <#{*}>::T, a
+        // pattern an argument is computed by, says how many objs the place takes and makes none. Exact is a stated
+        // number: the {**} of a type read for any multiplicity has no bound at all, and isExact() alone took it
+        final cInt point = counted.isExact() && null != counted.min() ? counted : cInt.ONE();
+        final Type parentType = this.parentType();
+        return objs(obj.stream().map(one -> {
+            if (one.isUncaughtFail())
+                return one;
+            // a base type asks membership; a pattern with no base of its own (a generic, a variable, a root) passes
+            final boolean member = this.tid().b().isZero() ||
+                    ((parentType.isRootType() ?
+                            !this.isBaseType() || Inst.Helper.filterOnDomainAllowUnique(one, Helper.unit(this)) :
+                            !parentType.apply(one).isNoObj()) &&
+                            (null == this.predicate() || one.test(predicate().apply(one))));
+            if (!member)
                 return noobj();
-        }
-        return null == this.predicate() || obj.test(predicate().apply(obj)) ?
-                obj :
-                noobj();
+            // the point goes on as the processor puts an inst's point on its answer: a mono value's span stays its span
+            return point.isZero() ? noobj() : point.isOne() ? one : one.tid().b().isOne() || !one.isMono() ?
+                    one.c(c -> c.mult(point)) : one.d(one.tid().d().mult(point));
+        }));
+    }
+
+    /**
+     * A SPAN OF ZERO IS id() (Marko, 2026-11-17): {@code {0}P{c}} is c·P⁰, the predicate not applied, so the obj is the
+     * obj and never noobj. A type is the zero exactly when its point is, as an instruction is ({@link Inst#isNoObj}):
+     * {@link Obj#isNoObj()} tests c(), which is span x point, and read {@code {0}int::T} as nothing.
+     */
+    @Override
+    default boolean isNoObj() {
+        return this.tid().d().isZero();
     }
 
     final static class Helper {
+
+        /**
+         * ONE COPY AT ONE INDEX: the obj without its counts, span and point, in its tid and, for a type, in its vid
+         * too, since a base type is tested by its vid and keeps its counts there ({@code int{2}::T} has the vid
+         * {@code /m/int{2}}). A type's filter asks membership of it ({@link Type#apply}), and a lst asks it index by
+         * index ({@link Lst#test}).
+         */
+        public static Obj unit(final Obj obj) {
+            final Obj bare = obj.tid(obj.tid().cLess().b(null));
+            return obj.isType() && null != obj.vid() ? bare.vid(obj.vid().cLess().b(null)) : bare;
+        }
 
         static boolean basePathEquals(final fURI a, final fURI b) {
             return null != a && null != b && a.basePath().equals(b.basePath());
@@ -700,8 +749,9 @@ public interface Type extends Obj {
                     member.isRec() && poly.isFibered() ? testFibration(member.asRec(), poly)
                             : member.isLst() && poly.isTensored() ? testTensor(member.asLst(), poly)
                             : member.isRel() && poly.isPathed() ? testPaths(member.asRel(), poly)
-                            // a type against a type compares index by index: each index's span and point within
-                            : !member.isType() || !poly.isTensored() || lst((List) member.asType().lstIndices()).test(lst((List) poly.lstIndices()))));
+                            // a type against a type compares index by index: each index's span and point within, as a
+                            // bracket reads (Lst.Helper.testRuns)
+                            : !member.isType() || !poly.isTensored() || Lst.Helper.testRuns(lst((List) member.asType().lstIndices()), lst((List) poly.lstIndices()))));
         }
 
         /**
@@ -751,7 +801,7 @@ public interface Type extends Obj {
         public static boolean testTensor(final Lst lst, final Type tensoredLst) {
             final List<Type> entries = tensoredLst.lstIndices();
             if (entries.stream().allMatch(entry -> entry.tid().b().isOne()))
-                return lst.test(lst((List) entries));
+                return Lst.Helper.testRuns(lst, lst((List) entries));
             final List<Obj> values = lst.lstValue().stream().map(value -> (Obj) value.autoResolve(lst)).toList();
             final Set<Integer> reached = runs(values, entries);
             return null == entries.getLast().tid().b().max() ? reached.contains(values.size()) : !reached.isEmpty();
