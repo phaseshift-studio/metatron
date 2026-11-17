@@ -77,11 +77,13 @@ public class MType extends MObj implements Type {
         if (null == BootLoader.ROOT_MACHINE)
             // class-init phase, before a machine exists to hold a graph: resolve directly (no memo)
             return T0(tid, vid, predicate, constructor);
-        // NOTHING REFINES TO NOTHING. a {0} tid or vid is the noobj type whatever it is named: there is nothing in
-        // nothing to refine, so the set cannot get any smaller. a constant, answered before the memo -- it needs no
-        // cache entry, no watch and no invalidation. NOOBJ_TYPE is null only while it is itself being built
-        // (TypeBuilder.create() resolves through here), and that one construction takes the ordinary path.
-        if (null != NOOBJ_TYPE && ((null != tid && tid.isZero()) || (null != vid && vid.isZero())))
+        // NOTHING REFINES TO NOTHING. a {0} point, in the tid or in the vid's count (::T{0}), is the noobj type whatever
+        // it is named: there is nothing in nothing to refine, so the set cannot get any smaller. a {0} span is not
+        // nothing (Marko, 2026-11-17): {0}int::T is the filter run zero times, P⁰ = id, so it is a type. a constant,
+        // answered before the memo -- it needs no cache entry, no watch and no invalidation. NOOBJ_TYPE is null only
+        // while it is itself being built (TypeBuilder.create() resolves through here), and that one construction takes
+        // the ordinary path.
+        if (null != NOOBJ_TYPE && ((null != tid && tid.d().isZero()) || (null != vid && vid.d().isZero())))
             return NOOBJ_TYPE;
         final TypeGraph.Key key = new TypeGraph.Key(tid, vid, predicate, constructor);
         return Machine.current().memory().typeGraph().memo(key, () -> T0(tid, vid, predicate, constructor));
@@ -253,9 +255,9 @@ public class MType extends MObj implements Type {
 
     @Override
     public Type clone(final Object jvm, final fURI tid, final fURI vid) {
-        // a type derived to coefficient {0} (c(0), tid(x{0})) is the noobj type, as T() answers it. NOOBJ_TYPE is null only
-        // while it is itself being built
-        if (null != NOOBJ_TYPE && null != tid && tid.isZero())
+        // a type derived to point {0} (c(0) writes the point, tid(x{0})) is the noobj type, as T() answers it; a span of
+        // {0} is id. NOOBJ_TYPE is null only while it is itself being built
+        if (null != NOOBJ_TYPE && null != tid && tid.d().isZero())
             return NOOBJ_TYPE;
         return new MType((Tuple.Pair<Call, Call>) jvm, tid, null == vid ? this.vid() : vid, false);
     }

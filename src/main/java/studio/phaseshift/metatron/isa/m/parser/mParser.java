@@ -428,7 +428,7 @@ public class mParser {
                 .map(t -> {
                     final Inst temp = (Inst) new MInst(Triplet.with(
                             pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
-                                    lst(mParser.<List<Obj>>pick(t, 1)) :
+                                    lst(mParser.laidArgs(pick(t, 0), pick(t, 1))) :
                                     rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
                             null,
                             noobj()), // todo: encode seed in parser
@@ -437,6 +437,16 @@ public class mParser {
                     // just parsed, and the nested-element guard there keeps an unrepresentable tid from being built
                     return Inst.Helper.fullSignature(temp);
                 });
+    }
+
+    /**
+     * AN INSTRUCTION'S ARGUMENTS ARE A LST, so a value's span lays argument positions as it lays a lst's indices
+     * (Marko, 2026-11-17): {@code 1.xxx(2{2})} is {@code 1.xxx(2,2)}. A rec of named arguments has no axis and keeps
+     * the span curled. {@code start}'s arguments are no positions but the stream it emits, and a stream has no axis
+     * either, so {@code start(2{3})} keeps its span.
+     */
+    private static List<Obj> laidArgs(final Object tid, final List<Obj> args) {
+        return tid instanceof fURI furi && START_INST_TID.name().equals(furi.name()) ? args : Lst.Helper.laid(args);
     }
 
     /**
@@ -462,7 +472,7 @@ public class mParser {
                 // inst_seed []
                 .map(t -> Inst.Helper.fullSignature((Inst) new MInst(Triplet.with(
                         pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
-                                lst(mParser.<List<Obj>>pick(t, 1)) :
+                                lst(mParser.laidArgs(pick(t, 0), pick(t, 1))) :
                                 rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(mParser.<Obj>pick(t, 2)),
                         noobj()), // todo: encode seed in parser

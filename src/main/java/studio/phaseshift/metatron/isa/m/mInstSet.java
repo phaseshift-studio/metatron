@@ -440,12 +440,14 @@ public class mInstSet extends AbstractInstSet {
     /**
      * {@code map_nest} — a PLAIN rule: a map of a map is the map, whatever it maps. map hands each obj to its argument one
      * at a time, so the outer map adds nothing: {@code map(map(+2)) ⇝ map(+2)}, and {@code form_map_unwrap} unwraps the
-     * rest. A pattern's map states map's own endpoints, maybe in and maybe out ({@code #{?}}), so a RESOLVED map
-     * ({@code map?/m/int{?}<=...}) tests it too: an endpoint a pattern leaves out reads as {@code #}, which an
-     * {@code int{?}} is not. It is its own rule, not the mapper's: map's form is {@code standard}, its {@code {?} ⇒ {?}}
-     * shape no mapper's, since what it hands on is what its argument does ({@code map(is(gt(1)))} filters).
+     * rest. A pattern's map states map's own endpoints, maybe in ({@code #{?}}) and any number out ({@code #{*}}, Marko,
+     * 2026-11-17: {@code map?B{*}<=A{?}}), so a RESOLVED map ({@code map?/m/int{*}<=...}) tests it too: an endpoint a
+     * pattern leaves out reads as {@code #}, which an {@code int{*}} is not, and a pattern stating the old {@code #{?}}
+     * out held no map at all once map's range was {@code {*}}. It is its own rule, not the mapper's: map's form is
+     * {@code standard}, its {@code {?} ⇒ {*}} shape no mapper's, since what it hands on is what its argument does
+     * ({@code map(is(gt(1)))} filters).
      */
-    public static final Rec MAP_NEST = rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))))),
+    public static final Rec MAP_NEST = rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL, f("f"), null, null))))))),
             MCode.code(List.of(instB(MAP_INST_TID, lst(T(ALL, f("f"), null, null))))));
 
     /**
@@ -458,7 +460,7 @@ public class mInstSet extends AbstractInstSet {
      * That is the Java fold the mapper rule replaced, and it is unsound for a function that consumes the stream:
      * {@code {1,2,3}.map(sum())} sums each element alone, {@code {1,2,3}}, while {@code {1,2,3}.sum()} is 6.
      */
-    public static final Rec FORM_MAP_UNWRAP = rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))),
+    public static final Rec FORM_MAP_UNWRAP = rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL, f("f"), null, null))))),
             T(ALL, f("f"), null, null));
 
     /**

@@ -414,9 +414,10 @@ a term (Theorem 4). ◻
 So a zero point annihilates only a step that runs: $(0a)^n = 0^n a^n$ is $0$ for
 $n \geq 1$ and $1$ for $n = 0$ (Theorem 7), and a span range, a sum of such runs (Definition 3, below), is $0$ only if
 it holds no zero-step run. In mtron, `{n}a{c}` is $c\,a^n$, the point on the run (Corollary 3), so `{0}a{c}` is
-`id{c}()` and an instruction is `noobj` exactly when its point is zero. The run of the pointed term, $(ca)^n$, is the
-pointed step written out, or a span on the branch its point stands for, so $(0a)^0 = 1$ is a zero span on the branch
-of no members. Tested by the product $c \cdot n$, which is the count of a value's copies, the zero span read as the
+`id{c}()` and an instruction is `noobj` exactly when its point is zero. So is a type, which as a step is a filter:
+`{0}int{3}::T` runs its filter no times, so it takes every object three times, while `int{0}::T` is `noobj`. The run of
+the pointed term, $(ca)^n$, is the pointed step written out, or a span on the branch its point stands for, so
+$(0a)^0 = 1$ is a zero span on the branch of no members. Tested by the product $c \cdot n$, which is the count of a value's copies, the zero span read as the
 zero: a branch member `{0}a` dropped its object, $\langle 5 \rangle (a^0 + b)$ answering $\langle 5 \rangle b$
 alone.
 
@@ -433,6 +434,8 @@ alone.
 5.{0}id{0}()
 5.plus{0}(1)
 5.branch({0}plus(1),plus(2))
+'a'.map({0}int{3}::T)
+'a'.map(int{0}::T)
 ```
 
 ::: **Theorem 8** (A span does not distribute over a branch). If
