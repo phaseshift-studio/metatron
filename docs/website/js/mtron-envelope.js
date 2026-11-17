@@ -78,7 +78,8 @@
             tid: tid,
             vid: vid,
             shortTid: tid ? tid.split("/").pop().replace(/\{[^}]*\}$/, "") : null,
-            raw: raw
+            raw: raw,
+            isType: splitAt.typeAt > 0 && raw.charAt(splitAt.typeAt + 2) === "T"
         };
     }
 
@@ -201,7 +202,7 @@
                     } else if (source[open] === "T") {
                         // a type reference: tid::T (optionally tid::T[…]@vid)
                         let stop = open + 1;                       // past the 'T'
-                        if (source[stop] === "[") stop = closeOf(source, stop);
+                        while (source[stop] === "[") stop = closeOf(source, stop);
                         let vid = null;
                         let end = stop;
                         if (source[stop] === "@") {
@@ -217,7 +218,8 @@
                             shortTid: tid.split("/").pop(),
                             start: start,
                             end: end,
-                            raw: source.slice(start, end)
+                            raw: source.slice(start, end),
+                            isType: true
                         });
                         i = end;
                         continue;

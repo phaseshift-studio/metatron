@@ -251,7 +251,7 @@
 <script type="module">
     import * as MtronEnvelope from '/js/mtron-envelope.js';
     import * as MtronIO from '/js/mtron-io.js';
-    import * as MtronPanels from '/js/mtron-panels.js';
+    import * as MtronObjPanels from '/js/mtron-obj-panels.js';
 
     "use strict";
 
@@ -400,6 +400,115 @@
         el.style.alignSelf = span.row > 1 ? "stretch" : "";
     }
 
+    /* ── card move + resize ─────────────────────────────────────────────────
+       a card is moved by dragging its header grip to reorder it in its grid (the
+       grid is auto-flow, so position IS dom order — the order savePage() keeps);
+       a card is resized by dragging its corner grip to change the col/row span.
+       both touch only the card's dataset and dom order, which pageCards() already
+       reads back, so drag + resize persist through the existing save path. */
+    function nearestObjCard(grid, root, x, y) {
+        let best = null, bestD = Infinity, bestBefore = false;
+        Array.from(grid.children).forEach((objCard) => {
+            if (objCard === root || !(objCard.dataset && objCard.dataset.tid)) return;
+            const r = objCard.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            const cy = r.top + r.height / 2;
+            const d = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+            if (d < bestD) {
+                bestD = d;
+                best = objCard;
+                bestBefore = y < r.top ? true : (y > r.bottom ? false : (x < cx));
+            }
+        });
+        return best ? {objCard: best, before: bestBefore} : null;
+    }
+
+    function makeDraggable(root) {
+        const grip = root.querySelector(".obj-card-grip");
+        if (!grip) return;
+        grip.addEventListener("pointerdown", (ev) => {
+            if (ev.button !== 0) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            const grid = root.parentElement;
+            let target = null;
+            let before = false;
+            root.classList.add("dragging");
+            grip.setPointerCapture(ev.pointerId);
+            const move = (e) => {
+                const found = nearestObjCard(grid, root, e.clientX, e.clientY);
+                if (found) {
+                    before = found.before;
+                    if (found.objCard !== target) {
+                        if (target) target.classList.remove("drop-target");
+                        target = found.objCard;
+                        target.classList.add("drop-target");
+                    }
+                } else if (target) {
+                    target.classList.remove("drop-target");
+                    target = null;
+                }
+            };
+            const up = () => {
+                if (target) {
+                    target.classList.remove("drop-target");
+                    if (before) grid.insertBefore(root, target);
+                    else target.insertAdjacentElement("afterend", root);
+                }
+                root.classList.remove("dragging");
+                grip.removeEventListener("pointermove", move);
+                grip.removeEventListener("pointerup", up);
+                grip.removeEventListener("pointercancel", up);
+            };
+            grip.addEventListener("pointermove", move);
+            grip.addEventListener("pointerup", up);
+            grip.addEventListener("pointercancel", up);
+        });
+    }
+
+    function makeResizable(root) {
+        const grip = root.querySelector(".obj-card-resize");
+        if (!grip) return;
+        grip.addEventListener("pointerdown", (ev) => {
+            if (ev.button !== 0) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            const grid = root.parentElement;
+            const rect = root.getBoundingClientRect();
+            const startX = ev.clientX;
+            const startY = ev.clientY;
+            const startW = rect.width;
+            const startH = rect.height;
+            const startCol = Number(root.dataset.col) || 1;
+            const startRow = Number(root.dataset.row) || 1;
+            const gs = getComputedStyle(grid);
+            const gap = parseFloat(gs.columnGap) || parseFloat(gs.rowGap) || 14;
+            /* columns are uniform (4 per row); rows are auto and uneven, so a row
+               is the card's own current height. each stride also adds one gap. */
+            const colStride = (grid.clientWidth - gap * 3) / 4 + gap;
+            const rowStride = startH / startRow + gap;
+            const MAX_ROW = 6;
+            root.classList.add("resizing");
+            grip.setPointerCapture(ev.pointerId);
+            const move = (e) => {
+                const col = Math.max(1, Math.min(4, Math.round((startW + (e.clientX - startX)) / colStride)));
+                const row = Math.max(1, Math.min(MAX_ROW, Math.round((startH + (e.clientY - startY)) / rowStride)));
+                if (col !== Number(root.dataset.col) || row !== Number(root.dataset.row)) {
+                    applySpan(root, col, row);
+                }
+            };
+            const up = () => {
+                root.classList.remove("resizing");
+                grip.removeEventListener("pointermove", move);
+                grip.removeEventListener("pointerup", up);
+                grip.removeEventListener("pointercancel", up);
+            };
+            grip.addEventListener("pointermove", move);
+            grip.addEventListener("pointerup", up);
+            grip.addEventListener("pointercancel", up);
+        });
+    }
+
     /* ── http probes ───────────────────────────────────────────────────────── */
     async function probe(path, msTimeout) {
         const t = performance.now();
@@ -499,7 +608,7 @@
         if (note) note.textContent = HL ? "syntax: mtron" : "syntax: plain";
         if (HL) {
             $$("#out .line").forEach(retint);
-            if (DIALOG.views.mtron) renderCard(DIALOG, dialogHost);
+            if (modalObjCard.views.mtron) renderObjCard(modalObjCard, modalHost);
         }
     }
 
@@ -852,40 +961,40 @@
        one algorithm, two hosts: the dialog (expression line, copy, close) and a
        pinned card (title left, vid right, unpin). the card owns its views and
        reads; the codecs are shared. */
-    function emptyCard() {
-        return {views: {}, tab: "mtron", env: null, prettyLoaded: false, jsonLoaded: false, panel: null, history: []};
+    function emptyObjCard() {
+        return {views: {}, tab: "mtron", env: null, prettyLoaded: false, jsonLoaded: false, objPanel: null, history: []};
     }
 
-    function cardButton(host, tab) {
+    function objCardButton(host, tab) {
         return host.tabs.querySelector('[data-tab="' + tab + '"]');
     }
 
-    function cardDot(host, state) {
+    function objCardDot(host, state) {
         if (host.dot) setDot(host.dot, state);
     }
 
-    function resetCard(card, host, keepHistory) {
-        card.views = {};
-        card.tab = "mtron";
-        card.env = null;
-        card.prettyLoaded = false;
-        card.jsonLoaded = false;
-        card.panel = null;
-        if (!keepHistory) card.history = [];
+    function resetObjCard(objCard, host, keepHistory) {
+        objCard.views = {};
+        objCard.tab = "mtron";
+        objCard.env = null;
+        objCard.prettyLoaded = false;
+        objCard.jsonLoaded = false;
+        objCard.objPanel = null;
+        if (!keepHistory) objCard.history = [];
         host.tabs.querySelectorAll(".popup-tab").forEach((button) => {
             button.disabled = button.dataset.tab === "json" || button.dataset.tab === "panel";
             button.setAttribute("aria-selected", String(button.dataset.tab === "mtron"));
         });
-        const panel = cardButton(host, "panel");
-        if (panel) panel.hidden = true;
+        const panelTab = objCardButton(host, "panel");
+        if (panelTab) panelTab.hidden = true;
         host.out.textContent = "";
         if (host.expr) host.expr.textContent = "";
     }
 
-    function renderCard(card, host) {
-        const view = card.views[card.tab];
+    function renderObjCard(objCard, host) {
+        const view = objCard.views[objCard.tab];
         host.tabs.querySelectorAll(".popup-tab").forEach((button) => {
-            button.setAttribute("aria-selected", String(button.dataset.tab === card.tab));
+            button.setAttribute("aria-selected", String(button.dataset.tab === objCard.tab));
         });
         if (!view) {
             host.out.textContent = "";
@@ -898,80 +1007,80 @@
             return;
         }
         paint(host.out, view.text, view.kind);
-        if (card.tab === "mtron")
+        if (objCard.tab === "mtron")
             annotateObjects(host.out, view.text, host.openObject);
     }
 
-    function setCardView(card, host, tab, value, kind) {
-        if (kind === "dom") card.views[tab] = {node: value, kind: "dom"};
-        else card.views[tab] = {text: value, kind: kind || "sys"};
-        const button = cardButton(host, tab);
+    function setObjCardView(objCard, host, tab, value, kind) {
+        if (kind === "dom") objCard.views[tab] = {node: value, kind: "dom"};
+        else objCard.views[tab] = {text: value, kind: kind || "sys"};
+        const button = objCardButton(host, tab);
         if (button) {
             button.disabled = false;
             button.hidden = false;
         }
-        if (card.tab === tab) renderCard(card, host);
+        if (objCard.tab === tab) renderObjCard(objCard, host);
     }
 
     function enableJson(host) {
-        const button = cardButton(host, "json");
+        const button = objCardButton(host, "json");
         if (button) button.disabled = false;
     }
 
-    function ensurePretty(card, host) {
-        const env = card.env;
+    function ensurePretty(objCard, host) {
+        const env = objCard.env;
         if (!env) return;
         if (!env.vid) {
-            if (!card.views.mtron) setCardView(card, host, "mtron", env.raw, "res");
+            if (!objCard.views.mtron) setObjCardView(objCard, host, "mtron", env.raw, "res");
             return;
         }
-        if (card.prettyLoaded) return;
-        card.prettyLoaded = true;
-        setCardView(card, host, "mtron", "pretty-printing…", "sys");
-        cardDot(host, "busy");
+        if (objCard.prettyLoaded) return;
+        objCard.prettyLoaded = true;
+        setObjCardView(objCard, host, "mtron", "pretty-printing…", "sys");
+        objCardDot(host, "busy");
         readPretty(env.vid).then((text) => {
-            cardDot(host, "up");
-            setCardView(card, host, "mtron", text, "res");
+            objCardDot(host, "up");
+            setObjCardView(objCard, host, "mtron", text, "res");
         }).catch(() => {
-            cardDot(host, "bad");
-            setCardView(card, host, "mtron", env.raw, "res");
+            objCardDot(host, "bad");
+            setObjCardView(objCard, host, "mtron", env.raw, "res");
         });
     }
 
-    function ensureJson(card, host) {
-        const env = card.env;
+    function ensureJson(objCard, host) {
+        const env = objCard.env;
         if (!env || !env.vid) return;
-        if (card.jsonLoaded) return;
-        card.jsonLoaded = true;
-        setCardView(card, host, "json", "reading " + env.vid + " as json…", "sys");
-        cardDot(host, "busy");
+        if (objCard.jsonLoaded) return;
+        objCard.jsonLoaded = true;
+        setObjCardView(objCard, host, "json", "reading " + env.vid + " as json…", "sys");
+        objCardDot(host, "busy");
         readJson(env.vid).then((value) => {
-            cardDot(host, "up");
-            if (value === null) setCardView(card, host, "json", "noobj", "sys");
-            else if (typeof value === "string") setCardView(card, host, "json", value, "res");
-            else setCardView(card, host, "json", JSON.stringify(value, null, 2), "json");
+            objCardDot(host, "up");
+            if (value === null) setObjCardView(objCard, host, "json", "noobj", "sys");
+            else if (typeof value === "string") setObjCardView(objCard, host, "json", value, "res");
+            else setObjCardView(objCard, host, "json", JSON.stringify(value, null, 2), "json");
         }).catch((error) => {
-            cardDot(host, "bad");
-            setCardView(card, host, "json", String(error && error.message ? error.message : error), "err");
+            objCardDot(host, "bad");
+            setObjCardView(objCard, host, "json", String(error && error.message ? error.message : error), "err");
         });
     }
 
-    function cardTabTo(card, host, tab) {
-        if (tab === "mtron") ensurePretty(card, host);
-        else if (tab === "json") ensureJson(card, host);
-        if (!card.views[tab]) return;
-        card.tab = tab;
-        renderCard(card, host);
+    function objCardTabTo(objCard, host, tab) {
+        if (tab === "mtron") ensurePretty(objCard, host);
+        else if (tab === "json") ensureJson(objCard, host);
+        if (!objCard.views[tab]) return;
+        objCard.tab = tab;
+        renderObjCard(objCard, host);
     }
 
-    function resolvePanel(tid) {
-        return MtronPanels && MtronPanels.resolve ? MtronPanels.resolve(tid) : null;
+    function resolveObjPanel(tid) {
+        return MtronObjPanels && MtronObjPanels.resolve ? MtronObjPanels.resolve(tid) : null;
     }
 
-    function mountPanel(card, host, env) {
-        const factory = card.panel;
+    function mountObjPanel(objCard, host, env) {
+        const factory = objCard.objPanel;
         if (!factory) return;
-        setCardView(card, host, "panel", "panel…", "sys");
+        setObjCardView(objCard, host, "panel", "panel…", "sys");
         const api = {
             json: () => env.vid ? readJson(env.vid) : Promise.resolve(null),
             pretty: () => env.vid ? readPretty(env.vid) : Promise.resolve(env.raw),
@@ -990,9 +1099,9 @@
             announce: (tools) => announceMcpTools(tools)
         };
         Promise.resolve().then(() => factory(env, api)).then((node) => {
-            if (node) setCardView(card, host, "panel", node, "dom");
+            if (node) setObjCardView(objCard, host, "panel", node, "dom");
         }).catch((error) => {
-            setCardView(card, host, "panel", String(error && error.message ? error.message : error), "err");
+            setObjCardView(objCard, host, "panel", String(error && error.message ? error.message : error), "err");
         });
     }
 
@@ -1067,68 +1176,76 @@
         render(root, 0, clean.length, roots);
     }
 
-    function updateBack(card, host) {
-        if (host.back) host.back.hidden = card.history.length === 0;
+    function updateBack(objCard, host) {
+        if (host.back) host.back.hidden = objCard.history.length === 0;
     }
 
-    function inspectCard(card, host, env, options) {
-        resetCard(card, host, options && options.keepHistory);
-        card.env = env;
-        card.panel = resolvePanel(env.tid);
-        if (card.panel) {
-            const button = cardButton(host, "panel");
+    function inspectObjCard(objCard, host, env, options) {
+        resetObjCard(objCard, host, options && options.keepHistory);
+        objCard.env = env;
+        /* a type obj serializes as tid::T[…]@vid — route it to the type panel
+           regardless of which tid (base type) it refines */
+        objCard.objPanel = resolveObjPanel(env.isType ? "type" : env.tid);
+        if (objCard.objPanel) {
+            const button = objCardButton(host, "panel");
             button.hidden = false;
             button.disabled = false;
         }
-        if (host.title) host.title.textContent = env.shortTid || "value";
+        /* a type's label is its vid's last segment (its name), not its tid */
+        if (host.title) {
+            const label = (env.isType && env.vid)
+                ? String(env.vid).split("/").pop()
+                : (env.shortTid || "value");
+            host.title.textContent = label;
+        }
         if (host.at) host.at.textContent = env.vid || "no vid";
         if (host.expr) {
             if (options && options.expr) host.expr.textContent = options.expr;
             else host.expr.textContent = env.expr ? "mtron> " + env.expr : "";
         }
-        setCardView(card, host, "mtron", env.vid ? "pretty-printing…" : env.raw, env.vid ? "sys" : "res");
+        setObjCardView(objCard, host, "mtron", env.vid ? "pretty-printing…" : env.raw, env.vid ? "sys" : "res");
         if (env.vid) enableJson(host);
-        card.tab = card.panel ? "panel" : "mtron";
-        if (card.panel) mountPanel(card, host, env);
-        renderCard(card, host);
-        if (!card.panel && env.vid) ensurePretty(card, host);
-        updateBack(card, host);
+        objCard.tab = objCard.objPanel ? "panel" : "mtron";
+        if (objCard.objPanel) mountObjPanel(objCard, host, env);
+        renderObjCard(objCard, host);
+        if (!objCard.objPanel && env.vid) ensurePretty(objCard, host);
+        updateBack(objCard, host);
         if (options && options.open && host.dialog && !host.dialog.open) host.dialog.showModal();
     }
 
-    function nestedCard(card, host, obj) {
-        card.history.push({
+    function nestedObjCard(objCard, host, obj) {
+        objCard.history.push({
             title: host.title ? host.title.textContent : "",
             at: host.at ? host.at.textContent : "",
             expr: host.expr ? host.expr.textContent : "",
-            views: card.views,
-            tab: card.tab,
-            env: card.env,
-            prettyLoaded: card.prettyLoaded,
-            jsonLoaded: card.jsonLoaded,
-            panel: card.panel
+            views: objCard.views,
+            tab: objCard.tab,
+            env: objCard.env,
+            prettyLoaded: objCard.prettyLoaded,
+            jsonLoaded: objCard.jsonLoaded,
+            objPanel: objCard.objPanel
         });
-        inspectCard(card, host, {tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid},
+        inspectObjCard(objCard, host, {tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid, isType: obj.isType},
             {open: true, keepHistory: true, expr: "nested " + obj.tid});
     }
 
-    function backCard(card, host) {
-        const state = card.history.pop();
+    function backObjCard(objCard, host) {
+        const state = objCard.history.pop();
         if (!state) return;
-        card.views = state.views;
-        card.tab = state.tab;
-        card.env = state.env;
-        card.prettyLoaded = state.prettyLoaded;
-        card.jsonLoaded = state.jsonLoaded;
-        card.panel = state.panel;
+        objCard.views = state.views;
+        objCard.tab = state.tab;
+        objCard.env = state.env;
+        objCard.prettyLoaded = state.prettyLoaded;
+        objCard.jsonLoaded = state.jsonLoaded;
+        objCard.objPanel = state.objPanel;
         if (host.title) host.title.textContent = state.title;
         if (host.at) host.at.textContent = state.at;
         if (host.expr) host.expr.textContent = state.expr;
-        renderCard(card, host);
-        updateBack(card, host);
+        renderObjCard(objCard, host);
+        updateBack(objCard, host);
     }
 
-    const dialogHost = {
+    const modalHost = {
         dialog: $("#popup"),
         title: $("#popup-title"),
         at: $("#popup-at"),
@@ -1139,80 +1256,84 @@
         back: $("#popup-back"),
         openObject: (obj) => openNested(obj)
     };
-    const DIALOG = emptyCard();
+    const modalObjCard = emptyObjCard();
 
     function inspectReference(env) {
-        inspectCard(DIALOG, dialogHost, env, {open: true});
+        inspectObjCard(modalObjCard, modalHost, env, {open: true});
     }
 
     function openNested(obj) {
-        nestedCard(DIALOG, dialogHost, obj);
+        nestedObjCard(modalObjCard, modalHost, obj);
     }
 
     function popupBack() {
-        backCard(DIALOG, dialogHost);
+        backObjCard(modalObjCard, modalHost);
     }
 
     /* one pinned card factory: the dialog's pin and a loaded page's cards both use it */
-    function mountPinnedCard(env, options) {
+    function mountPinnedObjCard(env, options) {
         const opts = options || {};
         const root = document.createElement("article");
-        root.className = "pin-card";
+        root.className = "obj-card";
         root.dataset.tid = env.tid || "";
         root.dataset.vid = env.vid || "";
         root.dataset.label = opts.label || env.shortTid || "value";
         root.dataset.view = opts.view || "panel";
         applySpan(root, opts.col, opts.row);
-        root.innerHTML = '<header class="pin-head">' +
-            '<span class="pin-title"></span>' +
+        root.innerHTML = '<header class="obj-card-head">' +
+            '<button type="button" class="obj-card-grip" title="drag to move" aria-label="move">⠿</button>' +
+            '<span class="obj-card-title"></span>' +
             '<div class="popup-tabs" role="tablist">' +
             '<button type="button" class="popup-tab" data-tab="panel" hidden>panel</button>' +
             '<button type="button" class="popup-tab" data-tab="mtron">mtron</button>' +
             '<button type="button" class="popup-tab" data-tab="json" disabled>json</button></div>' +
-            '<span class="pin-vid"></span>' +
-            '<button type="button" class="pin-unpin" title="unpin">×</button></header>' +
-            '<div class="popup-out"></div>';
+            '<span class="obj-card-vid"></span>' +
+            '<button type="button" class="obj-card-unpin" title="unpin">×</button></header>' +
+            '<div class="popup-out"></div>' +
+            '<button type="button" class="obj-card-resize" title="drag to resize" aria-label="resize">◢</button>';
         const host = {
             dialog: null,
-            title: root.querySelector(".pin-title"),
-            at: root.querySelector(".pin-vid"),
+            title: root.querySelector(".obj-card-title"),
+            at: root.querySelector(".obj-card-vid"),
             expr: null,
             tabs: root.querySelector(".popup-tabs"),
             out: root.querySelector(".popup-out"),
             dot: null,
             back: null,
-            openObject: (obj) => inspectReference({tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid})
+            openObject: (obj) => inspectReference({tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid, isType: obj.isType})
         };
-        const card = emptyCard();
-        root.querySelector(".pin-unpin").addEventListener("click", () => {
+        const objCard = emptyObjCard();
+        root.querySelector(".obj-card-unpin").addEventListener("click", () => {
             const parent = root.parentElement;
             root.remove();
             if (parent && parent.id === "pinned" && parent.childElementCount === 0) parent.hidden = true;
         });
         root.querySelectorAll(".popup-tab").forEach((button) => {
             button.addEventListener("click", () => {
-                cardTabTo(card, host, button.dataset.tab);
+                objCardTabTo(objCard, host, button.dataset.tab);
                 root.dataset.view = button.dataset.tab;
             });
         });
-        inspectCard(card, host, env, {open: false});
+        makeDraggable(root);
+        makeResizable(root);
+        inspectObjCard(objCard, host, env, {open: false});
         if (host.title) host.title.textContent = root.dataset.label;
-        if (opts.view) cardTabTo(card, host, opts.view);
+        if (opts.view) objCardTabTo(objCard, host, opts.view);
         const parent = opts.parent || $("#pinned");
         parent.appendChild(root);
         if (parent.id === "pinned") parent.hidden = false;
-        if (opts.close && dialogHost.dialog.open) dialogHost.dialog.close();
+        if (opts.close && modalHost.dialog.open) modalHost.dialog.close();
         return root;
     }
 
-    function pinCard() {
-        const env = DIALOG.env;
+    function pinObjCard() {
+        const env = modalObjCard.env;
         if (!env) return;
         const loaded = $("#page-loaded");
         const target = loaded && !loaded.hidden ? loaded : $("#pinned");
-        mountPinnedCard(env, {
+        mountPinnedObjCard(env, {
             label: env.shortTid,
-            view: DIALOG.tab || "panel",
+            view: modalObjCard.tab || "panel",
             span: 1,
             parent: target,
             close: true
@@ -1308,10 +1429,10 @@
     }
 
     /* the static mcp_client card (the fallback page and the pre-load paint) has no vid,
-       so it asks for one; a page card with a vid gets the real runner through mountPanel */
+       so it asks for one; a page card with a vid gets the real runner through mountObjPanel */
     (function mountStaticMcpPanel() {
-        const factory = MtronPanels && MtronPanels.resolve
-            ? MtronPanels.resolve("mcp_client") : null;
+        const factory = MtronObjPanels && MtronObjPanels.resolve
+            ? MtronObjPanels.resolve("mcp_client") : null;
         const host = $("#mcp-panel-host");
         if (!factory || !host) return;
         host.appendChild(factory(
@@ -1392,21 +1513,21 @@
     }
 
     function showPopup(action) {
-        const host = dialogHost;
-        resetCard(DIALOG, host, false);
+        const host = modalHost;
+        resetObjCard(modalObjCard, host, false);
         if (host.title) host.title.textContent = "result";
         if (host.at) host.at.textContent = "at=" + action.at;
         if (host.expr) host.expr.textContent = "mtron> " + action.expr;
-        setCardView(DIALOG, host, "mtron", "evaluating…", "sys");
-        cardDot(host, "busy");
+        setObjCardView(modalObjCard, host, "mtron", "evaluating…", "sys");
+        objCardDot(host, "busy");
         if (!host.dialog.open) host.dialog.showModal();
         evaluateThen(action.expr).then((result) => {
             const env = MtronEnvelope ? MtronEnvelope.parse(result) : null;
-            cardDot(host, "up");
-            inspectCard(DIALOG, host, env || {raw: result}, {open: true, expr: "mtron> " + action.expr});
+            objCardDot(host, "up");
+            inspectObjCard(modalObjCard, host, env || {raw: result}, {open: true, expr: "mtron> " + action.expr});
         }).catch((error) => {
-            cardDot(host, "bad");
-            setCardView(DIALOG, host, "mtron", "!!! " + (error && error.message ? error.message : String(error)), "err");
+            objCardDot(host, "bad");
+            setObjCardView(modalObjCard, host, "mtron", "!!! " + (error && error.message ? error.message : String(error)), "err");
         });
     }
 
@@ -1512,8 +1633,8 @@
        the panels that need the raw machine form read through here. */
     function evalMtron(expr) {
         const mime = "application/x-mtron";
-        const reader = readerFor(mime);
-        const run = reader.chain.then(() => connectReader(mime)).then((socket) => new Promise((resolve) => {
+        const reader = readerFor(mime, readers);
+        const run = reader.chain.then(() => connectReader(mime, wsBase, readers)).then((socket) => new Promise((resolve) => {
             const timer = setTimeout(() => {
                 socket.removeEventListener("message", answer);
                 resolve("");
@@ -1600,16 +1721,24 @@
         chip.replaceWith(actionLink(chip.textContent, expr, "web/console", "chip"));
     });
 
-    dialogHost.tabs.querySelectorAll(".popup-tab").forEach((button) => {
-        button.addEventListener("click", () => cardTabTo(DIALOG, dialogHost, button.dataset.tab));
+    modalHost.tabs.querySelectorAll(".popup-tab").forEach((button) => {
+        button.addEventListener("click", () => objCardTabTo(modalObjCard, modalHost, button.dataset.tab));
     });
     $("#popup-back").addEventListener("click", popupBack);
-    $("#popup-pin").addEventListener("click", pinCard);
+    $("#popup-pin").addEventListener("click", pinObjCard);
     $("#popup-close").addEventListener("click", () => $("#popup").close());
+    /* clicking the backdrop — outside the dialog's box — also closes it */
+    $("#popup").addEventListener("click", (ev) => {
+        const rect = ev.currentTarget.getBoundingClientRect();
+        if (ev.clientX < rect.left || ev.clientX > rect.right ||
+            ev.clientY < rect.top || ev.clientY > rect.bottom) {
+            ev.currentTarget.close();
+        }
+    });
     $("#popup").addEventListener("close", () => {
         setDot($("#popup-dot"), "");
-        DIALOG.history = [];
-        updateBack(DIALOG, dialogHost);
+        modalObjCard.history = [];
+        updateBack(modalObjCard, modalHost);
     });
     $("#popup-copy").addEventListener("click", async () => {
         const button = $("#popup-copy");
@@ -1642,7 +1771,7 @@
     (function pageCard() {
         const tabs = $$(".page-tabs .popup-tab");
         if (!tabs.length) return;
-        const panel = $("#page-panel");
+        const pagePanel = $("#page-panel");
         const encoding = $("#page-encoding");
         const out = $("#page-encoding-out");
         const pageSave = $("#page-save");
@@ -1734,7 +1863,7 @@
             currentView = view;
             tabs.forEach((button) => button.setAttribute("aria-selected", String(button.dataset.pageView === view)));
             const isPanel = view === "panel";
-            panel.hidden = !isPanel;
+            pagePanel.hidden = !isPanel;
             encoding.hidden = isPanel;
             if (isPanel) return;
             if (cache.has(view)) {
@@ -1766,8 +1895,8 @@
                         row: Number(el.dataset.row) || 1
                     }));
             }
-            const cards = BEFORE.map((card) => ({...card}));
-            $$("#pinned .pin-card").forEach((root) => {
+            const cards = BEFORE.map((entry) => ({...entry}));
+            $$("#pinned .obj-card").forEach((root) => {
                 if (!root.dataset.tid) return;
                 cards.push({
                     tid: root.dataset.tid,
@@ -1778,7 +1907,7 @@
                     row: Number(root.dataset.row) || 1
                 });
             });
-            AFTER.forEach((card) => cards.push({...card}));
+            AFTER.forEach((entry) => cards.push({...entry}));
             return cards;
         }
 
@@ -1833,7 +1962,7 @@
                 const span = spanOf(rec.span);
                 const view = wordOf(rec.view) || "panel";
                 if (cardVid) {
-                    mountPinnedCard({tid: cardTid, vid: cardVid, raw: ""}, {
+                    mountPinnedObjCard({tid: cardTid, vid: cardVid, raw: ""}, {
                         label: rec.label ? String(rec.label) : tid,
                         view: view,
                         col: span.col,
@@ -1841,13 +1970,13 @@
                         parent: loadedGrid
                     });
                 } else {
-                    const card = $$("#page-panel [data-tid]").find((el) => el.dataset.tid === cardTid);
+                    const objCard = $$("#page-panel [data-tid]").find((el) => el.dataset.tid === cardTid);
                     if (!card) return;
-                    const label = rec.label ? String(rec.label) : (card.dataset.label || tid);
+                    const label = rec.label ? String(rec.label) : (objCard.dataset.label || tid);
                     const heading = card.querySelector("header h2");
                     if (heading) heading.textContent = label;
-                    card.dataset.label = label;
-                    applySpan(card, span.col, span.row);
+                    objCard.dataset.label = label;
+                    applySpan(objCard, span.col, span.row);
                     loadedGrid.appendChild(card);
                 }
             });

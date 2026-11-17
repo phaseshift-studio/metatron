@@ -1127,11 +1127,9 @@ class fURI {
         return _parse(newPath.slice(pre.length + (newPath[pre.length] === '/' ? 1 : 0)));
     }
 
-    origin() {
-        return _of(null, this._scheme, this._host, this._port, [], null, null, new Map(), null);
-    }
-
     origin(o) {
+        if (arguments.length === 0)
+            return _of(null, this._scheme, this._host, this._port, [], null, null, new Map(), null);
         return _of(this._span, o.scheme(), o.host(), o.port(), this._path, this._point, this._poly, this._query, this._templates);
     }
 

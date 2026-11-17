@@ -10,11 +10,13 @@
  * `env` is `{tid, vid, raw}` and `api` is `{json(), pretty()}`. A panel must not
  * own sockets or dialogs; it renders the object and stops there.
  *
- * UMD: `window.MtronPanels` in a page, `module.exports` under node (for tests).
+ * UMD: `window.MtronObjPanels` in a page, `module.exports` under node (for tests).
  */
 import { read, write } from './mtron-io.js';
 import { parseSchema, renderForm, collectForm } from './mtron-form.js';
 import { serialize } from './obj_mtron_serializer.js';
+import { f } from './furi.js';
+import { parse as envelope } from './mtron-envelope.js';
 
 "use strict";
 
@@ -583,9 +585,256 @@ import { serialize } from './obj_mtron_serializer.js';
             return el;
         }
 
+        /* ── instset tables: type · inst · rewrite · const ───────────────────
+           one read per table, over the JSON codec (the entries come back as
+           address strings — the signatures, complete and unclipped); the first
+           open of a table fetches, its promise is kept for the panel's life. */
+        const SIG_TABLES = ["type", "inst", "rewrite", "const"];
+        const sigCache = new Map();
+        let activeDrop = null;
+
+        function sigRead(key) {
+            if (!sigCache.has(key))
+                sigCache.set(key, api.mtron("*~/instset/" + key).then(signaturesOf));
+            return sigCache.get(key);
+        }
+
+        /* split an x-mtron table list into signature strings. a type entry is
+           sig::T[...] — its signature is the tid before the top-level ::T — and
+           an inst / const entry is its own serialization. */
+        function signaturesOf(text) {
+            const source = String(text == null ? "" : text).trim();
+            if (!source || source === "noobj") return [];
+            let inner = source;
+            if (inner.charAt(0) === "[" && inner.charAt(inner.length - 1) === "]") inner = inner.slice(1, -1);
+            const out = [];
+            let depth = 0;
+            let quote = null;
+            let start = 0;
+            for (let i = 0; i < inner.length; i++) {
+                const c = inner[i];
+                if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+                if (c === "'" || c === '"') { quote = c; continue; }
+                if (c === "[" || c === "(" || c === "{") { depth++; continue; }
+                if (c === "]" || c === ")" || c === "}") { depth--; continue; }
+                if (c === "," && depth === 0) {
+                    const sig = sigOf(inner.slice(start, i).trim());
+                    if (sig) out.push(sig);
+                    start = i + 1;
+                }
+            }
+            const sig = sigOf(inner.slice(start).trim());
+            if (sig) out.push(sig);
+            return out;
+        }
+
+        /* the signature of one table entry: the type's vid (its name), or its
+           tid for a base type where tid == vid. */
+        function sigOf(entry) {
+            let depth = 0;
+            let atIndex = -1;
+            for (let i = 0; i < entry.length; i++) {
+                const c = entry[i];
+                if (c === "[" || c === "(" || c === "{") depth++;
+                else if (c === "]" || c === ")" || c === "}") depth--;
+                else if (depth === 0 && c === "@") atIndex = i;
+            }
+            if (atIndex >= 0) {
+                let vid = entry.slice(atIndex + 1).trim();
+                if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
+                return vid;
+            }
+            /* no vid: a base type (int::T, …) — the tid before the top-level ::T */
+            let d = 0;
+            for (let i = 0; i + 2 < entry.length; i++) {
+                const c = entry[i];
+                if (c === "[" || c === "(" || c === "{") d++;
+                else if (c === "]" || c === ")" || c === "}") d--;
+                else if (d === 0 && c === ":" && entry[i + 1] === ":" && entry[i + 2] === "T")
+                    return entry.slice(0, i).trim();
+            }
+            return entry;
+        }
+
+        /* the signature the machine names — painted with the mtron grammar,
+           plain text when the highlighter has not loaded yet */
+        function paintSignature(el, text) {
+            if (window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron")) {
+                try {
+                    el.innerHTML = window.hljs.highlight(text, {language: "mtron", ignoreIllegals: true}).value;
+                    return;
+                } catch (ignored) {
+                }
+            }
+            el.textContent = text;
+        }
+
+        /* the doc/decq read of a signature, quoted the way the machine wants:
+           *<plus?int<=int&args=[int]&decq>
+           the furi supplies the name; the query and args stay as the machine
+           spelled them, with the characters the angle cannot carry raw taken
+           to their percent form (rec{?} → rec%7B%3F%7D, (10) → %2810%29, …) */
+        function escapeArgs(args) {
+            return args.replace(/[(){}[\]?@<>#&=-]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+        }
+
+        function signatureRead(entry, q) {
+            let depth = 0;
+            let quote = null;
+            let qAt = -1;
+            let openAt = -1;
+            let closeAt = entry.length;
+            for (let i = 0; i < entry.length; i++) {
+                const ch = entry[i];
+                if (quote) {
+                    if (ch === "\\") i++;
+                    else if (ch === quote) quote = null;
+                    continue;
+                }
+                if (ch === "'" || ch === '"') { quote = ch; continue; }
+                const next = entry[i + 1];
+                if (depth === 0 && qAt < 0 && ch === "?") qAt = i;
+                if (depth === 0 && openAt < 0 && ch === "(") openAt = i;
+                /* < > are brackets only when they are not the <= >= => -> arrows */
+                if (ch === "(" || ch === "[" || ch === "{" || (ch === "<" && next !== "=" && next !== ">")) depth++;
+                else if (ch === ")" || ch === "]" || ch === "}" || (ch === ">" && next !== "=" && next !== "-")) {
+                    depth = Math.max(0, depth - 1);
+                    if (depth === 0 && openAt >= 0 && closeAt === entry.length) closeAt = i;
+                }
+            }
+            const headEnd = openAt > 0 ? openAt : (qAt > 0 ? qAt : entry.length);
+            const namePath = entry.slice(0, headEnd);
+            let name = null;
+            try { name = f(namePath).name(); } catch (ignored) { }
+            if (!name) {
+                const slash = namePath.lastIndexOf("/");
+                name = slash > 0 ? namePath.slice(slash + 1) : namePath;
+            }
+            const query = qAt > 0 ? entry.slice(qAt, openAt > 0 ? openAt : entry.length) : "";
+            const args = openAt > 0 ? escapeArgs(entry.slice(openAt + 1, closeAt)) : null;
+            return "*<" + name + query + (args ? "&args=[" + args + "]" : "") + "&" + q + ">";
+        }
+
+        /* one row's doc/dec: evaluate the read over the structural socket and
+           wear the answer as the standard object card — a docs::/decs:: rec is
+           a read result with its own address, so parse it, and fall back to a
+           plain raw card when it carries no envelope. the panel never owns
+           the socket or the dialog */
+        function showRead(entry, label) {
+            const readExpr = signatureRead(entry, label + "q");
+            const wear = (text) => {
+                const clean = String(text == null ? "" : text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "");
+                /* a docs::/decs:: answer is a normal obj: parse its envelope and
+                   wear it as the standard card (panel when one is registered),
+                   the read it came from sitting in the card's expr line */
+                const env = Object.assign({raw: clean, expr: readExpr}, envelope(clean) || {shortTid: label});
+                if (api && typeof api.open === "function")
+                    api.open(env);
+            };
+            if (api && typeof api.mtron === "function") {
+                api.mtron(readExpr).then(wear)
+                    .catch((problem) => wear(problem && problem.message ? problem.message : problem));
+            } else {
+                wear(readExpr);
+            }
+        }
+
+        /* a pinned card clips its contents; a card with an open table unclips */
+        function unclip(tileEl, on) {
+            const host = tileEl.closest(".obj-card");
+            if (host) host.classList.toggle("drop-open", on);
+        }
+
+        function closeDrop() {
+            if (!activeDrop) return;
+            activeDrop.drop.hidden = true;
+            activeDrop.actions.querySelectorAll("button.on").forEach((button) => button.classList.remove("on"));
+            unclip(activeDrop.tile, false);
+            activeDrop.key = null;
+            activeDrop = null;
+        }
+
+        function wireActions(tileEl) {
+            const actions = node("div", "machine-tile-actions");
+            const drop = node("div", "machine-drop");
+            drop.hidden = true;
+            const pair = {tile: tileEl, actions: actions, drop: drop, key: null};
+
+            function open(key) {
+                /* clicking the already-open table closes it — a toggle, not a re-open */
+                if (activeDrop === pair && pair.key === key) {
+                    closeDrop();
+                    return;
+                }
+                closeDrop();
+                pair.key = key;
+                const button = actions.querySelector('[data-table="' + key + '"]');
+                if (button) button.classList.add("on");
+                activeDrop = pair;
+                unclip(tileEl, true);
+                drop.hidden = false;
+                drop.textContent = "";
+                drop.appendChild(node("div", "machine-drop-empty", "reading ~/instset/" + key + "…"));
+                sigRead(key).then((list) => {
+                    if (activeDrop !== pair) return;
+                    drop.textContent = "";
+                    if (!list.length) {
+                        drop.appendChild(node("div", "machine-drop-empty", "the machine names no " + key));
+                        return;
+                    }
+                    list.forEach((text) => {
+                        const row = node("div", "machine-drop-row");
+                        const cell = node("button", "machine-drop-cell");
+                        cell.type = "button";
+                        cell.title = text + " · click to open";
+                        cell.setAttribute("aria-label", "open " + text);
+                        paintSignature(cell, text);
+                        cell.addEventListener("click", () => {
+                            if (api && api.open)
+                                api.open({
+                                    isType: key === "type",
+                                    vid: text,
+                                    raw: text,
+                                    shortTid: text.split("/").pop() || text
+                                });
+                        });
+                        row.appendChild(cell);
+                        ["doc", "dec"].forEach((label) => {
+                            const button = node("button", "machine-drop-btn", label);
+                            button.type = "button";
+                            button.addEventListener("click", () => showRead(text, label));
+                            row.appendChild(button);
+                        });
+                        drop.appendChild(row);
+                    });
+                }).catch((problem) => {
+                    if (activeDrop !== pair) return;
+                    drop.textContent = "";
+                    drop.appendChild(node("div", "machine-drop-empty",
+                        String(problem && problem.message ? problem.message : problem)));
+                });
+            }
+
+            SIG_TABLES.forEach((key) => {
+                const button = node("button", "", key);
+                button.type = "button";
+                button.dataset.table = key;
+                button.addEventListener("click", () => open(key));
+                actions.appendChild(button);
+            });
+
+            drop.addEventListener("mousedown", (ev) => ev.stopPropagation());
+            tileEl.appendChild(actions);
+            tileEl.appendChild(drop);
+        }
+
         function setTiles(items) {
             tiles.textContent = "";
-            items.forEach((item) => tiles.appendChild(tile(item.label, item.metric, item.sub, item.inherited)));
+            items.forEach((item) => {
+                const el = tile(item.label, item.metric, item.sub, item.inherited);
+                if (item.actions) wireActions(el);
+                tiles.appendChild(el);
+            });
         }
 
         /* a frame's unions fall through to the enclosing machine; the rec read only
@@ -636,10 +885,10 @@ import { serialize } from './obj_mtron_serializer.js';
                     ? Object.keys(instset.prefix).length
                     : 0;
                 setTiles([
+                    { label: "instset", metric: sets + " sets", sub: aliases + " aliases", inherited: instsetR.inherited, actions: true },
                     { label: "compiler", metric: stages + "/4 stages", sub: checksOn + "/" + (Object.keys(checks).length || 5) + " checks on", inherited: compilerR.inherited },
                     { label: "network", metric: peers + " peers", sub: listeners + " listeners", inherited: peerR.inherited || rosterR.inherited },
-                    { label: "processor", metric: computers + " computers", sub: traceStacks + " trace stacks", inherited: computerR.inherited || tracerR.inherited },
-                    { label: "instset", metric: sets + " sets", sub: aliases + " aliases", inherited: instsetR.inherited }
+                    { label: "processor", metric: computers + " computers", sub: traceStacks + " trace stacks", inherited: computerR.inherited || tracerR.inherited }
                 ]);
             } catch (problem) {
                 if (my !== token) return;
@@ -699,6 +948,14 @@ import { serialize } from './obj_mtron_serializer.js';
                 load();
             }).catch((problem) => fail(problem && problem.message ? problem.message : String(problem)));
         });
+
+        /* a mousedown outside the tile closes its table (bound once per panel) */
+        if (!box._outsideBound) {
+            box._outsideBound = true;
+            document.addEventListener("mousedown", (ev) => {
+                if (activeDrop && !activeDrop.tile.contains(ev.target)) closeDrop();
+            });
+        }
 
         (async () => {
             try {
@@ -861,32 +1118,166 @@ import { serialize } from './obj_mtron_serializer.js';
     register("network", networkPanel);
 
 
-    /* the web surfaces: the server obj's own route table, not a probe */
-    function routePanel(title, value) {
+    /* docs and decs — the result of ?docq / ?decq. the machine makes these in
+       the course of a read (there is no door to re-ask), so the card receives
+       them as the raw rec: render it like every other card — one row per key,
+       an address value as the page's usual clickable (plain click opens it,
+       shift-click opens its ?docq), everything else painted mtron. */
+    function paintMtron(el, text) {
+        const t = String(text == null ? "" : text);
+        if (window.hljs && window.hljs.getLanguage("mtron"))
+            el.innerHTML = window.hljs.highlight(t, {language: "mtron"}).value;
+        else el.textContent = t;
+    }
+
+    /* the top-level key=>value pairs of a rec's body — arrows and quotes in
+       the values never split a pair */
+    function recEntries(text) {
+        const l = text.indexOf("[");
+        const r = text.lastIndexOf("]");
+        if (l < 0 || r <= l + 1) return [];
+        const body = text.slice(l + 1, r);
+        const pieces = [];
+        let depth = 0, quote = null, start = 0;
+        for (let i = 0; i < body.length; i++) {
+            const ch = body[i];
+            if (quote) {
+                if (ch === "\\") i++;
+                else if (ch === quote) quote = null;
+                continue;
+            }
+            if (ch === "'" || ch === '"') { quote = ch; continue; }
+            const next = body[i + 1];
+            if (ch === "[" || ch === "(" || ch === "{" || (ch === "<" && next !== "=" && next !== ">")) depth++;
+            else if (ch === "]" || ch === ")" || ch === "}" || (ch === ">" && next !== "=" && next !== "-")) depth--;
+            else if (ch === "," && depth === 0) { pieces.push(body.slice(start, i)); start = i + 1; }
+        }
+        pieces.push(body.slice(start));
+        const pairs = [];
+        pieces.forEach((piece) => {
+            const arrow = piece.indexOf("=>");
+            if (arrow < 0) return;
+            const key = piece.slice(0, arrow).trim();
+            const value = piece.slice(arrow + 2).trim();
+            if (key) pairs.push([key, value]);
+        });
+        return pairs;
+    }
+
+    function fieldsPanel(env, api) {
+        const box = node("div", "mpanel");
+        const text = env && env.raw ? String(env.raw) : "";
+        const pairs = recEntries(text);
+        if (!pairs.length) {
+            box.appendChild(node("pre", "mpanel-raw", text));
+            return box;
+        }
+        const open = (uri) => {
+            const s = String(uri);
+            if (api && api.open) api.open({raw: s, shortTid: s.split("/").slice(-1)[0]});
+        };
+        pairs.forEach(([key, value]) => {
+            const row = node("div", "mpanel-row");
+            row.appendChild(node("span", "mpanel-k", key));
+            const v = node("span", "mpanel-v", "");
+            if (value.startsWith("/")) {
+                try {
+                    v.appendChild(f(value).toElement(open));
+                    row.appendChild(v);
+                    box.appendChild(row);
+                    return;
+                } catch (ignored) { /* not an address (a signature) — paint it */ }
+            }
+            paintMtron(v, value);
+            row.appendChild(v);
+            box.appendChild(row);
+        });
+        return box;
+    }
+
+    register("docs", fieldsPanel);
+    register("decs", fieldsPanel);
+
+
+    /* the web surfaces: the server obj's own route table, not a probe. the obj's
+       origin/host is a bind wildcard, so the live host is read from /network/host;
+       each route row's target is a metatron address — click it to resolve (read)
+       the object it serves; a globe beside it resolves the route as an http url. */
+    async function resolveHost(api, value) {
+        try {
+            const raw = await api.evalJson("*/network/host");
+            const text = raw == null ? "" : String(raw).trim();
+            if (text && text !== "noobj") return f(text);
+        } catch (ignored) { /* no host — leave the header empty */ }
+        const fb = value && (value.host || value.origin);
+        const text = fb == null ? "" : String(fb).trim();
+        if (text && text !== "_") {
+            try { return f(text); } catch (ignored) { }
+        }
+        return null;
+    }
+
+    async function routePanel(title, value, api, httpResolve) {
         const box = node("div", "mpanel");
         const head = node("div", "mpanel-head");
         head.appendChild(node("span", "mpanel-k", title));
-        const target = value && (value.origin || value.host);
-        if (target) head.appendChild(node("span", "mpanel-pattern", brief(target)));
+        const host = node("span", "mpanel-pattern", "");
+        head.appendChild(host);
         box.appendChild(head);
+
+        /* the host is read once up front so the globes are real links with an href */
+        const hostUri = (api && api.evalJson) ? await resolveHost(api, value) : null;
+        if (hostUri) host.textContent = hostUri.toString();
+
         const routes = value && value.route && typeof value.route === "object" ? value.route : {};
         const paths = Object.keys(routes);
         if (!paths.length) box.appendChild(node("div", "mpanel-empty", "no routes"));
+
+        /* click a route's target -> resolve it: read the object at that address
+           and wear it as the standard card (shift-click opens its ?docq) */
+        const openTarget = (uri) => {
+            const vid = uri.toString();
+            if (api && api.open) api.open({vid: vid, raw: vid, shortTid: uri.name() || vid.split("/").pop() || vid});
+        };
+
         paths.forEach((path) => {
             const row = node("div", "mpanel-row");
             row.appendChild(node("span", "mpanel-k", path));
-            row.appendChild(node("span", "mpanel-v", brief(routes[path])));
+            const v = node("span", "mpanel-v");
+            const target = routes[path];
+            const text = target == null ? "" : String(target);
+            if (text) {
+                const button = f(text).toElement(openTarget, "route-target");
+                button.textContent = brief(target);
+                v.appendChild(button);
+            } else {
+                v.textContent = brief(target);
+            }
+            if (httpResolve && hostUri) {
+                /* a real <a> so the browser treats it as a link — right-click →
+                   open in new tab, middle-click, native navigation. the host's own
+                   name path is dropped (origin) before the route path is joined */
+                const url = hostUri.origin().scheme("http").port(8777).extend(path).toString();
+                const globe = node("a", "route-globe", "\u{1F310}");
+                globe.href = url;
+                globe.target = "_blank";
+                globe.rel = "noopener noreferrer";
+                globe.title = url;
+                globe.setAttribute("aria-label", "open " + path + " over http");
+                v.appendChild(globe);
+            }
+            row.appendChild(v);
             box.appendChild(row);
         });
         return box;
     }
 
     register("/m/web/http/http_server", async function (env, api) {
-        return routePanel("http_server", await api.json());
+        return routePanel("http_server", await api.json(), api, true);
     });
 
     register("/m/web/ws/ws_server", async function (env, api) {
-        return routePanel("ws_server", await api.json());
+        return routePanel("ws_server", await api.json(), api);
     });
 
     /* the console is the page's console section; the obj supplies its header */
@@ -915,27 +1306,38 @@ import { serialize } from './obj_mtron_serializer.js';
        and its vid is the table name; a table's rows (a wildcard read of
        <path>/<table>/+) are equal-sized recs, so the columns are the first
        row's keys. */
+    /* a tblespace's schema read (*<space>/+) is an objs of rels: { vid => type, … },
+       or one bare rel when there is a single table. the table name is the last path
+       segment of each vid. */
     function schemaTableNames(text) {
-        const source = String(text == null ? "" : text);
-        const names = [];
+        const source = String(text == null ? "" : text).trim();
+        if (!source || source === "noobj") return [];
+        const names = new Set();
         let depth = 0;
-        let listDepth = -1;
+        let relDepth = null;
         let quote = null;
         for (let i = 0; i < source.length; i++) {
             const c = source[i];
             if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
             if (c === "'" || c === '"') { quote = c; continue; }
-            if (c === "[" || c === "(" || c === "{") { depth++; if (listDepth < 0) listDepth = depth; continue; }
+            if (c === "[" || c === "(" || c === "{") { depth++; continue; }
             if (c === "]" || c === ")" || c === "}") { depth--; continue; }
-            if (c === "@" && depth === listDepth) {
-                let j = i + 1;
-                while (j < source.length && /[A-Za-z0-9_./-]/.test(source[j])) j++;
-                const name = source.slice(i + 1, j);
-                if (name) names.push(name);
-                i = j - 1;
+            if (c === "=" && source[i + 1] === ">") {
+                if (relDepth === null) relDepth = depth;
+                if (depth === relDepth) {
+                    let start = i - 1;
+                    while (start >= 0 && /\s/.test(source[start])) start--;
+                    const end = start + 1;
+                    while (start >= 0 && source[start] !== "{" && source[start] !== ",") start--;
+                    let vid = source.slice(start + 1, end).trim();
+                    if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
+                    const segs = vid.split("/").filter(Boolean);
+                    if (segs.length) names.add(segs[segs.length - 1]);
+                }
+                i++;
             }
         }
-        return names;
+        return Array.from(names);
     }
 
     /* the address an auto-at / auto-deref reference points at — what a clickable
@@ -968,7 +1370,7 @@ import { serialize } from './obj_mtron_serializer.js';
         const grid = node("div", "tble-grid");
         grid.appendChild(spinner("discovering tables…"));
         try {
-            const schemaText = await api.mtron("*<" + data + "/+>");
+            const schemaText = await api.mtron("*<" + data + "/+/>");
             const tables = schemaTableNames(schemaText);
             grid.textContent = "";
             tables.forEach((name) => pick.appendChild(new Option(name, name)));
@@ -1275,6 +1677,215 @@ import { serialize } from './obj_mtron_serializer.js';
             box.textContent = "";
             box.appendChild(node("div", "mpanel-empty", String(problem && problem.message ? problem.message : problem)));
         }
+        return box;
+    });
+
+    /* ── type::T — a type's definition: its refinement, desc, predicate,
+       constructor and examples. the ?docq data is read field-by-field with
+       >> projections, so nothing here parses the doc rec. */
+    function closeBracket(text, openIdx) {
+        let depth = 0;
+        let quote = null;
+        for (let i = openIdx; i < text.length; i++) {
+            const c = text[i];
+            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+            if (c === "'" || c === '"') { quote = c; continue; }
+            if (c === "[") depth++;
+            else if (c === "]") { depth--; if (depth === 0) return i + 1; }
+        }
+        return text.length;
+    }
+
+    function hasTopLevelArrow(text) {
+        let depth = 0;
+        let quote = null;
+        for (let i = 0; i + 1 < text.length; i++) {
+            const c = text[i];
+            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+            if (c === "'" || c === '"') { quote = c; continue; }
+            if (c === "[" || c === "(" || c === "{") depth++;
+            else if (c === "]" || c === ")" || c === "}") depth--;
+            else if (depth === 0 && c === "=" && text[i + 1] === ">") return true;
+        }
+        return false;
+    }
+
+    function addField(text, out) {
+        const s = text.trim();
+        if (!s) return;
+        let depth = 0;
+        let quote = null;
+        let arrowAt = -1;
+        for (let i = 0; i + 1 < s.length; i++) {
+            const c = s[i];
+            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+            if (c === "'" || c === '"') { quote = c; continue; }
+            if (c === "[" || c === "(" || c === "{") depth++;
+            else if (c === "]" || c === ")" || c === "}") depth--;
+            else if (depth === 0 && c === "=" && s[i + 1] === ">") { arrowAt = i; break; }
+        }
+        if (arrowAt < 0) return;
+        const key = s.slice(0, arrowAt).trim();
+        const type = s.slice(arrowAt + 2).trim();
+        if (key) out.push({key: key, type: type});
+    }
+
+    function parseFields(text, out) {
+        const source = String(text == null ? "" : text).trim();
+        if (!source) return;
+        let depth = 0;
+        let quote = null;
+        let start = 0;
+        for (let i = 0; i < source.length; i++) {
+            const c = source[i];
+            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+            if (c === "'" || c === '"') { quote = c; continue; }
+            if (c === "[" || c === "(" || c === "{") depth++;
+            else if (c === "]" || c === ")" || c === "}") depth--;
+            else if (depth === 0 && c === ",") {
+                addField(source.slice(start, i), out);
+                start = i + 1;
+            }
+        }
+        addField(source.slice(start), out);
+    }
+
+    /* a type obj's x-mtron: tid::T[?predicate][constructor]@vid */
+    function parseType(text) {
+        const source = String(text == null ? "" : text).trim();
+        const out = {tid: "", vid: null, predicate: [], constructor: ""};
+        let depth = 0;
+        let quote = null;
+        let tidEnd = -1;
+        for (let i = 0; i + 2 < source.length; i++) {
+            const c = source[i];
+            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+            if (c === "'" || c === '"') { quote = c; continue; }
+            if (c === "[" || c === "(" || c === "{") depth++;
+            else if (c === "]" || c === ")" || c === "}") depth--;
+            else if (depth === 0 && c === ":" && source[i + 1] === ":" && source[i + 2] === "T") { tidEnd = i; break; }
+        }
+        if (tidEnd > 0) out.tid = source.slice(0, tidEnd).trim();
+        let rest = tidEnd >= 0 ? source.slice(tidEnd + 3) : "";
+        let atIdx = -1;
+        depth = 0;
+        quote = null;
+        for (let i = 0; i < rest.length; i++) {
+            const c = rest[i];
+            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
+            if (c === "'" || c === '"') { quote = c; continue; }
+            if (c === "[" || c === "(" || c === "{") depth++;
+            else if (c === "]" || c === ")" || c === "}") depth--;
+            else if (depth === 0 && c === "@") atIdx = i;
+        }
+        if (atIdx >= 0) {
+            let vid = rest.slice(atIdx + 1).trim();
+            if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
+            out.vid = vid;
+            rest = rest.slice(0, atIdx).trim();
+        }
+        let i = 0;
+        while (i < rest.length) {
+            while (i < rest.length && rest[i] !== "[") i++;
+            if (i >= rest.length) break;
+            const end = closeBracket(rest, i);
+            const group = rest.slice(i, end);
+            if (group.charAt(1) === "?") parseFields(group.slice(2, -1), out.predicate);
+            else if (group !== "[]" && group !== "[,]") {
+                if (hasTopLevelArrow(group.slice(1, -1))) parseFields(group.slice(1, -1), out.predicate);
+                else out.constructor = group;
+            }
+            i = end;
+        }
+        return out;
+    }
+
+    function paintSig(el, text) {
+        if (window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron")) {
+            try {
+                el.innerHTML = window.hljs.highlight(text, {language: "mtron", ignoreIllegals: true}).value;
+                return;
+            } catch (ignored) { }
+        }
+        el.textContent = text;
+    }
+
+    register("type", async function (env, api) {
+        const box = node("div", "mpanel type-panel");
+        const vid = String((env && env.vid) || "").trim();
+        if (!vid) { box.appendChild(node("div", "mpanel-empty", "no type address")); return box; }
+
+        const [typeText, tid, doc] = await Promise.all([
+            (api && api.mtron ? api.mtron("*<" + vid + ">") : Promise.resolve("")).catch(() => ""),
+            (api && api.evalJson ? api.evalJson("*<" + vid + ">.tid()") : Promise.resolve("")).catch(() => ""),
+            (api && api.evalJson ? api.evalJson("*<" + vid + "?docq>.-<[>>desc,>>args.>-.as(lst::T).>-[,],>>example]") : Promise.resolve(null)).catch(() => null)
+        ]);
+
+        const parsed = parseType(typeText);
+        const tidText = String(tid == null ? "" : tid).trim();
+        const refined = (tidText && tidText !== "noobj" && !/^(fail|parse error)/i.test(tidText)) ? tidText : parsed.tid;
+        const desc = Array.isArray(doc) ? String(doc[0] == null ? "" : doc[0]).trim() : "";
+        const argPairs = Array.isArray(doc) && Array.isArray(doc[1]) ? doc[1] : [];
+        const examples = Array.isArray(doc) && Array.isArray(doc[2]) ? doc[2] : [];
+        const name = String(vid.split("/").pop() || vid);
+
+        const head = node("div", "type-head");
+        head.appendChild(node("span", "type-title", name + "::T"));
+        if (refined && refined !== name) {
+            head.appendChild(node("span", "type-refines", "refines"));
+            const ref = node("button", "type-refines-link", refined);
+            ref.type = "button";
+            ref.title = "open " + refined;
+            ref.addEventListener("click", () => {
+                if (api && api.open)
+                    api.open({tid: "type", vid: refined, raw: refined, shortTid: refined.split("/").pop() || refined});
+            });
+            head.appendChild(ref);
+        }
+        box.appendChild(head);
+
+        if (desc && desc !== "noobj") box.appendChild(node("p", "type-desc", desc));
+
+        if (parsed.predicate.length) {
+            box.appendChild(node("div", "type-section", "predicate"));
+            const table = node("table", "type-pred");
+            const tbody = document.createElement("tbody");
+            parsed.predicate.forEach((field) => {
+                const tr = document.createElement("tr");
+                const kd = node("td", "type-pred-key", "");
+                paintSig(kd, field.key);
+                const td = node("td", "type-pred-type", "");
+                paintSig(td, field.type);
+                const dd = node("td", "type-pred-desc", "");
+                const pair = argPairs.find((p) => Array.isArray(p) && String(p[0]) === field.key);
+                dd.textContent = pair && pair.length > 1 ? String(pair[1]) : "";
+                tr.appendChild(kd);
+                tr.appendChild(td);
+                tr.appendChild(dd);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            box.appendChild(table);
+        }
+
+        if (parsed.constructor) {
+            box.appendChild(node("div", "type-section", "constructor"));
+            const ctor = node("pre", "type-ctor", "");
+            paintSig(ctor, parsed.constructor.slice(1, -1));
+            box.appendChild(ctor);
+        }
+
+        if (examples.length) {
+            box.appendChild(node("div", "type-section", "example(s)"));
+            const ul = node("ul", "type-examples");
+            examples.forEach((ex) => {
+                const li = document.createElement("li");
+                paintSig(li, String(ex));
+                ul.appendChild(li);
+            });
+            box.appendChild(ul);
+        }
+
         return box;
     });
 
