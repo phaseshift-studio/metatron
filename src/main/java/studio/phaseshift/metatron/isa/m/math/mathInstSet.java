@@ -321,28 +321,9 @@ public class mathInstSet extends AbstractInstSet {
      * Format: {@code //yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm}
      */
     public static Uri nowDatetime() {
-        final ZonedDateTime now = ZonedDateTime.now();
-        final String year = String.format("%04d", now.getYear());
-        final String month = String.format("%02d", now.getMonthValue());
-        final String day = String.format("%02d", now.getDayOfMonth());
-        final String hour = String.format("%02d", now.getHour());
-        final String minute = String.format("%02d", now.getMinute());
-        final String second = String.format("%02d", now.getSecond());
-        final String millis = String.format("%03d", now.getNano() / 1_000_000);
-        final String tz = now.getOffset().getId(); // "+HH:MM" or "-HH:MM"
-        final String tzCompact = tz.replace(":", ""); // "+HHMM" or "-HHMM"
-        final String host = year + "." + month;
-        final fURI furi = fURI.of(
-                null,          // span
-                null,          // scheme
-                host,          // host = year.month
-                Integer.parseInt(day),  // port = day
-                List.of(hour, minute, second, millis),  // path
-                null, null,    // coefficient, poly
-                Map.of("tz", tzCompact),  // query
-                null           // fragment
-        );
-        return uri(furi, MATH_DATETIME_TID, null);
+        // the one datetime construction: it lays the absolute path (a relative one renders the day glued to the
+        // hour, //2026.11:1804/...) and spells UTC +0000 where ZoneOffset.getId() answers Z
+        return buildDatetimeUri(ZonedDateTime.now());
     }
 
     private static final java.util.regex.Pattern DT_PARSE =
@@ -1100,7 +1081,7 @@ public class mathInstSet extends AbstractInstSet {
                                     };
                                 }).create()),
                 uri(INST), lst(
-                        docWrap(instC(MATH_DATETIME_NOW_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()), "returns the current system datetime as a datetime uri", "datetime_now()   [-- <//2026.08.09/14/30/52/123?tz=+0000> (the moment you run it) --]"),
+                        docWrap(instC(MATH_DATETIME_NOW_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()), "returns the current system datetime as a datetime uri", "datetime_now()   [-- datetime::<//2026.08:9/14/30/52/123?tz=+0000> (the moment you run it) --]"),
                         // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,
                         // datetime - datetime -> millis::T
                         docWrap(instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {
@@ -1297,17 +1278,17 @@ public class mathInstSet extends AbstractInstSet {
                                 "complex argument (phase): \\(\\arg(a+bi)=\\mathrm{atan2}(b,a)\\)",
                                 "cmplx::[1.0,1.0].arg()   [-- 0.7853981633974483 --]"),
                         docWrap(instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
-                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime forward by a duration", "<//2026.08:09/14/30/00/000?tz=+0000> + second::30.0   [-- <//2026.08:09/14/30/30/000?tz=+0000> --]"),
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime forward by a duration", "datetime::<//2026.08:9/14/30/00/000?tz=+0000> + second::30.0   [-- datetime::<//2026.08:9/14/30/30/000?tz=+0000> --]"),
                         docWrap(instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
-                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) - (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime backward by a duration", "<//2026.08:09/14/30/30/000?tz=+0000> - second::30.0   [-- <//2026.08:09/14/30/00/000?tz=+0000> --]"),
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) - (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime backward by a duration", "datetime::<//2026.08:9/14/30/30/000?tz=+0000> - second::30.0   [-- datetime::<//2026.08:9/14/30/00/000?tz=+0000> --]"),
                         docWrap(instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_TIME_TID), lst(DATETIME_TYPE), (lhs, inst) ->
-                                normalizeTime(real((double) (datetimeToMillis(lhs.asUri()) - datetimeToMillis(inst.arg(0).asUri())), MATH_MILLIS_TID, null))), "the elapsed duration between two datetimes (in millis — normalize it for a readable unit)", "<//2026.08:09/14/31/00/000?tz=+0000> - <//2026.08:09/14/30/00/000?tz=+0000>   [-- millis::60000.0 --]"),
+                                normalizeTime(real((double) (datetimeToMillis(lhs.asUri()) - datetimeToMillis(inst.arg(0).asUri())), MATH_MILLIS_TID, null))), "the elapsed duration between two datetimes, normalized to a readable time unit", "datetime::<//2026.08:9/14/31/00/000?tz=+0000> - datetime::<//2026.08:9/14/30/00/000?tz=+0000>   [-- second::60.0 --]"),
                         // uri -> datetime identity cast (predicate validates in Type.apply)
-                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)), "cast a uri to a datetime — the datetime predicate validates the uri structure first", "<//2026.08.09/14/30/52/123?tz=+0000>.as(datetime::T)   [-- //2026.08.09/14/30/52/123?tz=+0000 --]"),
-                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(datetimeToMillis(lhs.asUri()))), "a datetime to epoch millis", "<//2026.08.09/14/30/52/123?tz=+0000>.as(int::T)   [-- the epoch millis of that moment --]"),
-                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(humanReadableDatetime(lhs.asUri()))), "a datetime to a human readable str", "<//2026.08.07/19/48/02/251?tz=+0000>.as(str::T)   [-- Friday, August 7, 2026 07:48:02 PM +00:00 --]"),
+                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)), "cast a uri to a datetime — the datetime predicate validates the uri structure first", "<//2026.08:9/14/30/52/123?tz=+0000>.as(datetime::T)   [-- datetime::<//2026.08:9/14/30/52/123?tz=+0000> --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(datetimeToMillis(lhs.asUri()))), "a datetime to epoch millis", "datetime::<//2026.08:9/14/30/52/123?tz=+0000>.as(int::T)   [-- 1786285852123 (the epoch millis of that moment) --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(humanReadableDatetime(lhs.asUri()))), "a datetime to a human readable str", "datetime::<//2026.08:7/19/48/02/251?tz=+0000>.as(str::T)   [-- 'Friday, August 7, 2026 07:48:02 PM +00:00' --]"),
                         // str -> datetime (parse ISO-8601 / Docker timestamps)
-                        docWrap(instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(DATETIME_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())), "parse an ISO-8601 or docker-style timestamp str into a datetime", "'2026-08-07T19:48:02Z'.as(datetime::T)   [-- <//2026.08.07/19/48/02/000?tz=+0000> --]"),
+                        docWrap(instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(DATETIME_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())), "parse an ISO-8601 or docker-style timestamp str into a datetime", "'2026-08-07T19:48:02Z'.as(datetime::T)   [-- datetime::<//2026.08:7/19/48/02/000?tz=+0000> --]"),
                         /*instC(MATH_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_TIME_TID), lst(), (lhs, inst) -> real((double) System.currentTimeMillis(), MATH_TIME_TID, null)),
                         instC(AS_INST_TID.dom(MATH_TIME_TID).rng(STR_TID), lst(TIME_TYPE), (lhs, inst) -> {
                             Date date = new Date(lhs.realValue().intValue());

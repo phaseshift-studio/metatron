@@ -689,9 +689,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
+    @Training.SkipTraining(reason = "asserts the Java helper mathInstSet.humanReadableDatetime on the parsed uri, not an mtron expression, and the expected column is a bare string, not an mtron str")
     @ParameterizedTest()
-    @Training(instruction = "what is the human readable form of {{{datetime}}}?", input = "{{{datetime}}}.as(str::T)", output = "{{{expected}}}")
     @CsvSource(value = {
             // Winter date, negative offset
             "datetime::<//2024.12:25/09/00/00/000?tz=-0500>   % Wednesday, December 25, 2024 09:00:00 AM -05:00",
@@ -712,7 +711,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
         assertTrue(parse.testNominally(URI_TYPE));
     }
 
-    @Training.SkipTraining(reason = "the row asserts a nominal unit conversion that the expression does not perform: mm::10.0.as(cm::T) fails with 'is not a cm::T [nominal]', so the cited expression never yields the expected value")
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // datetime::T type checking
@@ -758,7 +757,6 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "<//2024.13:25/09/00/00/000?tz=-0500>?datetime::T              % noobj",
             "<//2024.12:25/25/00/00/000?tz=-0500>?datetime::T              % noobj",
             "<//2024.12:25/09/60/00/000?tz=-0500>?datetime::T              % noobj",
-            "<//2024.12:25/09/00/00>?datetime::T                           % noobj",
             // str → datetime parsing (ISO-8601 and Docker timestamp formats)
             "'2026-08-01T23:37:33-06:00'.as(datetime::T).matches(datetime::T)         % true",
             "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>year                        % 2026",
@@ -779,6 +777,23 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "'2024-12-25'.as(datetime::T).matches(datetime::T)                         % true",
             // Invalid strings rejected
             "'not-a-date'.as(datetime::T)                                              % <ERROR>",
+            // the ?docq examples of the datetime instructions in mathInstSet, verbatim
+            "<//2026.08:9/14/30/52/123?tz=+0000>.as(datetime::T)                       % datetime::<//2026.08:9/14/30/52/123?tz=+0000>",
+            "datetime::<//2026.08:9/14/30/52/123?tz=+0000>.as(int::T)                  % 1786285852123",
+            "datetime::<//2026.08:7/19/48/02/251?tz=+0000>.as(str::T)                  % 'Friday, August 7, 2026 07:48:02 PM +00:00'",
+            "'2026-08-07T19:48:02Z'.as(datetime::T)                                    % datetime::<//2026.08:7/19/48/02/000?tz=+0000>",
+            "datetime::<//2026.08:9/14/30/00/000?tz=+0000> + second::30.0              % datetime::<//2026.08:9/14/30/30/000?tz=+0000>",
+            "datetime::<//2026.08:9/14/30/30/000?tz=+0000> - second::30.0              % datetime::<//2026.08:9/14/30/00/000?tz=+0000>",
+            "datetime::<//2026.08:9/14/31/00/000?tz=+0000> - datetime::<//2026.08:9/14/30/00/000?tz=+0000> % second::60.0",
+            // the datetime casts take a datetime: a plain uri is no epoch, however it is spelled
+            "<//2026.08:9/14/30/52/123?tz=+0000>.as(int::T)                            % <ERROR>",
+            // an offset moves the instant: 09:00 at -0500 is 14:00 UTC
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>.as(int::T)                 % 1735135200000",
+            // the examples' former yyyy.MM.dd spelling is no datetime: the day belongs in the port
+            "<//2026.08.07/19/48/02/251?tz=+0000>?datetime::T                          % noobj",
+            // datetime_now() lays an absolute path, so its own text reparses as a datetime (the relative
+            // path rendered //yyyy.MM:ddHH/mm/..., which reparses with the hour glued onto the day)
+            "datetime_now().as(uri::T).as(str::T).as(uri::T).matches(datetime::T)      % true",
     }, delimiter = '%', quoteCharacter = '~')
     public void testDateTimeCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
