@@ -362,7 +362,7 @@ mtron> *plus?docq
           rng=>'/m/math/datetime',
           args=>[0=>'/m/real'],
           desc=>'[mapper] shift a datetime forward ...',
-          example=>['<//2026.08:09/14/30/00/000?tz=+000...']]
+          example=>['datetime::<//2026.08:9/14/30/00/00...']]
 mtron> *plus?str<=str&docq
 ==>docs::[desc=>'no documentation available',
           obj=>plus?str<=str(str::T){<j>}]

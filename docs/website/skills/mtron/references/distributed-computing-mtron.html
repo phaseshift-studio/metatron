@@ -652,18 +652,30 @@ the seed is a singleton and the run carries a closed range, <code>law_shard</cod
 distinct place, each carrying the <strong>whole</strong> seed and the run with its span narrowed to that place's share (<code>{p_i,q_i}</code>,
 a contiguous subrange chosen by WORK — a lane walks its runs from the seed, each step once, so a share <code>{a,b}</code> costs the
 <code>b</code> steps it walks and the <code>b - a + 1</code> runs it emits, and the lane nearer the top takes fewer runs: <code>{0,4}</code> over two
-places is <code>{0,2}</code> and <code>{3,4}</code>). The chain's tail (the first non-floatable instruction after the run, a reducer included)
-runs at home over the branch's bag.</p>
+places is <code>{0,2}</code> and <code>{3,4}</code>). When the run ends at a cut, each lane folds its own unrolls through the cut, so one
+partial per lane travels home, and the master recombines the partials through the cut's combiner.</p>
 <pre><code class="language-mtron">start(0).{0,10}plus(1).sum()
-⇒ branch?&lt;={0}(&lt;p_1&gt; =&gt; start?hop=0(0).{0,7}plus(1), &lt;p_2&gt; =&gt; start?hop=0(0).{8,10}plus(1)).sum()
+⇒ branch?&lt;={0}(&lt;p_1&gt; =&gt; start?hop=0(0).{0,6}plus(1).sum(), &lt;p_2&gt; =&gt; start?hop=0(0).{7,10}plus(1).sum()).sum()
 </code></pre>
-<p>The branch recombines the terms; the tail folds them. <strong>No typed cut is needed</strong>, so a span the typing probe cannot
-thread still plans, and the cutless form is the same path with an empty tail (<code>branch(...)</code> alone). A point span (<code>{3}</code>)
-is a lone compose chain and an open range (<code>{*}</code>, <code>{+}</code>) has no last unroll: neither is an index set, so both
-decline to the identity. v1 factors one axis per application — the seed first (today's layout), the run when the seed
-is a singleton; the product (seed × unroll) is the tree's next level, never a new grid. The run partition is <strong>not a
-<code>?split</code> kind</strong>: <code>{w}part</code> weights the seed, while a run share is a range — one per place, since a branch has one lane
-per key.</p>
+<p><strong>No typed cut is needed</strong> for the cutless form: a run with no cut after it ships its unrolls whole, and the chain's tail
+(the first non-floatable instruction after the run) runs at home over the branch's bag, so a span the typing probe
+cannot thread still plans (<code>branch(...)</code> alone when the tail is empty). A point span (<code>{3}</code>) is a lone compose chain and
+an open range (<code>{*}</code>, <code>{+}</code>) has no last unroll: neither is an index set, so both decline to the identity. v1 factors
+one axis per run — the seed first, the run when the seed is one obj; the product (seed × unroll) is the tree's next
+level, never a new grid. The run partition is <strong>not a <code>?split</code> kind</strong>: <code>{w}part</code> weights the seed, while a run share is
+a range — one per place, since a branch has one lane per key.</p>
+<p><strong>After a cut, the seed is one obj.</strong> A fold answers one obj (a gather whose rng is one), so the run after a cut has
+nothing to deal; its multiplicity is a span range in the run. The branch takes that obj whole and copies it to every
+lane (<code>?split=copy</code>), and each lane walks its own share of the range and folds it through the cut. The copy needs no
+idempotence: the shares are disjoint, so no term is counted twice. <strong>A point is an index set too:</strong> <code>step{p}</code> is <code>p</code>
+copies of one term, and points add across a branch (<code>a{p} = a{p_1} + a{p_2}</code>), so the lanes take even shares of the
+copies — <code>id{5}()</code> over two places is <code>id{3}()</code> and <code>id{2}()</code>, each lane folding its copies through the cut. A run
+after a cut with neither a span range nor a point stays home: dealing one obj would hand the whole run to one lane.</p>
+<pre><code class="language-mtron">{1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
+⇒ branch?&lt;={0}(&lt;p_1&gt; =&gt; start?hop=0({1,4}).plus(1).sum(), &lt;p_2&gt; =&gt; …).sum()
+     .branch?&lt;=int{*}&amp;split=copy(&lt;p_1&gt; =&gt; {0,1}plus?hop=0(1).sum(), &lt;p_2&gt; =&gt; {2,2}plus?hop=0(1).sum(),
+                                 &lt;p_3&gt; =&gt; {3,3}plus?hop=0(1).sum()).sum()                          [-- 41+22+23 = 86 --]
+</code></pre>
 <h4>the branch's gather grain — the dom coefficient</h4>
 <p>The dom is a <strong>tid</strong>, not a number: <code>inst.dom()</code> answers the domain's type-id and <code>inst.dom().c()</code> its <strong>coefficient</strong>
 (the multiplicity). The arrow spelling is sugar — <code>A&lt;=B</code> is <code>dom=B&amp;rng=A</code> (the left is the rng, the
@@ -718,13 +730,14 @@ are placeholders — the schemas below are motifs, not literal runs.</p>
 <tr><td><strong>S</strong> master-participates ✅</td><td>\(\bigoplus_{i=0}^{k} a_i \cdot r\) over \(\{\mathrm{master}\} \cup \mathrm{peers}\)</td><td><code>{1,…,8}.plus(1).sum()</code></td><td><code>?place=[local,peer]</code>: the master folds its own slice (a lane at distance zero) and ships k−1</td><td><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-dist-master" aria-label="watch S"><i class="bi bi-play-fill" aria-hidden="true"></i><span>S</span></button></div></td></tr>
 <tr><td><strong>T</strong> reference frame migration ✅</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\) — machine semiring groupoid, stream ring's process dual</td><td><code>{1,2,3}.plus(5).move(//host/a).plus(2).sum()</code></td><td>cut at the move — <code>move(&lt;host&gt;)</code>; the tail ships as a program and the value snakes back</td><td><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-dist-move" aria-label="watch T"><i class="bi bi-play-fill" aria-hidden="true"></i><span>T</span></button></div></td></tr>
 <tr><td><strong>U</strong> profile collation</td><td>\(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\) — \(\oplus\) is keyed union with per-op times added, so the report is a commutative monoid</td><td><code>{1,2,3,4,5}.plus(10).sum().profile()&gt;&gt;format</code></td><td><code>branch?&lt;={0}(&lt;p_i&gt; =&gt; start?hop=0(part_i).plus(10).sum().profile(),…).profile_collate()&gt;&gt;format</code></td><td> </td></tr>
-<tr><td><strong>V</strong> generative run ✅</td><td>\(a^{[m,n]} = \sum_{k=m}^{n} a^k\) (Definition 3 — the unrolls are independent terms)</td><td><code>start(0).{0,1000}plus(1).sum()</code></td><td><code>branch?&lt;={0}(&lt;p_1&gt; =&gt; start?hop=0(0).{0,p}plus(1), &lt;p_2&gt; =&gt; …).sum()</code> — one lane per place, the span narrowed by WORK</td><td><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-dist-run" aria-label="watch V"><i class="bi bi-play-fill" aria-hidden="true"></i><span>V</span></button></div></td></tr>
+<tr><td><strong>V</strong> generative run ✅</td><td>\(a^{[m,n]} = \sum_{k=m}^{n} a^k\) (Definition 3 — the unrolls are independent terms)</td><td><code>start(0).{0,1000}plus(1).sum()</code></td><td><code>branch?&lt;={0}(&lt;p_1&gt; =&gt; start?hop=0(0).{0,p}plus(1).sum(), &lt;p_2&gt; =&gt; …).sum()</code> — one lane per place, narrowed by WORK</td><td><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-dist-run" aria-label="watch V"><i class="bi bi-play-fill" aria-hidden="true"></i><span>V</span></button></div></td></tr>
 </tbody>
 </table>
 <p><strong>Legend.</strong> ✅ = implemented (<code>A</code> done; <code>D</code> done 2026-10-26; <code>E</code>, <code>G</code> v1 done 2026-10-28; <code>S</code> done 2026-10-28 —
 the axes' <code>local</code> designator, <code>?place=[local,peer]</code>; <code>O</code> free today — it needs no plumbing; <code>V</code> v1 done 2026-11-12 —
 a <strong>singleton</strong> seed and a <strong>closed</strong> span range; a multi-member seed still factors the seed first, and a point/open
-span declines). <code>P</code> is the data-index-space sibling of <code>V</code>: same &quot;nothing ships&quot; spirit, but its index is a generated
+span declines; 2026-11-18 — every cut plans its run, and after a cut the one obj is copied to every lane while the span
+range or point is factored, each lane folding its share through the cut). <code>P</code> is the data-index-space sibling of <code>V</code>: same &quot;nothing ships&quot; spirit, but its index is a generated
 <em>data</em> space, while <code>V</code>'s index is the exponent.
 An empty box is <em>not</em> &quot;unsound&quot;: the law holds, the lowering is unwritten. <code>F</code> is struck for streams (order lives in
 <code>lst</code>, never a bag); <code>M</code> is a note; <code>I</code> is infrastructure. <code>U</code> is the instrumentation row: <code>profile()</code> already
@@ -769,22 +782,39 @@ address, <code>M</code> decomposes into O / A / G over three index splits, <code
 <p>Green = implemented (the ✅ in the table); white = the law holds, the lowering is unwritten.</p>
 <h3>the implemented layouts, spelled out</h3>
 <p>The done patterns, with the lane/master forms written in full. <code>law_shard</code> (A) is the one engine they all lower
-to; the rest specialize it. Every master is one <code>branch</code> keyed by place, and the master recombines the lanes'
+to; the rest specialize it. Every run that ships is one <code>branch</code> keyed by place, and the master recombines the lanes'
 partials through the combiner.</p>
 <ul>
-<li><strong>A literal seed is dealt by the plan.</strong> Each lane carries its own part, <code>&lt;p_i&gt; =&gt; start(part_i).&lt;program&gt;</code>, so the
+<li>
+<p><strong>Every cut plans the run before it.</strong> A chain that folds more than once ships each run through its own branch;
+each combiner brings the computation home, where the next run starts:
+<code>branch(&lt;p_i&gt; =&gt; &lt;run_1&gt;.&lt;fold_1&gt;, …).&lt;combiner_1&gt;.branch(&lt;p_i&gt; =&gt; &lt;run_2&gt;.&lt;fold_2&gt;, …).&lt;combiner_2&gt;</code>. A run never
+reaches back past the cut before it, a run that declines stays as written, and the tail after the last cut stays
+home.</p>
+</li>
+<li>
+<p><strong>A literal seed is dealt by the plan.</strong> Each lane carries its own part, <code>&lt;p_i&gt; =&gt; start(part_i).&lt;program&gt;</code>, so the
 listing shows what each place runs. With no <code>start</code> left at home the branch takes nothing: it is the initial form,
-<code>branch?&lt;={0}(…)</code>.</li>
-<li><strong>A computed bag stays home and is dealt when the branch runs.</strong> Whatever cannot float before the run (a <code>repeat</code>,
+<code>branch?&lt;={0}(…)</code>.</p>
+</li>
+<li>
+<p><strong>A computed bag stays home and is dealt when the branch runs.</strong> Whatever cannot float before the run (a <code>repeat</code>,
 an effect) is the prefix, which runs where the code stands:
 <code>&lt;prefix&gt;.branch?&lt;=T{*}&amp;split=part(&lt;p_i&gt; =&gt; &lt;program&gt;, …)</code> (<code>repeat() [[ plus(10).order ]]</code>, Marko 2026-11-05).
-Its <strong>dom coefficient</strong> is <code>{*}</code> by default (the barrier); a stated one pages it — see <em>the branch's gather grain</em>.</li>
-<li><strong>A run partition replicates the seed and narrows the exponent.</strong> A seeded lane carries the whole seed and its own
-subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. See <em>the run
-partition</em>.</li>
-<li>A place with n shares is keyed <code>?split={n}part</code>, and <code>?split=copy</code> hands every lane the whole seed.</li>
-<li>A lane ships raw. The master's compiler never binds a lane; each is compiled where it runs (server side for a host,
-by that machine's compiler for a machine path).</li>
+Its <strong>dom coefficient</strong> is <code>{*}</code> by default (the barrier); a stated one pages it — see <em>the branch's gather grain</em>.</p>
+</li>
+<li>
+<p><strong>A run partition replicates the seed and narrows the exponent.</strong> A seeded lane carries the whole seed and its own
+subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. After a cut the
+seed is computed, so the branch copies it to every lane (<code>branch?&lt;=T{*}&amp;split=copy(…)</code>). See <em>the run partition</em>.</p>
+</li>
+<li>
+<p>A place with n shares is keyed <code>?split={n}part</code>, and <code>?split=copy</code> hands every lane the whole seed.</p>
+</li>
+<li>
+<p>A lane ships raw. The master's compiler never binds a lane; each is compiled where it runs (server side for a host,
+by that machine's compiler for a machine path).</p>
+</li>
 </ul>
 <h4>A — homomorphism shard (<code>sum</code>, <code>prod</code>, <code>count</code>, <code>order(s)</code>, rec <code>sum</code>)</h4>
 <pre><code class="language-mtron">master:   branch?&lt;={0}&amp;split=part(&lt;p_1&gt; =&gt; start?hop=0(&lt;part_1&gt;).plus(1).count(), …,
@@ -826,8 +856,10 @@ future.</p>
 on p_1:    branch?&lt;={0}&amp;split=part(&lt;p_2&gt; =&gt; start?hop={2}0({1,3,5,7}).plus(1).sum(),
                                   &lt;p_3&gt; =&gt; start?hop={2}0({2,4,6,8}).plus(1).sum()).sum()
 </code></pre>
-<p>The axis resolves in chain order — the first statement in the chain wins: a <code>?hop</code> on any instruction, else the plan's
-tree route (default height 1, the star). A peer re-plans its part because applying a code compiles it
+<p>The axis resolves per run, in chain order — the first statement among the run's own instructions wins, else the axis
+the run before it resolved, else the plan's tree route (default height 1, the star). A statement governs from where it
+stands onward: <code>start?hop=0(…)</code> keeps a whole chain home, while <code>?hop=0</code> on the last fold keeps only that run home. The
+<code>?place</code> and <code>?split</code> axes resolve the same way. A peer re-plans its part because applying a code compiles it
 (<code>Machine.applyCode</code>); at a height of zero the part is a leaf. The emitted lane restates the <strong>form</strong>, never the
 number: the same arity, one height down, stated on the lane's <strong>first instruction</strong> — <code>start?hop={2}1(part)</code> — and a
 leaf states the bare <code>?hop=0</code>; no other instruction carries a budget. <code>{2}2 ⇒ {2}1 ⇒ 0</code>. A chain (<code>[h,1]</code>) hands the
@@ -886,13 +918,16 @@ state each decision's three axes before the <code>where</code> they describe: th
 <li><strong>Register it.</strong> A rewrite in <code>catRewrite.rules()</code>, wired into <code>catInstSet</code>'s <code>REWRITE</code> key, lowers the plan
 (<code>code -&gt; PlanInterpreter.lower(plan, code)</code>), so the compiler's rewriter applies it, and <code>path::T</code> draws it as an
 out-edge wherever it moves the code.</li>
-<li><strong>The emitter lowers it.</strong> <code>Shard.apply</code> — the body <code>PlanInterpreter</code> delegates to — matches the one-cut shape
-<code>[initial, {*}home, {*}floatable, blocked(reducer ∧ laws), {*}tail]</code>. The cut is the first fold that recombines,
-the floatable run before it ships, and everything before the run stays home. It emits one branch keyed by place:
-seeded lanes under <code>branch?&lt;={0}</code> for a literal seed; <code>&lt;prefix&gt;.branch?&lt;=T{*}&amp;split=part(&lt;p_i&gt; =&gt; &lt;run&gt;.&lt;fold&gt;, …).&lt;combiner&gt;</code> for a computed bag, which the branch deals when it runs (a stated dom coefficient pages the
-shipment); and,
-when the seed is a singleton and the run carries a closed span range, the <strong>run partition</strong> — one lane per place
-carrying the whole seed with a narrowed span, the tail folding at home. The lane's first instruction states the
+<li><strong>The emitter lowers it.</strong> <code>Shard.apply</code> — the body <code>PlanInterpreter</code> delegates to — walks the chain cut by cut,
+<code>[initial, {+}[{*}home, {*}floatable, blocked(reducer ∧ laws)], {*}tail]</code>. Each cut is a fold that recombines, the
+floatable run before it (never reaching back past the cut before) ships, and what lies between stays home. Each run
+emits one branch keyed by place: seeded lanes under <code>branch?&lt;={0}</code> for a literal seed;
+<code>&lt;prefix&gt;.branch?&lt;=T{*}&amp;split=part(&lt;p_i&gt; =&gt; &lt;run&gt;.&lt;fold&gt;, …).&lt;combiner&gt;</code> for a computed bag, which the branch deals
+when it runs (a stated dom coefficient pages the shipment); and, when the seed is one obj (a literal singleton, or
+what the fold before the run answers) and the run carries a closed span range or a point, the <strong>run partition</strong> —
+one lane per place carrying the whole seed (copied by the branch when it is computed) with a narrowed span (split by
+WORK) or point (split evenly), each lane folding its share through the cut. A run with one obj and neither stays
+home. The lane's first instruction states the
 restated budget (<code>?hop=0</code> at a leaf).</li>
 <li><strong>Liveness gates it.</strong> The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
 place set), and only to targets that <code>serve</code> the route (<code>PlaceResolver.serves</code>: online, and the client overrides the
@@ -914,7 +949,7 @@ ops.</li>
 <li><code>docs/design/distributed-patterns-menu.md</code> — the working list this reference distills, with the open decisions and
 the instructions the patterns still want.</li>
 </ul>
-<div class="modal fade asciinema-modal" id="cast-mini-distributed" style="--cols: 125" tabindex="-1" aria-labelledby="cast-mini-distributed-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-mini-distributed-title">A</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/mini-distributed.cast" data-cols="125" data-rows="32" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-data-local" style="--cols: 118" tabindex="-1" aria-labelledby="cast-dist-data-local-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-data-local-title">B</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-data-local.cast" data-cols="118" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-tree" style="--cols: 125" tabindex="-1" aria-labelledby="cast-dist-tree-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-tree-title">E</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-tree.cast" data-cols="125" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-keyed" style="--cols: 134" tabindex="-1" aria-labelledby="cast-dist-keyed-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-keyed-title">G</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-keyed.cast" data-cols="134" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-const" style="--cols: 124" tabindex="-1" aria-labelledby="cast-dist-const-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-const-title">O</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-const.cast" data-cols="124" data-rows="26" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-master" style="--cols: 144" tabindex="-1" aria-labelledby="cast-dist-master-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-master-title">S</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-master.cast" data-cols="144" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-move" style="--cols: 111" tabindex="-1" aria-labelledby="cast-dist-move-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-move-title">T</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-move.cast" data-cols="111" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-run" style="--cols: 117" tabindex="-1" aria-labelledby="cast-dist-run-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-run-title">V</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-run.cast" data-cols="117" data-rows="32" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div>
+<div class="modal fade asciinema-modal" id="cast-mini-distributed" style="--cols: 110" tabindex="-1" aria-labelledby="cast-mini-distributed-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-mini-distributed-title">A</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/mini-distributed.cast" data-cols="110" data-rows="32" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-data-local" style="--cols: 118" tabindex="-1" aria-labelledby="cast-dist-data-local-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-data-local-title">B</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-data-local.cast" data-cols="118" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-tree" style="--cols: 110" tabindex="-1" aria-labelledby="cast-dist-tree-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-tree-title">E</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-tree.cast" data-cols="110" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-keyed" style="--cols: 110" tabindex="-1" aria-labelledby="cast-dist-keyed-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-keyed-title">G</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-keyed.cast" data-cols="110" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-const" style="--cols: 110" tabindex="-1" aria-labelledby="cast-dist-const-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-const-title">O</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-const.cast" data-cols="110" data-rows="26" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-master" style="--cols: 110" tabindex="-1" aria-labelledby="cast-dist-master-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-master-title">S</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-master.cast" data-cols="110" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-move" style="--cols: 111" tabindex="-1" aria-labelledby="cast-dist-move-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-move-title">T</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-move.cast" data-cols="111" data-rows="30" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-dist-run" style="--cols: 110" tabindex="-1" aria-labelledby="cast-dist-run-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-dist-run-title">V</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/dist-run.cast" data-cols="110" data-rows="32" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div>
     </div>
     <script src="../../../js/asciinema.js" defer></script>
 </main>

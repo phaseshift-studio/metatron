@@ -539,6 +539,9 @@ below); rows that do not verify are excluded from the file you train on.</p>
 replaced by that column's value and <code>{{{@TestData}}}</code> by the method's preloaded <code>@TestData</code> lines.
 Repeat the annotation to emit several entries per row.
 <ul>
+<li>A hole shaped like a parameter name must name one of the method's parameters: <code>{{{code}}}</code> on a
+method without <code>code</code> fails the extraction, and so does such a hole missing one of its braces. Any
+other <code>{{{...}}}</code> is mtron's own str template (<code>{{{plus(23)}}}</code>) and is emitted verbatim.</li>
 <li><strong><code>input</code> is mandatory.</strong> A template with no <code>input</code> emits a row whose input is empty; empty parses to
 <code>noobj</code> and can never verify.</li>
 <li><code>input</code> must be the <em>one</em> expression the test evaluates. <code>checkCodeParseApply(LOG, lhs, code, expected)</code>
@@ -595,6 +598,9 @@ the corpus already on disk. The test extends <code>AbstractMetatronTest</code> a
 comparison for addresses, and <code>hasPoly</code> → <code>test()</code>. It reports verified / mismatched / evaluation-error /
 not-an-expression counts, the <strong>failing sources</strong> (<code>Class.method</code>, worst first) as a worklist, and fails
 the build with <code>-Dmtron.training.verify.strict=true</code> if any row does not verify.</p>
+<p>A <code>mathInstSetTest</code> row is evaluated with <code>/m/math</code> imported, the instruction set its own class runs
+under; the base VM has none, so without it the row's units, <code>cmplx</code>, <code>datetime</code> and <code>timeout()</code> do not
+resolve. An import is &quot;ensure mounted&quot;: the first math row mounts it, and it stays for the rest of the run.</p>
 <p>Every row carries <code>source</code>. A row that cannot name the test it came from cannot be triaged or repaired.</p>
 <h4>Known Limitations</h4>
 <ul>
