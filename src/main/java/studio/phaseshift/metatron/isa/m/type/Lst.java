@@ -336,11 +336,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * {@code [3{2}]} a 3 at each of indices 0 and 1, a lst of two. Only a value's span lays indices, a value having no
          * product of its own to be a power in: an instruction's span is its run, one step held at one index, and a
          * type's is a run of a filter, P·P = P, so {@code [{2}int::T]} is {@code [int::T]}, with a zero span the
-         * identity, which takes any obj. An lhs index passes the rhs index at its place when its mass is within the rhs
-         * index's (a type's point, a value's point, a stream's count) and every copy
-         * it holds is one of the rhs index's, asked at the domain gate ({@link Inst.Helper#filterOnDomainAllowUnique}):
-         * {@code [{2}3]} is an {@code [int{2}::T]}, {@code [3{2}]} is not, and {@code [{2}3,5]} is no
-         * {@code [int::T,int::T,int::T]}. Past the last rhs index the
+         * identity, which takes any obj. An lhs index passes the rhs index at its place when it holds it
+         * ({@link Type.Helper#holds}, the judgment the run walk asks of an index too): its mass is within the rhs
+         * index's and every copy it holds is one of the rhs index's: {@code [{2}3]} is an {@code [int{2}::T]},
+         * {@code [3{2}]} is not, and {@code [{2}3,5]} is no {@code [int::T,int::T,int::T]}. Past the last rhs index the
          * lhs is open, even inside a value's run ({@code [3{2}]} is an {@code [int::T]}, {@code [3{2},5{2}]} an
          * {@code [int::T,int::T,int::T]}), and an rhs index past the last lhs index is one the lhs leaves empty, so it
          * passes only if its mass admits zero. A lst TYPE's bracket reads its types as values
@@ -349,29 +348,12 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         public static boolean testIndices(final Lst lhs, final Lst rhs) {
             final Function<Lst, List<Obj>> resolved = lst ->
                     laid(lst.lstValue().stream().map(entry -> (Obj) entry.autoResolve(lhs)).toList());
-            final Function<Obj, cInt> mass = entry -> entry.isType() || entry.isCall() ? entry.tid().d() : entry.c();
             final List<Obj> lefts = resolved.apply(lhs);
             final List<Obj> rights = resolved.apply(rhs);
             for (int i = 0; i < rights.size(); i++) {
-                final Obj right = rights.get(i);
-                if (i >= lefts.size()) {
-                    if (!mass.apply(right).isZeroable())
-                        return false;
-                    continue;
-                }
-                final Obj left = lefts.get(i);
-                final cInt has = mass.apply(left);
-                if (!has.within(mass.apply(right)))
+                // an rhs index past the last lhs index is one the lhs leaves empty
+                if (!Type.Helper.holds(i < lefts.size() ? lefts.get(i) : noobj(), rights.get(i)))
                     return false;
-                if (!has.isZero() && !(right.isType() && right.tid().b().isZero())) {
-                    // a type is asked at the domain gate, so {3}5 is an int as 5 is; an instruction or a value at the
-                    // index is asked as a pattern is, each copy alone (is(gt(3)) runs its predicate)
-                    final Obj unit = Type.Helper.unit(right);
-                    if (!left.stream().allMatch(copy -> right.isType() ?
-                            Inst.Helper.filterOnDomainAllowUnique(Type.Helper.unit(copy), unit) :
-                            Type.Helper.unit(copy).test(unit)))
-                        return false;
-                }
             }
             return true;
         }

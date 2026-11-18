@@ -584,6 +584,36 @@ public class LstTest extends AbstractAlgebraTest {
     }
 
     /**
+     * BOTH WALKS JUDGE AN INDEX ALIKE (Marko, 2026-11-18: one funnel, not implementations that may conflict). A lst
+     * meets a bracket through the run walk ({@link Type.Helper#runs}) and a lst of patterns through the index walk
+     * ({@link Lst.Helper#testIndices}), and both ask one index the same question, {@link Type.Helper#holds}. Each row
+     * puts one value at index 0 and asks both: the bracket entry is written as a value ({@code {2}int} is mass 2 at
+     * one index), the pattern as a type literal ({@code int{2}::T}, the same mass).
+     */
+    @ParameterizedTest
+    @TestData(value = {"import(/m/math)"})
+    @CsvSource(value = {
+            // value at the index | bracket entry | pattern     | holds
+            "{2}5                  % {2}int        % int{2}::T   % true",
+            "5                     % {2}int        % int{2}::T   % false",
+            "{1,2}                 % {2}int        % int{2}::T   % true",
+            "{1,'b'}               % {2}int        % int{2}::T   % false",
+            "{3}5                  % int           % int::T      % false",
+            "5                     % nat           % nat::T      % true",
+            "-1                    % nat           % nat::T      % false",
+            "\"a\"                   % int           % int::T      % false",
+    }, delimiter = '%')
+    public void testBothWalksJudgeAnIndexAlike(final String value, final String entry, final String pattern, final boolean holds) {
+        final Obj lst = ObjmtronSerializer.parse("[" + value + "]");
+        final Obj bracket = ObjmtronSerializer.parse("lst[" + entry + "]::T");
+        final Obj patterns = ObjmtronSerializer.parse("[" + pattern + "]");
+        assertEquals(holds, lst.test(bracket), lst + " ? " + bracket + " (the run walk)");
+        assertEquals(holds, lst.test(patterns), lst + " ? " + patterns + " (the index walk)");
+        assertEquals(holds, Type.Helper.holds(lst.lstValue().getFirst(), patterns.lstValue().getFirst()),
+                "holds(" + value + ", " + pattern + ")");
+    }
+
+    /**
      * A LST IS THE AXIS A VALUE'S SPAN UNFOLDS ALONG (Marko, 2026-11-17): {@code [3{2}]} is {@code [3,3]}, so a
      * select's rules meet two indices and two lsts written one way and the other are equal, while a stream has no axis
      * and keeps the span curled, and a point stays mass at its index.
