@@ -313,6 +313,7 @@ public final class Tokens {
     public static final String CLOSE = "close";
     public static final String TABLE = "table";
     public static final String CTOR = "ctor";
+    public static final String PRED = "pred";
     /// ////////////////////////////////////////////////////////
     public static final fURI INST_CTOR_TID = M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe());
     public static final String SPARQL = "sparql";

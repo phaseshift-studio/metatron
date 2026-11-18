@@ -1013,6 +1013,75 @@ dialog.save-as .actions {
     overflow-wrap: anywhere;
 }
 
+/* docs::T panel — the doc description and its dom/rng signature line */
+.docs-desc {
+    margin: .4rem 0 0;
+    color: var(--dim);
+    font-size: 11.5px;
+}
+
+.docs-sig {
+    margin: .3rem 0 0;
+    display: flex;
+    gap: .35rem;
+    align-items: baseline;
+    font-size: 11px;
+}
+
+.docs-sig-dom,
+.docs-sig-rng {
+    color: var(--fg);
+}
+
+.docs-sig-arrow {
+    color: var(--faint);
+}
+
+/* decs::T panel — a recursive key/value tree, one line per field */
+.decs-row {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    line-height: 1.35;
+}
+
+.decs-key {
+    color: var(--dim);
+    font-size: 11px;
+}
+
+.decs-key:hover,
+.decs-tid:hover {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.decs-tid {
+    color: var(--faint);
+    font-size: 11px;
+}
+
+.decs-val {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    color: var(--fg);
+    font: inherit;
+    font-size: 11px;
+    text-align: left;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.decs-val:hover {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 /* a route target in the web-surface panels: a clickable address that resolves */
 .route-target {
     background: none;

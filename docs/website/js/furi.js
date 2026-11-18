@@ -399,6 +399,42 @@ function splitPath(pathStr) {
     return segments;
 }
 
+/* Expand the first branch of a text, and recursively the rest, into every text it
+   spells with that text's point (mirror fURI.java:expand). */
+function _expand(text) {
+    let open = -1, close = -1, depth = 0, square = 0;
+    for (let i = 0; i < text.length && close === -1; i++) {
+        const ch = text[i];
+        if (ch === '[') square++;
+        else if (ch === ']') square--;
+        else if (square !== 0) continue;
+        else if (ch === '?' && depth === 0) break;
+        else if (ch === '{') { if (depth === 0) open = i; depth++; }
+        else if (ch === '}' && --depth === 0) close = i;
+    }
+    if (close === -1) return [{str: text, point: cInt.ONE_}];
+    const head = text.slice(0, open);
+    const body = text.slice(open + 1, close);
+    const tails = _expand(text.slice(close + 1));
+    const expanded = [];
+    if (COEFFICIENT_BODY_RE.test(body)) {
+        const point = close + 1 < text.length && '/{},?[]&'.indexOf(text[close + 1]) < 0;
+        for (const tail of tails)
+            expanded.push(point
+                ? {str: head + tail.str, point: cInt.of(body).mult(tail.point)}
+                : {str: head + '{' + body + '}' + tail.str, point: tail.point});
+        return expanded;
+    }
+    for (const element of splitBranchElements(body)) {
+        const end = leadingCoefficient(element);
+        const point = end === -1 ? cInt.ONE_ : cInt.of(element.slice(1, end));
+        for (const alternative of _expand(element.slice(end + 1)))
+            for (const tail of tails)
+                expanded.push({str: head + alternative.str + tail.str, point: point.mult(alternative.point).mult(tail.point)});
+    }
+    return expanded;
+}
+
 /* The last top-level `{...}` pair, as [open, close], or null. */
 function lastTopLevelBrace(text) {
     let depth = 0;
@@ -624,11 +660,9 @@ class fURI {
         return this._poly.length !== 0;
     }
 
-    hasQ() {
-        return this._query.size !== 0;
-    }
-
     hasQ(key) {
+        if (arguments.length === 0)
+            return this._query.size !== 0;
         return this._query.has(typeof key === 'object' ? key.toString() : key);
     }
 
@@ -796,19 +830,15 @@ class fURI {
         return this.q(m);
     }
 
-    dom() {
-        return this.hasQ('dom') ? f(this.q('dom')) : fURI.ALL;
-    }
-
-    rng() {
-        return this.hasQ('rng') ? f(this.q('rng')) : fURI.ALL;
-    }
-
     dom(d) {
+        if (arguments.length === 0)
+            return this.hasQ('dom') ? f(this._query.get('dom')) : fURI.ALL;
         return this.q('dom', d);
     }
 
     rng(r) {
+        if (arguments.length === 0)
+            return this.hasQ('rng') ? f(this._query.get('rng')) : fURI.ALL;
         return this.q('rng', r);
     }
 

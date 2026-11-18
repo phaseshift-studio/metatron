@@ -1092,6 +1092,7 @@
             instance: wsBase,
             mtron: (expr) => evalMtron(expr),
             open: (env) => inspectReference(env || {}),
+            at: (text) => { if (host.at) host.at.textContent = text; },
             frame: (vid) => {
                 pageFrame = (!vid || vid === "/.") ? null : String(vid);
             },
@@ -1445,34 +1446,6 @@
         ));
     })();
 
-    /* ── surfaces ──────────────────────────────────────────────────────────── */
-    async function loadHttp() {
-        if (offline) {
-            setDot($("#d-http"), "warn");
-            $("#m-http").textContent = "file:// preview";
-            $("#r-root").textContent = "local file";
-            $("#r-mcp").textContent = "—";
-            return;
-        }
-        const root = await probe("./");
-        const mcp = await probe("/mcp", 4000);
-        setDot($("#d-http"), root.reachable ? "up" : "bad");
-        $("#m-http").textContent = root.reachable ? ms(root.ms) : "unreachable";
-        $("#r-root").textContent = root.reachable ? root.status + " · " + ms(root.ms) : "—";
-        $("#r-mcp").textContent = mcp.reachable
-            ? (mcp.status === 405 ? "405 · up" : mcp.status + " · " + ms(mcp.ms))
-            : "—";
-    }
-
-    async function loadWs() {
-        const mtron = await probeWs(wsUrl);
-        setDot($("#d-ws"), mtron.ok ? "up" : "bad");
-        $("#m-ws").textContent = mtron.ok ? ms(mtron.ms) : "unreachable";
-        $("#r-mtron").textContent = mtron.ok ? "up · " + ms(mtron.ms) : "—";
-        const mcp = await probeWs(wsFor("/mcp"), 1600);
-        $("#r-wsmcp").textContent = mcp.ok ? "up · " + ms(mcp.ms) : "—";
-    }
-
     /* ── actions: an expression and the surface it lands on ──────────────────
        the console's url protocol, carried on any page: ?mtron=<expr>&at=<surface>.
        every clickable action renders as a real anchor, so copy-link works. */
@@ -1696,15 +1669,6 @@
         try {
             renderIdentity();
             loadStats();
-            await Promise.all([loadHttp(), loadWs()]);
-            const dots = [$("#d-http"), $("#d-ws")];
-            const up = dots.filter((d) => d && d.classList.contains("up")).length;
-            setDot($("#pulse-dot"), up === 2 ? "up" : up === 0 ? "bad" : "warn");
-            $("#pulse").textContent = up === 2
-                ? "all surfaces up"
-                : up === 0
-                    ? "no surface answering"
-                    : up + " of 2 surfaces up";
         } finally {
             refreshing = false;
         }

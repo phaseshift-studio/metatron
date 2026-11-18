@@ -28,8 +28,10 @@ import studio.phaseshift.metatron.util.ProjectionFailureException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
@@ -203,6 +205,20 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
     final class Helper {
         public Helper() {
             // do nothing
+        }
+
+        public static Obj typeToRec(final Obj maybeType, final Supplier<Obj> notType) {
+            if (maybeType.isType()) {
+                final Type type = maybeType.asType();
+                return rec(
+                        uri(TID), uri(type.tid()),
+                        uri(VID), uri(type.vid()),
+                        uri(PRED), !type.hasPredicate() ? noobj() : type.isIsaPredicate() ?
+                                rec(uri(CODE), type.predicate(), uri(ARGS), Type.Helper.typePredicateObj(type)) :
+                                rec(uri(CODE), type.predicate()),
+                        uri(CTOR), type.hasConstructor() ? type.constructor() : noobj());
+            }
+            return notType.get();
         }
 
         public static <OBJ extends Obj> OBJ atToggle(final Rec arec, final Obj key, final boolean doAuto) {

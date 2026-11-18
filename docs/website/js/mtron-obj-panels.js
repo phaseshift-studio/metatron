@@ -12,9 +12,9 @@
  *
  * UMD: `window.MtronObjPanels` in a page, `module.exports` under node (for tests).
  */
-import { read, write } from './mtron-io.js';
+import { read } from './mtron-io.js';
 import { parseSchema, renderForm, collectForm } from './mtron-form.js';
-import { serialize } from './obj_mtron_serializer.js';
+import { parse, write, quote, real, int } from './obj_mtron_serializer.js';
 import { f } from './furi.js';
 import { parse as envelope } from './mtron-envelope.js';
 
@@ -599,61 +599,32 @@ import { parse as envelope } from './mtron-envelope.js';
             return sigCache.get(key);
         }
 
-        /* split an x-mtron table list into signature strings. a type entry is
-           sig::T[...] — its signature is the tid before the top-level ::T — and
-           an inst / const entry is its own serialization. */
+        /* split an x-mtron table list into signature strings: parse it into objs
+           and pull each entry's display signature — a type's vid (its name), else
+           its tid for a base type where tid == vid; an inst/const writes back verbatim */
         function signaturesOf(text) {
             const source = String(text == null ? "" : text).trim();
             if (!source || source === "noobj") return [];
-            let inner = source;
-            if (inner.charAt(0) === "[" && inner.charAt(inner.length - 1) === "]") inner = inner.slice(1, -1);
+            const parsed = parse(source);
             const out = [];
-            let depth = 0;
-            let quote = null;
-            let start = 0;
-            for (let i = 0; i < inner.length; i++) {
-                const c = inner[i];
-                if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
-                if (c === "'" || c === '"') { quote = c; continue; }
-                if (c === "[" || c === "(" || c === "{") { depth++; continue; }
-                if (c === "]" || c === ")" || c === "}") { depth--; continue; }
-                if (c === "," && depth === 0) {
-                    const sig = sigOf(inner.slice(start, i).trim());
+            if (parsed.isLst() || parsed.isObjs()) {
+                for (const obj of parsed.js) {
+                    const sig = signatureOf(obj);
                     if (sig) out.push(sig);
-                    start = i + 1;
                 }
+            } else {
+                const sig = signatureOf(parsed);
+                if (sig) out.push(sig);
             }
-            const sig = sigOf(inner.slice(start).trim());
-            if (sig) out.push(sig);
             return out;
         }
 
-        /* the signature of one table entry: the type's vid (its name), or its
-           tid for a base type where tid == vid. */
-        function sigOf(entry) {
-            let depth = 0;
-            let atIndex = -1;
-            for (let i = 0; i < entry.length; i++) {
-                const c = entry[i];
-                if (c === "[" || c === "(" || c === "{") depth++;
-                else if (c === "]" || c === ")" || c === "}") depth--;
-                else if (depth === 0 && c === "@") atIndex = i;
+        function signatureOf(obj) {
+            if (obj.isType()) {
+                const name = obj.vid ? obj.vid : obj.tid;
+                return name ? name.toString() : null;
             }
-            if (atIndex >= 0) {
-                let vid = entry.slice(atIndex + 1).trim();
-                if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
-                return vid;
-            }
-            /* no vid: a base type (int::T, …) — the tid before the top-level ::T */
-            let d = 0;
-            for (let i = 0; i + 2 < entry.length; i++) {
-                const c = entry[i];
-                if (c === "[" || c === "(" || c === "{") d++;
-                else if (c === "]" || c === ")" || c === "}") d--;
-                else if (d === 0 && c === ":" && entry[i + 1] === ":" && entry[i + 2] === "T")
-                    return entry.slice(0, i).trim();
-            }
-            return entry;
+            return write(obj);
         }
 
         /* the signature the machine names — painted with the mtron grammar,
@@ -704,15 +675,15 @@ import { parse as envelope } from './mtron-envelope.js';
             }
             const headEnd = openAt > 0 ? openAt : (qAt > 0 ? qAt : entry.length);
             const namePath = entry.slice(0, headEnd);
-            let name = null;
-            try { name = f(namePath).name(); } catch (ignored) { }
-            if (!name) {
-                const slash = namePath.lastIndexOf("/");
-                name = slash > 0 ? namePath.slice(slash + 1) : namePath;
-            }
             const query = qAt > 0 ? entry.slice(qAt, openAt > 0 ? openAt : entry.length) : "";
             const args = openAt > 0 ? escapeArgs(entry.slice(openAt + 1, closeAt)) : null;
-            return "*<" + name + query + (args ? "&args=[" + args + "]" : "") + "&" + q + ">";
+            /* the first query param opens with `?`, the rest join with `&` — a
+               signature with no rng/dom (a base type) still needs `?decq`. the
+               full namePath (its address, not its last segment) is what to read */
+            let params = query;
+            if (args) params += (params ? "&" : "?") + "args=[" + args + "]";
+            params += (params ? "&" : "?") + q;
+            return "*<" + namePath + params + ">";
         }
 
         /* one row's doc/dec: evaluate the read over the structural socket and
@@ -728,6 +699,8 @@ import { parse as envelope } from './mtron-envelope.js';
                    wear it as the standard card (panel when one is registered),
                    the read it came from sitting in the card's expr line */
                 const env = Object.assign({raw: clean, expr: readExpr}, envelope(clean) || {shortTid: label});
+                env.tid = label + "s";   /* docs::T / decs::T — the panel marker */
+                env.isType = false;      /* the answer is a doc/dec, never the type card */
                 if (api && typeof api.open === "function")
                     api.open(env);
             };
@@ -949,11 +922,15 @@ import { parse as envelope } from './mtron-envelope.js';
             }).catch((problem) => fail(problem && problem.message ? problem.message : String(problem)));
         });
 
-        /* a mousedown outside the tile closes its table (bound once per panel) */
+        /* a mousedown outside the tile closes its table (bound once per panel);
+           a mousedown on the object card's modal — its backdrop included — does
+           not, so a type can be opened, its card dismissed, and the table stays */
         if (!box._outsideBound) {
             box._outsideBound = true;
             document.addEventListener("mousedown", (ev) => {
-                if (activeDrop && !activeDrop.tile.contains(ev.target)) closeDrop();
+                const modal = document.getElementById("popup");
+                if (activeDrop && !activeDrop.tile.contains(ev.target) && !(modal && modal.contains(ev.target)))
+                    closeDrop();
             });
         }
 
@@ -1116,87 +1093,6 @@ import { parse as envelope } from './mtron-envelope.js';
 
     register("/m/mach/component/network", networkPanel);
     register("network", networkPanel);
-
-
-    /* docs and decs — the result of ?docq / ?decq. the machine makes these in
-       the course of a read (there is no door to re-ask), so the card receives
-       them as the raw rec: render it like every other card — one row per key,
-       an address value as the page's usual clickable (plain click opens it,
-       shift-click opens its ?docq), everything else painted mtron. */
-    function paintMtron(el, text) {
-        const t = String(text == null ? "" : text);
-        if (window.hljs && window.hljs.getLanguage("mtron"))
-            el.innerHTML = window.hljs.highlight(t, {language: "mtron"}).value;
-        else el.textContent = t;
-    }
-
-    /* the top-level key=>value pairs of a rec's body — arrows and quotes in
-       the values never split a pair */
-    function recEntries(text) {
-        const l = text.indexOf("[");
-        const r = text.lastIndexOf("]");
-        if (l < 0 || r <= l + 1) return [];
-        const body = text.slice(l + 1, r);
-        const pieces = [];
-        let depth = 0, quote = null, start = 0;
-        for (let i = 0; i < body.length; i++) {
-            const ch = body[i];
-            if (quote) {
-                if (ch === "\\") i++;
-                else if (ch === quote) quote = null;
-                continue;
-            }
-            if (ch === "'" || ch === '"') { quote = ch; continue; }
-            const next = body[i + 1];
-            if (ch === "[" || ch === "(" || ch === "{" || (ch === "<" && next !== "=" && next !== ">")) depth++;
-            else if (ch === "]" || ch === ")" || ch === "}" || (ch === ">" && next !== "=" && next !== "-")) depth--;
-            else if (ch === "," && depth === 0) { pieces.push(body.slice(start, i)); start = i + 1; }
-        }
-        pieces.push(body.slice(start));
-        const pairs = [];
-        pieces.forEach((piece) => {
-            const arrow = piece.indexOf("=>");
-            if (arrow < 0) return;
-            const key = piece.slice(0, arrow).trim();
-            const value = piece.slice(arrow + 2).trim();
-            if (key) pairs.push([key, value]);
-        });
-        return pairs;
-    }
-
-    function fieldsPanel(env, api) {
-        const box = node("div", "mpanel");
-        const text = env && env.raw ? String(env.raw) : "";
-        const pairs = recEntries(text);
-        if (!pairs.length) {
-            box.appendChild(node("pre", "mpanel-raw", text));
-            return box;
-        }
-        const open = (uri) => {
-            const s = String(uri);
-            if (api && api.open) api.open({raw: s, shortTid: s.split("/").slice(-1)[0]});
-        };
-        pairs.forEach(([key, value]) => {
-            const row = node("div", "mpanel-row");
-            row.appendChild(node("span", "mpanel-k", key));
-            const v = node("span", "mpanel-v", "");
-            if (value.startsWith("/")) {
-                try {
-                    v.appendChild(f(value).toElement(open));
-                    row.appendChild(v);
-                    box.appendChild(row);
-                    return;
-                } catch (ignored) { /* not an address (a signature) — paint it */ }
-            }
-            paintMtron(v, value);
-            row.appendChild(v);
-            box.appendChild(row);
-        });
-        return box;
-    }
-
-    register("docs", fieldsPanel);
-    register("decs", fieldsPanel);
 
 
     /* the web surfaces: the server obj's own route table, not a probe. the obj's
@@ -1566,10 +1462,10 @@ import { parse as envelope } from './mtron-envelope.js';
             if (v === undefined || v === null || v === '' || v === false) return;
             let text;
             if (f.kind === 'bool') text = v ? 'true' : 'false';
-            else if (f.kind === 'int') text = serialize(parseInt(v, 10));
-            else if (f.kind === 'real') text = serialize({ real: parseFloat(v) });
+            else if (f.kind === 'int') text = int(parseInt(v, 10));
+            else if (f.kind === 'real') text = real(parseFloat(v));
             else if (f.kind === 'rec' || f.kind === 'lst') text = v;
-            else text = serialize(String(v));
+            else text = quote(String(v));
             parts.push(f.key + '=>' + text);
         });
         return '[' + parts.join(',') + ']';
@@ -1682,122 +1578,16 @@ import { parse as envelope } from './mtron-envelope.js';
 
     /* ── type::T — a type's definition: its refinement, desc, predicate,
        constructor and examples. the ?docq data is read field-by-field with
-       >> projections, so nothing here parses the doc rec. */
-    function closeBracket(text, openIdx) {
-        let depth = 0;
-        let quote = null;
-        for (let i = openIdx; i < text.length; i++) {
-            const c = text[i];
-            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
-            if (c === "'" || c === '"') { quote = c; continue; }
-            if (c === "[") depth++;
-            else if (c === "]") { depth--; if (depth === 0) return i + 1; }
-        }
-        return text.length;
-    }
-
-    function hasTopLevelArrow(text) {
-        let depth = 0;
-        let quote = null;
-        for (let i = 0; i + 1 < text.length; i++) {
-            const c = text[i];
-            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
-            if (c === "'" || c === '"') { quote = c; continue; }
-            if (c === "[" || c === "(" || c === "{") depth++;
-            else if (c === "]" || c === ")" || c === "}") depth--;
-            else if (depth === 0 && c === "=" && text[i + 1] === ">") return true;
-        }
-        return false;
-    }
-
-    function addField(text, out) {
-        const s = text.trim();
-        if (!s) return;
-        let depth = 0;
-        let quote = null;
-        let arrowAt = -1;
-        for (let i = 0; i + 1 < s.length; i++) {
-            const c = s[i];
-            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
-            if (c === "'" || c === '"') { quote = c; continue; }
-            if (c === "[" || c === "(" || c === "{") depth++;
-            else if (c === "]" || c === ")" || c === "}") depth--;
-            else if (depth === 0 && c === "=" && s[i + 1] === ">") { arrowAt = i; break; }
-        }
-        if (arrowAt < 0) return;
-        const key = s.slice(0, arrowAt).trim();
-        const type = s.slice(arrowAt + 2).trim();
-        if (key) out.push({key: key, type: type});
-    }
-
-    function parseFields(text, out) {
-        const source = String(text == null ? "" : text).trim();
-        if (!source) return;
-        let depth = 0;
-        let quote = null;
-        let start = 0;
-        for (let i = 0; i < source.length; i++) {
-            const c = source[i];
-            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
-            if (c === "'" || c === '"') { quote = c; continue; }
-            if (c === "[" || c === "(" || c === "{") depth++;
-            else if (c === "]" || c === ")" || c === "}") depth--;
-            else if (depth === 0 && c === ",") {
-                addField(source.slice(start, i), out);
-                start = i + 1;
-            }
-        }
-        addField(source.slice(start), out);
-    }
-
-    /* a type obj's x-mtron: tid::T[?predicate][constructor]@vid */
-    function parseType(text) {
-        const source = String(text == null ? "" : text).trim();
-        const out = {tid: "", vid: null, predicate: [], constructor: ""};
-        let depth = 0;
-        let quote = null;
-        let tidEnd = -1;
-        for (let i = 0; i + 2 < source.length; i++) {
-            const c = source[i];
-            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
-            if (c === "'" || c === '"') { quote = c; continue; }
-            if (c === "[" || c === "(" || c === "{") depth++;
-            else if (c === "]" || c === ")" || c === "}") depth--;
-            else if (depth === 0 && c === ":" && source[i + 1] === ":" && source[i + 2] === "T") { tidEnd = i; break; }
-        }
-        if (tidEnd > 0) out.tid = source.slice(0, tidEnd).trim();
-        let rest = tidEnd >= 0 ? source.slice(tidEnd + 3) : "";
-        let atIdx = -1;
-        depth = 0;
-        quote = null;
-        for (let i = 0; i < rest.length; i++) {
-            const c = rest[i];
-            if (quote) { if (c === "\\") i++; else if (c === quote) quote = null; continue; }
-            if (c === "'" || c === '"') { quote = c; continue; }
-            if (c === "[" || c === "(" || c === "{") depth++;
-            else if (c === "]" || c === ")" || c === "}") depth--;
-            else if (depth === 0 && c === "@") atIdx = i;
-        }
-        if (atIdx >= 0) {
-            let vid = rest.slice(atIdx + 1).trim();
-            if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
-            out.vid = vid;
-            rest = rest.slice(0, atIdx).trim();
-        }
-        let i = 0;
-        while (i < rest.length) {
-            while (i < rest.length && rest[i] !== "[") i++;
-            if (i >= rest.length) break;
-            const end = closeBracket(rest, i);
-            const group = rest.slice(i, end);
-            if (group.charAt(1) === "?") parseFields(group.slice(2, -1), out.predicate);
-            else if (group !== "[]" && group !== "[,]") {
-                if (hasTopLevelArrow(group.slice(1, -1))) parseFields(group.slice(1, -1), out.predicate);
-                else out.constructor = group;
-            }
-            i = end;
-        }
-        return out;
+       >> projections, so nothing here parses the doc rec. the predicate's
+       fields come from the serializer: parse the isa([…]) code and read its
+       rec argument — key (fURI) and the field's type, written back to text. */
+    function predicateFields(code) {
+        if (!code || code === "noobj") return [];
+        const inst = parse(code);
+        if (!inst || !inst.isInst()) return [];
+        const rec = inst.arg(0);
+        if (!rec || !rec.isRec()) return [];
+        return [...rec.js.entries()].map(([k, v]) => ({key: k.toString(), type: write(v)}));
     }
 
     function paintSig(el, text) {
@@ -1815,15 +1605,17 @@ import { parse as envelope } from './mtron-envelope.js';
         const vid = String((env && env.vid) || "").trim();
         if (!vid) { box.appendChild(node("div", "mpanel-empty", "no type address")); return box; }
 
-        const [typeText, tid, doc] = await Promise.all([
-            (api && api.mtron ? api.mtron("*<" + vid + ">") : Promise.resolve("")).catch(() => ""),
-            (api && api.evalJson ? api.evalJson("*<" + vid + ">.tid()") : Promise.resolve("")).catch(() => ""),
+        const [decon, doc] = await Promise.all([
+            (api && api.evalJson ? api.evalJson("*<" + vid + ">.as(rec::T)") : Promise.resolve(null)).catch(() => null),
             (api && api.evalJson ? api.evalJson("*<" + vid + "?docq>.-<[>>desc,>>args.>-.as(lst::T).>-[,],>>example]") : Promise.resolve(null)).catch(() => null)
         ]);
 
-        const parsed = parseType(typeText);
-        const tidText = String(tid == null ? "" : tid).trim();
-        const refined = (tidText && tidText !== "noobj" && !/^(fail|parse error)/i.test(tidText)) ? tidText : parsed.tid;
+        const refined = decon && decon.tid ? String(decon.tid).trim() : "";
+        const fullVid = decon && decon.vid ? String(decon.vid).trim() : "";
+        if (fullVid && api && api.at) api.at(fullVid);
+        const ctorText = decon && decon.ctor ? String(decon.ctor).trim() : "";
+        const predCode = decon && decon.pred && decon.pred.code ? String(decon.pred.code) : "";
+        const predicate = predicateFields(predCode);
         const desc = Array.isArray(doc) ? String(doc[0] == null ? "" : doc[0]).trim() : "";
         const argPairs = Array.isArray(doc) && Array.isArray(doc[1]) ? doc[1] : [];
         const examples = Array.isArray(doc) && Array.isArray(doc[2]) ? doc[2] : [];
@@ -1838,7 +1630,7 @@ import { parse as envelope } from './mtron-envelope.js';
             ref.title = "open " + refined;
             ref.addEventListener("click", () => {
                 if (api && api.open)
-                    api.open({tid: "type", vid: refined, raw: refined, shortTid: refined.split("/").pop() || refined});
+                    api.open({isType: true, vid: refined, raw: refined, shortTid: refined.split("/").pop() || refined});
             });
             head.appendChild(ref);
         }
@@ -1846,11 +1638,11 @@ import { parse as envelope } from './mtron-envelope.js';
 
         if (desc && desc !== "noobj") box.appendChild(node("p", "type-desc", desc));
 
-        if (parsed.predicate.length) {
+        if (predicate.length) {
             box.appendChild(node("div", "type-section", "predicate"));
             const table = node("table", "type-pred");
             const tbody = document.createElement("tbody");
-            parsed.predicate.forEach((field) => {
+            predicate.forEach((field) => {
                 const tr = document.createElement("tr");
                 const kd = node("td", "type-pred-key", "");
                 paintSig(kd, field.key);
@@ -1868,10 +1660,10 @@ import { parse as envelope } from './mtron-envelope.js';
             box.appendChild(table);
         }
 
-        if (parsed.constructor) {
+        if (ctorText && ctorText !== "noobj") {
             box.appendChild(node("div", "type-section", "constructor"));
             const ctor = node("pre", "type-ctor", "");
-            paintSig(ctor, parsed.constructor.slice(1, -1));
+            paintSig(ctor, ctorText);
             box.appendChild(ctor);
         }
 
@@ -1885,6 +1677,138 @@ import { parse as envelope } from './mtron-envelope.js';
             });
             box.appendChild(ul);
         }
+
+        return box;
+    });
+
+    /* ── docs::T — the documentation attached to an obj (?docq). read the same
+       ?docq answer as JSON (desc/dom/rng are str, args a rec of key=>str, example
+       a lst of str) and lay it out like the type card's doc half. */
+    register("docs", async function (env, api) {
+        const box = node("div", "mpanel docs-panel");
+        const expr = String((env && env.expr) || "").trim();
+        if (!expr) { box.appendChild(node("div", "mpanel-empty", "no doc read")); return box; }
+
+        const doc = await (api && api.evalJson ? api.evalJson(expr) : Promise.resolve(null)).catch(() => null);
+        if (!doc || typeof doc !== "object") { box.appendChild(node("div", "mpanel-empty", "no documentation")); return box; }
+
+        const desc = doc.desc != null ? String(doc.desc).trim() : "";
+        if (desc && desc !== "noobj") box.appendChild(node("p", "docs-desc", desc));
+
+        const dom = doc.dom != null ? String(doc.dom).trim() : "";
+        const rng = doc.rng != null ? String(doc.rng).trim() : "";
+        if (dom || rng) {
+            const sig = node("div", "docs-sig");
+            if (dom) sig.appendChild(node("span", "docs-sig-dom", dom));
+            if (dom && rng) sig.appendChild(node("span", "docs-sig-arrow", "<="));
+            if (rng) sig.appendChild(node("span", "docs-sig-rng", rng));
+            box.appendChild(sig);
+        }
+
+        if (doc.args && typeof doc.args === "object") {
+            const entries = Object.entries(doc.args);
+            if (entries.length) {
+                box.appendChild(node("div", "type-section", "arguments"));
+                const table = node("table", "type-pred");
+                const tbody = document.createElement("tbody");
+                entries.forEach(([key, value]) => {
+                    const tr = document.createElement("tr");
+                    const kd = node("td", "type-pred-key", "");
+                    paintSig(kd, key);
+                    const dd = node("td", "type-pred-desc", String(value == null ? "" : value));
+                    tr.appendChild(kd);
+                    tr.appendChild(dd);
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                box.appendChild(table);
+            }
+        }
+
+        if (Array.isArray(doc.example) && doc.example.length) {
+            box.appendChild(node("div", "type-section", "example(s)"));
+            const ul = node("ul", "type-examples");
+            doc.example.forEach((ex) => {
+                const li = document.createElement("li");
+                paintSig(li, String(ex));
+                ul.appendChild(li);
+            });
+            box.appendChild(ul);
+        }
+
+        return box;
+    });
+
+    /* ── decs::T — the algebraic declaration attached to an obj (?decq). the
+       facets are obj/theory/law/inverse/…, each holding a type or code, so they
+       are read as x-mtron (not JSON, which drops type values) and split on the
+       rec's top-level arrows. */
+    register("decs", async function (env, api) {
+        const box = node("div", "mpanel decs-panel");
+        /* the raw ?decq answer is already on the card (env.raw, read by showRead);
+           re-reading env.expr here is a second round-trip, so prefer the raw text */
+        let clean = String((env && env.raw) || "").replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "").trim();
+        if (!clean && env && env.expr) {
+            const text = await (api && api.mtron ? api.mtron(env.expr) : Promise.resolve("")).catch(() => "");
+            clean = String(text == null ? "" : text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "").trim();
+        }
+        if (!clean || clean === "noobj") { box.appendChild(node("div", "mpanel-empty", "no declaration")); return box; }
+
+        const decs = parse(clean);
+        if (!decs.isRec()) {
+            /* not a rec of key=>value facets — a type can be its own decs —
+               so show the declaration as-is */
+            const raw = node("pre", "type-ctor", "");
+            paintSig(raw, clean);
+            box.appendChild(raw);
+            return box;
+        }
+
+        /* browse like the web: evaluate an expression, parse its envelope, and open
+           the result as a fresh modal obj card. every uri — key, tid, or leaf value —
+           routes through this */
+        const browse = (expr) => {
+            (api && api.mtron ? api.mtron(expr) : Promise.resolve(""))
+                .then((text) => {
+                    const clean = String(text == null ? "" : text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "").trim();
+                    if (!clean) return;
+                    const env = Object.assign({raw: clean, expr: expr}, envelope(clean) || {shortTid: expr.split("/").pop() || expr});
+                    if (api && api.open) api.open(env);
+                }).catch(() => { });
+        };
+
+        /* render the rec tree recursively: one key per line, nested recs indented,
+           a typed rec's tid beside its key. every uri is a clickable button */
+        const render = (parent, obj, depth) => {
+            const items = obj.isRec() ? [...obj.js.entries()] : obj.js.map((v, i) => [f(String(i)), v]);
+            for (const [k, v] of items) {
+                const row = node("div", "decs-row");
+                row.style.paddingLeft = (depth * 14) + "px";
+                /* toElement makes the button but not its text — set it, like
+                   mtron-obj.js's clickable() does */
+                const keyEl = k.toElement((uri) => browse(String(uri)), "obj-link decs-key");
+                keyEl.textContent = k.toString();
+                row.appendChild(keyEl);
+                if (v.isRec() || v.isLst()) {
+                    if (v.isRec() && v.tid && !v.isBaseTid()) {
+                        const tidEl = v.tid.toElement((uri) => browse(String(uri)), "obj-link decs-tid");
+                        tidEl.textContent = v.tid.toString();
+                        row.appendChild(tidEl);
+                    }
+                    parent.appendChild(row);
+                    render(parent, v, depth + 1);
+                } else {
+                    const expr = write(v);
+                    const btn = node("button", "decs-val", expr);
+                    btn.type = "button";
+                    btn.title = "evaluate " + expr;
+                    btn.addEventListener("click", () => browse(expr));
+                    row.appendChild(btn);
+                    parent.appendChild(row);
+                }
+            }
+        };
+        render(box, decs, 0);
 
         return box;
     });
