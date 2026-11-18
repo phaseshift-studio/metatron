@@ -1036,10 +1036,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     return Type.Helper.nominalTypeChecker(lhs, rhsType);
                 } else if (!rhs.asType().isBaseType()
                         && Type.Helper.testByIdentity(lhs.tid(), rhs.vid())) { // identity, not a claim: erasure is explicit here
-                    // a name match says nothing of multiplicity: the coefficient is judged as on the nominal path
+                    // a name match says nothing of multiplicity: the coefficient is judged as on the nominal path. A stream
+                    // is one of the type only when the type holds every obj in it: a type applied filters a stream obj by
+                    // obj (Type.apply), so anything left over said only that SOME obj was one, and a stream's tid is the
+                    // sum of its objs' ({/m/rec,being}), which a name matches when one summand does. P(a+b) = a+b exactly
+                    // when P(a) = a and P(b) = b: {being::[age=>29],[blah=>'stuff']} is no being{+}::T
                     return lhs.c().within(rhs.c()) && (rhs.asType().isRootType() || !rhs.asType().hasPredicate() ||
                             (lhs.isType()
                                     ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
+                                    : lhs.isObjs()
+                                    ? lhs.stream().allMatch(one -> !rhs.asType().apply(one).isNothing())
                                     : !rhs.asType().apply(lhs).isNothing()));
                 }
             }
