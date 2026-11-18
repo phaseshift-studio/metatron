@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
@@ -1231,8 +1232,11 @@ public enum Law {
          * positional vid. A code member is the same when its instruction list is pairwise the same, the points
          * included up to the last inst: only the last inst's point is the member's multiplicity, as a point ahead of a
          * reducer is what the reducer reads ({@code 5.plus(1).count()} is 1 and {@code 5.plus{2}(1).count()} is 2). A
-         * non-call member is the same when it is coefficient-less equal (the coefficient is the multiplicity the law sums,
-         * so it is deliberately OUT of the test).
+         * non-call member is the same when it is coefficient-less equal AND has the same span: its point is the
+         * multiplicity the law sums, so it is deliberately OUT of the test, but a span is part of the term, as it is part
+         * of an instruction. A type's span is its filter's power, so {@code {0}nat::T}, the identity, is no
+         * {@code nat::T}, and a value's span is a run a branch keeps curled for the processor that unrolls it (Marko,
+         * 2026-11-18), so {@code 6{2}} is no {@code 6}.
          */
         public static boolean sameMember(final Obj a, final Obj b) {
             if (a.isInst() && b.isInst()) {
@@ -1255,7 +1259,18 @@ public enum Law {
             }
             if (a instanceof Inst || b instanceof Inst || a instanceof Code || b instanceof Code)
                 return false;
-            return a.clessEquals(b);
+            return a.clessEquals(b) && Objects.equals(a.tid().b(), b.tid().b());
+        }
+
+        /**
+         * A TERM AT ANOTHER POINT, its span kept ({@link Obj#d(cInt)}). A base type keeps its counts on its vid too (it is
+         * named by it), so a type whose vid names its own type moves the point there as well, or {@code int{3}::T} at the
+         * point 4 would be a type no {@code int{4}::T} equals.
+         */
+        public static Obj withPoint(final Obj term, final cInt point) {
+            final Obj pointed = term.d(point);
+            return pointed.isType() && null != pointed.vid() && pointed.vid().basePath().equals(pointed.tid().basePath()) ?
+                    pointed.vid(pointed.vid().d(null == point || point.isOne() ? null : point)) : pointed;
         }
 
         /**

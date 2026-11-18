@@ -1184,18 +1184,20 @@ public class mInstSet extends AbstractInstSet {
                         // key are already summed by the rec itself (a => x, a => x is a => x{2}), and lanes under different keys
                         // run at different places, so they never collapse. A MEMBER'S MULTIPLICITY is the coefficient the law
                         // sums: an inst's own point d, the point of a code's last inst (on the member's output), else the obj's
-                        // coefficient. Never the head's: a point there floats past a reducer, so
+                        // point (a stream's count). Never the head's: a point there floats past a reducer, so
                         // 5.branch(plus(1).count(),plus(1).count()) collapsed to plus{2}(1).count() and answered 2, not {2}1.
                         // Never the whole coefficient b·d: a span is part of the function (like terms share it), so summing it
-                        // as a point read {?}plus(1) + plus(1) as plus{1,2}(1). The summed point is written back there, its span
-                        // untouched
+                        // as a point read {?}plus(1) + plus(1) as plus{1,2}(1). The same holds for a type and a value: a type's
+                        // span is its filter's power ({0}nat::T is the identity, no nat::T) and a value's a run the branch
+                        // keeps curled (Marko, 2026-11-18), so terms of one span alone are alike (Law.Helper.sameMember). The
+                        // summed point is written back there, its span untouched
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_collapse"), code -> {
                             final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
                             if (null == op)
                                 return code;
                             final Function<Obj, cInt> multiplicity = member -> member.isCode() && !member.asCode().insts().isEmpty()
                                     ? member.asCode().insts().getLast().tid().d()
-                                    : member.isInst() ? member.asInst().tid().d() : member.c();
+                                    : member.isObjs() ? member.c() : member.tid().d();
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
@@ -1234,7 +1236,7 @@ public class mInstSet extends AbstractInstSet {
                                             insts.set(insts.size() - 1, insts.getLast().d(sum).asInst());
                                             merged.add(MCode.code(insts));
                                         } else
-                                            merged.add(rep.isInst() ? rep.d(sum) : rep.c(sum));
+                                            merged.add(rep.isObjs() ? rep.c(sum) : Law.Helper.withPoint(rep, sum));
                                     }
                                     out.add(inst.args(lst(merged)));
                                 } else

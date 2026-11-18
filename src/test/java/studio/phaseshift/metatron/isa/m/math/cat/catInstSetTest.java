@@ -1597,6 +1597,17 @@ public class catInstSetTest extends AbstractInstSetTest {
             // a point ahead of the last inst is part of the function, as a reducer reads it: no like terms
             "5.branch(plus(1).count(),plus{2}(1).count())       % start(5).branch(plus(1).count(),plus{2}(1).count())  % {1,2}",
             "1.branch(+2.+2,plus{2}(2).+2)                      % start(1).branch(plus(2).plus(2),plus{2}(2).plus(2))  % {3}5",
+            // a span is part of the term, a type's and a value's as an instruction's (Marko, 2026-11-18): {0}int::T is the
+            // identity and no int::T, {2}int::T a run of the filter, and 6{2} a run the branch keeps curled. Only the
+            // point is summed
+            "true.branch({0}int::T,int::T)                      % start(true).branch({0}int::T,int::T)                 % true",
+            "1.branch({2}int::T,int::T)                         % start(1).branch({2}int::T,int::T)                    % {2}1",
+            "1.branch(int{3}::T,int::T,str::T)                  % start(1).branch(int{4}::T,str::T)                    % {4}1",
+            "true.branch({0}int::T,{0}int::T,str::T)            % start(true).branch({0}int{2}::T,str::T)              % {2}true",
+            "5.branch(6{2},6)                                   % start(5).branch(6{2},6)                              % {6{2},6}",
+            "5.branch(6{2},6{2},7)                              % start(5).branch({2}6{2},7)                           % {{2}6{2},7}",
+            // an instruction of another span is another term, as a type's or a value's is
+            "1.branch({2}plus(1),plus(1))                       % start(1).branch({2}plus(1),plus(1))                  % {3,2}",
     }, delimiter = '%')
     public void testBranchCollapse(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
