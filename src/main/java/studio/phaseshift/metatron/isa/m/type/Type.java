@@ -842,10 +842,36 @@ public interface Type extends Obj {
          * {@link #runs}, the one funnel a run of slots is tested through.
          */
         public static boolean testTensor(final Lst lst, final Type tensoredLst) {
-            final List<Type> entries = tensoredLst.lstIndices();
-            final List<Obj> values = Lst.Helper.laid(lst.lstValue().stream().map(value -> (Obj) value.autoResolve(lst)).toList());
-            final Set<Integer> reached = runs(values, entries);
-            return entries.isEmpty() || null != entries.getLast().tid().b().max() ? !reached.isEmpty() : reached.contains(values.size());
+            return testTensor(lst, tensoredLst, null);
+        }
+
+        /**
+         * {@link #testTensor(Lst, Type)}, BINDING: with a {@code bindings} map, each variable the bracket names binds the
+         * one type of the indices its run claims ({@code lst[A{*},B{?}]} over {@code [1,1,'hello']} binds A to int and B
+         * to str), and the bindings of the walk the test accepts are written into the map. A null map binds nothing, the
+         * plain test: a variable holds anything. One walk either way ({@link #runs}), so a lst binds a bracket exactly
+         * when it is one.
+         */
+        public static boolean testTensor(final Lst lst, final Type tensoredLst, final Map<fURI, fURI> bindings) {
+            return testTensor(Lst.Helper.laid(lst.lstValue().stream().map(value -> (Obj) value.autoResolve(lst)).toList()),
+                    tensoredLst.lstIndices(), bindings);
+        }
+
+        /**
+         * The tensor test over laid indices — a lst value's, or a lst type's own bracket ({@link Type#lstIndices}), so a
+         * signature tests a signature — against a bracket's entries: the walk must reach the last index, unless the last
+         * entry's span is bounded, past which a lst is open. With a {@code bindings} map, the first walk the test accepts
+         * (earlier entries claiming as much as they can) writes its bindings into it.
+         */
+        public static boolean testTensor(final List<? extends Obj> values, final List<Type> entries, final Map<fURI, fURI> bindings) {
+            final boolean open = entries.isEmpty() || null != entries.getLast().tid().b().max();
+            for (final Reach reach : reaches(values, entries, null != bindings))
+                if (open || reach.index() == values.size()) {
+                    if (null != bindings)
+                        bindings.putAll(reach.bindings());
+                    return true;
+                }
+            return false;
         }
 
         /**
@@ -857,7 +883,28 @@ public interface Type extends Obj {
          * type is open past its last entry ({@link #testTensor}); an instruction's args are closed ({@link Inst#test}).
          */
         public static Set<Integer> runs(final List<? extends Obj> values, final List<? extends Obj> entries) {
-            Set<Integer> reached = Set.of(0); // the indices the entries so far can end at
+            final Set<Integer> reached = new TreeSet<>();
+            reaches(values, entries, false).forEach(reach -> reached.add(reach.index()));
+            return reached;
+        }
+
+        /**
+         * ONE STATE OF THE RUN WALK: the index the entries so far end at, and, when the walk binds, the variables its
+         * path bound (null when it does not).
+         */
+        private record Reach(int index, Map<fURI, fURI> bindings) {
+        }
+
+        /**
+         * THE RUN WALK, the one traversal a bracket is tested and bound through (Marko, 2026-11-18: one algorithm, not
+         * two that can become inconsistent): the states the entries, in order, can end at. Binding, a variable entry's
+         * run holds one type, the type the variable binds on that path, and a path that would bind it twice dies; each
+         * state carries its path's bindings, and the states are kept in order, longest runs first, so the first state
+         * at an end is the path on which earlier entries claimed as much as they could. Not binding, a variable holds
+         * anything and the states are the ends alone, the plain test's set.
+         */
+        private static List<Reach> reaches(final List<? extends Obj> values, final List<? extends Obj> entries, final boolean bind) {
+            List<Reach> reached = List.of(new Reach(0, bind ? Map.of() : null));
             for (final Obj entry : entries)
                 reached = run(values, entry, reached);
             return reached;
@@ -893,26 +940,62 @@ public interface Type extends Obj {
          * Where one entry's run can end, from each of the starts: k values on, k in its span, every one holding the
          * entry without its span; one value on for a spanned type that tests the entry whole; and right where it
          * starts at the end of the values, when its point admits zero (a missing trailing index, as Lst.test allows).
+         * Binding, a variable entry's run must hold the one type its variable binds ({@link #claim}).
          */
-        private static Set<Integer> run(final List<? extends Obj> values, final Obj entry, final Set<Integer> starts) {
+        private static List<Reach> run(final List<? extends Obj> values, final Obj entry, final List<Reach> starts) {
             final cInt span = entry.tid().b();
             final Obj slot = entry.tid(entry.tid().b(null)); // one index of the run: the entry without its span
             final long least = Math.max(0L, null == span.min() ? 0L : span.min());
-            final Set<Integer> next = new TreeSet<>();
-            for (final int start : starts) {
-                if (start == values.size() && entry.c().isZeroable())
-                    next.add(start);
+            final fURI variable = entry.tid().basePath().isGeneric() ? entry.tid().basePath() : null;
+            final Set<Reach> next = new LinkedHashSet<>();
+            for (final Reach from : starts) {
+                final int start = from.index();
+                if (null == span.max() || span.max() >= least) {
+                    int end = start;
+                    while (end < values.size() && (null == span.max() || end - start < span.max()) && fills(values.get(end), slot))
+                        end++;
+                    for (int k = end - start; k >= least; k--) // longest first: an earlier entry claims as much as it can
+                        claim(next, from, values, start, start + k, variable);
+                }
                 if (start < values.size() && !values.get(start).tid().b().isOne() && values.get(start).test(entry))
-                    next.add(start + 1);
-                if (null != span.max() && span.max() < least)
-                    continue;
-                int end = start;
-                while (end < values.size() && (null == span.max() || end - start < span.max()) && fills(values.get(end), slot))
-                    end++;
-                for (long k = least; start + k <= end; k++)
-                    next.add(start + (int) k);
+                    claim(next, from, values, start, start + 1, variable);
+                if (start == values.size() && entry.c().isZeroable())
+                    next.add(from);
             }
-            return next;
+            return new ArrayList<>(next);
+        }
+
+        /**
+         * The plain run of one entry over index starts, as {@link #unfold} walks it: the ends alone.
+         */
+        private static Set<Integer> run(final List<? extends Obj> values, final Obj entry, final Set<Integer> starts) {
+            final Set<Integer> ends = new TreeSet<>();
+            run(values, entry, starts.stream().map(start -> new Reach(start, null)).toList()).forEach(reach -> ends.add(reach.index()));
+            return ends;
+        }
+
+        /**
+         * A state past a run of {@code values[start, stop)}: the run's bindings when the walk binds and the entry is a
+         * variable, one type for the variable across the run and the path before it (an index of an open type binds
+         * nothing); no state when the run would bind the variable twice.
+         */
+        private static void claim(final Set<Reach> next, final Reach from, final List<? extends Obj> values, final int start,
+                                  final int stop, final fURI variable) {
+            Map<fURI, fURI> bound = from.bindings();
+            if (null != bound && null != variable) {
+                for (int v = start; v < stop; v++) {
+                    final fURI type = Obj.Helper.specificTypeId(values.get(v)).basePath();
+                    if (type.isGeneric() || ALL.basePath().equals(type))
+                        continue;
+                    final fURI prior = bound.get(variable);
+                    if (null == prior) {
+                        bound = new LinkedHashMap<>(bound);
+                        bound.put(variable, type);
+                    } else if (!prior.equals(type))
+                        return; // a contradiction: the one variable would be two types, so this path ends here
+                }
+            }
+            next.add(new Reach(stop, bound));
         }
 
         /**

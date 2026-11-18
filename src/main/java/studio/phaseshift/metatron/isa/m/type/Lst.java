@@ -241,14 +241,73 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * means a type reached through a scheme or a query is never mistaken for a variable.
          */
         public static boolean hasGenericSlot(final List<String> poly) {
-            for (final String slot : poly) {
-                // a cheap spelling guard first: only an all-caps NAME can be a variable, so the slot's own text is
-                // read before the furi parser is asked about it (a `,` or a `+` slot is not a name at all)
-                final String text = null == slot ? "" : slot.trim();
-                if (!text.isEmpty() && Character.isUpperCase(text.charAt(0)) && Singleton.f(text).isGeneric())
+            for (final String slot : poly)
+                if (isVariable(slot))
                     return true;
-            }
             return false;
+        }
+
+        /**
+         * An index spelled as a variable: {@code A}, {@code A{2}}, or {@code {*}A{*}} — a bracket writes an index
+         * {@code {point}value{span}}, so its name is read past a leading point. A cheap spelling guard comes first:
+         * only an all-caps NAME can be a variable, so the text is read before the furi parser is asked about it (a
+         * {@code ,} or a {@code +} index is not a name at all).
+         */
+        private static boolean isVariable(final String index) {
+            String text = null == index ? "" : index.trim();
+            if (text.startsWith("{"))
+                text = text.indexOf('}') < 0 ? "" : text.substring(text.indexOf('}') + 1);
+            return !text.isEmpty() && Character.isUpperCase(text.charAt(0)) && Singleton.f(text).isGeneric();
+        }
+
+        /**
+         * THE BINDINGS A LST BRACKET'S VARIABLES TAKE FROM THE LST IT MEETS: the bracket's own test, binding
+         * ({@link Type.Helper#testTensor(List, List, Map)}), so a lst binds a bracket exactly when it is one (one
+         * algorithm). The lst's indices are a value's entries laid ({@link Helper#laid}) or a lst type's own bracket
+         * ({@link Type#lstIndices}). {@code lst[A{2},str]} over {@code [1,2,'hello']} binds A to int,
+         * {@code lst[A{*},B{?}]} over {@code [1,1,'hello']} binds A to int and B to str, and over {@code [1,1]} A to
+         * int alone; {@code lst[{*}A{*}]} over order's {@code lst[{*}int{*}]} binds A to int.
+         *
+         * @return the bindings, empty when the bracket names no variable or the lhs holds no lst indices to read; null
+         * when the lst is not the bracket ({@code lst[A{2},str]} over {@code [1,'hello']})
+         */
+        public static Map<fURI, fURI> bindings(final Obj lhs, final fURI bracket) {
+            if (null == bracket || !bracket.hasPoly() || !hasGenericSlot(bracket.poly()) || !isLst(bracket))
+                return Map.of();
+            final List<? extends Obj> indices = lhs.isType()
+                    ? (isLst(lhs.tid()) && lhs.tid().hasPoly() ? lhs.asType().lstIndices() : List.of())
+                    : lhs.isLst() ? Helper.laid(lhs.asLst().lstValue()) : List.of();
+            if (indices.isEmpty())
+                return Map.of();
+            final Map<fURI, fURI> bindings = new LinkedHashMap<>();
+            return Type.Helper.testTensor(indices, T(bracket).lstIndices(), bindings) ? bindings : null;
+        }
+
+        /**
+         * A BRACKET WITH ITS VARIABLES BOUND: each index naming a bound variable names its binding, with the index's
+         * own point and span as written ({@code lst[{*}A{*}]} with A bound to int is {@code lst[{*}int{*}]}); the id
+         * itself when no index is bound.
+         */
+        public static fURI bound(final fURI tid, final Map<fURI, fURI> bindings) {
+            if (null == tid || !tid.hasPoly() || null == bindings || bindings.isEmpty())
+                return tid;
+            boolean changed = false;
+            final List<String> indices = new ArrayList<>(tid.poly().size());
+            for (final String index : tid.poly()) {
+                final fURI declared = isVariable(index) ? Singleton.f(index.trim()) : null;
+                final fURI binding = null == declared ? null : bindings.get(declared.basePath());
+                if (null == binding) {
+                    indices.add(index);
+                    continue;
+                }
+                indices.add(binding.basePath().b(declared.b()).d(declared.d()).toString());
+                changed = true;
+            }
+            return changed ? tid.poly(indices) : tid;
+        }
+
+        private static boolean isLst(final fURI tid) {
+            return LST_TID.basePath().equals(tid.polyLess().basePath());
         }
 
         /**
@@ -271,30 +330,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         public static fURI boundTID(final Lst value, final fURI tid) {
             if (null == tid || !tid.hasPoly() || !hasGenericSlot(tid.poly()))
                 return tid;
-            final List<String> poly = tid.poly();
-            final List<Obj> slots = value.lstValue();
-            if (poly.size() != slots.size())
-                return null; // arity: lst[A,B]::[1] has no second slot to bind B from
-            final Map<fURI, fURI> bindings = new LinkedHashMap<>();
-            final List<String> bound = new ArrayList<>(poly.size());
-            for (int i = 0; i < poly.size(); i++) {
-                final String declared = poly.get(i);
-                final fURI slot = Singleton.f(declared.trim());
-                final Obj slotValue = null == slots.get(i) ? noobj() : slots.get(i);
-                if (!slot.isGeneric()) {
-                    if (!slotValue.test(T(slot))) {
-                        return null;
-                    }
-                    bound.add(declared);
-                    continue;
-                }
-                final fURI type = slotValue.tid();
-                final fURI prior = bindings.putIfAbsent(slot.big(), type);
-                if (null != prior && !prior.equals(type))
-                    return null; // a contradiction: the one variable would be two types
-                bound.add((null == prior ? type : prior).toString());
-            }
-            return tid.poly(bound);
+            // the one walk a bracket is tested through: a lst[A,B]::[1] leaves an index no value fills (arity), and a
+            // concrete index its value does not hold fails the unfold, so both answer null, as a contradiction does
+            final Map<fURI, fURI> bindings = bindings(value, tid);
+            return null == bindings ? null : bound(tid, bindings);
         }
 
         /**

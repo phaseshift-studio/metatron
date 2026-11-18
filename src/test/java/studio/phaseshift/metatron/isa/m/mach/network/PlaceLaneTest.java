@@ -521,6 +521,25 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
+     * A RUN THAT TURNS ONE OBJ INTO MANY DEALS WHAT IT TURNS IT INTO — the run after order's fold has one obj, its sorted
+     * lst, and no index set, so the run's leading flatmapper ({@code merge}, which unrolls the lst into the ints its
+     * indices hold) stays home, and the rest of the run ships through a branch that deals the unrolled ints by member.
+     * Over the three loop peers. Each row: the chain % the master's ops % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start({1,2,3,4,5}).plus(10).order(neg()).merge().plus(1).sum()  % branch,kmerge,merge,branch,sum % 70", // 12+…+16
+            "start({1,2,3,4,5}).plus(10).order().merge().plus(1).prod()      % branch,kmerge,merge,branch,prod % 524160", // 12·13·14·15·16
+    }, delimiter = '%')
+    void testALeadingFlatmapperOverOneObjStaysHome(final String source, final String ops, final int expected) {
+        connectAll();
+        final Code emitted = lower(homeAndPeer(), source);
+        assertEquals(List.of(ops.trim().split(",")), TransportRewriteHarness.ops(emitted).stream().map(fURI::name).toList(),
+                "merge unrolls the sorted lst at home and the run after it ships: " + emitted);
+        checkEquality(LOG, jnt(expected), evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
      * ONE OBJ AND NO INDEX SET STAYS HOME — the run after a fold has one obj and, with no span range and no point,
      * nothing to factor, so dealing it would hand the whole run to one lane: a round trip and no parallelism. A point
      * span ({@code {3}}, one compose chain) is no index set either. The run before still ships. Each row: the chain %
