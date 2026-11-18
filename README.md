@@ -9,44 +9,54 @@ using a universal uri address space that is processed by a distributed vm contro
 language called mtron.
 
 **metatron** is the runtime (VM, machines, spaces, instruction sets); **mtron** is the language that drives it. A value
-is an **obj**, an obj lives at a **uri**, and **code** is built from **inst** (instructions) using the ring operators `*` (serial
+is an **obj**, an obj lives at a **uri**, and **code** is built from **inst** (instructions) using the ring operators
+`*` (serial
 composition) and `+` (parallel branching).
 
-| Language                                        | Runtime       | License  | Version        |
-|-------------------------------------------------|---------------|----------|----------------|
-| mtron (`isa/m`), functional + fluent, type-safe | jvm, java 25+ | agpl-3.0 | `0.1-SNAPSHOT` |
+| Language                                        | Runtime       | Version        |
+|-------------------------------------------------|---------------|----------------|
+| mtron (`isa/m`), functional + fluent, type-safe | jvm, java 25+ | `0.1-SNAPSHOT` |
 
-**mtron** boasts numerous novel concepts in language design. the language's algebraic specification is rooted in a novel algebra called **stream ring theory**.
-the algebra supports negative objs, constructive/destructive interference of monads, types specifying a magnitude and a span,
-barrier semantics encoded in inst dom coefficients, and data compression based on ring `+`. the compiler rewrites code at the level of the theorems associated with the algebra
-of the particular carrier set and ops being analyzed. distributed data structures and processes are a theorem, not a feature. the language is fully self-reflective 
-w/o altering the way in which it is conceptually understood, where writing code that writes code is natural to express and the compiler, rewriter, generic binder, inst resolver
-are themselves objs available for manipulation and re-composition within the universal address space. the type system is both structural and nominal in a meaningful way,
-supporting open-world semantics and providing useful object-oriented programming patterns such as fiber bundles, tensors, and typed paths. type checking can be made
-more or less strict at runtime. numerous utilitarian motifs are an epiphenomena of it's design, with surprising features continuing to be stumbled upon.
+**mtron** boasts numerous novel concepts in language design. the language's algebraic specification is rooted in an
+algebra called **stream ring theory**.
+the algebra supports negative objs, constructive/destructive interference of monads, types specifying a magnitude and a
+spatial extent,
+barrier semantics encoded in inst dom coefficients, and data compression based on ring `+` and `*`. the compiler
+rewrites code
+at the level of the theorems associated with the algebra
+of the particular carrier set and ops being analyzed. distributed data structures and processes are a theorem, not a
+feature. the language is fully self-reflective
+w/o altering the way in which it is conceptually understood, where writing code that writes code is natural to express
+and the compiler, rewriter, generic binder, inst resolver
+are themselves objs available for manipulation and re-composition within the universal address space. the type system is
+both structural and nominal in a meaningful way,
+supporting open-world semantics and providing useful object-oriented programming patterns such as fiber bundles,
+tensors, and typed paths. type checking can be made
+more or less strict at runtime. numerous utilitarian motifs are an epiphenomena of it's design, with surprising features
+continuing to be stumbled upon.
 
 ## Core Concepts
 
-| Concept       | Role                                                                                                                                                               |
-|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **furi**      | *functional* uri — any datum can reference any other regardless of storage; query params encode instruction domain/range and space modulators called qprocs        |
-| **obj**       | base types: mono (`bool`, `bytes`, `int`, `real`, `str`, `uri`), poly (`rec`, `lst`, `rel`), call (`inst`, `code`). `noobj` is the `0`-object, `#` the 1-object    |
-| **vid / tid** | for a type, the name / its refinement (`int::T[?>0]@nat`); for a value, its location / constraining type (`nat::29@/usr/marko/age`)                                |
-| **machine**   | a computing context containing memory, network, compiler, processor — nested in frames of reference w/ push/pop multi-threading and resource isolation             |
-| **space**     | a system exposing a subset of the uri address space; registered with machine memory and resolved by uri patterns (`+` and `#` are furi segment wildcards)          |
-| **instset**   | an instruction set, discovered at boot via `META-INF/services/` spi, imported when needed, isolated to importing machine                                           |
+| Concept       | Role                                                                                                                                                            |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **furi**      | *functional* uri — any datum can reference any other regardless of storage; query params encode instruction domain/range and space modulators called qprocs     |
+| **obj**       | base types: mono (`bool`, `bytes`, `int`, `real`, `str`, `uri`), poly (`rec`, `lst`, `rel`), call (`inst`, `code`). `noobj` is the `0`-object, `#` the 1-object |
+| **vid / tid** | for a type, the name / its refinement (`int::T[?>0]@nat`); for a value, its location / constraining type (`nat::29@/usr/marko/age`)                             |
+| **machine**   | a computing context containing memory, network, compiler, processor — nested in frames of reference w/ push/pop multi-threading and resource isolation          |
+| **space**     | a system exposing a subset of the uri address space; registered with machine memory and resolved by uri patterns (`+` and `#` are furi segment wildcards)       |
+| **instset**   | an instruction set, discovered at boot via `META-INF/services/` spi, imported when needed, isolated to importing machine                                        |
 
 ## The Spaces
 
 Every backend is a `space`; the same language, types, and uri algebra apply to each.
 
-| Package                          | Backend / domain                                                                  |
-|----------------------------------|-----------------------------------------------------------------------------------|
-| `isa/m`, `isa/mach`              | core algebra, types + q-procs; machine, compiler, processor, ui, serializers      |
-| `isa/sys`, `isa/web`             | filesystems, serial ports; http; websockets; mcp; mime types                      |
-| `isa/tble`, `isa/dcmnt`          | sql (sqlite, mysql, maria, postgresql, rewrite pushdown); mql mongodb             |
-| `isa/grph`, `isa/vec`,           | gremlin (tinkerpop/janusgraph) w/ mtron expressivity; chromadb embeddings         |
-| `isa/iot`, `isa/llm`, `isa/dckr` | mqtt, zigbee2mqtt, llm and decision agents w/ feature-based harness; docker       |
+| Package                          | Backend / domain                                                             |
+|----------------------------------|------------------------------------------------------------------------------|
+| `isa/m`, `isa/mach`              | core algebra, types + q-procs; machine, compiler, processor, ui, serializers |
+| `isa/sys`, `isa/web`             | filesystems, serial ports; http; websockets; mcp; mime types                 |
+| `isa/tble`, `isa/dcmnt`          | sql (sqlite, mysql, maria, postgresql, rewrite pushdown); mql mongodb        |
+| `isa/grph`, `isa/vec`,           | gremlin (tinkerpop/janusgraph) w/ mtron expressivity; chromadb embeddings    |
+| `isa/iot`, `isa/llm`, `isa/dckr` | mqtt, zigbee2mqtt, llm and decision agents w/ feature-based harness; docker  |
 
 ## Quick Start
 
