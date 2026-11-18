@@ -1,12 +1,12 @@
 % distributed-run.tex — one cut: a chain of instructions, then the branch (one arching lane per place) into the fold
-% that recombines the lanes' partials. Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
-% standalone document and writes the PNG beside this file. INK: white on a transparent background (the site theme is
-% dark); the lanes are GREEN; a fold is a circle.
+% that recombines the lanes' partials. Rendered by `bin/render-tikz.py --png --dpi 300 docs/skills/mtron/assets/tikz`,
+% which wraps this body in a standalone document; the PNG goes to docs/website/skills/mtron/assets/. INK: white on a
+% transparent background (the site theme is dark); the lanes are GREEN; a fold is a circle.
 
 \begin{tikzpicture}[
   inst/.style={draw, rounded corners=2pt, thick, minimum width=11mm, minimum height=8mm, font=\small, color=white},
   fold/.style={draw, circle, thick, minimum size=9mm, font=\small, color=white},
-  step/.style={thick, color=white, -{Stealth[length=2mm]}},
+  hop/.style={thick, color=white, -{Stealth[length=2mm]}},
   lane/.style={thick, color=green!60!white, -{Stealth[length=1.8mm]}},
   note/.style={font=\scriptsize, color=white},
   link/.style={draw=green!60!white, fill=green!18!black, thick, rounded corners=0.5pt, minimum width=2.8mm,
@@ -17,8 +17,8 @@
 \node[inst] (f1) at (0,0)   {$f_1$};
 \node[inst] (f2) at (2.2,0) {$f_2$};
 \node[inst] (f3) at (4.4,0) {$f_3$};
-\draw[step] (f1) -- (f2);
-\draw[step] (f2) -- (f3);
+\draw[hop] (f1) -- (f2);
+\draw[hop] (f2) -- (f3);
 
 % ---- the branch: one lane per place, each folding its share; the fold recombines the partials ----
 \node[fold] (r) at (9.0,0) {$r$};
