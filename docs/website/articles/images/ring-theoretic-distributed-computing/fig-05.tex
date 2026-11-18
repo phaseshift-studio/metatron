@@ -1,0 +1,35 @@
+\begin{center}
+\begin{tikzpicture}[
+  obj/.style={draw, circle, thick, minimum size=7mm, font=\small},
+  run/.style={draw, rounded corners=2pt, thick, minimum width=15mm, minimum height=7mm, font=\small},
+  fold/.style={draw, circle, thick, minimum size=7mm, font=\small},
+  lane/.style={thick, ->, >=stealth, color=green!50!black},
+  step/.style={thick, ->, >=stealth},
+  note/.style={font=\small}
+]
+% ---- a span range: the unrolls split by work ----
+\node[obj]  (x)  at (0,0)    {$x$};
+\node[run]  (s1) at (2.6,1.1)  {$a^{[0,1]}$};
+\node[run]  (s2) at (2.6,0)    {$a^{[2,2]}$};
+\node[run]  (s3) at (2.6,-1.1) {$a^{[3,3]}$};
+\node[fold] (r1) at (4.6,1.1)  {$r$};
+\node[fold] (r2) at (4.6,0)    {$r$};
+\node[fold] (r3) at (4.6,-1.1) {$r$};
+\node[fold] (c)  at (6.4,0)    {$r$};
+\draw[lane] (x) -- (s1); \draw[lane] (x) -- (s2); \draw[lane] (x) -- (s3);
+\draw[step] (s1) -- (r1); \draw[step] (s2) -- (r2); \draw[step] (s3) -- (r3);
+\draw[step] (r1) -- (c);  \draw[step] (r2) -- (c);  \draw[step] (r3) -- (c);
+\node[note] at (3.2,-2.2) {$x\,a^{[0,3]}r = (x\,a^{[0,1]}r + x\,a^{[2,2]}r + x\,a^{[3,3]}r)\,r$};
+% ---- a point: the copies split evenly ----
+\node[obj]  (y)  at (9.4,0)   {$x$};
+\node[run]  (p1) at (12.0,0.6)  {$a\{3\}$};
+\node[run]  (p2) at (12.0,-0.6) {$a\{2\}$};
+\node[fold] (q1) at (14.0,0.6)  {$r$};
+\node[fold] (q2) at (14.0,-0.6) {$r$};
+\node[fold] (d)  at (15.8,0)    {$r$};
+\draw[lane] (y) -- (p1); \draw[lane] (y) -- (p2);
+\draw[step] (p1) -- (q1); \draw[step] (p2) -- (q2);
+\draw[step] (q1) -- (d);  \draw[step] (q2) -- (d);
+\node[note] at (12.6,-2.2) {$x\,a\{5\}r = (x\,a\{3\}r + x\,a\{2\}r)\,r$};
+\end{tikzpicture}
+\end{center}
