@@ -79,8 +79,9 @@ public final class PeerNode {
         // boot at warn: a forked JVM does not inherit the parent's -Dlogback.configurationFile, so without this
         // it logs at default DEBUG and three concurrent chatty boots will not be ready before the test does
         BootLoader.load(rec(uri("log"), uri("warn")));
-        // a forked peer evaluates shipped code type-check-free: it backs every PeerCluster suite, and with checks on a
-        // satellite's reply resolves start(n) to the code-level start and fails its range (MariaDBMultiServerSingleSpaceTest)
+        // a forked peer evaluates shipped code type-check-free: it backs every PeerCluster suite, so turning its
+        // checks on is the whole suite's call. All ten pass on the boot default since a reply's start(x) is typed by
+        // what x computes (TyperTest#testAnInitialInstAnswersWhatItsArgumentComputes; 2026-11-18)
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         memSpace.unregistered(rec(uri(PATTERN), uri("/sys/#")), null).addQ(QCollection.incrQ());
         InstSet.importInstSet(f("/m/web"));

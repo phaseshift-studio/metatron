@@ -115,4 +115,30 @@ public class TyperTest extends AbstractMetatronTest {
             Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
         }
     }
+
+    /**
+     * AN INITIAL INST'S RANGE IS WHAT ITS ARGUMENT COMPUTES: a call argument runs before start does, so start(5.plus(1))
+     * answers an int, not a code. Typed as the call itself, its range check failed ("rhs does not match inst range") and
+     * the instruction after it resolved for a code — plus composed instead of added — with the checks on or off; a
+     * forked peer evaluating a shipped start(…) failed every reply that way. A call's range is per input, so the count is
+     * open: start({1,2,3}.plus(1)) answers three. Under ?block the argument rides raw, so start answers the one code.
+     * Each row answers the same with every check on (the boot default) and off. Each row: the chain % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "start(5.plus(1))                 % 6",
+            "start(5.plus(1)).plus(1)         % 7",
+            "start({1,2,3}.plus(1)).sum()     % 9",
+            "start(5).plus(1)                 % 6",
+            "start?block(5.plus(1)).count()   % 1"})
+    public void testAnInitialInstAnswersWhatItsArgumentComputes(final String code, final String expected) {
+        try {
+            for (final boolean on : List.of(true, false)) {
+                Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, on && Typer.defaultsOn(flag)));
+                assertDoesNotThrow(() -> checkCodeParseApply(LOG, code, expected), "checks " + (on ? "on" : "off"));
+            }
+        } finally {
+            Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
+        }
+    }
 }
