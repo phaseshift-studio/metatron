@@ -71,6 +71,17 @@ class PlatonicObj {
     /* every obj is a function that maps an obj to an obj: this(a) -> b */
     apply(lhs) { return this; }
 
+    /* whether this obj carries a location (vid) */
+    hasVID() { return this.vid != null; }
+
+    /* whether this obj's tid is a base type (int, real, rec, …) — the writer
+       elides a base tid, so a caller asks this instead of comparing strings */
+    isBaseTid() {
+        if (this.tid == null) return false;
+        const n = this.tid.name();
+        return n != null && n !== '' && BASE_TID.has(n);
+    }
+
     toString() { return Obj.render(this); }
 }
 
@@ -89,9 +100,67 @@ class Uri extends PlatonicObj { isUri() { return true; } }
 class Lst extends PlatonicObj { isLst() { return true; } }
 class Rec extends PlatonicObj { isRec() { return true; } }
 class Rel extends PlatonicObj { isRel() { return true; } }
-class Fail extends PlatonicObj { isFail() { return true; } }
-class Type extends PlatonicObj { isType() { return true; } }
-class Inst extends PlatonicObj { isInst() { return true; } }
+class Fail extends PlatonicObj {
+    constructor(js, tid, vid, cause = null) {
+        super(js, tid, vid);
+        this.cause = cause;   // the next Fail in the cause chain, or null
+    }
+    isFail() { return true; }
+}
+
+/* Type — a type refines a base type (tid) under a name (vid). Its predicate and
+   constructor travel as the pair (js = [predicate, constructor]), mirroring the
+   Java jvm() = Pair<Call predicate, Call constructor>. A predicate is either an
+   isa(rec) instruction (the `[?rec]` sugar) or a raw predicate code; the accessors
+   below let a caller read tid/pred/ctor directly instead of regexing strings. */
+class Type extends PlatonicObj {
+    isType() { return true; }
+    /* the predicate Call (an Inst for the isa form, a Code otherwise), or null */
+    predicate() { return this.js[0]; }
+    /* the constructor Call, or null */
+    ctor() { return this.js[1]; }
+    hasPredicate() { return this.js[0] != null && !this.js[0].isNoObj(); }
+    hasConstructor() { return this.js[1] != null && !this.js[1].isNoObj(); }
+    /* an isa predicate is a single-instruction call whose operation is `isa` */
+    isIsaPredicate() {
+        if (!this.hasPredicate()) return false;
+        const p = this.js[0];
+        if (!p.isInst()) return false;
+        const n = p.name() ? p.name().toString() : '';
+        return n === 'isa' || n === '/m/inst/isa';
+    }
+    /* the rec argument of an isa predicate (the field map), else null */
+    isPredicateObj() {
+        return this.isIsaPredicate() ? this.js[0].arg(0) : null;
+    }
+}
+
+/* Inst — an instruction: name + typing (rng/dom) in the tid, the argument poly in
+   js (a Lst or a Rec), and the body in _f (a Code, an Inst, or null). */
+class Inst extends PlatonicObj {
+    constructor(js, tid, vid, f = null) {
+        super(js, tid, vid);
+        this._f = f;
+    }
+    isInst() { return true; }
+    /* the operation's address — the tid without its coefficient, query and poly */
+    name() { return this.tid ? this.tid.basePath() : null; }
+    rng() { return this.tid ? this.tid.rng() : null; }
+    dom() { return this.tid ? this.tid.dom() : null; }
+    args() { return this.js; }
+    arg(i) {
+        const a = this.js;
+        if (a == null) return noobj;
+        if (a.isLst()) return a.js.length > i ? a.js[i] : noobj;
+        if (a.isRec()) {
+            const vals = [...a.js.values()];
+            return vals.length > i ? vals[i] : noobj;
+        }
+        return noobj;
+    }
+    /* the body (mtron code or another instruction), or null */
+    f() { return this._f; }
+}
 class Code extends PlatonicObj { isCode() { return true; } }
 
 /* Objs — a multiplicity (int{4}::T in the language). js is an array of objs and

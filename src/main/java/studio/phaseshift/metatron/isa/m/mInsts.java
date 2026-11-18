@@ -45,6 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -357,6 +358,13 @@ public final class mInsts {
      */
     public static Set<Inst> bool_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(AS_INST_TID, "convert the lhs bool type to a reified rec")
+                        .dom(BOOL_TID, "the bool type to convert")
+                        .rng(REC_TID, "the bool type deconstructed to its component parts")
+                        .argLst(REC_TYPE, "the rec type")
+                        .body((lhs, inst) -> Rec.Helper.typeToRec(lhs, () -> fail("a bool value has no rec mapping")))
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the Boolean algebra — false, the join identity")
                         .dom(BOOL_TID, "the lhs bool").rng(BOOL_TID, "false").argLst()
                         .body((lhs, inst) -> lhs.asBool().zero())
@@ -403,6 +411,13 @@ public final class mInsts {
      */
     public static Set<Inst> bytes_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(AS_INST_TID, "convert the lhs bytes type to a reified rec")
+                        .dom(BYTES_TID, "the bytes type to convert")
+                        .rng(REC_TID, "the bytes type deconstructed to its component parts")
+                        .argLst(REC_TYPE, "the rec type")
+                        .body((lhs, inst) -> Rec.Helper.typeToRec(lhs, () -> fail("a bytes value has no rec mapping")))
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the bytes monoid — the empty byte sequence")
                         .dom(BYTES_TID, "the lhs bytes").rng(BYTES_TID, "the empty bytes").argLst()
                         .body((lhs, inst) -> lhs.asBytes().zero())
@@ -431,6 +446,13 @@ public final class mInsts {
      */
     public static Set<Inst> str_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(AS_INST_TID, "convert the lhs str type to a reified rec")
+                        .dom(STR_TID, "the str type to convert")
+                        .rng(REC_TID, "the str type deconstructed to its component parts")
+                        .argLst(REC_TYPE, "the rec type")
+                        .body((lhs, inst) -> Rec.Helper.typeToRec(lhs, () -> fail("a str value has no rec mapping")))
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the characters of the lhs str")
                         .dom(STR_TID, "the str to reverse").rng(STR_TID, "the reversed str").argLst()
                         .body((lhs, inst) -> lhs.jvm(new StringBuilder(lhs.strValue()).reverse().toString()))
@@ -554,6 +576,12 @@ public final class mInsts {
      */
     public static Set<Inst> uri_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(AS_INST_TID).dom(URI_TID).rng(REC_TID)
+                        .argLst(REC_TYPE)
+                        .body((lhs, _) -> Rec.Helper.typeToRec(lhs, () -> Uri.Helper.uriToRec(lhs.asUri())))
+                        .law(Law.pure)
+                        .inverse(AS_INST_TID.dom(REC_TID).rng(URI_TID))
+                        .create(),
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the path of the lhs uri")
                         .dom(URI_TID, "the uri to reverse").rng(URI_TID, "the uri with its path reversed")
                         .argLst()
@@ -897,7 +925,7 @@ public final class mInsts {
                 InstBuilder.build().tid(AS_INST_TID, "convert the lhs lst into the rec the argument rec type constructs")
                         .dom(LST_TID, "the lst to convert").rng(REC_TID, "the lhs lst as the argument's rec type")
                         .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
-                        .body((lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), null))
+                        .body((lhs, inst) -> Rec.Helper.typeToRec(lhs, () -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), null)))
                         .law(Law.pure)
                         .create()
         ));
@@ -916,18 +944,28 @@ public final class mInsts {
                         .law(Law.pure)
                         .form(Inst.Form.mapper)
                         .create(),*/
+               /* InstBuilder.build().tid(AS_INST_TID, "convert the lhs rec type to a reified rec")
+                        .dom(REC_TID, "the rec type to convert")
+                        .rng(REC_TID, "the rec type deconstructed to its component parts")
+                        .argLst(REC_TYPE, "the rec type")
+                        .body((lhs, inst) -> Rec.Helper.typeToRec(lhs, () -> lhs.as(inst.arg(0).asType())))
+                        .law(Law.pure)
+                        .create(),*/
                 InstBuilder.build().tid(AS_INST_TID, "convert an int into the rec the argument rec type constructs")
-                        .dom(INT_TID, "the int to convert").rng(REC_TID, "the lhs int as the argument's rec type")
+                        .dom(INT_TID, "the int to convert")
+                        .rng(REC_TID, "the lhs int as the argument's rec type")
                         .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
-                        .body((lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid()))
+                        .body((lhs, inst) -> Rec.Helper.typeToRec(lhs, () -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())))
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(AS_INST_TID, "convert a str into the rec the argument rec type constructs")
-                        .dom(STR_TID, "the str to convert").rng(REC_TID, "the lhs str as the argument's rec type")
+                        .dom(STR_TID, "the str to convert")
+                        .rng(REC_TID, "the lhs str as the argument's rec type")
                         .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
-                        .body((lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid()))
+                        .body((lhs, inst) -> Rec.Helper.typeToRec(lhs, () -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())))
                         .law(Law.pure)
                         .create(),
+
                 // rec<->lst IS NOT PRESERVING IN EITHER DIRECTION (the round trip re-keys and reorders), and
                 // rec->uri is LOSSY TOO (only the component entries a uri can hold survive; any other rec does not
                 // read back). Both declare NO inverse. uri->rec, the sound side of the uri pair,
@@ -939,7 +977,8 @@ public final class mInsts {
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(AS_INST_TID, "convert the lhs rec into the uri its component entries describe")
-                        .dom(REC_TID, "the rec to convert").rng(URI_TID, "the lhs rec as a uri")
+                        .dom(REC_TID, "the rec to convert")
+                        .rng(URI_TID, "the lhs rec as a uri")
                         .argLst(URI_TYPE, "the uri type that receives the value")
                         .body((lhs, inst) -> {
                             final Rec lhsRec = lhs.asRec();
