@@ -84,13 +84,17 @@ full tid would miss.
 
 **Marko:** "args().lstValue() should be args().count()."
 
-### 2.2 Only values compress
+### 2.2 What compresses
 
-`[plus(1),plus(1)]` must not become `[{2}plus(1)]`. An instruction's span is its composition power, so `{2}plus(1)` is
-one slot holding `plus(1).plus(1)`. `[int::T,int::T]` must not become `[{2}int::T]` either: a type's span is a run of
-its filter, P·P = P, so that is one slot too. The postfix slot is no span on either: `plus(1){2}` is a body, and
-`int::T{2}` does not parse (Marko, 2026-11-18). Compression applies to the same entries `Lst.Helper.laid` lays: mono
-and poly values, never types or calls.
+*Revised 2026-11-18.* This note first said only values compress, because an instruction's span was read as its
+composition power and a type's as a run of its filter (P·P = P), one slot either way. Marko ruled that a span on an
+axis is extension for every obj ("an obj that performs a computation" and "an obj that is used in a computation"
+alike), and that composition is the reading with no axis. So `[{2}plus(1)]` is `[plus(1),plus(1)]` and `[{2}int::T]`
+is `[int::T,int::T]`, and both compress: a lst of instructions or types runs the way a lst of values does. Each
+writes its span on its own literal's side (`3{2}`, `{2}int::T`, `{2}plus(1)`). Compression applies to the entries
+`Lst.Helper.laid` lays: values, types and instructions with an exact span. A range (`{*}int::T`) never lays, so it
+never comes out of a compressed run either. The postfix slot is no span on a call or a type: `plus(1){2}` is a body,
+and `int::T{2}` does not parse.
 
 **Marko:** "branch(6,6) already collapses:"
 
@@ -189,8 +193,8 @@ Each would need to decode on the way out and normalize on the way in.
 
 ### 2.9 Typing
 
-`[3,3,3,3,3].type()` would be `lst[int{5}]`. Under the value-mirror bracket reading that is five int slots, and under
-the type reading it is one slot (P⁵ = P), so the type of a compressed lst rides on the var-args answer.
+`[3,3,3,3,3].type()` would be `lst[int{5}]`, which is five int slots: a bracket reads its entries as values are read
+(Marko, 2026-11-18), and on an axis a span is extension.
 
 **Marko:** "That will work."
 

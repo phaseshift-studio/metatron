@@ -387,7 +387,7 @@ public class mParser {
             final Obj rhs = pick(t, 2);
             Obj current = lhs;
             for (final fURI tid : instChain) {
-                current = instB(tid, lst(current, rhs));
+                current = instB(tid, lst(mParser.laidArgsOf(tid, current, rhs)));
             }
             return current;
         });
@@ -440,13 +440,26 @@ public class mParser {
     }
 
     /**
-     * AN INSTRUCTION'S ARGUMENTS ARE A LST, so a value's span lays argument positions as it lays a lst's indices
-     * (Marko, 2026-11-17): {@code 1.xxx(2{2})} is {@code 1.xxx(2,2)}. A rec of named arguments has no axis and keeps
-     * the span curled. {@code start}'s arguments are no positions but the stream it emits, and a stream has no axis
-     * either, so {@code start(2{3})} keeps its span.
+     * AN INSTRUCTION'S ARGUMENTS ARE A LST, so a span lays argument positions as it lays a lst's indices (Marko,
+     * 2026-11-17 for values, 2026-11-18 for types and instructions): {@code 1.xxx(2{2})} is {@code 1.xxx(2,2)}, and
+     * {@code 1.isa({4}int::T)} is {@code 1.isa(int::T,int::T,int::T,int::T)}, which isa reads as {@code 1.isa(int::T)},
+     * extra arguments being dropped. A sugar is the call it stands for, so its arguments lay too: {@code 1?{4}int::T}
+     * is that isa. A rec of named arguments has no axis and keeps the span curled. Two instructions take no positions
+     * but a stream, which has no axis: {@code start}'s arguments are the stream it emits, so {@code start(2{3})} keeps
+     * its span, and {@code branch}'s are the terms of its sum ({@code {a,b}}, the ring's +), so
+     * {@code 5.branch({2}plus(1))} keeps {@code plus(1).plus(1)} as one term: laying it would make a sum of a
+     * composition ({@code {2}a{c}} is {@code c·a²}, never {@code 2c·a}), and the brace spelling never lays either.
+     * A BRANCH STAYS CURLED (Marko, 2026-11-18): its terms are meant to be computed by another processor, a thread or
+     * another machine, so a span there is the generator that processor unrolls; laying it here would generate the
+     * data locally and ship the data across the wire instead of the generator.
      */
     private static List<Obj> laidArgs(final Object tid, final List<Obj> args) {
-        return tid instanceof fURI furi && START_INST_TID.name().equals(furi.name()) ? args : Lst.Helper.laid(args);
+        return tid instanceof fURI furi && (START_INST_TID.name().equals(furi.name()) || BRANCH_INST_TID.name().equals(furi.name())) ?
+                args : Lst.Helper.laid(args);
+    }
+
+    private static List<Obj> laidArgsOf(final Object tid, final Obj... args) {
+        return mParser.laidArgs(tid, new ArrayList<>(Arrays.asList(args)));
     }
 
     /**
@@ -1708,7 +1721,8 @@ public class mParser {
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).qString(pick(t, 1)))))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), sugar_args(null != endToken), null == endToken ? of("") : endToken.trim())
-                        .map(t -> instB(instChain.getFirst(), lst(instB(instChain.get(1).qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
+                        .map(t -> instB(instChain.getFirst(), lst(instB(instChain.get(1).qString(pick(t, 1)),
+                                lst(mParser.laidArgsOf(instChain.get(1), mParser.<Obj>pick(t, 2)))))))).trim();
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {
@@ -1716,7 +1730,7 @@ public class mParser {
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instA(tid.qString(pick(t, 1)))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), sugar_args(null != endToken), null == endToken ? of("") : endToken.trim())
-                        .map(t -> instB(tid.qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
+                        .map(t -> instB(tid.qString(pick(t, 1)), lst(mParser.laidArgsOf(tid, mParser.<Obj>pick(t, 2))))));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

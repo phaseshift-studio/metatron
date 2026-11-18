@@ -315,47 +315,55 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         }
 
         /**
-         * A VALUE'S SPAN IS A RUN OF INDICES (Marko, 2026-11-17): a lst is the axis a value's span unfolds along, so it
-         * lays {@code 3{2}} as a 3 at each of two indices, {@code [3{2}]} is {@code [3,3]}, a lst of two, while
-         * {@code [{2}3]} keeps two 3s at its one index. A stream has no axis, so there the span stays curled; an
-         * instruction or a type keeps its span, a run of its own, at one index. The entries as they are when none lays.
+         * A SPAN ON AN AXIS IS EXTENSION (Marko, 2026-11-17 for values, 2026-11-18 for types and instructions): a lst,
+         * and an argument list, is an axis a span unfolds along, so it lays {@code 3{2}} as a 3 at each of two indices,
+         * {@code [3{2}]} is {@code [3,3]}, a lst of two, while {@code [{2}3]} keeps two 3s at its one index. A type and
+         * an instruction lay the same way, whatever side of the name their literal writes the span on:
+         * {@code [{4}int::T]} is {@code [int::T,int::T,int::T,int::T]}, so {@code 1-<[{4}int::T]} is
+         * {@code [1,1,1,1]} as {@code 1-<[int{4}::T]} is {@code [{4}1]}, and {@code 1-<[{2}plus(1),{3}mult(2)]} maps
+         * one obj over a lst of instructions. A span of zero lays nothing ({@code [{0}int::T]} is {@code [,]}). With no
+         * axis the span stays a power of the obj itself: a stream curls a value's, and a type's or an instruction's is
+         * its composition ({@code {4}int::T} is {@code int::T.int::T.int::T.int::T}, which is {@code int::T}). Only an
+         * exact span lays; a range ({@code {*}int::T}, {@code {?}int::T}) stays a run, so a declared {@code {*}int::T}
+         * takes any number of arguments. The entries as they are when none lays.
          */
         public static List<Obj> laid(final List<Obj> entries) {
-            final Predicate<Obj> lays = entry -> (entry.isMono() || entry.isPoly()) && !entry.isType() &&
+            final Predicate<Obj> lays = entry -> (entry.isMono() || entry.isPoly() || entry.isType() || entry.isCall()) &&
                     !entry.tid().b().isOne() && entry.tid().b().isExact() && null != entry.tid().b().min();
             return entries.stream().noneMatch(lays) ? entries : entries.stream()
                     .flatMap(entry -> lays.test(entry) ?
-                            Stream.generate(() -> entry.tid(entry.tid().b(null))).limit(Math.max(0L, entry.tid().b().min())) :
+                            Stream.generate(() -> withoutSpan(entry)).limit(Math.max(0L, entry.tid().b().min())) :
                             Stream.of(entry))
                     .collect(Collectors.toCollection(ArrayList::new));
         }
 
         /**
-         * A LST TESTS A LST INDEX BY INDEX (Marko, 2026-11-17). An index is an address that is not the obj, so a point
-         * is mass AT an index and a span a run OF indices: {@code [{2}3]} is two 3s at index 0, a lst of one index, and
-         * {@code [3{2}]} a 3 at each of indices 0 and 1, a lst of two. Only a value's span lays indices, a value having no
-         * product of its own to be a power in: an instruction's span is its run, one step held at one index, and a
-         * type's is a run of a filter, P·P = P, so {@code [{2}int::T]} is {@code [int::T]}, with a zero span the
-         * identity, which takes any obj. An lhs index passes the rhs index at its place when it holds it
-         * ({@link Type.Helper#holds}, the judgment the run walk asks of an index too): its mass is within the rhs
-         * index's and every copy it holds is one of the rhs index's: {@code [{2}3]} is an {@code [int{2}::T]},
-         * {@code [3{2}]} is not, and {@code [{2}3,5]} is no {@code [int::T,int::T,int::T]}. Past the last rhs index the
-         * lhs is open, even inside a value's run ({@code [3{2}]} is an {@code [int::T]}, {@code [3{2},5{2}]} an
-         * {@code [int::T,int::T,int::T]}), and an rhs index past the last lhs index is one the lhs leaves empty, so it
-         * passes only if its mass admits zero. A lst TYPE's bracket reads its types as values
+         * One index of a laid run: the entry without its span. A type keeps its span on its vid too (a base type is
+         * named by it), so both lose it.
+         */
+        private static Obj withoutSpan(final Obj entry) {
+            final Obj one = entry.tid(entry.tid().b(null));
+            return entry.isType() && null != entry.vid() ? one.vid(entry.vid().b(null)) : one;
+        }
+
+        /**
+         * A LST TESTS A LST INDEX BY INDEX (Marko, 2026-11-17), walked as a bracket is (Marko, 2026-11-18). An index is
+         * an address that is not the obj, so a point is mass AT an index and a span a run OF indices: {@code [{2}3]} is
+         * two 3s at index 0, a lst of one index, and {@code [3{2}]} a 3 at each of indices 0 and 1, a lst of two. A
+         * type's and an instruction's exact span lay the same way ({@link #laid}): {@code [{2}int::T]} is
+         * {@code [int::T,int::T]}. A ranged span cannot lay, so it is a run, and the patterns are the entries of the run
+         * walk ({@link Type.Helper#runs}): {@code [str::T,{?}int::T]} reads as {@code lst[str,int{?}]} does. Each index
+         * holds what its pattern expects ({@link Type.Helper#holds}): its mass is within the pattern's and every copy
+         * it holds is one of the pattern's: {@code [{2}3]} is an {@code [int{2}::T]}, {@code [3{2}]} is not, and
+         * {@code [{2}3,5]} is no {@code [int::T,int::T,int::T]}. Past the last pattern the lhs is open, even inside a
+         * value's run ({@code [3{2}]} is an {@code [int::T]}), and a pattern past the last lhs index is one the lhs
+         * leaves empty, so it passes only if its mass admits zero. A lst TYPE's bracket reads its types as values
          * ({@link Type.Helper#testTensor}).
          */
         public static boolean testIndices(final Lst lhs, final Lst rhs) {
             final Function<Lst, List<Obj>> resolved = lst ->
                     laid(lst.lstValue().stream().map(entry -> (Obj) entry.autoResolve(lhs)).toList());
-            final List<Obj> lefts = resolved.apply(lhs);
-            final List<Obj> rights = resolved.apply(rhs);
-            for (int i = 0; i < rights.size(); i++) {
-                // an rhs index past the last lhs index is one the lhs leaves empty
-                if (!Type.Helper.holds(i < lefts.size() ? lefts.get(i) : noobj(), rights.get(i)))
-                    return false;
-            }
-            return true;
+            return !Type.Helper.runs(resolved.apply(lhs), resolved.apply(rhs)).isEmpty();
         }
 
         public static <OBJ extends Obj> OBJ atToggle(final Lst alst, final Obj key, final boolean doAuto) {
