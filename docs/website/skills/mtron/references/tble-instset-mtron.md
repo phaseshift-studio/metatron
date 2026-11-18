@@ -46,7 +46,10 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 ```mtron
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
 ==>docs::[obj=>/m/space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/db/tble/space/tblespace,
-          desc=>'[structural] a metatron realizatio...',
+          args=>[
+           host=>'the location of the backing databa...',
+           driver=>'the provider-specific uri referenc...'],
+          desc=>'a metatron realization of a relati...',
           example=>['*<http://metatron.phaseshift.studi...']]
 mtron> *</m/db/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
 ==>[llm_chat_schema=>inst?<=#{*}(){<j>}]
@@ -336,7 +339,13 @@ mtron> */m/db/tble?docq
             /m/db/tble/inst/rewrite/sql_offset_limit?code{?}<=code(){<j>},
             ...(12 more)]]@/m/db/tble,
           desc=>'relational tables, typed rows, and...',
-          example=>['*acme:customer.where[person=>[name...']]
+          example=>['*acme:customer.where[person=>[name...'],
+          space=>[tblespace=>docs::[obj=>/m/space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/db/tble/space/tblespace,
+                                    args=>[
+                                     host=>'the location of the backing databa...',
+                                     driver=>'the provider-specific uri referenc...'],
+                                    desc=>'a metatron realization of a relati...',
+                                    example=>['*<http://metatron.phaseshift.studi...']]]]
 ```
 ### when a read stays in mtron
 
@@ -473,10 +482,11 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/21
+==>[body=>'a note with a database-assigned key']@tbledoc:note/23
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/22
+==>[body=>'another one']@tbledoc:note/24
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
+==>24
 ==>8
 ==>12
 ==>21
@@ -489,6 +499,7 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>17
 ==>6
 ==>20
+==>23
 ==>4
 ==>16
 ==>7

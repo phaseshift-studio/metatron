@@ -76,10 +76,10 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
    types, and <em>endpoint</em> types that provide the server logic. The two servers of <code>/m/web</code> are
    <code>http_server</code> and <code>ws_server</code> — each a listener: constructed, it is the machine's presence at
    <code>~/network/listener/&lt;key&gt;</code> — each carrying a <code>route</code> rec for routing connections to mounted services.
+   A listener is an addressable source, so a socket's own metrics are read at <code>&lt;origin&gt;/#?analq</code>
+   (a request is a <code>read</code>, a reply a <code>write</code>, <code>connections</code> a gauge); the network's
+   <code>~/network/analyzer</code> counts the wire, which is a different question from the work one server did.
    Reading the web is a client's: <code>http_client::[host =&gt; &lt;http://#&gt;]</code> (and <code>&lt;https://#&gt;</code>) is the gateway, a peer every
-   http(s) read goes through. A read never dials, so a machine with no gateway reads no web.</p>
-   <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
-   mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
    ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
 ==>[html=>[head=>[=>],
