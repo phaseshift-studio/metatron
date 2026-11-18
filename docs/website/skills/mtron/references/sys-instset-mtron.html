@@ -567,7 +567,7 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(17 more)]
+    ...(16 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
@@ -603,7 +603,7 @@ the same <code>==</code> projection:</p>
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           ...(17 more)]]
+           ...(16 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
@@ -613,7 +613,7 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(18 more)]
+    ...(17 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -649,7 +649,7 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    ...(17 more)]
+    ...(16 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
     '  Size: 26815     	Blocks: 56     ...',
@@ -670,7 +670,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    ...(17 more)]
+    ...(16 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -728,9 +728,9 @@ mtron&gt; */sys/thread/+.count()
 ==&gt;66
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::712.0,
-    free_mem_jvm=&gt;mB::335.1991,
+    free_mem_jvm=&gt;mB::555.0371,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::376.8008,
+    used_mem_jvm=&gt;mB::156.9628,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-43-generic',
     arch=&gt;'amd64',

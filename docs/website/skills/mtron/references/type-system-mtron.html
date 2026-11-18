@@ -802,9 +802,13 @@ hands a call no second candidate), and a tensor's entries name no other type (<c
 ints is not an int). A bracket's types are written the way values are, <code>{mass}type{span}</code>: <code>{4}int</code> is ONE position
 holding four ints, and <code>int{4}</code> a run of four positions, the same as <code>lst[int,int,int,int]</code>. Mass never spreads over
 extent, so <code>[{4}1]</code> satisfies <code>lst[{4}int]</code> and <code>[1,2,3,4]</code> satisfies <code>lst[int{4}]</code>, never the other way round. A lst
-tested against a lst <em>value</em> reads index by index too: a point there is mass at its index and only a value's span lays
-indices, so <code>[{2}3]</code> is an <code>[int{2}::T]</code> (a type obj keeps <code>{span}type{point}</code>) while <code>[3{2}]</code>, which a lst lays as
-<code>[3,3]</code>, is not.</p>
+tested against a lst <em>value</em> reads index by index too: a point there is mass at its index, and a span lays indices,
+whoever carries it. A value's does (<code>[3{2}]</code> is <code>[3,3]</code>), a type's does (<code>[{2}int::T]</code> is <code>[int::T,int::T]</code>, a type obj
+writing <code>{span}type{point}</code>), and an instruction's does (<code>1-&lt;[{2}plus(1)]</code> is <code>[2,2]</code>). So <code>[{2}3]</code> is an
+<code>[int{2}::T]</code> while <code>[3{2}]</code> is not, and a range such as <code>[str::T,{?}int::T]</code> stays a run, read as <code>lst[str,int{?}]</code>
+is. An argument list is an axis too, so <code>1?{4}int::T</code> is <code>1.isa(int::T,int::T,int::T,int::T)</code>, which isa reads as
+<code>1.isa(int::T)</code>. With no axis a span is a power of the obj: <code>1.{2}plus(1)</code> is <code>1.plus(1).plus(1)</code>, a branch's terms
+keep their spans, and <code>{4}int::T</code> is <code>int::T.int::T.int::T.int::T</code>, which is <code>int::T</code>.</p>
 <p><strong>A fibered type's entries are distinct objects.</strong> <code>person[ninja]</code> is a person <em>and</em> a ninja; the ninja is not the
 bundle's content but an object the bundle exposes. So a value of that type is acceptable where <code>ninja::T</code> is
 expected (its base or any fiber — see <em>acceptance and covariance</em>), and an instruction declared on <code>ninja</code> applies to

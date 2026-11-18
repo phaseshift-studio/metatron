@@ -850,7 +850,7 @@ mtron&gt; {3}5{3}.sum()
 mtron&gt; [3{4}]
 ==&gt;[3,3,3,3]
 mtron&gt; 5.branch(6{2})
-==&gt;{2}6
+==&gt;6{2}
 </code></pre>
 <p>NOTES: spans on a value. A value's span is curled on its tid (Marko, 2026-11-11): <code>2{3}</code> is one value, not the lst
 <code>[2,2,2]</code>, and only a space with an axis unrolls it (<code>5{3}@xyz</code> at <code>xyz/0..2</code>, still to come). A ranged value span,
@@ -923,7 +923,6 @@ mtron&gt; 5.branch({0}plus(1),plus(2))
 ==&gt;5
 ==&gt;7
 mtron&gt; 'a'.map({0}int{3}::T)
-==&gt;{3}'a'
 mtron&gt; 'a'.map(int{0}::T)
 </code></pre>
 <p>::: <strong>Theorem 8</strong> (A span does not distribute over a branch). If
@@ -1518,8 +1517,8 @@ involution, as a converse is. Today <code>[1,2,3]{-1}</code> does not parse.</li
 <li>On a rel, mtron's <code>neg()</code> swaps the ends, so <code>(1=&gt;2).neg()</code> is <code>2=&gt;1</code>. The arrow \(x \Rightarrow y\) is the matrix
 with a \(1\) at row \(x\) and column \(y\) [2], so the swap is its transpose, the converse
 \((x \Rightarrow y)^{\smile} = y \Rightarrow x\), and not its additive inverse, which is the point <code>{-1}(1=&gt;2)</code>.</li>
-<li>A lst under test lays only a value's span as indices, and reads a point as mass at its index, so <code>[{-1}3,4]</code> is no
-<code>[int::T]</code>: its index 0 holds a mass of \(-1\). A run of like slots read backward is the same run, so a value's
+<li>A lst under test lays a span as indices, a value's, a type's or an instruction's, and reads a point as mass at its
+index, so <code>[{-1}3,4]</code> is no <code>[int::T]</code>: its index 0 holds a mass of \(-1\). A run of like slots read backward is the same run, so a value's
 negative span could lay its length, but a value's span is never negative: <code>3{-1}</code> does not parse.</li>
 </ul>
 <h3>Point and Span Coefficients Type Systems</h3>
@@ -1536,23 +1535,37 @@ mtron&gt; 5.plus{3}(1).plus{3}(1).type().cc()
 mtron&gt; 5.plus(1).id{3}().type().cc()
 ==&gt;3
 </code></pre>
-<p>A type used as a step is a filter: \(\langle x \rangle T = \langle x \rangle\) when \(x\) is a <code>T</code>, and
-\(\langle x \rangle T = 0\) otherwise. A filter is idempotent, \(T \cdot T = T\), so the span of a type is the power of an
-idempotent, \(T^n = T\) for \(n \geq 1\) and \(T^0 = 1\) by Definition 2, while its point is a sum,
-\(cT = T + \cdots + T\), and makes copies. So <code>{2}int{3}::T</code> is <code>int{3}::T</code>, three parallel checks and never nine, and
-<code>{0}int{3}::T</code> is <code>id{3}()</code>, which takes every object three times.</p>
-<p>A bracket is not a type but a container. Its entries are uris, which are values, so they are written as values are,
-<code>{point}value{span}</code>, and the span there is a power in the container's own monoid, concatenation, whose unit is <code>[]</code>.
-That monoid is free, not idempotent: \([T]^n = [T, \ldots, T]\), \(n\) slots. So <code>lst[int{4}]</code> is
-<code>lst[int,int,int,int]</code>, runs add along the list (<code>lst[int{2},int,int]</code> is <code>lst[int{4}]</code>), and the point is the mass
-at one slot: <code>lst[{4}int]</code> is one slot holding four ints. The one notation <code>{n}</code> is a power in whichever monoid its
-host carries, composition for a type and concatenation for a bracket, which is why idempotence collapses one and not
-the other. Mass never spreads over extent: <code>[3{4}]</code>, which a lst lays as <code>[3,3,3,3]</code>, is a <code>lst[int{2},int,int]</code>,
-while <code>[{4}3]</code>, four ints at one slot, is not.</p>
-<pre><code class="language-mtron">mtron&gt; 1.map({2}int{3}::T)
+<p>A type is an object that performs a computation as well as one that is used in one, and which it is depends on where
+it stands. With no axis, as a step or as a term of a branch, a type is a filter:
+\(\langle x \rangle T = \langle x \rangle\) when \(x\) is a <code>T</code>, and \(\langle x \rangle T = 0\) otherwise. Its span makes
+code of it, <code>{4}int::T</code> being <code>int::T.int::T.int::T.int::T</code>, and a filter is idempotent, \(T \cdot T = T\), so the span
+of a type is the power of an idempotent, \(T^n = T\) for \(n \geq 1\) and \(T^0 = 1\) by Definition 2, while its point is a
+sum, \(cT = T + \cdots + T\), and makes copies. So <code>{2}int{3}::T</code> is <code>int{3}::T</code>, three parallel checks and never nine,
+and <code>{0}int{3}::T</code> is <code>id{3}()</code>, which takes every object three times.</p>
+<p>On an axis the same span is extension. A lst is an axis, and so is an argument list and a bracket, whose entries are
+uris, which are values, written as values are, <code>{point}value{span}</code>. There the span is a power in the container's own
+monoid, concatenation, whose unit is <code>[]</code>. That monoid is free, not idempotent: \([T]^n = [T, \ldots, T]\), \(n\) slots. So
+<code>lst[int{4}]</code> is <code>lst[int,int,int,int]</code>, runs add along the list (<code>lst[int{2},int,int]</code> is <code>lst[int{4}]</code>), and the
+point is the mass at one slot: <code>lst[{4}int]</code> is one slot holding four ints. The same holds for every object on an axis,
+a type and an instruction too: <code>[{4}int::T]</code> is <code>[int::T,int::T,int::T,int::T]</code>, so <code>1-&lt;[{4}int::T]</code> is <code>[1,1,1,1]</code>
+while <code>1-&lt;[int{4}::T]</code> is <code>[{4}1]</code>, and <code>1-&lt;[{2}plus(1),{3}mult(2)]</code> maps one object over a lst of instructions, the
+converse of a map. <code>?</code> is <code>isa</code>, whose operand is an argument list, so <code>1?{4}int::T</code> is
+<code>1.isa(int::T,int::T,int::T,int::T)</code>, which <code>isa</code> reads as <code>1.isa(int::T)</code>. The one notation <code>{n}</code> is a power in
+whichever monoid its place carries, composition with no axis and concatenation on one, which is why idempotence
+collapses one and not the other. Mass never spreads over extent: <code>[3{4}]</code>, which a lst lays as <code>[3,3,3,3]</code>, is a
+<code>lst[int{2},int,int]</code>, while <code>[{4}3]</code>, four ints at one slot, is not.</p>
+<pre><code class="language-mtron">mtron&gt; 1.branch({2}int{3}::T,str::T)
 ==&gt;{3}1
-mtron&gt; 'a'.map({0}int{3}::T)
+mtron&gt; 'a'.branch({0}int{3}::T,bool::T)
 ==&gt;{3}'a'
+mtron&gt; 1-&lt;[{4}int::T]
+==&gt;[1,1,1,1]
+mtron&gt; 1-&lt;[int{4}::T]
+==&gt;[{4}1]
+mtron&gt; 1-&lt;[{2}plus(1),{3}mult(2)]
+==&gt;[2,2,2,2,2]
+mtron&gt; 1?{4}int::T
+==&gt;1
 mtron&gt; [3{4}].?lst[int{2},int,int]::T
 ==&gt;[3,3,3,3]
 mtron&gt; [{4}3].?lst[int{2},int,int]::T

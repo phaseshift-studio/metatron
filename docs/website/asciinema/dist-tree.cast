@@ -1,4 +1,4 @@
-{"version":3,"term":{"cols":125,"rows":30,"type":"xterm-256color"}}
+{"version":3,"term":{"cols":110,"rows":30,"type":"xterm-256color"}}
 # generated from mini-tutorials.md — edit the source, not this recording
 [0.35,"o","       "]
 [0.03,"o","["]
@@ -119,7 +119,7 @@
 [0.03,"o",">"]
 [0.03,"o","]"]
 [0.12,"o","\r\n"]
-[0.3,"o","==>ws_client::[pattern=>ws://localhost:1111/mtron,\r\n               host=>ws://localhost:1111/mtron,\r\n   ...\r\n"]
+[0.3,"o","==>[pattern=>ws://localhost:1111/mtron,\r\n    host=>ws://localhost:1111/mtron,\r\n   ...\r\n"]
 [0.2,"o","mtron> "]
 [0.03,"o","s"]
 [0.03,"o","p"]
@@ -211,7 +211,7 @@
 [0.03,"o",">"]
 [0.03,"o","]"]
 [0.12,"o","\r\n"]
-[0.3,"o","==>ws_client::[pattern=>ws://localhost:1112/mtron,\r\n               host=>ws://localhost:1112/mtron,\r\n   ...\r\n"]
+[0.3,"o","==>[pattern=>ws://localhost:1112/mtron,\r\n    host=>ws://localhost:1112/mtron,\r\n   ...\r\n"]
 [0.2,"o","       "]
 [0.03,"o","["]
 [0.03,"o","="]
@@ -476,4 +476,4 @@
 [0.03,"o","a"]
 [0.03,"o","t"]
 [0.12,"o","\r\n"]
-[0.3,"o","==>\"\"\"\r\n    op      dom          rng      args                                                         f    desc      c_dom  c_rng \r\n    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=>start?hop=1({1,3,5,7}).plus(1).sum(),  <j>  standard  {0}    {*}   \r\n                                   ws://localhost:1112=>start?hop=1({2,4,6,8}).plus(1).sum()]                              \r\n    sum     #{*}::T      #::T                                                                  <?>  reducer   {*}    {1}   \r\n   \"\"\"\r\n"]
+[0.3,"o","==>\"\"\"\r\n    op     dom          rng        args                 f    desc     c_dom  c_rng \r\n    start  noobj{0}::T  int{8}::T  [{1,2,3,4,5,6,7,8}]  <j>  initial  {0}    {8}   \r\n    plus   int::T       int::T     [1]                  <j>  mapper   {1}    {1}   \r\n    sum    int{*}::T    int::T                          <j>  reducer  {*}    {1}   \r\n   \"\"\"\r\n"]

@@ -343,9 +343,13 @@ hands a call no second candidate), and a tensor's entries name no other type (`l
 ints is not an int). A bracket's types are written the way values are, `{mass}type{span}`: `{4}int` is ONE position
 holding four ints, and `int{4}` a run of four positions, the same as `lst[int,int,int,int]`. Mass never spreads over
 extent, so `[{4}1]` satisfies `lst[{4}int]` and `[1,2,3,4]` satisfies `lst[int{4}]`, never the other way round. A lst
-tested against a lst *value* reads index by index too: a point there is mass at its index and only a value's span lays
-indices, so `[{2}3]` is an `[int{2}::T]` (a type obj keeps `{span}type{point}`) while `[3{2}]`, which a lst lays as
-`[3,3]`, is not.
+tested against a lst *value* reads index by index too: a point there is mass at its index, and a span lays indices,
+whoever carries it. A value's does (`[3{2}]` is `[3,3]`), a type's does (`[{2}int::T]` is `[int::T,int::T]`, a type obj
+writing `{span}type{point}`), and an instruction's does (`1-<[{2}plus(1)]` is `[2,2]`). So `[{2}3]` is an
+`[int{2}::T]` while `[3{2}]` is not, and a range such as `[str::T,{?}int::T]` stays a run, read as `lst[str,int{?}]`
+is. An argument list is an axis too, so `1?{4}int::T` is `1.isa(int::T,int::T,int::T,int::T)`, which isa reads as
+`1.isa(int::T)`. With no axis a span is a power of the obj: `1.{2}plus(1)` is `1.plus(1).plus(1)`, a branch's terms
+keep their spans, and `{4}int::T` is `int::T.int::T.int::T.int::T`, which is `int::T`.
 
 **A fibered type's entries are distinct objects.** `person[ninja]` is a person *and* a ninja; the ninja is not the
 bundle's content but an object the bundle exposes. So a value of that type is acceptable where `ninja::T` is
