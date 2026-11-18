@@ -554,7 +554,7 @@ public interface Inst extends Call {
     }
 
     default boolean isFilter() {
-        return this.dom().c().isOne() && this.rng().c().isMaybe() && this.dom().typeId().basePath().equals(this.rng().tid().basePath());
+        return this.rng().c().lte(this.dom().c()) && this.rng().c().isMaybe() && this.dom().typeId().basePath().equals(this.rng().tid().basePath());
     }
 
     default boolean isMap() {

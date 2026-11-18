@@ -18,18 +18,13 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
-import studio.phaseshift.metatron.algebra.TheoryHelper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -38,6 +33,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -46,11 +42,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -60,12 +52,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.CMPLX_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -73,7 +63,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -1116,7 +1106,8 @@ public class catInstSetTest extends AbstractInstSetTest {
             case "units" -> Law.Helper.rules(MONOID_THEORY_TID);
             case "inverses" -> Law.Helper.rules(GROUP_THEORY_TID);
             case "mapper", "map_nest", "range_skip_take" -> List.of(stated.get(table));
-            default -> stated.containsKey(table) ? Law.Helper.claimed(stated.get(table), Law.valueOf(table)) : List.<Rec>of();
+            default ->
+                    stated.containsKey(table) ? Law.Helper.claimed(stated.get(table), Law.valueOf(table)) : List.<Rec>of();
         };
         for (final Rec rule : rules)
             out = Call.Helper.update(out, rule);
@@ -1298,7 +1289,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "start({1,2,3}).mult(20).sum()        % initial mapper reducer    % - endo endo",
             "5.cc(3).cc()                         % initial reducer reducer   % - endo endo",
             "start('mtron').cc(3).cc()            % initial reducer reducer   % - endo -",
-            "start({1,2,3}).is(gt(1)).sum()       % initial standard reducer  % - endo endo",
+            "start({1,2,3}).is(gt(1)).sum()       % initial filter reducer  % - endo endo",
             "start({1,2,3}).side(plus(1)).sum()   % initial mapper reducer    % - endo endo",
             "5.plus(0).neg()                      % initial mapper mapper     % - endo endo,iso,auto,section,retraction,mono,epi",
     }, delimiter = '%')
@@ -1318,7 +1309,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "start(5)        % initial    % -",
-            "is(gt(1))       % standard   % endo",
+            "is(gt(1))       % filter     % endo",
             "side(plus(1))   % mapper     % endo",
     }, delimiter = '%')
     void testBareMorphismGleansItsShapeFromItsRegistrations(final String inst, final String form, final String clazz) {
@@ -1366,7 +1357,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "side   % /m/int  % /m/int   % false",
             // a declared-pure filter floats by its form (A => A{?}); is is pure too, but its A{?} dom is no filter's form
             "filter % A       % A{?}     % true",
-            "is     % A{?}    % A{?}     % false",
+            "is     % A{?}    % A{?}     % true",
     }, delimiter = '%')
     void testFloatableRequiresPure(final String op, final String dom, final String rng, final boolean floats) {
         final Inst inst = instB(M_ISA_INST_TID.extend(op).dom(f(dom)).rng(f(rng)), lst());

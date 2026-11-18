@@ -548,14 +548,14 @@ public abstract class AbstractMetatronTest {
             final Machine before = Machine.current();
             try {
                 if (checkTIDs) {
-                    assertFalse(secondStage.insts().isEmpty());
-                    assertEquals(secondStage.insts().size(), compilation.insts().size());
+                    assertFalse(secondStage.insts().isEmpty(), "call must not be empty");
+                    assertEquals(secondStage.insts().size(), compilation.insts().size(), "code must be the same size");
                     for (int i = 0; i < compilation.insts().size(); i++) {
                         final Inst secondStageInst = secondStage.insts().get(i);
                         final Inst compilationInst = compilation.insts().get(i);
-                        assertEquals(secondStageInst.tid().basePath(), compilationInst.tid().basePath());
+                        assertEquals(secondStageInst.tid().basePath(), compilationInst.tid().basePath(), "inst tids must match");
                         if (!secondStageInst.args().isEmpty()) { // if test specifies args, then recurse checking args
-                            assertEquals(secondStageInst.args().count(), compilationInst.args().count());
+                            assertEquals(secondStageInst.args().count(), compilationInst.args().count(), "inst args must be the same size");
                             for (int j = 0; j < secondStageInst.args().count(); j++) {
                                 checkCodeRewrite(LOG, ObjmtronSerializer.single().write(compilationInst.arg(j)), ObjmtronSerializer.single().write(secondStageInst.arg(j)), null, checkTIDs);
                             }
