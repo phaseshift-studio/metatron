@@ -85,13 +85,13 @@ public class DatetimeTypeTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "<//2024.12:25/09/00/00/000?tz=-0500>.matches(datetime::T)   % true",
-            "<http://example.com>.matches(datetime::T)                   % false"
+            "<//2024.12:25/09/00/00/000?tz=-0500>.isa(datetime::T).count().gt(0) % true",
+            "<http://example.com>.isa(datetime::T).count().gt(0)         % false"
     }, delimiter = '%')
     public void testCastPredicateApplies(final String expr, final boolean expected) {
         final Obj apply = ObjmtronSerializer.parse(expr).apply();
         assertEquals(expected, apply.apply().boolValue(),
-                "matches " + expr + " should evaluate to " + expected + ", but applied to " + apply);
+                expr + " should evaluate to " + expected + ", but applied to " + apply);
     }
 
     @Test

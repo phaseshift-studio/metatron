@@ -201,9 +201,9 @@ hour::0.5.as(nanos::T)
 A converted value tests as its target unit:
 
 ```mtron_pre
-millis::1000.0.as(second::T).matches(second::T)
-micros::1000.0.as(millis::T).matches(millis::T)
-nanos::1000000.0.as(millis::T).matches(millis::T)
+millis::1000.0.as(second::T).isa(second::T)
+micros::1000.0.as(millis::T).isa(millis::T)
+nanos::1000000.0.as(millis::T).isa(millis::T)
 ```
 
 Time units require a real-backed value — an int-backed time is a type violation:
@@ -302,7 +302,7 @@ mB::2.0.as(kB::T)
 A converted value tests as its target unit:
 
 ```mtron_pre
-bB::1024.0.as(kB::T).matches(kB::T)
+bB::1024.0.as(kB::T).isa(kB::T)
 ```
 
 #### relational operators
@@ -383,7 +383,7 @@ mile::1.0.as(km::T)
 A converted value tests as its target unit:
 
 ```mtron_pre
-mm::1000.0.as(meter::T).matches(meter::T)
+mm::1000.0.as(meter::T).isa(meter::T)
 ```
 
 #### relational operators
@@ -454,7 +454,7 @@ mile::1.0.as(km::T)
 A converted value tests as its target unit:
 
 ```mtron_pre
-inch::12.0.as(foot::T).matches(foot::T)
+inch::12.0.as(foot::T).isa(foot::T)
 ```
 
 #### relational operators

@@ -56,7 +56,7 @@ public class IntTest extends AbstractAlgebraTest {
 
     @Training(
             instruction = "does the mtron expression {{{lhs}}} match {{{rhs}}}?",
-            input = "{{{lhs}}}.matches({{{rhs}}})",
+            input = "{{{lhs}}}.isa({{{rhs}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
@@ -88,11 +88,11 @@ public class IntTest extends AbstractAlgebraTest {
             "1                                   % plus(mult(10))               % 11",
             "1                                   % gt(0)                        % true",
             "1                                   % is(gt(0))                    % 1",
-            "1                                   % matches(int::T[])            % true",
-            "1                                   % is(matches(int::T[]))        % 1",
+            "1                                   % isa(int::T[]).count().gt(0)  % true",
+            "1                                   % isa(int::T[])                % 1",
             //  "1                                   % ~(str::T[])                  % false",
             "1                                   % ?str::T[]                    % noobj",
-            "int{-1}::1                          % is(matches(int{**}::T[]))    % int{-1}::1",
+            "int{-1}::1                          % isa(int{**}::T[])            % int{-1}::1",
             "int{-1}::1                          % ?int{,}::T[]                 % int{-1}::1"
     }, delimiter = '%')
     public void testCode(final String lhs, final String code, final String expected) {

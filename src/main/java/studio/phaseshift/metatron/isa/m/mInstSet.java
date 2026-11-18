@@ -198,7 +198,6 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI SORTA_INST_TID = M_ISA_INST_TID.extend("sorta");
     public static final fURI OR_INST_TID = M_ISA_INST_TID.extend("or");
     public static final fURI AND_INST_TID = M_ISA_INST_TID.extend("and");
-    public static final fURI MATCHES_INST_TID = M_ISA_INST_TID.extend("matches");
     public static final fURI EQ_INST_TID = M_ISA_INST_TID.extend("eq");
     public static final fURI NEQ_INST_TID = M_ISA_INST_TID.extend("neq");
     public static final fURI GT_INST_TID = M_ISA_INST_TID.extend("gt");
@@ -720,11 +719,9 @@ public class mInstSet extends AbstractInstSet {
                         //  docWrap(POLY_TYPE, "a obj composed of other objs"),
                         //  docWrap(NOOBJ_TYPE, "a no object"),
                         docWrap(ALL_TYPE, "universal type matching all objs within coefficient range",
-                                "abc.matches(#::T)              [-- true --]",
-                                "12.3.matches(#::T)             [-- true --]",
-                                "{2}'a string'.matches(#::T)    [-- false --]",
-                                "{2}'b string'.matches(#{2}::T) [-- true --]",
-                                "{2}'c string'.matches(#{+}::T) [-- true --]"),
+                                "abc.isa(#::T)                  [-- abc --]",
+                                "12.3.isa(#::T)                 [-- 12.3 --]",
+                                "{2}'c string'.isa(#{+}::T)     [-- {2}'c string' --]"),
                         docWrap(BOOL_TYPE, "a 2 valued mono: true or false",
                                 "true",
                                 "false",

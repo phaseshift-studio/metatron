@@ -65,7 +65,7 @@ class webInstSetTest extends AbstractMetatronTest {
      * (`Type.parentType()`), never through vid paths: `fURI.test` compares *names* when neither side
      * carries a wildcard (AbstractfURI.java:321-324), so being vidded under a type implies nothing.
      * <p>
-     * Asserted in java rather than as an mtron `matches()` / `sorta?()` expression on purpose: mtron
+     * Asserted in java rather than as an mtron expression on purpose: mtron
      * cannot yet express subsumption — inst resolution with a *type* lhs regresses. When it can, these
      * rows can carry expressions instead of vids.
      */

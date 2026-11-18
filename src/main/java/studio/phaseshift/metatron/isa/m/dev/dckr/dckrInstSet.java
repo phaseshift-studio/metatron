@@ -136,7 +136,7 @@ public class dckrInstSet extends AbstractInstSet {
                                         .isaPredicate(union_(
                                                 uri("created"), uri("running"), uri("paused"),
                                                 uri("restarting"), uri("exited"), uri("dead")))
-                                        .example("running.matches(docker_container_state::T)     [-- true --]", "stopped.matches(docker_container_state::T)     [-- false --]")
+                                        .example("running.isa(docker_container_state::T)     [-- running --]")
                                         .create(),
                         DOCKER_CONTAINER_TYPE = TypeBuilder.build()
                                         .tid(DOCKER_RESOURCE_TID)
