@@ -1772,28 +1772,28 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * Coefficient placement in a polynomial — the bracket list is the INDEX SIGNATURE, and where the
-     * coefficient sits decides what it multiplies:
+     * Coefficient placement in a polynomial — the bracket list is the INDEX SIGNATURE, and its types are written the way
+     * values are (Marko, 2026-11-18: "for lst[] the types in the brackets follow the same coefficient convention as
+     * values"), {@code {mass}type{span}}:
      *
      * <pre>
      *   lst[int,int,int,int]::T   four indices, each an int
-     *   lst[int{4}]::T            ONE index, whose value is itself an int{4}   (index 0 holds four ints)
-     *   lst[{4}int]::T            the list is COMPOSED OF four ints            (four int indices)
-     *   lst[{4}int{4}]::T         FOUR indices, whose values are int{4}        (indices 0-3 hold four ints)
+     *   lst[int{4}]::T            a RUN of four int indices                    (the same signature)
+     *   lst[{4}int]::T            ONE index holding four ints                  (index 0 holds four ints)
+     *   lst[{4}int{4}]::T         FOUR indices, each holding four ints         (indices 0-3 hold four ints)
      * </pre>
      * <p>
-     * A test lays every entry as a run of slots, its span times its point, the way ranged var args take their
-     * arguments (Marko, 2026-11-16): lst[int{4}] and lst[{4}int] accept the same lists, as [{4}1] and [1,2,3,4] each lay
-     * four ints.
+     * Mass never spreads over extent, and indices never pool into mass: [{4}1] is a lst[{4}int] and not a lst[int{4}],
+     * and [1,2,3,4] the other way around.
      * <p>
      * The distinction is what lets one construct serve both as a generic (List&lt;Integer&gt;) and as a
      * tuple, because position is significant and each index carries its own type: lst[age,zipcode] is a
      * two-index signature, not a bag of two either-or values.
      * <p>
-     * The leading coefficient is the entry's SPAN and the trailing one its POINT, {@code {span}type{point}}: an
-     * entry covers a run of indices, each holding its type. The index signature is checked as CONTAINMENT rather
-     * than equality: fewer elements than the signature fails, but MORE pass, so a four-element list satisfies a
-     * two-index signature, unless the last entry's span is unbounded: a {@code {*}} tail claims the rest.
+     * The right coefficient is the entry's SPAN, a run of indices, and the left one its MASS, how many at each index,
+     * {@code {mass}type{span}}. The index signature is checked as CONTAINMENT rather than equality: fewer elements than
+     * the signature fails, but MORE pass, so a four-element list satisfies a two-index signature, unless the last entry's
+     * span is unbounded: a {@code {*}} tail claims the rest.
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
@@ -1810,55 +1810,57 @@ public class TypeTest extends AbstractMetatronTest {
             "[1,2,3]             % lst[int,int,int,int]::T     % false",
             // ---- but MORE elements pass: the signature is a containment, not an equality ----
             "[1,2,3,4]           % lst[int,int]::T             % true",
-            // ---- the element coefficient lays as a run: four plain ints lay an int{4} ----
+            // ---- the span is the right coefficient: four plain ints are a run of four ----
             "[1,2,3,4]           % lst[int{4}]::T              % true",
             "[1,2,3]             % lst[int{4}]::T              % false",
+            "[1,'a']             % lst[int{2}]::T              % false",
             // ---- a tuple is a simply typed list: each index carries its type ----
             "[29,'94103']        % lst[age,zipcode]::T         % true",
             "[29,'94103']        % lst[zipcode,age]::T         % false",
             "[29,94103]          % lst[age,zipcode]::T         % false",
-            // ---- the point: one index holding a {2} int ----
-            "[{2}4]              % lst[int{2}]::T              % true",
-            "[{3}4]              % lst[int{2}]::T              % false",
-            // ---- the span: a run of indices, {span}type{point} ----
-            "[1,2,3,4]           % lst[{4}int]::T              % true",
-            "[1,2,3]             % lst[{4}int]::T              % false",
-            "[1,'a']             % lst[{2}int]::T              % false",
-            "[{2}1,{2}5,{2}7]    % lst[{3}int{2}]::T           % true",
-            "[{2}1,{2}5]         % lst[{3}int{2}]::T           % false",
-            "[{2}1,5,{2}7]       % lst[{3}int{2}]::T           % false",
-            "[{2}1,{2}5,{2}7,'x'] % lst[{3}int{2}]::T          % true",
+            // ---- the mass is the left coefficient: one index holding two ints ----
+            "[{2}4]              % lst[{2}int]::T              % true",
+            "[{3}4]              % lst[{2}int]::T              % false",
+            // ---- mass never spreads over extent, and indices never pool into mass ----
+            "[{4}1]              % lst[{4}int]::T              % true",
+            "[{4}1]              % lst[int{4}]::T              % false",
+            "[1,2,3,4]           % lst[{4}int]::T              % false",
+            // ---- both: a run of indices, each holding its mass, {mass}type{span} ----
+            "[{2}1,{2}5,{2}7]    % lst[{2}int{3}]::T           % true",
+            "[{2}1,{2}5]         % lst[{2}int{3}]::T           % false",
+            "[{2}1,5,{2}7]       % lst[{2}int{3}]::T           % false",
+            "[{2}1,{2}5,{2}7,'x'] % lst[{2}int{3}]::T          % true",
             "[{4}1,{4}2,{4}3,{4}4] % lst[{4}int{4}]::T         % true",
             "[1,2,3,4]           % lst[{4}int{4}]::T           % false",
-            "[1,2,'a','b','c']   % lst[{2}int,{3}str]::T       % true",
-            "[1,'a','b','c']     % lst[{2}int,{3}str]::T       % false",
-            "[1,2,'a','b']       % lst[{2}int,{3}str]::T       % false",
+            "[1,2,'a','b','c']   % lst[int{2},str{3}]::T       % true",
+            "[1,'a','b','c']     % lst[int{2},str{3}]::T       % false",
+            "[1,2,'a','b']       % lst[int{2},str{3}]::T       % false",
             // ---- a ranged span: {?} is zero or one index ----
-            "[1,'a','b']         % lst[{?}int,{2}str]::T       % true",
-            "['a','b']           % lst[{?}int,{2}str]::T       % true",
-            "[1,2,'a','b']       % lst[{?}int,{2}str]::T       % false",
-            "[1,2,'a']           % lst[{1,2}int,str]::T        % true",
-            "[1,2,3,'a']         % lst[{1,2}int,str]::T        % false",
-            // ---- an unbounded span on the last entry claims the rest: lst[{*}int] is List<Integer> ----
-            "[1,2,3]             % lst[{*}int]::T              % true",
-            "[,]                 % lst[{*}int]::T              % true",
-            "[1,2,'x']           % lst[{*}int]::T              % false",
-            "[1,'a','b']         % lst[{+}int,{*}str]::T       % true",
-            "['a']               % lst[{+}int,{*}str]::T       % false",
-            "[1,2,'a',3]         % lst[{+}int,{*}str]::T       % false",
-            "[1]                 % lst[int,{*}str]::T          % true",
-            // ---- a missing trailing index still passes when its point admits zero ----
-            "[1,2]               % lst[{2}int,str{?}]::T       % true",
-            "[1]                 % lst[{2}int,str{?}]::T       % false",
+            "[1,'a','b']         % lst[int{?},str{2}]::T       % true",
+            "['a','b']           % lst[int{?},str{2}]::T       % true",
+            "[1,2,'a','b']       % lst[int{?},str{2}]::T       % false",
+            "[1,2,'a']           % lst[int{1,2},str]::T        % true",
+            "[1,2,3,'a']         % lst[int{1,2},str]::T        % false",
+            // ---- an unbounded span on the last entry claims the rest: lst[int{*}] is List<Integer> ----
+            "[1,2,3]             % lst[int{*}]::T              % true",
+            "[,]                 % lst[int{*}]::T              % true",
+            "[1,2,'x']           % lst[int{*}]::T              % false",
+            "[1,'a','b']         % lst[int{+},str{*}]::T       % true",
+            "['a']               % lst[int{+},str{*}]::T       % false",
+            "[1,2,'a',3]         % lst[int{+},str{*}]::T       % false",
+            "[1]                 % lst[int,str{*}]::T          % true",
+            // ---- a missing trailing index still passes when its mass admits zero ----
+            "[1,2]               % lst[int{2},{?}str]::T       % true",
+            "[1]                 % lst[int{2},{?}str]::T       % false",
             // ---- a {*} tail of empty indices closes the lst ----
-            "[1,2]               % lst[{2}int,{*}#{0}]::T      % true",
-            "[1,2,3]             % lst[{2}int,{*}#{0}]::T      % false",
+            "[1,2]               % lst[int{2},{0}#{*}]::T      % true",
+            "[1,2,3]             % lst[int{2},{0}#{*}]::T      % false",
             // ---- {0}::T is still the noobj type, not a span ----
             "noobj               % {0}::T                      % true",
             // ---- a named entry keeps its span ----
-            "[29,30]             % lst[{2}age]::T              % true",
-            "[29]                % lst[{2}age]::T              % false",
-            "[29,'x']            % lst[{2}age]::T              % false",
+            "[29,30]             % lst[age{2}]::T              % true",
+            "[29]                % lst[age{2}]::T              % false",
+            "[29,'x']            % lst[age{2}]::T              % false",
             // ---- a type against a type: its span and its point are within the other's ----
             "{2}int{3}::T        % {*}int{0,5}::T              % true",
             "{2}int{3}::T        % {2}int{3}::T                % true",
@@ -1872,12 +1874,12 @@ public class TypeTest extends AbstractMetatronTest {
             "{3}age::T           % {2}age::T                   % false",
             "{3}age::T           % {*}int::T                   % true",
             // ---- a lst type against a lst type, entry by entry ----
-            "lst[{2}int{3}]::T   % lst[{*}int{0,5}]::T         % true",
-            "lst[{3}int{2}]::T   % lst[{2}int{2}]::T           % false",
-            "lst[{2}age]::T      % lst[{*}age]::T              % true",
-            "lst[int,int,int]::T % lst[{*}int]::T              % true",
-            "lst[int,str]::T     % lst[{*}int]::T              % false",
-            "lst[int]::T         % lst[int,{?}str]::T          % true",
+            "lst[{3}int{2}]::T   % lst[{0,5}int{*}]::T         % true",
+            "lst[{2}int{3}]::T   % lst[{2}int{2}]::T           % false",
+            "lst[age{2}]::T      % lst[age{*}]::T              % true",
+            "lst[int,int,int]::T % lst[int{*}]::T              % true",
+            "lst[int,str]::T     % lst[int{*}]::T              % false",
+            "lst[int]::T         % lst[int,str{?}]::T          % true",
             "lst[int]::T         % lst[int,str]::T             % false",
             "lst[int,str]::T     % lst[int,str]::T             % true",
             // a type's bracket is its argument list: a claim with no acceptor fails, as before spans
@@ -2336,20 +2338,20 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * The element coefficient satisfied properly. lst[int{2,4}] does not range the number of indices — it
-     * requires each index to HOLD a multiplicity in 2..4. So the index is filled with a multiplicity rather
-     * than a value, and then the bounded range is satisfied: {3}2 is three copies of 2, an int{3}, which is
-     * within {2,4}. A plain 2 is an int{1} and is out of range.
+     * The element coefficient satisfied properly. lst[{2,4}int] does not range the number of indices — its left
+     * coefficient is the mass at the index (Marko, 2026-11-18), so it requires the index to HOLD a multiplicity in 2..4.
+     * So the index is filled with a multiplicity rather than a value, and then the bounded range is satisfied: {3}2 is
+     * three copies of 2, an int{3}, which is within {2,4}. A plain 2 is an int{1} and is out of range.
      */
     @Test
     public void testTypeTestElementCoefficient() {
-        final Obj inRange = ObjmtronSerializer.parse("lst[int{2,4}]::[{3}2]");
-        LOG.warn("lst[int{2,4}]::[{3}2] => %s", inRange);
+        final Obj inRange = ObjmtronSerializer.parse("lst[{2,4}int]::[{3}2]");
+        LOG.warn("lst[{2,4}int]::[{3}2] => %s", inRange);
         assertTrue(inRange.stream().noneMatch(Obj::isFail),
                 "an index holding an int{3} is within {2,4}: " + inRange);
 
-        final Obj outOfRange = ObjmtronSerializer.parse("lst[int{2,4}]::[2]");
-        LOG.warn("lst[int{2,4}]::[2]   => %s", outOfRange);
+        final Obj outOfRange = ObjmtronSerializer.parse("lst[{2,4}int]::[2]");
+        LOG.warn("lst[{2,4}int]::[2]   => %s", outOfRange);
         assertTrue(outOfRange.stream().anyMatch(Obj::isFail),
                 "an index holding a plain 2 is an int{1}, out of {2,4}: " + outOfRange);
 

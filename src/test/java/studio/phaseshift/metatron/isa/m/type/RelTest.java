@@ -848,57 +848,59 @@ public class RelTest extends AbstractAlgebraTest {
     }
 
     /**
-     * A ZERO-ADMITTING VERTEX ENTRY IS OPTIONAL, AND ITS COEFFICIENT IS THE VALUE'S MULTIPLICITY THERE. No
+     * A ZERO-ADMITTING VERTEX ENTRY IS OPTIONAL, AND ITS LEFT COEFFICIENT IS THE VALUE'S MULTIPLICITY THERE: a bracket
+     * holds uris, so its entries are written as values, {@code {point}value{span}} (Marko, 2026-11-18). No
      * coefficient and {@code {1}} are exactly one value at that vertex, and {@code {?}} is ZERO OR ONE, so
-     * {@code rel[A,B{?},C]} accepts both {@code A=>C} (B skipped) and {@code A=>B=>C} (B present). The multiplicity
+     * {@code rel[A,{?}B,C]} accepts both {@code A=>C} (B skipped) and {@code A=>B=>C} (B present). The multiplicity
      * reading is pinned by {@link #testVertexCoefficientIsTheValueMultiplicity}.
      */
     @ParameterizedTest
     @CsvSource(value = {
             // the optional vertex is PRESENT
-            "rel[A,B{?},C]::(a=>(b=>c))                          % rel[A,B{?},C]::(a=>(b=>c))",
+            "rel[A,{?}B,C]::(a=>(b=>c))                          % rel[A,{?}B,C]::(a=>(b=>c))",
             // ... and ABSENT: the chain closes straight from A to C
-            "rel[A,B{?},C]::(a=>c)                               % rel[A,B{?},C]::(a=>c)",
+            "rel[A,{?}B,C]::(a=>c)                               % rel[A,{?}B,C]::(a=>c)",
             // an explicit {1} is exactly one, so the same poly spelled with {1} still insists on the middle vertex
-            "rel[A,B{1},C]::(a=>(b=>c))                          % rel[A,B{1},C]::(a=>(b=>c))",
-            "rel[A,B{1},C]::(a=>c)                               % <ERROR>",
-            "rel[A,B{?},C]::(a=>c)                               % rel[uri,uri]::(a=>c)",
-            "rel[A,B{*},C]::(a=>(b=>c))                          % rel[uri,uri,uri]::(a=>(b=>c))",
+            "rel[A,{1}B,C]::(a=>(b=>c))                          % rel[A,{1}B,C]::(a=>(b=>c))",
+            "rel[A,{1}B,C]::(a=>c)                               % <ERROR>",
+            "rel[A,{?}B,C]::(a=>c)                               % rel[uri,uri]::(a=>c)",
+            "rel[A,{*}B,C]::(a=>(b=>c))                          % rel[uri,uri,uri]::(a=>(b=>c))",
             // the optional vertex is still TYPED when present: a wrong type at that depth is a position mismatch
-            "rel[int,str{?},bool]::(1=>(2=>true))                % <ERROR>",
+            "rel[int,{?}str,bool]::(1=>(2=>true))                % <ERROR>",
             // ... and the closed form is held to the LAST vertex
-            "rel[int,str{?},bool]::(1=>'tally')                  % <ERROR>",
-            "rel[int,str{?},bool]::(1=>true)                     % rel[int,str{?},bool]::(1=>true)",
+            "rel[int,{?}str,bool]::(1=>'tally')                  % <ERROR>",
+            "rel[int,{?}str,bool]::(1=>true)                     % rel[int,{?}str,bool]::(1=>true)",
             // A TRAILING OPTIONAL VERTEX IS OMITTED, NOT MISSING: the chain closes at the last vertex present, and
             // the {?} entries the poly still names after it admit zero
-            "rel[int,int,str{?}]::(1=>2)                          % rel[int,int,str{?}]::(1=>2)",
-            "rel[int,int,str{?}]::(1=>2=>'xyz')                   % rel[int,int,str{?}]::(1=>2=>'xyz')",
+            "rel[int,int,{?}str]::(1=>2)                          % rel[int,int,{?}str]::(1=>2)",
+            "rel[int,int,{?}str]::(1=>2=>'xyz')                   % rel[int,int,{?}str]::(1=>2=>'xyz')",
             // ... but a PRESENT trailing vertex of the wrong type is not an absent one
-            "rel[int,int,str{?}]::(1=>2=>3.5)                     % <ERROR>",
+            "rel[int,int,{?}str]::(1=>2=>3.5)                     % <ERROR>",
             // the middle optional vertex is still skipped by the ordinary closing read
-            "rel[int,int{?},str]::(1=>'xyz')                      % rel[int,int{?},str]::(1=>'xyz')",
+            "rel[int,{?}int,str]::(1=>'xyz')                      % rel[int,{?}int,str]::(1=>'xyz')",
             // a REQUIRED trailing vertex is not skippable, so the tail is still an arity mismatch
             "rel[int,int,str]::(1=>2)                             % <ERROR>",
             // a LEADING optional vertex may be skipped: the path starts at the next one
-            "rel[int{?},str,bool]::('x'=>true)                    % rel[int{?},str,bool]::('x'=>true)",
-            "rel[int{?},str,bool]::(1=>('x'=>true))               % rel[int{?},str,bool]::(1=>('x'=>true))",
+            "rel[{?}int,str,bool]::('x'=>true)                    % rel[{?}int,str,bool]::('x'=>true)",
+            "rel[{?}int,str,bool]::(1=>('x'=>true))               % rel[{?}int,str,bool]::(1=>('x'=>true))",
             // TWO optional vertices in a row: neither, either or both may be skipped
-            "rel[int,str{?},real{?},bool]::(1=>true)                  % rel[int,str{?},real{?},bool]::(1=>true)",
-            "rel[int,str{?},real{?},bool]::(1=>(2.5=>true))           % rel[int,str{?},real{?},bool]::(1=>(2.5=>true))",
-            "rel[int,str{?},real{?},bool]::(1=>('x'=>true))           % rel[int,str{?},real{?},bool]::(1=>('x'=>true))",
-            "rel[int,str{?},real{?},bool]::(1=>('x'=>(2.5=>true)))    % rel[int,str{?},real{?},bool]::(1=>('x'=>(2.5=>true)))",
+            "rel[int,{?}str,{?}real,bool]::(1=>true)                  % rel[int,{?}str,{?}real,bool]::(1=>true)",
+            "rel[int,{?}str,{?}real,bool]::(1=>(2.5=>true))           % rel[int,{?}str,{?}real,bool]::(1=>(2.5=>true))",
+            "rel[int,{?}str,{?}real,bool]::(1=>('x'=>true))           % rel[int,{?}str,{?}real,bool]::(1=>('x'=>true))",
+            "rel[int,{?}str,{?}real,bool]::(1=>('x'=>(2.5=>true)))    % rel[int,{?}str,{?}real,bool]::(1=>('x'=>(2.5=>true)))",
             // ... but a present vertex is still typed by its position: a bool is not a str or a real
-            "rel[int,str{?},real{?},bool]::(1=>(true=>2.5))           % <ERROR>",
+            "rel[int,{?}str,{?}real,bool]::(1=>(true=>2.5))           % <ERROR>",
     }, delimiter = '%')
     public void testRelOptionalVertex(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     /**
-     * A VERTEX COEFFICIENT IS THE MULTIPLICITY OF THE VALUE AT THAT VERTEX — not a hop count and not a repetition of
-     * the vertex. {@code rel[int,person{2}]} is a TWO-vertex chain whose SECOND vertex holds two people
-     * ({@code 1=>{person::[…],person::[…]}}), the same reading the tensor gives an index ({@code lst[int{2},str]}
-     * holds two ints at index 0). Matching therefore compares the ENTRY's coefficient against the value's own
+     * A VERTEX'S LEFT COEFFICIENT IS THE MULTIPLICITY OF THE VALUE AT THAT VERTEX, since a bracket holds uris and writes
+     * them as values, {@code {point}value{span}} (Marko, 2026-11-18). {@code rel[int,{2}person]} is a TWO-vertex chain
+     * whose SECOND vertex holds two people ({@code 1=>{person::[…],person::[…]}}), the same reading the tensor gives an
+     * index ({@code lst[{2}int,str]} holds two ints at index 0), while the RIGHT coefficient is a run of vertices:
+     * {@code rel[int,person{2}]} is {@code int=>person=>person} ({@link #testVertexSpanIsARunOfVertices}). Matching therefore compares the ENTRY's coefficient against the value's own
      * multiplicity at that vertex — {@code {n}} exactly n, {@code {n,m}} an inclusive range, {@code {+}} at least
      * one, no coefficient and {@code {1}} exactly one — while the vertex's TYPE still types each of those values
      * ({@code person{2}} types two people, not one person twice).
@@ -907,10 +909,9 @@ public class RelTest extends AbstractAlgebraTest {
      * accepted) pin that the value test still judges its multiplicity; the {@code pilgrim} rows pin the same for a
      * predicated vertex type.
      * <p>
-     * A ZERO-ADMITTING ENTRY IS NULLABLE, and that is the only repeat reading this path takes: {@code {?}} (zero or
-     * one) and {@code {*}} (zero or more) may be OMITTED, so a middle vertex spelled either way is a vertex a
-     * shorter chain legitimately skips. Whether a repeated vertex means a longer CHAIN is not settled, so no row
-     * here counts hops — {@code {*}} accepts a two-value vertex as a MULTIPLICITY of two. The poly splitter keeps
+     * A ZERO-ADMITTING ENTRY IS NULLABLE: {@code {?}} (zero or one) and {@code {*}} (zero or more) may be OMITTED, so
+     * a middle vertex spelled either way is a vertex a shorter chain legitimately skips, and {@code {*}person} accepts
+     * a two-value vertex as a MULTIPLICITY of two. The poly splitter keeps
      * {@code {2,3}} (comma and all) as one entry, which is why the type is readable at all.
      */
     @Training.SkipTraining(
@@ -922,42 +923,67 @@ public class RelTest extends AbstractAlgebraTest {
     })
     @CsvSource(value = {
             // ---- {n}: exactly n values at that vertex ----
-            "rel[int,uri{2}]::(1=>{bob,marko})                                          % rel[int,uri{2}]::1=>{bob,marko}",
-            "rel[int,uri{2}]::(1=>bob)                                                  % <ERROR>",
-            "rel[int,uri{2}]::(1=>{a,b,c})                                              % <ERROR>",
+            "rel[int,{2}uri]::(1=>{bob,marko})                                          % rel[int,{2}uri]::1=>{bob,marko}",
+            "rel[int,{2}uri]::(1=>bob)                                                  % <ERROR>",
+            "rel[int,{2}uri]::(1=>{a,b,c})                                              % <ERROR>",
             // ... and the same rule where a same-vid type match cannot see the coefficient: a rec vertex
-            "rel[int,person{2}]::(1=>{person::[name=>'bob'],person::[name=>'marko']})   % rel[int,person{2}]::1=>{person::[name=>'bob'],person::[name=>'marko']}",
-            "rel[int,person{2}]::(1=>person::[name=>'bob'])                             % <ERROR>",
+            "rel[int,{2}person]::(1=>{person::[name=>'bob'],person::[name=>'marko']})   % rel[int,{2}person]::1=>{person::[name=>'bob'],person::[name=>'marko']}",
+            "rel[int,{2}person]::(1=>person::[name=>'bob'])                             % <ERROR>",
             // ---- no coefficient and {1}: exactly one ----
-            "rel[int,uri{1}]::(1=>bob)                                                  % rel[int,uri]::1=>bob",
-            "rel[int,uri{1}]::(1=>{bob,marko})                                          % <ERROR>",
+            "rel[int,{1}uri]::(1=>bob)                                                  % rel[int,uri]::1=>bob",
+            "rel[int,{1}uri]::(1=>{bob,marko})                                          % <ERROR>",
             "rel[int,uri]::(1=>{bob,marko})                                             % <ERROR>",
             // ---- {n,m}: an inclusive range ----
-            "rel[int,person{2,3}]::(1=>{person::[name=>'a'],person::[name=>'b']})       % rel[int,person{2,3}]::1=>{person::[name=>'a'],person::[name=>'b']}",
-            "rel[int,person{2,3}]::(1=>{person::[name=>'a'],person::[name=>'b'],person::[name=>'c']}) % rel[int,person{2,3}]::1=>{person::[name=>'a'],person::[name=>'b'],person::[name=>'c']}",
-            "rel[int,person{2,3}]::(1=>{person::[name=>'a'],person::[name=>'b'],person::[name=>'c'],person::[name=>'d']}) % <ERROR>",
+            "rel[int,{2,3}person]::(1=>{person::[name=>'a'],person::[name=>'b']})       % rel[int,{2,3}person]::1=>{person::[name=>'a'],person::[name=>'b']}",
+            "rel[int,{2,3}person]::(1=>{person::[name=>'a'],person::[name=>'b'],person::[name=>'c']}) % rel[int,{2,3}person]::1=>{person::[name=>'a'],person::[name=>'b'],person::[name=>'c']}",
+            "rel[int,{2,3}person]::(1=>{person::[name=>'a'],person::[name=>'b'],person::[name=>'c'],person::[name=>'d']}) % <ERROR>",
             // ---- {+}: at least one — one suffices, and the vertex is still REQUIRED (the absent row follows) ----
-            "rel[int,person{+}]::(1=>person::[name=>'a'])                               % rel[int,person{+}]::1=>person::[name=>'a']",
-            "rel[int,person{+}]::(1=>{person::[name=>'a'],person::[name=>'b']})         % rel[int,person{+}]::1=>{person::[name=>'a'],person::[name=>'b']}",
-            "rel[int,person{+},str]::(1=>'tally')                                       % <ERROR>",
-            "rel[int,person{+},str]::(1=>(person::[name=>'a']=>'tally'))                % rel[int,person{+},str]::1=>(person::[name=>'a']=>'tally')",
+            "rel[int,{+}person]::(1=>person::[name=>'a'])                               % rel[int,{+}person]::1=>person::[name=>'a']",
+            "rel[int,{+}person]::(1=>{person::[name=>'a'],person::[name=>'b']})         % rel[int,{+}person]::1=>{person::[name=>'a'],person::[name=>'b']}",
+            "rel[int,{+}person,str]::(1=>'tally')                                       % <ERROR>",
+            "rel[int,{+}person,str]::(1=>(person::[name=>'a']=>'tally'))                % rel[int,{+}person,str]::1=>(person::[name=>'a']=>'tally')",
             // ---- {?}: zero or one — absent, or ONE value that is still its type ----
-            "rel[int,person{?},str]::(1=>'tally')                                       % rel[int,person{?},str]::1=>'tally'",
-            "rel[int,person{?}]::(1=>person::[name=>'a'])                               % rel[int,person{?}]::1=>person::[name=>'a']",
-            "rel[int,person{?}]::(1=>{person::[name=>'a'],person::[name=>'b']})         % <ERROR>",
+            "rel[int,{?}person,str]::(1=>'tally')                                       % rel[int,{?}person,str]::1=>'tally'",
+            "rel[int,{?}person]::(1=>person::[name=>'a'])                               % rel[int,{?}person]::1=>person::[name=>'a']",
+            "rel[int,{?}person]::(1=>{person::[name=>'a'],person::[name=>'b']})         % <ERROR>",
             // ---- {*}: zero or more — absent is legal, and a multiplicity is that multiplicity, not a repeat ----
-            "rel[int,person{*},str]::(1=>'tally')                                       % rel[int,person{*},str]::1=>'tally'",
-            "rel[int,person{*}]::(1=>{person::[name=>'a'],person::[name=>'b']})         % rel[int,person{*}]::1=>{person::[name=>'a'],person::[name=>'b']}",
+            "rel[int,{*}person,str]::(1=>'tally')                                       % rel[int,{*}person,str]::1=>'tally'",
+            "rel[int,{*}person]::(1=>{person::[name=>'a'],person::[name=>'b']})         % rel[int,{*}person]::1=>{person::[name=>'a'],person::[name=>'b']}",
             // ... at a MIDDLE vertex too: the multiplicity is the value there, and the path goes on
-            "rel[int,person{*},str]::(1=>({person::[name=>'a'],person::[name=>'b']}=>'tally'))   % rel[int,person{*},str]::(1=>({person::[name=>'a'],person::[name=>'b']}=>'tally'))",
+            "rel[int,{*}person,str]::(1=>({person::[name=>'a'],person::[name=>'b']}=>'tally'))   % rel[int,{*}person,str]::(1=>({person::[name=>'a'],person::[name=>'b']}=>'tally'))",
             // ---- a PREDICATED vertex type: the multiplicity is judged as for a bare one ----
-            "rel[int,pilgrim{2}]::(1=>pilgrim::[name=>'bob'])                           % <ERROR>",
+            "rel[int,{2}pilgrim]::(1=>pilgrim::[name=>'bob'])                           % <ERROR>",
             "rel[int,pilgrim]::(1=>pilgrim::[name=>'bob'])                              % rel[int,pilgrim]::(1=>pilgrim::[name=>'bob'])",
             // ---- the LEADING vertex obeys the same rule: its coefficient is the value there, not a hop count ----
-            "rel[int{2},uri]::({1,2}=>bob)                                              % rel[int{2},uri]::{1,2}=>bob",
-            "rel[int{2},uri]::(1=>bob)                                                  % <ERROR>",
+            "rel[{2}int,uri]::({1,2}=>bob)                                              % rel[{2}int,uri]::{1,2}=>bob",
+            "rel[{2}int,uri]::(1=>bob)                                                  % <ERROR>",
     }, delimiter = '%', quoteCharacter = '~')
     public void testVertexCoefficientIsTheValueMultiplicity(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A VERTEX'S RIGHT COEFFICIENT IS A RUN OF VERTICES (Marko, 2026-11-18: a bracket holds uris, so its entries are
+     * written as values, {@code {point}value{span}}): {@code rel[int,uri{2},str]} is {@code int=>uri=>uri=>str}, the
+     * span lengthening the chain as it lays indices in a lst ({@code lst[int{2}]}), while the left coefficient stays the
+     * multiplicity at each vertex of the run. A ranged run takes any length it admits.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // ---- an exact run: two uri vertices between the int and the str ----
+            "rel[int,uri{2},str]::(1=>(a=>(b=>'x')))            % rel[int,uri{2},str]::(1=>(a=>(b=>'x')))",
+            "rel[int,uri{2},str]::(1=>(a=>'x'))                 % <ERROR>",
+            "rel[int,uri{2},str]::(1=>(a=>(b=>(c=>'x'))))       % <ERROR>",
+            // ---- a ranged run: {*} any number of vertices, {+} at least one, {1,2} one or two ----
+            "rel[int,uri{*},str]::(1=>'x')                      % rel[int,uri{*},str]::(1=>'x')",
+            "rel[int,uri{*},str]::(1=>(a=>(b=>(c=>'x'))))       % rel[int,uri{*},str]::(1=>(a=>(b=>(c=>'x'))))",
+            "rel[int,uri{+},str]::(1=>'x')                      % <ERROR>",
+            "rel[int,uri{1,2},str]::(1=>(a=>(b=>'x')))          % rel[int,uri{1,2},str]::(1=>(a=>(b=>'x')))",
+            // ---- each vertex of the run holds its mass: two vertices of two uris each ----
+            "rel[int,{2}uri{2}]::(1=>({a,b}=>{c,d}))            % rel[int,{2}uri{2}]::(1=>({a,b}=>{c,d}))",
+            "rel[int,{2}uri{2}]::(1=>({a,b}=>c))                % <ERROR>",
+    }, delimiter = '%')
+    public void testVertexSpanIsARunOfVertices(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

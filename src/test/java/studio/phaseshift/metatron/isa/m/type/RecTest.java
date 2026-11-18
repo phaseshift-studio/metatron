@@ -827,7 +827,7 @@ public class RecTest extends AbstractAlgebraTest {
      * THE REC POLY NAMES ITS DECLARED FIELDS. {@code rec[k1,k2]} declares the keys {@code k1} and {@code k2}, so a
      * literal carrying only {@code k1} fails its type while one carrying both passes. A missing key still READS
      * as {@code noobj} — the last row is that read, not a type test — which is exactly why a declared field cannot
-     * be silent. Absence is legal only where the field's coefficient admits zero ({@code rec[k{?},j]}).
+     * be silent. Absence is legal only where the field's coefficient admits zero ({@code rec[{?}k,j]}).
      */
     @Training(
             instruction = "does {{{code}}} carry the fields its rec poly declares?",
@@ -842,7 +842,7 @@ public class RecTest extends AbstractAlgebraTest {
             // the failure is per field: the middle of three is the absent one
             "rec[k1,k2,k3]::[k1=>a,k3=>c]                            % <ERROR>",
             // a field whose own coefficient admits zero ({?}) may be absent
-            "rec[k1{?},k2,k3]::[k2=>b,k3=>c]                         % rec[k1{?},k2,k3]::[k2=>b,k3=>c]",
+            "rec[{?}k1,k2,k3]::[k2=>b,k3=>c]                         % rec[{?}k1,k2,k3]::[k2=>b,k3=>c]",
             // an absent key still READS as noobj: the read is untouched, only the type test judges absence
             "[k1=>a]>>k2                                             % noobj",
             // ... and that holds for an accepted literal reading a key its declaration never named
@@ -1089,7 +1089,7 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>1]-<?lst[int]<=rec([>>a.+1])                   % [2]",
             "[a=>1]-<?lst[int{+}]<=rec([>>a.+1])                % [2]",
             "[a=>1]-<?lst[int{*}]<=rec([>>a.+1])                % [2]",
-            "[a=>1]-<?lst[int{0}]<=rec([>>a.+1])                % <ERROR>",
+            "[a=>1]-<?lst[{0}int]<=rec([>>a.+1])                % <ERROR>",
             // "[a=>1]-<?int{*}<=rec({>>a.+1})                     % 2",
     }, delimiter = '%')
     public void testSplit(final String expression, final String expected) {
@@ -1410,7 +1410,7 @@ public class RecTest extends AbstractAlgebraTest {
      * </pre>
      * A fiber at coefficient one is REQUIRED: the same literal with {@code position} omitted is not a
      * {@code duo_person[duo_ninja,duo_position]} and fails at parse time. Absence would be legal only for
-     * {@code rec[role,position{?}]} (or a {@code position} the declaration types as optional).
+     * {@code rec[role,{?}position]} (or a {@code position} the declaration types as optional).
      */
     @Training.SkipTraining(reason = "reads *marko and the duo_* declarations seeded by @TestData, so the row input is not self-contained")
     @ParameterizedTest
@@ -1725,8 +1725,8 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>1,b=>2]                    % rec[a,b]::T         % true",
             "[a=>1]                         % rec[a,b]::T         % false",
             "[a=>1,b=>2,c=>3]               % rec[a,b]::T         % true",
-            "[a=>1]                         % rec[a,b{?}]::T      % true",
-            "[c=>1]                         % rec[a{?},b{?}]::T   % true",
+            "[a=>1]                         % rec[a,{?}b]::T      % true",
+            "[c=>1]                         % rec[{?}a,{?}b]::T   % true",
             "[x=>1,y=>2]                    % coord::T            % true",
             "[x=>1]                         % coord::T            % false",
             "[aa=>[x=>1,y=>2],bb=>3]        % pin::T              % true",

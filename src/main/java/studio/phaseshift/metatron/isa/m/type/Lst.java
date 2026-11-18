@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -344,7 +343,8 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * {@code [int::T,int::T,int::T]}. Past the last rhs index the
          * lhs is open, even inside a value's run ({@code [3{2}]} is an {@code [int::T]}, {@code [3{2},5{2}]} an
          * {@code [int::T,int::T,int::T]}), and an rhs index past the last lhs index is one the lhs leaves empty, so it
-         * passes only if its mass admits zero. A lst TYPE's bracket keeps its own reading ({@link #testRuns}).
+         * passes only if its mass admits zero. A lst TYPE's bracket reads its types as values
+         * ({@link Type.Helper#testTensor}).
          */
         public static boolean testIndices(final Lst lhs, final Lst rhs) {
             final Function<Lst, List<Obj>> resolved = lst ->
@@ -375,84 +375,6 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                 }
             }
             return true;
-        }
-
-        /**
-         * A LST TYPE'S BRACKET, READ AS RUNS (Marko, 2026-11-16), the reading {@code lst[…]::T} keeps while the notation
-         * inside its brackets is settled (Marko, 2026-11-17: its tokens may read as values, so that
-         * {@code lst[int{2},str]::T} is {@code [int::T,int::T,str::T]}); a lst against a lst tests index by index
-         * ({@link #testIndices}). THE RUNS OF {@code lhs} LAID OVER THE RUNS OF {@code rhs}, the way ranged var args take
-         * their arguments. An entry covers a run of indices: its span times its point, times a type's own count
-         * ({@code int::T{3}}, which the parser writes on the type's vid {@code /m/type{3}}). Each index of a run holds the
-         * entry's slot, the entry without those counts, so {@code [{3}int::T]}, {@code [int{2}::T,int::T]} and
-         * {@code [int::T,int::T,int::T]} each lay three ints. A run whose count is a range ({@code {2}int{?}::T}: zero to
-         * two ints) takes any length in it, on either side, and index by index each lhs slot tests the rhs slot it lands
-         * on. Past the last rhs index the lhs is open, as a positional lst is, but only between entries and only behind a
-         * run that laid something: an lhs run is never split between the rhs and the open tail ({@code [{3}4]} is not an
-         * {@code [int{2}::T]}), and a trailing run that lays nothing leaves the lhs where it found it
-         * ({@code ['a','b']} is not a {@code [str::T,{?}int::T]}).
-         */
-        public static boolean testRuns(final Lst lhs, final Lst rhs) {
-            final List<Obj> lefts = lhs.lstValue();
-            final Obj[] resolved = new Obj[lefts.size()]; // an lhs entry is read only once an rhs run reaches it
-            final Function<Obj, cInt> count = entry -> entry.c().mult(entry.isType() && null != entry.vid() &&
-                    TYPE_TID.equals(entry.vid().basePath()) ? entry.vid().c() : cInt.ONE());
-            // a slot drops the counts from its tid, and a type's from its vid as well: a base type is tested by its vid
-            final Function<Obj, Obj> slot = Type.Helper::unit;
-            final ToLongFunction<cInt> least = c -> null == c.min() ? 0L : Math.max(0L, c.min());
-            // a count past the least of an unbounded run (and past one, so that laying something stays apart from laying
-            // nothing) is one place, which keeps the walk finite
-            final BiFunction<cInt, Long, Long> next = (c, n) -> null == c.max() ? Math.min(n + 1, Math.max(1L, least.applyAsLong(c))) : n + 1;
-            // where the lhs stands: an entry (high word) and how many of its indices are laid (low word)
-            Set<Long> reached = Set.of(0L);
-            Set<Long> laidSome = Set.of(0L); // where the last rhs run stopped having laid something
-            for (final Obj entry : rhs.lstValue()) {
-                final Obj right = entry.autoResolve(lhs);
-                final cInt rightCount = count.apply(right);
-                final Boolean[] tested = new Boolean[lefts.size()];
-                final Set<Long> ends = new HashSet<>();
-                final Set<Long> laid = new HashSet<>();
-                final Set<List<Long>> seen = new HashSet<>();
-                final Deque<long[]> walk = new ArrayDeque<>();
-                reached.forEach(place -> walk.push(new long[]{place, 0L}));
-                while (!walk.isEmpty()) {
-                    final long[] step = walk.pop(); // {where the lhs stands, indices of this rhs run laid}
-                    if (!seen.add(List.of(step[0], step[1])))
-                        continue;
-                    final int i = (int) (step[0] >>> 32);
-                    final long at = step[0] & 0xFFFFFFFFL;
-                    if (step[1] >= least.applyAsLong(rightCount)) {
-                        ends.add(step[0]);
-                        if (step[1] > 0)
-                            laid.add(step[0]);
-                    }
-                    if (i == lefts.size())
-                        continue;
-                    if (null == resolved[i])
-                        resolved[i] = lefts.get(i).autoResolve(lhs);
-                    final cInt leftCount = count.apply(resolved[i]);
-                    if (at >= least.applyAsLong(leftCount))
-                        walk.push(new long[]{(long) (i + 1) << 32, step[1]}); // the lhs entry ends, the rhs run goes on
-                    if ((null == leftCount.max() || at < leftCount.max()) &&
-                            (null == rightCount.max() || step[1] < rightCount.max()) &&
-                            (null != tested[i] ? tested[i] : (tested[i] = resolved[i].stream().allMatch(unit -> slot.apply(unit).test(slot.apply(right))))))
-                        walk.push(new long[]{((long) i << 32) | next.apply(leftCount, at), next.apply(rightCount, step[1])});
-                }
-                if (ends.isEmpty())
-                    return false;
-                reached = ends;
-                laidSome = laid;
-            }
-            // every rhs run is laid. The rest of the lhs is the open tail: it must start between entries, and if it holds
-            // anything, the last rhs run must have laid something
-            final Set<Long> behind = laidSome;
-            return reached.stream().anyMatch(place -> {
-                final int i = (int) (place >>> 32);
-                final long at = place & 0xFFFFFFFFL;
-                if (0 != at && at < least.applyAsLong(count.apply(resolved[i])))
-                    return false;
-                return (0 == at ? i : i + 1) == lefts.size() || behind.contains(place);
-            });
         }
 
         public static <OBJ extends Obj> OBJ atToggle(final Lst alst, final Obj key, final boolean doAuto) {
