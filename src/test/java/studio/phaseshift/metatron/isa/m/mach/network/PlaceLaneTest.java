@@ -473,20 +473,21 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * HOME INSTRUCTIONS BEFORE A RUN KEEP ITS ONE OBJ — an instruction that does not float ({@code print} is effectful)
-     * stays home, and the run after it still ships, however many stand between: each hands on the one obj it takes, so
-     * the fold's one obj (or a literal of one member, at the head) is still one when the run starts, the branch copies it
-     * to every lane, and the lanes split the span range as they do with nothing between. A floatable instruction behind
-     * one that stays home stays with it; after it, it floats into the run. Over the three loop peers. Each row: the
-     * chain % the master's ops % its value.
+     * HOME INSTRUCTIONS BEFORE A RUN KEEP ITS ONE OBJ — an instruction that does not float ({@code side} declares no
+     * laws, so it is not pure) stays home, and the run after it still splits its index set, however many stand between:
+     * each hands on the one obj it takes (a one-obj dom and range, no copies, no unrolls), so the fold's one obj (or a
+     * literal of one member, at the head) is still one when the run starts, the branch copies it to every lane, and the
+     * lanes split the span range as they do with nothing between. A floatable instruction behind one that stays home
+     * stays with it; after it, it floats into the run. Over the three loop peers. Each row: the chain % the master's
+     * ops % its value.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "start({1,2,3,4,5}).plus(1).sum().print(_).{0,3}plus(1).sum()            % branch,sum,print,branch,sum        % 86",     // 20+21+22+23
-            "start({1,2,3,4,5}).plus(1).sum().print(_).print(_).{0,3}plus(1).prod()  % branch,sum,print,print,branch,prod % 212520", // 20·21·22·23
-            "start({1,2,3,4,5}).plus(1).sum().plus(1).print(_).{0,3}plus(1).sum()    % branch,sum,plus,print,branch,sum   % 90",     // 21+22+23+24
-            "start({1,2,3,4,5}).plus(1).sum().print(_).plus(1).{0,3}plus(1).sum()    % branch,sum,print,branch,sum        % 90",
-            "start(5).print(_).{0,3}plus(1).sum()                                    % start,print,branch,sum             % 26",     // 5+6+7+8
+            "start({1,2,3,4,5}).plus(1).sum().side(plus(1)).{0,3}plus(1).sum()                % branch,sum,side,branch,sum       % 86",     // 20+21+22+23
+            "start({1,2,3,4,5}).plus(1).sum().side(plus(1)).side(plus(1)).{0,3}plus(1).prod() % branch,sum,side,side,branch,prod % 212520", // 20·21·22·23
+            "start({1,2,3,4,5}).plus(1).sum().plus(1).side(plus(1)).{0,3}plus(1).sum()        % branch,sum,plus,side,branch,sum  % 90",     // 21+22+23+24
+            "start({1,2,3,4,5}).plus(1).sum().side(plus(1)).plus(1).{0,3}plus(1).sum()        % branch,sum,side,branch,sum       % 90",
+            "start(5).side(plus(1)).{0,3}plus(1).sum()                                        % start,side,branch,sum            % 26",     // 5+6+7+8
     }, delimiter = '%')
     void testHomeInstructionsBeforeARunKeepItsOneObj(final String source, final String ops, final int expected) {
         connectAll();
@@ -497,6 +498,25 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         assertTrue(run.lanes().stream().allMatch(lane -> "copy".equals(lane.split())),
                 "the branch copies the one obj to every lane: " + emitted);
         assertEquals("0..1|2..2|3..3", spans(run), "the lanes split the span range: " + emitted);
+        checkEquality(LOG, jnt(expected), evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * A RUN AFTER PRINT SHIPS — print is effectful, so it stays home, and its range carries the type it takes
+     * ({@code A{?} ⇒ A{*}}, as {@code to}'s does), so the run after it is read at that type and ships through its own
+     * branch. That {@code {*}} range promises no one obj, so the branch deals what print hands on rather than copying it
+     * to every lane. Over the three loop peers. Each row: the chain % the master's ops % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start({1,2,3,4,5}).plus(1).sum().print(_).{0,3}plus(1).sum()                 % branch,sum,print,branch,sum      % 86",
+            "start({1,2,3,4,5}).plus(1).sum().side(plus(1)).print(_).{0,3}plus(1).prod()  % branch,sum,side,print,branch,prod % 212520",
+    }, delimiter = '%')
+    void testARunAfterPrintShips(final String source, final String ops, final int expected) {
+        connectAll();
+        final Code emitted = lower(homeAndPeer(), source);
+        assertEquals(List.of(ops.trim().split(",")), TransportRewriteHarness.ops(emitted).stream().map(fURI::name).toList(),
+                "print stays home and the run after it ships: " + emitted);
         checkEquality(LOG, jnt(expected), evaluate(emitted).clone().selfVID(null), true);
     }
 
