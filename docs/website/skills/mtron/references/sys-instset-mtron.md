@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -74,7 +74,7 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.8M ...',
+    'tmpfs                  6.1G  6.9M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme1n1p2         916G  594G ...',
     'tmpfs                   31G  3.5M ...',
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>66
+==>65
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::555.0371,
+    free_mem_jvm=>mB::407.4152,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::156.9628,
+    used_mem_jvm=>mB::304.5847,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',

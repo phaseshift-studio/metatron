@@ -553,6 +553,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                 obj=&gt;/m/instset::[q=&gt;[,]]]],
               pattern=&gt;/m/math/cat/#,
+              rewrite=&gt;[/m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}],
               type=&gt;[
                rec[obj]::T[?[
                 obj=&gt;&lt;#&gt;::T,
@@ -618,7 +619,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 {?}linked_to=&gt;[rec::T],
                 {?}linked_from=&gt;[rec::T],
                 {?}status=&gt;uri::T]][ctor?place&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/place],
-              rewrite=&gt;[/m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}],
               inst=&gt;[
                lower?path&lt;=path(plan::T){&lt;j&gt;},
                bind?path&lt;=path(plan::T){&lt;j&gt;},
@@ -807,8 +807,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#theory" class="text-light">theory</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
-  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
   <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
+  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__path">
@@ -845,13 +845,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> code as a categorical path incident to iso-semantic rewritten forms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
-  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
   <a href="#uri{?}::T" class="text-light">uri{?}::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\) of the machine's rewrite pool, keyed by the rule's name and holding its \(\mathrm{name}\) and its \(\mathrm{result}\), the vertex \(r(p)\); a rule is live on \(p\) iff \(r(p) 
 eq p\), so a normal form has no edge"" class="text-info">&quot;one out-edge per live rewrite \(r\) of the machine&#39;s rewrite pool, keyed by the rule&#39;s name and holding its \(\mathrm{name}\) and its \(\mathrm{result}\), the vertex \(r(p)\); a rule is live on \(p\) iff \(r(p) 
 eq p\), so a normal form has no edge&quot;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
-  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
+  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
+  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__place">
