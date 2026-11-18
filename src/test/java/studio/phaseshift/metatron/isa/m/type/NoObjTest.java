@@ -242,7 +242,15 @@ public class NoObjTest extends AbstractMetatronTest {
             "1.mult({0}2)               % <ERROR>",
             "1.minus({0}2)              % <ERROR>",
             "2.div(noobj)               % <ERROR>",
-            "'''a''.plus({0}''b'')'     % <ERROR>"},
+            "'''a''.plus({0}''b'')'     % <ERROR>",
+            // nor does a call that leaves the slot out (Marko, 2026-11-17: there is no plus of zero arguments), where
+            // the int plus ran on noobj's 0 and answered 1, and mult answered 0. An argument past the last slot is the
+            // open world's (Marko, 2026-11-17), as a lst's tail is: [2,2]?[int::T] is [2,2]
+            "1.plus()                   % <ERROR>",
+            "1.mult()                   % <ERROR>",
+            "true.plus()                % <ERROR>",
+            "\"a\".plus()                % <ERROR>",
+            "1.plus(2,3)                % 3"},
             delimiter = '%')
     public void testNothingFillsAnOperandSlot(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

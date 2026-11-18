@@ -201,8 +201,12 @@ public abstract class AbstractResolverTest extends AbstractMetatronTest {
     @CsvSource(value = {
             "1.plus(2).plus(3).plus(4)                                              % 10",
             "[1,2,3]>-.sum().plus(4)                                                  % 10",
-            "5.gt(3).and(true)                                                      % true",
-            "5.gt(3).and(5.lt(3))                                                   % false",
+            // and takes two or more args, the lhs among them as _ (Marko, 2026-11-17); with one it does not resolve, where
+            // it read that one alone and 1.lt(0).and(true) was true
+            "5.gt(3).and(true,_)                                                    % true",
+            "5.gt(3).and(5.lt(3),_)                                                 % false",
+            "1.lt(0).and(true,_)                                                    % false",
+            "5.gt(3).and(true)                                                      % <ERROR>",
     }, delimiter = '%')
     public void testChainedResolution(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
