@@ -115,4 +115,7 @@ strong {
 .article-body code,
 .article-body pre {
     font-family: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    /* never ligate multi-character operators (=> -< >= <= >>= etc.) into single
+       look-alike glyphs — mtron source must read back as the exact characters */
+    font-variant-ligatures: none;
 }

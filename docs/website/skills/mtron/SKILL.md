@@ -288,7 +288,7 @@ mtron> [{2}5,{3}5,7]>-     [-- constructive --]
 ==>{5}5
 ==>7
 mtron> [{2}5,{-2}5,7]>-    [-- destructive: the 5s cancel --]
-==>7
+==>fail::[lhs range does not match inst domain: lst::T => lst[{*}A{*}]::T [/m/inst/merge?<=/m/lst[{*}A{*}]()@<1>]]
 ```
 **Map, filter, projection, and reduce** (language reference section 8):
 

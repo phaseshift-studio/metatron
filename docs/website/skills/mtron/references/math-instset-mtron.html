@@ -430,6 +430,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../../../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -584,7 +593,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 </table>
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.11:18/07/02/07/186?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:18/13/23/44/981?tz=-0700&gt;
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
 ==&gt;datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
@@ -712,12 +721,12 @@ mtron&gt; 30000.0.as(minute::T)
 ==&gt;minute::30000.0
 </code></pre>
 <p>A converted value tests as its target unit:</p>
-<pre><code class="language-mtron">mtron&gt; millis::1000.0.as(second::T).matches(second::T)
-==&gt;true
-mtron&gt; micros::1000.0.as(millis::T).matches(millis::T)
-==&gt;true
-mtron&gt; nanos::1000000.0.as(millis::T).matches(millis::T)
-==&gt;true
+<pre><code class="language-mtron">mtron&gt; millis::1000.0.as(second::T).isa(second::T)
+==&gt;second::1.0
+mtron&gt; micros::1000.0.as(millis::T).isa(millis::T)
+==&gt;millis::1.0
+mtron&gt; nanos::1000000.0.as(millis::T).isa(millis::T)
+==&gt;millis::1.0
 </code></pre>
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
@@ -830,8 +839,8 @@ mtron&gt; 1024.0.as(kB::T)
 ==&gt;kB::1024.0
 </code></pre>
 <p>A converted value tests as its target unit:</p>
-<pre><code class="language-mtron">mtron&gt; bB::1024.0.as(kB::T).matches(kB::T)
-==&gt;true
+<pre><code class="language-mtron">mtron&gt; bB::1024.0.as(kB::T).isa(kB::T)
+==&gt;kB::1.0
 </code></pre>
 <h5>relational operators</h5>
 <pre><code class="language-mtron">mtron&gt; bB::1024.0.eq(kB::1.0)
@@ -908,8 +917,8 @@ mtron&gt; 5.0.as(meter::T)
 ==&gt;meter::5.0
 </code></pre>
 <p>A converted value tests as its target unit:</p>
-<pre><code class="language-mtron">mtron&gt; mm::1000.0.as(meter::T).matches(meter::T)
-==&gt;true
+<pre><code class="language-mtron">mtron&gt; mm::1000.0.as(meter::T).isa(meter::T)
+==&gt;meter::1.0
 </code></pre>
 <h5>relational operators</h5>
 <pre><code class="language-mtron">mtron&gt; mm::1000.0.eq(meter::1.0)
@@ -978,8 +987,8 @@ mtron&gt; 5.0.as(foot::T)
 ==&gt;foot::5.0
 </code></pre>
 <p>A converted value tests as its target unit:</p>
-<pre><code class="language-mtron">mtron&gt; inch::12.0.as(foot::T).matches(foot::T)
-==&gt;true
+<pre><code class="language-mtron">mtron&gt; inch::12.0.as(foot::T).isa(foot::T)
+==&gt;foot::1.0
 </code></pre>
 <h5>relational operators</h5>
 <pre><code class="language-mtron">mtron&gt; inch::12.0.eq(foot::1.0)

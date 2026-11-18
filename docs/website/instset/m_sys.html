@@ -430,6 +430,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -553,6 +562,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
+             const=&gt;[thread_executor::[stop=&gt;[,],
+                                       run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
+             type=&gt;[
+              /m/space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
+              /m/space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
+              rec::T[?[
+               level=&gt;union(info,trace,warn,error,debug),
+               source=&gt;&lt;#&gt;::T,
+               message=&gt;str::T]]@/m/sys/log_entry,
+              uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
+              uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file,
+              file::T@/m/dev/dckr/image],
              inst=&gt;[
               as?bytes&lt;=uri(bytes::T){&lt;j&gt;},
               as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;},
@@ -569,19 +590,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               bash?lst[str]&lt;=(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
               sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;},
               stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;},
-              stdin?str&lt;=(){&lt;j&gt;}],
-             const=&gt;[thread_executor::[stop=&gt;[,],
-                                       run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
-             type=&gt;[
-              /m/space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
-              /m/space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
-              rec::T[?[
-               level=&gt;union(info,trace,warn,error,debug),
-               source=&gt;&lt;#&gt;::T,
-               message=&gt;str::T]]@/m/sys/log_entry,
-              uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
-              uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file,
-              file::T@/m/dev/dckr/image]]@/m/sys</code></pre>
+              stdin?str&lt;=(){&lt;j&gt;}]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -904,9 +913,9 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
   <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
+  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__redirect">
@@ -946,7 +955,8 @@ if only a min is provided, then the file is read from that line till the end.
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> pauses the current thread for arg amount of time</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> pauses the current thread for arg amount of time
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="spec-chip spec-generic">generic</span><a href="#an obj" class="text-info">an obj</a> <span class="text-light">=&gt;</span> <span class="spec-chip spec-generic">generic</span><a href="#the lhs obj" class="text-success">the lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -987,7 +997,8 @@ if only a min is provided, then the file is read from that line till the end.
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> prints arg jvm object to the terminal and emits lhs obj as rhs obj</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> prints arg jvm object to the terminal and emits lhs obj as rhs obj
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#maybe an obj" class="text-success">maybe an obj</a></pre>
 </div>
