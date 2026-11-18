@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.Tokens.INST_COMPOSITION;
 import static studio.phaseshift.metatron.Tokens.RESOLVE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_GENERIC_BINDER_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -99,10 +100,16 @@ public class GenericBinder extends MRec implements Binder {
             if (null == resolvedArgs)
                 return null;
             bound = bound.args(resolvedArgs);
-            // AN INITIAL INST EMITS ITS ARGUMENT (start(x) answers x), so its range is read off it. A KEYED initial inst
-            // answers what its lanes answer — a branch of seeded lanes, branch?<={0}(<p> => start(…)…) — which no single
-            // argument states, so its declared range stands
-            bound = bound.isInitial() && bound.args().isLst() ? bound.rng(bound.arg(0).type()) : bound;
+            // AN INITIAL INST EMITS ITS ARGUMENT (start(x) answers x), so its range is read off it: a value's type, or —
+            // since a call argument is computed before the inst runs — the type of what the call computes, any number of
+            // it: start(5.plus(1)) answers an int, not a code, and start({1,2,3}.plus(1)) three of them (a call's rng is
+            // per input, so its count is unknown here). Under ?block the arguments ride raw, so the call itself is what
+            // it answers. A KEYED initial inst answers what its lanes answer — a branch of seeded lanes,
+            // branch?<={0}(<p> => start(…)…) — which no single argument states, so its declared range stands
+            bound = !bound.isInitial() || !bound.args().isLst() ? bound
+                    : bound.rng(bound.arg(0).isObjCall() && !userInst.isBlocking()
+                    ? T(bound.arg(0).rng().typeId().maybeSome())
+                    : bound.arg(0).type());
             // THE CALL'S COEFFICIENT RIDES ON AS WRITTEN, {b}inst{d}: c(count) writes the whole count into the point and
             // drops a span it does not divide, so {2,3}plus(1) ran once at the point {2,3} instead of as its run
             bound = bound.tid(bound.tid().b(userInst.tid().b()).d(userInst.tid().d()));
