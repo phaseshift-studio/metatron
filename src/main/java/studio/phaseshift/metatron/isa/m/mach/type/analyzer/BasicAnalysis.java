@@ -51,11 +51,11 @@ public class BasicAnalysis extends MRec implements Analysis {
     // ======================== the meters ========================
 
     public static Obj counter(final long value) {
-        return jnt(value).tid(COUNTER_TID);
+        return jnt(value, COUNTER_TID, null);
     }
 
     public static Obj gauge(final double value) {
-        return real(value).tid(GAUGE_TID);
+        return real(value, GAUGE_TID, null);
     }
 
     public static Rec timer(final long count, final long total, final long min, final long max) {
