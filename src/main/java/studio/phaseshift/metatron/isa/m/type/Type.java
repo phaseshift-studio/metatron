@@ -496,6 +496,37 @@ public interface Type extends Obj {
             return obj.isType() && null != obj.vid() ? bare.vid(obj.vid().cLess().b(null)) : bare;
         }
 
+        /**
+         * ONE INDEX HOLDS WHAT IS EXPECTED OF IT: the one judgment every index walk asks, a lst against a lst of
+         * patterns ({@link Lst.Helper#testIndices}) and a value laid against a run of a bracket or a signature
+         * ({@link #runs}, {@link #unfold}) alike (Marko, 2026-11-18: one funnel, not implementations that may
+         * conflict). A point is mass at the index, so the value's mass is within the expected one's ({@link #mass}),
+         * and every copy the index holds is one of the expected, both without their counts ({@link #unit}): a type
+         * asks it at the domain gate ({@link Inst.Helper#filterOnDomainAllowUnique}), so {@code {3}5} is an int as
+         * 5 is, and a value or an instruction is asked as a pattern is ({@code is(gt(3))} runs its predicate). An
+         * index with no mass holds what its mass allows, so a missing index is {@code holds(noobj(), expected)}, and
+         * a type of span zero, its filter run zero times (P⁰ = id), takes any copy.
+         */
+        public static boolean holds(final Obj value, final Obj expected) {
+            final cInt has = mass(value);
+            if (!has.within(mass(expected)))
+                return false;
+            if (has.isZero() || (expected.isType() && expected.tid().b().isZero()))
+                return true;
+            final Obj one = unit(expected);
+            return value.stream().allMatch(copy -> expected.isType() ?
+                    Inst.Helper.filterOnDomainAllowUnique(unit(copy), one) :
+                    unit(copy).test(one));
+        }
+
+        /**
+         * The mass at one index: a type's or an instruction's point (its span is a run of it, P·P = P for a type),
+         * a value's or a stream's count.
+         */
+        public static cInt mass(final Obj obj) {
+            return obj.isType() || obj.isCall() ? obj.tid().d() : obj.c();
+        }
+
         static boolean basePathEquals(final fURI a, final fURI b) {
             return null != a && null != b && a.basePath().equals(b.basePath());
         }
@@ -820,7 +851,8 @@ public interface Type extends Obj {
         /**
          * The runs {@code entries} lay over {@code values}: the indices the entries, in order, can end at. An entry's
          * SPAN covers a run, {@code {span}type{point}}: it takes k values, k in its span, each holding the entry
-         * without its span, and a trailing entry whose point admits zero may take none. A value that is itself a
+         * without its span ({@link #holds}, the judgment a lst of patterns asks of an index too), and a trailing entry
+         * whose point admits zero may take none. A value that is itself a
          * spanned type is a whole run, so it takes an entry it tests whole: a signature against a signature. A lst
          * type is open past its last entry ({@link #testTensor}); an instruction's args are closed ({@link Inst#test}).
          */
@@ -852,7 +884,7 @@ public interface Type extends Obj {
                 end = reached.get(e).stream().filter(start -> start <= stop && run(values, entry, Set.of(start)).contains(stop))
                         .max(Integer::compare).orElseThrow();
                 for (int v = end; v < stop; v++)
-                    unfolded[v] = values.get(v).test(slot) ? slot : entry;
+                    unfolded[v] = fills(values.get(v), slot) ? slot : entry;
             }
             return new ArrayList<>(Arrays.asList(unfolded));
         }
@@ -875,12 +907,21 @@ public interface Type extends Obj {
                 if (null != span.max() && span.max() < least)
                     continue;
                 int end = start;
-                while (end < values.size() && (null == span.max() || end - start < span.max()) && values.get(end).test(slot))
+                while (end < values.size() && (null == span.max() || end - start < span.max()) && fills(values.get(end), slot))
                     end++;
                 for (long k = least; start + k <= end; k++)
                     next.add(start + (int) k);
             }
             return next;
+        }
+
+        /**
+         * Whether a value fills one index of a run: it holds the run's slot ({@link #holds}), as an index of a lst of
+         * patterns does. A value that is itself a spanned type or instruction is a run of its own rather than one
+         * index, so it is tested whole, as a signature is against a signature ({@link #run}'s whole-run step).
+         */
+        private static boolean fills(final Obj value, final Obj slot) {
+            return value.tid().b().isOne() ? holds(value, slot) : value.test(slot);
         }
 
         /**
