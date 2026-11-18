@@ -225,6 +225,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4}.filter(gt(2)).sum()                                                  % 7",
             "{1,2,3,4}.filter(gt(2)).side(plus(1)).sum()                                    % 7",
             "{1,2,3}.vid(abc).sum()                                                         % 6",
+            // a noobj argument is no true, and a noobj lhs is no obj to keep: is answers noobj either way
+            "3.is(noobj)                                                                    % noobj",
+            "{1,2,3}.is(noobj).count()                                                      % 0",
+            "is(true)                                                                       % noobj",
+            "{1,2,3}.is(gt(5)).is(true)                                                     % noobj",
     }, delimiter = '%')
     public void testGatherAfterSeed(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
