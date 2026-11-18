@@ -102,7 +102,7 @@ public class MType extends MObj implements Type {
      * <p>
      * OFF BY DEFAULT, because the test fixtures (and, for now, parts of the instsets) re-declare names with a
      * different predicate and rely on the replacement landing — e.g. {@code mortal} as
-     * {@code human::T[?lt(120)]@mortal} over an earlier {@code mortal}. With the flag on, the registered type is
+     * {@code human::T[?<120]@mortal} over an earlier {@code mortal}. With the flag on, the registered type is
      * kept and the attempt is warned; the kill then lets the next definition through. The warning fires either way,
      * so the offenders are findable before the switch is turned on.
      */
@@ -201,7 +201,7 @@ public class MType extends MObj implements Type {
                             // rule is to clear the name first: `name -> noobj()`, then redefine. DETECT it here and
                             // REPORT it; whether to also REFUSE it is a policy the suite does not yet keep (many
                             // fixtures deliberately re-declare a name with a different predicate, e.g. mortal as
-                            // human::T[?lt(120)]@mortal over an earlier mortal), so the replacement still happens.
+                            // human::T[?<120]@mortal over an earlier mortal), so the replacement still happens.
                             // THE SAME DECLARATION IS NOT A REDEFINITION: two parses of one declaration build
                             // different Call objects (the bodies are distinct lambdas), so object equality cannot
                             // tell them apart from a genuine change -- the RENDERED form can.
