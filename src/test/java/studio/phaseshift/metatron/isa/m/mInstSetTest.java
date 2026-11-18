@@ -390,6 +390,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.print(_)                                                                     % 1",
             "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}",
+            // print hands on what it takes (A => A): a fold after it still folds the whole stream, not each obj alone
+            "{1,2,3,4}.print(_).sum()                                                       % 10",
+            "{1,2,3,4}.print(_).println(_).count()                                          % 4",
+            "1.5.print(_).plus(1.0)                                                         % 2.5",
             "1.plus(0).plus::(2)                                                            % 3",
             // "1.plus::(2)                                                                    % 3"
     }, delimiter = '%')

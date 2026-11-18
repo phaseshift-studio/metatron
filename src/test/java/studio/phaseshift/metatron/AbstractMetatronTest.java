@@ -21,18 +21,18 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.impl.MFail;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -50,7 +50,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 
 /**
  * Base for every VM-booting test. The class-level {@link Timeout} caps each inherited test method at five minutes, so a
@@ -160,7 +159,9 @@ public abstract class AbstractMetatronTest {
         begin();
     }
 
-    /** idempotent: ensure the process VM is booted. public because several test classes call it from their own @BeforeAll. */
+    /**
+     * idempotent: ensure the process VM is booted. public because several test classes call it from their own @BeforeAll.
+     */
     public static void begin() {
         if (BOOTED)
             return;
@@ -530,40 +531,54 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult, final boolean checkTIDs) {
-        final Code firstStage = ObjmtronSerializer.parse(code);
-        final Call secondStage = ObjmtronSerializer.parse(expected);
-        final Call compilation = firstStage.rewrite().tryToInst();
-        final Obj result = ObjmtronSerializer.parse(expectedResult);
-        // ONE STARTING MACHINE, THREE INDEPENDENT EVALUATIONS. A program that crosses a move boundary RE-HOMES the
-        // thread -- that is what `move` is -- so the stage evaluated second would otherwise stand in the machine the
-        // first one moved to. A frame pushed by a test's own @TestData dialed nothing, and a cut from it is rightly
-        // refused ("no peer is dialed at ..."): the check would report the frame's reach, not the program's rewrite.
-        // The perspective is restored in `finally`, so a red row cannot leave the thread somewhere else either.
-        final Machine before = Machine.current();
-        try {
-            if (checkTIDs) {
-                assertFalse(secondStage.insts().isEmpty());
-                assertEquals(secondStage.insts().size(), compilation.insts().size());
-                for (int i = 0; i < compilation.insts().size(); i++) {
-                    assertEquals(compilation.insts().get(i).tid().basePath(), secondStage.insts().get(i).tid().basePath());
+        final Obj first = ObjmtronSerializer.parse(code);
+        if (!first.isCall()) {
+            final Obj second = ObjmtronSerializer.parse(expected);
+            assertEquals(second, first);
+        } else {
+            final Call firstStage = first.asCall();
+            final Call secondStage = ObjmtronSerializer.parse(expected);
+            final Call compilation = firstStage.isCode() ? firstStage.asCode().rewrite().tryToInst() : firstStage;
+            final Obj result = null == expectedResult ? null : ObjmtronSerializer.parse(expectedResult);
+            // ONE STARTING MACHINE, THREE INDEPENDENT EVALUATIONS. A program that crosses a move boundary RE-HOMES the
+            // thread -- that is what `move` is -- so the stage evaluated second would otherwise stand in the machine the
+            // first one moved to. A frame pushed by a test's own @TestData dialed nothing, and a cut from it is rightly
+            // refused ("no peer is dialed at ..."): the check would report the frame's reach, not the program's rewrite.
+            // The perspective is restored in `finally`, so a red row cannot leave the thread somewhere else either.
+            final Machine before = Machine.current();
+            try {
+                if (checkTIDs) {
+                    assertFalse(secondStage.insts().isEmpty());
+                    assertEquals(secondStage.insts().size(), compilation.insts().size());
+                    for (int i = 0; i < compilation.insts().size(); i++) {
+                        final Inst secondStageInst = secondStage.insts().get(i);
+                        final Inst compilationInst = compilation.insts().get(i);
+                        assertEquals(secondStageInst.tid().basePath(), compilationInst.tid().basePath());
+                        if (!secondStageInst.args().isEmpty()) { // if test specifies args, then recurse checking args
+                            assertEquals(secondStageInst.args().count(), compilationInst.args().count());
+                            for (int j = 0; j < secondStageInst.args().count(); j++) {
+                                checkCodeRewrite(LOG, ObjmtronSerializer.single().write(compilationInst.arg(j)), ObjmtronSerializer.single().write(secondStageInst.arg(j)), null, checkTIDs);
+                            }
+                        }
+                    }
+                    if (null != result)
+                        assertEquals(result, applyFrom(before, firstStage));
+                } else if (null != result) {
+                    LOG.debug("testing compilation %s => %s [expected:%s]", firstStage, secondStage, compilation);
+                    assertEquals(secondStage, compilation);
+                    Obj actual = applyFrom(before, firstStage);
+                    LOG.debug("testing evaluation 1 %s => %s [expected:%s]", firstStage, actual, result);
+                    assertEquals(result, actual);
+                    actual = applyFrom(before, secondStage);
+                    LOG.debug("testing evaluation 2 %s => %s [expected:%s]", secondStage, actual, result);
+                    assertEquals(result, actual);
+                    actual = applyFrom(before, compilation);
+                    LOG.debug("testing evaluation 3 %s => %s [expected:%s]", compilation, actual, result);
+                    assertEquals(result, actual);
                 }
-                assertEquals(result, applyFrom(before, firstStage));
-            } else {
-
-                LOG.debug("testing compilation %s => %s [expected:%s]", firstStage, secondStage, compilation);
-                assertEquals(secondStage, compilation);
-                Obj actual = applyFrom(before, firstStage);
-                LOG.debug("testing evaluation 1 %s => %s [expected:%s]", firstStage, actual, result);
-                assertEquals(result, actual);
-                actual = applyFrom(before, secondStage);
-                LOG.debug("testing evaluation 2 %s => %s [expected:%s]", secondStage, actual, result);
-                assertEquals(result, actual);
-                actual = applyFrom(before, compilation);
-                LOG.debug("testing evaluation 3 %s => %s [expected:%s]", compilation, actual, result);
-                assertEquals(result, actual);
+            } finally {
+                Machine.current(before);
             }
-        } finally {
-            Machine.current(before);
         }
     }
 

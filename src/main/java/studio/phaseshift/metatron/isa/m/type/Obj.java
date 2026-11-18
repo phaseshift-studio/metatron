@@ -1808,16 +1808,22 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .create(),
                     InstBuilder.build()
                             .tid(PRINTLN_INST_TID)
-                            .dom(ALL.maybe(), "the rhs obj")
-                            .rng(ALL.maybeSome(), "the lhs obj")
+                            // f(x) ↦ x, side's contract (A ⇒ A): see print
+                            .dom(A, "the rhs obj")
+                            .rng(A, "the lhs obj")
                             .argLst(T(ALL_STAR), "concatenated args followed by newline written to stdout")
                             .desc("a side-effect function \\(f(x) \\mapsto x\\)")
                             .body((lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none(o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs).stream().peek(x -> inst.logger().none(lineSeparator()))))
                             .create(),
                     InstBuilder.build()
                             .tid(PRINT_INST_TID)
-                            .dom(ALL.maybe(), "the rhs obj")
-                            .rng(ALL.maybeSome(), "the lhs obj")
+                            // f(x) ↦ x, side's contract (A ⇒ A): the obj it takes is the one it hands on, so the chain's
+                            // type survives it and a plan reads what follows at the carrier, not at # (#{*}<=#{?} lost
+                            // it, and law_shard could not ship a run after print). A one-obj dom binds per object over
+                            // a stream (appliesPerObject), so a fold after it still folds the stream; a {?} dom would not
+                            // ({1,2,3,4}.is(gt(0)).sum() answers {1,2,3,4}). A noobj lhs passes the domain gate as ever
+                            .dom(A, "the rhs obj")
+                            .rng(A, "the lhs obj")
                             .argLst(T(ALL_STAR), "concatenated args followed by newline written to stdout")
                             .desc("a side-effect function \\(f(x) \\mapsto x\\)")
                             .body((lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none(o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs)))
