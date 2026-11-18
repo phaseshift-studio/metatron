@@ -34,6 +34,9 @@ below); rows that do not verify are excluded from the file you train on.
 - **`@Training(instruction, input, output)`** — `@Repeatable`. Each field is a template: `{{{param}}}` is
   replaced by that column's value and `{{{@TestData}}}` by the method's preloaded `@TestData` lines.
   Repeat the annotation to emit several entries per row.
+  - A hole shaped like a parameter name must name one of the method's parameters: `{{{code}}}` on a
+    method without `code` fails the extraction, and so does such a hole missing one of its braces. Any
+    other `{{{...}}}` is mtron's own str template (`{{{plus(23)}}}`) and is emitted verbatim.
   - **`input` is mandatory.** A template with no `input` emits a row whose input is empty; empty parses to
     `noobj` and can never verify.
   - `input` must be the *one* expression the test evaluates. `checkCodeParseApply(LOG, lhs, code, expected)`
@@ -93,6 +96,10 @@ All of these are build products and are gitignored (see `docs/website/.gitignore
 comparison for addresses, and `hasPoly` → `test()`. It reports verified / mismatched / evaluation-error /
 not-an-expression counts, the **failing sources** (`Class.method`, worst first) as a worklist, and fails
 the build with `-Dmtron.training.verify.strict=true` if any row does not verify.
+
+A `mathInstSetTest` row is evaluated with `/m/math` imported, the instruction set its own class runs
+under; the base VM has none, so without it the row's units, `cmplx`, `datetime` and `timeout()` do not
+resolve. An import is "ensure mounted": the first math row mounts it, and it stays for the rest of the run.
 
 Every row carries `source`. A row that cannot name the test it came from cannot be triaged or repaired.
 

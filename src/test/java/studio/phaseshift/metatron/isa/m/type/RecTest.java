@@ -457,7 +457,7 @@ public class RecTest extends AbstractAlgebraTest {
 
     @Training.SkipTraining(reason = "mutates through Rec.at(key, noobj(), MUTABLE) and asserts the resulting count; the CSV is not an expression->value pair")
     @ParameterizedTest
-    @Training(instruction = "when {{{key}}} is removed from {{{recStr}}, what is the result?", output = "{{{expectedCount}}}")
+    @Training(instruction = "when {{{key}}} is removed from {{{recStr}}}, what is the result?", output = "{{{expectedCount}}}")
     @CsvSource(value = {
             // MUTABLE delete: remove from original in-place
             "[a=>10,b=>20,c=>30]  % b   % 2",     // delete middle

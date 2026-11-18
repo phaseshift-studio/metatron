@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.math.mathInstSetTest;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -28,6 +30,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 
 /**
  * Generates the Unsloth training corpus, and separately verifies one.
@@ -115,6 +118,11 @@ public class UnslothTrainingDatasetExtractorTest extends AbstractMetatronTest {
             }
             if (input.contains("->")) writes++;
 
+            // a mathInstSetTest row needs /m/math, which its own class runs under and the base VM lacks: without it
+            // the row's units, cmplx, datetime and timeout() do not resolve. an import is "ensure mounted", so the
+            // first math row mounts it and it stays for the rows after
+            if (source.startsWith(mathInstSetTest.class.getSimpleName() + "."))
+                InstSet.importInstSet(MATH_ISA_TID);
             final Verdict verdict = verify(input, expected);
             record(bySource, source, verdict.kind() == Kind.OK);
             switch (verdict.kind()) {

@@ -48,9 +48,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  * Marks a {@code @ParameterizedTest} method for template-based training data extraction.
  * <p>
  * Each of {@code instruction}, {@code input}, and {@code output} is a template in which a
- * {@code {{{param}}}} hole is replaced by that column's row value (only when the hole's
- * content matches a method parameter name; anything else is emitted verbatim). Repeat the
- * annotation to emit multiple entries per CSV row. The static
+ * {@code {{{param}}}} hole is replaced by that column's row value. A hole shaped like a
+ * parameter name must name one of the method's parameters and carry all six braces, or extraction fails; any other
+ * {@code {{{...}}}} (mtron's own str templates, such as {@code {{{plus(23)}}}}) is emitted
+ * verbatim. Repeat the annotation to emit multiple entries per CSV row. The static
  * {@link Extractor#from(Method, CsvSource)} method handles both annotated and fallback
  * (two-column) methods.
  * <p>
@@ -170,9 +171,9 @@ public @interface Training {
                             continue;
                         }
                         entries.add(new Entry(
-                                render(training.instruction(), parts, paramToCol, testData),
-                                render(training.input(), parts, paramToCol, testData),
-                                render(training.output(), parts, paramToCol, testData),
+                                render(training.instruction(), parts, paramToCol, testData, methodKey),
+                                render(training.input(), parts, paramToCol, testData, methodKey),
+                                render(training.output(), parts, paramToCol, testData, methodKey),
                                 methodKey));
                     }
                 }
@@ -240,6 +241,11 @@ public @interface Training {
         }
 
         private static final Pattern TEMPLATE_HOLE = Pattern.compile("\\{\\{\\{([^{}]+)\\}\\}\\}");
+        private static final String IDENTIFIER = "[A-Za-z_$][A-Za-z0-9_$]*";
+        private static final Pattern PARAM_NAME = Pattern.compile(IDENTIFIER);
+        // a parameter hole a brace short on either side: TEMPLATE_HOLE never matches it, so it would pass as text
+        private static final Pattern BRACE_SHORT_HOLE = Pattern.compile(
+                "\\{\\{\\{\\s*" + IDENTIFIER + "\\s*\\}\\}(?!\\})|(?<!\\{)\\{\\{\\s*" + IDENTIFIER + "\\s*\\}\\}\\}");
 
         /**
          * Maps each method parameter name to its column index (requires {@code -parameters}).
@@ -257,20 +263,31 @@ public @interface Training {
 
         /**
          * Renders a template by replacing {@code {{{name}}}} holes whose content matches a
-         * parameter name with that column's value; any other {@code {{{...}}}} is left verbatim.
+         * parameter name with that column's value. A hole shaped like a parameter name that names
+         * none of them throws: {@code {{{code}}}} on a method without {@code code} is a template
+         * written for another signature, and left verbatim it reaches the corpus as text. So does a
+         * parameter hole missing one of its braces, which no hole pattern would match. Any other
+         * {@code {{{...}}}} is mtron (a str template) and is left verbatim.
          */
-        private static String render(final String template, final String[] parts, final Map<String, Integer> paramToCol, final String testData) {
+        private static String render(final String template, final String[] parts, final Map<String, Integer> paramToCol,
+                                     final String testData, final String methodKey) {
             if (template == null || template.isEmpty()) return "";
+            final Matcher shortHole = BRACE_SHORT_HOLE.matcher(template);
+            if (shortHole.find())
+                throw MTronException.of("training template hole %s in %s is a brace short: %s", shortHole.group(), methodKey, template);
             final Matcher m = TEMPLATE_HOLE.matcher(template);
             final StringBuilder sb = new StringBuilder();
             while (m.find()) {
                 final String name = m.group(1).trim();
                 if (name.equals(TEST_DATA_ACCESSOR)) {
                     if (null == testData || null == paramToCol.get(TEST_DATA_ACCESSOR))
-                        throw MTronException.of("attempting to access non-existent @TestData: %s", template);
+                        throw MTronException.of("attempting to access non-existent @TestData in %s: %s", methodKey, template);
                     m.appendReplacement(sb, Matcher.quoteReplacement(testData));
                 } else {
                     final Integer col = paramToCol.get(name);
+                    if (null == col && PARAM_NAME.matcher(name).matches())
+                        throw MTronException.of("training template hole %s names no parameter of %s %s: %s",
+                                m.group(0), methodKey, paramToCol.keySet(), template);
                     final String replacement = (col != null && col < parts.length) ? parts[col].trim() : m.group(0);
                     m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
                 }
