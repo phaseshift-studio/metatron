@@ -112,20 +112,42 @@ steps go through its definition, and the outer fold is $C(r)$. ◻
 
 Read right to left, the identity is a program for $k$ machines: each place $p_i$ computes $s_i\,f\,r$, one partial per
 place travels home, and the home machine computes $C(r)$ over the partials. In mtron the right side is a `branch` keyed
-by place. The serial program
+by place. The examples in this article run over two places. `harvest`, an instruction from Dr. Stynx's boot file
+[`drstynx.boot.mtron`](../skills/drstynx/assets/drstynx.boot.mtron), spawns a sibling JVM on this machine for each
+integer it is given and dials each one as a `ws_client` peer; the category instset, which holds `law_shard`, is
+imported out of view.
+
+```mtron_pre
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_OUTPUT] harvest?rec<=int{*}(uri{?}::T){ /
+  spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0). /
+    -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest
+[NO_OUTPUT] {0,1}.harvest()
+```
+
+The serial program
 
 ```mtron_pre
 {1,2,3,4}.plus(1).sum()
 ```
 
-is rewritten by `law_shard` to
+is rewritten by `law_shard`, and `explain()` prints the code the machine runs:
 
-```mtron
-branch?<={0}(<p_1> => start({1,2}).plus(1).sum(), <p_2> => start({3,4}).plus(1).sum()).sum()
+```mtron_pre
+{1,2,3,4}.plus(1).sum().explain()>>format
 ```
 
-where $p_1$ and $p_2$ are places, and `count()` in place of `sum()` recombines through `sum()`, its combiner. The rewrite
-never names a combiner: it reads the fold's declared laws and computes one.
+The `branch` is keyed by the two places. Each lane starts from its share of the seed, `{1,3}` or `{2,4}` (the members
+are dealt in turn), and runs the floatable run and the fold where it lands; `?hop=0` tells the peer not to plan the lane
+again. The `sum` after the `branch` is $C(r)$. A fold defined by a derivation recombines through the fold that defines
+it: each place counts its share, and home sums the counts.
+
+```mtron_pre
+{1,2,3,4}.count().explain()>>format
+```
+
+The rewrite never names a combiner: it reads the fold's declared laws and computes one.
 
 [To be written: the computed combiner in full (self-combining, by derivation, pointwise for a keyed fold), and what a
 fold that declares neither law does (it stays home).]
@@ -147,6 +169,16 @@ still ships.
 
 ```mtron_pre
 {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
+{1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().explain()>>format
+```
+
+The plan has a `branch` and a `sum` for each cut. The first deals the seed. The second has one object, the `20` the first
+fold answered, so it copies that object to both places and splits the run's own span, $[0,2]$ to one and $[3,3]$ to the
+other (the next section reads a coefficient as an index set). The profile counts what the home machine ran, the
+expansion and contraction of each cut in figure 2, and lists `law_shard` among the rewrite rules:
+
+```mtron_pre
+{1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
 ```
 
 [To be written: the home instructions in general (what a contract must state for one object to survive them), and the
@@ -155,42 +187,43 @@ the run deals its members.]
 
 ```mtron_pre
 {1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()
+{1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum().explain()>>format
 ```
+
+`order` is a cut too, and its computed combiner is `kmerge`, a k-way merge: each place sorts its share, and home merges
+the sorted partials. The `merge` that unrolls the sorted lst stays home, and the run after it deals the members to the
+places again.
 
 # Coefficients as Index Sets
 
 A coefficient is a second place to find parallelism [[2]](./span-and-point-coefficient-algebra.md). A span range is a
 sum of independent terms, $a^{[m,n]} = \sum_{k=m}^{n} a^k$, so a run over one object can be split by its exponent: each
-place takes the whole object and a contiguous share of the unrolls. On one machine the identity is a branch over a
-copied object:
+place takes the whole object and a contiguous share of the unrolls.
 
 ```mtron_pre
 start(0).{0,3}plus(1).sum()
+start(0).{0,3}plus(1).sum().explain()>>format
 ```
 
+Both lanes start from the same `0`. The first takes the unrolls $0$ to $2$ and the second the unroll $3$, written `{3}`:
+the shares are cut by the work each costs, not by how many unrolls each holds. At home the profile shows the program
+that ran, a `branch` and a `sum`, and the time spent at the `branch` waiting on the two partials:
+
 ```mtron_pre
-0.branch({0,1}plus(1).sum(),{2,3}plus(1).sum()).sum()
+start(0).{0,3}plus(1).sum().profile()>>format
 ```
 
 A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and points add across a branch,
-$a\{p\} = a\{p_1\} + a\{p_2\}$ with $p = p_1 + p_2$, so the places take even shares of the copies:
-
-```mtron_pre
-start(20).id{5}().plus(10).prod()
-```
-
-```mtron_pre
-20.branch(id{3}().plus(10).prod(),id{2}().plus(10).prod()).prod()
-```
+$a\{p\} = a\{p_1\} + a\{p_2\}$ with $p = p_1 + p_2$, so the places take even shares of the copies.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-05.tex -->
 ![figure 5](images/ring-theoretic-distributed-computing/fig-05.svg)
 
-The same holds after a cut, where the object to copy is the fold's answer:
+[To be written: the point's live example. Over places today a shipped lane loses its point, so the example waits on
+that fix.]
 
-```mtron_pre
-{1,2,3,4,5}.plus(1).sum().branch({0,1}plus(1).sum(),{2,2}plus(1).sum(),{3,3}plus(1).sum()).sum()
-```
+The same holds after a cut, where the object to copy is the fold's answer: the second `branch` in the chain of cuts
+above copies the `20` to both places and splits the span $[0,3]$ as $[0,2]$ and $[3,3]$.
 
 [To be written: shares chosen by work for a span (a lane walks its runs from the seed, so a share $[a,b]$ costs the $b$
 steps it walks and the $b - a + 1$ runs it emits) and evenly for a point; why the copy needs no idempotence (the shares
