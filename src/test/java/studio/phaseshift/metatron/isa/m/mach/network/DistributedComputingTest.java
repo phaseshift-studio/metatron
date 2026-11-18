@@ -128,13 +128,13 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     @BeforeAll
     static void startPeers() throws Exception {
-        // typing is not solved across distributed executions yet -- run type-check-free, as the manual demo did
+        // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         // (BootLoader.load mounts only /m, /sys, /m/mach). Import its parent (/m/math) first, then it.
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
-        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
         cluster = PeerCluster.of(2).start();
         for (int i = 1; i <= cluster.size(); i++)
             clients.add(dial(i));

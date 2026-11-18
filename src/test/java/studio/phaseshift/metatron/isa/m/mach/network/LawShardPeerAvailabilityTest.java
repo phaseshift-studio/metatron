@@ -60,12 +60,12 @@ public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegra
 
     @Test
     void testLawShardAvailableWhenPeered() {
-        // typing is not solved across distributed executions yet — run type-check-free, as the manual demo did
+        // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
-        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
 
         // a ws_client self-dial mints a /network/peer — the exact trigger law_shard's guard reads
         Network.Helper.connect(Machine.current().network(), f("ws://localhost:" + this.wsPort + "/mtron"), WS_CLIENT_TID);

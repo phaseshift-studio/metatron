@@ -92,11 +92,11 @@ public class PlaceLaneTest extends AbstractMetatronTest {
 
     @BeforeEach
     void setup() {
-        // typing is not solved across distributed executions yet — run type-check-free, as the forked-peer suite does
+        // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         InstSet.importInstSet(MATH_ISA_TID);
         InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
-        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
     }
 
     @AfterEach
@@ -473,16 +473,17 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * ONE OBJ AND NO SPAN RANGE STAYS HOME — the run after a fold has one obj and nothing to factor, so dealing it would
-     * hand the whole run to one lane: a round trip and no parallelism. A point span ({@code {3}}) is no index set
-     * either. The run before still ships. Each row: the chain % its value.
+     * ONE OBJ AND NO INDEX SET STAYS HOME — the run after a fold has one obj and, with no span range and no point,
+     * nothing to factor, so dealing it would hand the whole run to one lane: a round trip and no parallelism. A point
+     * span ({@code {3}}, one compose chain) is no index set either. The run before still ships. Each row: the chain %
+     * its value.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "start({1,2,3,4,5}).plus(1).sum().plus(10).prod()  % 30",
             "start({1,2,3,4,5}).plus(1).sum().{3}plus(1).sum() % 23",
     }, delimiter = '%')
-    void testARunWithOneObjAndNoSpanRangeStaysHome(final String source, final int expected) {
+    void testARunWithOneObjAndNoIndexSetStaysHome(final String source, final int expected) {
         connectAll();
         final Code emitted = lower(homeAndPeer(), source);
         assertEquals(1, branches(emitted).size(), "only the first run ships: " + emitted);
@@ -494,10 +495,10 @@ public class PlaceLaneTest extends AbstractMetatronTest {
      * A RUN STATES ITS OWN AXES, AND ONE THAT STATES NONE KEEPS THOSE OF THE RUN BEFORE IT — a statement governs from
      * where it stands onward. {@code ?hop=0} on the last fold keeps only that run home, though its span range or its
      * computed prefix would otherwise ship it; at the head, or on the first fold, it reaches every run after it, so
-     * nothing ships. The first row's fold states its barrier ({@code sum?int<=int{*}}) only as a WORKAROUND: with typer
-     * checks off, a reducer after a span range in a tail behind a keyed branch folds each obj alone (a known typer bug,
-     * Marko 2026-11-18), so the plain {@code sum?hop=0()} answers 20 there until it is fixed. Each row: the chain % how
-     * many runs ship % its value.
+     * nothing ships. The first row's fold states its barrier ({@code sum?int<=int{*}}) only as a WORKAROUND, until the
+     * tail-fold bug is fixed (Marko, 2026-11-18): behind a keyed branch, a reducer after a span range that stays home
+     * folds each obj alone and answers 20 here, typer checks on or off. Each row: the chain % how many runs ship % its
+     * value.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -510,6 +511,31 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         connectAll();
         final Code emitted = lower(homeAndPeer(), source);
         assertEquals(shipped, branches(emitted).size(), "the runs that ship: " + emitted);
+        checkEquality(LOG, jnt(expected), evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * A POINT IS SPLIT ACROSS THE LANES — {@code a{p}} is p copies of one term and points add across a branch, so with one
+     * obj to start from the copies are the index set: every lane takes the whole obj and an even share of the point
+     * ({@code {5}} over the three loop peers is 2, 2 and 1), folds its copies through the cut, and the master recombines.
+     * At the head the lanes are seeded; after a fold the branch copies the obj. Each row: the chain % the lanes' points %
+     * its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start({1,2,3,4,5}).plus(1).sum().id{5}().plus(10).prod()  % 2|2|1 % 24300000", // 30^5
+            "start({1,2,3,4,5}).plus(1).sum().id{5}().plus(10).count() % 2|2|1 % 5",
+            "start(20).id{5}().plus(10).prod()                         % 2|2|1 % 24300000",
+            "start(20).plus{5}(1).prod()                               % 2|2|1 % 4084101",  // 21^5
+    }, delimiter = '%')
+    void testAPointIsSplitAcrossTheLanes(final String source, final String points, final int expected) {
+        connectAll();
+        final Code emitted = lower(homeAndPeer(), source);
+        final DistributedSweep.Layout last = layoutAt(emitted, branches(emitted).size() - 1);
+        assertEquals(points.trim(), last.lanes().stream()
+                .map(lane -> lane.code().insts().stream().map(inst -> inst.tid().d()).filter(point -> !point.isOne())
+                        .map(point -> String.valueOf(point.min())).findFirst().orElse("1"))
+                .collect(Collectors.joining("|")), "the shares of the point: " + emitted);
         checkEquality(LOG, jnt(expected), evaluate(emitted).clone().selfVID(null), true);
     }
 
