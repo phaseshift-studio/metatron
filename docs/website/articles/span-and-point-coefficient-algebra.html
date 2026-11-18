@@ -469,15 +469,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             </li>-->
         </div>
     </div>
-    <div>
+   <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/mfs/boot/space/web/"
+               href="http://localhost:8777/splash"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
-    </div>
+    </div> -->
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
@@ -626,8 +626,9 @@ point is taken once by the run, and <code>{0}a{c}</code> is <code>id{c}()</code>
 </thead>
 <tbody>
 <tr><td>an instruction</td><td>span: <code>{n}a</code> is \(a^n\)</td><td>point: <code>a{c}</code> is \(ca\)</td></tr>
-<tr><td>a type</td><td>span: <code>{n}T</code> is \(n\) slots of <code>T</code></td><td>point: <code>T{c}</code> is \(c\) copies of <code>T</code></td></tr>
+<tr><td>a type</td><td>span: <code>{n}T</code> is \(T^n = T\), with \(T^0 = 1\)</td><td>point: <code>T{c}</code> is \(c\) copies of <code>T</code></td></tr>
 <tr><td>a value</td><td>point: <code>{c}x</code> is \(cx\)</td><td>span: <code>x{n}</code> lays <code>x</code> along \(n\) slots</td></tr>
+<tr><td>a bracket entry</td><td>point: <code>{c}T</code> is \(c\) objects at one slot</td><td>span: <code>T{n}</code> is \(n\) slots of <code>T</code></td></tr>
 </tbody>
 </table>
 <p>The point coefficient can be understood as the <em>mass</em> at an address, copies compressed into a single point in space.
@@ -646,6 +647,9 @@ the compiled code holds the one instruction <code>{3}plus(1)@&lt;0&gt;</code>, w
 <code>{point}value{span}</code>. <code>{3}2</code> is three 2s at one address; <code>2{3}</code> is 2 laid at
 the uris 0, 1 and 2. Why does the value side flip? (My guess, not settled:
 diagrammatic order, a value being where a chain starts.)</li>
+<li>Brackets side with values: a bracket's entries are uris, and a uri is a value, so <code>lst[{2}int]</code> holds two ints at
+one slot and <code>lst[int{2}]</code> is two slots (Marko, 2026-11-18). A type written outside a bracket keeps <code>{span}T{point}</code>,
+<code>int{2}::T</code> being two parallel copies of the <code>int</code> filter.</li>
 <li>Caution: the stream notation \(\langle x \rangle\) above is a stream, so the
 positions <code>&lt;0&gt;</code>, <code>&lt;1&gt;</code> stay in code font here, never in math.]</li>
 </ul>
@@ -830,7 +834,9 @@ mtron&gt; *a.*a
 \(0, 1, \ldots, n-1\), each copy keeping the point of \(x\), so \((c)x\) along \(n\)
 slots counts \(c \cdot n\) objects. In mtron a value writes its span after it,
 <code>x{n}</code>, and keeps it curled on its type: <code>2{3}</code> is one 2 that counts three, and
-<code>{3}5{3}</code> counts nine and sums to 45. A space with an axis is what lays it out.</p>
+<code>{3}5{3}</code> counts nine and sums to 45. A space with an axis is what lays it out. A
+lst is such an axis, <code>[3{4}]</code> being <code>[3,3,3,3]</code>, and so is an instruction's argument
+list, a lst too: <code>5.branch(6{2})</code> is <code>5.branch(6,6)</code>.</p>
 <pre><code class="language-mtron">mtron&gt; 2{3}
 ==&gt;2{3}
 mtron&gt; {2}2{3}
@@ -841,6 +847,10 @@ mtron&gt; {3}5{3}.count()
 ==&gt;9
 mtron&gt; {3}5{3}.sum()
 ==&gt;45
+mtron&gt; [3{4}]
+==&gt;[3,3,3,3]
+mtron&gt; 5.branch(6{2})
+==&gt;{2}6
 </code></pre>
 <p>NOTES: spans on a value. A value's span is curled on its tid (Marko, 2026-11-11): <code>2{3}</code> is one value, not the lst
 <code>[2,2,2]</code>, and only a space with an axis unrolls it (<code>5{3}@xyz</code> at <code>xyz/0..2</code>, still to come). A ranged value span,
@@ -1526,7 +1536,30 @@ mtron&gt; 5.plus{3}(1).plus{3}(1).type().cc()
 mtron&gt; 5.plus(1).id{3}().type().cc()
 ==&gt;3
 </code></pre>
-<p>[To be written: the type of a range, and spans of slots in a type (<code>lst[{n}T]</code>).]</p>
+<p>A type used as a step is a filter: \(\langle x \rangle T = \langle x \rangle\) when \(x\) is a <code>T</code>, and
+\(\langle x \rangle T = 0\) otherwise. A filter is idempotent, \(T \cdot T = T\), so the span of a type is the power of an
+idempotent, \(T^n = T\) for \(n \geq 1\) and \(T^0 = 1\) by Definition 2, while its point is a sum,
+\(cT = T + \cdots + T\), and makes copies. So <code>{2}int{3}::T</code> is <code>int{3}::T</code>, three parallel checks and never nine, and
+<code>{0}int{3}::T</code> is <code>id{3}()</code>, which takes every object three times.</p>
+<p>A bracket is not a type but a container. Its entries are uris, which are values, so they are written as values are,
+<code>{point}value{span}</code>, and the span there is a power in the container's own monoid, concatenation, whose unit is <code>[]</code>.
+That monoid is free, not idempotent: \([T]^n = [T, \ldots, T]\), \(n\) slots. So <code>lst[int{4}]</code> is
+<code>lst[int,int,int,int]</code>, runs add along the list (<code>lst[int{2},int,int]</code> is <code>lst[int{4}]</code>), and the point is the mass
+at one slot: <code>lst[{4}int]</code> is one slot holding four ints. The one notation <code>{n}</code> is a power in whichever monoid its
+host carries, composition for a type and concatenation for a bracket, which is why idempotence collapses one and not
+the other. Mass never spreads over extent: <code>[3{4}]</code>, which a lst lays as <code>[3,3,3,3]</code>, is a <code>lst[int{2},int,int]</code>,
+while <code>[{4}3]</code>, four ints at one slot, is not.</p>
+<pre><code class="language-mtron">mtron&gt; 1.map({2}int{3}::T)
+==&gt;{3}1
+mtron&gt; 'a'.map({0}int{3}::T)
+==&gt;{3}'a'
+mtron&gt; [3{4}].?lst[int{2},int,int]::T
+==&gt;[3,3,3,3]
+mtron&gt; [{4}3].?lst[int{2},int,int]::T
+mtron&gt; [{4}3].?lst[{4}int]::T
+==&gt;[{4}3]
+</code></pre>
+<p>[To be written: the type of a range.]</p>
 <h3>Conclusion</h3>
 <p><strong>NOTES</strong>:</p>
 <ul>

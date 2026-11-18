@@ -469,15 +469,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             </li>-->
         </div>
     </div>
-    <div>
+   <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/mfs/boot/space/web/"
+               href="http://localhost:8777/splash"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
-    </div>
+    </div> -->
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
@@ -949,34 +949,36 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/23
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/25
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/24
+==&gt;[body=&gt;'another one']@tbledoc:note/26
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;24
-==&gt;8
 ==&gt;12
 ==&gt;21
 ==&gt;18
 ==&gt;15
 ==&gt;9
-==&gt;11
-==&gt;14
 ==&gt;3
-==&gt;17
 ==&gt;6
-==&gt;20
-==&gt;23
 ==&gt;4
 ==&gt;16
 ==&gt;7
 ==&gt;19
 ==&gt;1
-==&gt;22
-==&gt;2
-==&gt;5
 ==&gt;13
 ==&gt;10
+==&gt;8
+==&gt;11
+==&gt;14
+==&gt;17
+==&gt;26
+==&gt;20
+==&gt;23
+==&gt;22
+==&gt;2
+==&gt;25
+==&gt;5
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

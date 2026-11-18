@@ -340,78 +340,96 @@ entries are not separate objects a call can reach: `[29,'94103']` satisfies `lst
 age, position 1 a zipcode) and fails `lst[zipcode,age]::T`, where the coordinates are swapped.
 Two consequences, and they are the same consequence twice: there is no lifting *into* a tensor's positions (`lst[int]`
 hands a call no second candidate), and a tensor's entries name no other type (`lst[int]` is never an `int` — a list of
-ints is not an int). The coefficient is where extent lives, not another coordinate: `lst[int{4}]` is ONE position
-holding four ints, while `lst[int,int,int,int]` is four positions. A TEST lays every entry as a run of positions, its
-span times its point, the way ranged var args take their arguments: `[1,2,3,4]` and `[{4}1]` both satisfy
-`lst[int{4}]`. A lst tested against a lst *value* reads index by index instead: a point there is mass at its index and
-only a value's span lays indices, so `[{2}3]` is an `[int{2}::T]` while `[3{2}]`, which a lst lays as `[3,3]`, is not.
+ints is not an int). A bracket's types are written the way values are, `{mass}type{span}`: `{4}int` is ONE position
+holding four ints, and `int{4}` a run of four positions, the same as `lst[int,int,int,int]`. Mass never spreads over
+extent, so `[{4}1]` satisfies `lst[{4}int]` and `[1,2,3,4]` satisfies `lst[int{4}]`, never the other way round. A lst
+tested against a lst *value* reads index by index too: a point there is mass at its index and only a value's span lays
+indices, so `[{2}3]` is an `[int{2}::T]` (a type obj keeps `{span}type{point}`) while `[3{2}]`, which a lst lays as
+`[3,3]`, is not.
 
 **A fibered type's entries are distinct objects.** `person[ninja]` is a person *and* a ninja; the ninja is not the
 bundle's content but an object the bundle exposes. So a value of that type is acceptable where `ninja::T` is
 expected (its base or any fiber — see *acceptance and covariance*), and an instruction declared on `ninja` applies to
 the fiber's value as if it had been declared top-level.
 
-### a bracket entry's coefficient: the multiplicity of the value AT that position or vertex
+### a bracket entry's coefficient: the multiplicity of the value AT that position or vertex, or a run of positions
 
 <!-- cast: mini-tensors title="tensors: rank and magnitude lst with coefficient polynomials" speed_rates="0.5,1,1.5,2" speed_default="1" place="both" -->
 
-A bracket entry is a *position* (a tensor position, a path vertex), so a **suffix coefficient is the multiplicity of the
-value at that position** — not another position, and not another hop. `lst[int{2},str]` is a two-position list whose
-FIRST position holds two ints; `rel[int,person{2}]` is a two-vertex chain whose SECOND vertex holds two people
-(`1=>{bob,marko}`, two people at that vertex — not two hops). A lst under test lays that multiplicity as a run, so
-`[1,2,'a']` satisfies `lst[int{2},str]` as `[{1,2},'a']` does:
+A bracket entry is a *position* (a tensor position, a path vertex). A bracket holds uris, so it writes its types the
+way values are written, `{mass}type{span}`: **its prefix coefficient is the multiplicity of the value at that
+position**, and its suffix a run of positions. `lst[{2}int,str]` is a two-position list whose FIRST position holds two
+ints, and `lst[int{2},str]` a three-position list; `rel[int,{2}person]` is a two-vertex chain whose SECOND vertex holds
+two people (`1=>{bob,marko}`, two people at that vertex), and `rel[int,person{2}]` a three-vertex chain,
+`int=>person=>person`. Mass never spreads over extent, so `[1,2,'a']` is a `lst[int{2},str]` and `[{1,2},'a']` a
+`lst[{2}int,str]`:
 
 ```mtron
-a suffix coefficient is the multiplicity of the value AT that position / vertex
+a bracket entry's prefix coefficient is the multiplicity of the value AT that position / vertex
 mtron> wayfarer -> rec::T@wayfarer
-mtron> lst[int{2},str]::[{1,2},'a']              [-- position 0 is an int{2}: one position, two ints --]
-==>lst[int{2},str]::[{1,2},'a']
-mtron> rel[int,wayfarer{2}]::(1=>{wayfarer::[name=>'bob'],wayfarer::[name=>'marko']})   [-- the second vertex holds two wayfarers --]
-==>rel[int,wayfarer{2}]::(1=>{wayfarer::[name=>'bob'],wayfarer::[name=>'marko']})
-mtron> lst[int{2},str]::[1,'a']          [-- one int is an int{1}: too few for an int{2} position --]
-==>fail::[parse error at line 1, col 1: obj does not match /m/lst[/m/int{2},/m/str]::T
+mtron> lst[{2}int,str]::[{1,2},'a']              [-- position 0 holds two ints: one position, mass two --]
+==>lst[{2}int,str]::[{1,2},'a']
+mtron> lst[int{2},str]::[1,2,'a']                [-- int{2} is a run: two int positions, then a str --]
+==>lst[int{2},str]::[1,2,'a']
+mtron> rel[int,{2}wayfarer]::(1=>{wayfarer::[name=>'bob'],wayfarer::[name=>'marko']})   [-- the second vertex holds two wayfarers --]
+==>rel[int,{2}wayfarer]::(1=>{wayfarer::[name=>'bob'],wayfarer::[name=>'marko']})
+mtron> rel[int,wayfarer{2}]::(1=>(wayfarer::[name=>'bob']=>wayfarer::[name=>'marko']))   [-- wayfarer{2} is a run: two wayfarer vertices --]
+==>rel[int,wayfarer{2}]::(1=>(wayfarer::[name=>'bob']=>wayfarer::[name=>'marko']))
+mtron> lst[{2}int,str]::[1,'a']          [-- one int is an int{1}: too few for a position holding two --]
+==>fail::[parse error at line 1, col 1: obj does not match /m/lst[{2}/m/int,/m/str]::T
      [[1,'a']
          X=>
-     lst[int{2},str]::T
+     lst[{2}int,str]::T
      ──────────────────
      [X=>1,==>'a']]
      predicate apply failed on poly
-   	while parsing: lst[int{2},str]::[1,'a']]
-mtron> rel[int,wayfarer{2}]::(1=>wayfarer::[name=>'bob'])   [-- one wayfarer is too few for a wayfarer{2} vertex --]
-==>fail::[parse error at line 1, col 1: obj does not match /m/rel[/m/int,wayfarer{2}]::T
+   	while parsing: lst[{2}int,str]::[1,'a']]
+mtron> lst[int{2},str]::[{1,2},'a']      [-- two ints at one position are no run of two positions --]
+==>fail::[parse error at line 1, col 1: obj does not match /m/lst[/m/int{2},/m/str]::T
+     [[{1,2},'a']
+         X=>
+     lst[int{2},str]::T
+     ──────────────────
+     [==>{1,2},==>'a']]
+     predicate apply failed on poly
+   	while parsing: lst[int{2},str]::[{1,2},'a']]
+mtron> rel[int,{2}wayfarer]::(1=>wayfarer::[name=>'bob'])   [-- one wayfarer is too few for a vertex holding two --]
+==>fail::[parse error at line 1, col 1: obj does not match /m/rel[/m/int,{2}wayfarer]::T
      [1=>wayfarer::[name=>'bob']
          X=>
-     rel[int,wayfarer{2}]::T
+     rel[int,{2}wayfarer]::T
      ─────────────────────────────────
      [==>1,X=>wayfarer::[name=>'bob']]]
      predicate apply failed on poly
-   	while parsing: rel[int,wayfarer{2}]::(1=>wayfarer::[name=>'bob'])]
+   	while parsing: rel[int,{2}wayfarer]::(1=>wayfarer::[name=>'bob'])]
 ```
 The coefficient forms say how many values that position admits, exactly as they do anywhere else in a type:
 
-| entry        | value at that position                                   |
-|--------------|----------------------------------------------------------|
-| `T` / `T{1}` | exactly one                                              |
-| `T{n}`       | exactly n (`lst[int{2},str]` ⇒ `[{1,2},'a']`)            |
-| `T{n,m}`     | an inclusive range — n, …, m                             |
-| `T{+}`       | at least one, so the position is REQUIRED                |
-| `T{?}`       | zero or one — ABSENT, or one that is still its type      |
-| `T{*}`       | zero or more — absent is legal, and so is a multiplicity |
+| entry         | value at that position                                   |
+|---------------|----------------------------------------------------------|
+| `T` / `{1}T`  | exactly one                                              |
+| `{n}T`        | exactly n (`lst[{2}int,str]` ⇒ `[{1,2},'a']`)            |
+| `{n,m}T`      | an inclusive range — n, …, m                             |
+| `{+}T`        | at least one, so the position is REQUIRED                |
+| `{?}T`        | zero or one — ABSENT, or one that is still its type      |
+| `{*}T`        | zero or more — absent is legal, and so is a multiplicity |
 
 **Absence** is the zero end of the range, and it reads differently in the two readings. In a tensor the value is a
-list, so a zero-admitting TRAILING position is one the shorter list does not fill — `lst[str,int{?}]` accepts `['a']`.
+list, so a zero-admitting TRAILING position is one the shorter list does not fill — `lst[str,{?}int]` accepts `['a']`.
 In
-a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — `rel[int,wayfarer{?},str]` accepts
-`1=>'tally'` (the middle vertex skipped) while `rel[int,wayfarer{+},str]` does not. A present value must still be the
+a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — `rel[int,{?}wayfarer,str]` accepts
+`1=>'tally'` (the middle vertex skipped) while `rel[int,{+}wayfarer,str]` does not. A present value must still be the
 entry's type at both: `{?}` is zero-or-one, not "anything when present".
 
-**A PREFIX coefficient is the entry's span: how many positions in a row.** An entry is `{span}type{point}`, so
-`lst[{4}int]` is four int positions, `lst[{3}int{2}]` three positions that each hold an `int{2}`, and
-`lst[{?}int,{2}str]` an optional int then two strs. A ranged span takes any count it admits, and an unbounded span on
-the LAST entry claims the rest of the list: `lst[{*}int]` holds ints only. A type keeps both in its one id —
-`{2}int{3}::T` has tid `{2}/m/int{3}` — and its coefficient stays the point. A path does not read a prefix yet: whether
-a repeated vertex should lengthen a chain is not settled. A NEGATIVE (anti) coefficient is not a multiplicity at all, so
-a path reports it as not yet matched rather than judging it.
+**A bracket entry's SUFFIX coefficient is its span: how many positions in a row.** An entry is `{mass}type{span}`, so
+`lst[int{4}]` is four int positions, `lst[{2}int{3}]` three positions that each hold two ints, and
+`lst[int{?},str{2}]` an optional int then two strs. Runs add up along the list: `lst[int{2},int,int]` is
+`lst[int{4}]`. A ranged span takes any count it admits, and an unbounded span on the LAST entry claims the rest of the
+list: `lst[int{*}]` holds ints only, and `lst[int{2},{0}#{*}]`, a tail of positions that hold nothing, exactly two. A
+type obj keeps the type convention in its one id — `{2}int{3}::T` has tid `{2}/m/int{3}` — and its coefficient stays
+the point. A path's suffix lengthens the chain the same way: `rel[int,person{2}]` is `int=>person=>person`. A
+NEGATIVE (anti) coefficient is not a multiplicity at all, so a path reports it as not yet matched rather than judging
+it.
 
 ### declaring a fibered type vs instantiating one
 
@@ -504,7 +522,7 @@ instruction run on* (dispatch).
 
 - **A fiber named at coefficient one must be there.** The value is tested against the declaration, and a field it
   does not have fails that test. Absence is legal only where the fiber's coefficient admits zero —
-  `rec[role,position{?}]` — and reading a missing key still yields `noobj`. `noobj` is a value, not a hole.
+  `rec[role,{?}position]` — and reading a missing key still yields `noobj`. `noobj` is a value, not a hole.
 - **A predicated fiber type is satisfied by the FIBER'S VALUE.** A poly entry types one of the bundle's fibers
   (`person[ninja]` puts a ninja at the field the declaration calls `role`), so the object a trait's shape is about
   (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `bundle>>role` — not the bundle's declaration. A *shaped

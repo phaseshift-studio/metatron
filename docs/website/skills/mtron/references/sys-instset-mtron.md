@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           {?}timeout=>'a real number denoting timeout of ...',
-           cmd=>'the terminal command to evaluate (...'],
+           cmd=>'the terminal command to evaluate (...',
+           {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -69,15 +69,15 @@ mtron> bash('ls')
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(19 more)]
+    ...(17 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.9M ...',
+    'tmpfs                  6.1G  6.8M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme1n1p2         916G  594G ...',
-    'tmpfs                   31G  7.6M ...',
+    'tmpfs                   31G  3.5M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -110,7 +110,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           ...(19 more)]]
+           ...(17 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -120,7 +120,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(20 more)]
+    ...(18 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -161,7 +161,7 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    ...(19 more)]
+    ...(17 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 26815     	Blocks: 56     ...',
@@ -185,7 +185,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    ...(19 more)]
+    ...(17 more)]
 ```
 Unit values test against each other's units:
 
@@ -257,9 +257,9 @@ mtron> */sys/thread/+.count()
 ==>66
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::515.4654,
+    free_mem_jvm=>mB::335.1991,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::196.5345,
+    used_mem_jvm=>mB::376.8008,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
