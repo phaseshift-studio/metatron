@@ -337,7 +337,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * product of its own to be a power in: an instruction's span is its run, one step held at one index, and a
          * type's is a run of a filter, P·P = P, so {@code [{2}int::T]} is {@code [int::T]}, with a zero span the
          * identity, which takes any obj. An lhs index passes the rhs index at its place when its mass is within the rhs
-         * index's (a type's point times its own count {@code ::T{n}}, a value's point, a stream's count) and every copy
+         * index's (a type's point, a value's point, a stream's count) and every copy
          * it holds is one of the rhs index's, asked at the domain gate ({@link Inst.Helper#filterOnDomainAllowUnique}):
          * {@code [{2}3]} is an {@code [int{2}::T]}, {@code [3{2}]} is not, and {@code [{2}3,5]} is no
          * {@code [int::T,int::T,int::T]}. Past the last rhs index the
@@ -349,8 +349,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         public static boolean testIndices(final Lst lhs, final Lst rhs) {
             final Function<Lst, List<Obj>> resolved = lst ->
                     laid(lst.lstValue().stream().map(entry -> (Obj) entry.autoResolve(lhs)).toList());
-            final Function<Obj, cInt> mass = entry -> entry.isType() || entry.isCall() ? entry.tid().d().mult(entry.isType() &&
-                    null != entry.vid() && TYPE_TID.equals(entry.vid().basePath()) ? entry.vid().c() : cInt.ONE()) : entry.c();
+            final Function<Obj, cInt> mass = entry -> entry.isType() || entry.isCall() ? entry.tid().d() : entry.c();
             final List<Obj> lefts = resolved.apply(lhs);
             final List<Obj> rights = resolved.apply(rhs);
             for (int i = 0; i < rights.size(); i++) {

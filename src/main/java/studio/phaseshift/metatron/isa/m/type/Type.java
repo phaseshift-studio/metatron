@@ -440,9 +440,9 @@ public interface Type extends Obj {
      * {@code map(int{2}::T)} is {@code map{2}(int::T)}, so {@code 1.branch(int::T,int::T)} is {@code {2}1}, while
      * {@code 1.branch(int::T,str::T)} is {@code 1} and {@code true.branch(int::T,str::T)} is nothing. A span is a run
      * of the filter, P·P = P, so it tells only at zero, where {@code {0}P{c}} is c·id and takes every obj
-     * ({@code {2}int{3}::T} is {@code int{3}::T}). A type's own count, {@code ::T{n}}, is n copies of the filter. Only
-     * an exact point makes copies: a ranged one ({@code int{?}::T}, the {@code {*}} of an argument pattern) is a
-     * quantifier, how many objs a place takes, and passes the obj as it is.
+     * ({@code {2}int{3}::T} is {@code int{3}::T}). Only an exact point makes copies: a ranged one
+     * ({@code int{?}::T}, the {@code {*}} of an argument pattern) is a quantifier, how many objs a place takes, and
+     * passes the obj as it is.
      * Membership is asked of each obj the stream holds at the domain gate
      * ({@link Inst.Helper#filterOnDomainAllowUnique}), against the type without its counts ({@link Helper#unit}), so
      * {@code {3}5} is an int as 5 is: a base type asks it of its base, a refinement of its parent and then its
@@ -450,12 +450,11 @@ public interface Type extends Obj {
      */
     @Override
     default Obj apply(final Obj obj) {
-        final cInt counted = this.tid().d().mult(null != this.vid() && Tokens.TYPE_TID.equals(this.vid().basePath()) ?
-                this.vid().c() : cInt.ONE());
+        final cInt stated = this.tid().d();
         // AN EXACT POINT IS COPIES, A RANGED ONE A QUANTIFIER: int{2}::T is two filters, while the {*} of <#{*}>::T, a
         // pattern an argument is computed by, says how many objs the place takes and makes none. Exact is a stated
         // number: the {**} of a type read for any multiplicity has no bound at all, and isExact() alone took it
-        final cInt point = counted.isExact() && null != counted.min() ? counted : cInt.ONE();
+        final cInt point = stated.isExact() && null != stated.min() ? stated : cInt.ONE();
         final Type parentType = this.parentType();
         return objs(obj.stream().map(one -> {
             if (one.isUncaughtFail())
