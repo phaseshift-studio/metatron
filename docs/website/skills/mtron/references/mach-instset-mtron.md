@@ -277,10 +277,10 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}state=>'the run state: stop, run or pause',
-           {?}tracer=>"the processor's diagnostics (trace...",
            {?}result=>'the objs the last evaluation produ...',
            {?}analyzer=>"the processor's statistics (analyz...",
+           {?}state=>'the run state: stop, run or pause',
+           {?}tracer=>"the processor's diagnostics (trace...",
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -348,13 +348,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
+           {?}result=>'the last result produced by the th...',
            {?}state=>'current state of the thread',
            {?}timeout=>'how long a read of rhs waits for t...',
            {?}loop=>'delay to repeat code evaluation (d...',
            {?}time=>'the datetime::T when the thread wa...',
            code=>"the thread's executing code",
-           {?}runtime=>"computes the thread's current runn...",
-           {?}result=>'the last result produced by the th...'],
+           {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
 | key       | value                                        |
@@ -410,12 +410,12 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
-           {?}peer=>"machine's own connections, one per...",
            {?}analyzer=>"the network's statistics (analyzer...",
            {?}roster=>'known machines, connectionless: <h...',
            {?}status=>'the health method — an auto inst c...',
-           {?}listener=>'the sockets this machine serves th...'],
+           {?}listener=>'the sockets this machine serves th...',
+           {?}pattern=>'the branch this network answers as...',
+           {?}peer=>"machine's own connections, one per..."],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',

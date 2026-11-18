@@ -533,19 +533,14 @@ compose (\(\cdot\)). For a natural number \(n \in \mathbb{N}\), the point counts
 span counts multiplications, \(a^n = a \cdot \cdots \cdot a\). A point can be understood as the <em>mass</em> at a single
 memory address. The span is the <em>extent</em> along a sequential series of addresses.</p>
 <p>Stream ring theory holds the bridge between them: the third equality of
-Theorem 6: \((ca)^n = c^n a^n\). In mtron, <code>{n}a{c}</code> is \((ca)^n = c^n a^n\):
-the span exponentiates the point.</p>
+Theorem 6: \((ca)^n = c^n a^n\). A run of the pointed term exponentiates its point.</p>
 <p><strong>Live proof.</strong> Two steps of <code>plus{3}(34)</code> from <code>1</code>: the value climbs to <code>69</code>,
 and the point squares to <code>9</code>. Thus, \((3a)^2\) and</p>
-<pre><code class="language-mtron">mtron&gt; 1.{2}plus{3}(34)
+<pre><code class="language-mtron">mtron&gt; 1.plus{3}(34).plus{3}(34)
 ==&gt;{9}69
 </code></pre>
 <p>In <em>branch normal form</em>, the point expanded, \(3a = a + a + a\), so \((3a)^2 = (a + a + a)^2\):</p>
 <pre><code class="language-mtron">mtron&gt; 1.{2}{plus(34),plus(34),plus(34)}
-==&gt;{9}69
-</code></pre>
-<p>In <em>compose normal form</em>, the span expanded, \((3a)^2 = 3a \cdot 3a\):</p>
-<pre><code class="language-mtron">mtron&gt; 1.plus{3}(34).plus{3}(34)
 ==&gt;{9}69
 </code></pre>
 <p>Finally, in both compose and branch normal form, the sum of the \(3^2\) words \(a \cdot a\):</p>
@@ -559,6 +554,15 @@ and the point squares to <code>9</code>. Thus, \((3a)^2\) and</p>
           plus(34).plus(34),
           plus(34).plus(34)}
 ==&gt;{9}69
+</code></pre>
+<p>Written on one instruction, the two coefficients are its two extents: <code>{2}plus{3}(34)</code> is three lanes of the run
+<code>plus(34).plus(34)</code>, \(3a^2\), its point taken once, as <code>map{3}</code> takes it once for the run it maps:</p>
+<pre><code class="language-mtron">mtron&gt; 1.{2}plus{3}(34)
+==&gt;{3}69
+mtron&gt; 1.plus(34).plus{3}(34)
+==&gt;{3}69
+mtron&gt; 1.map{3}(plus(34).plus(34))
+==&gt;{3}69
 </code></pre>
 <p>The purpose of this article is to prove that the laws of each coefficient alone and of the two together,
 can be derived solely from the stream ring axioms of [1] as well as to demonstrate practical, utilitarian
@@ -593,8 +597,9 @@ a^0 = 1 \quad \text{and} \quad a^{n+1} = a^n \cdot a.
 \]
 In mtron it is written before the instruction, <code>{n}a</code>, and stays on it: <code>{3}a</code> is
 one instruction whose run <code>a.a.a</code> is walked when it applies, never written out
-into the code, and <code>{0}a</code> is \(a^0 = 1\), the identity <code>id()</code>, whatever its point.
-A term with both coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
+into the code, and <code>{0}a</code> is \(a^0 = 1\), the identity <code>id()</code>. A term with both
+coefficients, <code>{n}a{c}</code>, is \(c\) lanes of its run, \(c\,a^n\): the point is parallel and the span serial, so the
+point is taken once by the run, and <code>{0}a{c}</code> is <code>id{c}()</code>.
 :::</p>
 <p>An mtron chain is read as a stream ring expression:</p>
 <table>
@@ -610,7 +615,7 @@ A term with both coefficients, <code>{n}a{c}</code>, is \((ca)^n\).
 <tr><td><code>{c}x</code></td><td>\(cx\)</td></tr>
 <tr><td><code>a{c}</code></td><td>\(ca\)</td></tr>
 <tr><td><code>{n}a</code></td><td>\(a^n\)</td></tr>
-<tr><td><code>{n}a{c}</code></td><td>\((ca)^n\)</td></tr>
+<tr><td><code>{n}a{c}</code></td><td>\(c\,a^n\)</td></tr>
 <tr><td><code>{-n}a</code></td><td>\((a^{\smile})^n\)</td></tr>
 </tbody>
 </table>
@@ -881,27 +886,35 @@ a term (Theorem 4). ◻
 :::</p>
 <p>So a zero point annihilates only a step that runs: \((0a)^n = 0^n a^n\) is \(0\) for
 \(n \geq 1\) and \(1\) for \(n = 0\) (Theorem 7), and a span range, a sum of such runs (Definition 3, below), is \(0\) only if
-it holds no zero-step run. In mtron, <code>{0}a{c}</code> is written
-<code>id()</code> whatever \(c\), and an instruction is <code>noobj</code> only when its point is zero
-and its span holds no zero-step run. Tested by the product \(c \cdot n\), which is
-the count of a value's copies, the zero span read as the zero: a branch member
-<code>{0}a</code> dropped its object, \(\langle 5 \rangle (a^0 + b)\) answering
-\(\langle 5 \rangle b\) alone.</p>
-<p><strong>Live proof.</strong></p>
-<pre><code class="language-mtron">mtron&gt; 5.{2}id{3}()
+it holds no zero-step run. In mtron, <code>{n}a{c}</code> is \(c\,a^n\), the point on the run (Corollary 3), so <code>{0}a{c}</code> is
+<code>id{c}()</code> and an instruction is <code>noobj</code> exactly when its point is zero. So is a type, which as a step is a filter:
+<code>{0}int{3}::T</code> runs its filter no times, so it takes every object three times, while <code>int{0}::T</code> is <code>noobj</code>. The run of
+the pointed term, \((ca)^n\), is the pointed step written out, or a span on the branch its point stands for, so
+\((0a)^0 = 1\) is a zero span on the branch of no members. Tested by the product \(c \cdot n\), which is the count of a value's copies, the zero span read as the
+zero: a branch member <code>{0}a</code> dropped its object, \(\langle 5 \rangle (a^0 + b)\) answering \(\langle 5 \rangle b\)
+alone.</p>
+<p><strong>Live proof.</strong> The run of the pointed step exponentiates its point (Corollary 4), the point on the run does not
+(Corollary 3), and a zero point annihilates whatever its span.</p>
+<pre><code class="language-mtron">mtron&gt; 5.id{3}().id{3}()
 ==&gt;{9}5
+mtron&gt; 5.{2}id{3}()
+==&gt;{3}5
 mtron&gt; 5.{2}id().id{3}()
 ==&gt;{3}5
-mtron&gt; 5.{3}id{2}()
+mtron&gt; 5.id{2}().id{2}().id{2}()
 ==&gt;{8}5
+mtron&gt; 5.{3}id{2}()
+==&gt;{2}5
+mtron&gt; 5.{0}id{3}()
+==&gt;{3}5
 mtron&gt; 5.{0}id{0}()
-==&gt;5
-mtron&gt; 5.{0}plus{0}(1)
-==&gt;5
 mtron&gt; 5.plus{0}(1)
 mtron&gt; 5.branch({0}plus(1),plus(2))
 ==&gt;5
 ==&gt;7
+mtron&gt; 'a'.map({0}int{3}::T)
+==&gt;{3}'a'
+mtron&gt; 'a'.map(int{0}::T)
 </code></pre>
 <p>::: <strong>Theorem 8</strong> (A span does not distribute over a branch). If
 \(a,b \in \mathcal{F}\), then
@@ -1053,9 +1066,10 @@ as a pattern still matches <code>{?}neg()</code> as a run of none or one <code>n
 <p><strong>Live proof.</strong> If \(a (x) = x + 1\), then
 \(\langle 1 \rangle a^{[2,3]} = \langle 1 \rangle (a^2 + a^3) = \langle 3, 4 \rangle\)
 and \(\langle 1 \rangle a^{[0,1]} = \langle 1, 2 \rangle\). By Corollary 6,
-\(\langle 1 \rangle (3a)^{[2,3]} = \langle (9)3, (27)4 \rangle\), and a
-multiplicity on the input counts once:
-\(\langle (2)1 \rangle (3a)^{[2,3]} = \langle (18)3, (54)4 \rangle\).</p>
+\(\langle 1 \rangle (3a)^{[2,3]} = \langle (9)3, (27)4 \rangle\), a range on the branch the point stands for, while
+the point on the range is taken once by each of its runs, $\langle 1 \rangle 3a^{[2,3]} = \langle (3)3, (3)4
+\rangle$, and a multiplicity on the input counts once:
+\(\langle (2)1 \rangle 3a^{[2,3]} = \langle (6)3, (6)4 \rangle\).</p>
 <pre><code class="language-mtron">mtron&gt; 1.{2,3}plus(1)
 ==&gt;3
 ==&gt;4
@@ -1065,12 +1079,15 @@ mtron&gt; 1.branch(plus(1).plus(1),plus(1).plus(1).plus(1))
 mtron&gt; 1.{?}plus(1)
 ==&gt;1
 ==&gt;2
-mtron&gt; 1.{2,3}plus{3}(1)
+mtron&gt; 1.{2,3}{plus(1),plus(1),plus(1)}
 ==&gt;{9}3
 ==&gt;{27}4
+mtron&gt; 1.{2,3}plus{3}(1)
+==&gt;{3}3
+==&gt;{3}4
 mtron&gt; {2}1.{2,3}plus{3}(1)
-==&gt;{18}3
-==&gt;{54}4
+==&gt;{6}3
+==&gt;{6}4
 </code></pre>
 <p>A range on a point is a range of multiplicities: if \(b (x) = x + 2\), then
 \(\langle 1 \rangle\, [0,1]\, b = \langle ([0,1])3 \rangle\), a three held zero
@@ -1106,13 +1123,13 @@ weighted \(1, 2, 4, \ldots, 64\), which is \(2^7 - 1 = 127\) objects.</p>
 ==&gt;5
 ==&gt;6
 mtron&gt; 0.{0,6}plus{2}(1)
-==&gt;0
+==&gt;{2}0
 ==&gt;{2}1
-==&gt;{4}2
-==&gt;{8}3
-==&gt;{16}4
-==&gt;{32}5
-==&gt;{64}6
+==&gt;{2}2
+==&gt;{2}3
+==&gt;{2}4
+==&gt;{2}5
+==&gt;{2}6
 </code></pre>
 <p>An open range is the Kleene star [3],
 \(a^{[0,\infty)} = a^* = 1 + a + a^2 + \cdots\). If \(a (x) = x + 1\), then
@@ -1462,6 +1479,18 @@ mtron&gt; 5.branch(plus(1),plus{-1}(1)).count()
 mtron&gt; 5.{-1}plus(1)
 ==&gt;4
 </code></pre>
+<p>A negative span keeps the point as a positive one does: <code>{-n}a{c}</code> is \(c\) lanes of the backward run, \(c\,a^{-n}\),
+so <code>5.{-1}plus{3}(1)</code> is <code>{3}4</code> and <code>5.{-2}plus{3}(1)</code> is <code>{3}3</code>, as <code>5.{2}plus{3}(1)</code> is <code>{3}7</code>. The run of the
+pointed term backward, Theorem 13's \((ca)^{-n} = c^n a^{-n}\), is the converse step pointed at each step.</p>
+<pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1)
+==&gt;{3}7
+mtron&gt; 5.{-1}plus{3}(1)
+==&gt;{3}4
+mtron&gt; 5.{-2}plus{3}(1)
+==&gt;{3}3
+mtron&gt; 5.minus{3}(1).minus{3}(1)
+==&gt;{9}3
+</code></pre>
 <p>In mtron, an instruction declares its converse in its <code>?decq</code> claim, as the contract it runs backward:
 <code>plus?int&lt;=int(int)</code> names <code>minus?int&lt;=int(int)</code>, and <code>neg</code> names itself. The walk of Theorem 10 splits a span at zero
 and runs a negative length as that many steps of the converse. An instruction that declares none has no backward run to
@@ -1479,29 +1508,20 @@ involution, as a converse is. Today <code>[1,2,3]{-1}</code> does not parse.</li
 <li>On a rel, mtron's <code>neg()</code> swaps the ends, so <code>(1=&gt;2).neg()</code> is <code>2=&gt;1</code>. The arrow \(x \Rightarrow y\) is the matrix
 with a \(1\) at row \(x\) and column \(y\) [2], so the swap is its transpose, the converse
 \((x \Rightarrow y)^{\smile} = y \Rightarrow x\), and not its additive inverse, which is the point <code>{-1}(1=&gt;2)</code>.</li>
-<li>A lst under test lays an entry's span times its point as slots. A negative count lays none and is skipped, so
-<code>[{-1}3,4]</code> passes for <code>[int::T]</code>. A run of like slots read backward is the same run, so a negative span could lay its
-length, while a negative point, an anti-entry, should neither lay nor be skipped.</li>
-<li>By Theorem 13, <code>5.{-1}plus{3}(1)</code> is <code>{3}4</code> and <code>5.{-2}plus{3}(1)</code> is <code>{9}3</code>, as <code>5.{2}plus{3}(1)</code> is <code>{9}7</code>. Today
-mtron answers <code>4</code> and <code>3</code>: the walk builds the converse step from its declared contract (<code>Inst.Helper.runs</code>) and
-leaves the step's point behind.</li>
+<li>A lst under test lays only a value's span as indices, and reads a point as mass at its index, so <code>[{-1}3,4]</code> is no
+<code>[int::T]</code>: its index 0 holds a mass of \(-1\). A run of like slots read backward is the same run, so a value's
+negative span could lay its length, but a value's span is never negative: <code>3{-1}</code> does not parse.</li>
 </ul>
-<pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1)
-==&gt;{9}7
-mtron&gt; 5.{-1}plus{3}(1)
-==&gt;4
-mtron&gt; 5.{-2}plus{3}(1)
-==&gt;3
-</code></pre>
 <h3>Point and Span Coefficients Type Systems</h3>
-<p>If \(a (x) = y\), then \(\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle\) by
-Theorem 7 and the apply axiom. So the coefficient of the inferred type is
-\(c^n\): <code>type()</code> reads the point of a term off its run, and <code>cc()</code> reads the
-coefficient of that type. In the console, <code>5.{2}plus{3}(1).type()</code> is
-<code>int{9}::T</code>. The compiler types a span by its runs, never by its span times its
-point, which is the count of a value's copies (<code>{3}5{3}</code> counts nine):
-<code>0.{10}plus(4)</code> is typed one <code>int</code>, not ten.</p>
+<p>If \(a (x) = y\), then \(\langle x \rangle c\,a^n = \langle c\,a^n (x) \rangle\) and
+\(\langle x \rangle (ca)^n = \langle c^n a^n (x) \rangle\) by Theorem 7 and the apply axiom. So the coefficient of
+the inferred type of <code>{n}a{c}</code> is \(c\), and of the run of the pointed step \(c^n\): <code>type()</code> reads the point of a term
+off its run, and <code>cc()</code> reads the coefficient of that type. In the console, <code>5.{2}plus{3}(1).type()</code> is
+<code>int{3}::T</code>. The compiler types a span by its runs, never by its span times its point, which is the count of a
+value's copies (<code>{3}5{3}</code> counts nine): <code>0.{10}plus(4)</code> is typed one <code>int</code>, not ten.</p>
 <pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1).type().cc()
+==&gt;3
+mtron&gt; 5.plus{3}(1).plus{3}(1).type().cc()
 ==&gt;9
 mtron&gt; 5.plus(1).id{3}().type().cc()
 ==&gt;3

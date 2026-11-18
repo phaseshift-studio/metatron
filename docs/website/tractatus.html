@@ -3273,7 +3273,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{g}}E{{m}}T{{y}}a{{m}}T{{g}}R{{r}}O{{y}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}M{{g}}E{{y}}t{{y}}a{{c}}t{{b}}r{{g}}o{{b}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5766,7 +5766,7 @@ mtron&gt; *fs:m     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
-==&gt;null
+==&gt;"[ERROR] [boot] java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MLst cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MLst and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app') at studio.phaseshift.metatron.BootLoader.main(BootLoader.java:325)"
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code></pre>
 </div>
@@ -5813,16 +5813,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355852       7000   6348852   1% /run'
+==&gt;'tmpfs                    6355852       7052   6348800   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  622949820 288008004  69% /'
-==&gt;'tmpfs                   31779244       7704  31771540   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  622797316 288160508  69% /'
+==&gt;'tmpfs                   31779244       7708  31771536   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779244          0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355848        256   6355592   1% /run/user/1000'
+==&gt;'tmpfs                    6355848        260   6355588   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1326561572 594646972  70% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1327484828 593723716  70% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;'AGENTSWARM.md'
@@ -6039,7 +6039,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:1614/52/26/676?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:1717/23/20/041?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7900,7 +7900,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:1614/52/31/031?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1717/23/24/660?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7919,7 +7919,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:1614/52/31/031?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:1717/23/24/660?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -8011,7 +8011,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:1614/52/04/867?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:1717/23/01/759?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8019,7 +8019,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:1614/52/04/867?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:1717/23/01/759?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -9490,6 +9490,7 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/env/+/.take(10)
 ==&gt;/sys/env/LOGNAME=&gt;'killswitch'
+==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/4ef0bf74_7440_46a9_a7f3_ce10401cf482'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
 ==&gt;/sys/env/SAKANA_API_KEY=&gt;'fish_c6e79276b55fedf01aae6a5029fd8b263915542167d3dcea42aff825fa3cc316'
 ==&gt;/sys/env/SDKMAN_PLATFORM=&gt;'linuxx64'
@@ -9497,8 +9498,7 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 ==&gt;/sys/env/GPG_AGENT_INFO=&gt;'/run/user/1000/gnupg/S.gpg-agent:0:1'
 ==&gt;/sys/env/COLORTERM=&gt;'truecolor'
 ==&gt;/sys/env/XDG_SESSION_CLASS=&gt;'user'
-==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;' site'
-==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/69fdc689_e818_4652_8e6d_e7ea00840d3f'</code></pre>
+==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;' site'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

@@ -519,7 +519,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">356</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">21</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/m-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 16, 2026</span>
+            <span class="instset-built">built November 17, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -540,7 +540,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/instset::[q=&gt;[
+                        <pre><code>/m/instset::[pattern=&gt;/m/#,
+             q=&gt;[
               docq::[
                pattern=&gt;docq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -552,12 +553,155 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
-             pattern=&gt;/m/#,
+             type=&gt;[
+              &lt;#&gt;::T,
+              bool::T,
+              int::T,
+              real::T,
+              bytes::T,
+              str::T,
+              uri::T,
+              uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law,
+              rec::T[?[{?}law=&gt;lst[{+}law]::T]]@/m/theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                involution,
+                left_distributive,
+                right_distributive]]]@/m/theory/ring_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               inv=&gt;inst::T,
+               {?}law=&gt;[monoidic,unit,involution],
+               {?}rewrite=&gt;[
+                [op(a::T).op(inv(a::T))=&gt;],
+                [op(inv(a::T)).op(a::T)=&gt;]]]]@/m/theory/group_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit],
+               {?}rewrite=&gt;[[op(id)=&gt;]]]]@/m/theory/monoid_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit,commutative]]]@/m/theory/commutative_monoid_theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               inv=&gt;inst::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                involution,
+                left_distributive,
+                right_distributive]]]@/m/theory/field_theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                left_distributive,
+                right_distributive]]]@/m/theory/rig_theory,
+              theory::T[?[
+               or=&gt;inst::T,
+               and=&gt;inst::T,
+               not=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                idempotent,
+                involution,
+                complement,
+                left_distributive,
+                right_distributive]]]@/m/theory/boolean_theory,
+              theory::T[?[
+               meet=&gt;inst::T,
+               join=&gt;inst::T,
+               bottom=&gt;&lt;#&gt;::T,
+               top=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/lattice_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/semilattice_theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,left_distributive]]]@/m/theory/near_ring_theory,
+              uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form,
+              rel::T,
+              lst::T,
+              rec::T,
+              inst::T,
+              code::T,
+              fail::T,
+              /m/space::T[][ctor?memspace&lt;=(isa(rec::T)){&lt;j&gt;}]@/m/space/memspace,
+              rec::T[?[
+               pattern=&gt;uri::T,
+               {?}pre_write=&gt;inst::T,
+               {?}post_write=&gt;inst::T,
+               {?}qless_write=&gt;inst::T,
+               {?}qless_read=&gt;inst::T,
+               {?}pre_read=&gt;inst::T,
+               {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc,
+              str::T@/m/str/rx,
+              qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=(){&lt;j&gt;}]@/m/qproc/subq,
+              rec::T[?[{?}target=&gt;uri::T,code=&gt;&lt;#?dom=lst&gt;::T]]@/m/qproc/subq/sub,
+              lst::T[?[uri::T,&lt;#{*}&gt;::T]]@/m/qproc/subq/pub,
+              rec::T[?[usr=&gt;uri::T]]@/m/qproc/lockq/lock,
+              qproc::T[][ctor?analq&lt;=(){&lt;j&gt;}]@/m/qproc/analq,
+              qproc::T[][ctor?typeq&lt;=(){&lt;j&gt;}]@/m/qproc/typeq,
+              rec::T[?[
+               {?}obj=&gt;&lt;#{*}&gt;::T,
+               {?}dom=&gt;str::T,
+               {?}rng=&gt;str::T,
+               {?}args=&gt;&lt;#&gt;::T,
+               desc=&gt;str::T,
+               {?}build=&gt;str::T,
+               {?}example=&gt;lst::T]][ctor?docs&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq/docs,
+              rec::T[?[
+               obj=&gt;&lt;#&gt;::T,
+               {?}theory=&gt;&lt;#&gt;::T,
+               {?}law=&gt;&lt;#&gt;::T,
+               {?}inverse=&gt;&lt;#&gt;::T,
+               {?}converse=&gt;&lt;#&gt;::T,
+               {?}derivation=&gt;&lt;#&gt;::T,
+               {?}form=&gt;&lt;#&gt;::T,
+               {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs,
+              qproc::T[][ctor?docq&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq,
+              qproc::T[][ctor?mintq&lt;=(){&lt;j&gt;}]@/m/qproc/mintq,
+              qproc::T[][ctor?shortq&lt;=(){&lt;j&gt;}]@/m/qproc/shortq,
+              qproc::T[][ctor?safeq&lt;=(){&lt;j&gt;}]@/m/qproc/safeq,
+              qproc::T[][ctor?incrq&lt;=(){&lt;j&gt;}]@/m/qproc/incrq,
+              qproc::T[][ctor?embedq&lt;=(){&lt;j&gt;}]@/m/qproc/embedq,
+              qproc::T[][ctor?constq&lt;=(){&lt;j&gt;}]@/m/qproc/constq,
+              qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
+              qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
+              qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
+              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
              rewrite=&gt;[
               /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
               /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/map_nest?code{?}&lt;=code([map?#{?}&lt;=(map?#{?}&lt;=(f::T))=&gt;map(f::T)]){&lt;j&gt;},
-              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map?#{?}&lt;=(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
+              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
+              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
               /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;]){&lt;j&gt;},
               /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
               /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
@@ -717,6 +861,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               neg?code&lt;=code(){&lt;j&gt;},
               plus?code&lt;=code(code::T){&lt;j&gt;},
               id?A&lt;=A(){&lt;j&gt;},
+              map?B{*}&lt;=A{?}(B{*}::T){&lt;j&gt;},
               branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
               order?lst[A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
               swap?A&lt;=A(B::T){&lt;j&gt;},
@@ -812,7 +957,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                          bool::T){&lt;j&gt;},
               apply?&lt;=inst({?}lhs=&gt;#{*}::T,{?}args=&gt;lst{?}::T){&lt;j&gt;},
               apply?&lt;=#(#{?}::T){&lt;j&gt;},
-              map?B{?}&lt;=A{?}(B{?}::T){&lt;j&gt;},
               filter?A{?}&lt;=A(#{?}::T){&lt;j&gt;},
               side?A&lt;=A(#::T){&lt;j&gt;},
               tid?uri&lt;=#(){&lt;j&gt;},
@@ -868,151 +1012,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               ctor(),
               lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
               as?str&lt;=docs(str::T){&lt;j&gt;}],
-             const=&gt;[,],
-             type=&gt;[
-              &lt;#&gt;::T,
-              bool::T,
-              int::T,
-              real::T,
-              bytes::T,
-              str::T,
-              uri::T,
-              uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law,
-              rec::T[?[{?}law=&gt;lst[{+}law]::T]]@/m/theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                involution,
-                left_distributive,
-                right_distributive]]]@/m/theory/ring_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               inv=&gt;inst::T,
-               {?}law=&gt;[monoidic,unit,involution],
-               {?}rewrite=&gt;[
-                [op(a::T).op(inv(a::T))=&gt;],
-                [op(inv(a::T)).op(a::T)=&gt;]]]]@/m/theory/group_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit],
-               {?}rewrite=&gt;[[op(id)=&gt;]]]]@/m/theory/monoid_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit,commutative]]]@/m/theory/commutative_monoid_theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               inv=&gt;inst::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                involution,
-                left_distributive,
-                right_distributive]]]@/m/theory/field_theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                left_distributive,
-                right_distributive]]]@/m/theory/rig_theory,
-              theory::T[?[
-               or=&gt;inst::T,
-               and=&gt;inst::T,
-               not=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                idempotent,
-                involution,
-                complement,
-                left_distributive,
-                right_distributive]]]@/m/theory/boolean_theory,
-              theory::T[?[
-               meet=&gt;inst::T,
-               join=&gt;inst::T,
-               bottom=&gt;&lt;#&gt;::T,
-               top=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/lattice_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/semilattice_theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,left_distributive]]]@/m/theory/near_ring_theory,
-              uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form,
-              rel::T,
-              lst::T,
-              rec::T,
-              inst::T,
-              code::T,
-              fail::T,
-              /m/space::T[][ctor?memspace&lt;=(isa(rec::T)){&lt;j&gt;}]@/m/space/memspace,
-              rec::T[?[
-               pattern=&gt;uri::T,
-               {?}pre_write=&gt;inst::T,
-               {?}post_write=&gt;inst::T,
-               {?}qless_write=&gt;inst::T,
-               {?}qless_read=&gt;inst::T,
-               {?}pre_read=&gt;inst::T,
-               {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc,
-              str::T@/m/str/rx,
-              qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=(){&lt;j&gt;}]@/m/qproc/subq,
-              rec::T[?[{?}target=&gt;uri::T,code=&gt;&lt;#?dom=lst&gt;::T]]@/m/qproc/subq/sub,
-              lst::T[?[uri::T,&lt;#{*}&gt;::T]]@/m/qproc/subq/pub,
-              rec::T[?[usr=&gt;uri::T]]@/m/qproc/lockq/lock,
-              qproc::T[][ctor?analq&lt;=(){&lt;j&gt;}]@/m/qproc/analq,
-              qproc::T[][ctor?typeq&lt;=(){&lt;j&gt;}]@/m/qproc/typeq,
-              rec::T[?[
-               {?}obj=&gt;&lt;#{*}&gt;::T,
-               {?}dom=&gt;str::T,
-               {?}rng=&gt;str::T,
-               {?}args=&gt;&lt;#&gt;::T,
-               desc=&gt;str::T,
-               {?}build=&gt;str::T,
-               {?}example=&gt;lst::T]][ctor?docs&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq/docs,
-              rec::T[?[
-               obj=&gt;&lt;#&gt;::T,
-               {?}theory=&gt;&lt;#&gt;::T,
-               {?}law=&gt;&lt;#&gt;::T,
-               {?}inverse=&gt;&lt;#&gt;::T,
-               {?}converse=&gt;&lt;#&gt;::T,
-               {?}derivation=&gt;&lt;#&gt;::T,
-               {?}form=&gt;&lt;#&gt;::T,
-               {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs,
-              qproc::T[][ctor?docq&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq,
-              qproc::T[][ctor?mintq&lt;=(){&lt;j&gt;}]@/m/qproc/mintq,
-              qproc::T[][ctor?shortq&lt;=(){&lt;j&gt;}]@/m/qproc/shortq,
-              qproc::T[][ctor?safeq&lt;=(){&lt;j&gt;}]@/m/qproc/safeq,
-              qproc::T[][ctor?incrq&lt;=(){&lt;j&gt;}]@/m/qproc/incrq,
-              qproc::T[][ctor?embedq&lt;=(){&lt;j&gt;}]@/m/qproc/embedq,
-              qproc::T[][ctor?constq&lt;=(){&lt;j&gt;}]@/m/qproc/constq,
-              qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
-              qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
-              qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
-              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq]]@/m</code></pre>
+             const=&gt;[,]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -2514,15 +2514,15 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     <p class="mb-0 text-light"> a structured profile report produced by profile()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
+  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty print format'" class="text-info">&#39;lazily constructed pretty print format&#39;</a>
   <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
   <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
   <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
   <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
   <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
-  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
-  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -6528,12 +6528,12 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">map</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">B{?}</span></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">B{*}</span></span></span>
         </span>
         <small class="text-muted code">/m/inst/map</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__map-doc-0-tab').click();document.getElementById('__m__inst__map-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">map?B{?}&lt;=A{?}(B{?}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__map-doc-0-tab').click();document.getElementById('__m__inst__map-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">map?B{*}&lt;=A{?}(B{*}::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
@@ -9593,7 +9593,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         </span>
         <small class="text-muted code">/m/inst/rewrite/form_map_unwrap?rng=/m/code{?}&amp;dom=/m/code&amp;args=[/m/rec]</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map?#{?}&lt;=(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the stream lift unwraps: a mapping of a mapper is the mapper, \(\mathrm{map}(f) \leadsto f\), where the operation of \(f\) declares the mapper form. e.g. \(\mathrm{map}(\mathrm{neg}) \leadsto \mathrm{neg}\), while \(\mathrm{map}(\mathrm{sum})\) stays
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
@@ -9720,7 +9720,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         </span>
         <small class="text-muted code">/m/inst/rewrite/map_nest?rng=/m/code{?}&amp;dom=/m/code&amp;args=[/m/rec]</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?code{?}&lt;=code([map?#{?}&lt;=(map?#{?}&lt;=(f::T))=&gt;map(f::T)]){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the stream lift is idempotent: a mapping of a mapping is the mapping, whatever it maps, \(\mathrm{map}(\mathrm{map}(f)) \leadsto \mathrm{map}(f)\). e.g. \(\mathrm{map}(\mathrm{map}(\mathrm{sum})) \leadsto \mathrm{map}(\mathrm{sum})\)
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>

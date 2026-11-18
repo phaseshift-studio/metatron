@@ -1285,7 +1285,7 @@ public class mInstSet extends AbstractInstSet {
                         // branch(int::T,int::T) compiles to it: its like terms sum to branch(int{2}::T) and its one member
                         // inlines as map(int{2}::T). A value or a type floats its point when the point is exact: a ranged one
                         // is a quantifier, and a call keeps its points where its reducers count them
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_float"), code -> {
+                        /*docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_float"), code -> {
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
@@ -1302,7 +1302,7 @@ public class mInstSet extends AbstractInstSet {
                                     out.add(inst);
                             }
                             return changed ? MCode.code(out) : code;
-                        }), "the point floats off a map's argument: \\(\\mathrm{map}(x\\{c\\}) \\leadsto \\mathrm{map}\\{c\\}(x)\\), the map emitting \\(c\\) copies of what \\(x\\) emits once, for a value or a type \\(x\\) and an exact \\(c\\). e.g. \\(\\mathrm{map}(\\mathrm{int}\\{2\\}) \\leadsto \\mathrm{map}\\{2\\}(\\mathrm{int})\\)"),
+                        }), "the point floats off a map's argument: \\(\\mathrm{map}(x\\{c\\}) \\leadsto \\mathrm{map}\\{c\\}(x)\\), the map emitting \\(c\\) copies of what \\(x\\) emits once, for a value or a type \\(x\\) and an exact \\(c\\). e.g. \\(\\mathrm{map}(\\mathrm{int}\\{2\\}) \\leadsto \\mathrm{map}\\{2\\}(\\mathrm{int})\\)"),*/
 
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where

@@ -551,7 +551,10 @@ is what makes a <code>_?incrq</code> write assign its own key (see <em>keys the 
 </table>
 <pre><code class="language-mtron">mtron&gt; *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
 ==&gt;docs::[obj=&gt;/m/space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/db/tble/space/tblespace,
-          desc=&gt;'[structural] a metatron realizatio...',
+          args=&gt;[
+           host=&gt;'the location of the backing databa...',
+           driver=&gt;'the provider-specific uri referenc...'],
+          desc=&gt;'a metatron realization of a relati...',
           example=&gt;['*&lt;http://metatron.phaseshift.studi...']]
 mtron&gt; *&lt;/m/db/tble/helper&gt;    [-- the instset's helper rec: the llm chat schema, as a str --]
 ==&gt;[llm_chat_schema=&gt;inst?&lt;=#{*}(){&lt;j&gt;}]
@@ -828,7 +831,13 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
             /m/db/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(){&lt;j&gt;},
             ...(12 more)]]@/m/db/tble,
           desc=&gt;'relational tables, typed rows, and...',
-          example=&gt;['*acme:customer.where[person=&gt;[name...']]
+          example=&gt;['*acme:customer.where[person=&gt;[name...'],
+          space=&gt;[tblespace=&gt;docs::[obj=&gt;/m/space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/db/tble/space/tblespace,
+                                    args=&gt;[
+                                     host=&gt;'the location of the backing databa...',
+                                     driver=&gt;'the provider-specific uri referenc...'],
+                                    desc=&gt;'a metatron realization of a relati...',
+                                    example=&gt;['*&lt;http://metatron.phaseshift.studi...']]]]
 </code></pre>
 <h4>when a read stays in mtron</h4>
 <p>The match is structural and it DECLINES rather than guesses, so a read that names a table can still run in the VM. Each
@@ -940,10 +949,11 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/21
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/23
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/22
+==&gt;[body=&gt;'another one']@tbledoc:note/24
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
+==&gt;24
 ==&gt;8
 ==&gt;12
 ==&gt;21
@@ -956,6 +966,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;17
 ==&gt;6
 ==&gt;20
+==&gt;23
 ==&gt;4
 ==&gt;16
 ==&gt;7

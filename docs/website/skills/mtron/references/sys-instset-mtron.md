@@ -76,7 +76,7 @@ mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.9M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  595G ...',
+    '/dev/nvme1n1p2         916G  594G ...',
     'tmpfs                   31G  7.6M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -167,7 +167,7 @@ mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
     '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,3	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-15 23:30:36.685707...',
+    'Access: 2026-11-17 15:49:00.513466...',
    ...
 ```
 ### a shape of its own
@@ -257,9 +257,9 @@ mtron> */sys/thread/+.count()
 ==>66
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::307.4532,
+    free_mem_jvm=>mB::515.4654,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::404.5467,
+    used_mem_jvm=>mB::196.5345,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
