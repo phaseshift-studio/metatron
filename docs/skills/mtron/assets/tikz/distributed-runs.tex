@@ -1,12 +1,13 @@
 % distributed-runs.tex — every cut plans the run before it: a chain that folds twice expands and contracts twice, each
-% run shipped through its own branch and recombined at home, where the next run starts. Rendered with the tikz MCP
-% server (compile_tikz), which wraps this body in a standalone document and writes the PNG beside this file. INK: white
-% on a transparent background (the site theme is dark); the lanes are GREEN; a fold is a circle.
+% run shipped through its own branch and recombined at home, where the next run starts. Rendered by
+% `bin/render-tikz.py --png --dpi 300 docs/skills/mtron/assets/tikz`, which wraps this body in a standalone document;
+% the PNG goes to docs/website/skills/mtron/assets/. INK: white on a transparent background (the site theme is dark);
+% the lanes are GREEN; a fold is a circle.
 
 \begin{tikzpicture}[
   inst/.style={draw, rounded corners=2pt, thick, minimum width=11mm, minimum height=8mm, font=\small, color=white},
   fold/.style={draw, circle, thick, minimum size=9mm, font=\small, color=white},
-  step/.style={thick, color=white, -{Stealth[length=2mm]}},
+  hop/.style={thick, color=white, -{Stealth[length=2mm]}},
   lane/.style={thick, color=green!60!white, -{Stealth[length=1.8mm]}},
   note/.style={font=\scriptsize, color=white},
   link/.style={draw=green!60!white, fill=green!18!black, thick, rounded corners=0.5pt, minimum width=2.8mm,
@@ -17,8 +18,8 @@
 \node[inst] (f1) at (0,0)   {$f_1$};
 \node[inst] (f2) at (2.2,0) {$f_2$};
 \node[inst] (f3) at (4.4,0) {$f_3$};
-\draw[step] (f1) -- (f2);
-\draw[step] (f2) -- (f3);
+\draw[hop] (f1) -- (f2);
+\draw[hop] (f2) -- (f3);
 
 % ---- the first run ships, and its fold recombines at home ----
 \node[fold] (r1) at (9.0,0) {$r_1$};
@@ -32,7 +33,7 @@
 
 % ---- home again: the next run starts where the combiner left it ----
 \node[inst] (f4) at (11.2,0) {$f_4$};
-\draw[step] (r1) -- (f4);
+\draw[hop] (r1) -- (f4);
 
 % ---- the second run ships, and its fold recombines at home ----
 \node[fold] (r2) at (15.8,0) {$r_2$};
@@ -46,7 +47,7 @@
 
 % ---- the tail stays home ----
 \node[inst] (f5) at (18.0,0) {$f_5$};
-\draw[step] (r2) -- (f5);
+\draw[hop] (r2) -- (f5);
 
 % ---- expansion and contraction, twice ----
 \node[note] at (6.7,-1.45)  {expand};

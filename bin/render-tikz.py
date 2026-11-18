@@ -22,6 +22,7 @@ The PDF surface is untouched by any of this: it reads the sidecar, not the SVG.
 
     bin/render-tikz.py [dir ...]     # default: docs/website/articles/images
     bin/render-tikz.py --png …       # also write a raster fallback beside each svg
+    bin/render-tikz.py --png --dpi 300 …  # a sharper raster (default 200)
     bin/render-tikz.py --ink black … # for a light page (white ink is invisible on one)
     bin/render-tikz.py --scale 1 …   # svg at print size (default: 2.78, see below)
     bin/render-tikz.py --check …     # exit 1 if a committed svg is out of date
@@ -33,7 +34,8 @@ so it stays lossless) to 200/72 = 2.78x by default: the size of the 200-dpi rast
 preview these figures were checked against. `--scale 1` restores print size. The PDF
 is unaffected either way — it reads the sidecar, not the svg.
 
-`pdflatex` + `pdftocairo` are used directly when they are on PATH; otherwise the same
+`pdflatex` + `pdftocairo` are used directly when they are on PATH and TeX finds tikz,
+tikz-cd and standalone (a base TeX install has pdflatex without TikZ); otherwise the same
 commands run inside a TeX container (`TIKZ_TEX_IMAGE`, default `tikz-mcp:local` — the
 image this deployment ships for TikZ rendering; any image with texlive + poppler will
 do).
@@ -96,7 +98,11 @@ def host_repo() -> Path:
 
 
 def shell(script: str, build: Path) -> subprocess.CompletedProcess:
-    local = shutil.which('pdflatex') and shutil.which('pdftocairo')
+    # the binaries alone are not enough: a base TeX (Debian's texlive-latex-base) has pdflatex
+    # but no TikZ, so ask TeX itself for the packages (kpsewhich exits 1 when any is missing)
+    local = (shutil.which('pdflatex') and shutil.which('pdftocairo') and shutil.which('kpsewhich')
+             and subprocess.run(['kpsewhich', 'tikz.sty', 'tikz-cd.sty', 'standalone.cls'],
+                                capture_output=True).returncode == 0)
     if local:
         return subprocess.run(['sh', '-c', script], cwd=build, capture_output=True, text=True)
     image = os.environ.get('TIKZ_TEX_IMAGE', 'tikz-mcp:local')
@@ -111,7 +117,7 @@ def shell(script: str, build: Path) -> subprocess.CompletedProcess:
         capture_output=True, text=True)
 
 
-def render(sidecars, build: Path, png: bool, ink: str):
+def render(sidecars, build: Path, png: bool, ink: str, dpi: int):
     build.mkdir(parents=True, exist_ok=True)
     for f in build.iterdir():
         if f.is_file():
@@ -125,7 +131,7 @@ def render(sidecars, build: Path, png: bool, ink: str):
               '  pdftocairo -svg "$b.pdf" "$b.svg"\n'
               # -transp matters as much as the ink colour: a white-on-white raster
               # preview is blank, so the PNG keeps the page transparent too
-              + ('  pdftocairo -png -transp -r 200 -singlefile "$b.pdf" "$b"\n' if png else '')
+              + (f'  pdftocairo -png -transp -r {dpi} -singlefile "$b.pdf" "$b"\n' if png else '')
               + 'done\n')
     result = shell(script, build)
     if result.returncode != 0:
@@ -153,6 +159,7 @@ def main() -> int:
     parser.add_argument('dirs', nargs='*', default=DEFAULT_DIRS,
                         help=f'sidecar directories (default: {" ".join(DEFAULT_DIRS)})')
     parser.add_argument('--png', action='store_true', help='also write a raster fallback')
+    parser.add_argument('--dpi', type=int, default=200, help='raster resolution for --png (default 200)')
     parser.add_argument('--ink', default='white',
                         help='diagram ink colour (default white: the site is dark red and '
                              'black, so black line art is invisible); the page itself is '
@@ -169,7 +176,7 @@ def main() -> int:
 
     build = Path(tempfile.mkdtemp(prefix='render-tikz.', dir=Path.cwd() / 'target'))
     try:
-        render(sidecars, build, args.png, args.ink)
+        render(sidecars, build, args.png, args.ink, args.dpi)
         for sidecar in sidecars:
             scale_svg(build / sidecar.with_suffix('.svg').name, args.scale)
         stale, written = [], 0
