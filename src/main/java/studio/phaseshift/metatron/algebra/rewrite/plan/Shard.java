@@ -51,11 +51,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * immutable {@link Env} snapshot: guard on the live roster, match the chain shape, locate the multiplicity to factor,
  * emit the keyed {@code branch} layout, and leave everything else where it stood.
  *
+ * <p><b>Every cut plans the run before it.</b> A chain may fold more than once: {@code a.r.b.s} has two cuts, {@code r}
+ * and {@code s}, and each plans the floatable run before it without reaching back past the cut before. A run ships
+ * through its own branch, and its cut's combiner brings the computation home, where the next run starts (the run
+ * between two cuts, {@link Span.Kind#BETWEEN}). One application plans every cut.
+ *
  * <p><b>The two partitions are one funnel.</b> A distribution factors an index set over the roster: the seed's point
  * ({@code d()} instances, the initial value's members) and a run's span range ({@code b()} instances, the unrolls
  * {@code a^[m,n] = Σ a^k}) are both index sets, and a lane's program is the chain with its share projected onto it —
  * {@code start(part)} projects the members, {@code {p,q}step} projects the unrolls. A lane may carry both projections.
- * v1 factors one axis per application: the seed first (today's layout), the span when the seed is a singleton.
+ * v1 factors one axis per run: the seed first, the span when the seed is one obj. A fold answers one obj, so the run
+ * after a cut factors its span range, with that obj copied to every lane.
  *
  * <p><b>The lane's budget is stated on its first instruction</b> ({@code ?hop}, {@code 0} at a leaf), so the metadata
  * is where a human and a re-planning peer read it. A copied instruction carries no budget of its own: both spellings
@@ -74,210 +80,213 @@ public final class Shard {
 
     /**
      * The one body (§12.1): {@code apply(plan, env) = locate → resolve → emit}, over one immutable {@link Env}
-     * snapshot — nothing inside reads the machine.
+     * snapshot — nothing inside reads the machine. The chain is walked cut by cut, and each cut's run is emitted
+     * ({@link #emit}) or left as written.
      */
     public static Code apply(final Plan plan, final Code code, final Env env) {
         // A CHAIN THAT ALREADY BRANCHES BY PLACE IS A LAYOUT, NOT A FOLD TO PLAN: its keyed branch routes its lanes where
         // its keys point, and planning around it would wrap that branch in another. The fixpoint hands this rule every
-        // layout it emitted, so this is also where the shard's own output stops.
+        // layout it emitted, so this is also where the shard's own output stops: one application plans every cut, so a
+        // layout holds nothing left to plan.
         if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
             return code;
         // A LONE MACHINE DOES NOT FAN OUT -- unless its ROSTER declares a candidate (a declared machine is a
         // potential peer: the declared half of the liveness test, §4), or the decision states its own place set, whose
-        // HOME lane is the lanes case (?place=[{4}local]: a peerless machine shards). Read before the hop so the
-        // budget's own refusal stays exactly where it was on a machine with nothing reachable.
+        // HOME lane is the lanes case (?place=[{4}local]: a peerless machine shards).
         final boolean stated = code.insts().stream().anyMatch(inst -> inst.tid().hasQ(PLACE));
         final boolean dialed = !env.peers().isEmpty();
         if (!dialed && env.machines().isEmpty() && !stated)
             return code;
-        // THE HOP AXIS: how many more levels of the tree may be planned from here, and how many children one level may
-        // fan out to. A height of zero is a leaf and an arity of zero is a point: the identity, byte for byte.
-        final Hop axis = hopAxis(plan, code);
-        if (axis.isPoint() || axis.arity().isZero())
-            return code;
-        // THE ARITY CAPS THE FAN-OUT: at most `w` lanes leave one node; the data still clamps it (`k = min(shares, seed)`).
-        final long cap = null == axis.arity().max() ? Integer.MAX_VALUE : axis.arity().max();
-        final int fanout = (int) Math.min(cap, Integer.MAX_VALUE);
-        // THE PARTITION AXIS: what counts as one place's share. This chunk lowers STREAM and COPY; the other kinds
-        // DECLINE TO THE IDENTITY -- the unchanged chain, never a different-but-plausible layout.
-        final Partition split = split(plan, code);
-        if (Partition.Kind.STREAM != split.kind() && Partition.Kind.COPY != split.kind()) {
-            log.debug("?split={} does not lower in this chunk: the fold stays where it stands ({})", split, code);
-            return code;
-        }
-
         final List<Inst> insts = code.insts();
         // THE SEED IS THE INITIAL FORM (dom {0}) at the head of the chain, read off the contract the chain's own typing
         // resolved it to — never off its name.
-        final Inst initial = 2 > insts.size() ? null : contracts(code).getFirst();
-        if (null == initial || !initial.isInitial())
+        final List<Inst> contracts = 2 > insts.size() ? List.of() : contracts(code);
+        if (contracts.isEmpty() || null == contracts.getFirst() || !contracts.getFirst().isInitial())
             return code;
-
-        final Cut cut = plan.cut();
-        final Law[] laws = cut.laws().toArray(Law[]::new);
+        // the placement that ships — the plan's distributing route — states what its targets must serve
+        final Placement route = plan.where().stream().filter(placement -> placement.shape().distributes()).findFirst().orElse(null);
+        if (null == route)
+            return code;
         // each instruction keyed at the carrier flowing into it, not the seed's
         final List<Type> carriers = carriers(code);
         final List<Inst> typed = IntStream.range(0, insts.size())
                 .mapToObj(i -> 0 == i ? insts.getFirst() : retype(insts.get(i), carriers.get(i)))
                 .toList();
-        // THE CUT is the first fold whose partials recombine through a fold declaring the cut's laws. THE RUN is the
-        // floatable stretch right before it (or the whole rest of the chain when there is no cut). Everything before
-        // the run stays home.
-        final InstPattern recombines = InstPattern.law(Law.blocked).combinedBy(laws);
-        final InstPattern floats = InstPattern.law(Law.floatable);
-        final int cutIndex = IntStream.range(1, insts.size()).filter(i -> recombines.matches(typed.get(i))).findFirst().orElse(-1);
-        final int runIndex = 0 > cutIndex ? 1
-                : 1 + IntStream.range(1, cutIndex).map(i -> cutIndex - i)
-                .filter(i -> !floats.matches(typed.get(i)))
-                .findFirst().orElse(0);
-        final Inst reducer = 0 > cutIndex ? null : insts.get(cutIndex);
-        final Inst keyed = 0 > cutIndex ? null : typed.get(cutIndex);
-        // a self-combining fold re-applies the chain's own instruction; a fold defined by derivation recombines through
-        // the fold its definition names; a keyed fold through the chain its pointwise combiner computes
-        final Call combined = 0 > cutIndex ? null : Law.Helper.combiner(keyed, laws);
-        final List<Inst> combiner = 0 > cutIndex ? List.of()
-                : keyed == combined ? List.of(reducer) : combined.insts();
-        final Inst head = insts.getFirst();
-        final boolean literal = START_INST_TID.equals(head.tid().basePath()) && !head.args().isEmpty()
-                && !head.arg(0).isCall() && 1 == runIndex;
-        final int seed = literal ? (int) head.arg(0).stream().count() : Integer.MAX_VALUE;
-        // THE RUN AXIS: a closed span range in the run, factored when the seed is a singleton. The unrolls a^[m,n] are
-        // independent terms, so a share is a subrange of the exponent, not a part of the seed: every lane carries the
-        // whole seed and a narrowed span, and the chain's tail — the first non-floatable instruction after the run, a
-        // reducer included — runs at home over the branch's bag. NO TYPED CUT IS NEEDED: the branch recombines the
-        // terms and the tail folds them, so a span the typing probe could not thread is still plannable. The run must
-        // start at the seed (a prefix that does not float would have to be broadcast, the next chunk's copy case).
-        final RunRange range = literal && 1 == seed ? runRange(insts, 1, insts.size()) : null;
-        final int runEnd = null == range ? -1 : runEnd(insts, typed, floats, range.index());
-        final boolean runAxis = null != range && 2 <= range.count()
-                && 1 == runStart(typed, floats, range.index())
-                && range.index() < runEnd
-                && floats.matches(typed.get(range.index()));
-        if (0 > cutIndex && !runAxis)
-            return code;
-        if (!runAxis && Partition.Kind.COPY == split.kind()
-                && !idempotentCombiner(combined, carriers.get(cutIndex)))
-            return code;
-        final int members = runAxis ? (int) Math.min(range.count(), Integer.MAX_VALUE) : seed;
-        if (2 > members)
-            return code;
-
-        // the placement that ships — the plan's distributing route — states what its targets must serve
-        final Placement route = plan.where().stream().filter(placement -> placement.shape().distributes()).findFirst().orElse(null);
-        if (null == route)
-            return code;
-        // THE CANDIDATES: the plan's distributing place set, except that the peer enum with nothing dialed answers the
-        // ROSTER's machines -- each named as an address (//host), so the resolver reads the row discovery filed and
-        // admits it when its transport's scheme resolves (step 6's declared half of liveness). Planning never dials.
-        final PlaceSet declared = place(plan, code);
-        final PlaceSet candidates = !dialed && !stated
-                && declared.designators().stream().allMatch(designator -> PlaceSet.Form.PEER == designator.form())
-                ? roster(env) : declared;
-        // THE SHARES: the place set resolved against the snapshot, one entry per share, the HOME place's shares FIRST.
-        // A literal seed clamps the shares; a computed bag's size is the branch's to know; the ARITY caps the window.
-        final List<ResolvedPlace> shares = shares(resolve(env, route, candidates), members, fanout);
-        // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
-        // here. Several home shares are the lanes case, a peerless machine sharding.
-        final boolean localOnly = 1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal);
-        if (localOnly)
-            return code;
-        // THE FORM IS RESTATED, NEVER THE NUMBER: the lane's budget is the same arity with the height decremented and
-        // the unstated arity keeps its spelling; below a height of one the leaf states the bare point, 0.
-        final Obj budget = 1 == axis.height() ? jnt(0) : Hop.of(axis.height() - 1, axis.arity()).toObj();
-
-        // PROFILING IS AN END CAP, NOT A TAIL: when the chain's instruction after the cut is profile(), each lane
-        // answers a profiling::T, so the master indexes the reports by the machine each was made on.
-        final boolean profiling = 0 <= cutIndex && insts.size() > cutIndex + 1
-                && PROFILE_INST_TID.equals(insts.get(cutIndex + 1).tid().basePath());
-
-        if (runAxis)
-            return unroll(code, insts, runEnd, head, range, shares, budget);
-
-        // emit [prefix·]branch(place => [start(part)·]run·fold, …)·combiner(r) — BRANCH IS THE ONE DISTRIBUTED
-        // PRIMITIVE: each lane runs the floatable run replicated and a local partial reduce where its key points, and
-        // the lanes' partials come back as one bag, which the master recombines at home through the combiner.
-        final boolean copy = Partition.Kind.COPY == split.kind();
-        // the floatable run replicated, then the FOLD; the lane's first instruction states the restated budget.
-        final List<Inst> program = new ArrayList<>(insts.subList(runIndex, cutIndex).stream().map(Shard::raw).toList());
-        program.add(raw(reducer));
-        if (profiling)
-            program.add(instB(PROFILE_INST_TID, lst()));
-        // ONE KEY PER DISTINCT PLACE, in the lane order: the home place is <~>, a peer is its authority, and the n
-        // shares one place takes are one key weighted ?split={n}part.
-        final Map<fURI, Integer> places = new LinkedHashMap<>();
-        shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
-        // A LITERAL SEED IS DEALT BY THE BRANCH'S OWN RULE (BranchInst#deal), so a planned part is the part the branch
-        // would have dealt; under the copy kind every lane holds the whole seed.
-        final List<List<Obj>> parts = literal
-                ? BranchInst.deal(head.arg(0), places.values().stream().mapToLong(weight -> copy ? 0L : weight).toArray())
-                : List.of();
-        final List<Map.Entry<fURI, Integer>> keys = List.copyOf(places.entrySet());
-        final Map<Obj, Obj> lanes = new LinkedHashMap<>();
-        for (int r = 0; r < keys.size(); r++) {
-            final List<Inst> lane = new ArrayList<>();
-            if (literal)
-                lane.add(instB(START_INST_TID, lst(copy ? head.arg(0) : objs(parts.get(r)))));
-            lane.addAll(program);
-            stampHop(lane, budget);
-            final fURI place = keys.get(r).getKey();
-            final int weight = keys.get(r).getValue();
-            lanes.put(uri(copy || 1 == weight ? place : place.q(SPLIT, "{" + weight + "}" + PART)), code(lane));
+        final Chain chain = new Chain(insts, typed, contracts, carriers, plan.cut().laws().toArray(Law[]::new), route, env, dialed);
+        // EVERY CUT PLANS THE RUN BEFORE IT. A cut is a fold whose partials recombine through a fold declaring the cut's
+        // laws: its run ships, and its combiner brings the computation home, where the next run starts. A run states its
+        // own axes; one that states none keeps the axes the run before it resolved, else the plan's, so a budget or a
+        // place set stated at the head governs the whole chain and a ?hop=0 on a later fold keeps only its own run home.
+        // A run that declines stays as written, and past the head a stretch with no cut left is the tail: it stays home.
+        final InstPattern recombines = InstPattern.law(Law.blocked).combinedBy(chain.laws());
+        Axes axes = new Axes(plan.where().stream()
+                .filter(placement -> Placement.Shape.TREE == placement.shape())
+                .map(Placement::hopAxis)
+                .findFirst().orElse(Hop.point()), route.split(), route.place(), false);
+        final List<Inst> master = new ArrayList<>(insts.size());
+        boolean planned = false;
+        int from = 0;
+        while (from < insts.size()) {
+            final int start = Math.max(1, from);
+            final int cut = IntStream.range(start, insts.size()).filter(i -> recombines.matches(typed.get(i))).findFirst().orElse(-1);
+            if (0 > cut && 0 < from)
+                break;
+            // PROFILING IS AN END CAP, NOT A TAIL: when the instruction after the cut is profile(), each lane answers a
+            // profiling::T and the master indexes the reports by the machine each was made on, so the run reaches the end
+            final boolean profiling = 0 <= cut && insts.size() > cut + 1
+                    && PROFILE_INST_TID.equals(insts.get(cut + 1).tid().basePath());
+            final int end = 0 > cut || profiling ? insts.size() : cut + 1;
+            final List<Inst> own = insts.subList(from, end);
+            axes = new Axes(hopAxis(own, axes.hop()), split(own, axes.split()), place(own, axes.place()),
+                    axes.placed() || own.stream().anyMatch(inst -> inst.tid().hasQ(PLACE)));
+            final List<Inst> emitted = emit(chain, from, cut, end, axes, profiling);
+            master.addAll(null == emitted ? own : emitted);
+            planned |= null != emitted;
+            from = end;
         }
-        // the branch takes the computed bag whole (a {*} dom over the bag's carrier) and parts it by its keys. When
-        // every lane carries its own seed no start stands here, so the branch takes nothing: it is the initial form.
-        final fURI carrier = carriers.get(runIndex).typeId();
-        final fURI dom = literal ? fURI.Singleton.NOOBJ : null == carrier ? ALL_STAR : carrier.maybeSome();
-        final List<Inst> master = new ArrayList<>();
-        if (!literal)
-            master.addAll(insts.subList(0, runIndex));
-        master.add(instB(BRANCH_INST_TID.dom(dom).q(SPLIT, copy ? COPY : PART), rec(lanes)));
-        if (profiling)
-            master.add(profileCollate());
-        else {
-            master.addAll(combiner);
-            master.addAll(insts.subList(cutIndex + 1, insts.size()));
-        }
+        if (!planned)
+            return code;
+        master.addAll(insts.subList(from, insts.size()));
         return code(master);
     }
 
     /**
-     * THE RUN PARTITION: factor a span range of the run over the roster. One lane per distinct place, each carrying the
-     * whole seed and the run with its span narrowed to that lane's share of the unroll index — a contiguous subrange
-     * chosen by WORK ({@link #splitByCost}): a lane walks its runs from the seed, so the lane nearer the top walks
-     * further and takes fewer runs. The branch recombines the terms; the chain's tail (from {@code runEnd}) runs at home over
-     * the branch's bag, so a reducer after the run folds the union exactly as it folds the serial unroll.
+     * ONE CUT'S RUN, EMITTED: the instructions that replace {@code [from, end)} — the run's home prefix, the keyed branch
+     * the run ships through, and the combiner that brings it home — or null when the run declines and stays as written.
+     * A {@code cut} of -1 is the head of a chain with no cut, where the cutless run partition is the one layout there is.
      */
-    private static Code unroll(final Code code, final List<Inst> insts, final int runEnd, final Inst head,
-                               final RunRange range, final List<ResolvedPlace> shares, final Obj budget) {
-        final List<fURI> places = shares.stream()
-                .map(share -> share.isLocal() ? fURI.Singleton.f("~") : share.authority())
-                .distinct().toList();
-        final int lanes = (int) Math.min(Math.min(places.size(), range.count()), Integer.MAX_VALUE);
-        if (2 > lanes)
-            return code;
-        final List<long[]> ranges = splitByCost(range.min(), range.max(), lanes);
+    private static List<Inst> emit(final Chain chain, final int from, final int cut, final int end, final Axes axes,
+                                   final boolean profiling) {
+        final List<Inst> insts = chain.insts();
+        final List<Inst> typed = chain.typed();
+        // THE HOP AXIS: how many more levels of the tree may be planned from here, and how many children one level may
+        // fan out to. A height of zero is a leaf and an arity of zero is a point: the identity, byte for byte.
+        final Hop hop = axes.hop();
+        if (hop.isPoint() || hop.arity().isZero())
+            return null;
+        // THE ARITY CAPS THE FAN-OUT: at most `w` lanes leave one node; the data still clamps it (`k = min(shares, seed)`).
+        final int fanout = (int) Math.min(null == hop.arity().max() ? Integer.MAX_VALUE : hop.arity().max(), Integer.MAX_VALUE);
+        // THE PARTITION AXIS: what counts as one place's share. This chunk lowers STREAM and COPY; the other kinds
+        // DECLINE TO THE IDENTITY -- the unchanged chain, never a different-but-plausible layout.
+        final Partition split = axes.split();
+        if (Partition.Kind.STREAM != split.kind() && Partition.Kind.COPY != split.kind()) {
+            log.debug("?split={} does not lower in this chunk: the fold stays where it stands ({})", split, insts.subList(from, end));
+            return null;
+        }
+        // THE RUN is the floatable stretch right before the cut (the rest of the chain at a head with no cut), never
+        // reaching back past its first instruction: the one after the seed at the head, the one after the cut before it
+        // elsewhere. Whatever lies between that instruction and the run stays home.
+        final InstPattern floats = InstPattern.law(Law.floatable);
+        final int first = Math.max(1, from);
+        int runIndex = 0 > cut ? first : cut;
+        while (runIndex > first && floats.matches(typed.get(runIndex - 1)))
+            runIndex--;
+        // a self-combining fold re-applies the chain's own instruction; a fold defined by derivation recombines through
+        // the fold its definition names; a keyed fold through the chain its pointwise combiner computes
+        final Call combined = 0 > cut ? null : Law.Helper.combiner(typed.get(cut), chain.laws());
+        final List<Inst> combiner = null == combined ? List.of()
+                : typed.get(cut) == combined ? List.of(insts.get(cut)) : combined.insts();
+        // THE SEED: a literal at the head is dealt by the plan; anything else is the bag the branch takes when it runs.
+        // ONE OBJ HAS NOTHING TO DEAL -- a literal of one member, or what a fold answers (a gather whose rng is one, read
+        // off the contract of the instruction before the run): its one multiplicity is a span range in the run.
+        final Inst head = insts.getFirst();
+        final boolean literal = 0 == from && 1 == runIndex && START_INST_TID.equals(head.tid().basePath())
+                && !head.args().isEmpty() && !head.arg(0).isCall();
+        final long seed = literal ? head.arg(0).stream().count() : Long.MAX_VALUE;
+        final Inst before = chain.contracts().get(runIndex - 1);
+        final boolean one = literal ? 1 == seed : null != before && before.isReducing();
+        // THE RUN AXIS: a closed span range in the run, factored when the seed is one obj. The unrolls a^[m,n] are
+        // independent terms, so a share is a subrange of the exponent, not a part of the seed: every lane carries the
+        // whole seed and a narrowed span. Under a cut the run is the stretch the cut planned. NO TYPED CUT IS NEEDED at a
+        // head with no cut, where the run must start at the seed (a prefix that does not float would have to be
+        // broadcast) and ends at its first instruction that does not float, the tail running at home over the branch's bag.
+        final RunRange range = one ? runRange(insts, runIndex, 0 > cut ? insts.size() : cut) : null;
+        final int runEnd = null == range ? -1 : 0 <= cut ? cut : runEnd(insts, typed, floats, range.index());
+        final boolean runAxis = null != range && (0 <= cut || (1 == runStart(typed, floats, range.index())
+                && range.index() < runEnd && floats.matches(typed.get(range.index()))));
+        if (!runAxis && (0 > cut || one))
+            return null;
+        if (!runAxis && Partition.Kind.COPY == split.kind() && !idempotentCombiner(combined, chain.carriers().get(cut)))
+            return null;
+        final long members = runAxis ? range.count() : seed;
+        if (2 > members)
+            return null;
+        // THE CANDIDATES: the run's place set, except that the peer enum with nothing dialed and nothing stated answers
+        // the ROSTER's machines -- each named as an address (//host), so the resolver reads the row discovery filed and
+        // admits it when its transport's scheme resolves (step 6's declared half of liveness). Planning never dials.
+        final PlaceSet candidates = !chain.dialed() && !axes.placed()
+                && axes.place().designators().stream().allMatch(designator -> PlaceSet.Form.PEER == designator.form())
+                ? roster(chain.env()) : axes.place();
+        // THE SHARES: the place set resolved against the snapshot, one entry per share, the HOME place's shares FIRST.
+        // A literal seed clamps the shares; a computed bag's size is the branch's to know; the ARITY caps the window.
+        final List<ResolvedPlace> shares = shares(resolve(chain.env(), chain.route(), candidates),
+                (int) Math.min(members, Integer.MAX_VALUE), fanout);
+        // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
+        // here. Several home shares are the lanes case, a peerless machine sharding.
+        if (1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal))
+            return null;
+        // THE FORM IS RESTATED, NEVER THE NUMBER: the lane's budget is the same arity with the height decremented and
+        // the unstated arity keeps its spelling; below a height of one the leaf states the bare point, 0.
+        final Obj budget = 1 == hop.height() ? jnt(0) : Hop.of(hop.height() - 1, hop.arity()).toObj();
+        // ONE KEY PER DISTINCT PLACE, in the lane order: the home place is <~>, a peer is its authority. Under the seed
+        // axis the n shares one place takes are one key weighted ?split={n}part; under the run axis a key is one lane,
+        // at most one per unroll, its share of the exponent chosen by WORK (splitByCost).
+        final Map<fURI, Integer> places = new LinkedHashMap<>();
+        shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
+        final List<Map.Entry<fURI, Integer>> keys = List.copyOf(places.entrySet());
+        final int lanes = runAxis ? (int) Math.min(keys.size(), range.count()) : keys.size();
+        if (runAxis && 2 > lanes)
+            return null;
+        final List<long[]> exponents = runAxis ? splitByCost(range.min(), range.max(), lanes) : List.of();
+        // A LITERAL SEED IS DEALT BY THE BRANCH'S OWN RULE (BranchInst#deal), so a planned part is the part the branch
+        // would have dealt; under the copy kind and the run axis every lane holds the whole seed.
+        final boolean copy = Partition.Kind.COPY == split.kind();
+        final List<List<Obj>> parts = literal && !runAxis
+                ? BranchInst.deal(head.arg(0), keys.stream().mapToLong(key -> copy ? 0L : key.getValue()).toArray())
+                : List.of();
+        // emit [prefix·]branch(place => [start(part)·]run·fold, …)·combiner — BRANCH IS THE ONE DISTRIBUTED PRIMITIVE:
+        // each lane runs the floatable run (its share of a span range projected onto it) and a local partial reduce where
+        // its key points, so one partial per lane travels home, where the master recombines them through the combiner.
+        final int stop = 0 > cut ? runEnd : cut;
         final Map<Obj, Obj> routes = new LinkedHashMap<>();
         for (int r = 0; r < lanes; r++) {
-            final long[] share = ranges.get(r);
             final List<Inst> lane = new ArrayList<>();
-            // THE WHOLE SEED on every lane: the unrolls are taken from the same input, and the ranges are disjoint.
-            lane.add(instB(START_INST_TID, lst(head.arg(0))));
-            for (int i = 1; i < runEnd; i++) {
-                Inst inst = raw(insts.get(i));
-                // a NARROWED span is a fresh instruction, never a clone: Inst.tid(fURI) clones (and the clone reads
-                // the vid, which recomputes a coefficient the span is being rewritten out of) — instB writes the tid.
-                if (i == range.index())
-                    inst = instB(inst.tid().b(cInt.of(share[0], share[1])), inst.args());
-                lane.add(inst);
+            if (literal)
+                lane.add(instB(START_INST_TID, lst(runAxis || copy ? head.arg(0) : objs(parts.get(r)))));
+            for (int i = runIndex; i < stop; i++) {
+                final Inst inst = raw(insts.get(i));
+                // a NARROWED span is a fresh instruction, never a clone: Inst.tid(fURI) clones (and the clone reads the
+                // vid, which recomputes a coefficient the span is being rewritten out of) — instB writes the tid.
+                lane.add(runAxis && i == range.index()
+                        ? instB(inst.tid().b(cInt.of(exponents.get(r)[0], exponents.get(r)[1])), inst.args())
+                        : inst);
             }
+            if (0 <= cut)
+                lane.add(raw(insts.get(cut)));
+            if (profiling && !runAxis)
+                lane.add(instB(PROFILE_INST_TID, lst()));
             stampHop(lane, budget);
-            routes.put(uri(places.get(r)), code(lane));
+            final fURI place = keys.get(r).getKey();
+            final int weight = keys.get(r).getValue();
+            routes.put(uri(runAxis || copy || 1 == weight ? place : place.q(SPLIT, "{" + weight + "}" + PART)), code(lane));
         }
+        // lanes seeded with a literal take nothing, so the branch is the initial form; otherwise the branch takes the bag
+        // whole (a {*} dom over the carrier flowing into the run) and deals it by its keys -- or, under the run axis,
+        // copies it to every lane, whose shares of the exponent are disjoint.
+        final fURI carrier = chain.carriers().get(runIndex).typeId();
+        final fURI dom = literal ? fURI.Singleton.NOOBJ : null == carrier ? ALL_STAR : carrier.maybeSome();
         final List<Inst> master = new ArrayList<>();
-        // seeded lanes alone need no lhs: the branch is the initial form, with the dom the seed declares
-        master.add(instB(BRANCH_INST_TID.dom(fURI.Singleton.NOOBJ), rec(routes)));
-        master.addAll(insts.subList(runEnd, insts.size()));
-        return code(master);
+        if (!literal)
+            master.addAll(insts.subList(from, runIndex));
+        master.add(instB(literal && runAxis ? BRANCH_INST_TID.dom(dom)
+                : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY : PART), rec(routes)));
+        if (profiling && !runAxis)
+            master.add(profileCollate());
+        else {
+            master.addAll(combiner);
+            master.addAll(insts.subList(0 > cut ? runEnd : cut + 1, end));
+        }
+        return master;
     }
 
     /**
@@ -351,6 +360,21 @@ public final class Shard {
     }
 
     /**
+     * THE CHAIN a walk plans over, read once: its instructions, each one typed at the carrier flowing into it, the
+     * contract each resolved to, the carriers, the cut's laws, the plan's distributing route, and the snapshot.
+     */
+    private record Chain(List<Inst> insts, List<Inst> typed, List<Inst> contracts, List<Type> carriers, Law[] laws,
+                         Placement route, Env env, boolean dialed) {
+    }
+
+    /**
+     * THE THREE AXES a run is planned under (§2–§4) — how far and how wide, what counts as one share, and where — and
+     * whether a place set was stated rather than read off the plan.
+     */
+    private record Axes(Hop hop, Partition split, PlaceSet place, boolean placed) {
+    }
+
+    /**
      * THE INSTRUCTION AS WRITTEN. A lane is compiled where it runs, so the program it carries holds nothing this
      * machine bound: not the resolved signature, not a bound function and not a position vid. What stays is the op
      * address, the caller's own query, the coefficient and the arguments.
@@ -386,21 +410,18 @@ public final class Shard {
     }
 
     /**
-     * THE HOP AXIS of a fold, resolved in chain order: the earliest {@code ?hop} (or its deprecated alias) wins, else
-     * the plan's tree route. A value the projection cannot read is REFUSED — {@code hop} is the tree's height and a
-     * silent zero is the point topology.
+     * THE HOP AXIS of a run, resolved in chain order: the earliest {@code ?hop} (or its deprecated alias) among its
+     * instructions wins, else the axis it {@code inherits}. A value the projection cannot read is REFUSED — {@code hop}
+     * is the tree's height and a silent zero is the point topology.
      */
-    static Hop hopAxis(final Plan plan, final Code code) {
-        for (final Inst inst : code.insts()) {
+    private static Hop hopAxis(final List<Inst> insts, final Hop inherited) {
+        for (final Inst inst : insts) {
             if (inst.tid().hasQ(HOP))
                 return hopAxis(inst.tid(), HOP);
             if (inst.tid().hasQ(Placement.HOP_ALIAS))
                 return hopAxis(inst.tid(), Placement.HOP_ALIAS);
         }
-        return plan.where().stream()
-                .filter(placement -> Placement.Shape.TREE == placement.shape())
-                .map(Placement::hopAxis)
-                .findFirst().orElse(Hop.point());
+        return inherited;
     }
 
     private static Hop hopAxis(final fURI tid, final String key) {
@@ -413,17 +434,14 @@ public final class Shard {
     }
 
     /**
-     * THE PARTITION AXIS, resolved in chain order exactly as the hop axis is: a {@code ?split} on any instruction of
-     * the chain — a branch's own split belongs to its keys, not to this fold — else the plan's distributing route.
+     * THE PARTITION AXIS of a run, resolved in chain order exactly as the hop axis is: a {@code ?split} on any of its
+     * instructions — a branch's own split belongs to its keys, not to this fold — else the axis it {@code inherits}.
      */
-    private static Partition split(final Plan plan, final Code code) {
-        for (final Inst inst : code.insts())
+    private static Partition split(final List<Inst> insts, final Partition inherited) {
+        for (final Inst inst : insts)
             if (inst.tid().hasQ(SPLIT) && !BRANCH_INST_TID.equals(inst.tid().basePath()))
                 return split(inst.tid(), SPLIT);
-        return plan.where().stream()
-                .filter(placement -> placement.shape().distributes())
-                .map(Placement::split)
-                .findFirst().orElse(Partition.stream());
+        return inherited;
     }
 
     private static Partition split(final fURI tid, final String key) {
@@ -436,17 +454,14 @@ public final class Shard {
     }
 
     /**
-     * THE PLACE SET of a fold, resolved in chain order: a {@code ?place} on any instruction, else the plan's own
-     * distributing place set. A set the projection cannot read is REFUSED, never silently ignored.
+     * THE PLACE SET of a run, resolved in chain order: a {@code ?place} on any of its instructions, else the set it
+     * {@code inherits}. A set the projection cannot read is REFUSED, never silently ignored.
      */
-    private static PlaceSet place(final Plan plan, final Code code) {
-        for (final Inst inst : code.insts())
+    private static PlaceSet place(final List<Inst> insts, final PlaceSet inherited) {
+        for (final Inst inst : insts)
             if (inst.tid().hasQ(PLACE))
                 return place(inst.tid(), PLACE);
-        return plan.where().stream()
-                .filter(placement -> placement.shape().distributes())
-                .map(Placement::place)
-                .findFirst().orElse(PlaceSet.none());
+        return inherited;
     }
 
     private static PlaceSet place(final fURI tid, final String key) {

@@ -75,10 +75,11 @@ public final class Reduction {
      * The keyed lanes of the fan-out {@code branch}, {@code place => program} in key order — or empty when the code
      * carries no such branch.
      * <p>
-     * THE FIRST KEYED BRANCH IS THE FAN-OUT. {@code PlanInterpreter.shard} emits exactly one: at the head when the plan
-     * dealt a literal seed into the lanes ({@code branch?<={0}(<p> => start(part)…, …).<combiner>}), after the prefix
-     * that stays home when the bag is computed ({@code <prefix>.branch?<=T{*}&split=part(…).<combiner>}). The plan
-     * never plans around a keyed branch, so a chain it declined holds none it emitted.
+     * THE FIRST KEYED BRANCH IS THE FAN-OUT read here. {@code PlanInterpreter.shard} emits one per cut whose run ships:
+     * at the head when the plan dealt a literal seed into the lanes
+     * ({@code branch?<={0}(<p> => start(part)…, …).<combiner>}), after the prefix that stays home when the bag is
+     * computed ({@code <prefix>.branch?<=T{*}&split=part(…).<combiner>}), and after each later cut's combiner. The plan never plans around a keyed branch, so a chain it declined holds none
+     * it emitted; a test reads a later branch by handing this reader the chain from that branch on.
      */
     private static List<Rel> lanes(final Code master) {
         return master.insts().stream()

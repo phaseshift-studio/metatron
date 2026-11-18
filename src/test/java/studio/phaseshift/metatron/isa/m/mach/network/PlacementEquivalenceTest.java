@@ -143,6 +143,28 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
     }
 
     /**
+     * EVERY CUT SHIPS ITS RUN AND COMES HOME — through the compiler's rewriter, a chain that folds twice is planned at
+     * both cuts: each run ships through its own branch and its combiner brings the computation home. After a fold, the
+     * next run ships the span range it carries (the one obj copied to every lane), or, behind a prefix that stays home,
+     * deals the bag that prefix computes. Two loop peers. Each row: the source % the master's ops % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()                                         % branch,sum,branch,sum        % 86",
+            "{1,2,3}.plus(1).sum().repeat(code=>+1,until=>loop().?>20,emit=>true).plus(10).sum() % branch,sum,repeat,branch,sum % 649",
+    }, delimiter = '%')
+    void testEveryCutShipsItsRunAndComesHome(final String source, final String ops, final String expected) {
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger:8555"));
+        final Code compiled = Machine.current().compiler().rewriter()
+                .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
+        assertEquals(List.of(ops.trim().split(",")), DistributedSweep.layout(compiled).ops().stream().map(op -> op.name()).toList(),
+                "each cut's run ships through its own branch: " + compiled);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected),
+                TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
+    }
+
+    /**
      * A LANE IS COMPILED WHERE IT RUNS (Marko, 2026-11-05): compiling the master compiles the master's own chain and
      * never a lane's program. A host-keyed lane ships raw for its peer's compiler, and a machine-keyed lane is
      * compiled by that machine's compiler when it runs, so no instruction of a lane may carry a bound function. The
