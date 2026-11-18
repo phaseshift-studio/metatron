@@ -643,7 +643,9 @@ public class InstTest extends AbstractObjTest {
             "3.band(2,\"8\")                                    % 3",
             "10.band(2,\"8\")                                   % noobj",
             "{1,2,3,4,3,5,6}.band(3,\"8\")                      % {3,4,3,5,6}",
-            "10.band(2)                                         % noobj",
+            // a call that leaves out a slot that takes something fails, as the untyped band's does (Marko, 2026-11-17:
+            // you can't have less arguments than the instruction requires); it ran the body on a missing *1
+            "10.band(2)                                         % <ERROR>",
             "\"abc\".band?int{?}<=int(2,8)                      % <ERROR>",
             "\"abc\".band?int{?}<=str(2,8)                      % <ERROR>",
             "\"abc\".band(2,8)                                  % <ERROR>"

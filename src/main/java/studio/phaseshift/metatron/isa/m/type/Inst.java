@@ -1005,22 +1005,25 @@ public interface Inst extends Call {
         /**
          * Whether the user's literal arguments can fill the definition's declared slots. A slot that takes something
          * cannot be filled by nothing: {@code plus(int::T)} takes one int, and a {@code {0}2} (or noobj) brings none,
-         * whatever payload the zero carries. This is existence, not type checking, which stays on kind and type: only
-         * a zero arg against a declared, non-zeroable type slot is refused. Computed args (calls), call-shaped slots
-         * and rec-shaped (named) args pass, and a {@code {?}} slot still opts into absence.
+         * whatever payload the zero carries, and nor does a call that leaves the slot out (Marko, 2026-11-17:
+         * {@code 1.plus()} fails, there is no plus of zero arguments; it ran the int plus on noobj's 0). An argument past
+         * the last slot passes: a call is open, as a lst is ({@code [2,2]?[int::T]}). This is existence, not type
+         * checking, which stays on kind and type: only nothing against a declared, non-zeroable type slot is refused.
+         * Computed args (calls), call-shaped slots and rec-shaped (named) args pass, and a {@code {?}} slot still opts
+         * into absence.
          *
          * @param definition the definition as declared
          * @param userInst   the call whose args would fill its slots
-         * @return false only when a literal zero would fill a slot that takes something
+         * @return false only when nothing, a literal zero or a missing argument, would fill a slot that takes something
          */
         public static boolean argsFillSlots(final Inst definition, final Inst userInst) {
             if (!definition.args().isLst() || !userInst.args().isLst())
                 return true;
             final List<Obj> slots = definition.args().lstValue();
             final List<Obj> given = userInst.args().lstValue();
-            for (int i = 0; i < Math.min(slots.size(), given.size()); i++) {
+            for (int i = 0; i < slots.size(); i++) {
                 final Obj slot = slots.get(i);
-                final Obj arg = given.get(i);
+                final Obj arg = i < given.size() ? given.get(i) : noobj();
                 if (arg.isNoObj() && !arg.isObjCall() && slot.isType() && !slot.c().isZeroable())
                     return false;
             }
