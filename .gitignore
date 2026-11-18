@@ -1,3 +1,4 @@
+*.p12
 .*
 *.sqlite
 opencode.json
