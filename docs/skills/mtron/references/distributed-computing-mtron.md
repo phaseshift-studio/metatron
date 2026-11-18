@@ -8,7 +8,7 @@ description: |
   `Shard` — the body of the `law_shard` rule in the machine's rewrite pool (`instset().rewrites()`; the local law
   rules are /m's, `law_shard` is `catRewrite`'s). One row per pattern (A–V): its algebraic law (the latex), the mtron
   you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif).
-  A ✅ marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented
+  A green ➜ marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented
   below with the seed partition it complements.
   TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a
   distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's
@@ -168,10 +168,17 @@ a range — one per place, since a branch has one lane per key.
 **After a cut, the seed is one obj.** A fold answers one obj (a gather whose rng is one), so the run after a cut has
 nothing to deal; its multiplicity is a span range in the run. The branch takes that obj whole and copies it to every
 lane (`?split=copy`), and each lane walks its own share of the range and folds it through the cut. The copy needs no
-idempotence: the shares are disjoint, so no term is counted twice. **A point is an index set too:** `step{p}` is `p`
-copies of one term, and points add across a branch (`a{p} = a{p_1} + a{p_2}`), so the lanes take even shares of the
-copies — `id{5}()` over two places is `id{3}()` and `id{2}()`, each lane folding its copies through the cut. A run
-after a cut with neither a span range nor a point stays home: dealing one obj would hand the whole run to one lane.
+idempotence: the shares are disjoint, so no term is counted twice. The obj stays one across the instructions that stay
+home between the fold and the run, as long as each hands on at most one obj for the one it takes (a one-obj dom and
+range, no copies, no unrolls): `sum().side(plus(1)).{0,3}plus(1).sum()` keeps `side` home and still splits the span.
+An instruction whose range may be many (`print` and `to` declare `A{*}<=A{?}`) leaves a bag of unknown size, which the
+branch deals. **A point is an index set too:** `step{p}` is `p` copies of one term, and points add across a branch
+(`a{p} = a{p_1} + a{p_2}`), so the lanes take even shares of the copies — `id{5}()` over two places is `id{3}()` and
+`id{2}()`, each lane folding its copies through the cut. A run after a cut with neither a span range nor a point stays
+home: dealing one obj would hand the whole run to one lane — unless the run opens with a **flatmapper**, which turns
+the one obj into many. The flatmapper stays home and the rest of the run deals its bag, so
+`order(neg()).merge().plus(1).sum()` merges the sorted lst at home and ships `plus(1).sum()`
+(`branch().kmerge().merge().branch().sum()`).
 
 ```mtron
 {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
@@ -209,49 +216,83 @@ of round trips a lane's share costs, not how the index set was split.
 
 ## the menu
 
-The centerpiece: every pattern, its law, and the two motifs. The **pre-write motif** is the mtron before the rewrite
-fires; the **rewrite motif** is the emitted layout — one `branch` keyed by place (`s_i` a lane's program, `p_i` a peer,
-`part_i` the factor of the seed bulk the branch deals lane `i`).
-✅ = implemented today; an empty box = the law is sound but the lowering is not yet written. `s_i`, `p_i`, `part_i`
-are placeholders — the schemas below are motifs, not literal runs.
+The centerpiece: every pattern, the law that makes it sound, and what it does; then the mtron each one rewrites.
+<span style="color:#66ff66">➜</span> = implemented today; an empty status = the law is sound but the lowering is not yet
+written. ▶ plays a pattern's cast.
 
-| pattern                            | law (latex)                                                                                                                                   | mtron pre-write motif                                              | mtron rewrite motif                                                                                                    | ▶                                                                                                    |
-|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **A** homomorphism shard ✅        | $h(a \uplus b) = h(a) \oplus h(b)$                                                                                                            | `{1,2,3,4}.plus(1).count()`                                        | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(1).count(),…).sum()`                                                   | <!-- cast: mini-distributed title="A" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" --> |
-| **B** data-local shard             | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                                | `*/usr/data/+/current.plus(1).sum()`                               | `branch(<a_i> => from?hop=0(</usr/data/+/current>).plus(1).sum(),…).sum()`                                             | <!-- cast: dist-data-local title="B" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->  |
-| **C** authority push-down          | $\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}$ (Thm 5 + a pure chain)                                                    | `*<ws://host:8555/n/+>.plus(1).sum()`                              | `branch(<ws://host:8555> => from?hop=0(</n/+>).plus(1).sum()).sum()`                                                   |                                                                                                      |
-| **D** parallel fan-out ✅          | $\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b$ (Thm 5)                                                                     | any shard; the transport, not a new fold                           | `branch(<p_i> => s_i, …).combiner` — every lane a `virtual::T`                                                         |                                                                                                      |
-| **E** tree reduction ✅            | $(a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C$                                                     | `{1,…,8}.plus(1).sum?hop=2()`                                      | nested `start?hop=n-1(p_i)…` at each interior node — the dial graph is the tree                                        | <!-- cast: dist-tree title="E" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->        |
-| **F** ordered fold                 | $a \cdot (b \cdot c) = (a \cdot b) \cdot c$ (associativity alone)                                                                             | a `lst`-partitioned fold (streams never shard)                     | pipeline — carry the running total, neighbor-to-neighbor                                                               |                                                                                                      |
-| **G** keyed reduce ✅              | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$            | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `branch?<={0}(<p_i> => start?hop=0(part_i).group([mod(3)=>sum()]),…).sum()==[_=>sum()]`                                | <!-- cast: dist-keyed title="G" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->       |
-| **H** redundant / hedged shards    | $x \oplus x = x$                                                                                                                              | a partition shipped to r peers                                     | every reply folds (at-least-once); non-idempotent → hedge, first reply wins                                            |                                                                                                      |
-| **I** span/route interpreter       | $\mathrm{plan} \mapsto \mathrm{layout}$ (infrastructure)                                                                                      | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | `PlanInterpreter` (via `Shard`) lowers the plan's axes over a real span `[(lo, hi, role)]`                             |                                                                                                      |
-| **J** algebraic aggregates         | $\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}$                                                                      | `{...}.mean()`                                                     | pointwise tuple partials; the finalizer runs once at the master                                                        |                                                                                                      |
-| **K** limit / top-k push-down      | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                                        | `{...}.order(s).take(k)`                                           | slaves `order(s).take(k)`; master `kmerge(s).take(k)`                                                                  |                                                                                                      |
-| **L** mergeable sketches           | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                             | `{...}.hll()` (a sketch fold)                                      | A / E / H once the sketch declares its monoid theory                                                                   |                                                                                                      |
-| **M** matrix multiplication        | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                                     | `mtrx::[...].mult(mtrx::[...])`                                    | O + addressed union (rows); A with matrix sum (inner k); G over block keys (2-D)                                       |                                                                                                      |
-| **N** iterative / BSP              | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                               | a sharded superstep repeated                                       | `repeat`/`loop` around the layout; the combiner is the superstep boundary                                              |                                                                                                      |
-| **O** broadcast constants ✅       | $ca \cdot 1b = 1a \cdot 1b \cdot c1$ (Thm 6)                                                                                                  | `{...}.plus(B).sum()` (B a constant)                               | the constant rides as an argument of the floatable run — no fan-out change                                             | <!-- cast: dist-const title="O" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->       |
-| **P** computed seeds               | $[0, n) = \uplus_i \mathrm{index}_i$                                                                                                          | Monte Carlo — each peer gets a count + its own RNG seed            | one O(1) message per peer; nothing shipped                                                                             |                                                                                                      |
-| **Q** monad migration              | $\mathrm{authority}(m)$ — ship the monad, not the value                                                                                       | a remote read mid-chain                                            | `law_shard` per step — the continuation ships instead of the value                                                     |                                                                                                      |
-| **R** durable results              | $\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}$                                                                                     | `to(</usr/job/round/shard>)`                                       | `space` + `shard_result::[authority, round, status, value]`                                                            |                                                                                                      |
-| **S** master-participates ✅       | $\bigoplus_{i=0}^{k} a_i \cdot r$ over $\{\mathrm{master}\} \cup \mathrm{peers}$                                                              | `{1,…,8}.plus(1).sum()`                                            | `?place=[local,peer]`: the master folds its own slice (a lane at distance zero) and ships k−1                          | <!-- cast: dist-master title="S" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->      |
-| **T** reference frame migration ✅ | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$ — machine semiring groupoid, stream ring's process dual                                     | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                     | cut at the move — `move(<host>)`; the tail ships as a program and the value snakes back                                | <!-- cast: dist-move title="T" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->        |
-| **U** profile collation            | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$ — $\oplus$ is keyed union with per-op times added, so the report is a commutative monoid | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(),…).profile_collate()>>format`                      |                                                                                                      |
-| **V** generative run ✅            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$ (Definition 3 — the unrolls are independent terms)                                                           | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()` — one lane per place, narrowed by WORK    | <!-- cast: dist-run title="V" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->         |
+| key   | play                                                                                                 | status                                 | pattern                     | law                                                                                                                                | description                                                                                       |
+|-------|------------------------------------------------------------------------------------------------------|----------------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| **A** | <!-- cast: mini-distributed title="A" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" --> | <span style="color:#66ff66">➜</span> | homomorphism shard          | $h(a \uplus b) = h(a) \oplus h(b)$                                                                                                 | each place folds its part; the master recombines the partials through the computed combiner       |
+| **B** | <!-- cast: dist-data-local title="B" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->  |                                        | data-local shard            | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                     | the code moves to the data: each authority folds what it holds                                    |
+| **C** |                                                                                                      |                                        | authority push-down         | $\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}$                                                                | B with one owner: the fold runs where the data lives, natively (Thm 5 and a pure chain)           |
+| **D** |                                                                                                      | <span style="color:#66ff66">➜</span> | parallel fan-out            | $\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b$                                                                  | the transport, not a new fold: every lane a `virtual::T`, so the master pays max RTT, not Σ RTT   |
+| **E** | <!-- cast: dist-tree title="E" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->        | <span style="color:#66ff66">➜</span> | tree reduction              | $(a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C$                                          | `?hop=height{arity}`: each interior node re-plans its part and recombines a level                 |
+| **F** |                                                                                                      |                                        | ordered fold                | $a \cdot (b \cdot c) = (a \cdot b) \cdot c$                                                                                        | associativity alone: a `lst`-partitioned fold carries the running total (streams never shard)     |
+| **G** | <!-- cast: dist-keyed title="G" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->       | <span style="color:#66ff66">➜</span> | keyed reduce                | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$ | partials merge by key; the combiner is pointwise, computed from `h`'s                             |
+| **H** |                                                                                                      |                                        | redundant / hedged shards   | $x \oplus x = x$                                                                                                                   | an idempotent fold lets a part ship to r peers and every reply fold; otherwise hedge, first wins  |
+| **I** |                                                                                                      |                                        | span/route interpreter      | $\mathrm{plan} \mapsto \mathrm{layout}$                                                                                            | the infrastructure: `PlanInterpreter` (via `Shard`) lowers a plan's axes to a layout              |
+| **J** |                                                                                                      |                                        | algebraic aggregates        | $\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}$                                                           | pointwise tuple partials; the finalizer runs once at the master                                   |
+| **K** |                                                                                                      |                                        | limit / top-k push-down     | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                  |
+| **L** |                                                                                                      |                                        | mergeable sketches          | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                               |
+| **M** |                                                                                                      |                                        | matrix multiplication       | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)        |
+| **N** |                                                                                                      |                                        | iterative / BSP             | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a sharded superstep, repeated: the combiner is the superstep boundary                             |
+| **O** | <!-- cast: dist-const title="O" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->       | <span style="color:#66ff66">➜</span> | broadcast constants         | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                                                                                               | a constant rides as an argument of the floatable run: no fan-out change (Thm 6)                   |
+| **P** |                                                                                                      |                                        | computed seeds              | $[0, n) = \uplus_i \mathrm{index}_i$                                                                                               | the index space is split, not the data: one O(1) message per peer, nothing shipped                |
+| **Q** |                                                                                                      |                                        | monad migration             | $\mathrm{authority}(m)$                                                                                                            | ship the monad, not the value: the continuation travels, `law_shard` per step                     |
+| **R** |                                                                                                      |                                        | durable results             | $\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}$                                                                          | each partial is written to an address: a space and its `shard_result::T`                          |
+| **S** | <!-- cast: dist-master title="S" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->      | <span style="color:#66ff66">➜</span> | master-participates         | $\bigoplus_{i=0}^{k} a_i \cdot r$ over $\{\mathrm{master}\} \cup \mathrm{peers}$                                                   | the master folds its own slice, a lane at distance zero, and ships the rest                       |
+| **T** | <!-- cast: dist-move title="T" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->        | <span style="color:#66ff66">➜</span> | reference frame migration   | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$                                                                                  | the frame moves, not the data: the tail ships as a program and the value snakes back              |
+| **U** |                                                                                                      |                                        | profile collation           | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                               |
+| **V** | <!-- cast: dist-run title="V" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->         | <span style="color:#66ff66">➜</span> | generative run              | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by WORK, or the copies evenly |
 
-**Legend.** ✅ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
+### the mtron motif rewrites
+
+Each pattern's **pre-write** motif, the mtron before the rewrite fires, and its **rewrite**, the emitted layout: one
+`branch` keyed by place (`s_i` a lane's program, `p_i` a peer, `part_i` the factor of the seed bulk the branch deals
+lane `i`). The names are placeholders and the rows are schemas, not literal runs; an italic cell describes a motif no
+single expression shows.
+
+| key   | pre-write                                                          | rewrite                                                                                           |
+|-------|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| **A** | `{1,2,3,4}.plus(1).count()`                                        | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(1).count(), …).sum()`                             |
+| **B** | `*/usr/data/+/current.plus(1).sum()`                               | `branch(<a_i> => from?hop=0(</usr/data/+/current>).plus(1).sum(), …).sum()`                       |
+| **C** | `*<ws://host:8555/n/+>.plus(1).sum()`                              | `branch(<ws://host:8555> => from?hop=0(</n/+>).plus(1).sum()).sum()`                              |
+| **D** | *any shard*                                                        | `branch(<p_i> => s_i, …).combiner`, every lane a `virtual::T`                                     |
+| **E** | `{1,…,8}.plus(1).sum?hop=2()`                                      | *a nested* `start?hop=n-1(p_i)…` *at each interior node: the dial graph is the tree*              |
+| **F** | *a* `lst`*-partitioned fold*                                       | *a pipeline: the running total travels neighbor to neighbor*                                      |
+| **G** | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `branch?<={0}(<p_i> => start?hop=0(part_i).group([mod(3)=>sum()]), …).sum()==[_=>sum()]`          |
+| **H** | *a part shipped to r peers*                                        | *every reply folds (at least once); non-idempotent: hedge, the first reply wins*                  |
+| **I** | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | *the plan's axes lowered over a real span* `[(lo, hi, role)]`                                     |
+| **J** | `{...}.mean()`                                                     | *tuple partials; the finalizer once at the master*                                                |
+| **K** | `{...}.order(s).take(k)`                                           | *lanes* `order(s).take(k)`*; the master* `kmerge(s).take(k)`                                      |
+| **L** | `{...}.hll()`                                                      | *A, E or H once the sketch declares its monoid theory*                                            |
+| **M** | `mtrx::[...].mult(mtrx::[...])`                                    | *O + an addressed union (rows); A with the matrix sum (inner k); G over block keys (2-D)*         |
+| **N** | *a sharded superstep, repeated*                                    | `repeat` / `loop` *around the layout*                                                             |
+| **O** | `{...}.plus(B).sum()`                                              | *the constant* `B` *rides as an argument of the floatable run*                                    |
+| **P** | *Monte Carlo: a count and an RNG seed per peer*                    | *one O(1) message per peer*                                                                       |
+| **Q** | *a remote read mid-chain*                                          | `law_shard` *per step: the continuation ships*                                                    |
+| **R** | `to(</usr/job/round/shard>)`                                       | *a space, and* `shard_result::[authority, round, status, value]`                                  |
+| **S** | `{1,…,8}.plus(1).sum?place=[local,peer]()`                         | *the master's slice is a lane at distance zero; k−1 ship*                                         |
+| **T** | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                     | *cut at the move,* `move(<host>)`*: the tail ships as a program*                                  |
+| **U** | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(), …).profile_collate()>>format` |
+| **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK    |
+
+**Legend.** ➜ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 —
 a **singleton** seed and a **closed** span range; a multi-member seed still factors the seed first, and a point/open
 span declines; 2026-11-18 — every cut plans its run, and after a cut the one obj is copied to every lane while the span
-range or point is factored, each lane folding its share through the cut). `P` is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated
-*data* space, while `V`'s index is the exponent.
+range or point is factored, each lane folding its share through the cut; the one obj survives home instructions that
+hand on at most one obj, and a run's leading flatmappers over one obj stay home and their bag is dealt). `P` is the
+data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated *data* space, while `V`'s
+index is the exponent.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
-`lst`, never a bag); `M` is a note; `I` is infrastructure. `U` is the instrumentation row: `profile()` already
-captures the *emitted* chain — the master's `branch/<fold>` with the branch's wait visible — but
-the far side is one number, because `profile_analysis` captures only the machine it runs on. Collation ships each
-shard's own report home so the peers' per-op cost is legible; the master still needs the gather's wall time, and that
-row alone cannot be reconstructed from the shards.
+`lst`, never a bag); `M` is a note; `I` is infrastructure. `C` needs only Thm 5 and a pure chain. `T` is the machine
+semiring's groupoid, the stream ring's process dual. `V`'s unrolls are independent terms (Definition 3), which is why
+they split. `U` is the instrumentation row, and its $\oplus$ is a keyed union with the per-op times added, so the
+report is a commutative monoid: `profile()` already captures the *emitted* chain — the master's `branch/<fold>` with
+the branch's wait visible — but the far side is one number, because `profile_analysis` captures only the machine it
+runs on. Collation ships each shard's own report home so the peers' per-op cost is legible; the master still needs the
+gather's wall time, and that row alone cannot be reconstructed from the shards.
 
 ## the taxonomy — the menu as a tree
 
@@ -292,19 +333,25 @@ The four top branches read the two axes of `docs/design/distributed-patterns-thr
 - **composite & substrate** builds on the rest: `N` iterates a sharded superstep, `R` writes results to a spatial
   address, `M` decomposes into O / A / G over three index splits, `I` lowers the plan's axes to a layout.
 
-Green = implemented (the ✅ in the table); white = the law holds, the lowering is unwritten.
+Green = implemented (the ➜ in the table, the ✅ in the tree); white = the law holds, the lowering is unwritten.
 
 ## the implemented layouts, spelled out
 
 The done patterns, with the lane/master forms written in full. `law_shard` (A) is the one engine they all lower
 to; the rest specialize it. Every run that ships is one `branch` keyed by place, and the master recombines the lanes'
-partials through the combiner.
+partials through the combiner: the chain **expands** into one lane per place and **contracts** at the fold.
+
+<!-- figure source: assets/tikz/distributed-run.tex (same recipe) -->
+<img src="../assets/distributed-run.png" alt="one cut: a chain of instructions f1, f2, f3, then a fan of arching lanes, one per place, into the fold r that recombines them; the fan expands, the fold contracts" width="60%" style="margin:0.3em 0 0.6em 0"/>
 
 - **Every cut plans the run before it.** A chain that folds more than once ships each run through its own branch;
   each combiner brings the computation home, where the next run starts:
   `branch(<p_i> => <run_1>.<fold_1>, …).<combiner_1>.branch(<p_i> => <run_2>.<fold_2>, …).<combiner_2>`. A run never
   reaches back past the cut before it, a run that declines stays as written, and the tail after the last cut stays
-  home.
+  home. The chain expands and contracts once per cut:
+
+  <!-- figure source: assets/tikz/distributed-runs.tex (same recipe) -->
+  <img src="../assets/distributed-runs.png" alt="every cut plans its run: f1, f2, f3 fan out into the fold r1, home again to f4, which fans out into the fold r2, then the tail f5 stays home; expand, contract, expand, contract" width="100%" style="margin:0.3em 0 0.6em 0"/>
 
 - **A literal seed is dealt by the plan.** Each lane carries its own part, `<p_i> => start(part_i).<program>`, so the
   listing shows what each place runs. With no `start` left at home the branch takes nothing: it is the initial form,
@@ -450,11 +497,12 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    emits one branch keyed by place: seeded lanes under `branch?<={0}` for a literal seed;
    `<prefix>.branch?<=T{*}&split=part(<p_i> => <run>.<fold>, …).<combiner>` for a computed bag, which the branch deals
    when it runs (a stated dom coefficient pages the shipment); and, when the seed is one obj (a literal singleton, or
-   what the fold before the run answers) and the run carries a closed span range or a point, the **run partition** —
-   one lane per place carrying the whole seed (copied by the branch when it is computed) with a narrowed span (split by
-   WORK) or point (split evenly), each lane folding its share through the cut. A run with one obj and neither stays
-   home. The lane's first instruction states the
-   restated budget (`?hop=0` at a leaf).
+   what the fold before the run answers, carried through the home instructions that hand on at most one obj) and the
+   run carries a closed span range or a point, the **run partition** — one lane per place carrying the whole seed
+   (copied by the branch when it is computed) with a narrowed span (split by WORK) or point (split evenly), each lane
+   folding its share through the cut. With one obj and neither, the run's leading flatmappers stay home and expand it,
+   and the rest of the run deals their bag; a run with neither and no leading flatmapper stays home. The lane's first
+   instruction states the restated budget (`?hop=0` at a leaf).
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's
