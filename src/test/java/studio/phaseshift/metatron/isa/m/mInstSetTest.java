@@ -1025,6 +1025,11 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            // the ?docq examples of the universal type #::T (mInstSet), verbatim: isa answers the lhs or noobj
+            "abc.isa(#::T)                                                                                                             % abc",
+            "12.3.isa(#::T)                                                                                                            % 12.3",
+            "{2}'c string'.isa(#{+}::T)                                                                                                % {2}'c string'",
+            "abc.isa(#{2}::T)                                                                                                          % noobj",
             "[a=>1,b=>2,c=>3].select([a=>_])                                                                                           % [a=>1]",
             "{[a/b=>1],[b/c=>2],[c/d=>3]}.select([a/b=>_])                                                                             % [a/b=>1]",
             "{[a=>1],[a=>2],[a=>3]}.select([a=>is(gte(2))])                                                                            % {[a=>2],[a=>3]}",

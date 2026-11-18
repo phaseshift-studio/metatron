@@ -448,7 +448,7 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    @Training.SkipTraining(reason = "rows assert Obj.test on a parsed value; one row's lhs is a multiplicity ({1,2,3}) and the .matches(...) instruction has a one-obj dom, so it would answer {false,false,false} there instead of the asserted false")
+    @Training.SkipTraining(reason = "rows assert Obj.test on a parsed value; one row's lhs is a multiplicity ({1,2,3}), which an mtron expression evaluates one obj at a time rather than as the one value the test asserts on")
     @ParameterizedTest
     @CsvSource(value = {
             "[1,2,3]                                     % lst::T                       % true",
@@ -764,7 +764,7 @@ public class LstTest extends AbstractAlgebraTest {
      * admits zero, and a present zero-admitting index is still typed; an index's left coefficient is the multiplicity at
      * that index (Marko, 2026-11-18); and a poly at an index is read by its base ({@code lst}, {@code rec}, {@code rel}), not unpacked.
      */
-    @Training(instruction = "does the lst {{{value}}} match the tensor type {{{type}}}?", input = "{{{value}}}.matches({{{type}}})", output = "{{{matches}}}")
+    @Training(instruction = "does the lst {{{value}}} match the tensor type {{{type}}}?", input = "{{{value}}}.isa({{{type}}}).count().gt(0)", output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // value                      % type                          % matches

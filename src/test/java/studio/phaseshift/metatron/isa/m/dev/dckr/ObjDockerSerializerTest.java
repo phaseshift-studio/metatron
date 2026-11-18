@@ -405,7 +405,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
     }
 
     /**
-     * The typed rec matches its own type, so {@code .matches(docker_event::T)} and a type-headed filter are the same
+     * The typed rec matches its own type, so a type check and a type-headed filter are the same
      * act and the tid survives a filter.
      */
     @Test

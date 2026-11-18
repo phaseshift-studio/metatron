@@ -310,7 +310,7 @@ public class NoObjTest extends AbstractMetatronTest {
         assertNotEquals(noobj(), rec0());
     }
 
-    @Training.SkipTraining(reason = "the predicate is obj1.test(obj2) on two raw parsed VALUES; mtron matches() takes its argument as a Type, so the expression that would come closest does not express this comparison")
+    @Training.SkipTraining(reason = "the predicate is obj1.test(obj2) on two raw parsed values, and the receivers are mostly noobj: x.isa(y) answers x or noobj, so for a noobj x it is noobj either way and x.isa(y).count().gt(0) cannot give true, which most of these rows assert")
     @ParameterizedTest
     @CsvSource(value = {
             "noobj               | noobj                 |true",

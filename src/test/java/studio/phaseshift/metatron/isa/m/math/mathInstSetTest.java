@@ -636,12 +636,12 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "mm::5.0.eq(cm::1.0)                                                                 % false",
 
             // nominal typing of metric and imperial units
-            "mm::5.0.matches(metric::T)                                                          % true",
-            "km::1.0.matches(metric::T)                                                          % true",
-            "inch::5.0.matches(imperial::T)                                                      % true",
-            "mile::1.0.matches(imperial::T)                                                      % true",
-            "mm::5.0.matches(imperial::T)                                                        % false",
-            "meter::5.0.matches(imperial::T)                                                     % false",
+            "mm::5.0.isa(metric::T).count().gt(0)                                                % true",
+            "km::1.0.isa(metric::T).count().gt(0)                                                % true",
+            "inch::5.0.isa(imperial::T).count().gt(0)                                            % true",
+            "mile::1.0.isa(imperial::T).count().gt(0)                                            % true",
+            "mm::5.0.isa(imperial::T).count().gt(0)                                              % false",
+            "meter::5.0.isa(imperial::T).count().gt(0)                                           % false",
     }, delimiter = '%', quoteCharacter = '~')
     public void testDistanceConversions(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -715,9 +715,9 @@ public class mathInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             // datetime::T type checking
-            "datetime_now().matches(datetime::T)                                    % true",
-            "<http://example.com>.matches(datetime::T)                              % false",
-            "<//2024.12:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % true",
+            "datetime_now().isa(datetime::T).count().gt(0)                          % true",
+            "<http://example.com>.isa(datetime::T).count().gt(0)                    % false",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.isa(datetime::T).count().gt(0)    % true",
             // Structural projections (host/path/q → uri, port → int)
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host                            % <2024.12>",
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>port                            % 25",
@@ -748,17 +748,17 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>25].as(uri::T)           % <//2024.12:25/09/00/00/000?tz=-0500>",
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>26].as(uri::T)           % noobj",
             // Predicate rejects invalid datetimes
-            "<//99.99:99/99/99/99/999?tz=X>.matches(datetime::T)                    % false",
-            "<//2024.13:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % false",
-            "<//2024.12:25/25/00/00/000?tz=-0500>.matches(datetime::T)              % false",
-            "<//2024.12:25/09/60/00/000?tz=-0500>.matches(datetime::T)              % false",
+            "<//99.99:99/99/99/99/999?tz=X>.isa(datetime::T).count().gt(0)          % false",
+            "<//2024.13:25/09/00/00/000?tz=-0500>.isa(datetime::T).count().gt(0)    % false",
+            "<//2024.12:25/25/00/00/000?tz=-0500>.isa(datetime::T).count().gt(0)    % false",
+            "<//2024.12:25/09/60/00/000?tz=-0500>.isa(datetime::T).count().gt(0)    % false",
             "<//2024.12:25/09/00/00>?datetime::T                           % noobj",
             "<//99.99:99/99/99/99/999?tz=X>?datetime::T                    % noobj",
             "<//2024.13:25/09/00/00/000?tz=-0500>?datetime::T              % noobj",
             "<//2024.12:25/25/00/00/000?tz=-0500>?datetime::T              % noobj",
             "<//2024.12:25/09/60/00/000?tz=-0500>?datetime::T              % noobj",
             // str → datetime parsing (ISO-8601 and Docker timestamp formats)
-            "'2026-08-01T23:37:33-06:00'.as(datetime::T).matches(datetime::T)         % true",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T).isa(datetime::T).count().gt(0) % true",
             "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>year                        % 2026",
             "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>month                       % 8",
             "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>day                         % 1",
@@ -774,7 +774,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "'2024-12-25T09:00:00Z'.as(datetime::T)>>tz                               % '+0000'",
             // Date only (defaults to midnight UTC)
             "'2024-12-25'.as(datetime::T)>>month                                       % 12",
-            "'2024-12-25'.as(datetime::T).matches(datetime::T)                         % true",
+            "'2024-12-25'.as(datetime::T).isa(datetime::T).count().gt(0)               % true",
             // Invalid strings rejected
             "'not-a-date'.as(datetime::T)                                              % <ERROR>",
             // the ?docq examples of the datetime instructions in mathInstSet, verbatim
@@ -793,7 +793,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "<//2026.08.07/19/48/02/251?tz=+0000>?datetime::T                          % noobj",
             // datetime_now() lays an absolute path, so its own text reparses as a datetime (the relative
             // path rendered //yyyy.MM:ddHH/mm/..., which reparses with the hour glued onto the day)
-            "datetime_now().as(uri::T).as(str::T).as(uri::T).matches(datetime::T)      % true",
+            "datetime_now().as(uri::T).as(str::T).as(uri::T).isa(datetime::T).count().gt(0) % true",
     }, delimiter = '%', quoteCharacter = '~')
     public void testDateTimeCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

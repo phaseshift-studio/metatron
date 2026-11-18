@@ -1203,7 +1203,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         // THE VERDICT EXECUTES, THE DIFF COMPARES. the test path runs the type's predicate call
                         // through the processor (Type.apply -> obj.test(predicate().apply(obj))), while the
                         // recursion diff below only matches shapes -- so when predicate EXECUTION is what failed
-                        // (an unresolved isa/matches inst, a deref the resolver cannot reach), the diff shows
+                        // (an unresolved isa inst, a deref the resolver cannot reach), the diff shows
                         // every field matching and the real reason lives in the apply result: a fail carries the
                         // resolver's own exception, which the boolean verdict swallows. re-run the apply here,
                         // for the message alone.
@@ -1944,14 +1944,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .argLst(ALL_TYPE, "filter lhs if doesn't match arg")
                             .desc("checks whether the obj is nominally the arg type or a refinement of the arg type")
                             .body((lhs, inst) -> lhs.testNominally(inst.arg(0)) ? lhs : noobj())
-                            .create(),
-                    InstBuilder.build()
-                            .tid(MATCHES_INST_TID)
-                            .dom(ALL.maybe(), "any obj")
-                            .rng(BOOL_TID, "whether the lhs matches the arg type")
-                            .argLst(T(ALL.maybe()), "the type to match the lhs against")
-                            .desc("a matching function \\(f(x) \\mapsto b\\): structurally checks whether the lhs obj matches the arg type")
-                            .body((lhs, inst) -> bool(lhs.test(inst.arg(0))))
                             .create(),
                     InstBuilder.build()
                             .tid(BLOCK_INST_TID)

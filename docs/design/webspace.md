@@ -1382,8 +1382,7 @@ So **subsumption is expressible in mtron** as of this build (it used to regress;
 is what route-entry validation needs — `inst?protocol::T<=uri::T` is a subsumption check. Two lookalikes to avoid:
 `x.is(T)` resolves to `/m/inst/is`, a boolean-*argument* filter (`x.is(true)` → `x`), so a type argument is a
 category error (`1.is(int::T)` → `MInt cannot be cast to Bool`) — the skill doc's `is(...)` rows in "Type checking
-and casting" are a name error, not a gap; and `x.matches(T)` is **slated for deletion** (three references in main:
-`mInstSet.java:165`, its `?~` sugar at `:888`, and the row at `Obj.java:1307`), so nothing in this design may use
+and casting" are a name error, not a gap; and `x.matches(T)` was **deleted** on 2026-11-18, so nothing in this design may use
 it. Use `isa`. The java twin is `typeA.test(typeB)`, which is what the transport will call and what
 `webInstSetTest` asserts (rows carry vids so the assertion stays exact rather than comparing rendered types).
 
@@ -1397,8 +1396,7 @@ So **subsumption is expressible in mtron** as of this build (it used to regress;
 is what route-entry validation needs — `inst?protocol::T<=uri::T` is a subsumption check. Two lookalikes to avoid:
 `x.is(T)` resolves to `/m/inst/is`, a boolean-*argument* filter (`x.is(true)` → `x`), so a type argument is a
 category error (`1.is(int::T)` → `MInt cannot be cast to Bool`) — the skill doc's `is(...)` rows in "Type checking
-and casting" are a name error, not a gap; and `x.matches(T)` is **slated for deletion** (three references in main:
-`mInstSet.java:165`, its `?~` sugar at `:888`, and the row at `Obj.java:1307`), so nothing in this design may use
+and casting" are a name error, not a gap; and `x.matches(T)` was **deleted** on 2026-11-18, so nothing in this design may use
 it. Use `isa`. The java twin is `typeA.test(typeB)`, which is what the transport will call and what
 `webInstSetTest` asserts (rows carry vids so the assertion stays exact rather than comparing rendered types).
 

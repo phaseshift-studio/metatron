@@ -84,7 +84,7 @@ public class TypeTest extends AbstractMetatronTest {
     //  @Disabled("everything works with the recent inst typing exception console::T (??)")
     @Training(
             instruction = "does {{{obj}}} match the instruction type {{{inst}}}?",
-            input = "{{{obj}}}.matches({{{inst}}})",
+            input = "{{{obj}}}.isa({{{inst}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
@@ -114,7 +114,7 @@ public class TypeTest extends AbstractMetatronTest {
 
     @Training(
             instruction = "does {{{obj}}} match the type {{{typefURI}}}?",
-            input = "{{{obj}}}.matches({{{typefURI}}}::T)",
+            input = "{{{obj}}}.isa({{{typefURI}}}::T).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
@@ -258,7 +258,7 @@ public class TypeTest extends AbstractMetatronTest {
 
     @Training(
             instruction = "does {{{obj}}} match the type {{{type}}}?",
-            input = "|{{{obj}}}.matches({{{type}}})",
+            input = "|{{{obj}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"abc -> noobj::T"})
@@ -330,7 +330,7 @@ public class TypeTest extends AbstractMetatronTest {
 
     @Training(
             instruction = "is the type {{{typeA}}} a {{{typeB}}}?",
-            input = "|{{{typeA}}}.matches({{{typeB}}})",
+            input = "|{{{typeA}}}.isa({{{typeB}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"nat -> int::T[is(gt(0))]", "bignat -> int::T[is(gt(100))]",})
@@ -381,13 +381,13 @@ public class TypeTest extends AbstractMetatronTest {
             "0                   | nat::T                                     | false",
             "int::T              | nat::T + int::T                            | true",
             //"0                   | nat::T[mult(int::T)]                                        | false",
-            "0                   | int::T[is(or(matches(int::T),matches(real::T)))]            | true",
-            "0                   | int::T[is(or(matches(str::T),matches(real::T)))]            | false",
-            "0                   | int::T[is(or(matches(str::T),or(matches(uri::T),matches(real::T))))]    | false",
-            "0                   | int::T[is(or(matches(str::T),or(matches(int::T),matches(real::T))))]    | true",
-            "0                   | int::T[is(or(matches(int::T),matches(real::T)))]             | true",
-            "0                   | int::T[is(and(matches(int::T),matches(real::T)))]            | false",
-            "0                   | int::T[is(and(matches(str::T),matches(nat::T)))]             | false",
+            "0                   | int::T[is(or(isa(int::T).count().gt(0),isa(real::T).count().gt(0)))] | true",
+            "0                   | int::T[is(or(isa(str::T).count().gt(0),isa(real::T).count().gt(0)))] | false",
+            "0                   | int::T[is(or(isa(str::T).count().gt(0),or(isa(uri::T).count().gt(0),isa(real::T).count().gt(0))))] | false",
+            "0                   | int::T[is(or(isa(str::T).count().gt(0),or(isa(int::T).count().gt(0),isa(real::T).count().gt(0))))] | true",
+            "0                   | int::T[is(or(isa(int::T).count().gt(0),isa(real::T).count().gt(0)))] | true",
+            "0                   | int::T[is(and(isa(int::T).count().gt(0),isa(real::T).count().gt(0)))] | false",
+            "0                   | int::T[is(and(isa(str::T).count().gt(0),isa(nat::T).count().gt(0)))] | false",
             "nat::T              | 0                                                            | false",
             "nat::T              | 1                                                            | false",
             //  "nat::T              | T::T[nat::T]                               | true",
@@ -413,7 +413,7 @@ public class TypeTest extends AbstractMetatronTest {
 
     @Training(
             instruction = "is the type {{{type}}} a {{{baseType}}}?",
-            input = "|{{{type}}}.matches({{{baseType}}})",
+            input = "|{{{type}}}.isa({{{baseType}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"nat -> int::T[is(gt(0))]@nat", "bignat -> nat::T[is(gt(100))]@bignat",})
@@ -771,7 +771,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{obj}}} match the type {{{type}}}?",
-            input = "{{{obj}}}.matches({{{type}}})",
+            input = "{{{obj}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"int::T[is(gt(0))]@/m/type_test/posint", "/m/type_test/bigpos -> /m/type_test/posint::T[is(gt(100))]"})
@@ -793,7 +793,7 @@ public class TypeTest extends AbstractMetatronTest {
 
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -838,7 +838,7 @@ public class TypeTest extends AbstractMetatronTest {
 
     @Training(
             instruction = "does {{{objA}}} match {{{objB}}}?",
-            input = "|{{{objA}}}.matches({{{objB}}})",
+            input = "|{{{objA}}}.isa({{{objB}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1226,7 +1226,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1292,7 +1292,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1371,7 +1371,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1426,7 +1426,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1485,7 +1485,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1751,7 +1751,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1819,7 +1819,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1890,11 +1890,12 @@ public class TypeTest extends AbstractMetatronTest {
 
     /**
      * The rows of {@link #testTypeTestCoefficientPolynomial} whose instance is itself a type, asserted on the parsed
-     * types. No mtron expression says the same: {@code T.matches(U)} applies the receiver, so its point streams through
-     * ({@code {2}int::T.matches(int::T)} is {@code {2}true}) and a ranged point never ends
-     * ({@code {?}int::T.matches(int::T)} spins the processor).
+     * types. They stay out of training because the corpus row evaluates the instance, which answers a different
+     * question for some of these types: {@code {2}int::T.isa(int::T).count().gt(0)} answers {@code true} where its row
+     * asserts false, and so does each of {@code {?}int::T}, {@code {0,1}int::T} and {@code int{?}::T} as the receiver.
+     * The {@code |} block changed neither answer for {@code {2}int::T} or {@code {?}int::T}.
      */
-    @Training.SkipTraining(reason = "the instance is a type literal, asserted with Obj.test on the parsed type; as an mtron expression T.matches(U) applies the receiver, so its point streams through ({2}int::T.matches(int::T) is {2}true) and a ranged point never terminates ({?}int::T.matches(int::T) spins the processor)")
+    @Training.SkipTraining(reason = "the test asserts on the parsed type, so evaluating the instance would test a different obj")
     @ParameterizedTest
     @TestData(value = {"age -> int::T@age"})
     @CsvSource(value = {
@@ -1937,7 +1938,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does the type {{{instance}}} match the type {{{type}}}?",
-            input = "|{{{instance}}}::T.matches({{{type}}}::T)",
+            input = "|{{{instance}}}::T.isa({{{type}}}::T).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
@@ -2032,7 +2033,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "is the fibered type {{{instance}}} accepted where {{{expected}}} is expected?",
-            input = "|{{{instance}}}::T.matches({{{expected}}}::T)",
+            input = "|{{{instance}}}::T.isa({{{expected}}}::T).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -2074,7 +2075,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "is the fibered type {{{instance}}} accepted where {{{expected}}} is expected?",
-            input = "|{{{instance}}}::T.matches({{{expected}}}::T)",
+            input = "|{{{instance}}}::T.isa({{{expected}}}::T).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -2121,7 +2122,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{value}}} match the type {{{type}}}?",
-            input = "{{{value}}}.matches({{{type}}})",
+            input = "{{{value}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -2220,7 +2221,7 @@ public class TypeTest extends AbstractMetatronTest {
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
-            input = "{{{instance}}}.matches({{{type}}})",
+            input = "{{{instance}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {

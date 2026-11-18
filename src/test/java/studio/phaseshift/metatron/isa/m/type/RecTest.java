@@ -127,7 +127,7 @@ public class RecTest extends AbstractAlgebraTest {
 
     @Training(
             instruction = "does the {{{recA}}} rec match the {{{recB}}} rec?",
-            input = "{{{recA}}}.matches({{{recB}}})",
+            input = "{{{recA}}}.isa({{{recB}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
@@ -731,7 +731,7 @@ public class RecTest extends AbstractAlgebraTest {
 
     @Training(
             instruction = "does {{{record}}} match {{{type}}}?",
-            input = "{{{record}}}.matches({{{type}}})",
+            input = "{{{record}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
@@ -1713,7 +1713,7 @@ public class RecTest extends AbstractAlgebraTest {
      */
     @Training(
             instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
-            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            input = "{{{@TestData}}}; {{{value}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1744,7 +1744,7 @@ public class RecTest extends AbstractAlgebraTest {
      */
     @Training(
             instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
-            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            input = "{{{@TestData}}}; {{{value}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"scout -> rec::T@scout"})
@@ -1765,7 +1765,7 @@ public class RecTest extends AbstractAlgebraTest {
      */
     @Training(
             instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
-            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            input = "{{{@TestData}}}; {{{value}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
@@ -1810,7 +1810,7 @@ public class RecTest extends AbstractAlgebraTest {
      */
     @Training(
             instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
-            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            input = "{{{@TestData}}}; {{{value}}}.isa({{{type}}}).count().gt(0)",
             output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"rec[o]::T[?[o=>int::T]]@ex1"})
