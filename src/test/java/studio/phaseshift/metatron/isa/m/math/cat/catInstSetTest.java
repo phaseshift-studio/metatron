@@ -1290,6 +1290,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.cc(3).cc()                         % initial reducer reducer   % - endo endo",
             "start('mtron').cc(3).cc()            % initial reducer reducer   % - endo -",
             "start({1,2,3}).is(gt(1)).sum()       % initial filter reducer  % - endo endo",
+            "start({1,2,3}).filter(gt(1)).sum()   % initial filter reducer  % - endo endo",
             "start({1,2,3}).side(plus(1)).sum()   % initial mapper reducer    % - endo endo",
             "5.plus(0).neg()                      % initial mapper mapper     % - endo endo,iso,auto,section,retraction,mono,epi",
     }, delimiter = '%')
@@ -1303,13 +1304,15 @@ public class catInstSetTest extends AbstractInstSetTest {
     /**
      * A bare instruction lifted on its own has no chain to resolve it in, so an op no {@code ?decq} claim declares
      * gleans its form and class from the dom/rng its registrations agree on: the seed's one contract is initial, and
-     * {@code is}'s maybe-dom generic is standard. Each row: the instruction % its form % its class labels
-     * ({@code -} for none).
+     * {@code is} and {@code filter} are filters: neither answers more than it takes ({@code rng.c().lte(dom.c())}, so
+     * filter's {@code A => A{?}} as well as is's {@code A{?} => A{?}}). Each row: the instruction % its form % its class
+     * labels ({@code -} for none).
      */
     @ParameterizedTest
     @CsvSource(value = {
             "start(5)        % initial    % -",
             "is(gt(1))       % filter     % endo",
+            "filter(gt(1))   % filter     % endo",
             "side(plus(1))   % mapper     % endo",
     }, delimiter = '%')
     void testBareMorphismGleansItsShapeFromItsRegistrations(final String inst, final String form, final String clazz) {
