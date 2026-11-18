@@ -149,21 +149,35 @@ the seed is a singleton and the run carries a closed range, `law_shard` factors 
 distinct place, each carrying the **whole** seed and the run with its span narrowed to that place's share (`{p_i,q_i}`,
 a contiguous subrange chosen by WORK — a lane walks its runs from the seed, each step once, so a share `{a,b}` costs the
 `b` steps it walks and the `b - a + 1` runs it emits, and the lane nearer the top takes fewer runs: `{0,4}` over two
-places is `{0,2}` and `{3,4}`). The chain's tail (the first non-floatable instruction after the run, a reducer included)
-runs at home over the branch's bag.
+places is `{0,2}` and `{3,4}`). When the run ends at a cut, each lane folds its own unrolls through the cut, so one
+partial per lane travels home, and the master recombines the partials through the cut's combiner.
 
 ```mtron
 start(0).{0,10}plus(1).sum()
-⇒ branch?<={0}(<p_1> => start?hop=0(0).{0,7}plus(1), <p_2> => start?hop=0(0).{8,10}plus(1)).sum()
+⇒ branch?<={0}(<p_1> => start?hop=0(0).{0,6}plus(1).sum(), <p_2> => start?hop=0(0).{7,10}plus(1).sum()).sum()
 ```
 
-The branch recombines the terms; the tail folds them. **No typed cut is needed**, so a span the typing probe cannot
-thread still plans, and the cutless form is the same path with an empty tail (`branch(...)` alone). A point span (`{3}`)
-is a lone compose chain and an open range (`{*}`, `{+}`) has no last unroll: neither is an index set, so both
-decline to the identity. v1 factors one axis per application — the seed first (today's layout), the run when the seed
-is a singleton; the product (seed × unroll) is the tree's next level, never a new grid. The run partition is **not a
-`?split` kind**: `{w}part` weights the seed, while a run share is a range — one per place, since a branch has one lane
-per key.
+**No typed cut is needed** for the cutless form: a run with no cut after it ships its unrolls whole, and the chain's tail
+(the first non-floatable instruction after the run) runs at home over the branch's bag, so a span the typing probe
+cannot thread still plans (`branch(...)` alone when the tail is empty). A point span (`{3}`) is a lone compose chain and
+an open range (`{*}`, `{+}`) has no last unroll: neither is an index set, so both decline to the identity. v1 factors
+one axis per run — the seed first, the run when the seed is one obj; the product (seed × unroll) is the tree's next
+level, never a new grid. The run partition is **not a `?split` kind**: `{w}part` weights the seed, while a run share is
+a range — one per place, since a branch has one lane per key.
+
+**After a cut, the seed is one obj.** A fold answers one obj (a gather whose rng is one), so the run after a cut has
+nothing to deal; its multiplicity is a span range in the run. The branch takes that obj whole and copies it to every
+lane (`?split=copy`), and each lane walks its own share of the range and folds it through the cut. The copy needs no
+idempotence: the shares are disjoint, so no term is counted twice. A run after a cut with no span range stays home —
+dealing one obj would hand the whole run to one lane. A point is no index set: `{5}` on an instruction makes five
+copies of one term, which bulk into one obj.
+
+```mtron
+{1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
+⇒ branch?<={0}(<p_1> => start?hop=0({1,4}).plus(1).sum(), <p_2> => …).sum()
+     .branch?<=int{*}&split=copy(<p_1> => {0,1}plus?hop=0(1).sum(), <p_2> => {2,2}plus?hop=0(1).sum(),
+                                 <p_3> => {3,3}plus?hop=0(1).sum()).sum()                          [-- 41+22+23 = 86 --]
+```
 
 ### the branch's gather grain — the dom coefficient
 
@@ -223,12 +237,13 @@ are placeholders — the schemas below are motifs, not literal runs.
 | **S** master-participates ✅       | $\bigoplus_{i=0}^{k} a_i \cdot r$ over $\{\mathrm{master}\} \cup \mathrm{peers}$                                                              | `{1,…,8}.plus(1).sum()`                                            | `?place=[local,peer]`: the master folds its own slice (a lane at distance zero) and ships k−1                          | <!-- cast: dist-master title="S" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->      |
 | **T** reference frame migration ✅ | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$ — machine semiring groupoid, stream ring's process dual                                     | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                     | cut at the move — `move(<host>)`; the tail ships as a program and the value snakes back                                | <!-- cast: dist-move title="T" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->        |
 | **U** profile collation            | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$ — $\oplus$ is keyed union with per-op times added, so the report is a commutative monoid | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(),…).profile_collate()>>format`                      |                                                                                                      |
-| **V** generative run ✅            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$ (Definition 3 — the unrolls are independent terms)                                                           | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1), <p_2> => …).sum()` — one lane per place, the span narrowed by WORK | <!-- cast: dist-run title="V" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->         |
+| **V** generative run ✅            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$ (Definition 3 — the unrolls are independent terms)                                                           | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()` — one lane per place, narrowed by WORK    | <!-- cast: dist-run title="V" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->         |
 
 **Legend.** ✅ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 —
 a **singleton** seed and a **closed** span range; a multi-member seed still factors the seed first, and a point/open
-span declines). `P` is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated
+span declines; 2026-11-18 — every cut plans its run, and after a cut the one obj is copied to every lane while the span
+range is factored, each lane folding its share through the cut). `P` is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated
 *data* space, while `V`'s index is the exponent.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
 `lst`, never a bag); `M` is a note; `I` is infrastructure. `U` is the instrumentation row: `profile()` already
@@ -281,8 +296,14 @@ Green = implemented (the ✅ in the table); white = the law holds, the lowering 
 ## the implemented layouts, spelled out
 
 The done patterns, with the lane/master forms written in full. `law_shard` (A) is the one engine they all lower
-to; the rest specialize it. Every master is one `branch` keyed by place, and the master recombines the lanes'
+to; the rest specialize it. Every run that ships is one `branch` keyed by place, and the master recombines the lanes'
 partials through the combiner.
+
+- **Every cut plans the run before it.** A chain that folds more than once ships each run through its own branch;
+  each combiner brings the computation home, where the next run starts:
+  `branch(<p_i> => <run_1>.<fold_1>, …).<combiner_1>.branch(<p_i> => <run_2>.<fold_2>, …).<combiner_2>`. A run never
+  reaches back past the cut before it, a run that declines stays as written, and the tail after the last cut stays
+  home.
 
 - **A literal seed is dealt by the plan.** Each lane carries its own part, `<p_i> => start(part_i).<program>`, so the
   listing shows what each place runs. With no `start` left at home the branch takes nothing: it is the initial form,
@@ -292,8 +313,8 @@ partials through the combiner.
   `<prefix>.branch?<=T{*}&split=part(<p_i> => <program>, …)` (`repeat() [[ plus(10).order ]]`, Marko 2026-11-05).
   Its **dom coefficient** is `{*}` by default (the barrier); a stated one pages it — see *the branch's gather grain*.
 - **A run partition replicates the seed and narrows the exponent.** A seeded lane carries the whole seed and its own
-  subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. See *the run
-  partition*.
+  subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. After a cut the
+  seed is computed, so the branch copies it to every lane (`branch?<=T{*}&split=copy(…)`). See *the run partition*.
 - A place with n shares is keyed `?split={n}part`, and `?split=copy` hands every lane the whole seed.
 - A lane ships raw. The master's compiler never binds a lane; each is compiled where it runs (server side for a host,
   by that machine's compiler for a machine path).
@@ -348,8 +369,10 @@ on p_1:    branch?<={0}&split=part(<p_2> => start?hop={2}0({1,3,5,7}).plus(1).su
                                   <p_3> => start?hop={2}0({2,4,6,8}).plus(1).sum()).sum()
 ```
 
-The axis resolves in chain order — the first statement in the chain wins: a `?hop` on any instruction, else the plan's
-tree route (default height 1, the star). A peer re-plans its part because applying a code compiles it
+The axis resolves per run, in chain order — the first statement among the run's own instructions wins, else the axis
+the run before it resolved, else the plan's tree route (default height 1, the star). A statement governs from where it
+stands onward: `start?hop=0(…)` keeps a whole chain home, while `?hop=0` on the last fold keeps only that run home. The
+`?place` and `?split` axes resolve the same way. A peer re-plans its part because applying a code compiles it
 (`Machine.applyCode`); at a height of zero the part is a leaf. The emitted lane restates the **form**, never the
 number: the same arity, one height down, stated on the lane's **first instruction** — `start?hop={2}1(part)` — and a
 leaf states the bare `?hop=0`; no other instruction carries a budget. `{2}2 ⇒ {2}1 ⇒ 0`. A chain (`[h,1]`) hands the
@@ -420,14 +443,15 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
 4. **Register it.** A rewrite in `catRewrite.rules()`, wired into `catInstSet`'s `REWRITE` key, lowers the plan
    (`code -> PlanInterpreter.lower(plan, code)`), so the compiler's rewriter applies it, and `path::T` draws it as an
    out-edge wherever it moves the code.
-5. **The emitter lowers it.** `Shard.apply` — the body `PlanInterpreter` delegates to — matches the one-cut shape
-   `[initial, {*}home, {*}floatable, blocked(reducer ∧ laws), {*}tail]`. The cut is the first fold that recombines,
-   the floatable run before it ships, and everything before the run stays home. It emits one branch keyed by place:
-   seeded lanes under `branch?<={0}` for a literal seed; `<prefix>.branch?<=T{*}&split=part(<p_i> => <run>.<fold>,
-   …).<combiner>` for a computed bag, which the branch deals when it runs (a stated dom coefficient pages the
-   shipment); and,
-   when the seed is a singleton and the run carries a closed span range, the **run partition** — one lane per place
-   carrying the whole seed with a narrowed span, the tail folding at home. The lane's first instruction states the
+5. **The emitter lowers it.** `Shard.apply` — the body `PlanInterpreter` delegates to — walks the chain cut by cut,
+   `[initial, {+}[{*}home, {*}floatable, blocked(reducer ∧ laws)], {*}tail]`. Each cut is a fold that recombines, the
+   floatable run before it (never reaching back past the cut before) ships, and what lies between stays home. Each run
+   emits one branch keyed by place: seeded lanes under `branch?<={0}` for a literal seed;
+   `<prefix>.branch?<=T{*}&split=part(<p_i> => <run>.<fold>, …).<combiner>` for a computed bag, which the branch deals
+   when it runs (a stated dom coefficient pages the shipment); and, when the seed is one obj (a literal singleton, or
+   what the fold before the run answers) and the run carries a closed span range, the **run partition** — one lane per
+   place carrying the whole seed (copied by the branch when it is computed) with a narrowed span, each lane folding its
+   share through the cut. A run with one obj and no span range stays home. The lane's first instruction states the
    restated budget (`?hop=0` at a leaf).
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the

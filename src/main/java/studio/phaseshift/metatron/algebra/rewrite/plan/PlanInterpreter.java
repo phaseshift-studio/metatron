@@ -36,17 +36,18 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
  * the rule engine's move from plans to rewrite-rule lambdas: the pool's {@code law_shard} and the interpreter are two
  * doors onto the same emitter.
  *
- * <p>The one-cut distribution (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer roster, match the chain
- * shape {@code [seed, {*}floatable, blocked cut, {*}tail]}, locate the cut, then emit the
- * {@code <seed>.branch?dom=T{*}&split=part(<place> => <run>.<fold>, …).<combiner>.<tail>} layout the processor runs.
+ * <p>The distribution (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer roster, walk the chain cut by
+ * cut — {@code [seed, {+}[{*}home, {*}floatable, blocked cut], {*}tail]} — and at each cut emit the
+ * {@code <home>.branch?dom=T{*}&split=part(<place> => <run>.<fold>, …).<combiner>} layout the processor runs. Each
+ * combiner brings the computation home, where the next run ships again; the tail after the last cut stays home.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class PlanInterpreter {
 
     /**
-     * The one-cut distribution plan — {@code law_shard}, Thm 19 {@code (a+b)·c = (a·c+b·c)·c}: the anchor is a
-     * blocked reducer whose partials recombine through a fold declaring {@code monoidic} (partials regroup) and
+     * The distribution plan — {@code law_shard}, applied at every cut of a chain, Thm 19
+     * {@code (a+b)·c = (a·c+b·c)·c}: the anchor is a blocked reducer whose partials recombine through a fold declaring {@code monoidic} (partials regroup) and
      * {@code commutative} (order-free merge) — its COMBINER, computed rather than declared
      * ({@link Law.Helper#combiner}): {@code sum} and {@code prod} recombine through themselves, {@code count} through
      * {@code sum}, {@code order(s)} through {@code kmerge(s)}, and a keyed {@code group([k⇒h])} pointwise — the rec

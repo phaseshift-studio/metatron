@@ -70,7 +70,7 @@ public class Span extends MRec {
          */
         POST,
         /**
-         * the run between two cuts — the pipeline case
+         * the run between two cuts — the pipeline case, which {@code Shard} plans at every cut of a chain
          */
         BETWEEN,
         /**
