@@ -188,14 +188,12 @@ public final class Shard {
         final List<Inst> combiner = null == combined ? List.of()
                 : typed.get(cut) == combined ? List.of(insts.get(cut)) : combined.insts();
         // THE SEED: a literal at the head is dealt by the plan; anything else is the bag the branch takes when it runs.
-        // ONE OBJ HAS NOTHING TO DEAL -- a literal of one member, or what a fold answers (a gather whose rng is one, read
-        // off the contract of the instruction before the run): its one multiplicity is a span range in the run.
+        // ONE OBJ HAS NOTHING TO DEAL -- a literal of one member, or what a fold answers (a gather whose rng is one),
+        // carried to the run by the instructions that stay home before it: its one multiplicity is a span range in the run.
         final Inst head = insts.getFirst();
-        final boolean literal = 0 == from && 1 == runIndex && START_INST_TID.equals(head.tid().basePath())
-                && !head.args().isEmpty() && !head.arg(0).isCall();
+        final boolean literal = 0 == from && 1 == runIndex && literal(head);
         final long seed = literal ? head.arg(0).stream().count() : Long.MAX_VALUE;
-        final Inst before = chain.contracts().get(runIndex - 1);
-        final boolean one = literal ? 1 == seed : null != before && before.isReducing();
+        final boolean one = literal ? 1 == seed : one(chain, runIndex);
         // THE RUN AXIS: a closed span range or a point in the run, factored when the seed is one obj. The unrolls a^[m,n]
         // are independent terms, so a share is a subrange of the exponent, not a part of the seed; a point a{p} is p copies
         // of one term, and points add across a branch, so a share is a count of copies. Every lane carries the whole seed
@@ -292,6 +290,49 @@ public final class Shard {
             master.addAll(insts.subList(0 > cut ? runEnd : cut + 1, end));
         }
         return master;
+    }
+
+    /**
+     * A LITERAL SEED: {@code start(x)} whose argument is a value, not a call the branch would have to run first.
+     */
+    private static boolean literal(final Inst head) {
+        return START_INST_TID.equals(head.tid().basePath()) && !head.args().isEmpty() && !head.arg(0).isCall();
+    }
+
+    /**
+     * ONE OBJ FLOWS INTO THE RUN. Walking back from the run, each instruction that stays home before it hands on at
+     * most one obj for the one it takes — its contract maps one to one or to none ({@code print(_)}, a filter), and its
+     * own coefficient states no copies and no unrolls — until a fold, which answers one, or the seed, a literal of one
+     * member. So any number of home instructions may stand between a fold and the run after it. Anything else (a scatter,
+     * a point or span range, an instruction no contract types) leaves a bag of unknown size, which the branch deals.
+     */
+    private static boolean one(final Chain chain, final int runIndex) {
+        for (int i = runIndex - 1; 0 <= i; i--) {
+            if (0 == i)
+                return literal(chain.insts().getFirst()) && 1 == chain.insts().getFirst().arg(0).stream().count();
+            final Inst contract = chain.contracts().get(i);
+            if (null == contract)
+                return false;
+            if (contract.isReducing())
+                return true;
+            if (!handsOnOne(contract, chain.insts().get(i)))
+                return false;
+        }
+        return false;
+    }
+
+    private static boolean handsOnOne(final Inst contract, final Inst inst) {
+        if (!contract.tid().hasDom() || !contract.tid().hasRng() || contract.isInitial())
+            return false;
+        final cInt point = inst.tid().d();
+        final cInt span = inst.tid().b();
+        return atMostOne(contract.dom().c()) && atMostOne(contract.rng().c())
+                && (null == point || atMostOne(point) && !point.isZero())
+                && (null == span || !span.isVariable() && null != span.min() && span.min().equals(span.max()));
+    }
+
+    private static boolean atMostOne(final cInt count) {
+        return null != count && !count.isVariable() && null != count.max() && 1 >= count.max();
     }
 
     /**

@@ -25,9 +25,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
@@ -37,11 +37,10 @@ import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -131,8 +130,8 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         // (BootLoader.load mounts only /m, /sys, /m/mach). Import its parent (/m/math) first, then it.
-        InstSet.importInstSet(f("/m/math"));
-        InstSet.importInstSet(f("/m/math/cat"));
+        InstSet.importInstSet(MATH_ISA_TID);
+        InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
         cluster = PeerCluster.of(2).start();
@@ -288,7 +287,11 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6}.plus(10).sum()      % branch().sum() % 81",
+            "{1,2,3,4,5,6}.plus(10).sum()                                    % branch(start().plus().sum(),start().plus().sum()).sum()                          % 81",
+            "{1,2,3,4,5,6}.print(_).plus(10).sum()                           % start().print().branch(plus().sum(), plus().sum()).sum()                         % 81",
+            "0.{1,6}plus(1).plus(10).sum()                                   % branch(start().plus().plus().sum(),start().plus().plus().sum()).sum()            % 81",
+            "0.{1,6}plus(1).plus(10).sum().{1,6}plus(2).prod()               % branch().sum().branch().prod()                                                   % 462307158495",
+            "0.{1,6}plus(1).plus(10).sum().print(_).{1,6}plus(2).prod()      % branch().sum().print().branch().prod()                                           % 462307158495"
     }, delimiter = '%')
     void test_O_broadcast_constants(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -516,9 +519,11 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5}.plus(10).order(_)       % branch().kmerge() % [11,12,13,14,15]",
-            "{1,2,3,4,5}.plus(10).order()        % branch().kmerge() % [11,12,13,14,15]",
-            "{1,2,3,4,5}.plus(10).order(neg())   % branch().kmerge() % [15,14,13,12,11]",
+            "{1,2,3,4,5}.plus(10).order(_)                               % branch(start().plus(10).order(),start().plus(10).order()).kmerge()                        % [11,12,13,14,15]",
+            "{1,2,3,4,5}.plus(10).order()                                % branch(start().plus(10).order(),start().plus(10).order()).kmerge()                        % [11,12,13,14,15]",
+            "{1,2,3,4,5}.plus(10).order(neg())                           % branch(start().plus(10).order(neg()),start().plus(10).order(neg())).kmerge(neg())         % [15,14,13,12,11]",
+            //"{1,2,3,4,5}.plus(10).order(neg()).select({5}plus(1)).sum()  % branch().kmerge().select().sum()         % [15,14,13,12,11]",
+            // "{1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()  % branch().kmerge().merge().branch().sum() % 70",
     }, delimiter = '%')
     void test_order_recombines_with_or_without_a_selector(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
