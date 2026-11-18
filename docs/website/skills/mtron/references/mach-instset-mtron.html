@@ -635,10 +635,10 @@ after which instruction memory answers the address.</p>
      {?}resolver=&gt;resolver::T,
      {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
-           {?}typer=&gt;'the fourth stage — the per-machine...',
-           {?}parser=&gt;'the first stage — source text to o...',
+           {?}resolver=&gt;'the third stage — the walk that th...',
            {?}rewriter=&gt;'the second stage — the code::T to ...',
-           {?}resolver=&gt;'the third stage — the walk that th...'],
+           {?}parser=&gt;'the first stage — source text to o...',
+           {?}typer=&gt;'the fourth stage — the per-machine...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
            'compiler::[rewriter=&gt;fixpoint_rewr...',
@@ -775,10 +775,10 @@ write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the
      {?}tracer=&gt;tracer::T,
      {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor,
           args=&gt;[
-           {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
            {?}state=&gt;'the run state: stop, run or pause',
-           {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
+           {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
            {?}result=&gt;'the objs the last evaluation produ...',
+           {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
            computer=&gt;'the computers this processor minte...',
            fail=&gt;&quot;the machine's fail stack: an uncau...&quot;],
           desc=&gt;'the processor contract of machine:...']
@@ -838,12 +838,12 @@ analysis, pulled on demand (the mtron form of a recording rule):</p>
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
-           code=&gt;&quot;the thread's executing code&quot;,
-           {?}time=&gt;'the datetime::T when the thread wa...',
-           {?}loop=&gt;'delay to repeat code evaluation (d...',
-           {?}timeout=&gt;'how long a read of rhs waits for t...',
            {?}state=&gt;'current state of the thread',
+           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}loop=&gt;'delay to repeat code evaluation (d...',
+           {?}time=&gt;'the datetime::T when the thread wa...',
+           code=&gt;&quot;the thread's executing code&quot;,
+           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            {?}result=&gt;'the last result produced by the th...'],
           desc=&gt;'the thread base type']
 </code></pre>
@@ -897,12 +897,12 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(2 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
            {?}pattern=&gt;'the branch this network answers as...',
-           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
+           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
+           {?}roster=&gt;'known machines, connectionless: &lt;h...',
            {?}status=&gt;'the health method — an auto inst c...',
-           {?}roster=&gt;'known machines, connectionless: &lt;h...'],
+           {?}listener=&gt;'the sockets this machine serves th...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',

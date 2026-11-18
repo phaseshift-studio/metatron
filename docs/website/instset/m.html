@@ -549,7 +549,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/instset::[q=&gt;[
+                        <pre><code>/m/instset::[pattern=&gt;/m/#,
+             q=&gt;[
               docq::[
                pattern=&gt;docq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -561,7 +562,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
-             pattern=&gt;/m/#,
              inst=&gt;[
               as?bool&lt;=bool(bool::T){&lt;j&gt;},
               as?bytes&lt;=bool(bytes::T){&lt;j&gt;},
@@ -838,46 +838,21 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               lshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               start?A{**}&lt;={0}(A{**}::T){&lt;j&gt;},
               isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
-              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
-              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
-              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
-              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
-              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
-              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
-              isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
-              isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
-              isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
               isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;},
+              isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
+              isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
+              isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
+              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
+              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
+              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
+              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
+              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
+              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
               save?#&lt;=#(){&lt;j&gt;},
               ctor(),
               lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
               as?str&lt;=docs(str::T){&lt;j&gt;}],
-             rewrite=&gt;[
-              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
-              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
-              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
-              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;]){&lt;j&gt;},
-              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_poset?code{?}&lt;=code([
-                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
-                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
-                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
-                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
-              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
-              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;},
-              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
-              /m/inst/rewrite/pred_extract(){&lt;j&gt;}],
+             const=&gt;[,],
              type=&gt;[
               &lt;#&gt;::T,
               bool::T,
@@ -1022,7 +997,32 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
               qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
               qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
-             const=&gt;[,]]@/m</code></pre>
+             rewrite=&gt;[
+              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
+              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
+              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
+              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;]){&lt;j&gt;},
+              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_poset?code{?}&lt;=code([
+                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
+                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
+                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
+                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
+              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
+              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;},
+              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
+              /m/inst/rewrite/pred_extract(){&lt;j&gt;}]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -1991,9 +1991,9 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <p class="mb-0 text-light"> a structured explanation of a resolved expression produced by explain()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively'" class="text-info">&#39;lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
-  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
+  <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively'" class="text-info">&#39;lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -2521,15 +2521,15 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     <p class="mb-0 text-light"> a structured profile report produced by profile()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
-  <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
-  <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
-  <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
-  <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty print format'" class="text-info">&#39;lazily constructed pretty print format&#39;</a>
-  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
-  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
-  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
+  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
   <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
+  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
+  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
+  <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty print format'" class="text-info">&#39;lazily constructed pretty print format&#39;</a>
+  <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
+  <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -3227,8 +3227,8 @@ a/b/c/                           [-- relative/branch uri            --]
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs inst obj" class="text-info">the lhs inst obj</a> <span class="text-light">=&gt;</span> <a href="#the result of the lhs inst application" class="text-success">the result of the lhs inst application</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#args" class="text-light">args</a> <span class="text-light">=&gt;</span> <a href="#'the inst args (optional)'" class="text-info">&#39;the inst args (optional)&#39;</a>
-  <a href="#lhs" class="text-light">lhs</a> <span class="text-light">=&gt;</span> <a href="#'the obj to apply the lhs inst to'" class="text-info">&#39;the obj to apply the lhs inst to&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lhs" class="text-light">lhs</a> <span class="text-light">=&gt;</span> <a href="#'the obj to apply the lhs inst to'" class="text-info">&#39;the obj to apply the lhs inst to&#39;</a>
+  <a href="#args" class="text-light">args</a> <span class="text-light">=&gt;</span> <a href="#'the inst args (optional)'" class="text-info">&#39;the inst args (optional)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__args">
@@ -6285,35 +6285,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
@@ -6321,7 +6293,35 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 </div>
@@ -8286,10 +8286,10 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the repeated application results" class="text-success">the repeated application results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}esc" class="text-light">{?}esc</a> <span class="text-light">=&gt;</span> <a href="#'the escape predicate'" class="text-info">&#39;the escape predicate&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
-  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
+  <a href="#{?}esc" class="text-light">{?}esc</a> <span class="text-light">=&gt;</span> <a href="#'the escape predicate'" class="text-info">&#39;the escape predicate&#39;</a>
   <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
+  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__reverse">
