@@ -954,6 +954,28 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * A STREAM IS ONE OF A TYPE ONLY WHEN EVERY OBJ IN IT IS. A type applied filters a stream obj by obj
+     * ({@link Type#apply}), and a stream's tid is the sum of its objs' ({@code {/m/rec,being}}), which a type's name
+     * matches when one summand does, so asking only whether anything survived the filter let one being carry a
+     * {@code [blah=>'stuff']} through {@code being{+}::T} ({@link #testComplexTypes} row 30, broken by 8e1d6185d). For a
+     * filter P, P(a+b) = a+b exactly when P(a) = a and P(b) = b.
+     */
+    @ParameterizedTest
+    @TestData(value = {"being -> rec::T[?[age=>int::T]]@being"})
+    @CsvSource(value = {
+            "{being::[age=>29],[blah=>'stuff']}      % being{+}::T       % false",
+            "{[blah=>'stuff'],[blah=>'x']}           % being{+}::T       % false",
+            "{being::[age=>29],being::[age=>34]}     % being{+}::T       % true",
+            "{being::[age=>29],[age=>34]}            % being{+}::T       % true",
+            "{7,3}                                   % int{+}::T[?>5]    % false",
+            "{7,9}                                   % int{+}::T[?>5]    % true",
+            "{7,3}                                   % int{2}::T[?>5]    % false",
+    }, delimiter = '%')
+    public void testAStreamIsOfATypeOnlyWhenEveryObjIs(final String instance, final String type, final boolean matches) {
+        assertEquals(matches, ObjmtronSerializer.parse(instance).test(ObjmtronSerializer.parse(type)), instance + " ? " + type);
+    }
+
     private static List<Type> deducedTypeStack(final Obj type) {
         final List<Type> stack = new ArrayList<>();
         Obj temp = type;
