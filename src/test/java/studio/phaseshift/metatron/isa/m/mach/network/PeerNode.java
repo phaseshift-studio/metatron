@@ -79,8 +79,8 @@ public final class PeerNode {
         // boot at warn: a forked JVM does not inherit the parent's -Dlogback.configurationFile, so without this
         // it logs at default DEBUG and three concurrent chatty boots will not be ready before the test does
         BootLoader.load(rec(uri("log"), uri("warn")));
-        // typing is not solved across distributed executions yet — a peer evaluates shipped code type-check-free
-        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
         memSpace.unregistered(rec(uri(PATTERN), uri("/sys/#")), null).addQ(QCollection.incrQ());
         InstSet.importInstSet(f("/m/web"));
         trace("peer %d: booted (root=%s, port=%d)", index, root, port);

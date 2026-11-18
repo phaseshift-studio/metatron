@@ -1847,23 +1847,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             })
                             .create(),
                     InstBuilder.build()
-                            .tid(ID_INST_TID)
-                            .dom(A, "an rhs obj")
-                            .rng(A, "an lhs obj")
-                            .argLst()
-                            .desc("the obj identity function \\(f(x) \\mapsto x\\)")
-                            .body((lhs, inst) -> lhs)
-                            .create(),
-                    // TODO: do we gut this and rely fully on the non-barried form?
-                    InstBuilder.build()
-                            .tid(ID_INST_TID)
-                            .dom(A.maybeSome(), "the rhs obj")
-                            .rng(A.maybeSome(), "the lhs obj")
-                            .argLst()
-                            .desc("a objs barrier identity function \\(f(X) \\mapsto X\\)")
-                            .body((lhs, inst) -> lhs)
-                            .create(),
-                    InstBuilder.build()
                             .tid(AND_INST_TID)
                             .dom(A, "any objs")
                             .rng(BOOL_TID, "true if all objs are true")

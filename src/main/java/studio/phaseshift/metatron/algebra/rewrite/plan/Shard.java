@@ -56,12 +56,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * through its own branch, and its cut's combiner brings the computation home, where the next run starts (the run
  * between two cuts, {@link Span.Kind#BETWEEN}). One application plans every cut.
  *
- * <p><b>The two partitions are one funnel.</b> A distribution factors an index set over the roster: the seed's point
- * ({@code d()} instances, the initial value's members) and a run's span range ({@code b()} instances, the unrolls
- * {@code a^[m,n] = Σ a^k}) are both index sets, and a lane's program is the chain with its share projected onto it —
- * {@code start(part)} projects the members, {@code {p,q}step} projects the unrolls. A lane may carry both projections.
- * v1 factors one axis per run: the seed first, the span when the seed is one obj. A fold answers one obj, so the run
- * after a cut factors its span range, with that obj copied to every lane.
+ * <p><b>The partitions are one funnel.</b> A distribution factors an index set over the roster: the seed's point
+ * ({@code d()} instances, the initial value's members), a run's span range ({@code b()} instances, the unrolls
+ * {@code a^[m,n] = Σ a^k}) and a run instruction's point ({@code d()} copies, {@code a{p} = a + … + a}) are index sets,
+ * and a lane's program is the chain with its share projected onto it — {@code start(part)} projects the members,
+ * {@code {p,q}step} the unrolls, {@code step{k}} the copies. A lane may carry more than one projection. v1 factors one
+ * axis per run: the seed first, the run's span range or point when the seed is one obj. A fold answers one obj, so the
+ * run after a cut factors its span range or point, with that obj copied to every lane.
  *
  * <p><b>The lane's budget is stated on its first instruction</b> ({@code ?hop}, {@code 0} at a leaf), so the metadata
  * is where a human and a re-planning peer read it. A copied instruction carries no budget of its own: both spellings
@@ -195,9 +196,10 @@ public final class Shard {
         final long seed = literal ? head.arg(0).stream().count() : Long.MAX_VALUE;
         final Inst before = chain.contracts().get(runIndex - 1);
         final boolean one = literal ? 1 == seed : null != before && before.isReducing();
-        // THE RUN AXIS: a closed span range in the run, factored when the seed is one obj. The unrolls a^[m,n] are
-        // independent terms, so a share is a subrange of the exponent, not a part of the seed: every lane carries the
-        // whole seed and a narrowed span. Under a cut the run is the stretch the cut planned. NO TYPED CUT IS NEEDED at a
+        // THE RUN AXIS: a closed span range or a point in the run, factored when the seed is one obj. The unrolls a^[m,n]
+        // are independent terms, so a share is a subrange of the exponent, not a part of the seed; a point a{p} is p copies
+        // of one term, and points add across a branch, so a share is a count of copies. Every lane carries the whole seed
+        // and a narrowed span or point. Under a cut the run is the stretch the cut planned. NO TYPED CUT IS NEEDED at a
         // head with no cut, where the run must start at the seed (a prefix that does not float would have to be
         // broadcast) and ends at its first instruction that does not float, the tail running at home over the branch's bag.
         final RunRange range = one ? runRange(insts, runIndex, 0 > cut ? insts.size() : cut) : null;
@@ -230,14 +232,15 @@ public final class Shard {
         final Obj budget = 1 == hop.height() ? jnt(0) : Hop.of(hop.height() - 1, hop.arity()).toObj();
         // ONE KEY PER DISTINCT PLACE, in the lane order: the home place is <~>, a peer is its authority. Under the seed
         // axis the n shares one place takes are one key weighted ?split={n}part; under the run axis a key is one lane,
-        // at most one per unroll, its share of the exponent chosen by WORK (splitByCost).
+        // at most one per unroll or copy, its share chosen by WORK for a span (splitByCost) and evenly for a point.
         final Map<fURI, Integer> places = new LinkedHashMap<>();
         shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
         final List<Map.Entry<fURI, Integer>> keys = List.copyOf(places.entrySet());
         final int lanes = runAxis ? (int) Math.min(keys.size(), range.count()) : keys.size();
         if (runAxis && 2 > lanes)
             return null;
-        final List<long[]> exponents = runAxis ? splitByCost(range.min(), range.max(), lanes) : List.of();
+        final List<long[]> exponents = !runAxis ? List.of()
+                : range.point() ? splitEvenly(range.count(), lanes) : splitByCost(range.min(), range.max(), lanes);
         // A LITERAL SEED IS DEALT BY THE BRANCH'S OWN RULE (BranchInst#deal), so a planned part is the part the branch
         // would have dealt; under the copy kind and the run axis every lane holds the whole seed.
         final boolean copy = Partition.Kind.COPY == split.kind();
@@ -255,10 +258,12 @@ public final class Shard {
                 lane.add(instB(START_INST_TID, lst(runAxis || copy ? head.arg(0) : objs(parts.get(r)))));
             for (int i = runIndex; i < stop; i++) {
                 final Inst inst = raw(insts.get(i));
-                // a NARROWED span is a fresh instruction, never a clone: Inst.tid(fURI) clones (and the clone reads the
-                // vid, which recomputes a coefficient the span is being rewritten out of) — instB writes the tid.
+                // a NARROWED span or point is a fresh instruction, never a clone: Inst.tid(fURI) clones (and the clone
+                // reads the vid, which recomputes a coefficient being rewritten out of it) — instB writes the tid.
+                final long[] share = runAxis ? exponents.get(r) : null;
                 lane.add(runAxis && i == range.index()
-                        ? instB(inst.tid().b(cInt.of(exponents.get(r)[0], exponents.get(r)[1])), inst.args())
+                        ? instB(range.point() ? inst.tid().d(cInt.of(share[1] - share[0] + 1))
+                        : inst.tid().b(cInt.of(share[0], share[1])), inst.args())
                         : inst);
             }
             if (0 <= cut)
@@ -338,22 +343,46 @@ public final class Shard {
     }
 
     /**
-     * THE FIRST CLOSED SPAN RANGE of the run: an instruction whose span {@code b()} states both bounds with
-     * {@code 0 <= min < max}. A point span ({@code {n}}) is a lone compose chain, and an open range ({@code {+}},
-     * {@code {*}}) has no last unroll: neither is a branch. Null when the run has no range.
+     * THE COPIES OF A POINT, SPLIT EVENLY. A point {@code {p}} is p copies of one term, each costing the same, so the
+     * shares are contiguous runs of the copies {@code [1, p]} whose sizes differ by at most one: {@code {5}} over two
+     * lanes is three copies and two.
+     */
+    private static List<long[]> splitEvenly(final long count, final int lanes) {
+        final List<long[]> ranges = new ArrayList<>(lanes);
+        long start = 1;
+        for (int lane = 0; lane < lanes; lane++) {
+            final long size = count / lanes + (lane < count % lanes ? 1 : 0);
+            ranges.add(new long[]{start, start + size - 1});
+            start += size;
+        }
+        return ranges;
+    }
+
+    /**
+     * THE FIRST INDEX SET of the run: an instruction whose span {@code b()} states both bounds with
+     * {@code 0 <= min < max}, or whose point {@code d()} is exactly two or more. A point span ({@code {n}}) is a lone
+     * compose chain, an open range ({@code {+}}, {@code {*}}) has no last unroll, and a point of one is one term: none
+     * is a branch. Null when the run has neither.
      */
     private static RunRange runRange(final List<Inst> insts, final int from, final int to) {
         for (int i = Math.max(1, from); i < to; i++) {
             final cInt span = insts.get(i).tid().b();
-            if (null == span || span.isVariable() || null == span.min() || null == span.max())
-                continue;
-            if (0 <= span.min() && span.min() < span.max())
-                return new RunRange(i, span.min(), span.max());
+            if (null != span && !span.isVariable() && null != span.min() && null != span.max()
+                    && 0 <= span.min() && span.min() < span.max())
+                return new RunRange(i, span.min(), span.max(), false);
+            final cInt point = insts.get(i).tid().d();
+            if (null != point && !point.isVariable() && null != point.min() && point.min().equals(point.max())
+                    && 2 <= point.min())
+                return new RunRange(i, 1, point.min(), true);
         }
         return null;
     }
 
-    private record RunRange(int index, long min, long max) {
+    /**
+     * An index set of the run at {@code index}: the unrolls {@code [min, max]} of a span range, or the copies
+     * {@code [1, p]} of a {@code point}.
+     */
+    private record RunRange(int index, long min, long max, boolean point) {
         long count() {
             return this.max - this.min + 1;
         }

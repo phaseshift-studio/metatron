@@ -168,9 +168,10 @@ a range — one per place, since a branch has one lane per key.
 **After a cut, the seed is one obj.** A fold answers one obj (a gather whose rng is one), so the run after a cut has
 nothing to deal; its multiplicity is a span range in the run. The branch takes that obj whole and copies it to every
 lane (`?split=copy`), and each lane walks its own share of the range and folds it through the cut. The copy needs no
-idempotence: the shares are disjoint, so no term is counted twice. A run after a cut with no span range stays home —
-dealing one obj would hand the whole run to one lane. A point is no index set: `{5}` on an instruction makes five
-copies of one term, which bulk into one obj.
+idempotence: the shares are disjoint, so no term is counted twice. **A point is an index set too:** `step{p}` is `p`
+copies of one term, and points add across a branch (`a{p} = a{p_1} + a{p_2}`), so the lanes take even shares of the
+copies — `id{5}()` over two places is `id{3}()` and `id{2}()`, each lane folding its copies through the cut. A run
+after a cut with neither a span range nor a point stays home: dealing one obj would hand the whole run to one lane.
 
 ```mtron
 {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
@@ -243,7 +244,7 @@ are placeholders — the schemas below are motifs, not literal runs.
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 —
 a **singleton** seed and a **closed** span range; a multi-member seed still factors the seed first, and a point/open
 span declines; 2026-11-18 — every cut plans its run, and after a cut the one obj is copied to every lane while the span
-range is factored, each lane folding its share through the cut). `P` is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated
+range or point is factored, each lane folding its share through the cut). `P` is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated
 *data* space, while `V`'s index is the exponent.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
 `lst`, never a bag); `M` is a note; `I` is infrastructure. `U` is the instrumentation row: `profile()` already
@@ -449,9 +450,10 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    emits one branch keyed by place: seeded lanes under `branch?<={0}` for a literal seed;
    `<prefix>.branch?<=T{*}&split=part(<p_i> => <run>.<fold>, …).<combiner>` for a computed bag, which the branch deals
    when it runs (a stated dom coefficient pages the shipment); and, when the seed is one obj (a literal singleton, or
-   what the fold before the run answers) and the run carries a closed span range, the **run partition** — one lane per
-   place carrying the whole seed (copied by the branch when it is computed) with a narrowed span, each lane folding its
-   share through the cut. A run with one obj and no span range stays home. The lane's first instruction states the
+   what the fold before the run answers) and the run carries a closed span range or a point, the **run partition** —
+   one lane per place carrying the whole seed (copied by the branch when it is computed) with a narrowed span (split by
+   WORK) or point (split evenly), each lane folding its share through the cut. A run with one obj and neither stays
+   home. The lane's first instruction states the
    restated budget (`?hop=0` at a leaf).
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the

@@ -66,11 +66,11 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
 
     @BeforeEach
     void setup() {
-        // typing is not solved across distributed executions yet — run type-check-free, as the forked-peer suite does
+        // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
-        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
     }
 
     @AfterEach

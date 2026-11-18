@@ -59,11 +59,11 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
 
     @BeforeEach
     void setup() {
-        // typing is not solved across distributed executions yet — run type-check-free, as the forked-peer suite does
+        // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
-        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
     }
 
     @AfterEach
@@ -145,12 +145,13 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
     /**
      * EVERY CUT SHIPS ITS RUN AND COMES HOME — through the compiler's rewriter, a chain that folds twice is planned at
      * both cuts: each run ships through its own branch and its combiner brings the computation home. After a fold, the
-     * next run ships the span range it carries (the one obj copied to every lane), or, behind a prefix that stays home,
-     * deals the bag that prefix computes. Two loop peers. Each row: the source % the master's ops % its value.
+     * next run ships the span range or point it carries (the one obj copied to every lane), or, behind a prefix that
+     * stays home, deals the bag that prefix computes. Two loop peers. Each row: the source % the master's ops % its value.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "{1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()                                         % branch,sum,branch,sum        % 86",
+            "{1,2,3,4,5}.plus(1).sum().id{5}().plus(10).prod()                                    % branch,sum,branch,prod       % 24300000",
             "{1,2,3}.plus(1).sum().repeat(code=>+1,until=>loop().?>20,emit=>true).plus(10).sum() % branch,sum,repeat,branch,sum % 649",
     }, delimiter = '%')
     void testEveryCutShipsItsRunAndComesHome(final String source, final String ops, final String expected) {

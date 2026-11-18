@@ -98,7 +98,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
-        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
         Network.Helper.connect(Machine.current().network(), PEER);
         Network.Helper.connect(Machine.current().network(), GINGER);
         disjoin = InstBuilder.build()

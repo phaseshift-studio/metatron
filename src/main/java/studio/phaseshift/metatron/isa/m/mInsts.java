@@ -1221,7 +1221,17 @@ public final class mInsts {
                         .argLst()
                         .desc("the obj identity function \\(f(x) \\mapsto x\\)")
                         .body((lhs, _) -> lhs)
-                        .law(Law.pure, Law.idempotent, Law.involution, Law.unit)
+                        .law(Law.pure, Law.idempotent, Law.involution, Law.unit, Law.commutative)
+                        .create(),
+                // TODO: do we gut this and rely fully on the non-barried form?
+                InstBuilder.build()
+                        .tid(ID_INST_TID)
+                        .dom(A.maybeSome(), "the lhs objs to pass to the rhs")
+                        .rng(A.maybeSome(), "the rhs objs are the lhs objs")
+                        .argLst()
+                        .desc("a objs barrier identity function \\(f(X) \\mapsto X\\)")
+                        .body((lhs, _) -> lhs)
+                        .law(Law.pure, Law.idempotent, Law.involution, Law.unit, Law.commutative)
                         .create(),
                 InstBuilder.build()
                         .tid(MAP_INST_TID)
