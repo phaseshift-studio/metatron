@@ -330,17 +330,24 @@ public interface Type extends Obj {
     }
 
     /**
-     * The types at a tensor's indices ({@code lst[int,str]}); empty for any other bracket.
+     * The types at a tensor's indices ({@code lst[int,str]}); empty for any other bracket. A BRACKET READS ITS TYPES AS
+     * VALUES (Marko, 2026-11-18: "in brackets, we have uris ... so they are values. that means {point}value{span}"):
+     * {@code {4}int} is an int with mass {4} and {@code int{4}} an int with span {4}, so each entry is answered the way
+     * the run walk ({@link Helper#runs}) reads one, {@code {span}type{mass}}: {@code lst[int{4}]} has the entry
+     * {@code {4}int::T}, four int indices, and {@code lst[{4}int]} the entry {@code int{4}::T}, one index holding four
+     * ints. A path's vertices read the same way ({@link #relPaths()}).
      */
     default List<Type> lstIndices() {
-        return this.tid().poly().stream().map(u -> T(f(u))).toList();//.elements().map(e -> T(e.uriValue())).toList();
+        return this.tid().poly().stream().map(u -> f(u)).map(entry -> T(entry.b(entry.d()).d(entry.b()))).toList();
     }
 
     /**
-     * The types at a path's vertices ({@code rel[int,str]}); empty for any other bracket.
+     * The types at a path's vertices ({@code rel[int,str]}); empty for any other bracket. Its bracket holds uris as a
+     * lst's does, so it is read as one ({@link #lstIndices()}): {@code rel[int,{2}person]} holds two people at its second
+     * vertex, and {@code rel[int,person{2}]} is a run of two person vertices, {@code int=>person=>person}.
      */
     default List<Type> relPaths() {
-        return this.tid().poly().stream().map(u -> T(f(u))).toList();//.elements().map(e -> T(e.uriValue())).toList();
+        return this.lstIndices();
     }
 
     default Type parentType() {
@@ -416,8 +423,11 @@ public interface Type extends Obj {
             return false;
         if (!rhs.asType().parentType().isRootType() && !this.test(rhs.asType().parentType()))
             return false;
-        // identity, not a claim: erasure is explicit here
-        if (rhs.asType().isBaseType() && !Helper.testByIdentity(this.baseTypeID(), rhs.tid()))
+        // identity, not a claim: erasure is explicit here. Two lst brackets are the run walk's to compare
+        // (testNominally reads them through Type.Helper.testTypePoly), not the fURI bracket rule's
+        final boolean brackets = this.isTensored() && rhs.asType().isTensored();
+        if (rhs.asType().isBaseType() && !Helper.testByIdentity(brackets ? this.baseTypeID().polyLess() : this.baseTypeID(),
+                brackets ? rhs.tid().polyLess() : rhs.tid()))
             return false;
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
@@ -749,14 +759,15 @@ public interface Type extends Obj {
                     member.isRec() && poly.isFibered() ? testFibration(member.asRec(), poly)
                             : member.isLst() && poly.isTensored() ? testTensor(member.asLst(), poly)
                             : member.isRel() && poly.isPathed() ? testPaths(member.asRel(), poly)
-                            // a type against a type compares index by index: each index's span and point within, as a
-                            // bracket reads (Lst.Helper.testRuns)
-                            : !member.isType() || !poly.isTensored() || Lst.Helper.testRuns(lst((List) member.asType().lstIndices()), lst((List) poly.lstIndices()))));
+                            // a bracket against a bracket is the same run walk, closed on the lhs: each of its entries is a
+                            // run the rhs's entries must take, a signature against a signature, since a type's bracket is
+                            // its argument list and a claim with no acceptor fails
+                            : !member.isType() || !poly.isTensored() || runs(member.asType().lstIndices(), poly.lstIndices()).contains(member.asType().lstIndices().size())));
         }
 
         /**
          * A fibered rec carries every field its bracket names ({@code rec[k1,k2]}, or a declaration's fibers
-         * {@code rec[role]::T[…]@person}). A field may be absent only where its entry admits zero ({@code rec[k{?},j]})
+         * {@code rec[role]::T[…]@person}). A field may be absent only where its entry admits zero ({@code rec[{?}k,j]})
          * or the declaration types it so ({@code role=>?rec::T}); a field nothing types is required.
          */
         public static boolean testFibration(final Rec rec, final Type fiberedRec) {
@@ -790,21 +801,21 @@ public interface Type extends Obj {
         }
 
         /**
-         * A tensored lst holds the type at each of its indices ({@code lst[int,str]}): {@link Lst#test(Obj)} asks index
-         * by index, and a missing trailing index passes when its entry admits zero.
-         * <p>
-         * An entry's SPAN covers a run of indices, {@code {span}type{point}}: {@code lst[{3}int{2}]} is three indices
-         * each holding an int{2}, {@code lst[{?}int,{2}str]} an optional int then two strs. Each entry takes k indices,
-         * k in its span, every one holding its type. Past the last entry the lst is open, unless that entry's span is
-         * unbounded: a {@code {*}} tail claims the rest, so {@code lst[{*}int]} holds ints only.
+         * A tensored lst holds the types its bracket names ({@code lst[int,str]}), read the way values are written
+         * (Marko, 2026-11-18): {@code int{4}} is a run of four int indices and {@code {4}int} one index holding four ints
+         * ({@link Type#lstIndices()}). So {@code [3{4}]}, which is {@code [3,3,3,3]}, is a {@code lst[int{4}]} and a
+         * {@code lst[int{2},int,int]}, while {@code [{4}3]}, four ints at one index, is neither: mass never spreads over
+         * extent, and indices never pool into mass. Each entry takes k indices, k in its span, every one holding the
+         * entry at its mass, and a trailing entry that admits zero may be absent. Past the last entry the lst is open,
+         * unless that entry's span is unbounded: a {@code {*}} tail claims the rest, so {@code lst[int{*}]} holds ints
+         * only, and a tail of indices that hold nothing, {@code lst[int{2},{0}#{*}]}, is exactly two ints. The walk is
+         * {@link #runs}, the one funnel a run of slots is tested through.
          */
         public static boolean testTensor(final Lst lst, final Type tensoredLst) {
             final List<Type> entries = tensoredLst.lstIndices();
-            if (entries.stream().allMatch(entry -> entry.tid().b().isOne()))
-                return Lst.Helper.testRuns(lst, lst((List) entries));
-            final List<Obj> values = lst.lstValue().stream().map(value -> (Obj) value.autoResolve(lst)).toList();
+            final List<Obj> values = Lst.Helper.laid(lst.lstValue().stream().map(value -> (Obj) value.autoResolve(lst)).toList());
             final Set<Integer> reached = runs(values, entries);
-            return null == entries.getLast().tid().b().max() ? reached.contains(values.size()) : !reached.isEmpty();
+            return entries.isEmpty() || null != entries.getLast().tid().b().max() ? !reached.isEmpty() : reached.contains(values.size());
         }
 
         /**
@@ -884,18 +895,29 @@ public interface Type extends Obj {
         /**
          * The walk behind {@link #testPaths}: a rel's {@code first} is at the next vertex and its {@code second} is the
          * rest of the path, while an ordinary obj closes the path at a vertex after which every entry admits zero. A
-         * vertex's coefficient is the multiplicity of the value at it, so a vertex that admits zero may be skipped.
+         * vertex entry is a run of vertices, each holding the value at its mass ({@link Type#relPaths()}), so
+         * {@code rel[int,person{2}]} is {@code int=>person=>person} and {@code rel[int,{2}person]} two people at one
+         * vertex. A vertex whose run or mass admits zero may be skipped.
          */
         private static boolean pathTested(final Obj chain, final List<Type> vertices) {
             if (vertices.isEmpty())
                 return false;
-            final Obj vertex = vertices.getFirst();
+            final Type vertex = vertices.getFirst();
             final List<Type> rest = vertices.subList(1, vertices.size());
             if (vertex.c().isZeroable() && pathTested(chain, rest))
                 return true;
+            final cInt run = vertex.tid().b();
+            if (null != run.max() && run.max() < 1)
+                return false;
+            // one vertex of the run, at its mass, and the run that is left behind it
+            final Obj one = vertex.tid(vertex.tid().b(null));
+            final Type left = vertex.tid(vertex.tid().b(cInt.of(Math.max(0L, null == run.min() ? 0L : run.min() - 1),
+                    null == run.max() ? null : run.max() - 1))).asType();
+            final List<Type> after = new ArrayList<>(List.of(left));
+            after.addAll(rest);
             return chain.isRel()
-                    ? chain.asRel().first().test(vertex) && pathTested(chain.asRel().second(), rest)
-                    : chain.test(vertex) && rest.stream().allMatch(next -> next.c().isZeroable());
+                    ? chain.asRel().first().test(one) && pathTested(chain.asRel().second(), after)
+                    : chain.test(one) && after.stream().allMatch(next -> next.c().isZeroable());
         }
 
         /**

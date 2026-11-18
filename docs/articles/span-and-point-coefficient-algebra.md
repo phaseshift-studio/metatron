@@ -125,11 +125,12 @@ An mtron chain is read as a stream ring expression:
 
 Where a coefficient is written depends on what it is written on:
 
-| written on     | prefix                           | postfix                               |
-|----------------|----------------------------------|---------------------------------------|
-| an instruction | span: `{n}a` is $a^n$            | point: `a{c}` is $ca$                 |
-| a type         | span: `{n}T` is $n$ slots of `T` | point: `T{c}` is $c$ copies of `T`    |
-| a value        | point: `{c}x` is $cx$            | span: `x{n}` lays `x` along $n$ slots |
+| written on      | prefix                                    | postfix                               |
+|-----------------|-------------------------------------------|---------------------------------------|
+| an instruction  | span: `{n}a` is $a^n$                     | point: `a{c}` is $ca$                 |
+| a type          | span: `{n}T` is $T^n = T$, with $T^0 = 1$ | point: `T{c}` is $c$ copies of `T`    |
+| a value         | point: `{c}x` is $cx$                     | span: `x{n}` lays `x` along $n$ slots |
+| a bracket entry | point: `{c}T` is $c$ objects at one slot  | span: `T{n}` is $n$ slots of `T`      |
 
 The point coefficient can be understood as the _mass_ at an address, copies compressed into a single point in space.
 The span coefficient can be understood as the _extent_ along a contiguous sequence of points in space. In this way, $+$
@@ -148,6 +149,9 @@ the compiled code holds the one instruction `{3}plus(1)@<0>`, whose run is walke
   `{point}value{span}`. `{3}2` is three 2s at one address; `2{3}` is 2 laid at
   the uris 0, 1 and 2. Why does the value side flip? (My guess, not settled:
   diagrammatic order, a value being where a chain starts.)
+- Brackets side with values: a bracket's entries are uris, and a uri is a value, so `lst[{2}int]` holds two ints at
+  one slot and `lst[int{2}]` is two slots (Marko, 2026-11-18). A type written outside a bracket keeps `{span}T{point}`,
+  `int{2}::T` being two parallel copies of the `int` filter.
 - Caution: the stream notation $\langle x \rangle$ above is a stream, so the
   positions `<0>`, `<1>` stay in code font here, never in math.]
 
@@ -349,7 +353,9 @@ A span on an object lays it out in space: $n$ copies of $x$ at the addresses
 $0, 1, \ldots, n-1$, each copy keeping the point of $x$, so $(c)x$ along $n$
 slots counts $c \cdot n$ objects. In mtron a value writes its span after it,
 `x{n}`, and keeps it curled on its type: `2{3}` is one 2 that counts three, and
-`{3}5{3}` counts nine and sums to 45. A space with an axis is what lays it out.
+`{3}5{3}` counts nine and sums to 45. A space with an axis is what lays it out. A
+lst is such an axis, `[3{4}]` being `[3,3,3,3]`, and so is an instruction's argument
+list, a lst too: `5.branch(6{2})` is `5.branch(6,6)`.
 
 ```mtron_pre
 2{3}
@@ -357,6 +363,8 @@ slots counts $c \cdot n$ objects. In mtron a value writes its span after it,
 2{3}.count()
 {3}5{3}.count()
 {3}5{3}.sum()
+[3{4}]
+5.branch(6{2})
 ```
 
 NOTES: spans on a value. A value's span is curled on its tid (Marko, 2026-11-11): `2{3}` is one value, not the lst
@@ -1003,7 +1011,30 @@ value's copies (`{3}5{3}` counts nine): `0.{10}plus(4)` is typed one `int`, not 
 5.plus(1).id{3}().type().cc()
 ```
 
-[To be written: the type of a range, and spans of slots in a type (`lst[{n}T]`).]
+A type used as a step is a filter: $\langle x \rangle T = \langle x \rangle$ when $x$ is a `T`, and
+$\langle x \rangle T = 0$ otherwise. A filter is idempotent, $T \cdot T = T$, so the span of a type is the power of an
+idempotent, $T^n = T$ for $n \geq 1$ and $T^0 = 1$ by Definition 2, while its point is a sum,
+$cT = T + \cdots + T$, and makes copies. So `{2}int{3}::T` is `int{3}::T`, three parallel checks and never nine, and
+`{0}int{3}::T` is `id{3}()`, which takes every object three times.
+
+A bracket is not a type but a container. Its entries are uris, which are values, so they are written as values are,
+`{point}value{span}`, and the span there is a power in the container's own monoid, concatenation, whose unit is `[]`.
+That monoid is free, not idempotent: $[T]^n = [T, \ldots, T]$, $n$ slots. So `lst[int{4}]` is
+`lst[int,int,int,int]`, runs add along the list (`lst[int{2},int,int]` is `lst[int{4}]`), and the point is the mass
+at one slot: `lst[{4}int]` is one slot holding four ints. The one notation `{n}` is a power in whichever monoid its
+host carries, composition for a type and concatenation for a bracket, which is why idempotence collapses one and not
+the other. Mass never spreads over extent: `[3{4}]`, which a lst lays as `[3,3,3,3]`, is a `lst[int{2},int,int]`,
+while `[{4}3]`, four ints at one slot, is not.
+
+```mtron_pre
+1.map({2}int{3}::T)
+'a'.map({0}int{3}::T)
+[3{4}].?lst[int{2},int,int]::T
+[{4}3].?lst[int{2},int,int]::T
+[{4}3].?lst[{4}int]::T
+```
+
+[To be written: the type of a range.]
 
 ## Conclusion
 

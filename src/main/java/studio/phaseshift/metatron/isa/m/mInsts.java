@@ -1278,7 +1278,9 @@ public final class mInsts {
                 InstBuilder.build()
                         .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\)")
                         .dom(A.maybeSome(), "maybe some A to sort")
-                        .rng(LST_TID.poly(A.maybeSome()), "a sorted lst of the lhs A{*}")
+                        // equal objs sort to one index as a point ({1.1,1.1}.order() is [{2}1.1]), so its indices take
+                        // any mass: lst[{*}A{*}], the left coefficient a bracket entry's mass (Marko, 2026-11-18)
+                        .rng(LST_TID.poly(A.maybeSome().b(cInt.MAYBESOME())), "a sorted lst of the lhs A{*}")
                         .argLst(T(ALL.maybe()), "a projection of A to compare")
                         .body((lhs, inst) -> inst.arg(0).isNoObj() ?
                                 lhs.stream().sorted(CommonUtil.ObjComparator.single()).collect(new CommonUtil.LstCollector()) :

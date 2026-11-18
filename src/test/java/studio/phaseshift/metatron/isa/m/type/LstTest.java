@@ -454,43 +454,44 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2,3]                                     % lst::T                       % true",
             "[1,2,3]                                     % lst[int,int,int]::T          % true",
             "[1]                                         % lst[int,int]::T              % false",
-            "[1]                                         % lst[int,int{0}]::T           % true",
-            "[1]                                         % lst[int,int{?}]::T           % true",
-            "[,]                                         % lst[int{?},int{?}]::T        % true",
-            "[,]                                         % lst[int{0},int{0}]::T        % true",
-            "[,]                                         % lst[int{0},int]::T           % false",
+            "[1]                                         % lst[int,{0}int]::T           % true",
+            "[1]                                         % lst[int,{?}int]::T           % true",
+            "[,]                                         % lst[{?}int,{?}int]::T        % true",
+            "[,]                                         % lst[{0}int,{0}int]::T        % true",
+            "[,]                                         % lst[{0}int,int]::T           % false",
             "[a=>1,b=>2]                                 % lst[str,str]::T              % false",
             "{1,2,3}                                     % lst[int,int,int]::T          % false",
             "['a',1,['b',2]]                             % lst[str,int,lst]::T          % true",
-            "['a',{2}1]                                  % lst[str{?},int{2,3}]::T      % true",
-            "['a',{4}1]                                  % lst[str{?},int{2,3}]::T      % false",
-            "[{0}1,1,['b',2]]                            % lst[int{?},int,lst]::T       % true",
+            "['a',{2}1]                                  % lst[{?}str,{2,3}int]::T      % true",
+            "['a',{4}1]                                  % lst[{?}str,{2,3}int]::T      % false",
+            "[{0}1,1,['b',2]]                            % lst[{?}int,int,lst]::T       % true",
             "[{0}1,1,['b',2]]                            % lst[int,int,lst]::T          % false",
-            "[{1}1,{5}'a',2.01234]                       % lst[int,str{+},real]::T      % true",
-            "[{1}1,{5}'a',real::T]                       % lst[int,str{+},real]::T      % true",
-            "lst[int,str{+},real]::T                     % lst[int,str{+},real]::T      % true",
-            "lst[int,str,real]::T                        % lst[int,str{+},real]::T      % true",
-            "lst[int,str{0},real]::T                     % lst[int,str{+},real]::T      % false",
-            "[{1,2,3},{'a','b'}]                         % lst[int{3},str{+}]::T        % true",
-            "[{1,2,3},{'a','b'}]                         % lst[int{*}]::T               % true",
-            // AN INDEX'S COEFFICIENT IS THE MULTIPLICITY OF THE VALUE AT THAT INDEX, not another index:
-            // lst[int{2},str] is a two-index list whose index 0 holds two ints, so {1,2} belongs there and a lone 1
-            // does not. The boundary rows read the coefficient as a multiplicity: {n} exactly n, {n,m} a range, {+}
-            // at least one, {?} zero or one (the absent form is the shorter list above), {*} zero or more.
-            "[{1,2},'a']                                % lst[int{2},str]::T           % true",
-            "[{2}1,'a']                                 % lst[int{2},str]::T           % true",
-            "[1,'a']                                    % lst[int{2},str]::T           % false",
-            "[{1,2,3},'a']                              % lst[int{2},str]::T           % false",
-            "[{1,2},'a']                                % lst[int{2,3},str]::T         % true",
-            "[{1,2,3},'a']                              % lst[int{2,3},str]::T         % true",
-            "[{1,2,3,4},'a']                            % lst[int{2,3},str]::T         % false",
-            "[{1,2},'a']                                % lst[int{+},str]::T           % true",
-            "[{1,2},'a']                                % lst[int{*},str]::T           % true",
-            "['a',{1,2}]                                % lst[str,int{?}]::T           % false",
+            "[{1}1,{5}'a',2.01234]                       % lst[int,{+}str,real]::T      % true",
+            "[{1}1,{5}'a',real::T]                       % lst[int,{+}str,real]::T      % true",
+            "lst[int,{+}str,real]::T                     % lst[int,{+}str,real]::T      % true",
+            "lst[int,str,real]::T                        % lst[int,{+}str,real]::T      % true",
+            "lst[int,{0}str,real]::T                     % lst[int,{+}str,real]::T      % false",
+            "[{1,2,3},{'a','b'}]                         % lst[{3}int,{+}str]::T        % true",
+            "[{1,2,3},{'a','b'}]                         % lst[{*}int]::T               % true",
+            // AN INDEX'S LEFT COEFFICIENT IS THE MULTIPLICITY OF THE VALUE AT THAT INDEX, not another index: a bracket
+            // reads its types as values (Marko, 2026-11-18), so lst[{2}int,str] is a two-index list whose index 0 holds
+            // two ints, {1,2} belongs there and a lone 1 does not, while lst[int{2},str] is three indices. The boundary
+            // rows read the left coefficient as a multiplicity: {n} exactly n, {n,m} a range, {+} at least one, {?} zero
+            // or one (the absent form is the shorter list above), {*} zero or more.
+            "[{1,2},'a']                                % lst[{2}int,str]::T           % true",
+            "[{2}1,'a']                                 % lst[{2}int,str]::T           % true",
+            "[1,'a']                                    % lst[{2}int,str]::T           % false",
+            "[{1,2,3},'a']                              % lst[{2}int,str]::T           % false",
+            "[{1,2},'a']                                % lst[{2,3}int,str]::T         % true",
+            "[{1,2,3},'a']                              % lst[{2,3}int,str]::T         % true",
+            "[{1,2,3,4},'a']                            % lst[{2,3}int,str]::T         % false",
+            "[{1,2},'a']                                % lst[{+}int,str]::T           % true",
+            "[{1,2},'a']                                % lst[{*}int,str]::T           % true",
+            "['a',{1,2}]                                % lst[str,{?}int]::T           % false",
             // a plain entry is exactly one value: two ints at index 0 are not an int
             "[{1,2},'a']                                % lst[int,str]::T              % false",
             // a trailing index that admits zero may be unfilled
-            "['a']                                      % lst[str,int{?}]::T           % true",
+            "['a']                                      % lst[str,{?}int]::T           % true",
     }, delimiter = '%')
     public void testPoly(final String list, final String type, final boolean matches) {
         AbstractMetatronTest.checkMatches(LOG, list, type, matches);
@@ -664,8 +665,9 @@ public class LstTest extends AbstractAlgebraTest {
     }
 
     /**
-     * A NAMED TENSOR TYPE READS ITS TID'S BRACKET like a base one, coefficients included.
-     * {@code pair -> lst[person{2},str]::T@pair} is a two-index list whose index 0 holds two people, so a pair
+     * A NAMED TENSOR TYPE READS ITS TID'S BRACKET like a base one, coefficients included, the left one being the mass
+     * at an index (Marko, 2026-11-18). {@code pair -> lst[{2}person,str]::T@pair} is a two-index list whose index 0 holds
+     * two people, so a pair
      * holding one person is rejected. The coefficient of a predicated entry ({@code pilgrim}) is judged the same way
      * as that of a bare one ({@code person}). Its seed sits beside {@link #testUpdate}'s one-time seed: each test
      * method keeps its own loaded flag, so neither seed suppresses the other.
@@ -675,14 +677,14 @@ public class LstTest extends AbstractAlgebraTest {
     @TestData(value = {
             "person -> rec::T@person",
             "pilgrim -> rec::T[?[name=>str::T]]@pilgrim",
-            "pair -> lst[person{2},str]::T@pair",
+            "pair -> lst[{2}person,str]::T@pair",
     })
     @CsvSource(value = {
             "pair::[{person::[name=>'bob'],person::[name=>'kai']},'a']    % pair::[{person::[name=>'bob'],person::[name=>'kai']},'a']",
             "pair::[person::[name=>'bob'],'a']                            % <ERROR>",
             "pair::[{person::[name=>'bob'],person::[name=>'kai']},2]      % <ERROR>",
-            "lst[person{2},str]::[person::[name=>'bob'],'a']              % <ERROR>",
-            "lst[pilgrim{2},str]::[pilgrim::[name=>'bob'],'a']            % <ERROR>",
+            "lst[{2}person,str]::[person::[name=>'bob'],'a']              % <ERROR>",
+            "lst[{2}pilgrim,str]::[pilgrim::[name=>'bob'],'a']            % <ERROR>",
             "lst[pilgrim,str]::[pilgrim::[name=>'bob'],'a']               % lst[pilgrim,str]::[pilgrim::[name=>'bob'],'a']",
     }, delimiter = '%')
     public void testNamedTensorType(final String code, final String expected) {
@@ -691,8 +693,8 @@ public class LstTest extends AbstractAlgebraTest {
 
     /**
      * A TENSOR'S INDICES, EDGE BY EDGE. Each index holds its own type in order; a missing index fails unless its entry
-     * admits zero, and a present zero-admitting index is still typed; an index's coefficient is the multiplicity at that
-     * index; and a poly at an index is read by its base ({@code lst}, {@code rec}, {@code rel}), not unpacked.
+     * admits zero, and a present zero-admitting index is still typed; an index's left coefficient is the multiplicity at
+     * that index (Marko, 2026-11-18); and a poly at an index is read by its base ({@code lst}, {@code rec}, {@code rel}), not unpacked.
      */
     @Training(instruction = "does the lst {{{value}}} match the tensor type {{{type}}}?", input = "{{{value}}}.matches({{{type}}})", output = "{{{matches}}}")
     @ParameterizedTest
@@ -703,17 +705,17 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,true,'a']                 % lst[int,str,bool]::T          % false",
             // ---- a missing index fails unless its entry admits zero ----
             "[1,'a']                      % lst[int,str,bool]::T          % false",
-            "[1,'a']                      % lst[int,str,bool{?}]::T       % true",
-            "[1]                          % lst[int,str{?},bool{?}]::T    % true",
-            "[1,'a']                      % lst[int,str{?},bool{?}]::T    % true",
+            "[1,'a']                      % lst[int,str,{?}bool]::T       % true",
+            "[1]                          % lst[int,{?}str,{?}bool]::T    % true",
+            "[1,'a']                      % lst[int,{?}str,{?}bool]::T    % true",
             // ---- a present zero-admitting index is still typed ----
-            "[1,2]                        % lst[int,str{?},bool{?}]::T    % false",
-            // ---- an index's coefficient is the multiplicity at that index ----
-            "[{1,2,3}]                    % lst[int{3}]::T                % true",
-            "[{1,2,3}]                    % lst[int{2,4}]::T              % true",
-            "[{1,2,3,4,5}]                % lst[int{2,4}]::T              % false",
-            "[{1,2},{'a','b','c'}]        % lst[int{+},str{+}]::T         % true",
-            "[{1,2},'a']                  % lst[int{?},str]::T            % false",
+            "[1,2]                        % lst[int,{?}str,{?}bool]::T    % false",
+            // ---- an index's left coefficient is the multiplicity at that index ----
+            "[{1,2,3}]                    % lst[{3}int]::T                % true",
+            "[{1,2,3}]                    % lst[{2,4}int]::T              % true",
+            "[{1,2,3,4,5}]                % lst[{2,4}int]::T              % false",
+            "[{1,2},{'a','b','c'}]        % lst[{+}int,{+}str]::T         % true",
+            "[{1,2},'a']                  % lst[{?}int,str]::T            % false",
             // ---- a poly at an index is read by its base, not unpacked ----
             "[[1,2],'a']                  % lst[lst,str]::T               % true",
             "[[1,2],'a']                  % lst[int,str]::T               % false",
@@ -722,6 +724,55 @@ public class LstTest extends AbstractAlgebraTest {
             "[(1=>2),[a=>1]]              % lst[rec,rel]::T               % false",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTensorIndexEdges(final String value, final String type, final boolean matches) {
+        AbstractMetatronTest.checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * A BRACKET READS ITS TYPES AS VALUES (Marko, 2026-11-18): "for lst[] the types in the brackets follow the same
+     * coefficient convention as values. {4}int is an int with mass of {4}; int{4} is an int with span of {4}." A left
+     * coefficient is the mass at one index and a right one a run of indices, so {@code [3{4}]}, which is
+     * {@code [3,3,3,3]}, is a {@code lst[int{2},int,int]}, while {@code [{4}3]}, four ints at index 0, is not: mass never
+     * spreads over extent, and indices never pool into mass. One run walk reads every bracket
+     * ({@link Type.Helper#testTensor}), so a neighbour's coefficient never changes how an entry reads, an unbounded
+     * trailing run claims the rest, and a run that lays nothing leaves the tail open.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // value                      % type                              % matches
+            // ---- spans add up along the axis ----
+            "[3{4}]                       % lst[int{2},int,int]::T            % true",
+            "[3{4}]                       % lst[int{2},int{2}]::T             % true",
+            "[3{4}]                       % lst[int{2},int,int,int]::T        % false",
+            "[3{4}]                       % lst[int{2}]::T                    % true",
+            // ---- mass is not extent ----
+            "[{4}3]                       % lst[int{2},int,int]::T            % false",
+            "[{4}3]                       % lst[int{4}]::T                    % false",
+            "[{4}3]                       % lst[{4}int]::T                    % true",
+            "[{2}5]                       % lst[{2}int]::T                    % true",
+            "[5,5]                        % lst[{2}int]::T                    % false",
+            "[{2}3{2}]                    % lst[{2}int{2}]::T                 % true",
+            "[{2}3{2}]                    % lst[int{2}]::T                    % false",
+            "[{2}3{3}]                    % lst[{2}int{2},{2}int]::T          % true",
+            "[{2}3,{3}3]                  % lst[{*}int{2}]::T                 % true",
+            // ---- a neighbour's coefficient never changes how an entry reads ----
+            "[3,3,'a','a']                % lst[int{2},str{2}]::T             % true",
+            "[3,3,{2}'a']                 % lst[int{2},{2}str]::T             % true",
+            "[3,3,'a','a']                % lst[int{2},{2}str]::T             % false",
+            "[{2}3,'a','a']               % lst[int{2},str{2}]::T             % false",
+            // ---- an unbounded trailing run claims the rest, and a run that lays nothing leaves the tail open ----
+            "[3,'a']                      % lst[int{*}]::T                    % false",
+            "['a',3,'b']                  % lst[str,int{*}]::T                % false",
+            "['a','b']                    % lst[str,int{?}]::T                % true",
+            "['a',1]                      % lst[str,int,bytes{*}]::T          % true",
+            "['a',1,3]                    % lst[str,int,bytes{*}]::T          % false",
+            "['a',1,0x01,3]               % lst[str,int,bytes{*}]::T          % false",
+            "[1,2]                        % lst[int{2},{0}#{*}]::T            % true",
+            "[1,2,3]                      % lst[int{2},{0}#{*}]::T            % false",
+            // ---- a zero span lays no index, a zero mass holds no value ----
+            "[3]                          % lst[int{0}]::T                    % true",
+            "[3]                          % lst[{0}int]::T                    % false",
+    }, delimiter = '%')
+    public void testABracketReadsItsTypesAsValues(final String value, final String type, final boolean matches) {
         AbstractMetatronTest.checkMatches(LOG, value, type, matches);
     }
 
@@ -736,7 +787,7 @@ public class LstTest extends AbstractAlgebraTest {
     @TestData(value = {
             "ticket -> lst[int,str]::T@ticket",
             "booking -> lst[ticket,ticket]::T@booking",
-            "itinerary -> lst[booking,ticket{?}]::T@itinerary",
+            "itinerary -> lst[booking,{?}ticket]::T@itinerary",
     })
     @CsvSource(value = {
             // ---- a named tensor at an index: its own indices are read in turn ----

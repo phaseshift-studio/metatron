@@ -302,8 +302,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         // (uri ⇝ file::T is a parse). testNominally strips coefficients.
         if (lhsType.isBaseType())
             return (rhsType.isBaseType() || rhsType.isNominal())
-                    // identity, not a claim: erasure is explicit here
-                    && Type.Helper.testByIdentity(lhsType.baseTypeID(), rhsType.baseTypeID())
+                    // identity, not a claim: erasure is explicit here. A lst's bracket is read by the one run walk
+                    // (testTypePoly, Type.Helper.testTensor) and never by the fURI bracket rule, which reads a bracket
+                    // entry's coefficients the other way round (Marko, 2026-11-18: {4}int is mass, int{4} a span)
+                    && Type.Helper.testByIdentity(lhsType.isTensored() && rhsType.isTensored() ? lhsType.baseTypeID().polyLess() : lhsType.baseTypeID(),
+                    lhsType.isTensored() && rhsType.isTensored() ? rhsType.baseTypeID().polyLess() : rhsType.baseTypeID())
                     && Type.Helper.testTypePoly(this, rhsType);
         while (true) {
             // identity, not a claim: erasure is explicit here
@@ -1484,8 +1487,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .create(),
                     InstBuilder.build()
                             .tid(KMERGE_INST_TID)
-                            .dom(LST_TID.poly(A.maybeSome()).maybeSome(), "maybe some sorted lists")
-                            .rng(LST_TID.poly(A.maybeSome()), "a lst k-way merged by the arg obj")
+                            // a sorted lst may hold several equal objs at one index, so its indices take any mass
+                            .dom(LST_TID.poly(A.maybeSome().b(cInt.MAYBESOME())).maybeSome(), "maybe some sorted lists")
+                            .rng(LST_TID.poly(A.maybeSome().b(cInt.MAYBESOME())), "a lst k-way merged by the arg obj")
                             .argLst(T(ALL.maybe()), "the obj to merge by (natural order when absent)")
                             .desc("a sorted merge function \\(f(X) \\mapsto X'\\): k-way merges the lhs sorted lists by the arg obj")
                             .body((lhs, inst) -> {
