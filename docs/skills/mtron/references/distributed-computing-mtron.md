@@ -249,33 +249,33 @@ written. ▶ plays a pattern's cast.
 
 Each pattern's **pre-write** motif, the mtron before the rewrite fires, and its **rewrite**, the emitted layout: one
 `branch` keyed by place (`s_i` a lane's program, `p_i` a peer, `part_i` the factor of the seed bulk the branch deals
-lane `i`). The names are placeholders and the rows are schemas, not literal runs; an italic cell describes a motif no
+lane `i`). The names are placeholders and the rows are schemas, not literal runs; a cell in plain prose describes a motif no
 single expression shows.
 
-| key   | pre-write                                                          | rewrite                                                                                           |
-|-------|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| **A** | `{1,2,3,4}.plus(1).count()`                                        | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(1).count(), …).sum()`                             |
-| **B** | `*/usr/data/+/current.plus(1).sum()`                               | `branch(<a_i> => from?hop=0(</usr/data/+/current>).plus(1).sum(), …).sum()`                       |
-| **C** | `*<ws://host:8555/n/+>.plus(1).sum()`                              | `branch(<ws://host:8555> => from?hop=0(</n/+>).plus(1).sum()).sum()`                              |
-| **D** | *any shard*                                                        | `branch(<p_i> => s_i, …).combiner`, every lane a `virtual::T`                                     |
-| **E** | `{1,…,8}.plus(1).sum?hop=2()`                                      | *a nested* `start?hop=n-1(p_i)…` *at each interior node: the dial graph is the tree*              |
-| **F** | *a* `lst`*-partitioned fold*                                       | *a pipeline: the running total travels neighbor to neighbor*                                      |
-| **G** | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `branch?<={0}(<p_i> => start?hop=0(part_i).group([mod(3)=>sum()]), …).sum()==[_=>sum()]`          |
-| **H** | *a part shipped to r peers*                                        | *every reply folds (at least once); non-idempotent: hedge, the first reply wins*                  |
-| **I** | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | *the plan's axes lowered over a real span* `[(lo, hi, role)]`                                     |
-| **J** | `{...}.mean()`                                                     | *tuple partials; the finalizer once at the master*                                                |
-| **K** | `{...}.order(s).take(k)`                                           | *lanes* `order(s).take(k)`*; the master* `kmerge(s).take(k)`                                      |
-| **L** | `{...}.hll()`                                                      | *A, E or H once the sketch declares its monoid theory*                                            |
-| **M** | `mtrx::[...].mult(mtrx::[...])`                                    | *O + an addressed union (rows); A with the matrix sum (inner k); G over block keys (2-D)*         |
-| **N** | *a sharded superstep, repeated*                                    | `repeat` / `loop` *around the layout*                                                             |
-| **O** | `{...}.plus(B).sum()`                                              | *the constant* `B` *rides as an argument of the floatable run*                                    |
-| **P** | *Monte Carlo: a count and an RNG seed per peer*                    | *one O(1) message per peer*                                                                       |
-| **Q** | *a remote read mid-chain*                                          | `law_shard` *per step: the continuation ships*                                                    |
-| **R** | `to(</usr/job/round/shard>)`                                       | *a space, and* `shard_result::[authority, round, status, value]`                                  |
-| **S** | `{1,…,8}.plus(1).sum?place=[local,peer]()`                         | *the master's slice is a lane at distance zero; k−1 ship*                                         |
-| **T** | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                     | *cut at the move,* `move(<host>)`*: the tail ships as a program*                                  |
+| key   | pre-write                                                          | rewrite                                                                                            |
+|-------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| **A** | `{1,2,3,4}.plus(1).count()`                                        | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(1).count(), …).sum()`                              |
+| **B** | `*/usr/data/+/current.plus(1).sum()`                               | `branch(<a_i> => from?hop=0(</usr/data/+/current>).plus(1).sum(), …).sum()`                        |
+| **C** | `*<ws://host:8555/n/+>.plus(1).sum()`                              | `branch(<ws://host:8555> => from?hop=0(</n/+>).plus(1).sum()).sum()`                               |
+| **D** | any shard                                                          | `branch(<p_i> => s_i, …).combiner`, every lane a `virtual::T`                                      |
+| **E** | `{1,…,8}.plus(1).sum?hop=2()`                                      | a nested `start?hop=n-1(p_i)…` at each interior node: the dial graph is the tree                   |
+| **F** | a `lst`-partitioned fold                                           | a pipeline: the running total travels neighbor to neighbor                                         |
+| **G** | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `branch?<={0}(<p_i> => start?hop=0(part_i).group([mod(3)=>sum()]), …).sum()==[_=>sum()]`           |
+| **H** | a part shipped to r peers                                          | every reply folds (at least once); non-idempotent: hedge, the first reply wins                     |
+| **I** | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | the plan's axes lowered over a real span `[(lo, hi, role)]`                                        |
+| **J** | `{...}.mean()`                                                     | tuple partials; the finalizer once at the master                                                   |
+| **K** | `{...}.order(s).take(k)`                                           | lanes `order(s).take(k)`; the master `kmerge(s).take(k)`                                           |
+| **L** | `{...}.hll()`                                                      | A, E or H once the sketch declares its monoid theory                                               |
+| **M** | `mtrx::[...].mult(mtrx::[...])`                                    | O + an addressed union (rows); A with the matrix sum (inner k); G over block keys (2-D)            |
+| **N** | a sharded superstep, repeated                                      | `repeat` / `loop` around the layout                                                                |
+| **O** | `{...}.plus(B).sum()`                                              | the constant `B` rides as an argument of the floatable run                                         |
+| **P** | Monte Carlo: a count and an RNG seed per peer                      | one O(1) message per peer                                                                          |
+| **Q** | a remote read mid-chain                                            | `law_shard` per step: the continuation ships                                                       |
+| **R** | `to(</usr/job/round/shard>)`                                       | a space, and `shard_result::[authority, round, status, value]`                                     |
+| **S** | `{1,…,8}.plus(1).sum?place=[local,peer]()`                         | the master's slice is a lane at distance zero; k−1 ship                                            |
+| **T** | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                     | cut at the move, `move(<host>)`: the tail ships as a program                                       |
 | **U** | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(), …).profile_collate()>>format` |
-| **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK    |
+| **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK     |
 
 **Legend.** ➜ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 —
