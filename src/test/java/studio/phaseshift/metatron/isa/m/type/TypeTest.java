@@ -1882,7 +1882,23 @@ public class TypeTest extends AbstractMetatronTest {
             // ---- a named entry keeps its span ----
             "[29,30]             % lst[age{2}]::T              % true",
             "[29]                % lst[age{2}]::T              % false",
-            "[29,'x']            % lst[age{2}]::T              % false",
+            "[29,'x']            % lst[age{2}]::T              % false"},
+            delimiter = '%')
+    public void testTypeTestCoefficientPolynomial(final String instance, final String type, final boolean matches) {
+        checkMatches(LOG, instance, type, matches);
+    }
+
+    /**
+     * The rows of {@link #testTypeTestCoefficientPolynomial} whose instance is itself a type, asserted on the parsed
+     * types. No mtron expression says the same: {@code T.matches(U)} applies the receiver, so its point streams through
+     * ({@code {2}int::T.matches(int::T)} is {@code {2}true}) and a ranged point never ends
+     * ({@code {?}int::T.matches(int::T)} spins the processor).
+     */
+    @Training.SkipTraining(reason = "the instance is a type literal, asserted with Obj.test on the parsed type; as an mtron expression T.matches(U) applies the receiver, so its point streams through ({2}int::T.matches(int::T) is {2}true) and a ranged point never terminates ({?}int::T.matches(int::T) spins the processor)")
+    @ParameterizedTest
+    @TestData(value = {"age -> int::T@age"})
+    @CsvSource(value = {
+            // instance          % type                        % matches
             // ---- a type against a type: its span and its point are within the other's ----
             "{2}int{3}::T        % {*}int{0,5}::T              % true",
             "{2}int{3}::T        % {2}int{3}::T                % true",
@@ -1907,7 +1923,7 @@ public class TypeTest extends AbstractMetatronTest {
             // a type's bracket is its argument list: a claim with no acceptor fails, as before spans
             "lst[int,str]::T     % lst[int]::T                 % false"},
             delimiter = '%')
-    public void testTypeTestCoefficientPolynomial(final String instance, final String type, final boolean matches) {
+    public void testTypeTestCoefficientPolynomialOfTypes(final String instance, final String type, final boolean matches) {
         checkMatches(LOG, instance, type, matches);
     }
 
