@@ -554,8 +554,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
           args=&gt;[
-           cmd=&gt;'the terminal command to evaluate (...',
-           {?}timeout=&gt;'a real number denoting timeout of ...'],
+           {?}timeout=&gt;'a real number denoting timeout of ...',
+           cmd=&gt;'the terminal command to evaluate (...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -572,7 +572,7 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.8M ...',
+    'tmpfs                  6.1G  6.9M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme1n1p2         916G  594G ...',
     'tmpfs                   31G  3.5M ...',
@@ -725,12 +725,12 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;66
+==&gt;65
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::712.0,
-    free_mem_jvm=&gt;mB::555.0371,
+    free_mem_jvm=&gt;mB::407.4152,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::156.9628,
+    used_mem_jvm=&gt;mB::304.5847,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-43-generic',
     arch=&gt;'amd64',
