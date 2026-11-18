@@ -469,15 +469,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             </li>-->
         </div>
     </div>
-    <div>
+   <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/mfs/boot/space/web/"
+               href="http://localhost:8777/splash"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
-    </div>
+    </div> -->
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
@@ -516,10 +516,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">356</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">21</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">360</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">21</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/m-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 17, 2026</span>
+            <span class="instset-built">built November 18, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -540,8 +540,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/instset::[pattern=&gt;/m/#,
-             q=&gt;[
+                        <pre><code>/m/instset::[q=&gt;[
               docq::[
                pattern=&gt;docq,
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -553,6 +552,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
+             pattern=&gt;/m/#,
              type=&gt;[
               &lt;#&gt;::T,
               bool::T,
@@ -763,15 +763,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               div?real&lt;=real(real::T){&lt;j&gt;},
               minus?real&lt;=real(real::T){&lt;j&gt;},
               as?str&lt;=real(str::T){&lt;j&gt;},
+              as?rec&lt;=bool(rec::T){&lt;j&gt;},
               zero?bool&lt;=bool(){&lt;j&gt;},
               one?bool&lt;=bool(){&lt;j&gt;},
               plus?bool&lt;=bool(bool::T){&lt;j&gt;},
               mult?bool&lt;=bool(bool::T){&lt;j&gt;},
               not?bool&lt;=bool(){&lt;j&gt;},
               as?str&lt;=bool(str::T){&lt;j&gt;},
+              as?rec&lt;=bytes(rec::T){&lt;j&gt;},
               zero?bytes&lt;=bytes(){&lt;j&gt;},
               plus?bytes&lt;=bytes(bytes::T){&lt;j&gt;},
               as?str&lt;=bytes(str::T){&lt;j&gt;},
+              as?rec&lt;=str(rec::T){&lt;j&gt;},
               reverse?str&lt;=str(){&lt;j&gt;},
               zero?str&lt;=str(){&lt;j&gt;},
               gt?bool&lt;=str(str::T){&lt;j&gt;},
@@ -789,6 +792,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               as?uri&lt;=str(uri::T){&lt;j&gt;},
               split?lst&lt;=str(str::T){&lt;j&gt;},
               merge?str&lt;=str{*}(str::T){&lt;j&gt;},
+              as?rec&lt;=uri(rec::T){&lt;j&gt;},
               reverse?uri&lt;=uri(){&lt;j&gt;},
               merge?uri&lt;=uri{*}(uri::T){&lt;j&gt;},
               split?uri{*}&lt;=uri(){&lt;j&gt;},
@@ -832,7 +836,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               pow?lst&lt;=lst(int::T){&lt;j&gt;},
               as?rec&lt;=lst(rec::T){&lt;j&gt;},
               as?rec&lt;=int(rec::T){&lt;j&gt;},
-              as?rec&lt;=str(rec::T){&lt;j&gt;},
               as?lst&lt;=rec(lst::T){&lt;j&gt;},
               as?uri&lt;=rec(uri::T){&lt;j&gt;},
               zero?rec&lt;=rec(){&lt;j&gt;},
@@ -863,7 +866,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               id?A&lt;=A(){&lt;j&gt;},
               map?B{*}&lt;=A{?}(B{*}::T){&lt;j&gt;},
               branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
-              order?lst[A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
+              order?lst[{*}A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
               swap?A&lt;=A(B::T){&lt;j&gt;},
               *uri::T,
               profile?/m/inst/profile/profiling&lt;=(){&lt;j&gt;},
@@ -879,7 +882,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               has?str{?}&lt;=str(rec::T){&lt;j&gt;},
               as?int&lt;=uri(int::T){&lt;j&gt;},
               as?uri&lt;=uri(uri::T){&lt;j&gt;},
-              as?rec&lt;=uri(rec::T){&lt;j&gt;},
               has?uri{?}&lt;=uri(str::T){&lt;j&gt;},
               has?uri{?}&lt;=uri(uri::T){&lt;j&gt;},
               split?lst&lt;=uri(uri::T){&lt;j&gt;},
@@ -912,7 +914,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               serialize?B&lt;=A(/m/web::T){&lt;j&gt;},
               fork?A{*}&lt;=A{*}(#::T){&lt;j&gt;},
               range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)){&lt;j&gt;},
-              kmerge?lst[A{*}]&lt;=lst[A{*}]{*}(#{?}::T){&lt;j&gt;},
+              kmerge?lst[{*}A{*}]&lt;=lst[{*}A{*}]{*}(#{?}::T){&lt;j&gt;},
               via?B&lt;=A(rel::T){&lt;j&gt;},
               as?{0}&lt;=A(){&lt;j&gt;},
               as?str&lt;=A(str::T){&lt;j&gt;},
@@ -3148,7 +3150,7 @@ a/b/c/                           [-- relative/branch uri            --]
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">356</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">360</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
         An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
@@ -3160,7 +3162,7 @@ a/b/c/                           [-- relative/branch uri            --]
             placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
-            aria-live="polite" aria-atomic="true">showing 356 of 356</span>
+            aria-live="polite" aria-atomic="true">showing 360 of 360</span>
     </div>
 </div>
     <div class="card mb-3 instset-inst-card" id="__m__inst__active">
@@ -3276,43 +3278,59 @@ a/b/c/                           [-- relative/branch uri            --]
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__as" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">as?real&lt;=str(real::T){&lt;j&gt;}</code></pre></a></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-2-tab').click();document.getElementById('__m__inst__as-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=bool(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-2-tab').click();document.getElementById('__m__inst__as-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=bool(rec::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-3-tab').click();document.getElementById('__m__inst__as-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=bool(str::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__as" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">as?bool&lt;=str(bool::T){&lt;j&gt;}</code></pre></a></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-3-tab').click();document.getElementById('__m__inst__as-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=bytes(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-4-tab').click();document.getElementById('__m__inst__as-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=bytes(rec::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-4-tab').click();document.getElementById('__m__inst__as-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes&lt;=str(bytes::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-5-tab').click();document.getElementById('__m__inst__as-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=bytes(str::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-0-tab').click();document.getElementById('__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=str(rec::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-6-tab').click();document.getElementById('__m__inst__as-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes&lt;=str(bytes::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__as" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/inst/as?rng=/m/str&amp;dom=/m/bytes</code></pre></a></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-5-tab').click();document.getElementById('__m__inst__as-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bool&lt;=str(bool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-7-tab').click();document.getElementById('__m__inst__as-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bool&lt;=str(bool::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-6-tab').click();document.getElementById('__m__inst__as-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=str(int::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-8-tab').click();document.getElementById('__m__inst__as-doc-8').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=str(int::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-7-tab').click();document.getElementById('__m__inst__as-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?real&lt;=str(real::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-9-tab').click();document.getElementById('__m__inst__as-doc-9').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?real&lt;=str(real::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-8-tab').click();document.getElementById('__m__inst__as-doc-8').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri&lt;=str(uri::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-10-tab').click();document.getElementById('__m__inst__as-doc-10').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri&lt;=str(uri::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-9-tab').click();document.getElementById('__m__inst__as-doc-9').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=uri(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-0-tab').click();document.getElementById('__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=uri(rec::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__as" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">as?uri&lt;=rec(uri::T){&lt;j&gt;}</code></pre></a></div>
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-11-tab').click();document.getElementById('__m__inst__as-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=uri(str::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__as" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">as?uri&lt;=str(uri::T){&lt;j&gt;}</code></pre></a></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-10-tab').click();document.getElementById('__m__inst__as-doc-10').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=lst(rec::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-12-tab').click();document.getElementById('__m__inst__as-doc-12').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=lst(rec::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-11-tab').click();document.getElementById('__m__inst__as-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=int(rec::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-13-tab').click();document.getElementById('__m__inst__as-doc-13').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=int(rec::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
@@ -3324,19 +3342,19 @@ a/b/c/                           [-- relative/branch uri            --]
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-12-tab').click();document.getElementById('__m__inst__as-doc-12').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri&lt;=rec(uri::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-14-tab').click();document.getElementById('__m__inst__as-doc-14').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri&lt;=rec(uri::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-13-tab').click();document.getElementById('__m__inst__as-doc-13').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=inst(rec::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-15-tab').click();document.getElementById('__m__inst__as-doc-15').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=inst(rec::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-14-tab').click();document.getElementById('__m__inst__as-doc-14').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?lst&lt;=code(lst::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-16-tab').click();document.getElementById('__m__inst__as-doc-16').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?lst&lt;=code(lst::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-15-tab').click();document.getElementById('__m__inst__as-doc-15').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?inst&lt;=code(inst::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-17-tab').click();document.getElementById('__m__inst__as-doc-17').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?inst&lt;=code(inst::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
@@ -3356,15 +3374,15 @@ a/b/c/                           [-- relative/branch uri            --]
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-16-tab').click();document.getElementById('__m__inst__as-doc-16').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=real(int::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-18-tab').click();document.getElementById('__m__inst__as-doc-18').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=real(int::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-17-tab').click();document.getElementById('__m__inst__as-doc-17').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=uri(int::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-19-tab').click();document.getElementById('__m__inst__as-doc-19').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=uri(int::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-18-tab').click();document.getElementById('__m__inst__as-doc-18').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-20-tab').click();document.getElementById('__m__inst__as-doc-20').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
@@ -3396,7 +3414,7 @@ a/b/c/                           [-- relative/branch uri            --]
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-19-tab').click();document.getElementById('__m__inst__as-doc-19').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?{0}&lt;=A(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-21-tab').click();document.getElementById('__m__inst__as-doc-21').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?{0}&lt;=A(){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
@@ -3416,127 +3434,127 @@ a/b/c/                           [-- relative/branch uri            --]
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-20-tab').click();document.getElementById('__m__inst__as-doc-20').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes&lt;=uri(bytes::T){&lt;j&gt;}</code> <a href="m_sys.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/sys — documented there as well">defined by sys</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-22-tab').click();document.getElementById('__m__inst__as-doc-22').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes&lt;=uri(bytes::T){&lt;j&gt;}</code> <a href="m_sys.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/sys — documented there as well">defined by sys</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-21-tab').click();document.getElementById('__m__inst__as-doc-21').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;}</code> <a href="m_sys.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/sys — documented there as well">defined by sys</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-23-tab').click();document.getElementById('__m__inst__as-doc-23').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;}</code> <a href="m_sys.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/sys — documented there as well">defined by sys</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-22-tab').click();document.getElementById('__m__inst__as-doc-22').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=markdown(str::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-24-tab').click();document.getElementById('__m__inst__as-doc-24').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=markdown(str::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-23-tab').click();document.getElementById('__m__inst__as-doc-23').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=json(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-25-tab').click();document.getElementById('__m__inst__as-doc-25').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=json(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-24-tab').click();document.getElementById('__m__inst__as-doc-24').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=yaml(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-26-tab').click();document.getElementById('__m__inst__as-doc-26').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=yaml(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-25-tab').click();document.getElementById('__m__inst__as-doc-25').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=rec(json::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-27-tab').click();document.getElementById('__m__inst__as-doc-27').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=rec(json::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-26-tab').click();document.getElementById('__m__inst__as-doc-26').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=xml(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-28-tab').click();document.getElementById('__m__inst__as-doc-28').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=xml(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-27-tab').click();document.getElementById('__m__inst__as-doc-27').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xml&lt;=rec(xml::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-29-tab').click();document.getElementById('__m__inst__as-doc-29').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xml&lt;=rec(xml::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-28-tab').click();document.getElementById('__m__inst__as-doc-28').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=html(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-30-tab').click();document.getElementById('__m__inst__as-doc-30').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=html(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-29-tab').click();document.getElementById('__m__inst__as-doc-29').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html&lt;=rec(html::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-31-tab').click();document.getElementById('__m__inst__as-doc-31').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html&lt;=rec(html::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-30-tab').click();document.getElementById('__m__inst__as-doc-30').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=markdown(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-32-tab').click();document.getElementById('__m__inst__as-doc-32').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=markdown(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-31-tab').click();document.getElementById('__m__inst__as-doc-31').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html&lt;=markdown(html::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-33-tab').click();document.getElementById('__m__inst__as-doc-33').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html&lt;=markdown(html::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-32-tab').click();document.getElementById('__m__inst__as-doc-32').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown&lt;=html(markdown::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-34-tab').click();document.getElementById('__m__inst__as-doc-34').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown&lt;=html(markdown::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-33-tab').click();document.getElementById('__m__inst__as-doc-33').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown&lt;=rec(markdown::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-35-tab').click();document.getElementById('__m__inst__as-doc-35').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown&lt;=rec(markdown::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-34-tab').click();document.getElementById('__m__inst__as-doc-34').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=java(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-36-tab').click();document.getElementById('__m__inst__as-doc-36').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=java(rec::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-35-tab').click();document.getElementById('__m__inst__as-doc-35').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java&lt;=rec(java::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-37-tab').click();document.getElementById('__m__inst__as-doc-37').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java&lt;=rec(java::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-36-tab').click();document.getElementById('__m__inst__as-doc-36').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java&lt;=str(java::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-38-tab').click();document.getElementById('__m__inst__as-doc-38').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java&lt;=str(java::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-37-tab').click();document.getElementById('__m__inst__as-doc-37').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xsv&lt;=str(xsv::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-39-tab').click();document.getElementById('__m__inst__as-doc-39').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xsv&lt;=str(xsv::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-38-tab').click();document.getElementById('__m__inst__as-doc-38').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?csv&lt;=str(csv::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-40-tab').click();document.getElementById('__m__inst__as-doc-40').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?csv&lt;=str(csv::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-39-tab').click();document.getElementById('__m__inst__as-doc-39').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=mcp_client(json::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-41-tab').click();document.getElementById('__m__inst__as-doc-41').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=mcp_client(json::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-40-tab').click();document.getElementById('__m__inst__as-doc-40').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_client{+}&lt;=json(mcp_client::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-42-tab').click();document.getElementById('__m__inst__as-doc-42').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_client{+}&lt;=json(mcp_client::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-41-tab').click();document.getElementById('__m__inst__as-doc-41').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_server&lt;=skill(mcp_server::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-43-tab').click();document.getElementById('__m__inst__as-doc-43').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_server&lt;=skill(mcp_server::T){&lt;j&gt;}</code> <a href="m_web.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/web — documented there as well">defined by web</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-42-tab').click();document.getElementById('__m__inst__as-doc-42').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?time&lt;=time(time::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-44-tab').click();document.getElementById('__m__inst__as-doc-44').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?time&lt;=time(time::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-18-tab').click();document.getElementById('__m__inst__as-doc-18').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime&lt;=uri(uri::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-20-tab').click();document.getElementById('__m__inst__as-doc-20').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime&lt;=uri(uri::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-17-tab').click();document.getElementById('__m__inst__as-doc-17').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=datetime(int::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-19-tab').click();document.getElementById('__m__inst__as-doc-19').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=datetime(int::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-9-tab').click();document.getElementById('__m__inst__as-doc-9').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=datetime(str::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-11-tab').click();document.getElementById('__m__inst__as-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=datetime(str::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-8-tab').click();document.getElementById('__m__inst__as-doc-8').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime&lt;=str(datetime::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-10-tab').click();document.getElementById('__m__inst__as-doc-10').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime&lt;=str(datetime::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-43-tab').click();document.getElementById('__m__inst__as-doc-43').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric&lt;=metric(metric::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-45-tab').click();document.getElementById('__m__inst__as-doc-45').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric&lt;=metric(metric::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-44-tab').click();document.getElementById('__m__inst__as-doc-44').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial&lt;=imperial(imperial::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-46-tab').click();document.getElementById('__m__inst__as-doc-46').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial&lt;=imperial(imperial::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-45-tab').click();document.getElementById('__m__inst__as-doc-45').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial&lt;=metric(imperial::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-47-tab').click();document.getElementById('__m__inst__as-doc-47').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial&lt;=metric(imperial::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-46-tab').click();document.getElementById('__m__inst__as-doc-46').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric&lt;=imperial(metric::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-48-tab').click();document.getElementById('__m__inst__as-doc-48').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric&lt;=imperial(metric::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
@@ -3544,27 +3562,27 @@ a/b/c/                           [-- relative/branch uri            --]
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-47-tab').click();document.getElementById('__m__inst__as-doc-47').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?model&lt;=rec(model::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-49-tab').click();document.getElementById('__m__inst__as-doc-49').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?model&lt;=rec(model::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-48-tab').click();document.getElementById('__m__inst__as-doc-48').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool&lt;=docs(tool::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-50-tab').click();document.getElementById('__m__inst__as-doc-50').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool&lt;=docs(tool::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-13-tab').click();document.getElementById('__m__inst__as-doc-13').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool&lt;=inst(tool::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-15-tab').click();document.getElementById('__m__inst__as-doc-15').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool&lt;=inst(tool::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-49-tab').click();document.getElementById('__m__inst__as-doc-49').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=uri(skill::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-51-tab').click();document.getElementById('__m__inst__as-doc-51').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=uri(skill::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-50-tab').click();document.getElementById('__m__inst__as-doc-50').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=agent(skill::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-52-tab').click();document.getElementById('__m__inst__as-doc-52').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=agent(skill::T){&lt;j&gt;}</code> <a href="m_ai_llm.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/ai/llm — documented there as well">defined by llm</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-51-tab').click();document.getElementById('__m__inst__as-doc-51').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=widget(str::T){&lt;j&gt;}</code> <a href="m_sys_ui.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/sys/ui — documented there as well">defined by ui</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-53-tab').click();document.getElementById('__m__inst__as-doc-53').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=widget(str::T){&lt;j&gt;}</code> <a href="m_sys_ui.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/sys/ui — documented there as well">defined by ui</a></pre>
 
 </div>
 <div class="variant-row">
@@ -3588,91 +3606,91 @@ a/b/c/                           [-- relative/branch uri            --]
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-52-tab').click();document.getElementById('__m__inst__as-doc-52').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?geometry&lt;=str(geometry::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-54-tab').click();document.getElementById('__m__inst__as-doc-54').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?geometry&lt;=str(geometry::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-53-tab').click();document.getElementById('__m__inst__as-doc-53').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?geometry&lt;=json(geometry::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-55-tab').click();document.getElementById('__m__inst__as-doc-55').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?geometry&lt;=json(geometry::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-54-tab').click();document.getElementById('__m__inst__as-doc-54').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?geometry&lt;=rec(geometry::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-56-tab').click();document.getElementById('__m__inst__as-doc-56').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?geometry&lt;=rec(geometry::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-55-tab').click();document.getElementById('__m__inst__as-doc-55').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-57-tab').click();document.getElementById('__m__inst__as-doc-57').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-56-tab').click();document.getElementById('__m__inst__as-doc-56').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-58-tab').click();document.getElementById('__m__inst__as-doc-58').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-57-tab').click();document.getElementById('__m__inst__as-doc-57').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-59-tab').click();document.getElementById('__m__inst__as-doc-59').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-58-tab').click();document.getElementById('__m__inst__as-doc-58').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox2d&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-60-tab').click();document.getElementById('__m__inst__as-doc-60').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox2d&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-59-tab').click();document.getElementById('__m__inst__as-doc-59').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox3d&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-61-tab').click();document.getElementById('__m__inst__as-doc-61').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox3d&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-60-tab').click();document.getElementById('__m__inst__as-doc-60').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=str(point::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-62-tab').click();document.getElementById('__m__inst__as-doc-62').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=str(point::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-61-tab').click();document.getElementById('__m__inst__as-doc-61').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=json(point::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-63-tab').click();document.getElementById('__m__inst__as-doc-63').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=json(point::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-62-tab').click();document.getElementById('__m__inst__as-doc-62').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=rec(point::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-64-tab').click();document.getElementById('__m__inst__as-doc-64').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=rec(point::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-63-tab').click();document.getElementById('__m__inst__as-doc-63').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=point(json::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-65-tab').click();document.getElementById('__m__inst__as-doc-65').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=point(json::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-64-tab').click();document.getElementById('__m__inst__as-doc-64').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=str(line::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-66-tab').click();document.getElementById('__m__inst__as-doc-66').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=str(line::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-65-tab').click();document.getElementById('__m__inst__as-doc-65').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=json(line::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-67-tab').click();document.getElementById('__m__inst__as-doc-67').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=json(line::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-66-tab').click();document.getElementById('__m__inst__as-doc-66').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=rec(line::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-68-tab').click();document.getElementById('__m__inst__as-doc-68').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=rec(line::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-67-tab').click();document.getElementById('__m__inst__as-doc-67').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=line(json::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-69-tab').click();document.getElementById('__m__inst__as-doc-69').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=line(json::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-68-tab').click();document.getElementById('__m__inst__as-doc-68').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=str(polygon::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-70-tab').click();document.getElementById('__m__inst__as-doc-70').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=str(polygon::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-69-tab').click();document.getElementById('__m__inst__as-doc-69').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=json(polygon::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-71-tab').click();document.getElementById('__m__inst__as-doc-71').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=json(polygon::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-70-tab').click();document.getElementById('__m__inst__as-doc-70').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=rec(polygon::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-72-tab').click();document.getElementById('__m__inst__as-doc-72').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=rec(polygon::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-71-tab').click();document.getElementById('__m__inst__as-doc-71').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=polygon(json::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-73-tab').click();document.getElementById('__m__inst__as-doc-73').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=polygon(json::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-72-tab').click();document.getElementById('__m__inst__as-doc-72').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?project&lt;=uri(project::T){&lt;j&gt;}</code> <a href="m_dev_ide.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/dev/ide — documented there as well">defined by ide</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-74-tab').click();document.getElementById('__m__inst__as-doc-74').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?project&lt;=uri(project::T){&lt;j&gt;}</code> <a href="m_dev_ide.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/dev/ide — documented there as well">defined by ide</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-73-tab').click();document.getElementById('__m__inst__as-doc-73').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=project(#::T){&lt;j&gt;}</code> <a href="m_dev_ide.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/dev/ide — documented there as well">defined by ide</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-75-tab').click();document.getElementById('__m__inst__as-doc-75').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=project(#::T){&lt;j&gt;}</code> <a href="m_dev_ide.html#defined-__m__inst__as" class="badge bg-info text-decoration-none ms-1" title="defined by /m/dev/ide — documented there as well">defined by ide</a></pre>
 
 </div>
 <div class="variant-row">
@@ -4208,6 +4226,20 @@ a/b/c/                           [-- relative/branch uri            --]
         style="font-size:0.75rem;max-width:60px;">
         <i class="bi bi-info-circle me-1"></i> 74
     </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__inst__as-doc-74-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-74"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="bi bi-info-circle me-1"></i> 75
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__inst__as-doc-75-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-75"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="bi bi-info-circle me-1"></i> 76
+    </button>
 </li>
     </ul>
     <div class="tab-content" id="__m__inst__as-content">
@@ -4225,41 +4257,53 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div><div class="tab-pane fade " id="__m__inst__as-doc-2" role="tabpanel" aria-labelledby="__m__inst__as-doc-2-tab">
     <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> convert the lhs bool type to a reified rec</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the bool type to convert" class="text-info">the bool type to convert</a> <span class="text-light">=&gt;</span> <a href="#the bool type deconstructed to its component parts" class="text-success">the bool type deconstructed to its component parts</a></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as-doc-3" role="tabpanel" aria-labelledby="__m__inst__as-doc-3-tab">
+    <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> print the lhs bool into a str</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the bool to convert" class="text-info">the bool to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs bool as a str" class="text-success">the lhs bool as a str</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-3" role="tabpanel" aria-labelledby="__m__inst__as-doc-3-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-4" role="tabpanel" aria-labelledby="__m__inst__as-doc-4-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> convert the lhs bytes type to a reified rec</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the bytes type to convert" class="text-info">the bytes type to convert</a> <span class="text-light">=&gt;</span> <a href="#the bytes type deconstructed to its component parts" class="text-success">the bytes type deconstructed to its component parts</a></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as-doc-5" role="tabpanel" aria-labelledby="__m__inst__as-doc-5-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read the lhs bytes as a utf-8 str</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the bytes to convert" class="text-info">the bytes to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs bytes as a str" class="text-success">the lhs bytes as a str</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-4" role="tabpanel" aria-labelledby="__m__inst__as-doc-4-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-6" role="tabpanel" aria-labelledby="__m__inst__as-doc-6-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read the bytes of the lhs str</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the str to convert" class="text-info">the str to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs str as bytes" class="text-success">the lhs str as bytes</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-5" role="tabpanel" aria-labelledby="__m__inst__as-doc-5-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-7" role="tabpanel" aria-labelledby="__m__inst__as-doc-7-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read the lhs str as a bool — true when it spells true</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the str to convert" class="text-info">the str to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs str as a bool" class="text-success">the lhs str as a bool</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-6" role="tabpanel" aria-labelledby="__m__inst__as-doc-6-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-8" role="tabpanel" aria-labelledby="__m__inst__as-doc-8-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read the lhs str as an int</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the str to convert" class="text-info">the str to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs str as an int" class="text-success">the lhs str as an int</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-7" role="tabpanel" aria-labelledby="__m__inst__as-doc-7-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-9" role="tabpanel" aria-labelledby="__m__inst__as-doc-9-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read the lhs str as a real</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the str to convert" class="text-info">the str to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs str as a real" class="text-success">the lhs str as a real</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-8" role="tabpanel" aria-labelledby="__m__inst__as-doc-8-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-10" role="tabpanel" aria-labelledby="__m__inst__as-doc-10-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse an ISO-8601 or docker-style timestamp str into a datetime
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4272,7 +4316,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;2026-08-07T19:48:02Z&#39;.as(datetime::T)   [-- &lt;//2026.08.07/19/48/02/000?tz=+0000&gt; --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-9" role="tabpanel" aria-labelledby="__m__inst__as-doc-9-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-11" role="tabpanel" aria-labelledby="__m__inst__as-doc-11-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> a datetime to a human readable str
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4285,25 +4329,25 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.07/19/48/02/251?tz=+0000&gt;.as(str::T)   [-- Friday, August 7, 2026 07:48:02 PM +00:00 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-10" role="tabpanel" aria-labelledby="__m__inst__as-doc-10-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-12" role="tabpanel" aria-labelledby="__m__inst__as-doc-12-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> convert the lhs lst into the rec the argument rec type constructs</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lst to convert" class="text-info">the lst to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs lst as the argument's rec type" class="text-success">the lhs lst as the argument&#39;s rec type</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-11" role="tabpanel" aria-labelledby="__m__inst__as-doc-11-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-13" role="tabpanel" aria-labelledby="__m__inst__as-doc-13-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> convert an int into the rec the argument rec type constructs</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the int to convert" class="text-info">the int to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs int as the argument's rec type" class="text-success">the lhs int as the argument&#39;s rec type</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-12" role="tabpanel" aria-labelledby="__m__inst__as-doc-12-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-14" role="tabpanel" aria-labelledby="__m__inst__as-doc-14-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> convert the lhs rec into the uri its component entries describe</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the rec to convert" class="text-info">the rec to convert</a> <span class="text-light">=&gt;</span> <a href="#the lhs rec as a uri" class="text-success">the lhs rec as a uri</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-13" role="tabpanel" aria-labelledby="__m__inst__as-doc-13-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-15" role="tabpanel" aria-labelledby="__m__inst__as-doc-15-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps an instruction to a tool specification for llm use
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4316,25 +4360,25 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-14" role="tabpanel" aria-labelledby="__m__inst__as-doc-14-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-16" role="tabpanel" aria-labelledby="__m__inst__as-doc-16-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> convert a code into the lst of its insts</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the code to convert" class="text-info">the code to convert</a> <span class="text-light">=&gt;</span> <a href="#the code's insts as a lst" class="text-success">the code&#39;s insts as a lst</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-15" role="tabpanel" aria-labelledby="__m__inst__as-doc-15-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-17" role="tabpanel" aria-labelledby="__m__inst__as-doc-17-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> convert a code into the single inst that applies it</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the code to convert" class="text-info">the code to convert</a> <span class="text-light">=&gt;</span> <a href="#the code as one inst" class="text-success">the code as one inst</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-16" role="tabpanel" aria-labelledby="__m__inst__as-doc-16-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-18" role="tabpanel" aria-labelledby="__m__inst__as-doc-18-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> an int function: the lhs real truncated to an int</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a real" class="text-info">a real</a> <span class="text-light">=&gt;</span> <a href="#the lhs real truncated to an int" class="text-success">the lhs real truncated to an int</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-17" role="tabpanel" aria-labelledby="__m__inst__as-doc-17-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-19" role="tabpanel" aria-labelledby="__m__inst__as-doc-19-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> a datetime to epoch millis
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4347,7 +4391,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(int::T)   [-- the epoch millis of that moment --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-18" role="tabpanel" aria-labelledby="__m__inst__as-doc-18-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-20" role="tabpanel" aria-labelledby="__m__inst__as-doc-20-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> cast a uri to a datetime — the datetime predicate validates the uri structure first
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4360,13 +4404,13 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(datetime::T)   [-- //2026.08.09/14/30/52/123?tz=+0000 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-19" role="tabpanel" aria-labelledby="__m__inst__as-doc-19-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-21" role="tabpanel" aria-labelledby="__m__inst__as-doc-21-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> a casting function \(f(x) \mapsto \emptyset\): casts the lhs obj to noobj</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#noobj" class="text-success">noobj</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-20" role="tabpanel" aria-labelledby="__m__inst__as-doc-20-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-22" role="tabpanel" aria-labelledby="__m__inst__as-doc-22-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a file uri to its raw bytes — the file must resolve to an fsspace
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4379,7 +4423,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/README.md.as(bytes::T)   [-- the file&#39;s raw bytes --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-21" role="tabpanel" aria-labelledby="__m__inst__as-doc-21-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-23" role="tabpanel" aria-labelledby="__m__inst__as-doc-23-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> render an image&#39;s bytes as ascii art — the second arg scales the rendering (default 1.0)
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4393,7 +4437,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-22" role="tabpanel" aria-labelledby="__m__inst__as-doc-22-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-24" role="tabpanel" aria-labelledby="__m__inst__as-doc-24-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse a markdown skill document into an llm_skill::T
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4406,7 +4450,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:.&gt;/.metatron/skills/mtron/SKILL.md.as(llm_skill::T)   [-- an llm_skill::T with the skill&#39;s tools and resources --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-23" role="tabpanel" aria-labelledby="__m__inst__as-doc-23-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-25" role="tabpanel" aria-labelledby="__m__inst__as-doc-25-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse a json document into a rec
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4419,7 +4463,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://localhost:8555/api/status&gt;.as(rec::T)   [-- a json response parsed into rec::T --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-24" role="tabpanel" aria-labelledby="__m__inst__as-doc-24-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-26" role="tabpanel" aria-labelledby="__m__inst__as-doc-26-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse a yaml document into a rec
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4432,7 +4476,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/settings.yaml&gt;.as(rec::T)   [-- a yaml document parsed into rec::T --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-25" role="tabpanel" aria-labelledby="__m__inst__as-doc-25-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-27" role="tabpanel" aria-labelledby="__m__inst__as-doc-27-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> serialize a rec as a json document
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4445,7 +4489,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[name=&gt;&#39;metatron&#39;,port=&gt;8555].as(web_json::T)   [-- the rec as a json document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-26" role="tabpanel" aria-labelledby="__m__inst__as-doc-26-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-28" role="tabpanel" aria-labelledby="__m__inst__as-doc-28-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse an xml document into a rec
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4458,7 +4502,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/settings.xml&gt;.as(rec::T)   [-- an xml document parsed into rec::T --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-27" role="tabpanel" aria-labelledby="__m__inst__as-doc-27-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-29" role="tabpanel" aria-labelledby="__m__inst__as-doc-29-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> serialize a rec as an xml document
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4471,7 +4515,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[config=&gt;[port=&gt;8555]].as(xml::T)   [-- the rec as an xml document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-28" role="tabpanel" aria-labelledby="__m__inst__as-doc-28-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-30" role="tabpanel" aria-labelledby="__m__inst__as-doc-30-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> html::[html=&gt;
        [head=&gt;
@@ -4487,7 +4531,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
 </pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-29" role="tabpanel" aria-labelledby="__m__inst__as-doc-29-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-31" role="tabpanel" aria-labelledby="__m__inst__as-doc-31-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> serialize a rec as an html document
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4500,7 +4544,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[head=&gt;[title=&gt;&#39;metatron&#39;]].as(html::T)   [-- the rec as an html document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-30" role="tabpanel" aria-labelledby="__m__inst__as-doc-30-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-32" role="tabpanel" aria-labelledby="__m__inst__as-doc-32-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse a markdown document into a rec
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4513,7 +4557,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:.&gt;/README.md.as(rec::T)   [-- the markdown document parsed into rec::T structure --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-31" role="tabpanel" aria-labelledby="__m__inst__as-doc-31-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-33" role="tabpanel" aria-labelledby="__m__inst__as-doc-33-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert a markdown document to html — the same engine the docs site-html pass uses
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4526,7 +4570,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:docs/website/skills/mtron/README.md&gt;.as(html::T)   [-- the document as an html::T --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-32" role="tabpanel" aria-labelledby="__m__inst__as-doc-32-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-34" role="tabpanel" aria-labelledby="__m__inst__as-doc-34-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert an html document back to markdown
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4539,7 +4583,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://metatron.phaseshift.studio&gt;.as(markdown::T)   [-- the page&#39;s html as markdown --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-33" role="tabpanel" aria-labelledby="__m__inst__as-doc-33-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-35" role="tabpanel" aria-labelledby="__m__inst__as-doc-35-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> serialize a rec as a markdown document
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4552,7 +4596,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[title=&gt;&#39;metatron&#39;,body=&gt;&#39;greeting&#39;].as(markdown::T)   [-- the rec as a markdown::T document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-34" role="tabpanel" aria-labelledby="__m__inst__as-doc-34-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-36" role="tabpanel" aria-labelledby="__m__inst__as-doc-36-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse a java source file into a rec
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4565,7 +4609,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:.&gt;/Tokens.java.as(rec::T)   [-- the java source parsed into a rec --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-35" role="tabpanel" aria-labelledby="__m__inst__as-doc-35-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-37" role="tabpanel" aria-labelledby="__m__inst__as-doc-37-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> serialize a rec as java source
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4578,7 +4622,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[name=&gt;&#39;port&#39;,value=&gt;8555].as(java::T)   [-- the rec as java source text --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-36" role="tabpanel" aria-labelledby="__m__inst__as-doc-36-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-38" role="tabpanel" aria-labelledby="__m__inst__as-doc-38-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> tag a plain str as java source, without validation
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4591,7 +4635,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;int x = 3;&#39;.as(java::T)   [-- int x = 3; tagged as java::T --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-37" role="tabpanel" aria-labelledby="__m__inst__as-doc-37-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-39" role="tabpanel" aria-labelledby="__m__inst__as-doc-39-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> normalize a plain str as an xsv document
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4604,7 +4648,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;city,population; santa fe,45000&#39;.as(xsv::T)   [-- the text as a canonical xsv::T --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-38" role="tabpanel" aria-labelledby="__m__inst__as-doc-38-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-40" role="tabpanel" aria-labelledby="__m__inst__as-doc-40-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> normalize a plain str as a csv document
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4617,7 +4661,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;city,population; santa fe,45000&#39;.as(csv::T)   [-- the text as a canonical csv::T --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-39" role="tabpanel" aria-labelledby="__m__inst__as-doc-39-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-41" role="tabpanel" aria-labelledby="__m__inst__as-doc-41-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> export an mcp client&#39;s connection settings (type, url, headers) as a json document
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4630,7 +4674,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*/usr/ai/mcp/mtron.as(web_json::T)   [-- the client&#39;s settings as a json document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-40" role="tabpanel" aria-labelledby="__m__inst__as-doc-40-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-42" role="tabpanel" aria-labelledby="__m__inst__as-doc-42-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> import a json document as mcp client(s), merging command/args and env/headers
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4643,7 +4687,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/mcp.json&gt;.as(mcp_client::T)   [-- an mcp client imported from the json document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-41" role="tabpanel" aria-labelledby="__m__inst__as-doc-41-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-43" role="tabpanel" aria-labelledby="__m__inst__as-doc-43-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps a skill to an mcp server exposing its tools and resources
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4656,7 +4700,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">skill.as(mcp_server::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-42" role="tabpanel" aria-labelledby="__m__inst__as-doc-42-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-44" role="tabpanel" aria-labelledby="__m__inst__as-doc-44-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert a duration to another time unit — the total is preserved, only the unit label changes
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4670,7 +4714,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">millis::1500.0.as(second::T)   [-- second::1.5 --]
 second::90.0.as(minute::T)   [-- minute::1.5 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-43" role="tabpanel" aria-labelledby="__m__inst__as-doc-43-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-45" role="tabpanel" aria-labelledby="__m__inst__as-doc-45-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert a metric distance to another metric unit
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4683,7 +4727,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1500.0.as(km::T)   [-- km::1.5 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-44" role="tabpanel" aria-labelledby="__m__inst__as-doc-44-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-46" role="tabpanel" aria-labelledby="__m__inst__as-doc-46-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert an imperial distance to another imperial unit
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4696,7 +4740,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">inch::144.0.as(yard::T)   [-- yard::4.0 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-45" role="tabpanel" aria-labelledby="__m__inst__as-doc-45-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-47" role="tabpanel" aria-labelledby="__m__inst__as-doc-47-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert a metric distance to an imperial one — bridged through the exact 25.4 millimeters per inch
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4709,7 +4753,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1.0.as(inch::T)   [-- inch::39.37007874015748 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-46" role="tabpanel" aria-labelledby="__m__inst__as-doc-46-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-48" role="tabpanel" aria-labelledby="__m__inst__as-doc-48-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert an imperial distance to a metric one — bridged through the exact 25.4 millimeters per inch
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4722,7 +4766,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">foot::1.0.as(cm::T)   [-- cm::30.48 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-47" role="tabpanel" aria-labelledby="__m__inst__as-doc-47-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-49" role="tabpanel" aria-labelledby="__m__inst__as-doc-49-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps a rec to a model
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4732,7 +4776,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a rec shaped like a model'" class="text-info">&#39;a rec shaped like a model&#39;</a>
 </pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-48" role="tabpanel" aria-labelledby="__m__inst__as-doc-48-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-50" role="tabpanel" aria-labelledby="__m__inst__as-doc-50-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps an instruction doc to a tool specification for llm use
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4745,7 +4789,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-49" role="tabpanel" aria-labelledby="__m__inst__as-doc-49-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-51" role="tabpanel" aria-labelledby="__m__inst__as-doc-51-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps a directory to an llm skill where the dir follows the standard SKILL.md structure
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4758,7 +4802,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-50" role="tabpanel" aria-labelledby="__m__inst__as-doc-50-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-52" role="tabpanel" aria-labelledby="__m__inst__as-doc-52-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps an agent to a skill by aggregating its features&#39; tools and resources
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4771,7 +4815,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)]].as(skill::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-51" role="tabpanel" aria-labelledby="__m__inst__as-doc-51-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-53" role="tabpanel" aria-labelledby="__m__inst__as-doc-53-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs.
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4781,7 +4825,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
 </pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-52" role="tabpanel" aria-labelledby="__m__inst__as-doc-52-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-54" role="tabpanel" aria-labelledby="__m__inst__as-doc-54-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a document as the geometry it says it is — the door for a caller who does not know the kind
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4794,33 +4838,33 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(geometry::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-53" role="tabpanel" aria-labelledby="__m__inst__as-doc-53-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a document as the geometry it says it is — the door for a caller who does not know the kind
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the document value" class="text-info">the document value</a> <span class="text-light">=&gt;</span> <a href="#the geometry it declares, stamped with that kind's type" class="text-success">the geometry it declares, stamped with that kind&#39;s type</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lst::T@__m__math__geo__geometry" class="text-light">geometry</a> <span class="text-light">=&gt;</span> <a href="#'the family, read as whichever kind the document declares'" class="text-info">&#39;the family, read as whichever kind the document declares&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(geometry::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-54" role="tabpanel" aria-labelledby="__m__inst__as-doc-54-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a document as the geometry it says it is — the door for a caller who does not know the kind
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the document value" class="text-info">the document value</a> <span class="text-light">=&gt;</span> <a href="#the geometry it declares, stamped with that kind's type" class="text-success">the geometry it declares, stamped with that kind&#39;s type</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lst::T@__m__math__geo__geometry" class="text-light">geometry</a> <span class="text-light">=&gt;</span> <a href="#'the family, read as whichever kind the document declares'" class="text-info">&#39;the family, read as whichever kind the document declares&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(geometry::T)</code></pre>
-</div>
 </div><div class="tab-pane fade " id="__m__inst__as-doc-55" role="tabpanel" aria-labelledby="__m__inst__as-doc-55-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a document as the geometry it says it is — the door for a caller who does not know the kind
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the document value" class="text-info">the document value</a> <span class="text-light">=&gt;</span> <a href="#the geometry it declares, stamped with that kind's type" class="text-success">the geometry it declares, stamped with that kind&#39;s type</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lst::T@__m__math__geo__geometry" class="text-light">geometry</a> <span class="text-light">=&gt;</span> <a href="#'the family, read as whichever kind the document declares'" class="text-info">&#39;the family, read as whichever kind the document declares&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(geometry::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as-doc-56" role="tabpanel" aria-labelledby="__m__inst__as-doc-56-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a document as the geometry it says it is — the door for a caller who does not know the kind
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the document value" class="text-info">the document value</a> <span class="text-light">=&gt;</span> <a href="#the geometry it declares, stamped with that kind's type" class="text-success">the geometry it declares, stamped with that kind&#39;s type</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lst::T@__m__math__geo__geometry" class="text-light">geometry</a> <span class="text-light">=&gt;</span> <a href="#'the family, read as whichever kind the document declares'" class="text-info">&#39;the family, read as whichever kind the document declares&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(geometry::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as-doc-57" role="tabpanel" aria-labelledby="__m__inst__as-doc-57-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a coordinate list as point — integer coordinates become reals, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4833,7 +4877,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44].as(point::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-56" role="tabpanel" aria-labelledby="__m__inst__as-doc-56-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-58" role="tabpanel" aria-labelledby="__m__inst__as-doc-58-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a coordinate list as line — integer coordinates become reals, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4846,7 +4890,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[[-123,44],[-122,45]].as(line::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-57" role="tabpanel" aria-labelledby="__m__inst__as-doc-57-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-59" role="tabpanel" aria-labelledby="__m__inst__as-doc-59-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a coordinate list as polygon — integer coordinates become reals, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4859,7 +4903,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[[[-123,44],[-122,45],[-123,45],[-123,44]]].as(polygon::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-58" role="tabpanel" aria-labelledby="__m__inst__as-doc-58-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-60" role="tabpanel" aria-labelledby="__m__inst__as-doc-60-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a coordinate list as bbox2d — integer coordinates become reals, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4872,7 +4916,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44,-122,45].as(bbox2d::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-59" role="tabpanel" aria-labelledby="__m__inst__as-doc-59-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-61" role="tabpanel" aria-labelledby="__m__inst__as-doc-61-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a coordinate list as bbox3d — integer coordinates become reals, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4890,7 +4934,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44,0,-122,45,1300].as(bbox3d::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-60" role="tabpanel" aria-labelledby="__m__inst__as-doc-60-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-62" role="tabpanel" aria-labelledby="__m__inst__as-doc-62-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as point::T
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4900,7 +4944,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;POINT (-123.13 44.47)&quot;.as(geo:point::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-61" role="tabpanel" aria-labelledby="__m__inst__as-doc-61-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-63" role="tabpanel" aria-labelledby="__m__inst__as-doc-63-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as point::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4910,7 +4954,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:point::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-62" role="tabpanel" aria-labelledby="__m__inst__as-doc-62-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-64" role="tabpanel" aria-labelledby="__m__inst__as-doc-64-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a rec as point::T — the rec&#39;s own {@code type}/{@code coordinates} shape, or, when it is a Feature, the geometry at its {@code geometry} field
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4920,7 +4964,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(rec::T).as(point::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-63" role="tabpanel" aria-labelledby="__m__inst__as-doc-63-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-65" role="tabpanel" aria-labelledby="__m__inst__as-doc-65-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the point::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4930,7 +4974,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.13,44.47].as(json::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-64" role="tabpanel" aria-labelledby="__m__inst__as-doc-64-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-66" role="tabpanel" aria-labelledby="__m__inst__as-doc-66-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as line::T
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4940,7 +4984,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;LINESTRING (-123.13 44.47, -121.18 45.61)&quot;.as(geo:line::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-65" role="tabpanel" aria-labelledby="__m__inst__as-doc-65-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-67" role="tabpanel" aria-labelledby="__m__inst__as-doc-67-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as line::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4950,7 +4994,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:line::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-66" role="tabpanel" aria-labelledby="__m__inst__as-doc-66-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-68" role="tabpanel" aria-labelledby="__m__inst__as-doc-68-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a rec as line::T — the rec&#39;s own {@code type}/{@code coordinates} shape, or, when it is a Feature, the geometry at its {@code geometry} field
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4960,7 +5004,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(rec::T).as(line::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-67" role="tabpanel" aria-labelledby="__m__inst__as-doc-67-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-69" role="tabpanel" aria-labelledby="__m__inst__as-doc-69-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the line::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4970,7 +5014,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:line::[-123.13,44.47].as(json::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-68" role="tabpanel" aria-labelledby="__m__inst__as-doc-68-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-70" role="tabpanel" aria-labelledby="__m__inst__as-doc-70-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as polygon::T
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4980,7 +5024,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;POLYGON ((-123.2 44.4, -122.9 44.4, -122.9 44.6, -123.2 44.4))&quot;.as(geo:polygon::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-69" role="tabpanel" aria-labelledby="__m__inst__as-doc-69-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-71" role="tabpanel" aria-labelledby="__m__inst__as-doc-71-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as polygon::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
 retypes the obj&#39;s type/identity, not its value</p>
@@ -4990,7 +5034,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:polygon::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-70" role="tabpanel" aria-labelledby="__m__inst__as-doc-70-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-72" role="tabpanel" aria-labelledby="__m__inst__as-doc-72-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a rec as polygon::T — the rec&#39;s own {@code type}/{@code coordinates} shape, or, when it is a Feature, the geometry at its {@code geometry} field
 retypes the obj&#39;s type/identity, not its value</p>
@@ -5000,7 +5044,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::&quot;&quot;&quot;{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[…]}&quot;&quot;&quot;.as(rec::T).as(polygon::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-71" role="tabpanel" aria-labelledby="__m__inst__as-doc-71-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-73" role="tabpanel" aria-labelledby="__m__inst__as-doc-73-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the polygon::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
 retypes the obj&#39;s type/identity, not its value</p>
@@ -5010,7 +5054,7 @@ retypes the obj&#39;s type/identity, not its value</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:polygon::[-123.13,44.47].as(json::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-72" role="tabpanel" aria-labelledby="__m__inst__as-doc-72-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-74" role="tabpanel" aria-labelledby="__m__inst__as-doc-74-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> generate an project obj used to orient monads through project source
 retypes the obj&#39;s type/identity, not its value</p>
@@ -5029,7 +5073,7 @@ retypes the obj&#39;s type/identity, not its value</p>
          {?}code=><#>::T]]@__m__dev__ide__project" class="text-light">project</a> <span class="text-light">=&gt;</span> <a href="#'the project type'" class="text-info">&#39;the project type&#39;</a>
 </pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as-doc-73" role="tabpanel" aria-labelledby="__m__inst__as-doc-73-tab">
+</div><div class="tab-pane fade " id="__m__inst__as-doc-75" role="tabpanel" aria-labelledby="__m__inst__as-doc-75-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> as engineering becomes agent-dependent, the workspace manifest is no longer &quot;how to build&quot; but &quot;how to work here&quot; — and &quot;how to work here&quot; is the skill shape; what stays distinct is the lifecycle, which is precisely why the bridge is an as-view and not a refinement.
 retypes the obj&#39;s type/identity, not its value</p>
@@ -6286,12 +6330,12 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">kmerge</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__lst[A{*}]{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">lst[A{*}]{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__lst[A{*}]" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">lst[A{*}]</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__lst[{*}A{*}]{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">lst[{*}A{*}]{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__lst[{*}A{*}]" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">lst[{*}A{*}]</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/kmerge</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__kmerge-doc-0-tab').click();document.getElementById('__m__inst__kmerge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">kmerge?lst[A{*}]&lt;=lst[A{*}]{*}(#{?}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__kmerge-doc-0-tab').click();document.getElementById('__m__inst__kmerge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">kmerge?lst[{*}A{*}]&lt;=lst[{*}A{*}]{*}(#{?}::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
@@ -7452,12 +7496,12 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">order</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__lst[A{*}]" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">lst[A{*}]</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__lst[{*}A{*}]" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">lst[{*}A{*}]</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/order</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__order-doc-0-tab').click();document.getElementById('__m__inst__order-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">order?lst[A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__order-doc-0-tab').click();document.getElementById('__m__inst__order-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">order?lst[{*}A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">order(b::T)</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">split([id()]).kmerge(b::T)</code></pre></div>
 </div>
 </div>
