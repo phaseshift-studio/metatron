@@ -523,7 +523,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,2,3,4,5}.plus(10).order()                                % branch(start().plus(10).order(),start().plus(10).order()).kmerge()                        % [11,12,13,14,15]",
             "{1,2,3,4,5}.plus(10).order(neg())                           % branch(start().plus(10).order(neg()),start().plus(10).order(neg())).kmerge(neg())         % [15,14,13,12,11]",
             //"{1,2,3,4,5}.plus(10).order(neg()).select({5}plus(1)).sum()  % branch().kmerge().select().sum()         % [15,14,13,12,11]",
-            // "{1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()  % branch().kmerge().merge().branch().sum() % 70",
+            "{1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()  % branch().kmerge().merge().branch().sum() % 70",
     }, delimiter = '%')
     void test_order_recombines_with_or_without_a_selector(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);

@@ -691,9 +691,54 @@ public class LstTest extends AbstractAlgebraTest {
             "lst[A,B]::[1]                                          % <ERROR>",
             "lst[int,int]::[1,'x']                                  % <ERROR>",
             "lst[int,int]::[1,2]                                    % lst[int,int]::[1,2]",
+            // a run binds through the same walk the bracket is tested by (Lst.LstType.bindings): its variable takes
+            // the type of every index its run claims, and the bound bracket keeps the run as written
+            "lst[A{*}]::[1,2,3]                                     % lst[int{*}]::[1,2,3]",
+            "lst[str,A{*}]::['x',1,2]                               % lst[str,int{*}]::['x',1,2]",
+            // a lst is open past a bounded last index, so binding takes what the test takes (Marko, 2026-11-18)
+            "lst[A,B]::[1,2,3]                                      % lst[int,int]::[1,2,3]",
     }, delimiter = '%', quoteCharacter = '~')
     public void testGenericPolyBinding(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A LST BRACKET'S VARIABLES BIND THROUGH THE WALK ITS TEST TAKES ({@link Lst.LstType#bindings}): each entry claims
+     * a run of the value's indices the run funnel admits ({@link Type.Helper#runs}), every index is claimed, and a
+     * variable's run holds one type, the type it binds. An earlier entry claims as much as agrees with its variable,
+     * so {@code lst[A{*},B{?}]} over {@code [1,1,'hello']} leaves {@code 'hello'} to B. Each row: the value & the
+     * bracket & its bindings, null when the value does not match (Marko, 2026-11-18, the first four rows).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2,'hello']   & lst[A{2},str]::T      & [A=>int::T]",
+            "[1,'hello']     & lst[A{2},str]::T      & null",
+            "[1,1,'hello']   & lst[A{*},B{?}]::T     & [A=>int::T,B=>str::T]",
+            "[1,1]           & lst[A{*},B{?}]::T     & [A=>int::T]",
+            "[1,'x']         & lst[A,B]::T           & [A=>int::T,B=>str::T]",
+            "[1,2]           & lst[A,A]::T           & [A=>int::T]",
+            "[1,'x']         & lst[A,A]::T           & null",
+            "[1]             & lst[A,B]::T           & null",
+            "[1,2,3]         & lst[A,B]::T           & [A=>int::T,B=>int::T]", // open past B: lst[int,int], lst[int{2}]
+            "['x',1,2]       & lst[str,A{*}]::T      & [A=>int::T]",
+            "[1,'x']         & lst[A{*}]::T          & null",
+            "[{2}1,3]        & lst[{*}A{*}]::T       & [A=>int::T]",
+            "[{2}1,3]        & lst[A{*}]::T          & null",
+            "[1,2,3]         & lst[int{*}]::T        & [=>]",
+    }, delimiter = '&', quoteCharacter = '~')
+    public void testGenericBindings(final String value, final String type, final String expected) {
+        final Obj lst = ObjmtronSerializer.parse(value.trim());
+        final Obj bracket = ObjmtronSerializer.parse(type.trim());
+        final java.util.Map<studio.phaseshift.metatron.furi.fURI, studio.phaseshift.metatron.furi.fURI> bindings =
+                Lst.LstType.bindings(lst, bracket.tid());
+        if ("null".equals(expected.trim())) {
+            assertNull(bindings, lst + " does not match " + bracket + ", so nothing binds");
+            return;
+        }
+        assertNotNull(bindings, lst + " matches " + bracket);
+        final java.util.Map<Obj, Obj> bound = new java.util.LinkedHashMap<>();
+        bindings.forEach((variable, bindingType) -> bound.put(uri(variable), studio.phaseshift.metatron.isa.m.type.impl.MType.T(bindingType)));
+        assertEquals(ObjmtronSerializer.parse(expected.trim()), rec(bound), lst + " over " + bracket);
     }
 
     /**

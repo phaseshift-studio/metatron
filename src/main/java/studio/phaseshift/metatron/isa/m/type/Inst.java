@@ -106,8 +106,10 @@ public interface Inst extends Call {
                 return terminal;
             if (inst.isBranching())
                 return fork;
+            // MERGE IS A FLATMAPPER (Marko, 2026-11-18): it unrolls the lst a split built (or any lst) into the objs its
+            // indices hold, one obj to many, so a pure merge floats with a run like any flatmapper
             if (inst.isJoining())
-                return join;
+                return flatmapper;
             if (inst.isReducing())
                 return reducer;
             if (inst.isGather())
@@ -1339,6 +1341,15 @@ public interface Inst extends Call {
                     return null;
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
             }
+            // A VARIABLE A LST BRACKET NAMES binds to the type of the lhs's indices its run claims, read the way the
+            // bracket tests them (Lst.LstType.bindings): merge's A{*}<=lst[{*}A{*}] over order's lst[{*}int{*}] binds
+            // A to int, so the objs it unrolls are typed (Marko, 2026-11-18). A contradiction binds nothing here: the
+            // domain gate is what refuses it
+            if (!lhs.isNoObj() && apiInstTemp.tid().hasDom() && apiInstTemp.tid().dom().hasPoly()) {
+                final Map<fURI, fURI> indexed = Lst.LstType.bindings(lhs, apiInstTemp.tid().dom());
+                if (null != indexed)
+                    indexed.forEach(generics::putIfAbsent);
+            }
             if (apiInstTemp.rng().typeId().one().isGeneric() && generics.containsKey(apiInstTemp.rng().typeId().one())) {
                 apiInstTemp = apiInstTemp.rng(T(generics.get(apiInstTemp.rng().typeId().one()).c(apiInstTemp.rng().c())));
             }
@@ -1426,6 +1437,13 @@ public interface Inst extends Call {
 
             if (apiInstTemp.rng().typeId().one().isGeneric()) {
                 apiInstTemp = apiInstTemp.rng(T(generics.getOrDefault(apiInstTemp.rng().typeId().one(), userInst.rng().typeId()).c(apiInstTemp.rng().c())));
+            }
+            // A VARIABLE INSIDE A LST RANGE is the variable outside it (Lst.LstType.bound): order's lst[{*}A{*}] over
+            // an int stream answers lst[{*}int{*}], so the instruction after it reads the index type, not an open A
+            if (apiInstTemp.tid().hasRng() && apiInstTemp.tid().rng().hasPoly()) {
+                final fURI range = Lst.LstType.bound(apiInstTemp.tid().rng(), generics);
+                if (range != apiInstTemp.tid().rng())
+                    apiInstTemp = apiInstTemp.rng(T(range));
             }
             ///  hail mary
             if (apiInstTemp.dom().typeId().one().isGeneric() || apiInstTemp.dom().typeId().one().equals(ALL)) {

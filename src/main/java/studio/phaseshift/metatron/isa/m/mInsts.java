@@ -821,7 +821,10 @@ public final class mInsts {
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(MERGE_INST_TID, "merge the slots of the lhs lst into an obj stream")
-                        .dom(LST_TID, "the lst to merge")
+                        // merge?A{*}<=lst[{*}A{*}]() (Marko, 2026-11-18): the A the lst's indices hold is the A it
+                        // hands on, so order(…).merge() over ints is an int stream and what follows it is typed. Its
+                        // indices take any mass ({*} point), as order's and kmerge's do: a split's [{2}10] is merged too
+                        .dom(LST_TID.poly(A.maybeSome().b(cInt.MAYBESOME())), "the lst to merge")
                         .rng(A.maybeSome(), "the merged objs")
                         .argLst()
                         .body((lhs, inst) -> objs(lhs.elements()))

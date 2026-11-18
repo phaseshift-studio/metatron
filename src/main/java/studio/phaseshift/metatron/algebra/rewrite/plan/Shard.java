@@ -182,6 +182,7 @@ public final class Shard {
         int runIndex = 0 > cut ? first : cut;
         while (runIndex > first && floats.matches(typed.get(runIndex - 1)))
             runIndex--;
+        runIndex = expanded(chain, from, cut, runIndex);
         // a self-combining fold re-applies the chain's own instruction; a fold defined by derivation recombines through
         // the fold its definition names; a keyed fold through the chain its pointwise combiner computes
         final Call combined = 0 > cut ? null : Law.Helper.combiner(typed.get(cut), chain.laws());
@@ -319,6 +320,27 @@ public final class Shard {
                 return false;
         }
         return false;
+    }
+
+    /**
+     * A RUN THAT TURNS ONE OBJ INTO MANY STARTS AFTER THE TURN. With one obj flowing in and no index set to factor, the
+     * run's leading flatmappers ({@code merge} unrolling the lst a fold answered) stay home and expand the obj into a
+     * bag, which the rest of the run deals by member: {@code order(neg()).merge().plus(1).sum()} merges at home and
+     * ships {@code plus(1).sum()}. Otherwise the run starts where it stood.
+     */
+    private static int expanded(final Chain chain, final int from, final int cut, final int runIndex) {
+        if (0 > cut)
+            return runIndex;
+        final Inst head = chain.insts().getFirst();
+        final boolean one = 0 == from && 1 == runIndex && literal(head)
+                ? 1 == head.arg(0).stream().count()
+                : one(chain, runIndex);
+        if (!one || null != runRange(chain.insts(), runIndex, cut))
+            return runIndex;
+        int start = runIndex;
+        while (start < cut && Inst.Form.flatmapper == Inst.Form.of(chain.typed().get(start)).subring())
+            start++;
+        return start;
     }
 
     private static boolean handsOnOne(final Inst contract, final Inst inst) {
