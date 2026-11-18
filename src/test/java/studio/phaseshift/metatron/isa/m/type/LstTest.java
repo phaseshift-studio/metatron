@@ -500,11 +500,12 @@ public class LstTest extends AbstractAlgebraTest {
     /**
      * A LST TESTS A LST INDEX BY INDEX (Marko, 2026-11-17). An index is an address that is not the obj, so a point is
      * mass at an index and a span a run of indices: {@code [{2}3]} is two 3s at index 0, a lst of one index, and
-     * {@code [3{2}]} a 3 at each of indices 0 and 1, which a lst lays as {@code [3,3]}. Only a value's span lays
-     * indices: an instruction's span is its run and a type's a run of its filter, P·P = P, so {@code [{2}int::T]} is
-     * {@code [int::T]}, while a type's point is mass. An index passes when its mass
-     * is within the pattern's and its copies are the pattern's. Past the last pattern index the lhs is open, even inside
-     * a value's run, and a pattern index the lhs leaves empty passes only if its mass admits zero. Each row is
+     * {@code [3{2}]} a 3 at each of indices 0 and 1, which a lst lays as {@code [3,3]}. On an axis a type's and an
+     * instruction's span is extension too (Marko, 2026-11-18): {@code [{2}int::T]} is {@code [int::T,int::T]}, and a
+     * zero span lays nothing, while a type's point is mass. A range cannot lay, so it is a run, as in a bracket
+     * ({@code [str::T,{?}int::T]} reads as {@code lst[str,int{?}]}). An index passes when its mass is within the
+     * pattern's and its copies are the pattern's. Past the last pattern index the lhs is open, even inside a value's run,
+     * and a pattern index the lhs leaves empty passes only if its mass admits zero. Each row is
      * {@code lhs.isa?#{*}<=#{*}(rhs)}: the whole lhs comes back on a match, noobj otherwise.
      */
     @ParameterizedTest
@@ -523,11 +524,11 @@ public class LstTest extends AbstractAlgebraTest {
             "[{2}3,5].isa?#{*}<=#{*}([int::T,int::T,int::T])                                       % noobj",
             "['a',1,1].isa?#{*}<=#{*}([str::T,int{2}::T])                                          % noobj",
             "['a',1,1].isa?#{*}<=#{*}([str::T,{2}int::T])                                          % ['a',1,1]",
-            "['a',1,'b'].isa?#{*}<=#{*}([str::T,{2}int::T])                                        % ['a',1,'b']",
+            "['a',1,'b'].isa?#{*}<=#{*}([str::T,{2}int::T])                                        % noobj",
             "['a',1,1].isa?#{*}<=#{*}([str::T,{2}int{2}::T])                                       % noobj",
-            "['a',{2}1].isa?#{*}<=#{*}([str::T,{2}int{2}::T])                                      % ['a',{2}1]",
-            // ---- the span is a run, the point parallel: {2}int{3}::T is three parallel int::T checks, never nine ----
-            "[{3}6].isa?#{*}<=#{*}([{2}int{3}::T])                                                 % [{3}6]",
+            "['a',{2}1,{2}1].isa?#{*}<=#{*}([str::T,{2}int{2}::T])                                 % ['a',{2}1,{2}1]",
+            // ---- the span is extension, the point parallel: {2}int{3}::T is two indices of mass 3, never one of 6 ----
+            "[{3}6,{3}6].isa?#{*}<=#{*}([{2}int{3}::T])                                            % [{3}6,{3}6]",
             "[{9}6].isa?#{*}<=#{*}([{2}int{3}::T])                                                 % noobj",
             // ---- a value's span is its run written out ----
             "[{2}1{3}].isa?#{*}<=#{*}([{2}1,{2}1,{2}1])                                            % [{2}1,{2}1,{2}1]",
@@ -535,11 +536,11 @@ public class LstTest extends AbstractAlgebraTest {
             "[1{2}].isa?#{*}<=#{*}([1,1])                                                          % [1,1]",
             "[{2}1].isa?#{*}<=#{*}([1,1])                                                          % noobj",
             "[1,1].isa?#{*}<=#{*}([{2}1])                                                          % noobj",
-            // ---- a type's span is a run of its filter, one index; its point is mass ----
+            // ---- on an axis a type's span is extension, as a value's is; its point is mass ----
             "[{3}int::T].isa?#{*}<=#{*}([int::T])                                                  % [{3}int::T]",
-            "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % noobj",
+            "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % [int::T,int::T,int::T]",
             "[int::T,int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                    % [int::T,int::T,int::T]",
-            "[int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                           % [int::T,int::T]",
+            "[int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                           % noobj",
             "[{3}int::T].isa?#{*}<=#{*}([int{2}::T,int::T])                                        % noobj",
             "[int{3}::T].isa?#{*}<=#{*}([int{3}::T])                                               % [int{3}::T]",
             "[int{3}::T].isa?#{*}<=#{*}([int::T])                                                  % noobj",
@@ -561,12 +562,13 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2].isa?#{*}<=#{*}([int::T,noobj])                                                  % noobj",
             "[{2}1].isa?#{*}<=#{*}([int{?}::T])                                                    % noobj",
             "[{2}1].isa?#{*}<=#{*}([int{+}::T])                                                    % [{2}1]",
-            // ---- a zero span is the filter run zero times, id(): it takes any obj its point takes ----
+            // ---- on an axis a zero span lays nothing: the pattern is gone (id() is the no-axis reading) ----
             "['a'].isa?#{*}<=#{*}([{0}int::T])                                                     % ['a']",
-            "['a',1].isa?#{*}<=#{*}([{0}int::T,int::T])                                            % ['a',1]",
+            "['a',1].isa?#{*}<=#{*}([{0}int::T,int::T])                                            % noobj",
+            "[1,'a'].isa?#{*}<=#{*}([{0}int::T,int::T])                                            % [1,'a']",
             "['a',1].isa?#{*}<=#{*}([{0}int{2}::T,int::T])                                         % noobj",
-            "[{2}'a',1].isa?#{*}<=#{*}([{0}int{2}::T,int::T])                                      % [{2}'a',1]",
-            "[,].isa?#{*}<=#{*}([{0}int::T])                                                       % noobj",
+            "[{2}'a',1].isa?#{*}<=#{*}([{0}int{2}::T,int::T])                                      % noobj",
+            "[,].isa?#{*}<=#{*}([{0}int::T])                                                       % [,]",
             "['a',1].isa?#{*}<=#{*}([int{0}::T,int::T])                                            % noobj",
             // ---- an instruction at an index is a predicate each copy meets ----
             "[1,5].isa?#{*}<=#{*}([_,is(gt(3))])                                                   % [1,5]",
@@ -575,7 +577,7 @@ public class LstTest extends AbstractAlgebraTest {
             "[int::T,str::T].isa?#{*}<=#{*}([int::T])                                              % [int::T,str::T]",
             "[1,'a',2].isa?#{*}<=#{*}([{*}int::T,str::T])                                          % [1,'a',2]",
             "['a',1,'b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                        % ['a',1,'b']",
-            "['a','b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                          % noobj",
+            "['a','b'].isa?#{*}<=#{*}([str::T,{?}int::T])                                          % ['a','b']",
             "[1,2,'a'].isa?#{*}<=#{*}([{2}int::T,{2}str::T])                                       % noobj",
             "[{*}int::T].isa?#{*}<=#{*}([{*}int::T,str::T])                                        % noobj",
     }, delimiter = '%')
@@ -611,6 +613,42 @@ public class LstTest extends AbstractAlgebraTest {
         assertEquals(holds, lst.test(patterns), lst + " ? " + patterns + " (the index walk)");
         assertEquals(holds, Type.Helper.holds(lst.lstValue().getFirst(), patterns.lstValue().getFirst()),
                 "holds(" + value + ", " + pattern + ")");
+    }
+
+    /**
+     * A SPAN ON AN AXIS IS EXTENSION, WITH NO AXIS A POWER (Marko, 2026-11-18). A type is an obj that performs a
+     * computation, and with no axis its span makes code of it: {@code {4}int::T} is {@code int::T.int::T.int::T.int::T},
+     * which is {@code int::T}. On an axis, a lst or an argument list, the span is the obj's extension along it, for a
+     * value, a type and an instruction alike: {@code [{4}int::T]} is {@code [int::T,int::T,int::T,int::T]}, so
+     * {@code 1-<[{4}int::T]} is {@code [1,1,1,1]} as {@code 1-<[int{4}::T]}, the point, is {@code [{4}1]}, and
+     * {@code 1-<[{2}plus(1),{3}mult(2)]} maps one obj over a lst of instructions. {@code ?} is isa, and its operand is
+     * isa's argument list: {@code 1?{4}int::T} is {@code 1.isa(int::T,int::T,int::T,int::T)}, which isa reads as
+     * {@code 1.isa(int::T)}. A chain step and a branch's term have no axis, so there a span is the instruction's run.
+     */
+    @ParameterizedTest
+    @TestData(value = {"import(/m/math)"})
+    @CsvSource(value = {
+            // extension on a lst
+            "1-<[int::T]                        % [1]",
+            "1-<[{4}int::T]                     % [1,1,1,1]",
+            "1-<[int{4}::T]                     % [{4}1]",
+            "1-<[{2}int{3}::T]                  % [{3}1,{3}1]",
+            "1-<[{2}plus(1)]                    % [2,2]",
+            "1-<[{2}plus(1),{3}mult(2)]         % [2,2,2,2,2]",
+            "start([{4}int::T])                 % [int::T,int::T,int::T,int::T]",
+            "start([{2}plus(1)])                % [plus(1),plus(1)]",
+            "start([{0}int::T])                 % [,]",
+            // extension on an argument list, a sugar's too
+            "1.isa({4}int::T)                   % 1",
+            "1?{4}int::T                        % 1",
+            "3?{2}int::T                        % 3",
+            "1.map({2}plus(1))                  % 2",
+            // no axis: the span is the instruction's run
+            "1.{2}plus(1)                       % 3",
+            "1.branch({2}plus(1),mult(5))       % {3,5}",
+    }, delimiter = '%')
+    public void testASpanOnAnAxisIsExtension(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     /**

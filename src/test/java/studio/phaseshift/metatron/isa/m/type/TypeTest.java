@@ -2503,8 +2503,10 @@ public class TypeTest extends AbstractMetatronTest {
             "1.map{2}(int::T)                             % {2}1",
             "1.map(int::T).id{2}()                        % {2}1",
             "{2}3.map(int{3}::T)                          % {6}3",
-            // its span is a run of the filter, P·P = P
+            // its span: with no axis a run of the filter, P·P = P; on map's argument list (an axis) it lays, and map
+            // reads its first (Marko, 2026-11-18). {3}1 either way
             "1.map({2}int{3}::T)                          % {3}1",
+            "1.branch({2}int{3}::T,str::T)                % {3}1",
             // a branch of types sums its members' answers
             "1.branch(int::T,int::T)                      % {2}1",
             "1.branch(int::T,int::T,int::T)               % {3}1",
@@ -2516,26 +2518,27 @@ public class TypeTest extends AbstractMetatronTest {
             // a run of a sum compounds
             "1.{2}branch(int::T,int::T)                   % {4}1",
             "\"a\".{2}branch(int::T,int::T)                % noobj",
-            // a zero span is the filter run zero times, P⁰ = id (Marko, 2026-11-17): it takes any obj, and its point is
-            // copies
+            // with no axis a zero span is the filter run zero times, P⁰ = id (Marko, 2026-11-17): it takes any obj, and its
+            // point is copies. A branch's terms are such a place, a sum having no axis
             "start({0}int{3}::T)                          % {0}int{3}::T",
-            "\"a\".map({0}int::T)                          % \"a\"",
-            "\"a\".map({0}int{3}::T)                       % {3}\"a\"",
+            "\"a\".branch({0}int{3}::T,str::T)            % {4}\"a\"",
             "-1.map(nat::T)                               % noobj",
-            "-1.map({0}nat::T)                            % -1",
+            "-1.branch({0}nat::T,str::T)                  % -1",
             "3.map(int::T[?>5])                           % noobj",
             "7.map(int::T[?>5])                           % 7",
-            "3.map({0}int::T[?>5])                        % 3",
-            "3.map({0}int{2}::T[?>5])                     % {2}3",
-            "\"a\".map({0}int::T).map(int::T)              % noobj",
+            "3.branch({0}int::T[?>5],str::T)              % 3",
+            "3.branch({0}int{2}::T[?>5],str::T)           % {2}3",
             "\"a\".branch({0}int::T,str::T)                % {2}\"a\"",
             "1.branch({0}int::T,{0}str::T)                % {2}1",
+            // on an axis a zero span lays nothing (Marko, 2026-11-18): map's argument list is one, so "a".map({0}int::T)
+            // is "a".map(), and ? is isa, whose operand is its argument list, so "a" ? {0}int::T leaves isa no type
+            "\"a\".map({0}int::T)                          % noobj",
+            "\"a\".map({0}int::T).map(int::T)              % noobj",
+            "\"a\" ? {0}int::T                             % noobj",
+            "3 ? {0}int::T                                % noobj",
             // a zero point is nothing, whatever the span
             "\"a\".map(int{0}::T)                          % noobj",
             "\"a\".map({0}int{0}::T)                       % noobj",
-            // as a test, a zero span holds what its point holds
-            "\"a\" ? {0}int::T                             % \"a\"",
-            "3 ? {0}int::T                                % 3",
             "\"a\" ? {0}int{2}::T                          % noobj",
     }, delimiter = '%')
     public void testATypeIsAPointedFilter(final String code, final String expected) {

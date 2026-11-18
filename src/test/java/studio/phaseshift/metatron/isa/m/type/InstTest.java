@@ -195,20 +195,23 @@ public class InstTest extends AbstractObjTest {
     }
 
     /**
-     * A DECLARED SPAN IS A RUN OF ARGS (Marko, 2026-11-08: args unfold). A declaration is read at the call's shape, one
+     * A DECLARED RANGE IS A RUN OF ARGS (Marko, 2026-11-08: args unfold). A declaration is read at the call's shape, one
      * declared arg for each arg the call holds, and a call that no runs of the declared args claim is refused (null).
-     * Each row: the declaration % the call % the declared args at the call's shape, or null.
+     * An exact span is no run: an argument list is an axis, so the parser lays it (Marko, 2026-11-18), and
+     * {@code abc({3}int::T)} is the positional {@code abc(int::T,int::T,int::T)}, whose arity the resolver's gate
+     * judges. Each row: the declaration % the call % the declared args at the call's shape, or null.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             "abc({*}int::T)              % abc(3,4,5)              % abc(int::T,int::T,int::T)",
             "abc({*}int::T)              % abc()                   % abc()",
             "abc({3}int::T)              % abc(3,4,5)              % abc(int::T,int::T,int::T)",
-            "abc({3}int::T)              % abc(3,4)                % null",
-            "abc({3}int::T)              % abc(3,4,5,6)            % null",
-            "abc({3}int::T)              % abc(3,'a',5)            % null",
+            "abc({2,3}int::T)            % abc(3,4)                % abc(int::T,int::T)",
+            "abc({2,3}int::T)            % abc(3)                  % null",
+            "abc({2,3}int::T)            % abc(3,4,5,6)            % null",
+            "abc({2,3}int::T)            % abc(3,'a',5)            % null",
             "abc(int::T,{2}str::T)       % abc(3,'a','b')          % abc(int::T,str::T,str::T)",
-            "abc(int::T,{2}str::T)       % abc(3,'a')              % null",
+            "abc(int::T,{2,3}str::T)     % abc(3,'a')              % null",
             "abc({?}int::T,{2}str::T)    % abc('a','b')            % abc(str::T,str::T)",
             "abc({?}int::T,{2}str::T)    % abc(3,'a','b')          % abc(int::T,str::T,str::T)",
             "abc({*}int::T,str::T)       % abc(1,2,'a')            % abc(int::T,int::T,str::T)",

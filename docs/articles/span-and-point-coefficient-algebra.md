@@ -992,8 +992,8 @@ parse. A type used as a step is a filter, and so its own converse (Theorem 14).
 - On a rel, mtron's `neg()` swaps the ends, so `(1=>2).neg()` is `2=>1`. The arrow $x \Rightarrow y$ is the matrix
   with a $1$ at row $x$ and column $y$ [2], so the swap is its transpose, the converse
   $(x \Rightarrow y)^{\smile} = y \Rightarrow x$, and not its additive inverse, which is the point `{-1}(1=>2)`.
-- A lst under test lays only a value's span as indices, and reads a point as mass at its index, so `[{-1}3,4]` is no
-  `[int::T]`: its index 0 holds a mass of $-1$. A run of like slots read backward is the same run, so a value's
+- A lst under test lays a span as indices, a value's, a type's or an instruction's, and reads a point as mass at its
+  index, so `[{-1}3,4]` is no `[int::T]`: its index 0 holds a mass of $-1$. A run of like slots read backward is the same run, so a value's
   negative span could lay its length, but a value's span is never negative: `3{-1}` does not parse.
 
 ## Point and Span Coefficients Type Systems
@@ -1011,24 +1011,34 @@ value's copies (`{3}5{3}` counts nine): `0.{10}plus(4)` is typed one `int`, not 
 5.plus(1).id{3}().type().cc()
 ```
 
-A type used as a step is a filter: $\langle x \rangle T = \langle x \rangle$ when $x$ is a `T`, and
-$\langle x \rangle T = 0$ otherwise. A filter is idempotent, $T \cdot T = T$, so the span of a type is the power of an
-idempotent, $T^n = T$ for $n \geq 1$ and $T^0 = 1$ by Definition 2, while its point is a sum,
-$cT = T + \cdots + T$, and makes copies. So `{2}int{3}::T` is `int{3}::T`, three parallel checks and never nine, and
-`{0}int{3}::T` is `id{3}()`, which takes every object three times.
+A type is an object that performs a computation as well as one that is used in one, and which it is depends on where
+it stands. With no axis, as a step or as a term of a branch, a type is a filter:
+$\langle x \rangle T = \langle x \rangle$ when $x$ is a `T`, and $\langle x \rangle T = 0$ otherwise. Its span makes
+code of it, `{4}int::T` being `int::T.int::T.int::T.int::T`, and a filter is idempotent, $T \cdot T = T$, so the span
+of a type is the power of an idempotent, $T^n = T$ for $n \geq 1$ and $T^0 = 1$ by Definition 2, while its point is a
+sum, $cT = T + \cdots + T$, and makes copies. So `{2}int{3}::T` is `int{3}::T`, three parallel checks and never nine,
+and `{0}int{3}::T` is `id{3}()`, which takes every object three times.
 
-A bracket is not a type but a container. Its entries are uris, which are values, so they are written as values are,
-`{point}value{span}`, and the span there is a power in the container's own monoid, concatenation, whose unit is `[]`.
-That monoid is free, not idempotent: $[T]^n = [T, \ldots, T]$, $n$ slots. So `lst[int{4}]` is
-`lst[int,int,int,int]`, runs add along the list (`lst[int{2},int,int]` is `lst[int{4}]`), and the point is the mass
-at one slot: `lst[{4}int]` is one slot holding four ints. The one notation `{n}` is a power in whichever monoid its
-host carries, composition for a type and concatenation for a bracket, which is why idempotence collapses one and not
-the other. Mass never spreads over extent: `[3{4}]`, which a lst lays as `[3,3,3,3]`, is a `lst[int{2},int,int]`,
-while `[{4}3]`, four ints at one slot, is not.
+On an axis the same span is extension. A lst is an axis, and so is an argument list and a bracket, whose entries are
+uris, which are values, written as values are, `{point}value{span}`. There the span is a power in the container's own
+monoid, concatenation, whose unit is `[]`. That monoid is free, not idempotent: $[T]^n = [T, \ldots, T]$, $n$ slots. So
+`lst[int{4}]` is `lst[int,int,int,int]`, runs add along the list (`lst[int{2},int,int]` is `lst[int{4}]`), and the
+point is the mass at one slot: `lst[{4}int]` is one slot holding four ints. The same holds for every object on an axis,
+a type and an instruction too: `[{4}int::T]` is `[int::T,int::T,int::T,int::T]`, so `1-<[{4}int::T]` is `[1,1,1,1]`
+while `1-<[int{4}::T]` is `[{4}1]`, and `1-<[{2}plus(1),{3}mult(2)]` maps one object over a lst of instructions, the
+converse of a map. `?` is `isa`, whose operand is an argument list, so `1?{4}int::T` is
+`1.isa(int::T,int::T,int::T,int::T)`, which `isa` reads as `1.isa(int::T)`. The one notation `{n}` is a power in
+whichever monoid its place carries, composition with no axis and concatenation on one, which is why idempotence
+collapses one and not the other. Mass never spreads over extent: `[3{4}]`, which a lst lays as `[3,3,3,3]`, is a
+`lst[int{2},int,int]`, while `[{4}3]`, four ints at one slot, is not.
 
 ```mtron_pre
-1.map({2}int{3}::T)
-'a'.map({0}int{3}::T)
+1.branch({2}int{3}::T,str::T)
+'a'.branch({0}int{3}::T,bool::T)
+1-<[{4}int::T]
+1-<[int{4}::T]
+1-<[{2}plus(1),{3}mult(2)]
+1?{4}int::T
 [3{4}].?lst[int{2},int,int]::T
 [{4}3].?lst[int{2},int,int]::T
 [{4}3].?lst[{4}int]::T

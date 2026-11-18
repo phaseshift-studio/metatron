@@ -404,9 +404,10 @@ public class mParserTest extends AbstractMetatronTest {
             "{0}*a                           % {0}from(a)",
             // a value is {point}value{span} (Marko, 2026-11-10): a span of one is no span (testValueSpans has the rest)
             "2{1}                            % 2",
-            // an argument list lays a value's span (testAnArgumentListLaysAValuesSpan has the rest)
-            "1.branch(2{2})                  % 1.branch(2,2)",
-            "1.branch(mult(2{2}),3{2})       % 1.branch(mult(2,2),3,3)",
+            // an argument list lays a value's span (testAnArgumentListLaysAValuesSpan has the rest; a branch's terms are
+            // a sum, no axis, and keep it)
+            "1.xxx(2{2})                     % 1.xxx(2,2)",
+            "1.xxx(mult(2{2}),3{2})          % 1.xxx(mult(2,2),3,3)",
     }, delimiter = '%')
     void testParsesToTheSameObjAs(final String code, final String equivalent) {
         checkEquality(LOG, mParser.parse(code), mParser.parse(equivalent), true);
@@ -443,23 +444,31 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     /**
-     * AN ARGUMENT LIST IS A LST (Marko, 2026-11-17: {@code 1.xxx(2{2})} is {@code 1.xxx(2,2)}), so the parser lays a
-     * value's span along it as along a lst literal: an index for each step of the span, each holding the value without
-     * its span, and none at all for a zero span. A point is mass at its one index and stays there, and a type's span is
-     * a run of its filter, never laid. {@code start} keeps the span: its argument is the stream it starts, and a stream
+     * AN ARGUMENT LIST IS A LST (Marko, 2026-11-17: {@code 1.xxx(2{2})} is {@code 1.xxx(2,2)}; 2026-11-18: types and
+     * instructions too), so the parser lays a span along it as along a lst literal: an index for each step of the span,
+     * each holding the obj without its span, and none at all for a zero span. A point is mass at its one index and
+     * stays there, and a range cannot lay, so it stays a run (a declared var-arg). A sugar's arguments are the call's,
+     * so they lay too ({@code 1?{2}int::T} is {@code 1.isa(int::T,int::T)}). Two instructions keep the span: the
+     * arguments of {@code start} are the stream it starts and those of {@code branch} the terms of its sum, and a stream
      * has no axis to lay it along. The first argument's tid is checked, since a laid span and a kept one are told apart
      * only there, as in {@link #testValueSpans}.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "1.branch(2{2})                  % 2 % 2",
-            "1.branch('a'{2},3)              % 3 % \"a\"",
-            "1.branch(2{0},3)                % 1 % 3",
-            "1.branch({2}2{3})               % 3 % {2}2",
-            "1.branch({2}2)                  % 1 % {2}2",
+            "1.xxx(2{2})                     % 2 % 2",
+            "1.xxx('a'{2},3)                 % 3 % \"a\"",
+            "1.xxx(2{0},3)                   % 1 % 3",
+            "1.xxx({2}2{3})                  % 3 % {2}2",
+            "1.xxx({2}2)                     % 1 % {2}2",
             "1.{2}plus(3{2})                 % 2 % 3",
-            "1.branch(int{2}::T,{2}int::T)   % 2 % int{2}::T",
-            "1.branch({2}int::T)             % 1 % {2}int::T",
+            "1.xxx(int{2}::T,{2}int::T)      % 3 % int{2}::T",
+            "1.xxx({2}int::T)                % 2 % int::T",
+            "1.xxx({0}int::T,3)              % 1 % 3",
+            "1.xxx({2}plus(1))               % 2 % plus(1)",
+            "1.xxx({*}int::T)                % 1 % {*}int::T",
+            "1?{2}int::T                     % 2 % int::T",
+            "1.branch(2{2})                  % 1 % 2{2}",
+            "1.branch({2}plus(1),3)          % 2 % {2}plus(1)",
             "start(2{3})                     % 1 % 2{3}",
     }, delimiter = '%')
     void testAnArgumentListLaysAValuesSpan(final String code, final int arity, final String first) {
@@ -627,9 +636,11 @@ public class mParserTest extends AbstractMetatronTest {
             "5.map(plus{3}(1))                        % {3}6",
             "5.map(plus{3}(1)).count()                % 3",
             "5.map({0}plus{3}(9).plus(1))             % {3}6",
-            // an argument list lays a value's span, and start keeps it (Marko, 2026-11-17)
-            "5.branch(6{2})                           % {2}6",
-            "5.branch(6{3},7)                         % {{3}6,7}",
+            // an argument list lays a value's span (Marko, 2026-11-17), and start and branch keep it: their arguments
+            // are a stream, the one it starts and the terms of a sum, and a stream has no axis
+            "5.plus(6{2})                             % 11",
+            "5.branch(6{2})                           % 6{2}",
+            "5.branch(6{3},7)                         % {6{3},7}",
             "5.branch(6{0},7)                         % 7",
             "start(2{3}).count()                      % 3",
     }, delimiter = '%')
