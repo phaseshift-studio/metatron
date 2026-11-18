@@ -56,10 +56,11 @@ below); rows that do not verify are excluded from the file you train on.
       and `matches` gave the same);
     - a receiver type the row does not declare does not resolve the instruction
       (`|A::T.isa(A::T).count().gt(0)` fails with "unable to determine inst function"). Most such rows
-      name a type their method declares in `@TestData`, which the template leaves out: see the setup
-      bullet below;
-    - a fibered rec is not accepted (after `rec[o]::T[?[o=>int::T]]@ex1`,
-      `ex1::[o=>12].isa(ex1::T).count().gt(0)` gives `false`);
+      name a type their method declares in `@TestData`, which the template leaves out;
+    - a reducer in a statement after `;` answers `0` (`1; [1,2,3].count()` gives `0`, while
+      `1; 5.plus(1)` gives `6`), so a setup row ending in `.count().gt(0)` answers `false`, and the
+      setup bullet below cannot rescue a boolean row until that is fixed. It is not the receiver: after
+      `rec[o]::T[?[o=>int::T]]@ex1`, `ex1::[o=>12].isa(ex1::T)` gives `ex1::[o=>12]`;
     - the `|` block did not change the answer for a `{2}int::T` or `{?}int::T` receiver.
 
     A method whose rows are mostly such cases may get `@Training.SkipTraining` with the reason.
