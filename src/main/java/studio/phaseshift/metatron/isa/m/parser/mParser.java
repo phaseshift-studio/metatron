@@ -1598,10 +1598,13 @@ public class mParser {
     }
 
     public static Parser m_type() {
+        // a type literal has two coefficient places, {span}int{point}::T, and none after the ::T: int::T{3} once
+        // named the type /m/type{3}, a count no algebra reads (Marko, 2026-11-18: "We should not allow it to parse
+        // until (and if) we find how it incorporates algebraically into mtron")
         return seq(new TypeCoefficientParser(m_type_prefix(null)), of('T'),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
-                choice(m_furi_coefficient().map(t -> Tokens.TYPE_TID.d(coefficientOrOne(t))), m_vid_postfix()))
+                m_vid_postfix())
                 .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0).toString().equals("noobj") ? NOOBJ_TID : pick(t, 0), pick(t, 4)));
     }
 

@@ -77,7 +77,7 @@ public class MType extends MObj implements Type {
         if (null == BootLoader.ROOT_MACHINE)
             // class-init phase, before a machine exists to hold a graph: resolve directly (no memo)
             return T0(tid, vid, predicate, constructor);
-        // NOTHING REFINES TO NOTHING. a {0} point, in the tid or in the vid's count (::T{0}), is the noobj type whatever
+        // NOTHING REFINES TO NOTHING. a {0} point, in the tid or in the vid, is the noobj type whatever
         // it is named: there is nothing in nothing to refine, so the set cannot get any smaller. a {0} span is not
         // nothing (Marko, 2026-11-17): {0}int::T is the filter run zero times, P⁰ = id, so it is a type. a constant,
         // answered before the memo -- it needs no cache entry, no watch and no invalidation. NOOBJ_TYPE is null only

@@ -78,7 +78,7 @@ public class TypeTest extends AbstractMetatronTest {
         Object d = jnt(2).c(cInt.of(4, 6)).vid();
         LOG.warn("\n%s\n%s\n%s", a, b, d);
         assertNotEquals(a, b);
-        LOG.warn("%s", ObjmtronSerializer.parse("int{?}::T{*}"));
+        // int{?}::T{*}, the spelling of b, does not parse: nothing follows the ::T (testNothingFollowsTheTypesT)
     }
 
     //  @Disabled("everything works with the recent inst typing exception console::T (??)")
@@ -2233,35 +2233,46 @@ public class TypeTest extends AbstractMetatronTest {
 
 
     /**
-     * The type's OWN coefficient. Three coefficient positions share one {..} syntax, which is most of why
-     * this area is hard to read:
+     * A TYPE LITERAL HAS TWO COEFFICIENT PLACES, {@code {span}int{point}::T}. One {..} syntax serves each place a
+     * coefficient can go, which is most of why this area is hard to read:
      * <pre>
-     *   int{2,4}          the BASE type's coefficient range  — 2 to 4 ints
-     *   int{2,4}::T{5}    the TYPE's own coefficient        — five of that type
-     *   lst[int{4}]       the INDEX's element coefficient   — index 0 holds an int{4}, which a test lays as four ints
+     *   {2}int::T         the type's span   — a run of its filter, P·P = P
+     *   int{2,4}::T       the type's point  — 2 to 4 ints, carried on the tid
+     *   lst[int{4}]       a bracket entry, written as a value — a run of four int indices
      * </pre>
-     * The first is implemented and tested; this pins what the second one actually carries.
+     * Nothing follows the {@code ::T} ({@link #testNothingFollowsTheTypesT}).
      */
     @Test
     public void testTypeTestTypeCoefficient() {
         final Obj ranged = ObjmtronSerializer.parse("int{2,4}::T");
         LOG.warn("int{2,4}::T     => %s%n\tisType=%s tid=%s tid.c=%s c=%s",
                 ranged, ranged.isType(), ranged.tid(), ranged.tid().c(), ranged.c());
+        assertTrue(ranged.isType(), "int{2,4}::T should be a type: " + ranged);
+        assertEquals(cInt.of(2, 4), ranged.tid().c(), "the point rides on the tid");
+        assertEquals(cInt.of(2, 4), ranged.c(), "c() surfaces the tid's point");
+    }
 
-        final Obj typed = ObjmtronSerializer.parse("int{2,4}::T{5}");
-        LOG.warn("int{2,4}::T{5}  => %s%n\tisType=%s tid=%s tid.c=%s c=%s vid=%s",
-                typed, typed.isType(), typed.tid(), typed.tid().c(), typed.c(), typed.vid());
-
-        assertTrue(typed.isType(), "int{2,4}::T{5} should be a type: " + typed);
-        // the base range is untouched — it rides on the TID
-        assertEquals(cInt.of(2, 4), typed.tid().c(), "the base range is untouched by the type's coefficient");
-        // the {5} is recorded on the VID, whose base is /m/type: it counts the type as a member of the
-        // type-of-types, which is the reading "five int{2,4} types"
-        assertEquals(cInt.of(5, 5), typed.vid().c(), "the type-level coefficient rides on the vid");
-        assertEquals(Tokens.TYPE_TID, typed.vid().basePath(), "the vid of a bare ::T is /m/type");
-        // and c() reports the TID's coefficient, so the type-level one is NOT reachable through c() —
-        // anything asking a type "how many of you" gets the base range instead
-        assertEquals(cInt.of(2, 4), typed.c(), "c() surfaces the tid coefficient, not the type-level one");
+    /**
+     * NOTHING FOLLOWS A TYPE'S {@code ::T} (Marko, 2026-11-18: "We should not allow it to parse until (and if) we find
+     * how it incorporates algebraically into mtron"). A {@code {n}} there once named the type {@code /m/type{n}}, a
+     * count of the type of types that no law reads. Each spelling below is a parse fault, which the parser returns as
+     * a fail rather than throwing: not {@code int::T} followed by a {@code {3}} statement (a bare type does not end a
+     * statement), and not an obj that fails only once it runs.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "int::T{3}",
+            "int{2,4}::T{5}",
+            "int{?}::T{*}",
+            "int::T{0}",
+            "{0}int::T{2}",
+            "[int::T{3}]",
+            "5.map(int::T{2})",
+    }, delimiter = '%')
+    public void testNothingFollowsTheTypesT(final String code) {
+        final Obj parsed = ObjmtronSerializer.parse(code);
+        LOG.warn("%-20s => %s", code, parsed);
+        assertTrue(parsed.isFail(), code + " should not parse: " + parsed);
     }
 
     /**
@@ -2483,12 +2494,11 @@ public class TypeTest extends AbstractMetatronTest {
             // a run of a sum compounds
             "1.{2}branch(int::T,int::T)                   % {4}1",
             "\"a\".{2}branch(int::T,int::T)                % noobj",
-            // a zero span is the filter run zero times, P⁰ = id (Marko, 2026-11-17): it takes any obj, and its point and
-            // its own count are copies
+            // a zero span is the filter run zero times, P⁰ = id (Marko, 2026-11-17): it takes any obj, and its point is
+            // copies
             "start({0}int{3}::T)                          % {0}int{3}::T",
             "\"a\".map({0}int::T)                          % \"a\"",
             "\"a\".map({0}int{3}::T)                       % {3}\"a\"",
-            "5.map({0}int::T{2})                          % {2}5",
             "-1.map(nat::T)                               % noobj",
             "-1.map({0}nat::T)                            % -1",
             "3.map(int::T[?>5])                           % noobj",
@@ -2501,7 +2511,6 @@ public class TypeTest extends AbstractMetatronTest {
             // a zero point is nothing, whatever the span
             "\"a\".map(int{0}::T)                          % noobj",
             "\"a\".map({0}int{0}::T)                       % noobj",
-            "\"a\".map(int::T{0})                          % noobj",
             // as a test, a zero span holds what its point holds
             "\"a\" ? {0}int::T                             % \"a\"",
             "3 ? {0}int::T                                % 3",

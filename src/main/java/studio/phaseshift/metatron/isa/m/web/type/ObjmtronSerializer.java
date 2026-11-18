@@ -713,12 +713,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append(temp);
             sb.append("]");
         }
-        if (type.hasVID()) {
-            if (type.vid().basePath().equals(Tokens.TYPE_TID) && !type.vid().c().isOne()) {
-                sb.append("{").append(type.vid().c()).append('}');
-            } else if (!type.tid().basePath().equals(type.vid().basePath()))
-                this.handleVID(sb, type);
-        }
+        // nothing is written after the ::T but a name: the {n} that once followed it does not parse (mParser.m_type)
+        if (type.hasVID() && !type.tid().basePath().equals(type.vid().basePath()))
+            this.handleVID(sb, type);
         return sb;
     }
 

@@ -88,9 +88,9 @@ full tid would miss.
 
 `[plus(1),plus(1)]` must not become `[{2}plus(1)]`. An instruction's span is its composition power, so `{2}plus(1)` is
 one slot holding `plus(1).plus(1)`. `[int::T,int::T]` must not become `[{2}int::T]` either: a type's span is a run of
-its filter, P·P = P, so that is one slot too. The postfix slot means something else on both: `plus(1){2}` is a body,
-and `int::T{2}` is the type's own count. Compression applies to the same entries `Lst.Helper.laid` lays: mono and poly
-values, never types or calls.
+its filter, P·P = P, so that is one slot too. The postfix slot is no span on either: `plus(1){2}` is a body, and
+`int::T{2}` does not parse (Marko, 2026-11-18). Compression applies to the same entries `Lst.Helper.laid` lays: mono
+and poly values, never types or calls.
 
 **Marko:** "branch(6,6) already collapses:"
 

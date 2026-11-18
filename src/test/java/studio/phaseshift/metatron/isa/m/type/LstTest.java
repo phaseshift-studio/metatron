@@ -502,7 +502,7 @@ public class LstTest extends AbstractAlgebraTest {
      * mass at an index and a span a run of indices: {@code [{2}3]} is two 3s at index 0, a lst of one index, and
      * {@code [3{2}]} a 3 at each of indices 0 and 1, which a lst lays as {@code [3,3]}. Only a value's span lays
      * indices: an instruction's span is its run and a type's a run of its filter, P·P = P, so {@code [{2}int::T]} is
-     * {@code [int::T]}, while a type's point, and its own count {@code ::T{n}}, are mass. An index passes when its mass
+     * {@code [int::T]}, while a type's point is mass. An index passes when its mass
      * is within the pattern's and its copies are the pattern's. Past the last pattern index the lhs is open, even inside
      * a value's run, and a pattern index the lhs leaves empty passes only if its mass admits zero. Each row is
      * {@code lhs.isa?#{*}<=#{*}(rhs)}: the whole lhs comes back on a match, noobj otherwise.
@@ -535,14 +535,14 @@ public class LstTest extends AbstractAlgebraTest {
             "[1{2}].isa?#{*}<=#{*}([1,1])                                                          % [1,1]",
             "[{2}1].isa?#{*}<=#{*}([1,1])                                                          % noobj",
             "[1,1].isa?#{*}<=#{*}([{2}1])                                                          % noobj",
-            // ---- a type's span is a run of its filter, one index; its point and its own count are mass ----
+            // ---- a type's span is a run of its filter, one index; its point is mass ----
             "[{3}int::T].isa?#{*}<=#{*}([int::T])                                                  % [{3}int::T]",
             "[{3}int::T].isa?#{*}<=#{*}([int::T,int::T,int::T])                                    % noobj",
             "[int::T,int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                    % [int::T,int::T,int::T]",
             "[int::T,int::T].isa?#{*}<=#{*}([{3}int::T])                                           % [int::T,int::T]",
             "[{3}int::T].isa?#{*}<=#{*}([int{2}::T,int::T])                                        % noobj",
-            "[int::T{3}].isa?#{*}<=#{*}([int{3}::T])                                               % [int::T{3}]",
-            "[int::T{3}].isa?#{*}<=#{*}([int::T])                                                  % noobj",
+            "[int{3}::T].isa?#{*}<=#{*}([int{3}::T])                                               % [int{3}::T]",
+            "[int{3}::T].isa?#{*}<=#{*}([int::T])                                                  % noobj",
             "[5,6].isa?#{*}<=#{*}([{2}nat::T])                                                     % [5,6]",
             "[5,6].isa?#{*}<=#{*}([nat::T,nat::T])                                                 % [5,6]",
             "[5,-1].isa?#{*}<=#{*}([nat::T,nat::T])                                                % noobj",
