@@ -75,7 +75,7 @@ under `/m/math/+` and available via the standard type resolution system.
 
 ```mtron
 mtron> datetime_now()
-==>datetime::<//2026.11:18/07/02/07/186?tz=-0700>
+==>datetime::<//2026.11:18/13/23/44/981?tz=-0700>
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
 ==>datetime::<//2024.12:25/09/00/00/000?tz=-0500>
@@ -217,12 +217,12 @@ mtron> 30000.0.as(minute::T)
 A converted value tests as its target unit:
 
 ```mtron
-mtron> millis::1000.0.as(second::T).matches(second::T)
-==>true
-mtron> micros::1000.0.as(millis::T).matches(millis::T)
-==>true
-mtron> nanos::1000000.0.as(millis::T).matches(millis::T)
-==>true
+mtron> millis::1000.0.as(second::T).isa(second::T)
+==>second::1.0
+mtron> micros::1000.0.as(millis::T).isa(millis::T)
+==>millis::1.0
+mtron> nanos::1000000.0.as(millis::T).isa(millis::T)
+==>millis::1.0
 ```
 Time units require a real-backed value — an int-backed time is a type violation:
 
@@ -345,8 +345,8 @@ mtron> 1024.0.as(kB::T)
 A converted value tests as its target unit:
 
 ```mtron
-mtron> bB::1024.0.as(kB::T).matches(kB::T)
-==>true
+mtron> bB::1024.0.as(kB::T).isa(kB::T)
+==>kB::1.0
 ```
 #### relational operators
 
@@ -431,8 +431,8 @@ mtron> 5.0.as(meter::T)
 A converted value tests as its target unit:
 
 ```mtron
-mtron> mm::1000.0.as(meter::T).matches(meter::T)
-==>true
+mtron> mm::1000.0.as(meter::T).isa(meter::T)
+==>meter::1.0
 ```
 #### relational operators
 
@@ -508,8 +508,8 @@ mtron> 5.0.as(foot::T)
 A converted value tests as its target unit:
 
 ```mtron
-mtron> inch::12.0.as(foot::T).matches(foot::T)
-==>true
+mtron> inch::12.0.as(foot::T).isa(foot::T)
+==>foot::1.0
 ```
 #### relational operators
 

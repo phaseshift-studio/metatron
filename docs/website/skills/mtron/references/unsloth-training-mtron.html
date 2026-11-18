@@ -430,6 +430,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../../../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -539,20 +548,56 @@ below); rows that do not verify are excluded from the file you train on.</p>
 replaced by that column's value and <code>{{{@TestData}}}</code> by the method's preloaded <code>@TestData</code> lines.
 Repeat the annotation to emit several entries per row.
 <ul>
-<li>A hole shaped like a parameter name must name one of the method's parameters: <code>{{{code}}}</code> on a
+<li>
+<p>A hole shaped like a parameter name must name one of the method's parameters: <code>{{{code}}}</code> on a
 method without <code>code</code> fails the extraction, and so does such a hole missing one of its braces. Any
-other <code>{{{...}}}</code> is mtron's own str template (<code>{{{plus(23)}}}</code>) and is emitted verbatim.</li>
-<li><strong><code>input</code> is mandatory.</strong> A template with no <code>input</code> emits a row whose input is empty; empty parses to
-<code>noobj</code> and can never verify.</li>
-<li><code>input</code> must be the <em>one</em> expression the test evaluates. <code>checkCodeParseApply(LOG, lhs, code, expected)</code>
-evaluates <code>lhs.code</code>, so <code>input = &quot;{{{lhs}}}.{{{code}}}&quot;</code>.</li>
-<li>A boolean assertion becomes <code>a.matches(b)</code> (that is exactly <code>bool(lhs.test(arg))</code>):
-<code>input = &quot;{{{instance}}}.matches({{{type}}})&quot;</code>, <code>output = &quot;{{{matches}}}&quot;</code>.</li>
-<li>A type literal as receiver needs the <code>|</code> block so it is not applied:
-<code>input = &quot;|{{{type}}}.matches({{{other}}})&quot;</code>.</li>
-<li>Setup-dependent rows prefix the setup with <code>;</code>, which sequences statements:
-<code>input = &quot;{{{@TestData}}}; {{{code}}}&quot;</code>. The model then sees the state the answer depends on.</li>
-<li>Expected failure: <code>output = &quot;&lt;ERROR&gt;&quot;</code>.</li>
+other <code>{{{...}}}</code> is mtron's own str template (<code>{{{plus(23)}}}</code>) and is emitted verbatim.</p>
+</li>
+<li>
+<p><strong><code>input</code> is mandatory.</strong> A template with no <code>input</code> emits a row whose input is empty; empty parses to
+<code>noobj</code> and can never verify.</p>
+</li>
+<li>
+<p><code>input</code> must be the <em>one</em> expression the test evaluates. <code>checkCodeParseApply(LOG, lhs, code, expected)</code>
+evaluates <code>lhs.code</code>, so <code>input = &quot;{{{lhs}}}.{{{code}}}&quot;</code>.</p>
+</li>
+<li>
+<p>A boolean assertion becomes <code>a.isa(b).count().gt(0)</code>. <code>isa</code> answers <code>a</code> or <code>noobj</code> (it is
+<code>lhs.test(arg) ? lhs : noobj()</code>), and <code>count().gt(0)</code> turns that into a boolean:
+<code>input = &quot;{{{instance}}}.isa({{{type}}}).count().gt(0)&quot;</code>, <code>output = &quot;{{{matches}}}&quot;</code>. There is no
+<code>matches()</code> instruction.</p>
+</li>
+<li>
+<p>A type literal as receiver needs the <code>|</code> block so it is not applied:
+<code>input = &quot;|{{{type}}}.isa({{{other}}}).count().gt(0)&quot;</code>.</p>
+</li>
+<li>
+<p>That boolean is not always the one the test asserts with <code>Obj.test</code>, and the verifier leaves a row
+out of the verified file when they differ. Cases in the 2026-11-18 corpus:</p>
+<ul>
+<li>a <code>noobj</code> receiver answers <code>noobj</code> either way, so its row is never <code>true</code>
+(<code>noobj.isa(str{?}::T).count().gt(0)</code> gives <code>false</code>);</li>
+<li><code>isa</code> tests the receiver one unit at a time, so a coefficient on the receiver can change the
+answer (<code>int{-1}::1.isa(int{0,1}::T[]).count().gt(0)</code> gives <code>{-1}true</code>; the test asserts <code>false</code>,
+and <code>matches</code> gave the same);</li>
+<li>a receiver type the row does not declare does not resolve the instruction
+(<code>|A::T.isa(A::T).count().gt(0)</code> fails with &quot;unable to determine inst function&quot;). Most such rows
+name a type their method declares in <code>@TestData</code>, which the template leaves out;</li>
+<li>a reducer in a statement after <code>;</code> answers <code>0</code> (<code>1; [1,2,3].count()</code> gives <code>0</code>, while
+<code>1; 5.plus(1)</code> gives <code>6</code>), so a setup row ending in <code>.count().gt(0)</code> answers <code>false</code>, and the
+setup bullet below cannot rescue a boolean row until that is fixed. It is not the receiver: after
+<code>rec[o]::T[?[o=&gt;int::T]]@ex1</code>, <code>ex1::[o=&gt;12].isa(ex1::T)</code> gives <code>ex1::[o=&gt;12]</code>;</li>
+<li>the <code>|</code> block did not change the answer for a <code>{2}int::T</code> or <code>{?}int::T</code> receiver.</li>
+</ul>
+<p>A method whose rows are mostly such cases may get <code>@Training.SkipTraining</code> with the reason.</p>
+</li>
+<li>
+<p>Setup-dependent rows prefix the setup with <code>;</code>, which sequences statements:
+<code>input = &quot;{{{@TestData}}}; {{{code}}}&quot;</code>. The model then sees the state the answer depends on.</p>
+</li>
+<li>
+<p>Expected failure: <code>output = &quot;&lt;ERROR&gt;&quot;</code>.</p>
+</li>
 </ul>
 </li>
 <li><strong><code>@Training.SkipTraining(reason)</code></strong> — contributes no entries. Use it for anything that is not an

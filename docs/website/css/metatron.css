@@ -2228,8 +2228,8 @@ h6:hover .heading-anchor {
 .asciinema-launch {
     display: inline-flex;
     align-items: center;
-    gap: .45rem;
-    padding: .38rem .85rem .38rem .65rem;
+    gap: .3rem;
+    padding: .22rem .5rem .22rem .4rem;
     border: 1px solid var(--mred);
     border-radius: 999px;
     background: var(--dark);

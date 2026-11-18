@@ -430,6 +430,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../../../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -949,9 +958,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/31
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/37
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/32
+==&gt;[body=&gt;'another one']@tbledoc:note/38
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;27
 ==&gt;24
@@ -964,13 +973,17 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;6
 ==&gt;4
 ==&gt;16
+==&gt;38
 ==&gt;7
+==&gt;35
 ==&gt;19
 ==&gt;32
 ==&gt;1
 ==&gt;13
 ==&gt;10
 ==&gt;8
+==&gt;37
+==&gt;34
 ==&gt;31
 ==&gt;11
 ==&gt;29
@@ -981,10 +994,12 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;23
 ==&gt;28
 ==&gt;22
+==&gt;33
 ==&gt;2
 ==&gt;25
 ==&gt;30
 ==&gt;5
+==&gt;36
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

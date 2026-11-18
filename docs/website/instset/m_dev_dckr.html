@@ -430,6 +430,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -703,8 +712,7 @@ matches docker_container::T</code></pre>
     <p class="mb-0 text-light"> docker container state — union of created|running|paused|restarting|exited|dead</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">running.matches(docker_container_state::T)     [-- true --]
-stopped.matches(docker_container_state::T)     [-- false --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">running.isa(docker_container_state::T)     [-- running --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__dev__dckr__event">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

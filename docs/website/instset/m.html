@@ -430,6 +430,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -516,7 +525,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">359</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">21</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">358</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">21</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/m-instset-mtron.md">md</a></div>
             <span class="instset-built">built November 18, 2026</span>
@@ -553,7 +562,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
              pattern=&gt;/m/#,
-             const=&gt;[,],
              inst=&gt;[
               as?bool&lt;=bool(bool::T){&lt;j&gt;},
               as?bytes&lt;=bool(bytes::T){&lt;j&gt;},
@@ -653,7 +661,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               minus?lst&lt;=lst(lst::T){&lt;j&gt;},
               mult?lst&lt;=lst(lst::T){&lt;j&gt;},
               split?lst&lt;=A(lst::T){&lt;j&gt;},
-              merge?A{*}&lt;=lst(){&lt;j&gt;},
+              merge?A{*}&lt;=lst[{*}A{*}](){&lt;j&gt;},
               merge?uri&lt;=lst(uri::T){&lt;j&gt;},
               merge?str&lt;=lst(str::T){&lt;j&gt;},
               has?lst{?}&lt;=lst(#::T,#::T,#::T){&lt;j&gt;},
@@ -768,8 +776,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               auto_to?#&lt;=(#::T),
               catch?C{*}&lt;=A(B{*}::T){&lt;j&gt;},
               end?{0}&lt;=#{**}(){&lt;j&gt;},
-              println(#{*}::T){&lt;j&gt;},
-              print(#{*}::T){&lt;j&gt;},
+              println?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;},
+              print?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;},
               cascade(lst{?}::T){&lt;j&gt;},
               at?B{*}&lt;=A{?}(uri::T){&lt;j&gt;},
               and?bool&lt;=A(bool::T,
@@ -798,7 +806,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               else?#{?}&lt;=(#{?}::T){&lt;j&gt;},
               is?A{?}&lt;=A{?}(isa(bool::T).else(false)){&lt;j&gt;},
               sorta?#{?}&lt;=#(#::T){&lt;j&gt;},
-              matches?bool&lt;=(#{?}::T){&lt;j&gt;},
               block?B{+}&lt;=A{?}(B{+}::T){&lt;j&gt;},
               split?&lt;=#(#{+}::T){&lt;j&gt;},
               split?lst&lt;=#(lst::T){&lt;j&gt;},
@@ -1014,7 +1021,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
               qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
               qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
-              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq]]@/m</code></pre>
+              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
+             const=&gt;[,]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -1351,9 +1359,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__map" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">map</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__matches" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">matches</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__math" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">math</span>
@@ -1986,9 +1991,9 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <p class="mb-0 text-light"> a structured explanation of a resolved expression produced by explain()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
-  <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively'" class="text-info">&#39;lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively'" class="text-info">&#39;lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
+  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -2516,8 +2521,7 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     <p class="mb-0 text-light"> a structured profile report produced by profile()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
-  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
   <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
   <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
   <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
@@ -2525,6 +2529,7 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
   <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
   <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
   <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+  <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -3150,7 +3155,7 @@ a/b/c/                           [-- relative/branch uri            --]
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">359</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">358</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
         An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
@@ -3162,7 +3167,7 @@ a/b/c/                           [-- relative/branch uri            --]
             placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
-            aria-live="polite" aria-atomic="true">showing 359 of 359</span>
+            aria-live="polite" aria-atomic="true">showing 358 of 358</span>
     </div>
 </div>
     <div class="card mb-3 instset-inst-card" id="__m__inst__active">
@@ -6375,7 +6380,8 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> calculates the deepest branch of the type hierarchy for which all the argument types are a refinement off</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> calculates the deepest branch of the type hierarchy for which all the argument types are a refinement off
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#null" class="text-info">null</a> <span class="text-light">=&gt;</span> <a href="#the lcd of the arg type set" class="text-success">the lcd of the arg type set</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -6583,25 +6589,6 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some obj" class="text-info">maybe some obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj applied to the arg obj" class="text-success">the lhs obj applied to the arg obj</a></pre>
 </div>
-</div><div class="card mb-3 instset-inst-card" id="__m__inst__matches">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">matches</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="range" class="code text-success">bool</a></span></span>
-        </span>
-        <small class="text-muted code">/m/inst/matches</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__matches-doc-0-tab').click();document.getElementById('__m__inst__matches-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">matches?bool&lt;=(#{?}::T){&lt;j&gt;}</code></pre>
-
-</div>
-</div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> a matching function \(f(x) \mapsto b\): structurally checks whether the lhs obj matches the arg type</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#whether the lhs matches the arg type" class="text-success">whether the lhs matches the arg type</a></pre>
-</div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__math">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -6699,7 +6686,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge-doc-2-tab').click();document.getElementById('__m__inst__merge-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?A{*}&lt;=lst(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge-doc-2-tab').click();document.getElementById('__m__inst__merge-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?A{*}&lt;=lst[{*}A{*}](){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
@@ -8035,12 +8022,12 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">print</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{*}</span></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
         </span>
         <small class="text-muted code">/m/inst/print</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__print-doc-0-tab').click();document.getElementById('__m__inst__print-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">print(#{*}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__print-doc-0-tab').click();document.getElementById('__m__inst__print-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">print?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;}</code></pre>
 
 </div>
 </div>
@@ -8054,12 +8041,12 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">println</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{*}</span></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
         </span>
         <small class="text-muted code">/m/inst/println</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__println-doc-0-tab').click();document.getElementById('__m__inst__println-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">println(#{*}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__println-doc-0-tab').click();document.getElementById('__m__inst__println-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">println?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;}</code></pre>
 
 </div>
 </div>

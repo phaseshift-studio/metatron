@@ -41,10 +41,29 @@ below); rows that do not verify are excluded from the file you train on.
     `noobj` and can never verify.
   - `input` must be the *one* expression the test evaluates. `checkCodeParseApply(LOG, lhs, code, expected)`
     evaluates `lhs.code`, so `input = "{{{lhs}}}.{{{code}}}"`.
-  - A boolean assertion becomes `a.matches(b)` (that is exactly `bool(lhs.test(arg))`):
-    `input = "{{{instance}}}.matches({{{type}}})"`, `output = "{{{matches}}}"`.
+  - A boolean assertion becomes `a.isa(b).count().gt(0)`. `isa` answers `a` or `noobj` (it is
+    `lhs.test(arg) ? lhs : noobj()`), and `count().gt(0)` turns that into a boolean:
+    `input = "{{{instance}}}.isa({{{type}}}).count().gt(0)"`, `output = "{{{matches}}}"`. There is no
+    `matches()` instruction.
   - A type literal as receiver needs the `|` block so it is not applied:
-    `input = "|{{{type}}}.matches({{{other}}})"`.
+    `input = "|{{{type}}}.isa({{{other}}}).count().gt(0)"`.
+  - That boolean is not always the one the test asserts with `Obj.test`, and the verifier leaves a row
+    out of the verified file when they differ. Cases in the 2026-11-18 corpus:
+    - a `noobj` receiver answers `noobj` either way, so its row is never `true`
+      (`noobj.isa(str{?}::T).count().gt(0)` gives `false`);
+    - `isa` tests the receiver one unit at a time, so a coefficient on the receiver can change the
+      answer (`int{-1}::1.isa(int{0,1}::T[]).count().gt(0)` gives `{-1}true`; the test asserts `false`,
+      and `matches` gave the same);
+    - a receiver type the row does not declare does not resolve the instruction
+      (`|A::T.isa(A::T).count().gt(0)` fails with "unable to determine inst function"). Most such rows
+      name a type their method declares in `@TestData`, which the template leaves out;
+    - a reducer in a statement after `;` answers `0` (`1; [1,2,3].count()` gives `0`, while
+      `1; 5.plus(1)` gives `6`), so a setup row ending in `.count().gt(0)` answers `false`, and the
+      setup bullet below cannot rescue a boolean row until that is fixed. It is not the receiver: after
+      `rec[o]::T[?[o=>int::T]]@ex1`, `ex1::[o=>12].isa(ex1::T)` gives `ex1::[o=>12]`;
+    - the `|` block did not change the answer for a `{2}int::T` or `{?}int::T` receiver.
+
+    A method whose rows are mostly such cases may get `@Training.SkipTraining` with the reason.
   - Setup-dependent rows prefix the setup with `;`, which sequences statements:
     `input = "{{{@TestData}}}; {{{code}}}"`. The model then sees the state the answer depends on.
   - Expected failure: `output = "<ERROR>"`.

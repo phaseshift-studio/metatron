@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           {?}timeout=>'a real number denoting timeout of ...',
-           cmd=>'the terminal command to evaluate (...'],
+           cmd=>'the terminal command to evaluate (...',
+           {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -76,8 +76,8 @@ mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.9M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  594G ...',
-    'tmpfs                   31G  3.5M ...',
+    '/dev/nvme1n1p2         916G  595G ...',
+    'tmpfs                   31G   64M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>65
+==>67
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::407.4152,
+    free_mem_jvm=>mB::541.2842,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::304.5847,
+    used_mem_jvm=>mB::170.7157,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
