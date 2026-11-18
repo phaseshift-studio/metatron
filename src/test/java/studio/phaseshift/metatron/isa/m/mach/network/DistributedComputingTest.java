@@ -212,7 +212,10 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6}.plus(1).sum()       % branch().sum() % 27",
+            "{1,2,3,4,5,6}.plus(1).sum()                 % branch().sum()                                                                    % 27",
+            "{1,2,3,4,5,6}.is(gt(2)).sum()               % branch(start().is(gt(2)).sum(),start().is(gt(2)).sum()).sum()                     % 18",
+            "{1,2,3,4,5,6}.is(gt(2)).sum().mult(2)       % branch(start().is(gt(2)).sum(),start().is(gt(2)).sum()).sum().mult(2)             % 36",
+            "{1,2,3,4,5,6}.is(gt(2)).is(lt(6)).sum()     % branch(start().is(gt(2)).is(lt(6)).sum(),start().is(gt(2)).is(lt(6)).sum()).sum() % 12",
     }, delimiter = '%')
     void test_D_parallel_fan_out(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -523,7 +526,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,2,3,4,5}.plus(10).order()                                % branch(start().plus(10).order(),start().plus(10).order()).kmerge()                        % [11,12,13,14,15]",
             "{1,2,3,4,5}.plus(10).order(neg())                           % branch(start().plus(10).order(neg()),start().plus(10).order(neg())).kmerge(neg())         % [15,14,13,12,11]",
             //"{1,2,3,4,5}.plus(10).order(neg()).select({5}plus(1)).sum()  % branch().kmerge().select().sum()         % [15,14,13,12,11]",
-            "{1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()  % branch().kmerge().merge().branch().sum() % 70",
+            "{1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()     % branch(start().plus(10).order(),start().plus(10).order()).kmerge().merge().branch(plus(1).sum(),plus(1).sum()).sum()                                                  % 70",
     }, delimiter = '%')
     void test_order_recombines_with_or_without_a_selector(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
