@@ -12,8 +12,12 @@ apply.
 
 ## Absolute Rules
 
-* Under no circumstance should you perform any git operations. Do not check out, do not stash, do not merge, do not
-  commit, and do not push. Git is off limits.
+* Git is yours inside your own worktree: commit, rebase and reset your branch as the work needs (push only when Marko
+  asks). Never run git on main: no git command in the main checkout, and nothing that moves the `main` branch (no push
+  to main, no `update-ref`, no `--ignore-other-worktrees`). The stash, `.git/config` and the worktree list are shared
+  with main, so leave them alone too, and park unfinished work in a WIP commit on your branch. Marko lands branches on
+  main ("Landing on main", under Before Submitting). In Claude Code, the main checkout's `.claude/hooks/metatron-guard.py`
+  enforces this (`.claude/` is gitignored, so worktrees and fresh clones don't have it).
 * bin/metatron-docker is the build infrastructure for agents. Do not use mvn, mvnw, etc. We don't want to fight over
   target/. Use `bin/metatron-remote status` to see how many builds are running concurrently across different machines.
   If machine CPUs are pegged, don't throw another build on the pile. Wait.
@@ -234,7 +238,8 @@ fold's height; a move's frame transition is a `move seam`).
 - `grep` the call sites first; the "called once in BootLoader" premise was wrong for `bootstrap` (its real callers are
   `AbstractMachine`'s constructor and `push`).
 - Renames are not done until javadoc `{@link}`, mtron doc strings (the strings served by `?docq`), and the
-  hand-authored `docs/skills/` references are updated. NEVER edit `docs/website/` — it is generated on every build.
+  hand-authored `docs/skills/` references are updated. Never edit the build output in `docs/website/` (the table
+  under Skills and Docs): the next build overwrites it.
 - Tests are the proof: run the suites that exercise the changed surface, and read `Tests run:` (a green exit code with
   0 tests is not a pass).
 - A destructive IDE refactoring can half-apply (IntelliJ's headless "Move Inner to Upper Level" refuses nested
@@ -390,11 +395,26 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
 
 ## Skills and Docs
 
-* The agent skills live in `docs/skills/` (markdown; `.metatron/skills` links there). The hand-authored doc sources
-  are exactly four: `docs/skills/`, the theory articles in `docs/articles/` (compiled into `docs/website/articles/`),
-  the human-oriented adocs in `docs/website/adoc/`, and the instruction-set API reference derived from the instset
-  source. **Everything else under `docs/website/` is generated and overwritten on
-  every build — never edit it by hand.**
+Skills are written in `docs/skills/` and rendered into `docs/website/skills/`. `.metatron/skills` links to the rendered
+copy, so never edit through it. These parts of `docs/website/` are build output, overwritten on every build; edit their
+source instead:
+
+| build output under `docs/website/`                     | source                                               |
+|--------------------------------------------------------|------------------------------------------------------|
+| `skills/`                                              | `docs/skills/`, plus the bundled `bin/wsplus`        |
+| `articles/<name>.md` and `.html`                       | `docs/articles/<name>.md`                            |
+| `asciinema/`                                           | `docs/asciinema/`                                    |
+| `instset/`                                             | the instruction sets in `src/` (InstSetDocGenerator) |
+| `index.html`, `start.html`, `tractatus.html`           | `docs/website/adoc/` (AsciiDocRunner)                |
+| `highlight/languages/mtron.min.js`                     | `conf/nanorc/mtron.nanorc` (NanorcToHljs)            |
+| `install.sh`, `compose.yaml`                           | `dist/curl/install.sh`, `dist/docker/compose.yaml`   |
+| the `*-MENU:START/END` regions of `includes/header.html` | HeaderGenerator                                    |
+
+The rest of `docs/website/` is not build output and is edited in place: `adoc/` (Marko's to change), `css/`, `js/`,
+`lib/`, `images/`, `includes/` outside those two regions, and everything in `articles/` but the rendered pages (a
+figure's `fig-NN.tex` sidecar is its source; `bin/render-tikz.py` renders the svg). In Claude Code, the git guard
+named under Absolute Rules also blocks edits to the build output.
+
 * When you create, rename or significantly change a Java class documented in a skill reference, update that
   reference. Every example in a skill doc must pass the docs pipeline (`bin/metatron-docker build docs <file.md>`);
   `fail::` lines in the processed output are broken examples.
@@ -425,3 +445,14 @@ guidelines. Key points:
 - Reference a GitHub issue (`Closes #N` or `Refs #N`)
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for full details.
+
+### Landing on main
+
+A branch reaches main in this order:
+
+1. Commit on your branch, in your worktree.
+2. `git rebase main` in the worktree, so the branch is exactly what main will become.
+3. Have the branch reviewed against this file and CONTRIBUTING.md. In Claude Code that is the `metatron-reviewer`
+   subagent, which reads `git diff main...HEAD` itself. Fix every `must` finding, or say why it stands.
+4. Run the test classes the change touches on the final tree, and read `Tests run:`.
+5. Hand Marko the merge, `git -C <main checkout> merge --ff-only <branch>`. Agents never run it.
