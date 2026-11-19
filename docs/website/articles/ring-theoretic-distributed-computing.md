@@ -7,7 +7,8 @@ author: |
 ---
 
 **DRAFT**: This article is currently being developed. As of November 18, 2026, the distribution rewrite it describes,
-`law_shard`, is implemented in metatron for the patterns marked done in the distributed-computing reference [[3]](../skills/mtron/references/distributed-computing-mtron.html);
+`law_shard`, is implemented in metatron for the patterns marked done in the distributed-computing
+reference [[3]](../skills/mtron/references/distributed-computing-mtron.html);
 the remaining sections are outlined.
 
 # Introduction
@@ -29,19 +30,19 @@ $$
 $$
 
 The left side folds the union of two streams in one place. The right side folds each stream where it lies, then folds
-the two partials once more. Nothing in the right side requires the two folds to share a machine, so the right side is a
+the two partials once more. Nothing on the right side requires the two folds to share a machine, so the right side is a
 distributed program: two lanes, each computing its own partial, and a final fold that brings the computation home. The
 fold's declared laws, *monoidic* and *commutative*, are the license; no other feature is needed.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
-![figure 1](images/ring-theoretic-distributed-computing/fig-01.svg)
+![figure 1](images/ring-theoretic-distributed-computing/fig-01.svg){width=80%}
 
 A program may contract more than once. Every fold that declares these laws is a *cut*, and each cut plans the run of
 instructions before it. The program **expands** across the available machines, **contracts** at the fold, and starts
 again from the one value the fold left at home.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
-![figure 2](images/ring-theoretic-distributed-computing/fig-02.svg)
+![figure 2](images/ring-theoretic-distributed-computing/fig-02.svg){width=80%}
 
 This article develops that reading. The first section recalls the distributive laws of the stream ring and its
 function subrings. The second states the *shard identity*, the one rewrite every distribution pattern below lowers to,
@@ -55,11 +56,13 @@ The stream ring's function set $\mathcal{F}$ has four logical subsets [[1]](./st
 and flatmap functions, each of which forms a ring with unity, and the reduce functions $\mathcal{F}_r$, which form only
 a *near-ring*. The difference is distributivity, and distributivity is exactly the question a distributed system asks.
 
-| structure                                      | right distributive, $(a+b)c = ac + bc$ | left distributive, $c(a+b) = ca + cb$ |
-|------------------------------------------------|----------------------------------------|---------------------------------------|
-| map, filter, flatmap rings                      | yes                                    | yes                                   |
-| reduce near-ring $\mathcal{F}_r$ (Theorem 18)   | no                                     | yes                                   |
-| monoidic reduce functions (Theorem 19)         | semi: $(a+b)c = (ac+bc)c$               | yes                                   |
+| form                                           | right distributive         | left distributive   |
+|------------------------------------------------|----------------------------|---------------------|
+| `*inst?decq>>form`                             | $(a+b)c = ac + bc$         | $c(a+b) = ca + cb$  |
+| ---------------------------------------------- | -------------------------- | ------------------- |
+| map, filter, flatmap rings                     | yes                        | yes                 |
+| reduce near-ring $\mathcal{F}_r$ (Theorem 18)  | no                         | yes                 |
+| monoidic reduce functions (Theorem 19)         | semi: $(a+b)c = (ac+bc)c$  | yes                 |
 
 For a map, a filter, or a flatmap $f$, right distributivity says $(a + b)\,f = a\,f + b\,f$: an elementwise function
 applied to a merged stream is the merge of its applications to the parts. Each part may be processed where it lies.
@@ -70,7 +73,8 @@ This is why a *floatable* run, any chain of such functions, can be replicated in
 ![figure 3](images/ring-theoretic-distributed-computing/fig-03.svg)
 
 A reduce function is not right distributive: $(a+b)\,r$ produces one reduced object, while $a\,r + b\,r$ produces two.
-Theorem 19 recovers the equality for a reduce function over a commutative monoid $\langle X, \oplus \rangle$, at the cost
+Theorem 19 recovers the equality for a reduce function over a commutative monoid $\langle X, \oplus \rangle$, at the
+cost
 of one more fold: the two reduced objects are themselves reduced. Theorems 16 and 17 name the consequence for
 distribution: reduce functions are temporal, and coefficients stop floating at them, so a reduce function is the one
 synchronization point of a program, its *cut*.
@@ -81,22 +85,22 @@ synchronization point of a program, its *cut*.
 Theorem 19 drawn as streams: on the left one fold meets the merged stream; on the right each branch folds its own
 stream, and the two partials are folded once more.
 
-| theorem    | statement                                                    | for distribution                                       |
-|------------|--------------------------------------------------------------|--------------------------------------------------------|
-| Theorem 5  | streams are atemporal                                        | no order of apply or merge is required: placement is free |
-| Theorem 6  | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                          | elementwise work is independent: replicate it           |
-| Theorem 16 | reduce functions are temporal                                | the fold is the one synchronization point               |
-| Theorem 17 | $c1 \cdot 1a \neq 1a \cdot c1$ for $a \in \mathcal{F}_r$       | floating stops at a reducer: the fold is the cut        |
-| Theorem 18 | $\langle\mathcal{F}_r, +, \cdot\rangle$ is a near-ring        | a reducer distributes over a fan-out after it           |
-| Theorem 19 | $(a+b)c = (ac+bc)c$ for a monoidic $c$                       | a commutative monoid fold splits and re-applies         |
-| Theorem 21 | $\langle\mathcal{F}_r, \cdot\rangle$ is functionally closed   | a fold after a fold is a fold: combiners stay reducers  |
+| theorem    | statement                                                   | for distribution                                          |
+|------------|-------------------------------------------------------------|-----------------------------------------------------------|
+| Theorem 5  | streams are atemporal                                       | no order of apply or merge is required: placement is free |
+| Theorem 6  | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                        | elementwise work is independent: replicate it             |
+| Theorem 16 | reduce functions are temporal                               | the fold is the one synchronization point                 |
+| Theorem 17 | $c1 \cdot 1a \neq 1a \cdot c1$ for $a \in \mathcal{F}_r$    | floating stops at a reducer: the fold is the cut          |
+| Theorem 18 | $\langle\mathcal{F}_r, +, \cdot\rangle$ is a near-ring      | a reducer distributes over a fan-out after it             |
+| Theorem 19 | $(a+b)c = (ac+bc)c$ for a monoidic $c$                      | a commutative monoid fold splits and re-applies           |
+| Theorem 21 | $\langle\mathcal{F}_r, \cdot\rangle$ is functionally closed | a fold after a fold is a fold: combiners stay reducers    |
 
 # The Shard Identity
 
 **Definition (cut).** A *cut* is a reduce function $r$ whose partial results recombine through a reduce function
 $C(r)$, its *combiner*, that is monoidic and commutative. A fold that declares those laws itself is its own combiner,
-$C(r) = r$ (`sum`, `prod`); a fold defined by a derivation recombines through the fold that defines it
-($\texttt{count} = \texttt{map}(1) \cdot \texttt{sum}$, so $C(\texttt{count}) = \texttt{sum}$).
+$C(r) = r$ (`sum`, `prod`); a fold defined by a derivation recombines through the fold that defines it ($
+\texttt{count} = \texttt{map}(1) \cdot \texttt{sum}$, so $C(\texttt{count}) = \texttt{sum}$).
 
 **Proposition (the shard identity).** Let the seed $s = s_1 + \cdots + s_k$ be partitioned across $k$ places, let $f$ be
 a floatable run, and let $r$ be a cut. Then
@@ -123,7 +127,8 @@ mtron> harvest?rec<=int{*}(uri{?}::T){
            -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest
 ...
 mtron> {0,1}.harvest()
-...
+==>[0=>ws://localhost:1111/mtron,
+    1=>ws://localhost:1112/mtron]
 ```
 The serial program
 
@@ -166,6 +171,11 @@ fold that declares neither law does (it stays home).]
 A program with several cuts is planned cut by cut. Each cut plans the floatable run before it, never reaching back past
 the cut before that, and the instructions between a cut and the next run stay home. Written as a pattern over a chain,
 
+```mtron
+[initial,{+}[{*}home,{*}floatable,cut],{*}tail]
+         |_________distributed_______|
+```
+
 $$
 [\,\textit{initial},\; \{+\}[\,\{*\}\textit{home},\; \{*\}\textit{floatable},\; \textit{cut}\,],\; \{*\}\textit{tail}\,]
 $$
@@ -190,7 +200,8 @@ mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().explain()>>format
     sum     #{*}::T      #::T                                                                <?>  reducer   {*}    {1}   
    """
 ```
-The plan has a `branch` and a `sum` for each cut. The first deals the seed. The second has one object, the `20` the first
+The plan has a `branch` and a `sum` for each cut. The first deals the seed. The second has one object, the `20` the
+first
 fold answered, so it copies that object to both places and splits the run's own span, $[0,2]$ to one and $[3,3]$ to the
 other (the next section reads a coefficient as an index set). The profile counts what the home machine ran, the
 expansion and contraction of each cut in figure 2, and lists `law_shard` among the rewrite rules:
@@ -199,33 +210,33 @@ expansion and contraction of each cut in figure 2, and lists `law_shard` among t
 mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
 ==>"""
      stage     min (ms)   max (ms)
-     rewrite     17.325     20.683
-     resolve     22.954     26.175
-     apply       87.604    138.398
+     rewrite     14.076     17.824
+     resolve     18.343     26.212
+     apply       95.013    128.090
      insts     4
      resolve sub-stages (avg ms):
-       inst-resolve         6.442   61.2%
-       generic-binding      3.686   35.0%
-       inst-composition     0.401    3.8%
+       inst-resolve         5.669   61.8%
+       generic-binding      3.172   34.6%
+       inst-composition     0.339    3.7%
      rewrite rules:
                    branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
          insts.in  80                  80                  80                  80                  80                  80                  
          insts.out 80                  80                  80                  80                  80                  80                  
-         time(ms)  94.736              11.828              4.838               4.714               2.768               2.659               
-         TOTAL     inst.in 4   inst.out 4   time(ms) 139.990
+         time(ms)  85.880              10.805              4.423               4.271               2.494               2.349               
+         TOTAL     inst.in 4   inst.out 4   time(ms) 126.592
      apply sub-stages (avg ms):
-       split        0.009    0.0%
-       apply       51.912  100.0%
-       next         0.007    0.0%
+       split        0.012    0.0%
+       apply       45.655  100.0%
+       next         0.006    0.0%
      per-instruction (per iteration):
                    branch    sum       branch    sum       
          in.monad  0         1         0         0         
          in.coeff  0         2         0         0         
          out.monad 1         1         1         1         
          out.coeff 2         1         2         1         
-         time(ms)  51.912    0.000     0.000     0.000     
+         time(ms)  45.655    0.000     0.000     0.000     
      flow       monads=25 coeff-sum=30 compression=1.20 processors=10
-     cache     hits=357014 misses=5 hit=100.0%
+     cache     hits=356945 misses=5 hit=100.0%
    """
 ```
 [To be written: the home instructions in general (what a contract must state for one object to survive them), and the
@@ -276,23 +287,23 @@ that ran, a `branch` and a `sum`, and the time spent at the `branch` waiting on 
 mtron> start(0).{0,3}plus(1).sum().profile()>>format
 ==>"""
      stage     min (ms)   max (ms)
-     rewrite      5.657      6.524
-     resolve      7.383      8.371
-     apply       43.566     53.736
+     rewrite      6.364      6.740
+     resolve      8.224      8.943
+     apply       47.264     56.479
      insts     2
      resolve sub-stages (avg ms):
-       inst-resolve         2.262   54.1%
-       generic-binding      1.725   41.2%
-       inst-composition     0.198    4.7%
+       inst-resolve         2.528   53.2%
+       generic-binding      1.998   42.0%
+       inst-composition     0.226    4.8%
      rewrite rules:
-                   branch_factor       law_poset           law_monoidic        law_shard           theory_unit_removal derivation_contraction
+                   branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
          insts.in  40                  40                  40                  40                  40                  40                  
          insts.out 40                  40                  40                  40                  40                  40                  
-         time(ms)  21.404              8.759               2.986               2.690               1.986               1.897               
-         TOTAL     inst.in 2   inst.out 2   time(ms) 51.837
+         time(ms)  23.022              9.210               3.225               3.186               2.202               2.102               
+         TOTAL     inst.in 2   inst.out 2   time(ms) 56.370
      apply sub-stages (avg ms):
        split        0.009    0.0%
-       apply       36.989   99.9%
+       apply       40.082   99.9%
        next         0.012    0.0%
      per-instruction (per iteration):
                    branch    sum       
@@ -300,9 +311,9 @@ mtron> start(0).{0,3}plus(1).sum().profile()>>format
          in.coeff  0         2         
          out.monad 1         1         
          out.coeff 2         1         
-         time(ms)  36.989    0.000     
+         time(ms)  40.082    0.000     
      flow       monads=15 coeff-sum=15 compression=1.00 processors=10
-     cache     hits=210088 misses=5 hit=100.0%
+     cache     hits=209977 misses=5 hit=100.0%
    """
 ```
 A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and points add across a branch,
@@ -323,26 +334,54 @@ are disjoint); one axis per run, the seed's first.]
 
 # The Shape of a Law
 
-The law a fold obeys fixes how it distributes, and there are only a few shapes [[3]](../skills/mtron/references/distributed-computing-mtron.html):
+The law a fold obeys fixes how it distributes, and there are only a few
+shapes [[3]](../skills/mtron/references/distributed-computing-mtron.html):
 
-| law                                   | pattern                    | shape                                          | coordination          |
-|---------------------------------------|----------------------------|------------------------------------------------|-----------------------|
-| floatable (Theorem 6)                 | map, filter, flatmap       | free: replicate the run                        | none                  |
-| commutative monoid (Theorem 19)       | reduce, fold               | star: scatter, partial reduce, gather          | one barrier           |
-| associative, not commutative          | scan, prefix               | pipeline: carry the running total              | neighbor to neighbor  |
-| keyed product                         | join, group by             | shuffle: partition by key, reduce, gather      | key co-location       |
+| law                             | pattern              | shape                                     | coordination         |
+|---------------------------------|----------------------|-------------------------------------------|----------------------|
+| floatable (Theorem 6)           | map, filter, flatmap | free: replicate the run                   | none                 |
+| commutative monoid (Theorem 19) | reduce, fold         | star: scatter, partial reduce, gather     | one barrier          |
+| associative, not commutative    | scan, prefix         | pipeline: carry the running total         | neighbor to neighbor |
+| keyed product                   | join, group by       | shuffle: partition by key, reduce, gather | key co-location      |
 
 `sum`, `count`, `max`, and `order` are one pattern, the commutative monoid fold, with different instances: the operation
 is the instance, and the law is the pattern.
+
+The free shape needs no fold at all. With no cut there is nothing to recombine, so right distributivity alone,
+$(a + b)\,f = a\,f + b\,f$, ships the run: each place runs it on its share of the seed, and the branch's own merge, its
+$+$, brings every member home.
+
+```mtron
+mtron> {1,2,3,4,5,6,7,8}.plus(1).mult(2)
+==>4
+==>8
+==>12
+==>16
+==>6
+==>10
+==>14
+==>18
+mtron> {1,2,3,4,5,6,7,8}.plus(1).mult(2).explain()>>format
+==>"""
+    op      dom          rng      args                                                           f    desc      c_dom  c_rng 
+    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=>start?hop=0({1,3,5,7}).plus(1).mult(2),  <j>  standard  {0}    {*}   
+                                   ws://localhost:1112=>start?hop=0({2,4,6,8}).plus(1).mult(2)]                              
+   """
+```
+This is the embarrassingly parallel pattern: the program is the `branch` and nothing after it. A run floats only when
+every instruction in it is pure, and so is every code it is handed, so a filter handed a `print` stays home. An effect
+between two runs brings the members home, where it runs once over the merged bag, and the run after it goes out
+again on a branch of its own.
 
 ## The Menu
 
 Every distribution pattern metatron names is an instance of one of these laws, and the menu lists them all
 [[3]](../skills/mtron/references/distributed-computing-mtron.html). A $\checkmark$ marks a pattern `law_shard`
-implements today; an empty status means the law holds and the lowering is not yet written. Most entries are stars,
-refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out, through
-the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T) or
-compose the others (N, R, M, I).
+implements today; an empty status means the law holds and the lowering is not yet written. Two are free, the
+floatable law alone: O carries a constant along, and W, embarrassingly parallel, has no cut at all. Most entries are
+stars, refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out,
+through the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T)
+or compose the others (N, R, M, I).
 
 | key   | status       | pattern                   | law                                                                                                                                | description                                                                                                                            |
 |-------|--------------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
@@ -368,6 +407,7 @@ compose the others (N, R, M, I).
 | **T** | $\checkmark$ | reference frame migration | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$                                                                                  | the frame moves, not the data: the tail ships as a program and the value snakes back                                                   |
 | **U** |              | profile collation         | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                                                                    |
 | **V** | $\checkmark$ | generative run            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly                                     |
+| **W** | $\checkmark$ | embarrassingly parallel   | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home                                      |
 
 [To be written: the menu as a tree of these laws, a figure.]
 
@@ -387,6 +427,7 @@ compose the others (N, R, M, I).
 
 1. Rodriguez, M.A., "[Stream Ring Theory](./stream-ring-theory.md)," S/V Red Herring's Ship's Log: Chronicles in the Sea
    of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.
-2. Rodriguez, M.A., Stynx, D.R., "[A Span and Point Coefficient Algebra for Stream Rings](./span-and-point-coefficient-algebra.md)."
+2. Rodriguez, M.A., Stynx, D.R.,
+   "[A Span and Point Coefficient Algebra for Stream Rings](./span-and-point-coefficient-algebra.md)."
 3. "[distributed computing — the pattern menu](../skills/mtron/references/distributed-computing-mtron.html)," the mtron
    skill reference.

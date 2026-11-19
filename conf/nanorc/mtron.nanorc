@@ -86,6 +86,8 @@ color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
 color bright-black "<[^>]>"
+### bads
+color red "<\?>"
 ### comments
 color bright-black start="\[--" end="--]"
 color bright-black start="\[==" end="==]"

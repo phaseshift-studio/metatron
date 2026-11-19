@@ -6,20 +6,20 @@ description: |
   declared theories and process laws on `object::T` / `morphism::T`, `Law.Helper`'s *computed* combiner, and the
   `plan::T` vocabulary (`cut` / `where` / spans) built by `PlanBuilder`, applied by `PlanInterpreter`, and emitted by
   `Shard` — the body of the `law_shard` rule in the machine's rewrite pool (`instset().rewrites()`; the local law
-  rules are /m's, `law_shard` is `catRewrite`'s). One row per pattern (A–V): its algebraic law (the latex), the mtron
+  rules are /m's, `law_shard` is `catRewrite`'s). One row per pattern (A–W): its algebraic law (the latex), the mtron
   you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif).
   A play button marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented
   below with the seed partition it complements.
   TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a
   distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's
-  entries (A–V); when wiring a `plan::T` / `PlanBuilder` / `PlanInterpreter` / `Shard` / `Law.Helper` combiner.
+  entries (A–W); when wiring a `plan::T` / `PlanBuilder` / `PlanInterpreter` / `Shard` / `Law.Helper` combiner.
 ---
 
 # distributed computing — the pattern menu
 
 Distribution in metatron is not a subsystem you add: it is what a fold's *declared algebra* already licenses. A
 reducer ships, splits, and recombines **because its carrier declares a law**, never because a feature was turned on.
-The menu below (A–V) catalogues those laws: each entry is a pattern, its algebraic law the reason it is sound, its
+The menu below (A–W) catalogues those laws: each entry is a pattern, its algebraic law the reason it is sound, its
 *pre-write motif* the mtron you write, and its *rewrite motif* the sharded layout the rewriter emits. The premise is
 `docs/design/distributed-patterns-through-algebra.md` ("distribution is a theorem, not a feature"); the first
 realization is `law_shard`; the substrate and its gaps live in `docs/design/distributed-computing.md`. This doc is the
@@ -243,6 +243,7 @@ A ▶ play button = implemented today (it plays the pattern's cast); no play but
 | **T** | <!-- cast: dist-move title="T" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->        | reference frame migration   | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$                                                                                  | the frame moves, not the data: the tail ships as a program and the value snakes back              |
 | **U** |                                                                                                      | profile collation           | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                               |
 | **V** | <!-- cast: dist-run title="V" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->         | generative run              | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by WORK, or the copies evenly |
+| **W** | <!-- cast: dist-parallel title="W" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->    | embarrassingly parallel     | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home |
 
 ### the mtron motif rewrites
 
@@ -275,12 +276,15 @@ single expression shows.
 | **T** | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                     | cut at the move, `move(<host>)`: the tail ships as a program                                       |
 | **U** | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(), …).profile_collate()>>format` |
 | **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK     |
+| **W** | `{1,…,8}.complex_computation()`                                    | `branch?<={0}(<p_i> => start?hop=0(part_i).complex_computation(), …)`, and no combiner             |
 
 **Legend.** ▶ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 — a
 **singleton** seed and a **closed** span range — and 2026-11-18 every cut plans its run; see *the run partition*). `P`
 is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated *data* space, while
-`V`'s index is the exponent.
+`V`'s index is the exponent. `W` done 2026-11-19 — the free law with no cut at all, right distributivity alone: a
+dealt seed ships its floatable run and only the branch's merge recombines (an index set was already the cutless run
+partition). Floating is `Inst.isPure`, so an instruction handed an effect keeps the run home.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
 `lst`, never a bag); `M` is a note; `I` is infrastructure. `C` needs only Thm 5 and a pure chain. `T` is the machine
 semiring's groupoid, the stream ring's process dual. `V`'s unrolls are independent terms (Definition 3), which is why
@@ -292,14 +296,14 @@ gather's wall time, and that row alone cannot be reconstructed from the shards.
 
 ## the taxonomy — the menu as a tree
 
-The twenty-two entries are not a flat list: they fall out of **two axes** — the *data-side* law the anchor obeys (which
+The twenty-three entries are not a flat list: they fall out of **two axes** — the *data-side* law the anchor obeys (which
 fixes the route shape), and the *location-side* question of where the work lives — plus **orthogonal** rules that
-multiply any fan-out and **composites** that build on the rest. The table keeps the A–V lettering stable.
+multiply any fan-out and **composites** that build on the rest. The table keeps the A–W lettering stable.
 
 ```
-distribution — the menu (A–V)
+distribution — the menu (A–W)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
-│  ├─ free · floatable (Thm 6)        → O:✅
+│  ├─ free · floatable (Thm 6)        → O:✅  W:✅
 │  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J  K  L  H
 │  ├─ pipeline · associative          → F
 │  └─ shuffle · keyed                 → (G's hash-route; M(3))
@@ -311,15 +315,16 @@ distribution — the menu (A–V)
    └─ N  R  M  I
 ```
 
-<!-- figure source: assets/tikz/distributed-patterns.tex (same recipe); the rendered image is the original A–S menu — the table and the tree above are authoritative for U/V -->
+<!-- figure source: assets/tikz/distributed-patterns.tex (same recipe); the rendered image is the original A–S menu — the table and the tree above are authoritative for U/V/W -->
 <img src="../assets/distributed-patterns.png" alt="the original (A–S) render of the menu as a taxonomy tree: by the anchor's law (free → O, star → A E G J K L H, pipeline → F, shuffle), by the location (B C Q P), orthogonal (D S), composite (N R M I); green = implemented" width="100%" style="margin:0.3em 0 0 0"/>
 
 The four top branches read the two axes of `docs/design/distributed-patterns-through-algebra.md`:
 
 - **the anchor's law** is the *data-side* theorem, and it *is* the route shape: `free` (floatable, Thm 6) replicates
-  the run with no coordination; `star` (commutative monoid, Thm 19) scatters, partial-reduces, and gathers — `A` is
-  the one engine, and `E` / `G` / `J` / `K` / `L` / `H` are its refinements; `pipeline` (associative) carries the
-  running total; `shuffle` (keyed) co-locates the key (G's future hash-route, and M (3)).
+  the run with no coordination (`O` carries a constant along, and `W` is a run with no cut at all); `star`
+  (commutative monoid, Thm 19) scatters, partial-reduces, and gathers — `A` is the one engine, and `E` / `G` / `J` /
+  `K` / `L` / `H` are its refinements; `pipeline` (associative) carries the running total; `shuffle` (keyed)
+  co-locates the key (G's future hash-route, and M (3)).
 - **the location** is the *machine-side* question — native / delegation: `B` moves the code to the data, `C` is `B`
   with one owner, `Q` is `C` per step, `P` partitions the index space instead of data.
 - **orthogonal** multiplies any fan-out: `D` ships every round trip in parallel (max RTT), `S` keeps a slice home, and
@@ -450,6 +455,33 @@ $$\begin{matrix}& \curvearrowleft_4 & & \curvearrowleft_3 & \\ \mathrm{move} (a)
 Each hop is a re-compilation in a new environment, so the tail ships as *source*, never as compiled code; the
 receiver's compiler re-runs the same rule, which keeps the snake sound across a chain of machines with different
 co-located resources and instruction sets.
+
+### W — embarrassingly parallel (no cut)
+
+A chain with no fold has nothing to recombine, so the shard identity loses its combiner and keeps only right
+distributivity, $(a + b) \cdot f = a \cdot f + b \cdot f$: the map, filter and flatmap rings distribute over `+`. Past
+the last cut, `Shard.apply` plans run by run. Each floatable run ships on a branch of its own and deals the bag the
+home stretch before it hands on: a literal seed is dealt by the plan, any other bag by the branch when it runs. An
+instruction that does not float ends the run and brings the members home, where it runs once over the merged bag,
+and the next floatable run goes out again; the branch's own merge, its `+`, is the only recombination:
+
+```mtron
+{1,2,3,4,5,6,7,8}.plus(1).print(_).mult(2)
+  ⇝  branch?<={0}(<p_1> => start?hop=0({1,3,5,7}).plus(1),
+                  <p_2> => start?hop=0({2,4,6,8}).plus(1))
+       .print(_)
+       .branch?<=T{*}&split=part(<p_1> => mult?hop=0(2), <p_2> => mult?hop=0(2))
+```
+
+An effect at the head is the same walk with an empty first run: `{…}.print(_).plus(1)` prints at home and deals
+`plus(1)` over what `print` hands on.
+
+Every member comes home, eight in and eight out, where a fold would send one partial per place, so `W` pays the
+return trip on every member. One obj with a span range or a point is the same pattern over an index set (`V` with no
+cut), and one obj with neither has nothing to deal. Floating is `Inst.isPure`: an instruction floats when its
+contract declares `pure` (or, declaring nothing, its mtron body is a composition of pure instructions) and everything
+it is handed is pure too, so `is(gt(4))` ships and `is(print(_).gt(4))` keeps the run home. A user-defined
+instruction is still bare when `law_shard` runs, before resolution, so it stays home until its peers can run it.
 
 ## how the entries compose
 
