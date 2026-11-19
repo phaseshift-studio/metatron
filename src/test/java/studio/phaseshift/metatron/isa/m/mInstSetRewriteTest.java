@@ -182,6 +182,8 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "else_after_count        % {1,2,3}.count().else(0)             % start({1,2,3}).count()",
             "range_skip_take         % {1,2,3,4,5}.range(1,4)              % start({1,2,3,4,5}).skip(1).take(3)",
             "branch_factor           % 1.branch(plus(1).mult(2),plus(1).mult(3))  % start(1).plus(1).branch(mult(2),mult(3))",
+            // a head handed an effect is not factored: the effect would run once instead of once per lane
+            "branch_factor           % 1.branch(plus(print(_)).mult(2),plus(print(_)).mult(3))  % start(1).branch(plus(print(_)).mult(2),plus(print(_)).mult(3))",
             // map_nest: a mapping of a mapping is the mapping, whatever it maps, a stream's fold among them
             "map_nest                % 5.map(map(plus(2)))                 % start(5).map(plus(2))",
             "map_nest                % {1,2,3}.map(map(sum()))             % start({1,2,3}).map(sum())",
@@ -286,16 +288,18 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
     }
 
     /**
-     * WHERE A PEER IS DIALED AND THE FOLD STILL STAYS WHERE IT STANDS: a zero hop opts the fold out, on the seed or on the
-     * reducer; a chain with no fold has nothing to distribute; a seed of one member has nothing to part; and a split the
-     * shard does not lower ({@code block}) declines to the chain as written, never a plausible other layout. Each row:
-     * the chain law_shard leaves as it is.
+     * WHERE A PEER IS DIALED AND THE FOLD STILL STAYS WHERE IT STANDS: a zero hop opts the run out, on the seed or on the
+     * reducer, with a fold or without one; a chain with no fold ships its run (W) only when that run floats, so one
+     * whose first instruction is an effect has nothing to distribute; a seed of one member has nothing to part; and a
+     * split the shard does not lower ({@code block}) declines to the chain as written, never a plausible other layout.
+     * Each row: the chain law_shard leaves as it is.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "start?hop=0({1,2,3,4}).plus(1).sum()",
             "start({1,2,3,4}).plus(1).sum?hop=0()",
-            "start({1,2,3,4}).plus(1)",
+            "start?hop=0({1,2,3,4}).plus(1)",
+            "start({1,2,3,4}).print(_)",
             "start(1).plus(1).sum()",
             "start?split=block({1,2,3,4}).plus(1).sum()",
     }, delimiter = '%')

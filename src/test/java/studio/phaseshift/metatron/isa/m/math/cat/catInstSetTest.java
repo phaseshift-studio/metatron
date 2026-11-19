@@ -1004,6 +1004,8 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.plus(1).zero().plus(2).zero() % start(5).zero()",
             "5.zero()                       % start(5).zero()",
             "{1,2,3}.is(gt(1)).zero()       % start({1,2,3}).is(gt(1)).zero()",
+            // an instruction handed an effect is never swallowed: the absorbing op would drop the print with it
+            "5.plus(print(_)).zero()        % start(5).plus(print(_)).zero()",
             // a scaled instruction is no term of the rule, so it stops the run. Shape only: evaluated, zero drops a bulked
             // obj's coefficient today ({2}8.zero() is 0, where {2}8.neg() is {2}-8), so the chain answers 0 either way
             "5.plus{2}(3).plus(1).zero()    % start(5).plus{2}(3).zero()",

@@ -149,6 +149,20 @@ start(0).{0,10}plus(1).sum()                              [-- 55 --]
 start(0).{0,10}plus(1).sum().explain()>>format            [-- one lane per place, the unrolls' work split by sqrt --]
 ```
 
+```mtron_pre cast=dist-parallel cols=110 rows=30 typing_delay=0.03 speed_rates="0.5,1,1.5,2" speed_default="1"
+[HIDDEN]import(/m/math,math)
+[HIDDEN]import(/m/math/cat,cat)
+[NO_PROMPT][== two peers, spawned and dialed by harvest ==]
+[NO_OUTPUT] harvest?rec<=int{*}(uri{?}::T){ /
+  spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0). /
+    -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest
+[NO_OUTPUT] {0,1}.harvest()
+[NO_PROMPT][== no fold: every member comes home ==]
+{1,2,3,4,5,6,7,8}.plus(1).mult(2)                         [-- eight in, eight out --]
+[NO_PROMPT][== each place runs the run on its share, and the branch is the whole program ==]
+{1,2,3,4,5,6,7,8}.plus(1).mult(2).explain()>>format       [-- no combiner after the branch --]
+```
+
 ```mtron_pre cast=span-and-point cols=110 rows=32 typing_delay=0.03 speed_rates="0.5,1,1.5,2" speed_default="1"
 0.plus(1).plus(1).plus(1)
 0.branch(plus(1),plus(1).plus(1),plus(1).plus(1).plus(1))

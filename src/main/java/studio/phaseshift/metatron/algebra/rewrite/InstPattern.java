@@ -131,7 +131,9 @@ public final class InstPattern {
 
     private static boolean satisfies(final Inst inst, final Law law) {
         return switch (law) {
-            case floatable -> Inst.Form.of(inst).isFloatable() && Law.Helper.declares(inst.tid(), Law.pure);
+            // purity is the instruction's and everything it is handed: is(gt(2)) floats, is(print(_).gt(2)) does not
+            case floatable -> Inst.Form.of(inst).isFloatable() && inst.isPure();
+            case pure -> inst.isPure();
             case blocked -> Inst.Form.of(inst).isBlocked();
             default -> Law.Helper.declares(inst.tid(), law);
         };

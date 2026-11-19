@@ -254,14 +254,29 @@ shapes [[3]](../skills/mtron/references/distributed-computing-mtron.html):
 `sum`, `count`, `max`, and `order` are one pattern, the commutative monoid fold, with different instances: the operation
 is the instance, and the law is the pattern.
 
+The free shape needs no fold at all. With no cut there is nothing to recombine, so right distributivity alone,
+$(a + b)\,f = a\,f + b\,f$, ships the run: each place runs it on its share of the seed, and the branch's own merge, its
+$+$, brings every member home.
+
+```mtron_pre
+{1,2,3,4,5,6,7,8}.plus(1).mult(2)
+{1,2,3,4,5,6,7,8}.plus(1).mult(2).explain()>>format
+```
+
+This is the embarrassingly parallel pattern: the program is the `branch` and nothing after it. A run floats only when
+every instruction in it is pure, and so is every code it is handed, so a filter handed a `print` stays home. An effect
+between two runs brings the members home, where it runs once over the merged bag, and the run after it goes out
+again on a branch of its own.
+
 ## The Menu
 
 Every distribution pattern metatron names is an instance of one of these laws, and the menu lists them all
 [[3]](../skills/mtron/references/distributed-computing-mtron.html). A $\checkmark$ marks a pattern `law_shard`
-implements today; an empty status means the law holds and the lowering is not yet written. Most entries are stars,
-refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out, through
-the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T) or
-compose the others (N, R, M, I).
+implements today; an empty status means the law holds and the lowering is not yet written. Two are free, the
+floatable law alone: O carries a constant along, and W, embarrassingly parallel, has no cut at all. Most entries are
+stars, refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out,
+through the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T)
+or compose the others (N, R, M, I).
 
 | key   | status       | pattern                   | law                                                                                                                                | description                                                                                                                            |
 |-------|--------------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
@@ -287,6 +302,7 @@ compose the others (N, R, M, I).
 | **T** | $\checkmark$ | reference frame migration | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$                                                                                  | the frame moves, not the data: the tail ships as a program and the value snakes back                                                   |
 | **U** |              | profile collation         | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                                                                    |
 | **V** | $\checkmark$ | generative run            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly                                     |
+| **W** | $\checkmark$ | embarrassingly parallel   | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home                                      |
 
 [To be written: the menu as a tree of these laws, a figure.]
 
