@@ -514,8 +514,10 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * either way. Only the rewriter orders the two rules (analysis rules run last), and this assertion is what notices.
      * <p>
      * THE RESULT IS THE NEST'S SHAPE, folded bottom-up as each node collates: the depth, the leaves (how many, and the
-     * objs their seeds took, a coefficient sum, so the bulked {@code {2}3} counts twice) and the places per level. The
-     * format, the user's {@code >>format}, names every place and leads with the summary over the root's places.
+     * objs their runs carried, a coefficient sum, so the bulked {@code {2}3} counts twice) and the places per level.
+     * Every axis a run factors collates: the seed's members, a computed bag the branch deals, and the run axis's
+     * unrolls (V), where a lane's objs are the terms it unrolled. The format, the user's {@code >>format}, opens with
+     * the master's header, leads with the summary over the root's places, and names every place.
      * <p>
      * THE TREE IS {@link TreeShardTransportTest}'s. Here no node below the root can re-plan: the forked peers mount no
      * category and dial no one, and {@code ?place=[local,peer]} lands both lanes on the peers (no home lane), so the
@@ -528,6 +530,9 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             // a computed seed: a filter handed an effect stays home (A's row), so the master's run is start.is.branch,
             // and the branch deals the survivors when it runs
             "{1,2,3,4,5,6}.is(print(_).gt(2)).sum().profile()  % /m/inst/profile_collate() % [depth=>1,leaf=>[count=>2,c_sum=>4],level=>[2]]",
+            // the run axis (V): one seed copied to both lanes, the unrolls {0,3} split by work, so a leaf's objs are the
+            // terms it unrolled (3 and 1), not the one seed its start answers
+            "start(0).{0,3}plus(1).sum().profile()             % /m/inst/profile_collate() % [depth=>1,leaf=>[count=>2,c_sum=>4],level=>[2]]",
     }, delimiter = '%')
     void test_U_profile_collation(final String code, final String expectedRewriteForm, final String expectedResult) {
         // COLUMN 2 -- THE REWRITE FORM: the collator alone, over the master's run, which ends in the branch
@@ -564,7 +569,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         checkEquality(LOG, bool(true), bool(format.isStr()), true);
         nest.stream().skip(1).forEach(place -> checkEquality(LOG, bool(true),
                 bool(format.strValue().contains(place.at(uri(MACHINE)).uriValue().pathEncoding().toString())), true));
-        for (final String line : List.of("gathered in", "straggler", "imbalance", "efficiency", "tree", "critical"))
+        for (final String line : List.of("master", "gathered in", "straggler", "imbalance", "efficiency", "tree", "critical"))
             checkEquality(LOG, bool(true), bool(format.strValue().contains(line)), true);
     }
 

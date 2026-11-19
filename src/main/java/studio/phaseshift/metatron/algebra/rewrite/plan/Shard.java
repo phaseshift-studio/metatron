@@ -281,7 +281,7 @@ public final class Shard {
             }
             if (0 <= cut)
                 lane.add(raw(insts.get(cut)));
-            if (profiling && !runAxis)
+            if (profiling)
                 lane.add(instB(PROFILE_INST_TID, lst()));
             stampHop(lane, budget);
             final fURI place = keys.get(r).getKey();
@@ -298,11 +298,12 @@ public final class Shard {
             master.addAll(insts.subList(from, runIndex));
         master.add(instB(literal && runAxis ? BRANCH_INST_TID.dom(dom)
                 : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY : PART), rec(routes)));
-        if (profiling && !runAxis) {
-            // THE MASTER'S RUN IS TIMED AROUND ITS BRANCH: the lanes answer reports, not partials, so no combiner runs,
-            // and a bare profile_collate() marks where the master's run ends. The profile_analysis rule, an analysis rule
-            // and so applied after this one, captures everything before the marker (the master's whole run, the branch's
-            // gather wait included), times it as profile() times a local run and nests the lanes' reports under it
+        if (profiling) {
+            // THE MASTER'S RUN IS TIMED AROUND ITS BRANCH, whichever axis the run factored (a seed's members, a span's
+            // unrolls, a point's copies): the lanes answer reports, not partials, so no combiner runs, and a bare
+            // profile_collate() marks where the master's run ends. The profile_analysis rule, an analysis rule and so
+            // applied after this one, captures everything before the marker (the master's whole run, the branch's gather
+            // wait included), times it as profile() times a local run and nests the lanes' reports under it
             // (mInstSet.profileCollate). Whatever followed profile(), a >>format, follows the marker.
             master.add(instB(PROFILE_COLLATE_TID, lst()));
             master.addAll(insts.subList(cut + 2, end));

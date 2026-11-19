@@ -292,11 +292,12 @@ they split. `U` done 2026-11-19 — the instrumentation row: its $\oplus$ nests 
 figures add or fold, so the report is a commutative monoid. Each lane ends in `profile()` and answers its own report,
 and the master's run is timed around its branch (`profile_collate(branch(…))`), so the master's report holds the one
 number no lane can supply, the gather wait; each lane's report nests under it at `place`, keyed by the machine that
-made it. A tree nests like the tree: an interior node collates its own places, and the tree's figures (`depth`,
-`leaf`, `level` and the critical `path`) fold bottom-up as each node collates. `>>format` leads with the summary over
-a node's places (objs and apply per place, the straggler, imbalance as max ÷ mean apply, the gather wait, and a
-provisional efficiency, Σ lane apply ÷ (k × gather wait)), then the master's run and each place's report. Under a run
-axis (`V`) the profile is still the home machine's alone.
+made it. Every axis a run factors collates: a seed's members, a computed bag, a span's unrolls (`V`). A tree nests
+like the tree: an interior node collates its own places, and the tree's figures (`depth`, `leaf`, `level` and the
+critical `path`) fold bottom-up as each node collates. `>>format` nests like the tree too: `master`, then each place
+under a header of its own (its apply, and a leaf's objs or a node's count of places), the place's report one level in.
+A node's body leads with the summary over its places (objs and apply per place, the straggler, imbalance as max ÷ mean
+apply, the gather wait, and a provisional efficiency, Σ lane apply ÷ (k × gather wait)), then its own run.
 
 ## the taxonomy — the menu as a tree
 
