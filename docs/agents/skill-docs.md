@@ -5,12 +5,13 @@ links here where it applies. AGENTS.md's "Skills and docs" section is the summar
 
 ## Skill Reference Docs
 
-The project maintains two skill sets under `.metatron/skills/`:
+The skills are written under `docs/skills/`. The build renders them into `docs/website/skills/`, which is what
+`.metatron/skills` links to, so never edit through that link:
 
-| Skill        | Path                         | Purpose                                                               |
-|--------------|------------------------------|-----------------------------------------------------------------------|
-| **metatron** | `.metatron/skills/metatron/` | VM architecture, type system, boot process, MCP, UI architecture      |
-| **mtron**    | `.metatron/skills/mtron/`    | Language reference, examples, training pipeline, data-source adapters |
+| Skill        | Path                     | Purpose                                                               |
+|--------------|--------------------------|-----------------------------------------------------------------------|
+| **metatron** | `docs/skills/metatron/`  | VM architecture, type system, boot process, MCP, UI architecture      |
+| **mtron**    | `docs/skills/mtron/`     | Language reference, examples, training pipeline, data-source adapters |
 
 Each skill has:
 
@@ -24,15 +25,15 @@ Each skill has:
 Whenever you create, rename, or significantly change a Java class that is documented in a reference `.md`, update the
 corresponding file:
 
-| You changed…                                                              | Update…                                                                                                    |
-|---------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| A widget or UI class (`uiInstSet`, `TreeWidget`, `PanelWidget`, any tool) | `.metatron/skills/metatron/references/ui-instset-java.md`                                                  |
-| A type system class (`Type`, `MType`, `Inst`, `Code`)                     | `.metatron/skills/metatron/references/type-system-java.md` or `…-mtron.md`                                 |
-| A rewrite class (`RewriterBuilder`, `DBRewriteBuilder`)                   | `.metatron/skills/metatron/references/rewrite-system-java.md`                                              |
-| A space class (`tbleSpace`, `fsSpace`)                                    | `.metatron/skills/metatron/references/tble-space-java.md` or create a new space doc                        |
-| mtron language syntax or semantics                                        | `.metatron/skills/mtron/references/mtron-language-reference.md`                                            |
-| An MCP server/client class                                                | `.metatron/skills/metatron/references/mcp-mtron.md` or `.metatron/skills/mtron/references/mcp-server-*.md` |
-| A new data-source integration (`dckrSpace`, etc.)                         | `.metatron/skills/mtron/references/` — create a new doc                                                    |
+| You changed…                                                              | Update…                                                                                    |
+|---------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| A widget or UI class (`uiInstSet`, `TreeWidget`, `PanelWidget`, any tool) | `docs/skills/metatron/references/ui-instset-java.md`                                       |
+| A type system class (`Type`, `MType`, `Inst`, `Code`)                     | `docs/skills/metatron/references/type-system-java.md` or `…-mtron.md`                      |
+| A rewrite class (`RewriterBuilder`, `DBRewriteBuilder`)                   | `docs/skills/metatron/references/rewrite-system-java.md`                                   |
+| A space class (`tbleSpace`, `fsSpace`)                                    | `docs/skills/metatron/references/tble-space-java.md` or create a new space doc             |
+| mtron language syntax or semantics                                        | `docs/skills/mtron/references/mtron-language-reference.md`                                 |
+| An MCP server/client class                                                | `docs/skills/metatron/references/mcp-mtron.md` or `docs/skills/mtron/references/mcp-server-*.md` |
+| A new data-source integration (`dckrSpace`, etc.)                         | `docs/skills/mtron/references/` — create a new doc                                         |
 
 ### How to Update
 
@@ -48,12 +49,9 @@ corresponding file:
    clearly mechanical (adding a new class to an existing package map). For substantive documentation rewrites, confirm
    with the user first.
 
-**IMPORTANT**: everything under `docs/website/` — **except `docs/website/adoc/`** — is generated on build and
-overwritten each run; never edit it by hand. The hand-authored sources are exactly four: the human-oriented adocs at
-`docs/website/adoc/`, the metatron API reference (`instset`) derived from source-code instruction sets, the
-agent-oriented skills at `docs/skills/` (markdown), and the theory articles at `docs/articles/` (markdown). So
-`docs/website/skills/` is built from `docs/skills/` and `docs/website/articles/` from `docs/articles/`; edit the
-source, not the website copy. (`docs/skills` is also symlinked via `.metatron/skills`.)
+**IMPORTANT**: edit a skill in `docs/skills/`, never its rendered copy in `docs/website/skills/` (which is where
+`.metatron/skills` points). Which other parts of `docs/website/` are build output, and the source of each, is the table
+under "Skills and Docs" in [AGENTS.md](../../AGENTS.md).
 
 ### Existing Docs
 
