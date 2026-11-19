@@ -241,7 +241,7 @@ A ▶ play button = implemented today (it plays the pattern's cast); no play but
 | **R** |                                                                                                      | durable results             | $\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}$                                                                          | each partial is written to an address: a space and its `shard_result::T`                          |
 | **S** | <!-- cast: dist-master title="S" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->      | master-participates         | $\bigoplus_{i=0}^{k} a_i \cdot r$ over $\{\mathrm{master}\} \cup \mathrm{peers}$                                                   | the master folds its own slice, a lane at distance zero, and ships the rest                       |
 | **T** | <!-- cast: dist-move title="T" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->        | reference frame migration   | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$                                                                                  | the frame moves, not the data: the tail ships as a program and the value snakes back              |
-| **U** |                                                                                                      | profile collation           | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                               |
+| **U** |                                                                                                      | profile collation           | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each lane's profile ships home and nests under the master's, timed around the branch              |
 | **V** | <!-- cast: dist-run title="V" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->         | generative run              | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by WORK, or the copies evenly |
 | **W** | <!-- cast: dist-parallel title="W" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->    | embarrassingly parallel     | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home |
 
@@ -274,7 +274,7 @@ single expression shows.
 | **R** | `to(</usr/job/round/shard>)`                                       | a space, and `shard_result::[authority, round, status, value]`                                     |
 | **S** | `{1,…,8}.plus(1).sum?place=[local,peer]()`                         | the master's slice is a lane at distance zero; k−1 ship                                            |
 | **T** | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                     | cut at the move, `move(<host>)`: the tail ships as a program                                       |
-| **U** | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(), …).profile_collate()>>format` |
+| **U** | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `profile_collate(branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(), …))>>format`  |
 | **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK     |
 | **W** | `{1,…,8}.complex_computation()`                                    | `branch?<={0}(<p_i> => start?hop=0(part_i).complex_computation(), …)`, and no combiner             |
 
@@ -288,11 +288,16 @@ partition). Floating is `Inst.isPure`, so an instruction handed an effect keeps 
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
 `lst`, never a bag); `M` is a note; `I` is infrastructure. `C` needs only Thm 5 and a pure chain. `T` is the machine
 semiring's groupoid, the stream ring's process dual. `V`'s unrolls are independent terms (Definition 3), which is why
-they split. `U` is the instrumentation row, and its $\oplus$ is a keyed union with the per-op times added, so the
-report is a commutative monoid: `profile()` already captures the *emitted* chain — the master's `branch/<fold>` with
-the branch's wait visible — but the far side is one number, because `profile_analysis` captures only the machine it
-runs on. Collation ships each shard's own report home so the peers' per-op cost is legible; the master still needs the
-gather's wall time, and that row alone cannot be reconstructed from the shards.
+they split. `U` done 2026-11-19 — the instrumentation row: its $\oplus$ nests reports by place, a keyed union whose
+figures add or fold, so the report is a commutative monoid. Each lane ends in `profile()` and answers its own report,
+and the master's run is timed around its branch (`profile_collate(branch(…))`), so the master's report holds the one
+number no lane can supply, the gather wait; each lane's report nests under it at `place`, keyed by the machine that
+made it. Every axis a run factors collates: a seed's members, a computed bag, a span's unrolls (`V`). A tree nests
+like the tree: an interior node collates its own places, and the tree's figures (`depth`, `leaf`, `level` and the
+critical `path`) fold bottom-up as each node collates. `>>format` nests like the tree too: `master`, then each place
+under a header of its own (its apply, and a leaf's objs or a node's count of places), the place's report one level in.
+A node's body leads with the summary over its places (objs and apply per place, the straggler, imbalance as max ÷ mean
+apply, the gather wait, and a provisional efficiency, Σ lane apply ÷ (k × gather wait)), then its own run.
 
 ## the taxonomy — the menu as a tree
 
@@ -310,7 +315,7 @@ distribution — the menu (A–W)
 ├─ by the location                (native · delegation — where the work lives)
 │  └─ B  C  Q  P  T:✅
 ├─ orthogonal                     (multiply any fan-out)
-│  └─ D:✅  S:✅  U  V:✅ (the run's own multiplicity)
+│  └─ D:✅  S:✅  U:✅  V:✅ (the run's own multiplicity)
 └─ composite & substrate          (built from the above)
    └─ N  R  M  I
 ```

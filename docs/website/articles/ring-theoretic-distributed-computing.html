@@ -547,12 +547,12 @@ the two partials once more. Nothing on the right side requires the two folds to 
 distributed program: two lanes, each computing its own partial, and a final fold that brings the computation home. The
 fold's declared laws, <em>monoidic</em> and <em>commutative</em>, are the license; no other feature is needed.</p>
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
-<p><img src="images/ring-theoretic-distributed-computing/fig-01.svg" alt="figure 1" />{width=80%}</p>
+<p><img src="images/ring-theoretic-distributed-computing/fig-01.svg" alt="figure 1" />{width=70%}</p>
 <p>A program may contract more than once. Every fold that declares these laws is a <em>cut</em>, and each cut plans the run of
 instructions before it. The program <strong>expands</strong> across the available machines, <strong>contracts</strong> at the fold, and starts
 again from the one value the fold left at home.</p>
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
-<p><img src="images/ring-theoretic-distributed-computing/fig-02.svg" alt="figure 2" />{width=80%}</p>
+<p><img src="images/ring-theoretic-distributed-computing/fig-02.svg" alt="figure 2" />{width=70%}</p>
 <p>This article develops that reading. The first section recalls the distributive laws of the stream ring and its
 function subrings. The second states the <em>shard identity</em>, the one rewrite every distribution pattern below lowers to,
 and proves it from Theorems 18 and 19. The third extends it to programs with many cuts. The fourth shows that a
@@ -568,7 +568,7 @@ a <em>near-ring</em>. The difference is distributivity, and distributivity is ex
 </thead>
 <tbody>
 <tr><td><code>*inst?decq&gt;&gt;form</code></td><td>\((a+b)c = ac + bc\)</td><td>\(c(a+b) = ca + cb\)</td></tr>
-<tr><td>----------------------------------------------</td><td>--------------------------</td><td>-------------------</td></tr>
+<tr><td>──────────────────────────────────────────────</td><td>──────────────────────────</td><td>───────────────────</td></tr>
 <tr><td>map, filter, flatmap rings</td><td>yes</td><td>yes</td></tr>
 <tr><td>reduce near-ring \(\mathcal{F}_r\) (Theorem 18)</td><td>no</td><td>yes</td></tr>
 <tr><td>monoidic reduce functions (Theorem 19)</td><td>semi: \((a+b)c = (ac+bc)c\)</td><td>yes</td></tr>
@@ -595,13 +595,13 @@ stream, and the two partials are folded once more.</p>
 <tr><th>theorem</th><th>statement</th><th>for distribution</th></tr>
 </thead>
 <tbody>
-<tr><td>Theorem 5</td><td>streams are atemporal</td><td>no order of apply or merge is required: placement is free</td></tr>
-<tr><td>Theorem 6</td><td>\(ca \cdot 1b = 1a \cdot 1b \cdot c1\)</td><td>elementwise work is independent: replicate it</td></tr>
-<tr><td>Theorem 16</td><td>reduce functions are temporal</td><td>the fold is the one synchronization point</td></tr>
-<tr><td>Theorem 17</td><td>\(c1 \cdot 1a \neq 1a \cdot c1\) for \(a \in \mathcal{F}_r\)</td><td>floating stops at a reducer: the fold is the cut</td></tr>
-<tr><td>Theorem 18</td><td>\(\langle\mathcal{F}_r, +, \cdot\rangle\) is a near-ring</td><td>a reducer distributes over a fan-out after it</td></tr>
-<tr><td>Theorem 19</td><td>\((a+b)c = (ac+bc)c\) for a monoidic \(c\)</td><td>a commutative monoid fold splits and re-applies</td></tr>
-<tr><td>Theorem 21</td><td>\(\langle\mathcal{F}_r, \cdot\rangle\) is functionally closed</td><td>a fold after a fold is a fold: combiners stay reducers</td></tr>
+<tr><td><strong>Theorem 5</strong></td><td>streams are atemporal</td><td>no order of apply or merge is required: placement is free</td></tr>
+<tr><td><strong>Theorem 6</strong></td><td>\(ca \cdot 1b = 1a \cdot 1b \cdot c1\)</td><td>elementwise work is independent: replicate it</td></tr>
+<tr><td><strong>Theorem 16</strong></td><td>reduce functions are temporal</td><td>the fold is the one synchronization point</td></tr>
+<tr><td><strong>Theorem 17</strong></td><td>\(c1 \cdot 1a \neq 1a \cdot c1\) for \(a \in \mathcal{F}_r\)</td><td>floating stops at a reducer: the fold is the cut</td></tr>
+<tr><td><strong>Theorem 18</strong></td><td>\(\langle\mathcal{F}_r, +, \cdot\rangle\) is a near-ring</td><td>a reducer distributes over a fan-out after it</td></tr>
+<tr><td><strong>Theorem 19</strong></td><td>\((a+b)c = (ac+bc)c\) for a monoidic \(c\)</td><td>a commutative monoid fold splits and re-applies</td></tr>
+<tr><td><strong>Theorem 21</strong></td><td>\(\langle\mathcal{F}_r, \cdot\rangle\) is functionally closed</td><td>a fold after a fold is a fold: combiners stay reducers</td></tr>
 </tbody>
 </table>
 <h2>The Shard Identity</h2>
@@ -664,11 +664,8 @@ fold that declares neither law does (it stays home).]</p>
 <p>A program with several cuts is planned cut by cut. Each cut plans the floatable run before it, never reaching back past
 the cut before that, and the instructions between a cut and the next run stay home. Written as a pattern over a chain,</p>
 <pre><code class="language-mtron">[initial,{+}[{*}home,{*}floatable,cut],{*}tail]
-         |_________distributed_______|
+         └─────── distributed ───────┘
 </code></pre>
-<p>\[
-[\,\textit{initial},\; \{+\}[\,\{*\}\textit{home},\; \{*\}\textit{floatable},\; \textit{cut}\,],\; \{*\}\textit{tail}\,]
-\]</p>
 <p>each bracketed group is one expansion and one contraction (figure 2). After a cut the program holds one object, the
 value the fold answered, so the run after it has nothing to deal; what it has instead is the multiplicity in its own
 coefficients, which the next section treats. The instructions that stay home between two cuts keep that one object as
@@ -694,34 +691,103 @@ other (the next section reads a coefficient as an index set). The profile counts
 expansion and contraction of each cut in figure 2, and lists <code>law_shard</code> among the rewrite rules:</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-     stage     min (ms)   max (ms)
-     rewrite     14.076     17.824
-     resolve     18.343     26.212
-     apply       95.013    128.090
-     insts     4
-     resolve sub-stages (avg ms):
-       inst-resolve         5.669   61.8%
-       generic-binding      3.172   34.6%
-       inst-composition     0.339    3.7%
-     rewrite rules:
-                   branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
-         insts.in  80                  80                  80                  80                  80                  80                  
-         insts.out 80                  80                  80                  80                  80                  80                  
-         time(ms)  85.880              10.805              4.423               4.271               2.494               2.349               
-         TOTAL     inst.in 4   inst.out 4   time(ms) 126.592
-     apply sub-stages (avg ms):
-       split        0.012    0.0%
-       apply       45.655  100.0%
-       next         0.006    0.0%
-     per-instruction (per iteration):
-                   branch    sum       branch    sum       
-         in.monad  0         1         0         0         
-         in.coeff  0         2         0         0         
-         out.monad 1         1         1         1         
-         out.coeff 2         1         2         1         
-         time(ms)  45.655    0.000     0.000     0.000     
-     flow       monads=25 coeff-sum=30 compression=1.20 processors=10
-     cache     hits=356945 misses=5 hit=100.0%
+     master booger//4097763   apply 372.830 ms, 2 places
+       places      2, gathered in 372.830 ms (the master's apply, its gather wait included)
+       place                objs  apply (ms)   share
+       booger//4097879         3      12.796   48.3%
+       booger//4097961         1      13.685   51.7%  straggler
+       apply       min 12.796   max 13.685   mean 13.241 (ms)
+       imbalance   1.03 (max ÷ mean apply)
+       efficiency  0.036 (Σ lane apply ÷ (k × gather wait))
+       tree        depth 1   leaves 2   objs 4   lane time 26.481 ms
+       level 1     2 places, imbalance 1.03
+       critical    booger//4097961 13.685 ms
+       stage     min (ms)   max (ms)
+       rewrite     11.514     23.249
+       resolve     15.206     31.495
+       apply      372.830    466.760
+       insts     3
+       resolve sub-stages (avg ms):
+         inst-resolve         5.068   57.8%
+         generic-binding      3.347   38.2%
+         inst-composition     0.347    4.0%
+       rewrite rules:
+                     branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
+           insts.in  60                  60                  60                  60                  60                  60                  
+           insts.out 60                  60                  60                  60                  60                  60                  
+           time(ms)  60.227              11.689              5.016               4.499               2.609               2.458               
+           TOTAL     inst.in 3   inst.out 3   time(ms) 105.165
+       apply sub-stages (avg ms):
+         split        0.009    0.0%
+         apply       35.354  100.0%
+         next         0.006    0.0%
+       per-instruction (per iteration):
+                     branch    sum       branch    
+           in.monad  0         1         0         
+           in.coeff  0         2         0         
+           out.monad 1         1         1         
+           out.coeff 2         1         2         
+           time(ms)  35.354    0.000     0.000     
+       flow       monads=25 coeff-sum=25 compression=1.00 processors=10
+       cache     hits=382403 misses=6 hit=100.0%
+       booger//4097879   apply 12.796 ms, a leaf, objs 3
+         stage     min (ms)   max (ms)
+         rewrite      9.148     10.698
+         resolve      9.315     10.871
+         apply       12.796     14.813
+         insts     3
+         resolve sub-stages (avg ms):
+           inst-resolve         2.045   33.4%
+           generic-binding      3.594   58.7%
+           inst-composition     0.486    7.9%
+         rewrite rules:
+                       derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal law_idempotent      
+             insts.in  60                  60                  60                  60                  60                  60                  
+             insts.out 60                  60                  60                  60                  60                  60                  
+             time(ms)  56.463              9.419               8.153               4.274               3.987               3.263               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 93.629
+         apply sub-stages (avg ms):
+           split        0.012    4.6%
+           apply        0.236   91.5%
+           next         0.010    3.9%
+         per-instruction (per iteration):
+                       start     plus      sum       
+             in.monad  0         1         1         
+             in.coeff  0         1         3         
+             out.monad 1         1         1         
+             out.coeff 1         3         1         
+             time(ms)  0.030     0.206     0.000     
+         flow       monads=20 coeff-sum=25 compression=1.25 processors=10
+         cache     hits=95821 misses=9 hit=100.0%
+       booger//4097961   apply 13.685 ms, a leaf, objs 1, straggler
+         stage     min (ms)   max (ms)
+         rewrite      9.740     11.487
+         resolve      9.926     11.693
+         apply       13.685     16.525
+         insts     3
+         resolve sub-stages (avg ms):
+           inst-resolve         2.223   33.0%
+           generic-binding      3.886   57.6%
+           inst-composition     0.636    9.4%
+         rewrite rules:
+                       derivation_contractionbranch_factor       law_poset           law_monoidic        theory_unit_removal law_idempotent      
+             insts.in  60                  60                  60                  60                  60                  60                  
+             insts.out 60                  60                  60                  60                  60                  60                  
+             time(ms)  59.339              10.327              9.576               4.371               4.002               3.457               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 99.405
+         apply sub-stages (avg ms):
+           split        0.011    3.6%
+           apply        0.286   92.3%
+           next         0.013    4.0%
+         per-instruction (per iteration):
+                       start     plus      sum       
+             in.monad  0         1         1         
+             in.coeff  0         1         1         
+             out.monad 1         1         1         
+             out.coeff 1         1         1         
+             time(ms)  0.036     0.250     0.000     
+         flow       monads=20 coeff-sum=15 compression=0.75 processors=10
+         cache     hits=96336 misses=9 hit=100.0%
    &quot;&quot;&quot;
 </code></pre>
 <p>[To be written: the home instructions in general (what a contract must state for one object to survive them), and the
@@ -763,34 +829,103 @@ the shares are cut by the work each costs, not by how many unrolls each holds. A
 that ran, a <code>branch</code> and a <code>sum</code>, and the time spent at the <code>branch</code> waiting on the two partials:</p>
 <pre><code class="language-mtron">mtron&gt; start(0).{0,3}plus(1).sum().profile()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-     stage     min (ms)   max (ms)
-     rewrite      6.364      6.740
-     resolve      8.224      8.943
-     apply       47.264     56.479
-     insts     2
-     resolve sub-stages (avg ms):
-       inst-resolve         2.528   53.2%
-       generic-binding      1.998   42.0%
-       inst-composition     0.226    4.8%
-     rewrite rules:
-                   branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
-         insts.in  40                  40                  40                  40                  40                  40                  
-         insts.out 40                  40                  40                  40                  40                  40                  
-         time(ms)  23.022              9.210               3.225               3.186               2.202               2.102               
-         TOTAL     inst.in 2   inst.out 2   time(ms) 56.370
-     apply sub-stages (avg ms):
-       split        0.009    0.0%
-       apply       40.082   99.9%
-       next         0.012    0.0%
-     per-instruction (per iteration):
-                   branch    sum       
-         in.monad  0         1         
-         in.coeff  0         2         
-         out.monad 1         1         
-         out.coeff 2         1         
-         time(ms)  40.082    0.000     
-     flow       monads=15 coeff-sum=15 compression=1.00 processors=10
-     cache     hits=209977 misses=5 hit=100.0%
+     master booger//4097763   apply 294.161 ms, 2 places
+       places      2, gathered in 294.161 ms (the master's apply, its gather wait included)
+       place                objs  apply (ms)   share
+       booger//4097879         3      10.763   49.1%
+       booger//4097961         1      11.178   50.9%  straggler
+       apply       min 10.763   max 11.178   mean 10.970 (ms)
+       imbalance   1.02 (max ÷ mean apply)
+       efficiency  0.037 (Σ lane apply ÷ (k × gather wait))
+       tree        depth 1   leaves 2   objs 4   lane time 21.941 ms
+       level 1     2 places, imbalance 1.02
+       critical    booger//4097961 11.178 ms
+       stage     min (ms)   max (ms)
+       rewrite      4.611      5.776
+       resolve      5.597      6.846
+       apply      294.161    322.422
+       insts     1
+       resolve sub-stages (avg ms):
+         inst-resolve         1.038   34.3%
+         generic-binding      1.858   61.4%
+         inst-composition     0.129    4.3%
+       rewrite rules:
+                     branch_factor       law_poset           law_monoidic        law_shard           theory_unit_removal derivation_contraction
+           insts.in  10                  10                  10                  10                  10                  10                  
+           insts.out 10                  10                  10                  10                  10                  10                  
+           time(ms)  5.769               4.398               1.578               1.422               1.214               0.962               
+           TOTAL     inst.in 1   inst.out 1   time(ms) 21.781
+       apply sub-stages (avg ms):
+         split        0.000    0.0%
+         apply        0.000    0.0%
+         next         0.000    0.0%
+       per-instruction (per iteration):
+                     branch    
+           in.monad  0         
+           in.coeff  0         
+           out.monad 0         
+           out.coeff 0         
+           time(ms)  0.000     
+       flow       monads=0 coeff-sum=0 compression=0.00 processors=0
+       cache     hits=212595 misses=6 hit=100.0%
+       booger//4097879   apply 10.763 ms, a leaf, objs 3
+         stage     min (ms)   max (ms)
+         rewrite      7.742     10.721
+         resolve      7.901     10.886
+         apply       10.763     12.124
+         insts     3
+         resolve sub-stages (avg ms):
+           inst-resolve         1.762   33.2%
+           generic-binding      3.129   59.0%
+           inst-composition     0.413    7.8%
+         rewrite rules:
+                       derivation_contractionlaw_poset           branch_factor       law_idempotent      law_monoidic        theory_unit_removal 
+             insts.in  60                  60                  60                  60                  60                  60                  
+             insts.out 60                  60                  60                  60                  60                  60                  
+             time(ms)  45.850              8.920               7.247               4.286               3.759               3.339               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 79.953
+         apply sub-stages (avg ms):
+           split        0.007    3.9%
+           apply        0.161   94.0%
+           next         0.004    2.1%
+         per-instruction (per iteration):
+                       start     plus      sum       
+             in.monad  0         1         1         
+             in.coeff  0         1         3         
+             out.monad 1         1         1         
+             out.coeff 1         3         1         
+             time(ms)  0.015     0.146     0.000     
+         flow       monads=20 coeff-sum=25 compression=1.25 processors=10
+         cache     hits=96049 misses=9 hit=100.0%
+       booger//4097961   apply 11.178 ms, a leaf, objs 1, straggler
+         stage     min (ms)   max (ms)
+         rewrite      8.153      9.587
+         resolve      8.284      9.748
+         apply       11.178     12.998
+         insts     3
+         resolve sub-stages (avg ms):
+           inst-resolve         1.882   33.0%
+           generic-binding      3.330   58.4%
+           inst-composition     0.488    8.6%
+         rewrite rules:
+                       derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal law_idempotent      
+             insts.in  60                  60                  60                  60                  60                  60                  
+             insts.out 60                  60                  60                  60                  60                  60                  
+             time(ms)  47.170              9.065               8.154               3.765               3.318               2.643               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 80.785
+         apply sub-stages (avg ms):
+           split        0.008    4.5%
+           apply        0.161   93.6%
+           next         0.003    1.9%
+         per-instruction (per iteration):
+                       start     plus      sum       
+             in.monad  0         1         1         
+             in.coeff  0         1         1         
+             out.monad 1         1         1         
+             out.coeff 1         1         1         
+             time(ms)  0.015     0.145     0.000     
+         flow       monads=20 coeff-sum=15 compression=0.75 processors=10
+         cache     hits=96444 misses=9 hit=100.0%
    &quot;&quot;&quot;
 </code></pre>
 <p>A point is an index set too. The point \(a\{p\}\) is \(p\) copies of one term, and points add across a branch,
@@ -853,7 +988,7 @@ through the transport, the master's own share, and the run's own coefficients. T
 or compose the others (N, R, M, I).</p>
 <table>
 <thead>
-<tr><th>key</th><th>status</th><th>pattern</th><th>law</th><th>description</th></tr>
+<tr><th> </th><th> </th><th>pattern</th><th>law</th><th>description</th></tr>
 </thead>
 <tbody>
 <tr><td><strong>A</strong></td><td>\(\checkmark\)</td><td>homomorphism shard</td><td>\(h(a \uplus b) = h(a) \oplus h(b)\)</td><td>each place folds its part; the master recombines the partials through the computed combiner</td></tr>
@@ -876,7 +1011,7 @@ or compose the others (N, R, M, I).</p>
 <tr><td><strong>R</strong></td><td> </td><td>durable results</td><td>\(\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}\)</td><td>each partial is written to an address</td></tr>
 <tr><td><strong>S</strong></td><td>\(\checkmark\)</td><td>master-participates</td><td>\(\bigoplus_{i=0}^{k} a_i \cdot r\) over \(\{\mathrm{master}\} \cup \mathrm{peers}\)</td><td>the master folds its own slice, a lane at distance zero, and ships the rest</td></tr>
 <tr><td><strong>T</strong></td><td>\(\checkmark\)</td><td>reference frame migration</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\)</td><td>the frame moves, not the data: the tail ships as a program and the value snakes back</td></tr>
-<tr><td><strong>U</strong></td><td> </td><td>profile collation</td><td>\(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\)</td><td>each shard's profile ships home, and the master collates one report</td></tr>
+<tr><td><strong>U</strong></td><td>\(\checkmark\)</td><td>profile collation</td><td>\(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\)</td><td>each shard's profile ships home, and the master collates one report</td></tr>
 <tr><td><strong>V</strong></td><td>\(\checkmark\)</td><td>generative run</td><td>\(a^{[m,n]} = \sum_{k=m}^{n} a^k\)</td><td>a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly</td></tr>
 <tr><td><strong>W</strong></td><td>\(\checkmark\)</td><td>embarrassingly parallel</td><td>\((a + b) \cdot f = a \cdot f + b \cdot f\)</td><td>no cut: each place runs the floatable run on its share, and the branch's merge brings it all home</td></tr>
 </tbody>
