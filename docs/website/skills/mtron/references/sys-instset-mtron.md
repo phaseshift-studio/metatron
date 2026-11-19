@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           {?}timeout=>'a real number denoting timeout of ...',
-           cmd=>'the terminal command to evaluate (...'],
+           cmd=>'the terminal command to evaluate (...',
+           {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -167,7 +167,7 @@ mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
     '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,3	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-17 15:49:00.513466...',
+    'Access: 2026-11-18 16:21:51.663295...',
    ...
 ```
 ### a shape of its own
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>65
+==>66
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::483.2250,
+    free_mem_jvm=>mB::215.3376,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::228.7749,
+    used_mem_jvm=>mB::496.6623,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',

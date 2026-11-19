@@ -563,8 +563,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
           args=&gt;[
-           {?}timeout=&gt;'a real number denoting timeout of ...',
-           cmd=&gt;'the terminal command to evaluate (...'],
+           cmd=&gt;'the terminal command to evaluate (...',
+           {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -664,7 +664,7 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
     '  Size: 26815     	Blocks: 56     ...',
     'Device: 259,3	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-17 15:49:00.513466...',
+    'Access: 2026-11-18 16:21:51.663295...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -734,12 +734,12 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;65
+==&gt;66
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::712.0,
-    free_mem_jvm=&gt;mB::483.2250,
+    free_mem_jvm=&gt;mB::215.3376,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::228.7749,
+    used_mem_jvm=&gt;mB::496.6623,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-43-generic',
     arch=&gt;'amd64',
