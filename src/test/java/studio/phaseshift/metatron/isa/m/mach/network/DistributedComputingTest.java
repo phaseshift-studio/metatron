@@ -29,7 +29,11 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -40,9 +44,15 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.PROFILING_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -103,7 +113,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <tr><td>R</td><td>durable results</td><td>id : partial ↦ address</td><td>{@code to(</usr/job/round/shard>)}</td><td></td></tr>
  *   <tr><td>S</td><td>master participates</td><td>⊕_i a_i·r over {master} ∪ peers</td><td>{@code {1,…,8}.plus(1).sum()}</td><td>✅</td></tr>
  *   <tr><td>T</td><td>reference frame migration</td><td>move(a) … move(b) … (machine groupoid)</td><td>{@code {1,2,3}.plus(5).move(//host/a).plus(2).sum()}</td><td>✅</td></tr>
- *   <tr><td>U</td><td>profile collation</td><td>p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), ⊕ = keyed union with times added</td><td>{@code {1,2,3,4,5}.plus(10).sum().profile()>>format}</td><td></td></tr>
+ *   <tr><td>U</td><td>profile collation</td><td>p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), ⊕ = keyed union, the figures add or fold</td><td>{@code {1,2,3,4,5}.plus(10).sum().profile()>>format}</td><td>✅</td></tr>
  *   <tr><td>V</td><td>generative run</td><td>a^[m,n] = Σ_k a^k (the unrolls are independent terms)</td><td>{@code start(0).{0,1000}plus(1).sum()}</td><td>✅</td></tr>
  *   <tr><td>W</td><td>embarrassingly parallel</td><td>(a+b)·f = a·f + b·f, f floatable, no cut</td><td>{@code {1,…,8}.plus(1)}</td><td>✅</td></tr>
  * </table>
@@ -491,91 +501,72 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     }
 
     /**
-     * U -- profile collation: p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), where ⊕ is keyed union with per-op times added, so the
-     * report is a commutative monoid and the row is sound for the same reason A is.
+     * U -- profile collation: p̂(a ⊎ b) = p̂(a) ⊕ p̂(b). A report is a commutative monoid (its places index by machine,
+     * its figures add or fold), so a profile distributes for the same reason A does: each lane ends in
+     * {@code profile()} and answers its own report, and the master answers ONE profiling::T, its own run timed around
+     * the branch (so its apply holds the gather wait no lane can report), with each lane's report under {@code place},
+     * keyed by the machine that made it.
      * <p>
-     * {@code profile()} already captures the <em>emitted</em> chain — the master's
-     * {@code branch/<fold>}, with the branch's wait visible (measured live: 38.5 ms of a
-     * 38.8 ms apply, while every other inst is ≈0) — but the far side is one number, because
-     * {@code profile_analysis} captures only the machine it runs on. Collation ships each shard's own report
-     * home: same {@code profile_analysis} rule applied to the slave code, and the master's combiner swapped
-     * from the fold to a collator.
+     * THE REWRITE FORM IS ONE INSTRUCTION: the plan ends the master's run in a bare {@code profile_collate()}, and the
+     * {@code profile_analysis} rule captures the run before it and mints the collator over it. What the collator
+     * captured must END IN THE BRANCH: were the analysis to run before {@code law_shard}, it would capture the
+     * undistributed chain (start, plus, sum) and describe a computation that never happened, in a report well formed
+     * either way. Only the rewriter orders the two rules (analysis rules run last), and this assertion is what notices.
      * <p>
-     * TWO THINGS THE ROW MUST PIN WHEN IT LANDS. (1) ORDER: {@code profile_analysis} REMOVES the chain it
-     * captures, so if it ever runs before {@code law_shard} the fold vanishes from the code and the
-     * distribution silently degrades to a local-only measurement — same output shape, different meaning. The
-     * profiled chain must therefore be asserted to be the shard layout, op by op, not the original. (2) THE
-     * MASTER'S OWN COST: the gather's wall time cannot be reconstructed from the shards, since they run
-     * concurrently — so the collated report must carry the master's row too, and
-     * {@code Σ(shard times) ≤ master gather wait}.
-     */
-    /**
-     * U -- profile collation: p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), ⊕ = keyed union with per-op times added, so the report
-     * is a commutative monoid and the row is sound for the same reason A is.
+     * THE RESULT IS THE NEST'S SHAPE, folded bottom-up as each node collates: the depth, the leaves (how many, and the
+     * objs their seeds took, a coefficient sum, so the bulked {@code {2}3} counts twice) and the places per level. The
+     * format, the user's {@code >>format}, names every place and leads with the summary over the root's places.
      * <p>
-     * THE ASSERTION THAT MATTERS IS THE OP SEQUENCE: (branch, &lt;collate&gt;) proves profiling saw the
-     * SHARDED chain. If {@code profile_analysis} ever runs before {@code law_shard} the fold is gone from the code,
-     * the chain stays the original (start, plus, sum), and this row is what notices — {@code profile_analysis}
-     * removes what it captures, so the two rules are ordered by registration alone and nothing else pins them.
-     * <p>
-     * DISABLED — A REAL DISAGREEMENT, not a missing feature. The analysis inst is currently minted under the
-     * REWRITE tid {@code /m/inst/rewrite/profile_analysis}, while the inst this class documents (and
-     * {@code machInstSet.PROFILE_ANALYSIS_TID}) is {@code /m/inst/profile_analysis}. The op-sequence
-     * comparison cannot even express the difference: spelling {@code /m/inst/rewrite/profile_analysis()} in
-     * the expected form parses back down to {@code /m/inst/profile_analysis}, so no literal in a CSV can name
-     * what the implementation emits. Re-enable once the two addresses agree — the rule and the inst it mints
-     * should not share an address that the inst namespace cannot spell.
-     */
-    /**
-     * THE INDEX — the spec for the emitter work still outstanding, kept as an executable description rather
-     * than prose. TODAY the value is a FLAT profiling::T (keys: format, machine, stage, insts, resolve,
-     * rewrite, apply, per_inst, flow, cache) because the slaves return INTEGERS: their code carries no
-     * profile() end-cap, so the master has partials to fold, not reports to index.
-     * <p>
-     * The measurement that closes the question "are sum() and profile() fighting over the cut?": no —
-     * {@code per_inst} is [branch, sum], i.e. law_shard fired and profile_analysis
-     * captured the SHARD layout. Distribution is not the problem; the missing END CAP is.
-     * <p>
-     * What must land in PlanInterpreter.shard(): when a chain's tail is profile(), append profile() to every
-     * SLAVE (the peer's own compiler then mints profile_analysis over its part and answers a profiling::T),
-     * end the master in {@code profile_collate()} instead of the fold, and include the master's OWN report —
-     * its gather wait, which no shard can supply — as one more entry of the gathered multiplicity.
+     * THE TREE IS {@link TreeShardTransportTest}'s. Here no node below the root can re-plan: the forked peers mount no
+     * category and dial no one, and {@code ?place=[local,peer]} lands both lanes on the peers (no home lane), so the
+     * master's own lane cannot be an interior node either.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            // profile_collate is a PLAN's product, deliberately not an instruction of the ISA, so no short name
-            // resolves to it: the expected form spells the address the plan emits
-            "{1,3,3,4,5}.plus(10).sum().profile()  % branch()./m/inst/profile_collate() % 2",
+            // the star: two peers, a part each
+            "{1,3,3,4,5}.plus(10).sum().profile()              % /m/inst/profile_collate() % [depth=>1,leaf=>[count=>2,c_sum=>5],level=>[2]]",
+            // a computed seed: a filter handed an effect stays home (A's row), so the master's run is start.is.branch,
+            // and the branch deals the survivors when it runs
+            "{1,2,3,4,5,6}.is(print(_).gt(2)).sum().profile()  % /m/inst/profile_collate() % [depth=>1,leaf=>[count=>2,c_sum=>4],level=>[2]]",
     }, delimiter = '%')
-    void test_U_profiling_index(final String code, final String expectedRewriteForm, final String expectedResult) {
-        // COLUMN 2 -- THE REWRITE FORM: the emitted master chain, op by op. A profiling chain must end in
-        // profile_collate, NOT in the fold: once each slave answers a profiling::T there are no partials to
-        // recombine, so a layout ending in sum() means the end caps did not reach the leaves.
-        final var compiled = Machine.parse(code).asCode().rewrite().asCode();
-        final var expected = Machine.parse(expectedRewriteForm).asCode();
-        assertEquals(expected.insts().size(), compiled.insts().size(), "op count for " + code + ", was: " + compiled);
-        for (int i = 0; i < compiled.insts().size(); i++)
-            assertEquals(expected.insts().get(i).tid().basePath(), compiled.insts().get(i).tid().basePath(),
-                    "op " + i + " of " + compiled);
-        // COLUMN 3 -- THE ROW COUNT of the collated index: one per place a report was made.
-        final var collated = Machine.evaluate(compiled);
-        assertTrue(collated.isRec(), "the collated profile is one rec keyed by where each report was made, was: " + collated);
-        final var rows = collated.asRec().jvm();
-        assertTrue(rows.size() >= 2, "one row per place a report was made; keys=" + rows.keySet());
-        assertEquals(Integer.parseInt(expectedResult.trim()), rows.size(),
-                "collated rows for " + code + ", keys=" + rows.keySet());
-        rows.forEach((where, report) -> {
-            assertTrue(report.isRec(), "each row is a profiling::T, not a bare time: " + where);
-            assertFalse(report.asRec().at(uri("machine")).isNoObj(), "row " + where + " names its machine");
-            assertFalse(report.asRec().at(uri("insts")).isNoObj(), "row " + where + " counts the insts it profiled");
-            assertFalse(report.asRec().at(uri("stage")).isNoObj(), "row " + where + " carries per-stage timings");
-        });
+    void test_U_profile_collation(final String code, final String expectedRewriteForm, final String expectedResult) {
+        // COLUMN 2 -- THE REWRITE FORM: the collator alone, over the master's run, which ends in the branch
+        final Code compiled = Machine.parse(code).asCode().rewrite().asCode();
+        checkEquality(LOG, lst(Machine.parse(expectedRewriteForm).asCode().insts().stream().map(inst -> (Obj) uri(inst.tid().basePath())).toList()),
+                lst(compiled.insts().stream().map(inst -> (Obj) uri(inst.tid().basePath())).toList()), true);
+        checkEquality(LOG, uri(BRANCH_INST_TID), uri(compiled.insts().getFirst().arg(0).asCode().insts().getLast().tid().basePath()), true);
+        // COLUMN 3 -- THE NEST: one profiling::T at the root, the master's own run ending in its branch
+        final Rec report = Machine.evaluate(Machine.parse(code).asCode()).asRec();
+        checkEquality(LOG, uri(PROFILING_TID), uri(report.tid().basePath()), true);
+        checkEquality(LOG, uri(BRANCH_INST_TID.name()), report.at(uri(PER_INST)).elements().reduce((a, b) -> b).orElseThrow().asRec().at(uri(NAME)), true);
+        checkEquality(LOG, ObjmtronSerializer.parse(expectedResult.trim()), rec(
+                uri(DEPTH), report.at(uri(DEPTH)),
+                uri(LEAF), rec(uri(COUNT), report.at(uri(f(LEAF).extend(COUNT))), uri(C_SUM), report.at(uri(f(LEAF).extend(C_SUM)))),
+                uri(LEVEL), lst(report.at(uri(LEVEL)).elements().map(level -> (Obj) level.asRec().at(uri(COUNT))).toList())), true);
+        // EVERY PLACE AT EVERY LEVEL: a profiling::T keyed by the machine that made it, naming its machine, its insts and
+        // its stages; the critical path starts at one of the root's places
+        final List<Rec> nest = new ArrayList<>(List.of(report));
+        for (int i = 0; i < nest.size(); i++) {
+            final Obj places = nest.get(i).at(uri(PLACE));
+            if (!places.isNoObj())
+                places.asRec().<Rel>elements().forEach(place -> {
+                    checkEquality(LOG, place.first(), uri(place.second().asRec().at(uri(MACHINE)).uriValue().pathEncoding()), true);
+                    checkEquality(LOG, bool(true), bool(place.second().asRec().at(uri(INSTS)).isInt()), true);
+                    checkEquality(LOG, bool(true), bool(place.second().asRec().at(uri(f(STAGE).extend(APPLY).extend(MIN))).isReal()), true);
+                    nest.add(place.second().asRec());
+                });
+        }
+        checkEquality(LOG, bool(true), bool(report.at(uri(PLACE)).asRec().<Rel>elements()
+                .anyMatch(place -> place.first().equals(report.at(uri(PATH)).elements().findFirst().orElseThrow()))), true);
+        // THE FORMAT, as a user asks for it: every place's machine, and the summary over the root's places
+        final Obj format = Machine.evaluate(Machine.parse(code + ">>format").asCode());
+        LOG.debug("profile of %s: %s", code, format);
+        checkEquality(LOG, bool(true), bool(format.isStr()), true);
+        nest.stream().skip(1).forEach(place -> checkEquality(LOG, bool(true),
+                bool(format.strValue().contains(place.at(uri(MACHINE)).uriValue().pathEncoding().toString())), true));
+        for (final String line : List.of("gathered in", "straggler", "imbalance", "efficiency", "tree", "critical"))
+            checkEquality(LOG, bool(true), bool(format.strValue().contains(line)), true);
     }
-
-    /**
-     * the key the master's own report occupies in a collated profile.
-     */
-    private static final String SHARD_MASTER = "master";
 
     /**
      * AN ABSENT SELECTOR IS ADMITTED, SO THE ARGLESS {@code order()} SHARDS AS {@code order(_)} DOES. The {@code ?decq}

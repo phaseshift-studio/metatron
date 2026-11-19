@@ -209,6 +209,7 @@ public final class Tokens {
     public static final String ACTOR = "actor";
     public static final String EXIT = "exit";
     public static final String DEPTH = "depth";
+    public static final String LEAF = "leaf";
     public static final String CHAT_ID = "chat_id";
     public static final String PARENT = "parent";
     public static final String TEXT = "text";

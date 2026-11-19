@@ -47,6 +47,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleBiFunction;
+import java.util.function.ToLongBiFunction;
 import java.util.function.ToLongFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -653,17 +655,27 @@ public class mInstSet extends AbstractInstSet {
                     // reports of the places below it.
                     // NOTE: keyed with the base uri::T for now; a dedicated path-encoded refinement does not
                     // exist yet, so the encoding is a writer convention until the type states it.
-                    T(PATH_ENCODING_TID.maybe()), T(PROFILING_TID.maybe())), Map.of(
-                    uri(FORMAT), "lazily constructed pretty print format",
-                    uri(STAGE), "per-pipeline-stage min/max wall-clock timings (rewrite/resolve/apply)",
-                    uri(INSTS), "the resolved instruction count",
-                    uri(RESOLVE), "resolve sub-stages (inst-resolve/generic-binding/inst-composition)",
-                    uri(REWRITE), "per-rewrite-rule instruction reduction (rules + net total)",
-                    uri(APPLY), "processor sub-stages (split/apply/next)",
-                    uri(PER_INST), "per-instruction monad/coefficient flow + time",
-                    uri(FLOW), "bulk-compression flow (monads propagated vs coefficient sum)",
-                    uri(CACHE), "type-graph cache hit/miss/hit-rate"))
-            .desc("a structured profile report produced by profile()")
+                    // THE ENTRIES A REPORT ADDS (machine, and a collated report's place, depth, leaf, level and path;
+                    // profileCollate) are typed by this entry alone and documented below. Slots of their own failed
+                    // every report, a local profile() included (measured 2026-11-19): a pattern's key is required
+                    // unless it is optional (Rec#test), and a lane's report holds none of a collated report's entries.
+                    T(PATH_ENCODING_TID.maybe()), T(PROFILING_TID.maybe())), Map.ofEntries(
+                    Map.entry(uri(FORMAT), "lazily constructed pretty print format"),
+                    Map.entry(uri(STAGE), "per-pipeline-stage min/max wall-clock timings (rewrite/resolve/apply)"),
+                    Map.entry(uri(INSTS), "the resolved instruction count"),
+                    Map.entry(uri(RESOLVE), "resolve sub-stages (inst-resolve/generic-binding/inst-composition)"),
+                    Map.entry(uri(REWRITE), "per-rewrite-rule instruction reduction (rules + net total)"),
+                    Map.entry(uri(APPLY), "processor sub-stages (split/apply/next)"),
+                    Map.entry(uri(PER_INST), "per-instruction monad/coefficient flow + time"),
+                    Map.entry(uri(FLOW), "bulk-compression flow (monads propagated vs coefficient sum)"),
+                    Map.entry(uri(CACHE), "type-graph cache hit/miss/hit-rate"),
+                    Map.entry(uri(MACHINE), "the machine the report was made on: its host, its vid and its process id"),
+                    Map.entry(uri(PLACE), "a distributed profile's places: each lane's report, keyed by the path-encoded machine that made it"),
+                    Map.entry(uri(DEPTH), "the levels of places below this report (a star is 1)"),
+                    Map.entry(uri(LEAF), "the leaves below this report: how many (count), the objs their seeds took (c_sum) and their summed apply (time)"),
+                    Map.entry(uri(LEVEL), "per level below this report, the places' apply: count, min, max and total"),
+                    Map.entry(uri(PATH), "the critical path: the slowest place at each level, from here down to a leaf")))
+            .desc("a structured profile report produced by profile(); a distributed profile nests its places' reports")
             .example("{1,2,3}.sum().profile()>>format    [-- the str::T text table --]")
             .example("{1,2,3}.sum().profile()>>flow      [-- [monads=>…,coeff_sum=>…,compression=>…,processors=>…] --]")
             .create();
@@ -920,7 +932,13 @@ public class mInstSet extends AbstractInstSet {
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
-                                    final Tuple.Pair<Integer, Inst> profileInst = IteratorUtil.indexedStream(insts.iterator()).filter(i -> i.get1().tid().basePath().equals(PROFILE_INST_TID)).findAny().orElse(null);
+                                    // TWO MARKERS, ONE CAPTURE: the profile() a writer types, and the bare profile_collate()
+                                    // a distribution plan ends a profiled master's run with (Shard), its lanes answering
+                                    // reports. A minted collator carries its run as its argument, so it is never a marker.
+                                    final Tuple.Pair<Integer, Inst> profileInst = IteratorUtil.indexedStream(insts.iterator())
+                                            .filter(i -> PROFILE_INST_TID.equals(i.get1().tid().basePath())
+                                                    || (PROFILE_COLLATE_TID.equals(i.get1().tid().basePath()) && i.get1().args().isEmpty()))
+                                            .findAny().orElse(null);
                                     if (null == profileInst) return code;
                                     final List<Inst> preceding = new ArrayList<>(insts.subList(0, profileInst.get0()));
                                     // capture the pre-collapse code by CLOSURE, not as an inst arg — an arg
@@ -931,7 +949,9 @@ public class mInstSet extends AbstractInstSet {
                                     // dom is maybe (not maybeSome): one lhs in, exactly one report out. a bulk (gather)
                                     // dom made the monad loop apply this inst *and* flush it through the barrier, so
                                     // profile() returned two reports — a {2} objs, printed as two tables end to end.
-                                    bundledCode.add(profileAnalysis(precedingCode));
+                                    bundledCode.add(PROFILE_INST_TID.equals(profileInst.get1().tid().basePath())
+                                            ? profileAnalysis(precedingCode)
+                                            : profileCollate(precedingCode));
                                     if (profileInst.get0() + 1 < insts.size()) {
                                         final Inst capInst = insts.get(profileInst.get0() + 1);
                                         bundledCode.add(capInst.dom(PROFILING_TYPE));
@@ -940,7 +960,7 @@ public class mInstSet extends AbstractInstSet {
                                         }
                                     }
                                     return code.jvm(bundledCode);
-                                }), "rewrites a().b().c().profile() to profile_analysis(a().b().c()): \\(\\mathrm{profile} \\leadsto \\mathrm{profile\\_analysis}(\\ldots)\\)"),
+                                }), "rewrites a().b().c().profile() to profile_analysis(a().b().c()), and a distribution plan's a().branch(…).profile_collate() to profile_collate(a().branch(…)), the master's run timed around its branch: \\(\\mathrm{profile} \\leadsto \\mathrm{profile\\_analysis}(\\ldots)\\)"),
 
                         // THE UNIT LAW (Marko, 2026-11-08): monoid_theory states op(id) ⇝ ε, every monoid instance a carrier
                         // declares binds it (Law.Helper.rules), and each bound unit drops from a chain. The theories are /m's,
@@ -1755,7 +1775,7 @@ public class mInstSet extends AbstractInstSet {
                 .dom(ALL.maybe(), "the monads the run produced up to the profile marker")
                 .rng(PROFILING_TID, "the compressed profile report")
                 .args(lst(preceding))
-                .body((lhs, inst) -> profileTable(preceding))
+                .body((lhs, inst) -> profileTable(preceding, new AtomicReference<>()))
                 .law(Law.monoidic, Law.commutative, Law.pure)
                 // THE FORM IS DECLARED, not derived: Form.of reads a many-to-one dom as a reducer, and this
                 // inst's dom is deliberately `maybe` (a bulk dom made it answer two reports). Declared so
@@ -1764,6 +1784,130 @@ public class mInstSet extends AbstractInstSet {
                 .form(Inst.Form.reducer)
                 .desc("profile() is a MAKER: this is the instruction it mints around the captured program. A FOLD and a BARRIER — it aggregates every monad up to the marker and answers one compressed profile::profiling rec, so its laws are the ones a shard's report needs in order to recombine at the master: monoidic (the partials regroup), commutative (a collation is order-free) and pure (it observes, it does not mutate). The program is captured by closure, never as an argument, so the outer resolve cannot collapse the instructions being timed.")
                 .create();
+    }
+
+    /**
+     * THE COLLATION INSTRUCTION — {@code profile_collate(run)}: the master's half of a DISTRIBUTED profile, and the
+     * reason {@code profiling::T} is recursive.
+     * <p>
+     * THE MASTER'S RUN IS TIMED AROUND ITS BRANCH. A profiled cut ships lanes that end in {@code profile()}, so each
+     * answers a report instead of a partial, and ends the master's run with a bare {@code profile_collate()}. The
+     * {@code profile_analysis} rule, which runs after the distribution rule, captures the run before that marker as it
+     * captures a local one and mints this instruction over it. The body times the run as {@code profile()} times a
+     * local run (one warm-up, five timed runs), so the master's own report is an ordinary profiling::T whose
+     * {@code apply} holds the branch's gather wait, the one number no lane can report. The reports the last timed run
+     * gathered nest under it: ONE report, {@code place => [<path-encoded machine> => profiling::T, …]}.
+     * <p>
+     * KEYED, NEVER POSITIONAL — a reader must be able to say WHICH machine owns a number without reconstructing the
+     * fan-out order, and the topologies differ (a star's flat fan-out, a tree's hops, a divide-and-conquer plan), so the
+     * structure has to be self-describing rather than implied by the layout. THE KEY IS THE PATH ENCODING
+     * ({@link #PATH_ENCODING_TID}): {@code ws/localhost/1112/mtron} is one addressable segment,
+     * {@code ws://localhost:1112/mtron} is not a key at all.
+     * <p>
+     * A TREE NESTS LIKE THE TREE. An interior node, a peer handed a lane with hop budget left, is a master to its own
+     * places, so it answers a collated report and its parent nests it whole. The figures of a whole tree are FOLDED
+     * BOTTOM-UP, because they form a commutative monoid: each node folds its places' figures as it collates, and a leaf
+     * contributes itself, so nothing below a place is walked twice — {@code depth} (the levels below), {@code leaf}
+     * (how many leaves, the objs their seeds took as {@code c_sum}, their summed apply as {@code time}), {@code level}
+     * (per level below, the places' apply: count, min, max, total) and {@code path} (the critical path: the slowest
+     * place at each level, down to a leaf). A place's apply is its stage apply min, its steady-state run.
+     * <p>
+     * MONOIDIC + COMMUTATIVE + PURE for the same reason the other two profiling insts are: the reports regroup across
+     * lanes and machines, the index does not depend on arrival order, and collation observes.
+     */
+    public static final fURI PROFILE_COLLATE_TID = M_ISA_INST_TID.extend("profile_collate");
+
+    /**
+     * Mint the collation inst over the master's captured run. Deliberately NOT registered as an instruction of the
+     * ISA: like {@link #profileAnalysis(Code)} it is a MAKER's product, minted by the {@code profile_analysis} rule
+     * where a distribution plan ended a profiled master's run in a bare {@code profile_collate()}.
+     */
+    public static Inst profileCollate(final Code run) {
+        return InstBuilder.build()
+                .tid(PROFILE_COLLATE_TID, "the master's half of a distributed profile: its run timed around the branch, the lanes' reports nested under it")
+                .dom(ALL.maybe(), "the monads the master's run produced up to the marker")
+                .rng(PROFILING_TID, "the master's own report, each lane's report under place, keyed by the machine that made it")
+                .args(lst(run))
+                .form(Inst.Form.reducer)
+                .law(Law.monoidic, Law.commutative, Law.pure)
+                .body((lhs, inst) -> {
+                    final AtomicReference<Obj> gathered = new AtomicReference<>(noobj());
+                    final Rec own = profileTable(run, gathered);
+                    // THE PLACES: each report the last timed run gathered, keyed by the machine that made it. A report
+                    // that names no machine (one made in a machine without a vid) is the local one by construction.
+                    final Map<Obj, Obj> places = new LinkedHashMap<>();
+                    gathered.get().stream().filter(Obj::isRec).forEach(report -> {
+                        final Obj where = report.asRec().at(uri(MACHINE));
+                        places.put(where.isUri() ? uri(where.uriValue().pathEncoding()) : uri(LOCAL), report);
+                    });
+                    // THE SUBTREE, FOLDED BOTTOM-UP: leaves, objs and lane time add, depth takes the max, and a place's
+                    // level i is this node's level i + 1, merged as counts and totals add and min and max fold
+                    long leaves = 0L, objs = 0L, depth = 0L;
+                    double time = 0.0, slowest = -1.0;
+                    Obj straggler = noobj();
+                    final List<double[]> levels = new ArrayList<>();
+                    for (final Map.Entry<Obj, Obj> place : places.entrySet()) {
+                        final Rec report = place.getValue().asRec();
+                        final double apply = report.at(uri(f(STAGE).extend(APPLY).extend(MIN))).realValue();
+                        final boolean collated = !report.at(uri(PLACE)).isNoObj();
+                        leaves += collated ? report.at(uri(f(LEAF).extend(COUNT))).intValue() : 1L;
+                        objs += profileObjs(report);
+                        time += collated ? report.at(uri(f(LEAF).extend(TIME))).realValue() : apply;
+                        depth = Math.max(depth, collated ? report.at(uri(DEPTH)).intValue() : 0L);
+                        final List<double[]> below = new ArrayList<>(List.of(new double[]{1.0, apply, apply, apply}));
+                        report.at(uri(LEVEL)).elements().map(Obj::asRec).forEach(level -> below.add(new double[]{
+                                level.at(uri(COUNT)).intValue(), level.at(uri(MIN)).realValue(),
+                                level.at(uri(MAX)).realValue(), level.at(uri(TOTAL)).realValue()}));
+                        for (int i = 0; i < below.size(); i++) {
+                            if (levels.size() == i) {
+                                levels.add(below.get(i));
+                                continue;
+                            }
+                            final double[] merged = levels.get(i);
+                            merged[0] += below.get(i)[0];
+                            merged[1] = Math.min(merged[1], below.get(i)[1]);
+                            merged[2] = Math.max(merged[2], below.get(i)[2]);
+                            merged[3] += below.get(i)[3];
+                        }
+                        if (apply > slowest) {
+                            slowest = apply;
+                            straggler = place.getKey();
+                        }
+                    }
+                    // THE CRITICAL PATH: the straggler, then the straggler's own critical path, down to a leaf
+                    final List<Obj> path = new ArrayList<>();
+                    if (!straggler.isNoObj()) {
+                        path.add(straggler);
+                        places.get(straggler).asRec().at(uri(PATH)).elements().forEach(path::add);
+                    }
+                    final Map<Obj, Obj> fields = new LinkedHashMap<>();
+                    own.<Rel>elements().forEach(kv -> fields.put(kv.first(), kv.second()));
+                    fields.put(uri(PLACE), rec(places));
+                    fields.put(uri(DEPTH), jnt(places.isEmpty() ? 0L : depth + 1L));
+                    fields.put(uri(LEAF), rec(uri(COUNT), jnt(leaves), uri(C_SUM), jnt(objs), uri(TIME), real(time, MILLIS_TYPE.vid(), null)));
+                    fields.put(uri(LEVEL), lst(levels.stream().map(level -> (Obj) rec(
+                            uri(COUNT), jnt((long) level[0]),
+                            uri(MIN), real(level[1], MILLIS_TYPE.vid(), null),
+                            uri(MAX), real(level[2], MILLIS_TYPE.vid(), null),
+                            uri(TOTAL), real(level[3], MILLIS_TYPE.vid(), null))).toList()));
+                    fields.put(uri(PATH), lst(path));
+                    final String text = profileText(rec(fields), true);
+                    fields.put(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (self, format) -> str("\n" + text))));
+                    return rec(fields, PROFILING_TID, null);
+                })
+                .desc("the master's half of a distributed profile: the plan ends a profiled master's run in a bare profile_collate(), and the profile_analysis rule mints this instruction over the run before it. It times the master's run as profile() times a local run, so its apply holds the branch's gather wait, and nests the report each lane answered under place, keyed by the machine that made it (path-encoded). A tree nests like the tree, and the figures of the whole tree (depth, leaf, level, path) fold bottom-up as each node collates. Same laws as profile(): monoidic, commutative, pure.")
+                .create();
+    }
+
+    /**
+     * THE OBJS A PLACE TOOK: a collated place's leaves' coefficient sum, else what its seed put out, the coefficients
+     * its first instruction answered (a bulked member counts every copy it holds), read off its per-instruction flow.
+     */
+    private static long profileObjs(final Rec report) {
+        return !report.at(uri(PLACE)).isNoObj()
+                ? report.at(uri(f(LEAF).extend(C_SUM))).intValue()
+                : report.at(uri(PER_INST)).elements().findFirst()
+                .map(first -> first.asRec().at(uri(C_OUT)).intValue()).orElse(0L);
     }
 
     /**
@@ -1778,57 +1922,6 @@ public class mInstSet extends AbstractInstSet {
      * since this runs inside a profile); a machine with no vid — a rootless construct — contributes no
      * identity rather than a bare host, which would read as a machine called "".
      */
-    /**
-     * THE COLLATION INSTRUCTION — {@code profile_collate()}: the ⊕ a DISTRIBUTED profile needs at the master,
-     * and the reason {@code profiling::T} is recursive.
-     * <p>
-     * It takes the multiplicity of reports (the shards' answers plus this machine's own) and answers ONE rec
-     * indexed by where each report was made: {@code <path-encoded machine> => profiling::T}, with this
-     * machine's own at {@code master}. Keyed, never positional — a reader must be able to say WHICH machine
-     * owns a number without reconstructing the fan-out order, and the topologies differ (a star's flat
-     * fan-out, a tree's hops, a divide-and-conquer plan), so the structure has to be self-describing rather
-     * than implied by the layout.
-     * <p>
-     * THE KEY IS THE PATH ENCODING ({@link #PATH_ENCODING_TID}): {@code ws/localhost/1112/mtron} is one
-     * addressable segment, {@code ws://localhost:1112/mtron} is not a key at all.
-     * <p>
-     * MONOIDIC + COMMUTATIVE + PURE for the same reason the other two profiling insts are: the reports
-     * regroup across lanes and machines, the index does not depend on arrival order, and collation observes.
-     * The master's own row is the one NO shard can supply — its {@code apply} stage is the gather wait — which
-     * is why it must be identified and kept rather than summed away.
-     */
-    public static final fURI PROFILE_COLLATE_TID = M_ISA_INST_TID.extend("profile_collate");
-
-    /**
-     * Mint the collation inst. Deliberately NOT registered as an instruction of the ISA: like
-     * {@link #profileAnalysis(Code)} it is a MAKER's product, emitted by the distribution plan where a shard
-     * ends in {@code profile()} and the master has reports instead of partials.
-     */
-    public static Inst profileCollate() {
-        return InstBuilder.build()
-                .tid(PROFILE_COLLATE_TID, "index the gathered profiling::T reports by the machine each was made on")
-                .dom(ALL.maybeSome(), "the profiling::T reports the shards answered, plus this machine's own")
-                .rng(REC_TID, "one rec: <path-encoded machine> => profiling::T, this machine's own at `master`")
-                .form(Inst.Form.reducer)
-                .law(Law.monoidic, Law.commutative, Law.pure)
-                .body((lhs, inst) -> {
-                    final Obj here = machineIdentity();
-                    final Map<Obj, Obj> rows = new LinkedHashMap<>();
-                    lhs.stream().filter(Obj::isRec).forEach(report -> {
-                        final Obj where = report.asRec().at(uri(MACHINE));
-                        // THE MASTER IS NAMED, not inferred from arrival order: `machine == here` is the one
-                        // cheap test, and a report that names no machine is the local one by construction.
-                        rows.put(!where.isUri() || where.equals(here)
-                                        ? uri("master")
-                                        : uri(where.uriValue().pathEncoding()),
-                                report);
-                    });
-                    return rec(rows);
-                })
-                .desc("the master's half of a distributed profile: index the gathered profiling::T reports by the machine that made them (path-encoded), keeping this machine's own at `master`. The counterpart of profile(), which folds a LOCAL run into one report; this folds the REPORTS into one index. Same laws, different arity — and the recursion in profiling::T is what lets a report hold the reports of the places below it, so a star, a tree and a divide-and-conquer plan all describe themselves the same way.")
-                .create();
-    }
-
     private static Obj machineIdentity() {
         final Machine machine = Machine.current();
         final fURI vid = machine.vid();
@@ -1845,7 +1938,12 @@ public class mInstSet extends AbstractInstSet {
         return uri(composed.uriValue().toString() + "/" + ProcessHandle.current().pid());
     }
 
-    private static Rec profileTable(final Code code) {
+    /**
+     * TIME A RUN: one warm-up, then five timed runs of {@code code}, each rewritten, resolved and applied, and the
+     * report of what they cost. What the last timed run answered is handed back through {@code answer}: a collator's
+     * run answers the reports its lanes made.
+     */
+    private static Rec profileTable(final Code code, final AtomicReference<Obj> answer) {
         // snapshot the pre-collapse insts: Code.rewrite() mutates its input in place (via
         // selfJVM), so the timed loop must rewrite a fresh copy each iteration — the snapshot
         // is what makes the original 7 → 3 reduction measurable.
@@ -1879,7 +1977,7 @@ public class mInstSet extends AbstractInstSet {
                 final Code resolved = Machine.current().compiler().resolver().apply(noobj(), rewritten);
                 final long r1 = System.nanoTime();
                 final long a0 = System.nanoTime();
-                resolved.apply(noobj());
+                answer.set(resolved.apply(noobj()));
                 final long a1 = System.nanoTime();
                 rewriteMin = Math.min(rewriteMin, rw1 - rw0);
                 rewriteMax = Math.max(rewriteMax, rw1 - rw0);
@@ -1905,85 +2003,18 @@ public class mInstSet extends AbstractInstSet {
         final long tSplit = read.applyAsLong(f(APPLY).extend(SPLIT).extend(TOTAL));
         final long tApply = read.applyAsLong(f(APPLY).extend(APPLY).extend(TOTAL));
         final long tNext = read.applyAsLong(f(APPLY).extend(NEXT).extend(TOTAL));
-        final long resSum = tResolve + tBind + tCompose;
-        final long appSum = tSplit + tApply + tNext;
-        final StringBuilder sb = new StringBuilder("\n");
-        sb.append("  stage     min (ms)   max (ms)\n");
-        sb.append(String.format("  rewrite   %8.3f   %8.3f%n", rewriteMin / 1_000_000.0, rewriteMax / 1_000_000.0));
-        sb.append(String.format("  resolve   %8.3f   %8.3f%n", resolveMin / 1_000_000.0, resolveMax / 1_000_000.0));
-        sb.append(String.format("  apply     %8.3f   %8.3f%n", applyMin / 1_000_000.0, applyMax / 1_000_000.0));
-        sb.append(String.format("  insts     %d%n", resolved.insts().size()));
-        sb.append("  resolve sub-stages (avg ms):\n");
-        sb.append(String.format("    inst-resolve      %8.3f  %5.1f%%%n", tResolve / 1_000_000.0 / iters, 0L == resSum ? 0.0 : tResolve * 100.0 / resSum));
-        sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", tBind / 1_000_000.0 / iters, 0L == resSum ? 0.0 : tBind * 100.0 / resSum));
-        sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", tCompose / 1_000_000.0 / iters, 0L == resSum ? 0.0 : tCompose * 100.0 / resSum));
-        sb.append("  rewrite rules:\n");
         // rewrite => [<rule> => [in, out, time]], each rule read off its own rec, slowest first
         final ToLongFunction<Obj> ruleTime = rule -> rule.asRec().at(uri(f(TIME).extend(TOTAL))).orElse(jnt(0)).intValue();
         final ToLongFunction<Obj> ruleIn = rule -> rule.asRec().at(uri(IN)).orElse(jnt(0)).intValue();
         final ToLongFunction<Obj> ruleOut = rule -> rule.asRec().at(uri(OUT)).orElse(jnt(0)).intValue();
         final List<Map.Entry<Obj, Obj>> rules = new ArrayList<>(analysis.at(uri(REWRITE)).orElse(rec()).asRec().jvm().entrySet());
         rules.sort((a, b) -> Long.compare(ruleTime.applyAsLong(b.getValue()), ruleTime.applyAsLong(a.getValue())));
-        final int nRules = Math.min(6, rules.size());
-        sb.append("                ");
-        for (int i = 0; i < nRules; i++)
-            sb.append(String.format("%-20s", rules.get(i).getKey()));
-        sb.append('\n');
-        sb.append("      insts.in  ");
-        for (int i = 0; i < nRules; i++)
-            sb.append(String.format("%-20d", ruleIn.applyAsLong(rules.get(i).getValue())));
-        sb.append('\n');
-        sb.append("      insts.out ");
-        for (int i = 0; i < nRules; i++)
-            sb.append(String.format("%-20d", ruleOut.applyAsLong(rules.get(i).getValue())));
-        sb.append('\n');
-        sb.append("      time(ms)  ");
-        for (int i = 0; i < nRules; i++)
-            sb.append(String.format("%-20.3f", ruleTime.applyAsLong(rules.get(i).getValue()) / 1_000_000.0));
-        sb.append('\n');
-        // summary: the net reduction (original → rewritten inst count) and the total rule time.
+        // the net reduction (original → rewritten inst count) and the total rule time
         final long totalRuleTime = rules.stream().mapToLong(rule -> ruleTime.applyAsLong(rule.getValue())).sum();
-        sb.append(String.format("      TOTAL     inst.in %d   inst.out %d   time(ms) %.3f%n",
-                originalInsts.size(), rewritten.insts().size(), totalRuleTime / 1_000_000.0));
-        sb.append("  apply sub-stages (avg ms):\n");
-        sb.append(String.format("    split     %8.3f  %5.1f%%%n", tSplit / 1_000_000.0 / iters, 0L == appSum ? 0.0 : tSplit * 100.0 / appSum));
-        sb.append(String.format("    apply     %8.3f  %5.1f%%%n", tApply / 1_000_000.0 / iters, 0L == appSum ? 0.0 : tApply * 100.0 / appSum));
-        sb.append(String.format("    next      %8.3f  %5.1f%%%n", tNext / 1_000_000.0 / iters, 0L == appSum ? 0.0 : tNext * 100.0 / appSum));
-        sb.append("  per-instruction (per iteration):\n");
-        final List<Inst> insts = resolved.insts();
-        sb.append("                ");
-        for (final Inst inst : insts)
-            sb.append(String.format("%-10s", inst.tid().name()));
-        sb.append('\n');
-        sb.append("      in.monad  ");
-        for (int i = 0; i < insts.size(); i++)
-            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(MONAD_IN)) / iters));
-        sb.append('\n');
-        sb.append("      in.coeff  ");
-        for (int i = 0; i < insts.size(); i++)
-            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(C_IN)) / iters));
-        sb.append('\n');
-        sb.append("      out.monad ");
-        for (int i = 0; i < insts.size(); i++)
-            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(MONAD_OUT)) / iters));
-        sb.append('\n');
-        sb.append("      out.coeff ");
-        for (int i = 0; i < insts.size(); i++)
-            sb.append(String.format("%-10d", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(C_OUT)) / iters));
-        sb.append('\n');
-        sb.append("      time(ms)  ");
-        for (int i = 0; i < insts.size(); i++)
-            sb.append(String.format("%-10.3f", read.applyAsLong(f(PER_INST).extend(String.valueOf(i)).extend(TIME).extend(TOTAL)) / 1_000_000.0 / iters));
-        sb.append('\n');
         final long monads = read.applyAsLong(f(FLOW).extend(MONADS));
         final long coeffSum = read.applyAsLong(f(FLOW).extend(C_SUM));
-        final long processors = read.applyAsLong(f(FLOW).extend(PROCESSORS));
-        sb.append(String.format("  flow       monads=%d coeff-sum=%d compression=%.2f processors=%d%n",
-                monads, coeffSum, 0L == monads ? 0.0 : (double) coeffSum / (double) monads, processors));
-        sb.append(String.format("  cache     hits=%d misses=%d hit=%.1f%%%n", graph.hits(), graph.misses(), graph.hitRate() * 100.0));
-        final String text = sb.toString();
         final double ms = 1_000_000.0; // nanos -> millis
-        // per-rewrite-rule reduction records, sorted by time (same order as the text table)
+        // per-rewrite-rule reduction records, sorted by time (the order the text table reads them in)
         final List<Obj> ruleRecs = rules.stream()
                 .map(rule -> (Obj) rec(
                         uri(NAME), rule.getKey(),
@@ -1992,6 +2023,7 @@ public class mInstSet extends AbstractInstSet {
                         uri(TIME), real(ruleTime.applyAsLong(rule.getValue()) / ms, MILLIS_TYPE.vid(), null)))
                 .toList();
         // per-instruction monad/coefficient flow records
+        final List<Inst> insts = resolved.insts();
         final List<Obj> perInstRecs = new ArrayList<>();
         for (int i = 0; i < insts.size(); i++) {
             final fURI at = f(PER_INST).extend(String.valueOf(i));
@@ -2003,8 +2035,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(C_OUT), jnt(read.applyAsLong(at.extend(C_OUT)) / iters),
                     uri(TIME), real(read.applyAsLong(at.extend(TIME).extend(TOTAL)) / ms / iters, MILLIS_TYPE.vid(), null)));
         }
-        return rec(mutableMap(
-                uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(text))),
+        final Map<Obj, Obj> fields = mutableMap(
                 // WHICH MACHINE PRODUCED THIS REPORT — `*/network/host.mult(*~/.vid())`, e.g. booger/abc.
                 // Without it a collated report cannot say where a number came from; with it, the master
                 // keys the shards' reports by origin instead of by arrival order.
@@ -2013,7 +2044,7 @@ public class mInstSet extends AbstractInstSet {
                         uri(REWRITE), rec(uri(MIN), real(rewriteMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(rewriteMax / ms, MILLIS_TYPE.vid(), null)),
                         uri(RESOLVE), rec(uri(MIN), real(resolveMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(resolveMax / ms, MILLIS_TYPE.vid(), null)),
                         uri(APPLY), rec(uri(MIN), real(applyMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(applyMax / ms, MILLIS_TYPE.vid(), null))),
-                uri(INSTS), jnt(resolved.insts().size()),
+                uri(INSTS), jnt(insts.size()),
                 uri(RESOLVE), rec(
                         uri(INST_RESOLVE), real(tResolve / ms / iters, MILLIS_TYPE.vid(), null),
                         uri(GENERIC_BINDING), real(tBind / ms / iters, MILLIS_TYPE.vid(), null),
@@ -2029,10 +2060,134 @@ public class mInstSet extends AbstractInstSet {
                 uri(FLOW), rec(
                         uri(MONADS), jnt(monads), uri(C_SUM), jnt(coeffSum),
                         uri(COMPRESSION), real(0L == monads ? 0.0 : (double) coeffSum / (double) monads),
-                        uri(PROCESSORS), jnt(processors)),
+                        uri(PROCESSORS), jnt(read.applyAsLong(f(FLOW).extend(PROCESSORS)))),
                 uri(CACHE), rec(
                         uri(HITS), jnt(graph.hits()), uri(MISSES), jnt(graph.misses()),
-                        uri(HIT_RATE), real(graph.hitRate()))), PROFILING_TID, null);
+                        uri(HIT_RATE), real(graph.hitRate())));
+        // the text is rendered from the fields, as a nesting master renders a place's, and the format leads the report
+        final String text = profileText(rec(fields), true);
+        final Map<Obj, Obj> report = mutableMap(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str("\n" + text))));
+        report.putAll(fields);
+        return rec(report, PROFILING_TID, null);
+    }
+
+    /**
+     * A PROFILE'S TEXT, RENDERED FROM ITS DATA and never from the run that made it: a place's report crosses the wire
+     * as data (its own format is a lambda of the machine that made it), so the master renders every place it nests from
+     * the place's fields. A collated report leads with the summary over its direct places, and at the {@code root} the
+     * figures of the whole tree; then the master's own run, then each place's report, one level in. The formulas are
+     * named where they print: imbalance is max ÷ mean apply, and efficiency is Σ lane apply ÷ (k × gather wait), the
+     * gather wait being the master's own apply (min, as every apply here is: the steady-state run).
+     */
+    private static String profileText(final Rec report, final boolean root) {
+        // a reading at a path of a report's rec, or 0 where the report holds none
+        final ToDoubleBiFunction<Obj, fURI> ms = (rec, path) -> {
+            final Obj value = rec.asRec().at(uri(path));
+            return value.isReal() ? value.realValue() : 0.0;
+        };
+        final ToLongBiFunction<Obj, fURI> n = (rec, path) -> {
+            final Obj value = rec.asRec().at(uri(path));
+            return value.isInt() ? value.intValue() : 0L;
+        };
+        final fURI applied = f(STAGE).extend(APPLY).extend(MIN);
+        final StringBuilder sb = new StringBuilder();
+        final Obj places = report.at(uri(PLACE));
+        if (!places.isNoObj()) {
+            final List<Rel> children = places.asRec().<Rel>elements().toList();
+            final double wait = ms.applyAsDouble(report, applied);
+            final double[] applies = children.stream().mapToDouble(child -> ms.applyAsDouble(child.second(), applied)).toArray();
+            final double total = Arrays.stream(applies).sum();
+            final double mean = children.isEmpty() ? 0.0 : total / children.size();
+            final double max = Arrays.stream(applies).max().orElse(0.0);
+            final Obj straggler = report.at(uri(PATH)).elements().findFirst().orElse(noobj());
+            final int width = children.stream().mapToInt(child -> child.first().toString().length()).max().orElse(0);
+            sb.append(String.format("  places      %d, gathered in %.3f ms (the master's apply, its gather wait included)%n", children.size(), wait));
+            sb.append(String.format("  %-" + Math.max(5, width) + "s  %8s  %10s  %6s%n", "place", "objs", "apply (ms)", "share"));
+            for (int i = 0; i < children.size(); i++)
+                sb.append(String.format("  %-" + Math.max(5, width) + "s  %8d  %10.3f  %5.1f%%%s%n", children.get(i).first(),
+                        profileObjs(children.get(i).second().asRec()), applies[i], 0.0 == total ? 0.0 : applies[i] * 100.0 / total,
+                        children.get(i).first().equals(straggler) ? "  straggler" : ""));
+            sb.append(String.format("  apply       min %.3f   max %.3f   mean %.3f (ms)%n", Arrays.stream(applies).min().orElse(0.0), max, mean));
+            sb.append(String.format("  imbalance   %.2f (max ÷ mean apply)%n", 0.0 == mean ? 0.0 : max / mean));
+            sb.append(String.format("  efficiency  %.3f (Σ lane apply ÷ (k × gather wait))%n", 0.0 == wait || children.isEmpty() ? 0.0 : total / (children.size() * wait)));
+            if (root) {
+                sb.append(String.format("  tree        depth %d   leaves %d   objs %d   lane time %.3f ms%n", n.applyAsLong(report, f(DEPTH)),
+                        n.applyAsLong(report, f(LEAF).extend(COUNT)), n.applyAsLong(report, f(LEAF).extend(C_SUM)), ms.applyAsDouble(report, f(LEAF).extend(TIME))));
+                final List<Obj> levels = report.at(uri(LEVEL)).elements().toList();
+                for (int i = 0; i < levels.size(); i++) {
+                    final long count = n.applyAsLong(levels.get(i), f(COUNT));
+                    final double levelMean = 0L == count ? 0.0 : ms.applyAsDouble(levels.get(i), f(TOTAL)) / count;
+                    sb.append(String.format("  level %-5d %d places, imbalance %.2f%n", i + 1, count, 0.0 == levelMean ? 0.0 : ms.applyAsDouble(levels.get(i), f(MAX)) / levelMean));
+                }
+                // the critical path, walked down the places it names (by key equality: a machine's path may hold a
+                // dot segment, <host/./pid>, which a uri lookup would resolve away)
+                final StringJoiner critical = new StringJoiner(" → ");
+                Obj step = report;
+                for (final Obj hop : report.at(uri(PATH)).elements().toList()) {
+                    step = step.isNoObj() ? step : step.asRec().at(uri(PLACE)).<Rel>elements()
+                            .filter(place -> place.first().equals(hop)).findFirst().map(Rel::second).orElse(noobj());
+                    critical.add(String.format("%s %.3f ms", hop, step.isNoObj() ? 0.0 : ms.applyAsDouble(step, applied)));
+                }
+                sb.append("  critical    ").append(critical).append('\n');
+            }
+            sb.append(String.format("  the master's run, on %s%n", report.at(uri(MACHINE))));
+        }
+        sb.append("  stage     min (ms)   max (ms)\n");
+        for (final String stage : List.of(REWRITE, RESOLVE, APPLY))
+            sb.append(String.format("  %-8s  %8.3f   %8.3f%n", stage, ms.applyAsDouble(report, f(STAGE).extend(stage).extend(MIN)), ms.applyAsDouble(report, f(STAGE).extend(stage).extend(MAX))));
+        sb.append(String.format("  insts     %d%n", n.applyAsLong(report, f(INSTS))));
+        final double tResolve = ms.applyAsDouble(report, f(RESOLVE).extend(INST_RESOLVE));
+        final double tBind = ms.applyAsDouble(report, f(RESOLVE).extend(GENERIC_BINDING));
+        final double tCompose = ms.applyAsDouble(report, f(RESOLVE).extend(INST_COMPOSITION));
+        final double resSum = tResolve + tBind + tCompose;
+        sb.append("  resolve sub-stages (avg ms):\n");
+        sb.append(String.format("    inst-resolve      %8.3f  %5.1f%%%n", tResolve, 0.0 == resSum ? 0.0 : tResolve * 100.0 / resSum));
+        sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", tBind, 0.0 == resSum ? 0.0 : tBind * 100.0 / resSum));
+        sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", tCompose, 0.0 == resSum ? 0.0 : tCompose * 100.0 / resSum));
+        sb.append("  rewrite rules:\n");
+        final List<Obj> rules = report.at(uri(f(REWRITE).extend(RULES))).elements().limit(6).toList();
+        sb.append("                ");
+        rules.forEach(rule -> sb.append(String.format("%-20s", rule.asRec().at(uri(NAME)))));
+        sb.append("\n      insts.in  ");
+        rules.forEach(rule -> sb.append(String.format("%-20d", n.applyAsLong(rule, f(IN)))));
+        sb.append("\n      insts.out ");
+        rules.forEach(rule -> sb.append(String.format("%-20d", n.applyAsLong(rule, f(OUT)))));
+        sb.append("\n      time(ms)  ");
+        rules.forEach(rule -> sb.append(String.format("%-20.3f", ms.applyAsDouble(rule, f(TIME)))));
+        sb.append('\n');
+        sb.append(String.format("      TOTAL     inst.in %d   inst.out %d   time(ms) %.3f%n", n.applyAsLong(report, f(REWRITE).extend(TOTAL).extend(IN)),
+                n.applyAsLong(report, f(REWRITE).extend(TOTAL).extend(OUT)), ms.applyAsDouble(report, f(REWRITE).extend(TOTAL).extend(TIME))));
+        final double tSplit = ms.applyAsDouble(report, f(APPLY).extend(SPLIT));
+        final double tApply = ms.applyAsDouble(report, f(APPLY).extend(APPLY));
+        final double tNext = ms.applyAsDouble(report, f(APPLY).extend(NEXT));
+        final double appSum = tSplit + tApply + tNext;
+        sb.append("  apply sub-stages (avg ms):\n");
+        sb.append(String.format("    split     %8.3f  %5.1f%%%n", tSplit, 0.0 == appSum ? 0.0 : tSplit * 100.0 / appSum));
+        sb.append(String.format("    apply     %8.3f  %5.1f%%%n", tApply, 0.0 == appSum ? 0.0 : tApply * 100.0 / appSum));
+        sb.append(String.format("    next      %8.3f  %5.1f%%%n", tNext, 0.0 == appSum ? 0.0 : tNext * 100.0 / appSum));
+        sb.append("  per-instruction (per iteration):\n");
+        final List<Obj> perInst = report.at(uri(PER_INST)).elements().toList();
+        sb.append("                ");
+        perInst.forEach(inst -> sb.append(String.format("%-10s", inst.asRec().at(uri(NAME)))));
+        sb.append('\n');
+        for (final String[] row : new String[][]{{"in.monad  ", MONAD_IN}, {"in.coeff  ", C_IN}, {"out.monad ", MONAD_OUT}, {"out.coeff ", C_OUT}}) {
+            sb.append("      ").append(row[0]);
+            perInst.forEach(inst -> sb.append(String.format("%-10d", n.applyAsLong(inst, f(row[1])))));
+            sb.append('\n');
+        }
+        sb.append("      time(ms)  ");
+        perInst.forEach(inst -> sb.append(String.format("%-10.3f", ms.applyAsDouble(inst, f(TIME)))));
+        sb.append('\n');
+        sb.append(String.format("  flow       monads=%d coeff-sum=%d compression=%.2f processors=%d%n", n.applyAsLong(report, f(FLOW).extend(MONADS)),
+                n.applyAsLong(report, f(FLOW).extend(C_SUM)), ms.applyAsDouble(report, f(FLOW).extend(COMPRESSION)), n.applyAsLong(report, f(FLOW).extend(PROCESSORS))));
+        sb.append(String.format("  cache     hits=%d misses=%d hit=%.1f%%%n", n.applyAsLong(report, f(CACHE).extend(HITS)),
+                n.applyAsLong(report, f(CACHE).extend(MISSES)), ms.applyAsDouble(report, f(CACHE).extend(HIT_RATE)) * 100.0));
+        if (!places.isNoObj())
+            places.asRec().<Rel>elements().forEach(child -> {
+                sb.append(String.format("  place %s%n", child.first()));
+                profileText(child.second().asRec(), false).lines().forEach(line -> sb.append("  ").append(line).append('\n'));
+            });
+        return sb.toString();
     }
 
     @Override
