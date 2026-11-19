@@ -277,10 +277,10 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
            {?}result=>'the objs the last evaluation produ...',
            {?}analyzer=>"the processor's statistics (analyz...",
+           {?}state=>'the run state: stop, run or pause',
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -348,13 +348,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}state=>'current state of the thread',
-           {?}timeout=>'how long a read of rhs waits for t...',
-           {?}loop=>'delay to repeat code evaluation (d...',
            {?}time=>'the datetime::T when the thread wa...',
            code=>"the thread's executing code",
            {?}runtime=>"computes the thread's current runn...",
-           {?}result=>'the last result produced by the th...'],
+           {?}result=>'the last result produced by the th...',
+           {?}state=>'current state of the thread',
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}loop=>'delay to repeat code evaluation (d...'],
           desc=>'the thread base type']
 ```
 | key       | value                                        |

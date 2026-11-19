@@ -1,0 +1,1097 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Ring Theoretic Distributed Computing · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
+         (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
+         downloading it on every page view. Page-specific MathJax config scripts (e.g. the
+         theory articles) run during parse, before this loader fires. -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var content = document.querySelector('main') || document.body;
+            var text = content.textContent || '';
+            if (text.indexOf('\\(') === -1 && text.indexOf('\\[') === -1) return;
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js';
+            mathjax.async = true;
+            document.head.appendChild(mathjax);
+        });
+    </script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+        <link href="../css/theory-article.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                                src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                                src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                                src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+   <!-- <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/splash"
+               title="the metatron web console — served by this machine">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div> -->
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="article-doc">
+        <h1 class="article-title mb-1">Ring Theoretic Distributed Computing</h1>
+        <small class="article-subtitle">Distribution is a theorem of the stream ring. A fold that declares a commutative monoid can be pushed into the branches of its input, and one rewrite reads those declared laws to spread a program across machines.</small>
+        <div class="article-author">Dr. Marko A. Rodriguez<br>Dr. Stynx</div>
+    </div>
+    <div class="article-body">
+<p><strong>DRAFT</strong>: This article is currently being developed. As of November 18, 2026, the distribution rewrite it describes,
+<code>law_shard</code>, is implemented in metatron for the patterns marked done in the distributed-computing reference <a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>;
+the remaining sections are outlined.</p>
+<h2>Introduction</h2>
+<p>In Stream Ring Theory <a href="./stream-ring-theory.html">[1]</a>, a program is a term of the ring
+\(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\): the \(+\) branches a stream into computations that share nothing, and
+the \(\cdot\) composes them in series. Read with a network in mind, the \(+\) is already a distributed computation. The
+summands of \(a + b\) never meet until their streams merge, and by Theorem 5 streams are atemporal, so the summands may
+run in any order and therefore on any machine. What a distributed system must decide is not <em>whether</em> a term may be
+split, but <em>where the splitting must stop</em>: the places where a stream contracts back to a single value. Those places
+are the reduce functions, and the stream ring states exactly when a reduce function may be pushed into the branches
+before it.</p>
+<p>The statement is Theorem 19 of <a href="./stream-ring-theory.html">[1]</a>. A reduce function \(r\) over a commutative monoid is
+<em>semi-right distributive</em>:</p>
+<p>\[
+(a + b)\,r = (a\,r + b\,r)\,r
+\]</p>
+<p>The left side folds the union of two streams in one place. The right side folds each stream where it lies, then folds
+the two partials once more. Nothing in the right side requires the two folds to share a machine, so the right side is a
+distributed program: two lanes, each computing its own partial, and a final fold that brings the computation home. The
+fold's declared laws, <em>monoidic</em> and <em>commutative</em>, are the license; no other feature is needed.</p>
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
+<p><img src="images/ring-theoretic-distributed-computing/fig-01.svg" alt="figure 1" /></p>
+<p>A program may contract more than once. Every fold that declares these laws is a <em>cut</em>, and each cut plans the run of
+instructions before it. The program <strong>expands</strong> across the available machines, <strong>contracts</strong> at the fold, and starts
+again from the one value the fold left at home.</p>
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
+<p><img src="images/ring-theoretic-distributed-computing/fig-02.svg" alt="figure 2" /></p>
+<p>This article develops that reading. The first section recalls the distributive laws of the stream ring and its
+function subrings. The second states the <em>shard identity</em>, the one rewrite every distribution pattern below lowers to,
+and proves it from Theorems 18 and 19. The third extends it to programs with many cuts. The fourth shows that a
+coefficient is itself an index set, so a single value can be distributed by splitting its unrolls instead of its
+members. The fifth reads the menu of distribution patterns as a taxonomy of laws.</p>
+<h2>The Distributive Laws of the Stream Ring</h2>
+<p>The stream ring's function set \(\mathcal{F}\) has four logical subsets <a href="./stream-ring-theory.html">[1]</a>: the map, filter,
+and flatmap functions, each of which forms a ring with unity, and the reduce functions \(\mathcal{F}_r\), which form only
+a <em>near-ring</em>. The difference is distributivity, and distributivity is exactly the question a distributed system asks.</p>
+<table>
+<thead>
+<tr><th>structure</th><th>right distributive, \((a+b)c = ac + bc\)</th><th>left distributive, \(c(a+b) = ca + cb\)</th></tr>
+</thead>
+<tbody>
+<tr><td>map, filter, flatmap rings</td><td>yes</td><td>yes</td></tr>
+<tr><td>reduce near-ring \(\mathcal{F}_r\) (Theorem 18)</td><td>no</td><td>yes</td></tr>
+<tr><td>monoidic reduce functions (Theorem 19)</td><td>semi: \((a+b)c = (ac+bc)c\)</td><td>yes</td></tr>
+</tbody>
+</table>
+<p>For a map, a filter, or a flatmap \(f\), right distributivity says \((a + b)\,f = a\,f + b\,f\): an elementwise function
+applied to a merged stream is the merge of its applications to the parts. Each part may be processed where it lies.
+This is why a <em>floatable</em> run, any chain of such functions, can be replicated into every branch with no coordination
+(Theorem 6: the coefficient floats through non-reduce chains).</p>
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-03.tex -->
+<p><img src="images/ring-theoretic-distributed-computing/fig-03.svg" alt="figure 3" /></p>
+<p>A reduce function is not right distributive: \((a+b)\,r\) produces one reduced object, while \(a\,r + b\,r\) produces two.
+Theorem 19 recovers the equality for a reduce function over a commutative monoid \(\langle X, \oplus \rangle\), at the cost
+of one more fold: the two reduced objects are themselves reduced. Theorems 16 and 17 name the consequence for
+distribution: reduce functions are temporal, and coefficients stop floating at them, so a reduce function is the one
+synchronization point of a program, its <em>cut</em>.</p>
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-04.tex -->
+<p><img src="images/ring-theoretic-distributed-computing/fig-04.svg" alt="figure 4" /></p>
+<p>Theorem 19 drawn as streams: on the left one fold meets the merged stream; on the right each branch folds its own
+stream, and the two partials are folded once more.</p>
+<table>
+<thead>
+<tr><th>theorem</th><th>statement</th><th>for distribution</th></tr>
+</thead>
+<tbody>
+<tr><td>Theorem 5</td><td>streams are atemporal</td><td>no order of apply or merge is required: placement is free</td></tr>
+<tr><td>Theorem 6</td><td>\(ca \cdot 1b = 1a \cdot 1b \cdot c1\)</td><td>elementwise work is independent: replicate it</td></tr>
+<tr><td>Theorem 16</td><td>reduce functions are temporal</td><td>the fold is the one synchronization point</td></tr>
+<tr><td>Theorem 17</td><td>\(c1 \cdot 1a \neq 1a \cdot c1\) for \(a \in \mathcal{F}_r\)</td><td>floating stops at a reducer: the fold is the cut</td></tr>
+<tr><td>Theorem 18</td><td>\(\langle\mathcal{F}_r, +, \cdot\rangle\) is a near-ring</td><td>a reducer distributes over a fan-out after it</td></tr>
+<tr><td>Theorem 19</td><td>\((a+b)c = (ac+bc)c\) for a monoidic \(c\)</td><td>a commutative monoid fold splits and re-applies</td></tr>
+<tr><td>Theorem 21</td><td>\(\langle\mathcal{F}_r, \cdot\rangle\) is functionally closed</td><td>a fold after a fold is a fold: combiners stay reducers</td></tr>
+</tbody>
+</table>
+<h2>The Shard Identity</h2>
+<p><strong>Definition (cut).</strong> A <em>cut</em> is a reduce function \(r\) whose partial results recombine through a reduce function
+\(C(r)\), its <em>combiner</em>, that is monoidic and commutative. A fold that declares those laws itself is its own combiner,
+\(C(r) = r\) (<code>sum</code>, <code>prod</code>); a fold defined by a derivation recombines through the fold that defines it
+(\(\texttt{count} = \texttt{map}(1) \cdot \texttt{sum}\), so \(C(\texttt{count}) = \texttt{sum}\)).</p>
+<p><strong>Proposition (the shard identity).</strong> Let the seed \(s = s_1 + \cdots + s_k\) be partitioned across \(k\) places, let \(f\) be
+a floatable run, and let \(r\) be a cut. Then</p>
+<p>\[
+s\,f\,r = (s_1\,f\,r + \cdots + s_k\,f\,r)\;C(r).
+\]</p>
+<p><em>Proof sketch.</em> Because \(f\) is a product of map, filter, and flatmap functions, each of which is right distributive,
+\((s_1 + \cdots + s_k)\,f = s_1 f + \cdots + s_k f\). Applying Theorem 19 to the cut, by induction on \(k\),
+\((s_1 f + \cdots + s_k f)\,r = (s_1 f r + \cdots + s_k f r)\,r\). When \(r\) is defined through a derivation, the same
+steps go through its definition, and the outer fold is \(C(r)\). ◻</p>
+<p>Read right to left, the identity is a program for \(k\) machines: each place \(p_i\) computes \(s_i\,f\,r\), one partial per
+place travels home, and the home machine computes \(C(r)\) over the partials. In mtron the right side is a <code>branch</code> keyed
+by place. The examples in this article run over two places. <code>harvest</code>, an instruction from Dr. Stynx's boot file
+<a href="../skills/drstynx/assets/drstynx.boot.mtron"><code>drstynx.boot.mtron</code></a>, spawns a sibling JVM on this machine for each
+integer it is given and dials each one as a <code>ws_client</code> peer; the category instset, which holds <code>law_shard</code>, is
+imported out of view.</p>
+<pre><code class="language-mtron">mtron&gt; harvest?rec&lt;=int{*}(uri{?}::T){
+         spawn?uri&lt;=int(&lt;//localhost:${_ + 1111}/${_}&gt;,&lt;//${_}&gt;,*0).
+           -&lt;[host=&gt;_].as(ws_client::T).barrier()&gt;&gt;host.&gt;-[,].as(rec::T)}@harvest
+...
+mtron&gt; {0,1}.harvest()
+...
+</code></pre>
+<p>The serial program</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.plus(1).sum()
+==&gt;14
+</code></pre>
+<p>is rewritten by <code>law_shard</code>, and <code>explain()</code> prints the code the machine runs:</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.plus(1).sum().explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                                                     f    desc      c_dom  c_rng 
+    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=&gt;start?hop=0({1,3}).plus(1).sum(),  &lt;j&gt;  standard  {0}    {*}   
+                                   ws://localhost:1112=&gt;start?hop=0({2,4}).plus(1).sum()]                              
+    sum     #{*}::T      #::T                                                              &lt;?&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<p>The <code>branch</code> is keyed by the two places. Each lane starts from its share of the seed, <code>{1,3}</code> or <code>{2,4}</code> (the members
+are dealt in turn), and runs the floatable run and the fold where it lands; <code>?hop=0</code> tells the peer not to plan the lane
+again. The <code>sum</code> after the <code>branch</code> is \(C(r)\). A fold defined by a derivation recombines through the fold that defines
+it: each place counts its share, and home sums the counts.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.count().explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                                               f    desc      c_dom  c_rng 
+    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=&gt;start?hop=0({1,3}).count(),  &lt;j&gt;  standard  {0}    {*}   
+                                   ws://localhost:1112=&gt;start?hop=0({2,4}).count()]                              
+    sum     #{*}::T      #::T                                                        &lt;?&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<p>The rewrite never names a combiner: it reads the fold's declared laws and computes one.</p>
+<p>[To be written: the computed combiner in full (self-combining, by derivation, pointwise for a keyed fold), and what a
+fold that declares neither law does (it stays home).]</p>
+<h2>Chains of Cuts</h2>
+<p>A program with several cuts is planned cut by cut. Each cut plans the floatable run before it, never reaching back past
+the cut before that, and the instructions between a cut and the next run stay home. Written as a pattern over a chain,</p>
+<p>\[
+[\,\textit{initial},\; \{+\}[\,\{*\}\textit{home},\; \{*\}\textit{floatable},\; \textit{cut}\,],\; \{*\}\textit{tail}\,]
+\]</p>
+<p>each bracketed group is one expansion and one contraction (figure 2). After a cut the program holds one object, the
+value the fold answered, so the run after it has nothing to deal; what it has instead is the multiplicity in its own
+coefficients, which the next section treats. The instructions that stay home between two cuts keep that one object as
+long as each hands on at most one object for the one it takes: an effect like <code>print</code> stays home, and the run after it
+still ships.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
+==&gt;86
+mtron&gt; {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                                                       f    desc      c_dom  c_rng 
+    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=&gt;start?hop=0({1,3,5}).plus(1).sum(),  &lt;j&gt;  standard  {0}    {*}   
+                                   ws://localhost:1112=&gt;start?hop=0({2,4}).plus(1).sum()]                                
+    sum     #{*}::T      #::T                                                                &lt;?&gt;  reducer   {*}    {1}   
+    branch  int{*}::T    #{*}::T  [ws://localhost:1111=&gt;{0,2}plus?hop=0(1).sum(),            &lt;j&gt;  standard  {*}    {*}   
+                                   ws://localhost:1112=&gt;{3}plus?hop=0(1).sum()]                                          
+    sum     #{*}::T      #::T                                                                &lt;?&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<p>The plan has a <code>branch</code> and a <code>sum</code> for each cut. The first deals the seed. The second has one object, the <code>20</code> the first
+fold answered, so it copies that object to both places and splits the run's own span, \([0,2]\) to one and \([3,3]\) to the
+other (the next section reads a coefficient as an index set). The profile counts what the home machine ran, the
+expansion and contraction of each cut in figure 2, and lists <code>law_shard</code> among the rewrite rules:</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+     stage     min (ms)   max (ms)
+     rewrite     17.325     20.683
+     resolve     22.954     26.175
+     apply       87.604    138.398
+     insts     4
+     resolve sub-stages (avg ms):
+       inst-resolve         6.442   61.2%
+       generic-binding      3.686   35.0%
+       inst-composition     0.401    3.8%
+     rewrite rules:
+                   branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
+         insts.in  80                  80                  80                  80                  80                  80                  
+         insts.out 80                  80                  80                  80                  80                  80                  
+         time(ms)  94.736              11.828              4.838               4.714               2.768               2.659               
+         TOTAL     inst.in 4   inst.out 4   time(ms) 139.990
+     apply sub-stages (avg ms):
+       split        0.009    0.0%
+       apply       51.912  100.0%
+       next         0.007    0.0%
+     per-instruction (per iteration):
+                   branch    sum       branch    sum       
+         in.monad  0         1         0         0         
+         in.coeff  0         2         0         0         
+         out.monad 1         1         1         1         
+         out.coeff 2         1         2         1         
+         time(ms)  51.912    0.000     0.000     0.000     
+     flow       monads=25 coeff-sum=30 compression=1.20 processors=10
+     cache     hits=357014 misses=5 hit=100.0%
+   &quot;&quot;&quot;
+</code></pre>
+<p>[To be written: the home instructions in general (what a contract must state for one object to survive them), and the
+leading flatmapper: with one object and no index set, <code>merge()</code> unrolls the lst a fold answered at home, and the rest of
+the run deals its members.]</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()
+==&gt;70
+mtron&gt; {1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum().explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                                                               f    desc        c_dom  c_rng 
+    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=&gt;start?hop=0({1,3,5}).plus(10).order(neg()),  &lt;j&gt;  standard    {0}    {*}   
+                                   ws://localhost:1112=&gt;start?hop=0({2,4}).plus(10).order(neg())]                                  
+    kmerge  #{*}::T      #{*}::T  [neg()]                                                            &lt;j&gt;  reducer     {*}    {*}   
+    merge   #{*}::T      #{*}::T  [noobj]                                                            &lt;j&gt;  flatmapper  {*}    {*}   
+    branch  int{*}::T    #{*}::T  [ws://localhost:1111=&gt;plus?hop=0(1).sum(),                         &lt;j&gt;  standard    {*}    {*}   
+                                   ws://localhost:1112=&gt;plus?hop=0(1).sum()]                                                       
+    sum     #{*}::T      #::T                                                                        &lt;?&gt;  reducer     {*}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<p><code>order</code> is a cut too, and its computed combiner is <code>kmerge</code>, a k-way merge: each place sorts its share, and home merges
+the sorted partials. The <code>merge</code> that unrolls the sorted lst stays home, and the run after it deals the members to the
+places again.</p>
+<h2>Coefficients as Index Sets</h2>
+<p>A coefficient is a second place to find parallelism <a href="./span-and-point-coefficient-algebra.html">[2]</a>. A span range is a
+sum of independent terms, \(a^{[m,n]} = \sum_{k=m}^{n} a^k\), so a run over one object can be split by its exponent: each
+place takes the whole object and a contiguous share of the unrolls.</p>
+<pre><code class="language-mtron">mtron&gt; start(0).{0,3}plus(1).sum()
+==&gt;6
+mtron&gt; start(0).{0,3}plus(1).sum().explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                                                      f    desc      c_dom  c_rng 
+    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=&gt;start?hop=0(0).{0,2}plus(1).sum(),  &lt;j&gt;  standard  {0}    {*}   
+                                   ws://localhost:1112=&gt;start?hop=0(0).{3}plus(1).sum()]                                
+    sum     #{*}::T      #::T                                                               &lt;?&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<p>Both lanes start from the same <code>0</code>. The first takes the unrolls \(0\) to \(2\) and the second the unroll \(3\), written <code>{3}</code>:
+the shares are cut by the work each costs, not by how many unrolls each holds. At home the profile shows the program
+that ran, a <code>branch</code> and a <code>sum</code>, and the time spent at the <code>branch</code> waiting on the two partials:</p>
+<pre><code class="language-mtron">mtron&gt; start(0).{0,3}plus(1).sum().profile()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+     stage     min (ms)   max (ms)
+     rewrite      5.657      6.524
+     resolve      7.383      8.371
+     apply       43.566     53.736
+     insts     2
+     resolve sub-stages (avg ms):
+       inst-resolve         2.262   54.1%
+       generic-binding      1.725   41.2%
+       inst-composition     0.198    4.7%
+     rewrite rules:
+                   branch_factor       law_poset           law_monoidic        law_shard           theory_unit_removal derivation_contraction
+         insts.in  40                  40                  40                  40                  40                  40                  
+         insts.out 40                  40                  40                  40                  40                  40                  
+         time(ms)  21.404              8.759               2.986               2.690               1.986               1.897               
+         TOTAL     inst.in 2   inst.out 2   time(ms) 51.837
+     apply sub-stages (avg ms):
+       split        0.009    0.0%
+       apply       36.989   99.9%
+       next         0.012    0.0%
+     per-instruction (per iteration):
+                   branch    sum       
+         in.monad  0         1         
+         in.coeff  0         2         
+         out.monad 1         1         
+         out.coeff 2         1         
+         time(ms)  36.989    0.000     
+     flow       monads=15 coeff-sum=15 compression=1.00 processors=10
+     cache     hits=210088 misses=5 hit=100.0%
+   &quot;&quot;&quot;
+</code></pre>
+<p>A point is an index set too. The point \(a\{p\}\) is \(p\) copies of one term, and points add across a branch,
+\(a\{p\} = a\{p_1\} + a\{p_2\}\) with \(p = p_1 + p_2\), so the places take even shares of the copies.</p>
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-05.tex -->
+<p><img src="images/ring-theoretic-distributed-computing/fig-05.svg" alt="figure 5" /></p>
+<p>[To be written: the point's live example. Over places today a shipped lane loses its point, so the example waits on
+that fix.]</p>
+<p>The same holds after a cut, where the object to copy is the fold's answer: the second <code>branch</code> in the chain of cuts
+above copies the <code>20</code> to both places and splits the span \([0,3]\) as \([0,2]\) and \([3,3]\).</p>
+<p>[To be written: shares chosen by work for a span (a lane walks its runs from the seed, so a share \([a,b]\) costs the \(b\)
+steps it walks and the \(b - a + 1\) runs it emits) and evenly for a point; why the copy needs no idempotence (the shares
+are disjoint); one axis per run, the seed's first.]</p>
+<h2>The Shape of a Law</h2>
+<p>The law a fold obeys fixes how it distributes, and there are only a few shapes <a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>:</p>
+<table>
+<thead>
+<tr><th>law</th><th>pattern</th><th>shape</th><th>coordination</th></tr>
+</thead>
+<tbody>
+<tr><td>floatable (Theorem 6)</td><td>map, filter, flatmap</td><td>free: replicate the run</td><td>none</td></tr>
+<tr><td>commutative monoid (Theorem 19)</td><td>reduce, fold</td><td>star: scatter, partial reduce, gather</td><td>one barrier</td></tr>
+<tr><td>associative, not commutative</td><td>scan, prefix</td><td>pipeline: carry the running total</td><td>neighbor to neighbor</td></tr>
+<tr><td>keyed product</td><td>join, group by</td><td>shuffle: partition by key, reduce, gather</td><td>key co-location</td></tr>
+</tbody>
+</table>
+<p><code>sum</code>, <code>count</code>, <code>max</code>, and <code>order</code> are one pattern, the commutative monoid fold, with different instances: the operation
+is the instance, and the law is the pattern.</p>
+<h3>The Menu</h3>
+<p>Every distribution pattern metatron names is an instance of one of these laws, and the menu lists them all
+<a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>. A \(\checkmark\) marks a pattern <code>law_shard</code>
+implements today; an empty status means the law holds and the lowering is not yet written. Most entries are stars,
+refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out, through
+the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T) or
+compose the others (N, R, M, I).</p>
+<table>
+<thead>
+<tr><th>key</th><th>status</th><th>pattern</th><th>law</th><th>description</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>A</strong></td><td>\(\checkmark\)</td><td>homomorphism shard</td><td>\(h(a \uplus b) = h(a) \oplus h(b)\)</td><td>each place folds its part; the master recombines the partials through the computed combiner</td></tr>
+<tr><td><strong>B</strong></td><td> </td><td>data-local shard</td><td>\(\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)\)</td><td>the code moves to the data: each authority folds what it holds</td></tr>
+<tr><td><strong>C</strong></td><td> </td><td>authority push-down</td><td>\(\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}\)</td><td>B with one owner: the fold runs where the data lives, natively (Theorem 5 and a pure chain)</td></tr>
+<tr><td><strong>D</strong></td><td>\(\checkmark\)</td><td>parallel fan-out</td><td>\(\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b\)</td><td>the transport, not a new fold: every lane is submitted before any is awaited, so the master pays the longest round trip, not their sum</td></tr>
+<tr><td><strong>E</strong></td><td>\(\checkmark\)</td><td>tree reduction</td><td>\((a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C\)</td><td>each interior node re-plans its part and recombines a level</td></tr>
+<tr><td><strong>F</strong></td><td> </td><td>ordered fold</td><td>\(a \cdot (b \cdot c) = (a \cdot b) \cdot c\)</td><td>associativity alone: a list-partitioned fold carries the running total (streams never shard)</td></tr>
+<tr><td><strong>G</strong></td><td>\(\checkmark\)</td><td>keyed reduce</td><td>\(\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])\)</td><td>partials merge by key; the combiner is pointwise, computed from the inner fold's</td></tr>
+<tr><td><strong>H</strong></td><td> </td><td>redundant / hedged shards</td><td>\(x \oplus x = x\)</td><td>an idempotent fold lets a part ship to several peers and every reply fold; otherwise hedge, first wins</td></tr>
+<tr><td><strong>I</strong></td><td> </td><td>span/route interpreter</td><td>\(\mathrm{plan} \mapsto \mathrm{layout}\)</td><td>the infrastructure: a plan's axes lowered to a layout</td></tr>
+<tr><td><strong>J</strong></td><td> </td><td>algebraic aggregates</td><td>\(\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}\)</td><td>pointwise tuple partials; the finalizer runs once at the master</td></tr>
+<tr><td><strong>K</strong></td><td> </td><td>limit / top-k push-down</td><td>\(\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)\)</td><td>each lane keeps its own top k, and the master merges and keeps k</td></tr>
+<tr><td><strong>L</strong></td><td> </td><td>mergeable sketches</td><td>\(\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)\)</td><td>a sketch fold that declares its monoid theory plugs into A, E and H</td></tr>
+<tr><td><strong>M</strong></td><td> </td><td>matrix multiplication</td><td>\(A \cdot (B + C) = A \cdot B + A \cdot C\)</td><td>O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)</td></tr>
+<tr><td><strong>N</strong></td><td> </td><td>iterative / BSP</td><td>\(x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots\)</td><td>a sharded superstep, repeated: the combiner is the superstep boundary</td></tr>
+<tr><td><strong>O</strong></td><td>\(\checkmark\)</td><td>broadcast constants</td><td>\(ca \cdot 1b = 1a \cdot 1b \cdot c1\)</td><td>a constant rides as an argument of the floatable run: no fan-out change (Theorem 6)</td></tr>
+<tr><td><strong>P</strong></td><td> </td><td>computed seeds</td><td>\([0, n) = \uplus_i \mathrm{index}_i\)</td><td>the index space is split, not the data: one constant-size message per peer</td></tr>
+<tr><td><strong>Q</strong></td><td> </td><td>monad migration</td><td>\(\mathrm{authority}(m)\)</td><td>ship the monad, not the value: the continuation travels, one shard per step</td></tr>
+<tr><td><strong>R</strong></td><td> </td><td>durable results</td><td>\(\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}\)</td><td>each partial is written to an address</td></tr>
+<tr><td><strong>S</strong></td><td>\(\checkmark\)</td><td>master-participates</td><td>\(\bigoplus_{i=0}^{k} a_i \cdot r\) over \(\{\mathrm{master}\} \cup \mathrm{peers}\)</td><td>the master folds its own slice, a lane at distance zero, and ships the rest</td></tr>
+<tr><td><strong>T</strong></td><td>\(\checkmark\)</td><td>reference frame migration</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\)</td><td>the frame moves, not the data: the tail ships as a program and the value snakes back</td></tr>
+<tr><td><strong>U</strong></td><td> </td><td>profile collation</td><td>\(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\)</td><td>each shard's profile ships home, and the master collates one report</td></tr>
+<tr><td><strong>V</strong></td><td>\(\checkmark\)</td><td>generative run</td><td>\(a^{[m,n]} = \sum_{k=m}^{n} a^k\)</td><td>a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly</td></tr>
+</tbody>
+</table>
+<p>[To be written: the menu as a tree of these laws, a figure.]</p>
+<h2>Conclusion</h2>
+<p><strong>NOTES</strong>:</p>
+<ul>
+<li>Distribution is a reading of the ring, not a feature: \(+\) is placement-free by Theorem 5, and the only question is
+where a stream must contract.</li>
+<li>The shard identity, \(s\,f\,r = (s_1 f r + \cdots + s_k f r)\,C(r)\), is the one rewrite: floatable runs distribute
+because their subrings are right distributive, and a fold distributes when Theorem 19 holds for it.</li>
+<li>A program expands and contracts once per cut; one object survives the home instructions between cuts.</li>
+<li>A coefficient is an index set: a span splits by its exponent, a point by its copies.</li>
+<li>[To be written: what is open — the shuffle and pipeline shapes, and the laws a fold would declare to reach them.]</li>
+</ul>
+<h2>References</h2>
+<ol>
+<li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red Herring's Ship's Log: Chronicles in the Sea
+of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.</li>
+<li>Rodriguez, M.A., Stynx, D.R., &quot;<a href="./span-and-point-coefficient-algebra.html">A Span and Point Coefficient Algebra for Stream Rings</a>.&quot;</li>
+<li>&quot;<a href="../skills/mtron/references/distributed-computing-mtron.html">distributed computing — the pattern menu</a>,&quot; the mtron
+skill reference.</li>
+</ol>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="bi bi-envelope text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

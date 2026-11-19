@@ -775,10 +775,10 @@ write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the
      {?}tracer=&gt;tracer::T,
      {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor,
           args=&gt;[
-           {?}state=&gt;'the run state: stop, run or pause',
            {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
            {?}result=&gt;'the objs the last evaluation produ...',
            {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
+           {?}state=&gt;'the run state: stop, run or pause',
            computer=&gt;'the computers this processor minte...',
            fail=&gt;&quot;the machine's fail stack: an uncau...&quot;],
           desc=&gt;'the processor contract of machine:...']
@@ -838,13 +838,13 @@ analysis, pulled on demand (the mtron form of a recording rule):</p>
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           {?}state=&gt;'current state of the thread',
-           {?}timeout=&gt;'how long a read of rhs waits for t...',
-           {?}loop=&gt;'delay to repeat code evaluation (d...',
            {?}time=&gt;'the datetime::T when the thread wa...',
            code=&gt;&quot;the thread's executing code&quot;,
            {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
-           {?}result=&gt;'the last result produced by the th...'],
+           {?}result=&gt;'the last result produced by the th...',
+           {?}state=&gt;'current state of the thread',
+           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}loop=&gt;'delay to repeat code evaluation (d...'],
           desc=&gt;'the thread base type']
 </code></pre>
 <table>
