@@ -31,20 +31,28 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -152,6 +160,44 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         checkEquality(LOG, uri("1"), uri(layout.lane(0).budget()), true);
         checkEquality(LOG, ObjmtronSerializer.parse(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(master)), true);
+    }
+
+    /**
+     * A PROFILE NESTS LIKE THE TREE (U over E's budget): peer 1, handed a lane with a level left, re-plans it over peers 2
+     * and 3, times its own run around its branch and answers a collated report of its own, which crosses the wire whole
+     * and nests under the root's. The root holds all three peers (the {@code ws_client} literals parsed here dial them
+     * here too), so its level is three places, peer 1 the one interior node. The figures fold bottom-up: the root counts
+     * peer 1's leaves as peer 1 folded them, without walking below it. Each row: the source % the nest's shape -- depth,
+     * the leaves (how many, and the objs their seeds took) and the places per level.
+     */
+    @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the nest's shape is the subject, its timings vary run to run")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().profile()   % [depth=>2,leaf=>[count=>4,c_sum=>8],level=>[3,2]]",
+    }, delimiter = '%')
+    void testProfileNestsLikeTheTree(final String source, final String expected) {
+        final Rec report = Machine.evaluate(Machine.parse(source).asCode()).asRec();
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), rec(
+                uri(DEPTH), report.at(uri(DEPTH)),
+                uri(LEAF), rec(uri(COUNT), report.at(uri(f(LEAF).extend(COUNT))), uri(C_SUM), report.at(uri(f(LEAF).extend(C_SUM)))),
+                uri(LEVEL), lst(report.at(uri(LEVEL)).elements().map(level -> (Obj) level.asRec().at(uri(COUNT))).toList())), true);
+        // ONE INTERIOR NODE: the one place that collated places of its own, one level deep over two leaves
+        final List<Rec> interiors = report.at(uri(PLACE)).asRec().<Rel>elements().map(place -> place.second().asRec())
+                .filter(place -> !place.at(uri(PLACE)).isNoObj()).toList();
+        checkEquality(LOG, jnt(1), jnt(interiors.size()), true);
+        checkEquality(LOG, jnt(1), interiors.getFirst().at(uri(DEPTH)), true);
+        checkEquality(LOG, jnt(2), interiors.getFirst().at(uri(f(LEAF).extend(COUNT))), true);
+        // FOUR MACHINES: the root and its three peers, peers 2 and 3 at both levels
+        final List<Obj> machines = Stream.concat(Stream.of(report.at(uri(MACHINE))), Stream.concat(
+                report.at(uri(PLACE)).asRec().<Rel>elements().map(place -> (Obj) place.second().asRec().at(uri(MACHINE))),
+                interiors.getFirst().at(uri(PLACE)).asRec().<Rel>elements().map(place -> (Obj) place.second().asRec().at(uri(MACHINE))))).toList();
+        checkEquality(LOG, jnt(4), jnt(machines.stream().distinct().count()), true);
+        // the user's >>format names every place at both levels
+        final Obj format = Machine.evaluate(Machine.parse(source + ">>format").asCode());
+        LOG.debug("profile of %s: %s", source, format);
+        checkEquality(LOG, bool(true), bool(format.isStr()), true);
+        machines.stream().skip(1).forEach(machine -> checkEquality(LOG, bool(true),
+                bool(format.strValue().contains(machine.uriValue().pathEncoding().toString())), true));
     }
 
     /**

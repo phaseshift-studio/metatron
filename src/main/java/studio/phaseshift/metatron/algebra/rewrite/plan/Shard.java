@@ -137,7 +137,8 @@ public final class Shard {
             if (0 > cut && 0 > run)
                 break;
             // PROFILING IS AN END CAP, NOT A TAIL: when the instruction after the cut is profile(), each lane answers a
-            // profiling::T and the master indexes the reports by the machine each was made on, so the run reaches the end
+            // profiling::T, and the master's run is timed around its branch and nests the reports (emit), so the run
+            // reaches the end
             final boolean profiling = 0 <= cut && insts.size() > cut + 1
                     && PROFILE_INST_TID.equals(insts.get(cut + 1).tid().basePath());
             final int end = 0 > cut ? runEnd(insts, typed, floats, run) : profiling ? insts.size() : cut + 1;
@@ -297,9 +298,15 @@ public final class Shard {
             master.addAll(insts.subList(from, runIndex));
         master.add(instB(literal && runAxis ? BRANCH_INST_TID.dom(dom)
                 : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY : PART), rec(routes)));
-        if (profiling && !runAxis)
-            master.add(profileCollate());
-        else {
+        if (profiling && !runAxis) {
+            // THE MASTER'S RUN IS TIMED AROUND ITS BRANCH: the lanes answer reports, not partials, so no combiner runs,
+            // and a bare profile_collate() marks where the master's run ends. The profile_analysis rule, an analysis rule
+            // and so applied after this one, captures everything before the marker (the master's whole run, the branch's
+            // gather wait included), times it as profile() times a local run and nests the lanes' reports under it
+            // (mInstSet.profileCollate). Whatever followed profile(), a >>format, follows the marker.
+            master.add(instB(PROFILE_COLLATE_TID, lst()));
+            master.addAll(insts.subList(cut + 2, end));
+        } else {
             master.addAll(combiner);
             master.addAll(insts.subList(0 > cut ? runEnd : cut + 1, end));
         }
