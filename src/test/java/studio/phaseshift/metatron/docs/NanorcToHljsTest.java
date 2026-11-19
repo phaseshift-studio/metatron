@@ -35,10 +35,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * THE NANORC IS THE STANDARD OF TRUTH — the question these assertions answer is whether the
@@ -116,7 +113,7 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
     @Test
     public void theRealNanorcParsesIntoItsFullRuleList() throws IOException {
         final List<NanorcToHljs.Rule> rules = NanorcToHljs.parse(Files.readAllLines(NANORC));
-        assertEquals(89, rules.size());
+        assertEquals(90, rules.size());
         assertEquals(3, rules.stream().filter(r -> null != r.start()).count());
         // the design principle comment says so: assume everything is a uri — the first rule paints
         // the whole line blue, and the last rule is the final repaint
@@ -179,8 +176,8 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             // uri default (prompt-matchers in their guarded form)
             final String full = js.split("const MTRON_RULES = \\[")[1].split("];")[0];
             final String subset = js.split("const MTRON_RESULT_RULES = \\[")[1].split("];")[0];
-            assertEquals(88, full.split("className: 'mtron-nanorc-").length - 1);
-            assertEquals(88, subset.split("className: 'mtron-nanorc-").length - 1);
+            assertEquals(89, full.split("className: 'mtron-nanorc-").length - 1);
+            assertEquals(89, subset.split("className: 'mtron-nanorc-").length - 1);
             assertTrue(subset.contains("(?!^mtron>)"));
             // BOTH arrays resolve in the reversed (later-wins) order — the subset lost its reversal
             // once and the int rule beat the green 0x inside every result body
@@ -232,12 +229,16 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
     // terminal parity: the jline engine is the oracle
     // ============================================================================================
 
-    /** the terminal's own highlighter — same build as console.Highlighter, through jnanorc */
+    /**
+     * the terminal's own highlighter — same build as console.Highlighter, through jnanorc
+     */
     private static final SyntaxHighlighter TERMINAL = SyntaxHighlighter.build(
             new ConfigurationPath(Path.of("conf/nanorc"), Path.of(System.getProperty("user.home"), ".metatron"))
                     .getConfig("jnanorc"), "mtron");
 
-    /** the ANSI colors jline's default theme emits for the nanorc color names */
+    /**
+     * the ANSI colors jline's default theme emits for the nanorc color names
+     */
     private static final Map<String, String> SGR_TO_COLOR = Map.of(
             "34", "blue", "33", "yellow", "31", "red", "32", "green", "36", "cyan", "35", "magenta", "90", "bright-black");
 
@@ -360,7 +361,9 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
         }
     }
 
-    /** the consumption scan: at each position the first mode in emission order whose regex matches wins */
+    /**
+     * the consumption scan: at each position the first mode in emission order whose regex matches wins
+     */
     private static List<Span> consume(final List<NanorcToHljs.Rule> rules, final String text) {
         final List<Span> spans = new ArrayList<>();
         int pos = 0;
@@ -423,7 +426,10 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             for (final String param : m.group(1).split(";")) {
                 if (param.isEmpty()) continue;
                 switch (Integer.parseInt(param)) {
-                    case 0 -> { fg = null; underline = false; }
+                    case 0 -> {
+                        fg = null;
+                        underline = false;
+                    }
                     case 4 -> underline = true;
                     case 24 -> underline = false;
                     case 39 -> fg = null;

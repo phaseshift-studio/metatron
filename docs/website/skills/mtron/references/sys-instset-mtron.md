@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -74,7 +74,7 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.8M ...',
+    'tmpfs                  6.1G  7.2M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme1n1p2         916G  595G ...',
     'tmpfs                   31G   64M ...',
@@ -164,10 +164,10 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     ...(16 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 26815     	Blocks: 56     ...',
+    '  Size: 29315     	Blocks: 64     ...',
     'Device: 259,3	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-18 16:21:51.663295...',
+    'Access: 2026-11-19 13:40:09.242352...',
    ...
 ```
 ### a shape of its own
@@ -178,7 +178,7 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::26815.0,
+==>[bB::29315.0,
     bB::11430.0,
     bB::4096.0,
     bB::4096.0,
@@ -257,9 +257,9 @@ mtron> */sys/thread/+.count()
 ==>66
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::275.6622,
+    free_mem_jvm=>mB::520.2079,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::436.3377,
+    used_mem_jvm=>mB::191.7920,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
