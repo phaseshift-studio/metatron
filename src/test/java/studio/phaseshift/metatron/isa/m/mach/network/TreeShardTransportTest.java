@@ -168,7 +168,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
      * and nests under the root's. The root holds all three peers (the {@code ws_client} literals parsed here dial them
      * here too), so its level is three places, peer 1 the one interior node. The figures fold bottom-up: the root counts
      * peer 1's leaves as peer 1 folded them, without walking below it. Each row: the source % the nest's shape -- depth,
-     * the leaves (how many, and the objs their seeds took) and the places per level.
+     * the leaves (how many, and the objs their runs carried) and the places per level.
      */
     @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the nest's shape is the subject, its timings vary run to run")
     @ParameterizedTest

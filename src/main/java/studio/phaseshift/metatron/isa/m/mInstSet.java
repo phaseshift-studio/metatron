@@ -672,7 +672,7 @@ public class mInstSet extends AbstractInstSet {
                     Map.entry(uri(MACHINE), "the machine the report was made on: its host, its vid and its process id"),
                     Map.entry(uri(PLACE), "a distributed profile's places: each lane's report, keyed by the path-encoded machine that made it"),
                     Map.entry(uri(DEPTH), "the levels of places below this report (a star is 1)"),
-                    Map.entry(uri(LEAF), "the leaves below this report: how many (count), the objs their seeds took (c_sum) and their summed apply (time)"),
+                    Map.entry(uri(LEAF), "the leaves below this report: how many (count), the objs their runs carried (c_sum) and their summed apply (time)"),
                     Map.entry(uri(LEVEL), "per level below this report, the places' apply: count, min, max and total"),
                     Map.entry(uri(PATH), "the critical path: the slowest place at each level, from here down to a leaf")))
             .desc("a structured profile report produced by profile(); a distributed profile nests its places' reports")
@@ -1808,7 +1808,7 @@ public class mInstSet extends AbstractInstSet {
      * places, so it answers a collated report and its parent nests it whole. The figures of a whole tree are FOLDED
      * BOTTOM-UP, because they form a commutative monoid: each node folds its places' figures as it collates, and a leaf
      * contributes itself, so nothing below a place is walked twice — {@code depth} (the levels below), {@code leaf}
-     * (how many leaves, the objs their seeds took as {@code c_sum}, their summed apply as {@code time}), {@code level}
+     * (how many leaves, the objs their runs carried as {@code c_sum}, their summed apply as {@code time}), {@code level}
      * (per level below, the places' apply: count, min, max, total) and {@code path} (the critical path: the slowest
      * place at each level, down to a leaf). A place's apply is its stage apply min, its steady-state run.
      * <p>
@@ -1891,8 +1891,14 @@ public class mInstSet extends AbstractInstSet {
                             uri(MAX), real(level[2], MILLIS_TYPE.vid(), null),
                             uri(TOTAL), real(level[3], MILLIS_TYPE.vid(), null))).toList()));
                     fields.put(uri(PATH), lst(path));
-                    final String text = profileText(rec(fields), true);
-                    fields.put(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (self, format) -> str("\n" + text))));
+                    // THE ROOT'S HEADER, its body one level in, as each place's header heads the place's body
+                    final Obj machine = own.at(uri(MACHINE));
+                    final StringBuilder root = new StringBuilder(String.format("%n  master %s   apply %.3f ms, %d places%n",
+                            machine.isUri() ? machine.uriValue().pathEncoding() : LOCAL,
+                            own.at(uri(f(STAGE).extend(APPLY).extend(MIN))).realValue(), places.size()));
+                    profileText(rec(fields), true).lines().forEach(line -> root.append("  ").append(line).append('\n'));
+                    final String text = root.toString();
+                    fields.put(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (self, format) -> str(text))));
                     return rec(fields, PROFILING_TID, null);
                 })
                 .desc("the master's half of a distributed profile: the plan ends a profiled master's run in a bare profile_collate(), and the profile_analysis rule mints this instruction over the run before it. It times the master's run as profile() times a local run, so its apply holds the branch's gather wait, and nests the report each lane answered under place, keyed by the machine that made it (path-encoded). A tree nests like the tree, and the figures of the whole tree (depth, leaf, level, path) fold bottom-up as each node collates. Same laws as profile(): monoidic, commutative, pure.")
@@ -1900,14 +1906,15 @@ public class mInstSet extends AbstractInstSet {
     }
 
     /**
-     * THE OBJS A PLACE TOOK: a collated place's leaves' coefficient sum, else what its seed put out, the coefficients
-     * its first instruction answered (a bulked member counts every copy it holds), read off its per-instruction flow.
+     * THE OBJS A PLACE TOOK: a collated place's leaves' coefficient sum, else the largest stream its run carried, the
+     * most coefficients any one of its instructions answered (read off its per-instruction flow). Under the seed axis
+     * that is the members dealt to it (its start's, a bulked member counting every copy it holds); under the run axis,
+     * where every lane's start answers the one seed, it is the terms the lane unrolled (its spanned instruction's).
      */
     private static long profileObjs(final Rec report) {
         return !report.at(uri(PLACE)).isNoObj()
                 ? report.at(uri(f(LEAF).extend(C_SUM))).intValue()
-                : report.at(uri(PER_INST)).elements().findFirst()
-                .map(first -> first.asRec().at(uri(C_OUT)).intValue()).orElse(0L);
+                : report.at(uri(PER_INST)).elements().mapToLong(inst -> inst.asRec().at(uri(C_OUT)).intValue()).max().orElse(0L);
     }
 
     /**
@@ -2074,10 +2081,12 @@ public class mInstSet extends AbstractInstSet {
     /**
      * A PROFILE'S TEXT, RENDERED FROM ITS DATA and never from the run that made it: a place's report crosses the wire
      * as data (its own format is a lambda of the machine that made it), so the master renders every place it nests from
-     * the place's fields. A collated report leads with the summary over its direct places, and at the {@code root} the
-     * figures of the whole tree; then the master's own run, then each place's report, one level in. The formulas are
-     * named where they print: imbalance is max ÷ mean apply, and efficiency is Σ lane apply ÷ (k × gather wait), the
-     * gather wait being the master's own apply (min, as every apply here is: the steady-state run).
+     * the place's fields. THE TEXT NESTS LIKE THE TREE: a collated report's body leads with the summary over its direct
+     * places (and at the {@code root} the figures of the whole tree), then its own run, then each place under a header
+     * of its own (its key, its apply, and a leaf's objs or a node's count of places), the place's body one level in. A
+     * leaf's body is its run alone. The formulas are named where they print: imbalance is max ÷ mean apply, and
+     * efficiency is Σ lane apply ÷ (k × gather wait), the gather wait being the master's own apply (min, as every apply
+     * here is: the steady-state run).
      */
     private static String profileText(final Rec report, final boolean root) {
         // a reading at a path of a report's rec, or 0 where the report holds none
@@ -2092,6 +2101,7 @@ public class mInstSet extends AbstractInstSet {
         final fURI applied = f(STAGE).extend(APPLY).extend(MIN);
         final StringBuilder sb = new StringBuilder();
         final Obj places = report.at(uri(PLACE));
+        final Obj straggler = report.at(uri(PATH)).elements().findFirst().orElse(noobj());
         if (!places.isNoObj()) {
             final List<Rel> children = places.asRec().<Rel>elements().toList();
             final double wait = ms.applyAsDouble(report, applied);
@@ -2099,7 +2109,6 @@ public class mInstSet extends AbstractInstSet {
             final double total = Arrays.stream(applies).sum();
             final double mean = children.isEmpty() ? 0.0 : total / children.size();
             final double max = Arrays.stream(applies).max().orElse(0.0);
-            final Obj straggler = report.at(uri(PATH)).elements().findFirst().orElse(noobj());
             final int width = children.stream().mapToInt(child -> child.first().toString().length()).max().orElse(0);
             sb.append(String.format("  places      %d, gathered in %.3f ms (the master's apply, its gather wait included)%n", children.size(), wait));
             sb.append(String.format("  %-" + Math.max(5, width) + "s  %8s  %10s  %6s%n", "place", "objs", "apply (ms)", "share"));
@@ -2130,7 +2139,6 @@ public class mInstSet extends AbstractInstSet {
                 }
                 sb.append("  critical    ").append(critical).append('\n');
             }
-            sb.append(String.format("  the master's run, on %s%n", report.at(uri(MACHINE))));
         }
         sb.append("  stage     min (ms)   max (ms)\n");
         for (final String stage : List.of(REWRITE, RESOLVE, APPLY))
@@ -2184,7 +2192,10 @@ public class mInstSet extends AbstractInstSet {
                 n.applyAsLong(report, f(CACHE).extend(MISSES)), ms.applyAsDouble(report, f(CACHE).extend(HIT_RATE)) * 100.0));
         if (!places.isNoObj())
             places.asRec().<Rel>elements().forEach(child -> {
-                sb.append(String.format("  place %s%n", child.first()));
+                final Obj below = child.second().asRec().at(uri(PLACE));
+                sb.append(String.format("  %s   apply %.3f ms, %s%s%n", child.first(), ms.applyAsDouble(child.second(), applied),
+                        below.isNoObj() ? "a leaf, objs " + profileObjs(child.second().asRec()) : below.asRec().<Rel>elements().count() + " places",
+                        child.first().equals(straggler) ? ", straggler" : ""));
                 profileText(child.second().asRec(), false).lines().forEach(line -> sb.append("  ").append(line).append('\n'));
             });
         return sb.toString();
