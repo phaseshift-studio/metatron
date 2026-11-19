@@ -919,6 +919,8 @@ public class InstTest extends AbstractObjTest {
             "1        % side(plus(1))          % false",   // side runs its argument for the argument's effect
             "{1,2,3}  % is(gt(1))              % true",    // a pure filter handed a pure predicate
             "{1,2,3}  % is(to(x).gt(1))        % false",   // the same filter handed an effect
+            "1        % plus(plus(mult(0)))    % true",    // pure all the way down two arguments
+            "1        % plus(plus(print(_).mult(0)))   % false",   // an effect two arguments deep still spoils it
     }, delimiter = '%')
     public void testAnInstructionIsPureWhenDeclaredOrComposedOfPureInstructions(final String lhs, final String code, final boolean pure) {
         final Call parsed = ObjmtronSerializer.parse(code.trim()).as();
@@ -941,5 +943,10 @@ public class InstTest extends AbstractObjTest {
         assertFalse(MInst.instLambda((lhs, inst) -> lhs).isPure(), "an undeclared Java body is opaque");
         assertTrue(plus_(composed).tryToInst().asInst().isPure(), "plus handed the pure composition stays pure");
         assertFalse(plus_(noisy).tryToInst().asInst().isPure(), "plus handed the noisy one does not");
+        // the body is walked as deep as it nests: an effect in an argument of an argument of a body instruction counts
+        final Inst deepPure = instC(f("deep_pure").dom(Tokens.INT_TID).rng(Tokens.INT_TID), lst(), "plus(plus(mult(0)))");
+        assertTrue(deepPure.isPure(), "a body pure all the way down is pure: " + deepPure);
+        final Inst deepNoisy = instC(f("deep_noisy").dom(Tokens.INT_TID).rng(Tokens.INT_TID), lst(), "plus(plus(print(_).mult(0)))");
+        assertFalse(deepNoisy.isPure(), "an effect two arguments deep in the body spoils it: " + deepNoisy);
     }
 }

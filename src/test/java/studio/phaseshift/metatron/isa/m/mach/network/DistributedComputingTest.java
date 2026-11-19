@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -72,7 +74,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * rewrite form, and the actual compilation. So a row proves the layout <em>and</em> that distributing did not
  * change the answer.
  *
- * <h2>the menu (A–T)</h2>
+ * <h2>the menu (A–W)</h2>
  *
  * <p>{@code ✅} = the lowering is written; an empty box = the law is sound but the lowering is unwritten (the
  * row is present below as a {@code @Disabled} stub naming what it still needs). The law column is the reason
@@ -102,6 +104,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <tr><td>S</td><td>master participates</td><td>⊕_i a_i·r over {master} ∪ peers</td><td>{@code {1,…,8}.plus(1).sum()}</td><td>✅</td></tr>
  *   <tr><td>T</td><td>reference frame migration</td><td>move(a) … move(b) … (machine groupoid)</td><td>{@code {1,2,3}.plus(5).move(//host/a).plus(2).sum()}</td><td>✅</td></tr>
  *   <tr><td>U</td><td>profile collation</td><td>p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), ⊕ = keyed union with times added</td><td>{@code {1,2,3,4,5}.plus(10).sum().profile()>>format}</td><td></td></tr>
+ *   <tr><td>V</td><td>generative run</td><td>a^[m,n] = Σ_k a^k (the unrolls are independent terms)</td><td>{@code start(0).{0,1000}plus(1).sum()}</td><td>✅</td></tr>
+ *   <tr><td>W</td><td>embarrassingly parallel</td><td>(a+b)·f = a·f + b·f, f floatable, no cut</td><td>{@code {1,…,8}.plus(1)}</td><td>✅</td></tr>
  * </table>
  *
  * <h2>why this suite needs a real cluster</h2>
@@ -180,6 +184,8 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,2,3,4}.plus(1).count()         % branch().sum() % 4",
             // prod is self-combining: the master re-applies prod
             "{1,2,3,4}.plus(1).prod()          % branch().prod() % 120",
+            // a filter handed an effect does not float, so it stays home and only the fold ships over its bag
+            "{1,2,3,4,5,6}.is(print(_).gt(2)).sum()  % start().is().branch().sum() % 18",
     }, delimiter = '%')
     void test_A_homomorphism_shard(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -331,6 +337,67 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void test_T_reference_frame_migration(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
+    // ================================================================================================
+    // W — embarrassingly parallel. No cut: the run floats to the end of the chain, so right distributivity
+    // alone, (a+b)·f = a·f + b·f, is the whole law -- the map, filter and flatmap rings are right
+    // distributive. Each place runs the run on its share, and the branch's own merge (its +) is the only
+    // recombination: A's layout without a combiner, and the answer is every member of the stream (eight in,
+    // eight out for a mapper). An instruction that does not float ends the run; the rest of the chain runs
+    // at home over the branch's bag. Floating is Inst.isPure: an instruction handed an effect keeps the run home.
+    // ================================================================================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the canonical row: one mapper, eight ints in, eight ints out -- the lanes' streams are the answer
+            "{1,2,3,4,5,6,7,8}.plus(1)                    % branch(start().plus(),start().plus())                  % {2,3,4,5,6,7,8,9}",
+            // a run of mappers ships whole: every lane runs the full run on its share
+            "{1,2,3,4,5,6,7,8}.plus(1).mult(2)            % branch(start().plus().mult(),start().plus().mult())    % {4,6,8,10,12,14,16,18}",
+            // a filter floats too: each lane keeps its own survivors
+            "{1,2,3,4,5,6,7,8}.is(gt(4))                  % branch(start().is(gt(4)),start().is(gt(4)))            % {5,6,7,8}",
+            // a flatmapper floats too (merge declares pure): each lane unrolls its own lsts
+            "{[1,2],[3,4],[5,6],[7,8]}.merge().plus(1)    % branch(start().merge().plus(),start().merge().plus())  % {2,3,4,5,6,7,8,9}",
+            // an effect ends the run: the run ships, and print sees the merged stream at home
+            "{1,2,3,4,5,6,7,8}.plus(1).print(_)           % branch(start().plus(),start().plus()).print()          % {2,3,4,5,6,7,8,9}",
+            // the index set: one obj and a span range, split by work as V's is, and no fold after the branch
+            "start(0).{0,7}plus(1)                        % branch(start().plus(),start().plus())                  % {0,1,2,3,4,5,6,7}",
+            // one obj and no index set: nothing to deal, so nothing ships
+            "5.plus(1)                                    % start().plus()                                         % 6",
+            // a pure filter handed an effect is not pure: the run stays home, and the print runs here, once per member
+            "{1,2,3,4,5,6,7,8}.is(print(_).gt(4))         % start().is()                                           % {5,6,7,8}",
+            // FLOATABLE.IMPURE.FLOATABLE: the effect brings the members home, and the run after it goes out again, dealt
+            "{1,2,3,4,5,6,7,8}.plus(1).print(_).mult(2)   % branch(start().plus(),start().plus()).print().branch(mult(),mult())   % {4,6,8,10,12,14,16,18}",
+            "{1,2,3,4,5,6,7,8}.plus(1).is(print(_).gt(4)).mult(2)   % branch(start().plus(),start().plus()).is().branch(mult(),mult())   % {10,12,14,16,18}",
+            // IMPURE.FLOATABLE: an effect at the head runs home, and the floatable run after it is still found and dealt
+            "{1,2,3,4,5,6,7,8}.print(_).plus(1)           % start().print().branch(plus(),plus())                  % {2,3,4,5,6,7,8,9}",
+            "{1,2,3,4,5,6,7,8}.print(_).plus(1).mult(2)   % start().print().branch(plus().mult(),plus().mult())    % {4,6,8,10,12,14,16,18}",
+            // FLOATABLE** — an effect nested deep in an argument (plus's arg's arg) keeps the run home; its pure twin ships
+            "{1,2,3,4,5,6,7,8}.plus(plus(print(_).mult(0)))   % start().plus()                                     % {2,4,6,8,10,12,14,16}",
+            "{1,2,3,4,5,6,7,8}.plus(plus(mult(0)))        % branch(start().plus(),start().plus())                  % {2,4,6,8,10,12,14,16}",
+    }, delimiter = '%')
+    void test_W_embarrassingly_parallel(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
+    /**
+     * W, FLOATABLE** THROUGH A BODY: an instruction whose mtron body holds an effect deep inside it (its plus's plus's
+     * print) is not pure, so its run stays home. Defined on THIS machine, where the peers are dialed: a {@code @TestData}
+     * frame dials nothing, and a cut from it is refused for that reason rather than for the body's.
+     * <p>
+     * A user instruction cannot ship yet even when its body is pure: its peers would have to run it (context distribution),
+     * so this row holds only the negative case. {@code InstTest#testAnUndeclaredInstructionIsAsPureAsItsBody} pins the
+     * body walk both ways.
+     */
+    @Test
+    void test_W_an_instruction_whose_body_holds_an_effect_stays_home() {
+        ObjmtronSerializer.parse("noisy_computation?int<=int(){plus(plus(print(_).mult(0)))}@noisy_computation").apply();
+        try {
+            checkCodeRewrite(LOG, "{1,2,3,4,5,6,7,8}.noisy_computation()", "start().noisy_computation()",
+                    "{2,4,6,8,10,12,14,16}", true);
+        } finally {
+            Machine.write("noisy_computation", noobj());
+        }
     }
 
     // ================================================================================================

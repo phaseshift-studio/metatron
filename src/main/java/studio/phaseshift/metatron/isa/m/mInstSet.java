@@ -1058,7 +1058,8 @@ public class mInstSet extends AbstractInstSet {
                                             final Long least = op.dom().c().min();
                                             return IntStream.range(start, last).allMatch(i -> {
                                                 final Rec prior = Law.Helper.declared(scanned.insts().get(i).tid().basePath(), carriers.get(i));
-                                                if (!Law.Helper.declares(prior, Law.pure))
+                                                // a swallowed instruction is dropped with everything it is handed, so all of it must be pure
+                                                if (prior.isNoObj() || !scanned.insts().get(i).tid(prior.atDirect(OBJ).tid()).isPure())
                                                     return false;
                                                 if (op.rng().c().isZero())
                                                     return true;
@@ -1153,7 +1154,7 @@ public class mInstSet extends AbstractInstSet {
                                         && m.asCode().insts().getFirst().tid().b().isExact() && 0 < m.asCode().insts().getFirst().tid().b().min());
                                 if (declared.isNoObj()
                                         || !EnumSet.of(Inst.Form.mapper, Inst.Form.filter, Inst.Form.flatmapper).contains(Inst.Form.of(head.tid(declared.atDirect(OBJ).tid())).subring())
-                                        || !Law.Helper.declares(declared, Law.pure) || !members.stream().allMatch(m -> factorable.test(m)
+                                        || !head.tid(declared.atDirect(OBJ).tid()).isPure() || !members.stream().allMatch(m -> factorable.test(m)
                                         && Law.Helper.sameMember(exact ? m.asCode().insts().getFirst().tid(m.asCode().insts().getFirst().tid().b(head.tid().b())) : m.asCode().insts().getFirst(), head)
                                         && m.asCode().insts().getFirst().tid().d().equals(head.tid().d()))) {
                                     out.add(inst);

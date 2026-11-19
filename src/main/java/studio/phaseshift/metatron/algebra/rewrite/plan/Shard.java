@@ -118,8 +118,11 @@ public final class Shard {
         // laws: its run ships, and its combiner brings the computation home, where the next run starts. A run states its
         // own axes; one that states none keeps the axes the run before it resolved, else the plan's, so a budget or a
         // place set stated at the head governs the whole chain and a ?hop=0 on a later fold keeps only its own run home.
-        // A run that declines stays as written, and past the head a stretch with no cut left is the tail: it stays home.
+        // A run that declines stays as written. PAST THE LAST CUT (W) the rest is floatable runs and the home stretches
+        // between them: each run ships on a branch of its own, dealing the bag the stretch before it hands on, so an
+        // effect brings the members home and the run after it goes out again; once nothing floats, the tail stays home.
         final InstPattern recombines = InstPattern.law(Law.blocked).combinedBy(chain.laws());
+        final InstPattern floats = InstPattern.law(Law.floatable);
         Axes axes = new Axes(plan.where().stream()
                 .filter(placement -> Placement.Shape.TREE == placement.shape())
                 .map(Placement::hopAxis)
@@ -130,13 +133,14 @@ public final class Shard {
         while (from < insts.size()) {
             final int start = Math.max(1, from);
             final int cut = IntStream.range(start, insts.size()).filter(i -> recombines.matches(typed.get(i))).findFirst().orElse(-1);
-            if (0 > cut && 0 < from)
+            final int run = 0 <= cut ? -1 : IntStream.range(start, insts.size()).filter(i -> floats.matches(typed.get(i))).findFirst().orElse(-1);
+            if (0 > cut && 0 > run)
                 break;
             // PROFILING IS AN END CAP, NOT A TAIL: when the instruction after the cut is profile(), each lane answers a
             // profiling::T and the master indexes the reports by the machine each was made on, so the run reaches the end
             final boolean profiling = 0 <= cut && insts.size() > cut + 1
                     && PROFILE_INST_TID.equals(insts.get(cut + 1).tid().basePath());
-            final int end = 0 > cut || profiling ? insts.size() : cut + 1;
+            final int end = 0 > cut ? runEnd(insts, typed, floats, run) : profiling ? insts.size() : cut + 1;
             final List<Inst> own = insts.subList(from, end);
             axes = new Axes(hopAxis(own, axes.hop()), split(own, axes.split()), place(own, axes.place()),
                     axes.placed() || own.stream().anyMatch(inst -> inst.tid().hasQ(PLACE)));
@@ -154,7 +158,9 @@ public final class Shard {
     /**
      * ONE CUT'S RUN, EMITTED: the instructions that replace {@code [from, end)} — the run's home prefix, the keyed branch
      * the run ships through, and the combiner that brings it home — or null when the run declines and stays as written.
-     * A {@code cut} of -1 is the head of a chain with no cut, where the cutless run partition is the one layout there is.
+     * A {@code cut} of -1 is a stretch past the last cut, {@code [from, end)}: the home instructions before one floatable
+     * run, and the run itself, which ends at {@code end}. It ships as the cutless run partition (an index set at the
+     * head) or dealt over places (W), with nothing to recombine but the branch's own merge.
      */
     private static List<Inst> emit(final Chain chain, final int from, final int cut, final int end, final Axes axes,
                                    final boolean profiling) {
@@ -174,12 +180,12 @@ public final class Shard {
             log.debug("?split={} does not lower in this chunk: the fold stays where it stands ({})", split, insts.subList(from, end));
             return null;
         }
-        // THE RUN is the floatable stretch right before the cut (the rest of the chain at a head with no cut), never
-        // reaching back past its first instruction: the one after the seed at the head, the one after the cut before it
-        // elsewhere. Whatever lies between that instruction and the run stays home.
+        // THE RUN is the floatable stretch right before the cut (past the last cut, the stretch's first floatable
+        // instruction up to end), never reaching back past its first instruction: the one after the seed at the head, the
+        // one after the cut before it elsewhere. Whatever lies between that instruction and the run stays home.
         final InstPattern floats = InstPattern.law(Law.floatable);
         final int first = Math.max(1, from);
-        int runIndex = 0 > cut ? first : cut;
+        int runIndex = 0 <= cut ? cut : IntStream.range(first, end).filter(i -> floats.matches(typed.get(i))).findFirst().orElse(end);
         while (runIndex > first && floats.matches(typed.get(runIndex - 1)))
             runIndex--;
         runIndex = expanded(chain, from, cut, runIndex);
@@ -201,13 +207,20 @@ public final class Shard {
         // and a narrowed span or point. Under a cut the run is the stretch the cut planned. NO TYPED CUT IS NEEDED at a
         // head with no cut, where the run must start at the seed (a prefix that does not float would have to be
         // broadcast) and ends at its first instruction that does not float, the tail running at home over the branch's bag.
-        final RunRange range = one ? runRange(insts, runIndex, 0 > cut ? insts.size() : cut) : null;
-        final int runEnd = null == range ? -1 : 0 <= cut ? cut : runEnd(insts, typed, floats, range.index());
+        final RunRange range = one ? runRange(insts, runIndex, 0 > cut ? end : cut) : null;
+        // THE SEED AXIS PAST THE LAST CUT (W, embarrassingly parallel): a bag of many members and no fold, so the run is the
+        // floatable stretch [runIndex, end), each lane takes its share of the bag (a literal seed dealt by the plan, any
+        // other bag by the branch when it runs), and nothing recombines but the branch's own merge -- (a+b)f = af + bf,
+        // right distributivity alone.
+        final boolean cutless = 0 > cut && null == range && !one;
+        final int runEnd = null != range ? (0 <= cut ? cut : runEnd(insts, typed, floats, range.index()))
+                : cutless && runIndex < end ? end : -1;
         final boolean runAxis = null != range && (0 <= cut || (1 == runStart(typed, floats, range.index())
                 && range.index() < runEnd && floats.matches(typed.get(range.index()))));
-        if (!runAxis && (0 > cut || one))
+        if (!runAxis && (one || (0 > cut && !(cutless && runIndex < runEnd))))
             return null;
-        if (!runAxis && Partition.Kind.COPY == split.kind() && !idempotentCombiner(combined, chain.carriers().get(cut)))
+        // a copy has no fold to absorb the duplicates, so with no cut every member would come home once per lane
+        if (!runAxis && Partition.Kind.COPY == split.kind() && (0 > cut || !idempotentCombiner(combined, chain.carriers().get(cut))))
             return null;
         final long members = runAxis ? range.count() : seed;
         if (2 > members)
