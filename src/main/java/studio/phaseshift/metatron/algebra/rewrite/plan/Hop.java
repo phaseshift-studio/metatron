@@ -46,12 +46,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  * <p><b>The spelling is one coefficient reading, with a fallback for the two coefficients mtron cannot render.</b>
  * A bare int is the DEFAULT — today's semantics, height stated and arity "the receiver's local out-degree"
  * ({@code cInt.ANY()}), which is what every {@code ?hop=n} in the tree means — and a coefficient is the stated arity
- * ({@code {2}4} is a binary tree of height 4, {@code {2,4}4} a band). Two arities have no coefficient spelling at all:
- * {@code {0}n} is {@code noobj} (a zero coefficient is no object) and {@code {1}n} normalizes to the bare {@code n}
- * (mtron renders a coefficient of one away). Both are written as the pair {@code [height, arity]} instead
- * ({@link #toObj()}), so every truncation of the tree — including the <em>chain</em>, {@code [n,1]}, whose
- * {@link #sequential()} reading the obligations derivation depends on — has a spelling. The fallback is the grammar's
- * constraint, not a second vocabulary: {@code ?hop=n{0}} and {@code ?hop=n{1}} cannot be written as q values either.
+ * ({@code {2}4} is a binary tree of height 4, {@code {2,4}4} a band). Two arities read in the coefficient form but
+ * cannot be written back in it. {@code {0}n} is {@code n} with a zero coefficient (Marko, 2026-11-19: the parser reads
+ * {@code {x}y} before {@code {0}}, the noobj shorthand), which makes the int a zero, and a zero renders as
+ * {@code noobj}. {@code {1}n} normalizes to the bare {@code n} (mtron renders a coefficient of one away). Both are
+ * written as the pair {@code [height, arity]} instead ({@link #toObj()}), so every truncation of the tree — including
+ * the <em>chain</em>, {@code [n,1]}, whose {@link #sequential()} reading the obligations derivation depends on — has a
+ * spelling that reads back. The fallback is the grammar's constraint, not a second vocabulary.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -98,11 +99,12 @@ public final class Hop {
 
     /**
      * Read the axis from the value a {@code hop} key holds: a counted int (the value is the height, the coefficient
-     * the arity) or the pair {@code [height, arity]} for the two coefficients the grammar cannot render.
+     * the arity, a zero one too: {@code {0}3}) or the pair {@code [height, arity]}.
      *
      * <p><b>A bare int is TODAY, not one child:</b> no coefficient means "the receiver's local out-degree"
      * ({@code cInt.ANY()}) — every {@code ?hop=n} in the tree means exactly that — so this reader must not turn it into
-     * a chain. A stated arity of one and a stated zero ride the pair form instead ({@code [n,1]}, {@code [n,0]}).
+     * a chain. A stated arity of one rides the pair form instead ({@code [n,1]}), and a stated zero reads in either
+     * form ({@code {0}n}, {@code [n,0]}).
      */
     public static Hop of(final Obj value) {
         if (value.isLst()) {
@@ -113,8 +115,10 @@ public final class Hop {
         }
         if (!value.isInt())
             throw MTronException.of("a hop is a counted int (the value is the height, the coefficient the arity) or a [height, arity] pair: %s", value);
-        // a bare int is today's spelling: the height stated, the arity unstated (the local out-degree)
-        return new Hop(value.asInt().intValue().intValue(), value.c().isOne() ? cInt.ANY() : value.c());
+        // a bare int is today's spelling: the height stated, the arity unstated (the local out-degree). The height is read
+        // off the int itself: a zero arity ({0}3) makes the int a zero, and asInt() answers a zero with the int noobj,
+        // which has no value
+        return new Hop(value.<Long>jvm().intValue(), value.c().isOne() ? cInt.ANY() : value.c());
     }
 
     /**

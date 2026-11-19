@@ -316,13 +316,15 @@ public class DecisionModelTest extends AbstractInstSetTest {
      *
      * <p><b>A bare int is TODAY, not one child:</b> {@code ?hop=n} means "height n, the receiver's local out-degree"
      * in every plan and in the design (§10), so it reads as {@code cInt.ANY()}. A chain states arity one in the pair
-     * form ({@code [2,1]}) — {@code {1}2} normalizes to {@code 2}, so the coefficient cannot carry it — and the pair
-     * also spells a zero arity, which would be {@code noobj} as a coefficient.
+     * form ({@code [2,1]}) — {@code {1}2} normalizes to {@code 2}, so the coefficient cannot carry it — and a zero
+     * arity reads in both forms, {@code {0}3} and {@code [0,0]}, but only the pair writes it back: {@code {0}3} is a
+     * zero, which renders as {@code noobj}.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "4        % 4 % **  % false",
             "{2}4     % 4 % 2   % false",
+            "{0}3     % 3 % 0   % false",
             "{**}1    % 1 % **  % false",
             "'{2,4}4' % 4 % 2,4 % false",
             "[2,1]    % 2 % 1   % true",
