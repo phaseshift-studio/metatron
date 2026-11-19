@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}resolver=>'the third stage — the walk that th...',
            {?}rewriter=>'the second stage — the code::T to ...',
-           {?}parser=>'the first stage — source text to o...',
-           {?}typer=>'the fourth stage — the per-machine...'],
+           {?}resolver=>'the third stage — the walk that th...',
+           {?}typer=>'the fourth stage — the per-machine...',
+           {?}parser=>'the first stage — source text to o...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -277,9 +277,9 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}tracer=>"the processor's diagnostics (trace...",
-           {?}result=>'the objs the last evaluation produ...',
            {?}analyzer=>"the processor's statistics (analyz...",
+           {?}result=>'the objs the last evaluation produ...',
+           {?}tracer=>"the processor's diagnostics (trace...",
            {?}state=>'the run state: stop, run or pause',
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
@@ -348,13 +348,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}time=>'the datetime::T when the thread wa...',
-           code=>"the thread's executing code",
            {?}runtime=>"computes the thread's current runn...",
-           {?}result=>'the last result produced by the th...',
-           {?}state=>'current state of the thread',
+           code=>"the thread's executing code",
+           {?}time=>'the datetime::T when the thread wa...',
+           {?}loop=>'delay to repeat code evaluation (d...',
            {?}timeout=>'how long a read of rhs waits for t...',
-           {?}loop=>'delay to repeat code evaluation (d...'],
+           {?}state=>'current state of the thread',
+           {?}result=>'the last result produced by the th...'],
           desc=>'the thread base type']
 ```
 | key       | value                                        |
@@ -410,11 +410,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
-           {?}peer=>"machine's own connections, one per...",
-           {?}analyzer=>"the network's statistics (analyzer...",
-           {?}roster=>'known machines, connectionless: <h...',
            {?}status=>'the health method — an auto inst c...',
+           {?}roster=>'known machines, connectionless: <h...',
+           {?}analyzer=>"the network's statistics (analyzer...",
+           {?}peer=>"machine's own connections, one per...",
+           {?}pattern=>'the branch this network answers as...',
            {?}listener=>'the sockets this machine serves th...'],
           desc=>"a machine's network: the endpoints...",
           example=>[

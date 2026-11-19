@@ -85,15 +85,15 @@ synchronization point of a program, its *cut*.
 Theorem 19 drawn as streams: on the left one fold meets the merged stream; on the right each branch folds its own
 stream, and the two partials are folded once more.
 
-| theorem    | statement                                                   | for distribution                                          |
-|------------|-------------------------------------------------------------|-----------------------------------------------------------|
-| Theorem 5  | streams are atemporal                                       | no order of apply or merge is required: placement is free |
-| Theorem 6  | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                        | elementwise work is independent: replicate it             |
-| Theorem 16 | reduce functions are temporal                               | the fold is the one synchronization point                 |
-| Theorem 17 | $c1 \cdot 1a \neq 1a \cdot c1$ for $a \in \mathcal{F}_r$    | floating stops at a reducer: the fold is the cut          |
-| Theorem 18 | $\langle\mathcal{F}_r, +, \cdot\rangle$ is a near-ring      | a reducer distributes over a fan-out after it             |
-| Theorem 19 | $(a+b)c = (ac+bc)c$ for a monoidic $c$                      | a commutative monoid fold splits and re-applies           |
-| Theorem 21 | $\langle\mathcal{F}_r, \cdot\rangle$ is functionally closed | a fold after a fold is a fold: combiners stay reducers    |
+| theorem        | statement                                                   | for distribution                                          |
+|----------------|-------------------------------------------------------------|-----------------------------------------------------------|
+| **Theorem 5**  | streams are atemporal                                       | no order of apply or merge is required: placement is free |
+| **Theorem 6**  | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                        | elementwise work is independent: replicate it             |
+| **Theorem 16** | reduce functions are temporal                               | the fold is the one synchronization point                 |
+| **Theorem 17** | $c1 \cdot 1a \neq 1a \cdot c1$ for $a \in \mathcal{F}_r$    | floating stops at a reducer: the fold is the cut          |
+| **Theorem 18** | $\langle\mathcal{F}_r, +, \cdot\rangle$ is a near-ring      | a reducer distributes over a fan-out after it             |
+| **Theorem 19** | $(a+b)c = (ac+bc)c$ for a monoidic $c$                      | a commutative monoid fold splits and re-applies           |
+| **Theorem 21** | $\langle\mathcal{F}_r, \cdot\rangle$ is functionally closed | a fold after a fold is a fold: combiners stay reducers    |
 
 # The Shard Identity
 
@@ -163,12 +163,8 @@ the cut before that, and the instructions between a cut and the next run stay ho
 
 ```mtron
 [initial,{+}[{*}home,{*}floatable,cut],{*}tail]
-         |_________distributed_______|
+         └─────── distributed ───────┘
 ```
-
-$$
-[\,\textit{initial},\; \{+\}[\,\{*\}\textit{home},\; \{*\}\textit{floatable},\; \textit{cut}\,],\; \{*\}\textit{tail}\,]
-$$
 
 each bracketed group is one expansion and one contraction (figure 2). After a cut the program holds one object, the
 value the fold answered, so the run after it has nothing to deal; what it has instead is the multiplicity in its own
@@ -278,7 +274,7 @@ stars, refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are o
 through the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T)
 or compose the others (N, R, M, I).
 
-| key   | status       | pattern                   | law                                                                                                                                | description                                                                                                                            |
+|       |              | pattern                   | law                                                                                                                                | description                                                                                                                            |
 |-------|--------------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
 | **A** | $\checkmark$ | homomorphism shard        | $h(a \uplus b) = h(a) \oplus h(b)$                                                                                                 | each place folds its part; the master recombines the partials through the computed combiner                                            |
 | **B** |              | data-local shard          | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                     | the code moves to the data: each authority folds what it holds                                                                         |

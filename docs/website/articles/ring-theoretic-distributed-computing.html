@@ -525,7 +525,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div class="article-body">
 <p><strong>DRAFT</strong>: This article is currently being developed. As of November 18, 2026, the distribution rewrite it describes,
-<code>law_shard</code>, is implemented in metatron for the patterns marked done in the distributed-computing reference <a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>;
+<code>law_shard</code>, is implemented in metatron for the patterns marked done in the distributed-computing
+reference <a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>;
 the remaining sections are outlined.</p>
 <h2>Introduction</h2>
 <p>In Stream Ring Theory <a href="./stream-ring-theory.html">[1]</a>, a program is a term of the ring
@@ -542,16 +543,16 @@ before it.</p>
 (a + b)\,r = (a\,r + b\,r)\,r
 \]</p>
 <p>The left side folds the union of two streams in one place. The right side folds each stream where it lies, then folds
-the two partials once more. Nothing in the right side requires the two folds to share a machine, so the right side is a
+the two partials once more. Nothing on the right side requires the two folds to share a machine, so the right side is a
 distributed program: two lanes, each computing its own partial, and a final fold that brings the computation home. The
 fold's declared laws, <em>monoidic</em> and <em>commutative</em>, are the license; no other feature is needed.</p>
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
-<p><img src="images/ring-theoretic-distributed-computing/fig-01.svg" alt="figure 1" /></p>
+<p><img src="images/ring-theoretic-distributed-computing/fig-01.svg" alt="figure 1" />{width=80%}</p>
 <p>A program may contract more than once. Every fold that declares these laws is a <em>cut</em>, and each cut plans the run of
 instructions before it. The program <strong>expands</strong> across the available machines, <strong>contracts</strong> at the fold, and starts
 again from the one value the fold left at home.</p>
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
-<p><img src="images/ring-theoretic-distributed-computing/fig-02.svg" alt="figure 2" /></p>
+<p><img src="images/ring-theoretic-distributed-computing/fig-02.svg" alt="figure 2" />{width=80%}</p>
 <p>This article develops that reading. The first section recalls the distributive laws of the stream ring and its
 function subrings. The second states the <em>shard identity</em>, the one rewrite every distribution pattern below lowers to,
 and proves it from Theorems 18 and 19. The third extends it to programs with many cuts. The fourth shows that a
@@ -563,9 +564,11 @@ and flatmap functions, each of which forms a ring with unity, and the reduce fun
 a <em>near-ring</em>. The difference is distributivity, and distributivity is exactly the question a distributed system asks.</p>
 <table>
 <thead>
-<tr><th>structure</th><th>right distributive, \((a+b)c = ac + bc\)</th><th>left distributive, \(c(a+b) = ca + cb\)</th></tr>
+<tr><th>form</th><th>right distributive</th><th>left distributive</th></tr>
 </thead>
 <tbody>
+<tr><td><code>*inst?decq&gt;&gt;form</code></td><td>\((a+b)c = ac + bc\)</td><td>\(c(a+b) = ca + cb\)</td></tr>
+<tr><td>----------------------------------------------</td><td>--------------------------</td><td>-------------------</td></tr>
 <tr><td>map, filter, flatmap rings</td><td>yes</td><td>yes</td></tr>
 <tr><td>reduce near-ring \(\mathcal{F}_r\) (Theorem 18)</td><td>no</td><td>yes</td></tr>
 <tr><td>monoidic reduce functions (Theorem 19)</td><td>semi: \((a+b)c = (ac+bc)c\)</td><td>yes</td></tr>
@@ -578,7 +581,8 @@ This is why a <em>floatable</em> run, any chain of such functions, can be replic
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-03.tex -->
 <p><img src="images/ring-theoretic-distributed-computing/fig-03.svg" alt="figure 3" /></p>
 <p>A reduce function is not right distributive: \((a+b)\,r\) produces one reduced object, while \(a\,r + b\,r\) produces two.
-Theorem 19 recovers the equality for a reduce function over a commutative monoid \(\langle X, \oplus \rangle\), at the cost
+Theorem 19 recovers the equality for a reduce function over a commutative monoid \(\langle X, \oplus \rangle\), at the
+cost
 of one more fold: the two reduced objects are themselves reduced. Theorems 16 and 17 name the consequence for
 distribution: reduce functions are temporal, and coefficients stop floating at them, so a reduce function is the one
 synchronization point of a program, its <em>cut</em>.</p>
@@ -603,8 +607,8 @@ stream, and the two partials are folded once more.</p>
 <h2>The Shard Identity</h2>
 <p><strong>Definition (cut).</strong> A <em>cut</em> is a reduce function \(r\) whose partial results recombine through a reduce function
 \(C(r)\), its <em>combiner</em>, that is monoidic and commutative. A fold that declares those laws itself is its own combiner,
-\(C(r) = r\) (<code>sum</code>, <code>prod</code>); a fold defined by a derivation recombines through the fold that defines it
-(\(\texttt{count} = \texttt{map}(1) \cdot \texttt{sum}\), so \(C(\texttt{count}) = \texttt{sum}\)).</p>
+\(C(r) = r\) (<code>sum</code>, <code>prod</code>); a fold defined by a derivation recombines through the fold that defines it ($
+\texttt{count} = \texttt{map}(1) \cdot \texttt{sum}$, so \(C(\texttt{count}) = \texttt{sum}\)).</p>
 <p><strong>Proposition (the shard identity).</strong> Let the seed \(s = s_1 + \cdots + s_k\) be partitioned across \(k\) places, let \(f\) be
 a floatable run, and let \(r\) be a cut. Then</p>
 <p>\[
@@ -625,7 +629,8 @@ imported out of view.</p>
            -&lt;[host=&gt;_].as(ws_client::T).barrier()&gt;&gt;host.&gt;-[,].as(rec::T)}@harvest
 ...
 mtron&gt; {0,1}.harvest()
-...
+==&gt;[0=&gt;ws://localhost:1111/mtron,
+    1=&gt;ws://localhost:1112/mtron]
 </code></pre>
 <p>The serial program</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4}.plus(1).sum()
@@ -658,6 +663,9 @@ fold that declares neither law does (it stays home).]</p>
 <h2>Chains of Cuts</h2>
 <p>A program with several cuts is planned cut by cut. Each cut plans the floatable run before it, never reaching back past
 the cut before that, and the instructions between a cut and the next run stay home. Written as a pattern over a chain,</p>
+<pre><code class="language-mtron">[initial,{+}[{*}home,{*}floatable,cut],{*}tail]
+         |_________distributed_______|
+</code></pre>
 <p>\[
 [\,\textit{initial},\; \{+\}[\,\{*\}\textit{home},\; \{*\}\textit{floatable},\; \textit{cut}\,],\; \{*\}\textit{tail}\,]
 \]</p>
@@ -679,40 +687,41 @@ mtron&gt; {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().explain()&gt;&gt;format
     sum     #{*}::T      #::T                                                                &lt;?&gt;  reducer   {*}    {1}   
    &quot;&quot;&quot;
 </code></pre>
-<p>The plan has a <code>branch</code> and a <code>sum</code> for each cut. The first deals the seed. The second has one object, the <code>20</code> the first
+<p>The plan has a <code>branch</code> and a <code>sum</code> for each cut. The first deals the seed. The second has one object, the <code>20</code> the
+first
 fold answered, so it copies that object to both places and splits the run's own span, \([0,2]\) to one and \([3,3]\) to the
 other (the next section reads a coefficient as an index set). The profile counts what the home machine ran, the
 expansion and contraction of each cut in figure 2, and lists <code>law_shard</code> among the rewrite rules:</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
      stage     min (ms)   max (ms)
-     rewrite     17.325     20.683
-     resolve     22.954     26.175
-     apply       87.604    138.398
+     rewrite     14.076     17.824
+     resolve     18.343     26.212
+     apply       95.013    128.090
      insts     4
      resolve sub-stages (avg ms):
-       inst-resolve         6.442   61.2%
-       generic-binding      3.686   35.0%
-       inst-composition     0.401    3.8%
+       inst-resolve         5.669   61.8%
+       generic-binding      3.172   34.6%
+       inst-composition     0.339    3.7%
      rewrite rules:
                    branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
          insts.in  80                  80                  80                  80                  80                  80                  
          insts.out 80                  80                  80                  80                  80                  80                  
-         time(ms)  94.736              11.828              4.838               4.714               2.768               2.659               
-         TOTAL     inst.in 4   inst.out 4   time(ms) 139.990
+         time(ms)  85.880              10.805              4.423               4.271               2.494               2.349               
+         TOTAL     inst.in 4   inst.out 4   time(ms) 126.592
      apply sub-stages (avg ms):
-       split        0.009    0.0%
-       apply       51.912  100.0%
-       next         0.007    0.0%
+       split        0.012    0.0%
+       apply       45.655  100.0%
+       next         0.006    0.0%
      per-instruction (per iteration):
                    branch    sum       branch    sum       
          in.monad  0         1         0         0         
          in.coeff  0         2         0         0         
          out.monad 1         1         1         1         
          out.coeff 2         1         2         1         
-         time(ms)  51.912    0.000     0.000     0.000     
+         time(ms)  45.655    0.000     0.000     0.000     
      flow       monads=25 coeff-sum=30 compression=1.20 processors=10
-     cache     hits=357014 misses=5 hit=100.0%
+     cache     hits=356945 misses=5 hit=100.0%
    &quot;&quot;&quot;
 </code></pre>
 <p>[To be written: the home instructions in general (what a contract must state for one object to survive them), and the
@@ -755,23 +764,23 @@ that ran, a <code>branch</code> and a <code>sum</code>, and the time spent at th
 <pre><code class="language-mtron">mtron&gt; start(0).{0,3}plus(1).sum().profile()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
      stage     min (ms)   max (ms)
-     rewrite      5.657      6.524
-     resolve      7.383      8.371
-     apply       43.566     53.736
+     rewrite      6.364      6.740
+     resolve      8.224      8.943
+     apply       47.264     56.479
      insts     2
      resolve sub-stages (avg ms):
-       inst-resolve         2.262   54.1%
-       generic-binding      1.725   41.2%
-       inst-composition     0.198    4.7%
+       inst-resolve         2.528   53.2%
+       generic-binding      1.998   42.0%
+       inst-composition     0.226    4.8%
      rewrite rules:
-                   branch_factor       law_poset           law_monoidic        law_shard           theory_unit_removal derivation_contraction
+                   branch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal derivation_contraction
          insts.in  40                  40                  40                  40                  40                  40                  
          insts.out 40                  40                  40                  40                  40                  40                  
-         time(ms)  21.404              8.759               2.986               2.690               1.986               1.897               
-         TOTAL     inst.in 2   inst.out 2   time(ms) 51.837
+         time(ms)  23.022              9.210               3.225               3.186               2.202               2.102               
+         TOTAL     inst.in 2   inst.out 2   time(ms) 56.370
      apply sub-stages (avg ms):
        split        0.009    0.0%
-       apply       36.989   99.9%
+       apply       40.082   99.9%
        next         0.012    0.0%
      per-instruction (per iteration):
                    branch    sum       
@@ -779,9 +788,9 @@ that ran, a <code>branch</code> and a <code>sum</code>, and the time spent at th
          in.coeff  0         2         
          out.monad 1         1         
          out.coeff 2         1         
-         time(ms)  36.989    0.000     
+         time(ms)  40.082    0.000     
      flow       monads=15 coeff-sum=15 compression=1.00 processors=10
-     cache     hits=210088 misses=5 hit=100.0%
+     cache     hits=209977 misses=5 hit=100.0%
    &quot;&quot;&quot;
 </code></pre>
 <p>A point is an index set too. The point \(a\{p\}\) is \(p\) copies of one term, and points add across a branch,
@@ -796,7 +805,8 @@ above copies the <code>20</code> to both places and splits the span \([0,3]\) as
 steps it walks and the \(b - a + 1\) runs it emits) and evenly for a point; why the copy needs no idempotence (the shares
 are disjoint); one axis per run, the seed's first.]</p>
 <h2>The Shape of a Law</h2>
-<p>The law a fold obeys fixes how it distributes, and there are only a few shapes <a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>:</p>
+<p>The law a fold obeys fixes how it distributes, and there are only a few
+shapes <a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>:</p>
 <table>
 <thead>
 <tr><th>law</th><th>pattern</th><th>shape</th><th>coordination</th></tr>
@@ -810,13 +820,37 @@ are disjoint); one axis per run, the seed's first.]</p>
 </table>
 <p><code>sum</code>, <code>count</code>, <code>max</code>, and <code>order</code> are one pattern, the commutative monoid fold, with different instances: the operation
 is the instance, and the law is the pattern.</p>
+<p>The free shape needs no fold at all. With no cut there is nothing to recombine, so right distributivity alone,
+\((a + b)\,f = a\,f + b\,f\), ships the run: each place runs it on its share of the seed, and the branch's own merge, its
+\(+\), brings every member home.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4,5,6,7,8}.plus(1).mult(2)
+==&gt;4
+==&gt;8
+==&gt;12
+==&gt;16
+==&gt;6
+==&gt;10
+==&gt;14
+==&gt;18
+mtron&gt; {1,2,3,4,5,6,7,8}.plus(1).mult(2).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                                                           f    desc      c_dom  c_rng 
+    branch  noobj{0}::T  #{*}::T  [ws://localhost:1111=&gt;start?hop=0({1,3,5,7}).plus(1).mult(2),  &lt;j&gt;  standard  {0}    {*}   
+                                   ws://localhost:1112=&gt;start?hop=0({2,4,6,8}).plus(1).mult(2)]                              
+   &quot;&quot;&quot;
+</code></pre>
+<p>This is the embarrassingly parallel pattern: the program is the <code>branch</code> and nothing after it. A run floats only when
+every instruction in it is pure, and so is every code it is handed, so a filter handed a <code>print</code> stays home. An effect
+between two runs brings the members home, where it runs once over the merged bag, and the run after it goes out
+again on a branch of its own.</p>
 <h3>The Menu</h3>
 <p>Every distribution pattern metatron names is an instance of one of these laws, and the menu lists them all
 <a href="../skills/mtron/references/distributed-computing-mtron.html">[3]</a>. A \(\checkmark\) marks a pattern <code>law_shard</code>
-implements today; an empty status means the law holds and the lowering is not yet written. Most entries are stars,
-refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out, through
-the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T) or
-compose the others (N, R, M, I).</p>
+implements today; an empty status means the law holds and the lowering is not yet written. Two are free, the
+floatable law alone: O carries a constant along, and W, embarrassingly parallel, has no cut at all. Most entries are
+stars, refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out,
+through the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T)
+or compose the others (N, R, M, I).</p>
 <table>
 <thead>
 <tr><th>key</th><th>status</th><th>pattern</th><th>law</th><th>description</th></tr>
@@ -844,6 +878,7 @@ compose the others (N, R, M, I).</p>
 <tr><td><strong>T</strong></td><td>\(\checkmark\)</td><td>reference frame migration</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\)</td><td>the frame moves, not the data: the tail ships as a program and the value snakes back</td></tr>
 <tr><td><strong>U</strong></td><td> </td><td>profile collation</td><td>\(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\)</td><td>each shard's profile ships home, and the master collates one report</td></tr>
 <tr><td><strong>V</strong></td><td>\(\checkmark\)</td><td>generative run</td><td>\(a^{[m,n]} = \sum_{k=m}^{n} a^k\)</td><td>a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly</td></tr>
+<tr><td><strong>W</strong></td><td>\(\checkmark\)</td><td>embarrassingly parallel</td><td>\((a + b) \cdot f = a \cdot f + b \cdot f\)</td><td>no cut: each place runs the floatable run on its share, and the branch's merge brings it all home</td></tr>
 </tbody>
 </table>
 <p>[To be written: the menu as a tree of these laws, a figure.]</p>
@@ -862,7 +897,8 @@ because their subrings are right distributive, and a fold distributes when Theor
 <ol>
 <li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red Herring's Ship's Log: Chronicles in the Sea
 of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.</li>
-<li>Rodriguez, M.A., Stynx, D.R., &quot;<a href="./span-and-point-coefficient-algebra.html">A Span and Point Coefficient Algebra for Stream Rings</a>.&quot;</li>
+<li>Rodriguez, M.A., Stynx, D.R.,
+&quot;<a href="./span-and-point-coefficient-algebra.html">A Span and Point Coefficient Algebra for Stream Rings</a>.&quot;</li>
 <li>&quot;<a href="../skills/mtron/references/distributed-computing-mtron.html">distributed computing — the pattern menu</a>,&quot; the mtron
 skill reference.</li>
 </ol>

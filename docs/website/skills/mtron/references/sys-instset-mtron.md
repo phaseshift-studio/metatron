@@ -257,9 +257,9 @@ mtron> */sys/thread/+.count()
 ==>66
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::215.3376,
+    free_mem_jvm=>mB::275.6622,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::496.6623,
+    used_mem_jvm=>mB::436.3377,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',

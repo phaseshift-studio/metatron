@@ -1169,6 +1169,85 @@ pre.nowrap > code {
     word-wrap: normal;
 }
 
+/* ── Markdown / article code listings: no wrap, thin red scrollbar ───
+   The docs pipeline's ```mtron_pre``` / ```mtron``` fences (and any other code
+   fence inside a skill's `.markdown-body` or an article's `.article-body`) are
+   terminal listings — long mtron expressions and even wider results. They must
+   keep their column alignment and read horizontally, not reflow at the page
+   edge, so the site's `pre` wrap policy is scoped back to `pre` for the two
+   prose bodies and the `<pre>` is the one scroll container. The copy plugin
+   sets `overflow: hidden` on the `<pre>` (`.hljs-copy-wrapper`) and `.hljs`
+   gives the `<code>` its own hidden scrollbar; both are undone here. A block
+   whose lines fit the page shows no scrollbar at all (`overflow-x: auto`), and
+   the thin red scrollbar is painted only while the pointer is over the block. */
+.markdown-body pre,
+.article-body pre {
+    white-space: pre !important;
+    overflow-wrap: normal;
+    word-wrap: normal;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;   /* red only on :hover */
+}
+
+.markdown-body pre > code,
+.article-body pre > code {
+    white-space: pre !important;
+    overflow-wrap: normal;
+    word-wrap: normal;
+    overflow: visible !important;
+}
+
+/* The copy plugin hides its button by translateX-ing it off the right edge
+   (`.hljs-copy-container[data-autohide="true"]`); that off-screen box is part
+   of the `<pre>`'s scrollable overflow, so every block looked wider than the
+   page and `overflow-x: auto` painted a scrollbar on all of them. Hide it in
+   place (fade) instead so the scrollbar reflects the code's own width. */
+.markdown-body .hljs-copy-container[data-autohide="true"],
+.article-body .hljs-copy-container[data-autohide="true"] {
+    transform: none;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+}
+
+.markdown-body .hljs-copy-wrapper:hover .hljs-copy-container,
+.markdown-body .hljs-copy-wrapper:focus-within .hljs-copy-container,
+.article-body .hljs-copy-wrapper:hover .hljs-copy-container,
+.article-body .hljs-copy-wrapper:focus-within .hljs-copy-container {
+    transform: none;
+    opacity: 1;
+}
+
+.markdown-body pre:hover,
+.article-body pre:hover {
+    scrollbar-color: var(--mred) transparent;
+}
+
+.markdown-body pre::-webkit-scrollbar,
+.article-body pre::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.markdown-body pre::-webkit-scrollbar-track,
+.article-body pre::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.markdown-body pre::-webkit-scrollbar-thumb,
+.article-body pre::-webkit-scrollbar-thumb {
+    background-color: transparent;   /* red only on :hover */
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.markdown-body pre:hover::-webkit-scrollbar-thumb,
+.article-body pre:hover::-webkit-scrollbar-thumb {
+    background-color: var(--mred);
+}
+
 pre.highlight {
     position: relative !important;
 }
@@ -1609,7 +1688,7 @@ details[open] summary::before {
 
 th {
     font-size: 1.2rem;
-    color: var(--mheading);
+    color: var(--mred);
 }
 
 .halign-center {
@@ -2151,7 +2230,7 @@ h6:hover .heading-anchor {
 .asciinema-figure .asciinema-cast {
     border: 1px solid #2a2a2a;
     border-radius: 6px 6px 0 0;
-    overflow-x: auto;   /* a recording wider than the figure scrolls sideways */
+    overflow-x: auto; /* a recording wider than the figure scrolls sideways */
     overflow-y: hidden;
     background: #000;
 }
@@ -2165,12 +2244,12 @@ h6:hover .heading-anchor {
    fraction of a pixel per column would otherwise leave a permanent scrollbar
    across the last columns. */
 .asciinema-cast div.ap-wrapper {
-    justify-content: flex-start;   /* a too-wide terminal scrolls from its left edge */
+    justify-content: flex-start; /* a too-wide terminal scrolls from its left edge */
 }
 
 .asciinema-cast div.ap-wrapper div.ap-player {
-    flex: 0 0 auto;                /* keep the terminal's natural width */
-    max-width: none;               /* the wrapper scrolls; the player does not clip */
+    flex: 0 0 auto; /* keep the terminal's natural width */
+    max-width: none; /* the wrapper scrolls; the player does not clip */
     font-size: 16.4px;
 }
 
@@ -2178,13 +2257,13 @@ h6:hover .heading-anchor {
    dark-red thumb on a transparent track, so it reads as part of the black
    terminal instead of a chrome gutter */
 .asciinema-cast {
-    scrollbar-width: thin;                          /* Firefox */
-    scrollbar-color: var(--primary) transparent;    /* Firefox: thumb track */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--primary) transparent; /* Firefox: thumb track */
 }
 
 .asciinema-cast::-webkit-scrollbar {
-    width: 8px;     /* vertical bar */
-    height: 8px;    /* horizontal bar: the recording is wider than the dialog */
+    width: 8px; /* vertical bar */
+    height: 8px; /* horizontal bar: the recording is wider than the dialog */
 }
 
 .asciinema-cast::-webkit-scrollbar-track {
@@ -2277,7 +2356,7 @@ h6:hover .heading-anchor {
 
 .asciinema-modal .asciinema-cast {
     background: #000;
-    overflow-x: auto;   /* scrollbar when the recording is wider than the dialog */
+    overflow-x: auto; /* scrollbar when the recording is wider than the dialog */
     overflow-y: hidden;
 }
 
