@@ -529,8 +529,11 @@ public final class Shard {
         return inherited;
     }
 
+    @SuppressWarnings("unchecked")
     private static Hop hopAxis(final fURI tid, final String key) {
-        final Obj value = strictQValue(tid, key);
+        // NOT THE STRICT READ: a zero coefficient is the hop's arity ({0}3 is the point, height 3), but a zero streams as
+        // nothing, which the strict read refuses as an empty value. Hop.of refuses what it cannot read, noobj included
+        final Obj value = tid.qValue(key, (Class<Obj>) (Class<?>) Lst.class);
         try {
             return Hop.of(value);
         } catch (final MTronException e) {

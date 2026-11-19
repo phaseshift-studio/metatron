@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Hop;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -32,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -942,6 +944,32 @@ public class mParserTest extends AbstractMetatronTest {
         assertEquals(instB(PLUS_INST_TID, lst()), ObjmtronSerializer.parse("plus()"));
         assertTrue(ObjmtronSerializer.parse("plus()").asInst().jvm().get0().isEmpty());
         assertEquals(0, ObjmtronSerializer.parse("plus()").asInst().jvm().get0().count());
+    }
+
+    /**
+     * A ZERO COEFFICIENT LEADS A Q VALUE AS ANY OTHER DOES (Marko, 2026-11-19: {x}y is read before {0}, the noobj
+     * shorthand). {@code ?hop={0}3} is the value 3 with a zero coefficient, read as {@code {2}2} is: height 3 and arity
+     * {@code {0}}, and the instruction it sits on keeps its arguments. With {0} tried first, the value ended at the
+     * {0} and the 3 parsed as an instruction, on the seed ({@code start(start?hop={0}).3(…)}) and on a fold
+     * ({@code map(sum?hop={0}).3()}). A {0} with nothing after it is the noobj shorthand still, and the value ends
+     * there. Each row: the source % the q value its hop states % the height % the arity.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start?hop={0}3({1,2,3,4}).plus(1).sum()  % {0}3 % 3 % 0",
+            "start({1,2,3,4}).plus(1).sum?hop={0}3()  % {0}3 % 3 % 0",
+            "start({1,2,3,4}).plus(1).sum?hop={2}2()  % {2}2 % 2 % 2",
+            "start?hop={0}({1,2,3,4}).plus(1).sum()   % {0}  % 0 % **",
+    }, delimiter = '%')
+    public void testAZeroCoefficientLeadsAQValue(final String source, final String stated, final int height, final String arity) {
+        final List<Inst> insts = ObjmtronSerializer.parse(source).asCode().insts();
+        assertEquals(List.of("start", "plus", "sum"), insts.stream().map(inst -> inst.tid().name()).toList(),
+                "the hop's value takes nothing from the chain: " + insts);
+        final fURI tid = insts.stream().map(Inst::tid).filter(each -> each.hasQ(Tokens.HOP)).findFirst().orElseThrow();
+        assertEquals(stated, tid.q(Tokens.HOP), "the q value: " + tid);
+        final Hop hop = Hop.of(tid.qValue(Tokens.HOP, Lst.class));
+        assertEquals(height, hop.height(), "the height of " + stated);
+        assertEquals(arity, hop.arity().toString(), "the arity of " + stated);
     }
 
     @Test

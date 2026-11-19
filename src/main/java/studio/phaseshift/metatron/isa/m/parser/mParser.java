@@ -1174,13 +1174,17 @@ public class mParser {
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
+        // {x}y BEFORE {0} (Marko, 2026-11-19): a coefficient leads the uri after it, a zero one too, so {0}3 is 3 with a
+        // zero coefficient, as {2}2 is 2 with {2}. Only the zero has a form with no y, {0}, the noobj shorthand, so it is
+        // tried last. Tried first, it took the {0} of a q value and left the rest unread: start?hop={0}3(…) parsed as
+        // start(start?hop={0}).3(…), with an instruction named 3
         return choice(
-                of("{0}").trim().map(t -> NOOBJ),
                 seq(of("<>").trim()).map(x -> empty()),
                 // the empty uri counting something: <{2}> is <> + <>
                 seq(of('<'), m_furi_coefficient(), of('>')).map(x -> empty().d(coefficientOrOne(pick(x, 1)))),
                 seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query, true), labeledCloser(of('>'), "'>' to close the uri")).pick(1),
-                m_furi_bare(furiCharacterSet, polynomial, coefficient, query));
+                m_furi_bare(furiCharacterSet, polynomial, coefficient, query),
+                of("{0}").trim().map(t -> NOOBJ));
     }
 
     /**

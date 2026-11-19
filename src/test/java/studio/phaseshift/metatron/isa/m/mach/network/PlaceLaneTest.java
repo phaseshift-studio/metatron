@@ -286,9 +286,11 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "start?hop=0({1,2,3,4}).plus(1).sum()",
-            // an arity of zero stated on the fold, in the list form: the coefficient form with a ZERO arity no longer parses
-            // as a hop (start?hop={0}3(…) reads `3(…)` as an instruction, sum?hop={0}3() as map(sum?hop={0}).3()), while
-            // {2}2 still does, so the old {0}3 spelling had stopped stating any hop and passed only because the chain broke
+            // an arity of zero in both spellings, on the seed and on the fold: the coefficient ({0}3, read as {2}2 is now
+            // that {x}y is tried before the bare {0}; before, {0}3 ended at the {0} and parsed `3(…)` as an instruction, so
+            // the row passed only because the broken chain typed no cut) and the pair ([3,0])
+            "start?hop={0}3({1,2,3,4}).plus(1).sum()",
+            "start({1,2,3,4}).plus(1).sum?hop={0}3()",
             "start({1,2,3,4}).plus(1).sum?hop=[3,0]()",
             "start?hop=[3,0]({1,2,3,4}).plus(1).sum()",
             "start?hop=0({1,2,3,4,5}).plus(1).sum().{0,3}plus(1).sum()",
