@@ -984,6 +984,17 @@ public enum Law {
         }
 
         /**
+         * WHETHER EVERY CONTRACT THE OP DECLARES STATES THE LAW — the answer for an instruction that names no contract (a
+         * bare chain instruction, before resolution), because the law then holds wherever dispatch lands it. A law is
+         * never guessed across types: this asks it of all of them. False when the op declares nothing, so an undeclared
+         * op fails closed.
+         */
+        public static boolean declaresAtEveryContract(final fURI op, final Law law) {
+            final List<Obj> claims = Machine.read(op.basePath().addQ(QCollection.DECQ)).stream().toList();
+            return !claims.isEmpty() && claims.stream().allMatch(claim -> claim.isRec() && declares(claim.asRec(), law));
+        }
+
+        /**
          * THE GENERIC'S DECLARATION — the op's {@code ?decq} claim whose contract ranges over every carrier (a {@code #}
          * or type-variable dom), the answer when dispatch names no contract: a generic's laws hold at every instantiation
          * of its body. Dispatch misses {@code count?dom=#{*}} because {@link Type#isRootType()} compares the vid with its

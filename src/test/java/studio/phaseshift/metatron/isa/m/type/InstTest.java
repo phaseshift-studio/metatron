@@ -903,4 +903,43 @@ public class InstTest extends AbstractObjTest {
         final Code plain = start_(jnt(1)).plus_(plus_(mult_(jnt(2)))).mult_(jnt(24));
         assertFalse(plain.containsJavaFunction(), "the same chain over an int contains none: " + plain);
     }
+
+    /**
+     * PURE, DECLARED OR COMPOSED. A declared instruction answers its own {@code ?decq} claim, a code answers for every
+     * instruction it composes, and an instruction is only as pure as the code it is handed. Each row is checked as
+     * parsed (bare tids, what a rewrite sees before resolution) and as resolved against its lhs (what the compiler
+     * hands on).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1        % plus(1)                % true",    // declares pure
+            "1        % plus(1).mult(2)        % true",    // a composition of declared-pure instructions
+            "1        % print(_)               % false",   // an effect, never declared pure
+            "1        % plus(1).print(_)       % false",   // one effect spoils the composition
+            "1        % side(plus(1))          % false",   // side runs its argument for the argument's effect
+            "{1,2,3}  % is(gt(1))              % true",    // a pure filter handed a pure predicate
+            "{1,2,3}  % is(to(x).gt(1))        % false",   // the same filter handed an effect
+    }, delimiter = '%')
+    public void testAnInstructionIsPureWhenDeclaredOrComposedOfPureInstructions(final String lhs, final String code, final boolean pure) {
+        final Call parsed = ObjmtronSerializer.parse(code.trim()).as();
+        assertEquals(pure, parsed.isPure(), () -> "parsed: " + parsed);
+        final Call resolved = parsed.resolve(ObjmtronSerializer.parse(lhs.trim())).as();
+        assertEquals(pure, resolved.isPure(), () -> "resolved: " + resolved);
+    }
+
+    /**
+     * A BODY DECIDES WHAT NO CLAIM DOES. An instruction that declares nothing is pure when its mtron body composes pure
+     * instructions and impure when the body holds an effect; an undeclared Java body is opaque, so it is never pure. An
+     * instruction handed either one is as pure as what it is handed.
+     */
+    @Test
+    public void testAnUndeclaredInstructionIsAsPureAsItsBody() {
+        final Inst composed = instC(f("complex_computation").dom(Tokens.INT_TID).rng(Tokens.INT_TID), lst(), "plus(1).mult(2)");
+        assertTrue(composed.isPure(), "a body of pure instructions is pure: " + composed);
+        final Inst noisy = instC(f("noisy_computation").dom(Tokens.INT_TID).rng(Tokens.INT_TID), lst(), "print(_).plus(1)");
+        assertFalse(noisy.isPure(), "one effect in the body spoils it: " + noisy);
+        assertFalse(MInst.instLambda((lhs, inst) -> lhs).isPure(), "an undeclared Java body is opaque");
+        assertTrue(plus_(composed).tryToInst().asInst().isPure(), "plus handed the pure composition stays pure");
+        assertFalse(plus_(noisy).tryToInst().asInst().isPure(), "plus handed the noisy one does not");
+    }
 }
