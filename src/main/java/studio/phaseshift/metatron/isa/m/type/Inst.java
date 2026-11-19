@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -271,6 +272,31 @@ public interface Inst extends Call {
         return this.isJavaFunction() || this.args().elements().anyMatch(arg -> arg.isObjInst()
                 ? arg.asInst().containsJavaFunction()
                 : arg.isCode() && arg.asCode().containsJavaFunction());
+    }
+
+    /**
+     * PURE, DECLARED OR DERIVED ({@link Law#pure}): the result is a function of the lhs and the args alone, and applying
+     * the instruction changes nothing else. The instruction itself answers in three ways:
+     * <ul>
+     *   <li>it names a contract that declares its laws beside itself ({@code ?decq}): pure exactly when that contract
+     *       declares {@code pure}, and a Java body is opaque, so its purity is only ever declared;</li>
+     *   <li>it declares nothing and has an mtron body: pure when that body is, because a composition of pure
+     *       instructions is pure;</li>
+     *   <li>it names no contract (a bare instruction, before resolution): pure when every contract its op declares is,
+     *       since dispatch may land on any of them; an undeclared op fails closed.</li>
+     * </ul>
+     * Either way every argument must be pure too ({@link Helper#isPure(Obj)}): an instruction that runs code is only as
+     * pure as that code, so {@code is(gt(1))} is pure and {@code is(to(x).gt(1))} is not.
+     */
+    @Override
+    default boolean isPure() {
+        final Rec declared = Law.Helper.lawsOf(this.tid());
+        final Obj body = this.getMtronFunctionObj();
+        // noobj is a call too (the code ring's zero) and has no body of its own, so only a body that is there is read
+        final boolean itself = !declared.isNoObj() ? Law.Helper.declares(declared, Law.pure)
+                : !body.isNoObj() && body.isCall() ? body.<Call>as().isPure()
+                : Law.Helper.declaresAtEveryContract(this.tid(), Law.pure);
+        return itself && this.args().elements().allMatch(Helper::isPure);
     }
 
     /**
@@ -860,6 +886,25 @@ public interface Inst extends Call {
          */
         public static boolean appliesPerObject(final Obj lhs, final Obj dom) {
             return dom.c().isOne() && lhs.c().gt(cInt.ONE());
+        }
+
+        /**
+         * Whether an argument is pure ({@link Inst#isPure()}): an instruction or a code answers for itself, a lst or a rec
+         * for everything it holds (a keyed spec carries code as keys and values: {@code group([mod(3)=>sum()])}), and a
+         * value (noobj included) runs nothing, so it is pure.
+         */
+        public static boolean isPure(final Obj arg) {
+            if (arg.isNoObj())
+                return true;
+            if (arg.isObjInst())
+                return arg.asInst().isPure();
+            if (arg.isCode())
+                return arg.asCode().isPure();
+            if (arg.isLst())
+                return arg.asLst().lstValue().stream().allMatch(Helper::isPure);
+            if (arg.isRec())
+                return arg.asRec().jvm().entrySet().stream().allMatch(entry -> isPure(entry.getKey()) && isPure(entry.getValue()));
+            return true;
         }
 
 

@@ -112,6 +112,14 @@ public interface Call extends Obj {
         return this.isCode() && this.codeValue().stream().anyMatch(Inst::containsJavaFunction);
     }
 
+    /**
+     * Whether this call is pure ({@code pure}): a composition of pure instructions is pure, so a code is pure when every
+     * instruction it composes is. An instruction answers for itself, its body and its arguments ({@link Inst#isPure()}).
+     */
+    default boolean isPure() {
+        return this.isCode() && this.codeValue().stream().allMatch(Inst::isPure);
+    }
+
     default boolean isPredicate(final Obj lhs) {
         return !this.isNoObj() && this.resolve(lhs).insts().getLast().rng().c().equals(cInt.MAYBE());
     }
