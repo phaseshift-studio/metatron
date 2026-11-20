@@ -76,7 +76,7 @@ mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.8M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  591G ...',
+    '/dev/nvme1n1p2         916G  592G ...',
     'tmpfs                   31G  3.5M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>64
+==>65
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::179.2794,
+    free_mem_jvm=>mB::526.9566,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::532.7205,
+    used_mem_jvm=>mB::185.0433,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
