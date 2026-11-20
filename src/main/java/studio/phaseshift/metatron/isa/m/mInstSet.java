@@ -1591,12 +1591,13 @@ public class mInstSet extends AbstractInstSet {
                             final List<Inst> asked = new ArrayList<>(insts.subList(0, marker));
                             final List<Inst> extended = new ArrayList<>(insts);
                             extended.add(marker + 1, instC(extension.dom(ALL.maybe()).rng(EXPLANATION_TID), lst(), (lhs, inst) -> {
-                                final String drawing = Topology.draw(MCode.of(new ArrayList<>(asked)).rewrite().resolve(noobj()));
-                                if (null == drawing || !lhs.isRec())
+                                final Obj topology = Topology.explain(MCode.of(new ArrayList<>(asked)).rewrite().resolve(noobj()));
+                                if (topology.isNoObj() || !lhs.isRec())
                                     return lhs;
                                 final String table = lhs.asRec().at(uri(FORMAT)).strValue();
+                                final String drawing = topology.asRec().at(uri(FORMAT)).strValue();
                                 return lhs.asRec()
-                                        .at(f(EXT).extend(TOPOLOGY), rec(uri(FORMAT), auto_(() -> str(drawing))), Poly.MUTABLE)
+                                        .at(f(EXT).extend(TOPOLOGY), topology, Poly.MUTABLE)
                                         .at(f(FORMAT), auto_(() -> str(table + drawing)), Poly.MUTABLE);
                             }));
                             return code.jvm(extended);

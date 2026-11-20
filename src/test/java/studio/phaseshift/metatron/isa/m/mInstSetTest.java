@@ -1573,6 +1573,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "branch?<={0}(<~> => start({1,2,3}).plus(10), </.> => start({4}).plus(20)).explain()>>ext/topology/format.has('[{]4[}]──┤').count()  % 1 % parts of a seed sum to it",
             "branch?<={0}(<~> => start({1,2}).plus(10), </.> => start({1,2}).plus(20)).explain()>>ext/topology/format.has('[{]2[}]──┤').count()  % 1 % one seed copied is held once",
             "branch?<={0}(<~> => start({1,2,3}).{0,1}sum(), </.> => start({4}).plus(1)).explain()>>ext/topology/format.has('─►[{]3[}]─[{]4[}]').count() % 1 % the zero step is the lhs",
+            // negative steps walk the declared converse, one pointed step per exponent, else one limbo per obj
+            "branch?<={0}(<~> => start(5).{-2,0}plus(1), </.> => start(1)).explain()>>ext/topology/format.has('─►[{]1[}]─[{]3[}]').count()          % 1 % int plus declares its converse: three",
+            "branch?<={0}(<~> => start('marko').{-2,0}plus('a'), </.> => start(1)).explain()>>ext/topology/format.has('─►[{]1[}]─[{]2[}]').count() % 1 % str plus declares none: a limbo and the lhs",
+            "branch?<={0}(<~> => start(5).{-1,1}plus{3}(1), </.> => start(1)).explain()>>ext/topology/format.has('─►[{]1[}]─[{]9[}]').count()       % 1 % every step is pointed: nine",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

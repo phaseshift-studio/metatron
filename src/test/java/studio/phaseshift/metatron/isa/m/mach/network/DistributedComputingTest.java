@@ -127,10 +127,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * through its own {@code ws_client}, which self-registers into {@code /network/peer} — the exact trigger
  * the guard reads.
  *
- * <p>Type checking is disabled for this suite: typing <em>across</em> distributed executions is unsolved
- * (a shipped tail answers {@code #{*}}, so the master cannot re-derive the fold's int-ness). That is the same
- * posture the manual demo and the sibling transport suites take, and it is why the expected result is a value
- * rather than a type.
+ * <p>Type checking is on for this suite, the boot default (every check but code_resolve). A planned branch states what
+ * its lanes answer, the contract of the cut or of the run's last instruction once per lane, in generics and never
+ * {@code #{*}} (Marko, 2026-11-20), so the master re-derives the fold's type past the branch and the combiner after it
+ * binds its own dom.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -379,6 +379,10 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             // dom (lst[{*}A{*}]{*}) and answers one lst
             "{2,1,4,3}.order().explain()>>per_inst>>1>>c_rng                                                                % 1",
             "{2,1,4,3}.order().explain()>>ext/topology/format.has('//local─►[{]2[}]─[{]1[}]').count()                    % 1",
+            // ...and after an absorbed top-k: the select keeps a prefix of the cut's lst, so the branch states the cut's type
+            "{2,1,4,3}.order()==[{2}_].explain()>>per_inst>>1>>c_rng                                                         % 1",
+            // a run with no cut states what its last instruction answers: lanes that end in gt(3) answer bools
+            "{1,2,3,4,5,6,7,8}.plus(1).gt(3).explain()>>format.has('branch .*bool[{][*][}]::T').count()                   % 1",
             // two top-ks in one job draw two fans, and the second is dealt what the merge left, a bag of unknown size
             "{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]>-.order(neg())==[{2}_].explain()>>ext/topology/format.has('[{][*][}]──┤').count() % 1",
     }, delimiter = '%')
