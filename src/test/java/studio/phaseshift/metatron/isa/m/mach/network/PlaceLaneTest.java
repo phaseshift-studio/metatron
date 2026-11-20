@@ -196,19 +196,22 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE RUN AXIS KEEPS A LANE PER PLACE: every lane holds the whole seed and takes a share of the span's exponent, so a
-     * weighted place set is not clamped by the seed's one member. Three home shares and the peers plan three lanes, the
-     * home key and two peers, as many as the three exponents of {0,2}. Each row: the fold % its value.
+     * THE RUN AXIS KEEPS A LANE PER PLACE, AND ONE PER EXPONENT AT MOST: every lane holds the whole seed and takes a
+     * share of the span's exponent, so a weighted place set is not clamped by the seed's one member, and a span with
+     * fewer exponents than places opens no empty lane. Three home shares and three peers are four keys: the three
+     * exponents of {0,2} plan three lanes, the home key and two peers, and the two of {0,1} plan two. Each row: the fold
+     * % its lanes % its value.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{0,2}plus(1).sum() % 3",
+            "{0,2}plus(1).sum() % 3 % 3",
+            "{0,1}plus(1).sum() % 2 % 1",
     }, delimiter = '%')
-    void testTheRunAxisIsNotClampedByTheSeed(final String tail, final int expected) {
+    void testTheRunAxisIsNotClampedByTheSeed(final String tail, final int lanes, final int expected) {
         connectAll();
         final Code emitted = lower(homeAndPeer(), "start?place=[local,local,local,peer](0)." + tail);
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
-        assertEquals(3, layout.lanes().size(), "one lane per exponent, across the places: " + emitted);
+        assertEquals(lanes, layout.lanes().size(), "one lane per exponent, across the places: " + emitted);
         checkEquality(LOG, jnt(expected),
                 evaluate(emitted).clone().selfVID(null), true);
     }

@@ -1601,7 +1601,12 @@ public class mInstSet extends AbstractInstSet {
                                         .at(f(FORMAT), auto_(() -> str(table + drawing)), Poly.MUTABLE);
                             }));
                             return code.jvm(extended);
-                        }), "an explain extension: the distribution topology of the compiled chain, its point coefficients alone (the seed, each lane's share and what its instructions leave, the merge at home and what the master's instructions leave), at explain()>>ext/topology/format and appended to explain()>>format"),
+                        }), "an explain extension: the distribution topology of the compiled chain, its point coefficients "
+                                + "alone (the seed, each lane's share and what its instructions leave, the merge at home and "
+                                + "what the master's instructions leave), as data at explain()>>ext/topology/flow, drawn at "
+                                + "explain()>>ext/topology/format and appended to explain()>>format. A lane with levels left "
+                                + "re-plans where it runs, so that machine explains it (a peer is asked over the network) and "
+                                + "its subtree is drawn inside the lane"),
                         InstBuilder.build()
                                 .tid(M_ISA_REWRITE_TID.extend("pred_extract"))
                                 .body((code, inst) -> {
