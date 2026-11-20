@@ -831,9 +831,9 @@ mtron&gt; *mydb:people/+/                                          [-- all rows 
 ==&gt;mydb:people/2=&gt;[name=&gt;'stynx',role=&gt;developer]
 ==&gt;mydb:people/3=&gt;[name=&gt;'metis',role=&gt;oracle]
 mtron&gt; *mydb:people/+/name                                      [-- all names             --]
+==&gt;'marko'
 ==&gt;'stynx'
 ==&gt;'metis'
-==&gt;'marko'
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
 ==&gt;[name=&gt;'stynx']
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]

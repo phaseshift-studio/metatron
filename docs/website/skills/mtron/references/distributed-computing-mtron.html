@@ -555,6 +555,8 @@ menu, fix the five pieces a row names:</p>
 <code>s{?}</code> admits);</li>
 <li>a keyed fold <code>group([k ⇒ h])</code> recombines <strong>pointwise</strong> — <code>sum()==[_=&gt;combiner(h)]</code> — which no single edge names.</li>
 </ul>
+<p><code>Shard</code> extends a cut over a select that keeps a prefix (<code>==[{k}_]</code>) when the combiner declares <code>causal</code>, so the
+combiner of <code>order(s)==[{k}_]</code> is <code>kmerge(s)==[{k}_]</code> (entry K).</p>
 <h3>the theorem bindings</h3>
 <p>&quot;Which law the anchor obeys&quot; is the whole decision. The stream-ring theorems are the implementation sites:</p>
 <table>
@@ -767,7 +769,7 @@ single expression shows.</p>
 <tr><td><strong>H</strong></td><td>a part shipped to r peers</td><td>every reply folds (at least once); non-idempotent: hedge, the first reply wins</td></tr>
 <tr><td><strong>I</strong></td><td><code>[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]</code></td><td>the plan's axes lowered over a real span <code>[(lo, hi, role)]</code></td></tr>
 <tr><td><strong>J</strong></td><td><code>{...}.mean()</code></td><td>tuple partials; the finalizer once at the master</td></tr>
-<tr><td><strong>K</strong></td><td><code>{...}.order(s).take(k)</code></td><td>lanes <code>order(s).take(k)</code>; the master <code>kmerge(s).take(k)</code></td></tr>
+<tr><td><strong>K</strong></td><td><code>{...}.order(s)==[{k}_]</code></td><td>lanes <code>order(s)==[{k}_]</code>; the master <code>kmerge(s)==[{k}_]</code>, as <code>kmerge</code> is <code>causal</code></td></tr>
 <tr><td><strong>L</strong></td><td><code>{...}.hll()</code></td><td>A, E or H once the sketch declares its monoid theory</td></tr>
 <tr><td><strong>M</strong></td><td><code>mtrx::[...].mult(mtrx::[...])</code></td><td>O + an addressed union (rows); A with the matrix sum (inner k); G over block keys (2-D)</td></tr>
 <tr><td><strong>N</strong></td><td>a sharded superstep, repeated</td><td><code>repeat</code> / <code>loop</code> around the layout</td></tr>
@@ -789,6 +791,8 @@ is the data-index-space sibling of <code>V</code>: same &quot;nothing ships&quot
 <code>V</code>'s index is the exponent. <code>W</code> done 2026-11-19 — the free law with no cut at all, right distributivity alone: a
 dealt seed ships its floatable run and only the branch's merge recombines (an index set was already the cutless run
 partition). Floating is <code>Inst.isPure</code>, so an instruction handed an effect keeps the run home.
+<code>K</code> done 2026-11-20 — top-k is <code>order(s)==[{k}_]</code>, the select of <code>id()</code> slots that keeps the first k positions, and the
+cut absorbs it because <code>kmerge</code> declares <code>causal</code>; see <em>K</em> below.
 An empty box is <em>not</em> &quot;unsound&quot;: the law holds, the lowering is unwritten. <code>F</code> is struck for streams (order lives in
 <code>lst</code>, never a bag); <code>M</code> is a note; <code>I</code> is infrastructure. <code>C</code> needs only Thm 5 and a pure chain. <code>T</code> is the machine
 semiring's groupoid, the stream ring's process dual. <code>V</code>'s unrolls are independent terms (Definition 3), which is why
@@ -809,7 +813,7 @@ multiply any fan-out and <strong>composites</strong> that build on the rest. The
 <pre><code>distribution — the menu (A–W)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
 │  ├─ free · floatable (Thm 6)        → O:✅  W:✅
-│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J  K  L  H
+│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  K:✅  J  L  H
 │  ├─ pipeline · associative          → F
 │  └─ shuffle · keyed                 → (G's hash-route; M(3))
 ├─ by the location                (native · delegation — where the work lives)
@@ -931,6 +935,25 @@ master:   branch?&lt;={0}&amp;split=part(&lt;p_1&gt; =&gt; start?hop=0(&lt;part_
 partials append into a bag, and a bulked partial reads as its copies (the lanes' bag bulks equal ones). <code>==[_=&gt;C]</code> is
 <code>select</code>, the per-key fold. A <code>lst</code> is an atom of the merge, so an <code>order</code>'s sorted partials bag whole per key and
 <code>kmerge</code> merges the runs.</p>
+<h4>K — top-k push-down (<code>order(s)==[{k}_]</code>)</h4>
+<pre><code class="language-mtron">lane_i:   start?hop=0(&lt;part_i&gt;).order(s)==[{k}_]                       [-- each lane keeps its own first k --]
+master:   branch?&lt;={0}&amp;split=part(&lt;p_1&gt; =&gt; start?hop=0(&lt;part_1&gt;)…, &lt;p_2&gt; =&gt; …).kmerge(s)==[{k}_]
+</code></pre>
+<p>Top-k needs no instruction of its own. A positional select keeps only the positions its pattern covers, and a span
+on an entry lays that many slots along the select's bracket, so <code>==[{k}_]</code> is the lst's take: <code>[3,1,2]==[{2}_]</code> is
+<code>[3,1]</code>, and <code>{5,3,9,1,7}.order()==[{2}_]</code> is <code>[1,3]</code>. The cut <strong>absorbs</strong> that select when the cut's combiner
+declares <code>causal</code>: the first n of its output depend only on the first n of each input, so the longer cut recombines
+through the combiner followed by the select, <code>combiner(r·t) = combiner(r)·t</code>, computed rather than declared. <code>kmerge</code>
+is causal, since the first k of a sorted merge draw only on the first k of each run, so each lane sorts its part,
+keeps k and ships at most k members, and the master merges the runs and keeps k. It is not a <code>poset</code> law: <code>kmerge</code>
+is not monotone in the prefix order (<code>{[1],[3]}.kmerge()</code> is <code>[1,3]</code>, no prefix of <code>{[1,2],[3]}.kmerge()</code>,
+<code>[1,2,3]</code>).</p>
+<p>The select must keep a prefix and change nothing, every slot a bare <code>id()</code> (<code>_</code> is its sugar). A select that maps
+(<code>==[{2}+1]</code>) would map once in each lane and again at home, so it stays home, as do a point that copies
+(<code>id{2}()</code>) and a keyed pattern (<code>==[?&lt;2=&gt;_]</code>, which keeps every position, as a hole where its key fails). Two edges
+wait on other instructions: <code>order</code> keeps equals made at run time at separate indices (<code>{1,2}.mult(0).order()</code> is
+<code>[0,0]</code>, where the literal <code>{0,0}.order()</code> is <code>[{2}0]</code> and <code>kmerge</code> merges equals across lanes), and a zero span in a
+bracket lays one <code>id()</code> slot, so <code>==[{0}_]</code> keeps one position.</p>
 <h4>T — migrating a frame of reference</h4>
 <p><code>move()</code> relocates the <em>frame of reference</em> — the machine the code runs in — rather than moving data. It is the
 machine ring's serial <code>·</code> (<code>move</code> points the machine pointer at an existing machine, and the value flows through
@@ -969,7 +992,8 @@ it is handed is pure too, so <code>is(gt(4))</code> ships and <code>is(print(_).
 instruction is still bare when <code>law_shard</code> runs, before resolution, so it stays home until its peers can run it.</p>
 <h3>how the entries compose</h3>
 <ul>
-<li><strong>E applies to every A-fold</strong>, and to G, J and L: any combiner recombines at any interior node.</li>
+<li><strong>E applies to every A-fold</strong>, and to G, J, K and L: any combiner recombines at any interior node, and a K lane
+re-planned below the root absorbs its select again.</li>
 <li><strong>D multiplies everything</strong> — its absence made distribution slower, not wrong.</li>
 <li><strong>S applies to every fan-out</strong> — the master (and every interior node) folds its own slice instead of only recombining.</li>
 <li><strong>V multiplies A/E/G</strong> — the seed and the run are independent multiplicities: a lane's narrowed span is itself an
@@ -986,7 +1010,8 @@ factors by the seed axis first.</li>
 <li><strong>Declare the law.</strong> A fold declares <code>monoidic</code> + <code>commutative</code> (or a <code>derivation</code>) beside itself, in its
 <code>?decq</code>: <code>InstBuilder…law(Law.monoidic, Law.commutative)</code>, or <code>.derivation(…)</code> for a derived fold.</li>
 <li><strong>Let the combiner compute.</strong> <code>Law.Helper.combiner</code> reads it back — self-combining, derivation-defined, or pointwise
-(<code>group</code>) — so no combiner is ever named.</li>
+(<code>group</code>) — so no combiner is ever named. A cut followed by a select that keeps a prefix (<code>==[{k}_]</code>) extends over it
+when the combiner declares <code>causal</code>, and the longer cut recombines through the combiner followed by that select (K).</li>
 <li><strong>Author the plan in the axes.</strong> <code>PlanBuilder.plan(name).cut(Cut.reducer(Law.monoidic, Law.commutative))</code>, then
 state each decision's three axes before the <code>where</code> they describe: the origin's tail is
 <code>.place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())</code> over <code>local(at, post)</code> (the home
