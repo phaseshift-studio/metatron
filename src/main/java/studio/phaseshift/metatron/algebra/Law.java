@@ -149,6 +149,16 @@ public enum Law {
      */
     commutative,
     /**
+     * the first n of the output depend only on the first n of each input — {@code f(x₁,…,xₘ)↾n = f(x₁↾n,…,xₘ↾n)↾n}
+     * for every n, where {@code x↾n} keeps the first n positions: a causal (non-anticipative) stream function, as
+     * Rutten's stream calculus names it. A sorted merge is causal, and so is lst concatenation; neither is monotone in
+     * the prefix order ({@code [1]} is a prefix of {@code [1,2]}, yet merging each with {@code [3]} gives {@code [1,3]}
+     * and {@code [1,2,3]}), so no {@link #poset} law states it. It is what lets a prefix kept after a fold ship WITH the
+     * fold: keeping the first k of the merge needs only the first k of each part, so {@code law_shard} copies the
+     * select that keeps them into every lane of a cut whose combiner is causal (menu entry K, top-k)
+     */
+    causal,
+    /**
      * the carrier is partially ordered, and these insts are its comparisons
      */
     poset,
@@ -283,6 +293,11 @@ public enum Law {
                     + "monoidic is a monoid). mean is the witness: commutative, but neither associative nor unital";
             case monoidic -> "an associative binary op with an identity element";
             case commutative -> "a·b = b·a";
+            case causal -> "the first n of the output depend only on the first n of each input — f(x₁,…,xₘ)↾n = "
+                    + "f(x₁↾n,…,xₘ↾n)↾n for every n, a causal (non-anticipative) stream function. A sorted merge is causal "
+                    + "but not monotone in the prefix order, so no poset law states it. It is what lets law_shard keep a "
+                    + "prefix in every lane of a cut whose combiner is causal: the first k of the merge need only the "
+                    + "first k of each part (top-k)";
             case poset -> "the carrier is partially ordered, and these insts are its comparisons";
             case unit -> "the identity element — e·x = x·e = x";
             case involution -> "self-inverse — f(f(x)) = x (period two)";
@@ -326,7 +341,7 @@ public enum Law {
         return switch (this) {
             // an OPERATION on the carrier, either arity the instsets witness: a binary op or a fold. The arity is a
             // real claim here -- a commutative unary neg is a category error, and so is a monoidic element.
-            case action, commutative, magmadic, monoidic -> OPERATION;
+            case action, causal, commutative, magmadic, monoidic -> OPERATION;
             // a binary operation on the carrier (A × A → A): the laws that read an OPERAND equation
             case complement, cyclic, left_distributive, nilpotent, right_distributive, zero_divisor -> List.of(BINARY_ENDO);
             // the carrier to itself, the arity stated only by `args`: the ELEMENT laws (an identity, an

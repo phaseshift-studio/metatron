@@ -1525,7 +1525,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 }
                                 return lst(collapsed);
                             })
-                            .law(Law.monoidic, Law.commutative, Law.pure)
+                            // CAUSAL: the first n of the merge read only the first n of each sorted run, so a prefix
+                            // kept after it may be kept in every run first (law_shard's top-k)
+                            .law(Law.monoidic, Law.commutative, Law.causal, Law.pure)
                             .create(),
                     InstBuilder.build()
                             .tid(M_ISA_INST_TID.extend("via"))

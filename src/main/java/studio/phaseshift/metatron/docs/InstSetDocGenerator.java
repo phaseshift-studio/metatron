@@ -1488,6 +1488,7 @@ public class InstSetDocGenerator {
             Map.entry("magmadic", "a bare binary operation \\(A \\times A \\to A\\) — a magma: closure only, neither associativity nor an identity demanded"),
             Map.entry("monoidic", "an associative binary operation with an identity — \\((a \\cdot b) \\cdot c = a \\cdot (b \\cdot c)\\), \\(e \\cdot a = a \\cdot e = a\\)"),
             Map.entry("commutative", "\\(a \\cdot b = b \\cdot a\\)"),
+            Map.entry("causal", "the first n of the output depend only on the first n of each input — \\(f(x_1, \\dots, x_m)|_n = f(x_1|_n, \\dots, x_m|_n)|_n\\): a causal (non-anticipative) stream function, so a prefix kept after the fold may be kept in each part first"),
             Map.entry("poset", "the carrier is partially ordered, and these instructions are its comparisons \\((A \\times A \\to bool)\\)"),
             Map.entry("unit", "the identity element — \\(e \\cdot x = x \\cdot e = x\\)"),
             Map.entry("involution", "self-inverse, period two — \\(f(f(x)) = x\\)"),

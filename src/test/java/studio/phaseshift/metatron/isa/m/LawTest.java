@@ -59,6 +59,7 @@ public class LawTest {
             // and the arity-agnostic spelling is deliberately absent — a commutative neg or a monoidic element is
             // a category error, not a witness.
             "action                 % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
+            "causal                 % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
             "commutative            % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
             "magmadic               % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
             "monoidic               % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
