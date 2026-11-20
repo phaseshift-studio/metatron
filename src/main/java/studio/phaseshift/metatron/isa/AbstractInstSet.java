@@ -31,6 +31,8 @@ import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -313,6 +315,18 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         // of it landing in this level AFTER the level became a union member. The bump is last so one number covers
         // every one of those doors, including the ones setup cannot know it triggered.
         this.vocabularyChanged();
+        // THE SET'S MTRON HALF, ONE TO ONE WITH ITS JAVA CLASS: ..isa.m.mach.machInstSet is completed by
+        // ..isa/m/mach/mach.mtron, written in src/main/mtron and packaged beside the class. It runs LAST, once
+        // the set's own vocabulary resolves; a half that fails is logged, not thrown, as every boot sets up /m/mach.
+        final String mtron = this.getClass().getSimpleName().replaceFirst("InstSet$", "") + ".mtron";
+        try (final InputStream source = this.getClass().getResourceAsStream(mtron)) {
+            if (null != source)
+                Machine.evaluate(new String(source.readAllBytes(), StandardCharsets.UTF_8)).stream()
+                        .filter(Obj::isFail)
+                        .forEach(fail -> LOG.error("unable to evaluate %s for %s: %s", mtron, this.vid(), fail));
+        } catch (final Exception e) {
+            LOG.error("unable to evaluate %s for %s: %s", mtron, this.vid(), e);
+        }
     }
 
     @Override

@@ -51,6 +51,8 @@
             <outputDirectory>/</outputDirectory>
             <includes>
                 <include>**/*.class</include>
+                <!-- an instruction set's mtron half, beside its class (the pom's src/main/mtron resource) -->
+                <include>**/*.mtron</include>
             </includes>
         </fileSet>
         <fileSet>
