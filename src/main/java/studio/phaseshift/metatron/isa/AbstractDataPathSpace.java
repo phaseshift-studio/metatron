@@ -24,11 +24,13 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * Base class for {@link DataPath}-backed spaces (document stores, SQL tables,
@@ -114,6 +116,30 @@ public abstract class AbstractDataPathSpace<SJVM> extends AbstractSpace<SJVM> {
     // =======================================================================
     // Shared behaviors
     // =======================================================================
+
+    /**
+     * THE FLAT NAMESPACE, READ. A level listed with {@code +} answers from one scan of everything below it: each key one
+     * level down with its obj, and each level a deeper key passes through as an interior node (noobj). A flat key names
+     * its levels only by its path ({@code a/b/c} stored lays out {@code a} and {@code a/b}), so this is how the uri walk
+     * lists them (Space.Helper: a level is listed with one {@code +}).
+     */
+    protected Iterator<IdObj> flat(final fURI relativePath, final fURI pattern) {
+        final fURI node = pattern.asNode();
+        final fURI level = 1 == node.segmentLength() ? Space.Helper.root(node) : node.retract(1);
+        if (!"+".equals(node.name()) || level.hasPattern())
+            return this.readFlat(relativePath, pattern);
+        final int depth = level.segmentLength();
+        final Map<fURI, Obj> listed = new LinkedHashMap<>();
+        final fURI relative = relativePath.asNode();
+        final fURI relativeLevel = 1 == relative.segmentLength() ? Space.Helper.root(relative) : relative.retract(1);
+        this.readFlat(relativeLevel.extend(fURI.Singleton.ALL), level.extend(fURI.Singleton.ALL)).forEachRemaining(id -> {
+            if (id.furi().segmentLength() == depth + 1)
+                listed.put(id.furi(), id.obj());
+            else if (id.furi().segmentLength() > depth + 1)
+                listed.putIfAbsent(id.furi().head(depth + 1), noobj());
+        });
+        return listed.entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue())).iterator();
+    }
 
     /**
      * Whether a read of {@code relativePath} belongs in the flat namespace:

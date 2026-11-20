@@ -177,6 +177,22 @@ public class TopicTrie {
     }
 
     /**
+     * the segments one level below an exact path whose node holds no value of its own but leads to stored values -- the
+     * interior nodes there. A node is kept for each segment on the way to a value (and, after a removal, until a cleanup),
+     * so only those with a value below them count.
+     *
+     * @param furi the exact path (no wildcards)
+     * @return the segments of the interior nodes directly below it
+     */
+    public List<String> interior(final fURI furi) {
+        final TrieNode node = findExactNode(furi);
+        return null == node ? List.of() : node.children.entrySet().stream()
+                .filter(kv -> !kv.getValue().hasValues() && hasAnyValue(kv.getValue()))
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    /**
      * Iterate over all entries in the trie.
      *
      * @param consumer the consumer to call for each entry

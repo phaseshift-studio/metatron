@@ -81,20 +81,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @Isolated
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SkipRegexTest(value = {
-        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): the cases this
-        // space does not honor yet, by cause -- a fix deletes its lines
-        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {
-                // A: # answers structures beside the leaves (# answers only leaves, at full uris)
-                "^M8/(row|nested)$", "^X13/(nested|partial|pathkeys|split)$",
-                // B: an interior node of flat keys is not its subtree, not a + entry, not a walk step
-                "^X8/(entry|split)$", "^X9/(entry|split)$", "^X10/(entry|split)$", "^X11/split$", "^X12/split$",
-                "^X14/entry$", "^W1/entry$", "^W2/entry$", "^W3/entry$",
-                // C: an interior node inside a path-keyed rec is not its subtree, not a + entry, not a walk step
-                "^X8/pathkeys$", "^X9/(partial|pathkeys)$", "^X10/(partial|pathkeys)$", "^X12/partial$",
-                "^X14/(partial|pathkeys)$", "^W1/pathkeys$", "^W2/pathkeys$", "^W3/pathkeys$",
-                // E: a wildcard key answers an address a literal path key prefixes
-                "^P1/pathkeys$", "^P2/pathkeys$"
-        }),
         // Remaining testUpdateWrite skips are schema-fixed incompatibilities, NOT the
         // objs serialization bug (tble already round-trips objs losslessly as mtron
         // strings in TEXT columns — see M48, which passes).  M12b/M43/M44/M44b: a "+"
@@ -1790,15 +1776,17 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     static Stream<Arguments> provideKVStoreRewriteTestCases() {
         return Stream.of(
                 // kv_count
-                Arguments.of("kv: single +", "*db:kvtest/+.count()", jnt(5)),
+                // a + lists the levels deeper keys pass through too (Marko, 2026-11-19: flat and nested keys read the same):
+                // a..e, sub and deep
+                Arguments.of("kv: single +", "*db:kvtest/+.count()", jnt(7)),
                 Arguments.of("kv: nested +", "*db:kvtest/sub/+.count()", jnt(2)),
-                Arguments.of("kv: double +", "*db:kvtest/+/+.count()", jnt(2)),
+                Arguments.of("kv: double +", "*db:kvtest/+/+.count()", jnt(4)),            // sub/x, sub/y, deep/1, deep/2
                 Arguments.of("kv: deep ++", "*db:kvtest/deep/+/+.count()", jnt(3)),
                 Arguments.of("kv: exact path", "*db:kvtest/b.count()", jnt(1)),
                 Arguments.of("kv: empty path", "*db:kvtest/nonexistent/+.count()", jnt(0)),
                 // kv_limit
                 Arguments.of("kv: take 3", "*db:kvtest/+.take(3).count()", jnt(3)),
-                Arguments.of("kv: take 10", "*db:kvtest/+.take(10).count()", jnt(5)),
+                Arguments.of("kv: take 10", "*db:kvtest/+.take(10).count()", jnt(7)),
                 Arguments.of("kv: take 0", "*db:kvtest/+.take(0).count()", jnt(0))
         );
     }
@@ -3145,6 +3133,24 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             }
             Machine.current().memory().removeSpace(space.vid());
             space.close();
+        }
+    }
+
+    /**
+     * a wildcard write lands on the keys stored at the level, never on a level a deeper key passes through: an interior
+     * node holds nothing, and a row planted there would hide its subtree
+     */
+    @Test
+    public void testKVPlusWriteLandsOnStoredKeys() {
+        seedKVData();
+        try {
+            ObjmtronSerializer.parse(KV_PREFIX + "/+ -> 'nine'").apply();
+            checkCodeParseApply(LOG, "*" + KV_PREFIX + "/a", "'nine'");
+            checkCodeParseApply(LOG, "*" + KV_PREFIX + "/sub", "[x=>'xray',y=>'yankee']");
+        } finally {
+            cleanKVData();
+            for (final String interior : List.of("sub", "deep"))
+                ObjmtronSerializer.parse(KV_PREFIX + "/" + interior + " -> noobj").apply();
         }
     }
 }

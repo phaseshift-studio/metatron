@@ -307,7 +307,7 @@ public record DataPath(String db, String collection, String entry, String field,
     /**
      * Navigate into each object in {@code objects} using {@code extension}
      * as the sub-path.  Type-dispatches: {@link Space} objects are read via
-     * {@code readStream(extension)}; {@link Poly} objects via
+     * the extension's relation ({@code read(extension/)}); {@link Poly} objects via
      * {@code at(extension)}; all others via the corresponding
      * {@code rshift*} helper.  When {@code detached} is {@code true},
      * returned objects have their VID stripped.
@@ -317,7 +317,10 @@ public record DataPath(String db, String collection, String entry, String field,
             return objects;
         return objects.flatMap(o -> {
             if (o.isSpace()) {
-                return o.<Space>as().readStream(extension).map(io -> detached ? io.obj().vid(null) : io.obj().selfVID(io.furi()));
+                // the extension's relation (x/ is x => *x): each address it names, with the obj stored there as is
+                return o.<Space>as().read(extension.asBranch()).stream()
+                        .map(Obj::asRel)
+                        .map(rel -> detached ? rel.secondDirect().vid(null) : rel.secondDirect().selfVID(rel.first().uriValue()));
             } else if (o.isPoly()) {
                 return o.<Poly<?, ?>>as().at(extension).stream();
             } else if (o.isRec())

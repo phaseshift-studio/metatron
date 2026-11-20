@@ -1016,43 +1016,18 @@ public final class CommonUtil {
         final List<fURI> childUris = new ArrayList<>();
         final Map<fURI, fURI> childXrefs = new HashMap<>();
         if (depth < maxDepth || forceExpand.contains(uri)) {
-            // Read direct children via +/ on the specific parent URI.
-            // Each space implements +/ to return the immediate children
-            // of the given node (e.g. local:a/+/ → a1, a2).  This is the
-            // universal "list children" query pattern.
-            // Preferred source: the space's raw readStream (uri → stored obj pairs,
-            // concrete uris).  Spaces that override it return the raw stored values,
-            // so a child whose value is an auto pointer (!* / !@) reveals its
-            // canonical target here with no extra reads.  Spaces without a native
-            // override fall back to the resolved read listing below.
-            final List<fURI> streamedUris = new ArrayList<>();
-            final Map<fURI, fURI> streamedXrefs = new HashMap<>();
-            try {
-                Machine.current().memory().readStream(uri.extend("+/")).forEach(id -> {
-                    final fURI childUri = id.furi();
-                    if (null == childUri || childUri.equals(uri) || childUri.hasPattern()) return;
-                    streamedUris.add(childUri);
-                    final Obj raw = id.obj();
-                    if (null != raw && !raw.isNoObj())
-                        Obj.Helper.getAutoPointer(raw).ifPresent(target -> streamedXrefs.put(childUri, target));
-                });
-            } catch (final RuntimeException ignored) {
-                streamedUris.clear();
-                streamedXrefs.clear();
-            }
-            if (!streamedUris.isEmpty()) {
-                childUris.addAll(streamedUris);
-                childXrefs.putAll(streamedXrefs);
-            } else {
-                Machine.read(uri.extend("+/")).stream()
-                        .filter(o -> !o.isNoObj())
-                        .forEach(o -> {
-                            final Rel rel = o.asRel();
-                            final fURI childUri = rel.first().uriValue();
-                            childUris.add(childUri);
-                            Obj.Helper.getAutoPointer(rel.secondDirect()).ifPresent(target -> childXrefs.put(childUri, target));
-                        });
-            }
+            // Read direct children via +/ on the specific parent URI: each child's relation (x/+/ is every
+            // child => *child), with the stored obj as is, so a child whose value is an auto pointer (!* / !@)
+            // reveals its canonical target here with no extra reads.
+            Machine.read(uri.extend("+/")).stream()
+                    .map(Obj::asRel)
+                    .forEach(rel -> {
+                        final fURI childUri = rel.first().uriValue();
+                        if (childUri.equals(uri) || childUri.hasPattern())
+                            return;
+                        childUris.add(childUri);
+                        Obj.Helper.getAutoPointer(rel.secondDirect()).ifPresent(target -> childXrefs.put(childUri, target));
+                    });
             childUris.sort(Comparator.comparing(f -> f.asNode().name()));
         }
 

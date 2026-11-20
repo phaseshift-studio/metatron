@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -45,7 +46,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -114,8 +114,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 if (file.isFile()) {
                     return readFileAsObj(file, qMap).vid(null);
                 } else if (file.isDirectory()) {
-                    // A directory derefs to its own uri, as a branch (trailing /) — its
-                    // structure (the child uris) is walked with >> and /, never materialized.
+                    // A directory stores nothing (its value is its subtree, which Space.Helper derives: the reader
+                    // never reads one as a value); a direct caller gets its uri.
                     return uri(this.redirect(f(file.getPath()), false));//.asBranch());
                 }
             }
@@ -226,152 +226,87 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
 
     /**
-     * When the exact file for a VID doesn't exist, walk up the path to find
-     * the nearest parent file.  Parse that file into an Obj and navigate into
-     * it using the remaining path segments via {@code at()}.  This is the
-     * same type-level navigation that memSpace provides natively: a rec
-     * stored flat at {@code test:people/1} can answer
-     * {@code test:people/1/name} because the parsed poly handles field access.
-     *
-     * @param file the original (non-existent) file
-     * @param vid  the original VID
-     * @param qMap query parameters from the read expression
-     * @return an IdObj if a parent file was found and navigated, or null
+     * ONLY WHAT IS STORED (Marko, 2026-11-19), the filesystem's own way: a file stores its obj, and a directory stores
+     * nothing -- its value is its subtree, which Space.Helper derives (a container written at a directory is laid out
+     * in it). A pattern walks the files and directories it reaches, each directory an interior node (noobj), so a
+     * {@code +} listing names the level without reading below it. An address inside a stored file (a field of a rec,
+     * a slot of a lst) is no file: Space.Helper reads it from the file above it.
      */
-    /**
-     * Simple recursion guard — resets each thread after top-level write completes.
-     */
-    private static final ThreadLocal<Integer> NEST_GUARD = ThreadLocal.withInitial(() -> 0);
-
-    private IdObj navigateFromParentFile(final File file, final fURI vid, final Map<String, String> qMap) {
-        // When called reentrantly from within resolveWrite → directReader → ...
-        // return null so the caller creates a fresh file rather than re-parsing
-        // the parent and re-entering the Router cycle.
-        final int depth = NEST_GUARD.get();
-        if (depth > 0)
-            return null;
-        NEST_GUARD.set(depth + 1);
-        try {
-            // Walk up from the file path to find an existing parent
-            Path parent = file.toPath().getParent();
-            while (parent != null && !Files.exists(parent)) {
-                parent = parent.getParent();
-            }
-            if (parent == null || !Files.exists(parent))
-                return null;
-            final File parentFile = parent.toFile();
-            // Parse parent file content
-            final Obj parentObj = fileToObj(parentFile, qMap);
-            if (parentObj.isNoObj())
-                return null;
-            // Compute the parent VID in the space's URI namespace
-            final fURI parentVid = Space.Helper.routeToSpace(f(parent.toString()), this.routes());
-            final String relative = vid.toString().length() >= parentVid.toString().length() ? vid.toString().substring(parentVid.toString().length()) : "";
-            if (relative.isEmpty())
-                return null;
-            final fURI relativeFuri = f(relative.startsWith("/") ? relative.substring(1) : relative);
-            final Obj result;
-            if (parentObj.isRec()) {
-                result = parentObj.asRec().at(uri(relativeFuri));
-            } else if (parentObj.isLst()) {
-                final String name = relativeFuri.toString();
-                if (CommonUtil.isInt(name)) {
-                    final int idx = Integer.parseInt(name);
-                    final java.util.List<Obj> list = parentObj.lstValue();
-                    result = idx >= 0 && idx < list.size() ? list.get(idx) : noobj();
-                } else {
-                    result = noobj();
-                }
-            } else {
-                return null;
-            }
-            return result.isNoObj() ? null : IdObj.of(vid, result);
-        } finally {
-            NEST_GUARD.set(depth);
-        }
-    }
-
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (key) -> {
             final fURI keyQless = key.qLess();
             if (key.equals(ALL))
                 throw MTronException.of("infinite recursive walks on file system currently prohibited");
-            else {
-                if (key.hasPattern()) {
-                    final fURI retracted = keyQless.retractPattern();
-                    final Path walkRoot = Path.of(Space.Helper.routeFromSpace(retracted, this.routes()).toString());
-                    if (!Files.exists(walkRoot))
-                        return IteratorUtil.of();
-                    final fURI walkRootFuri = Space.Helper.routeToSpace(f(walkRoot.toString()), this.routes());
-                    // The walk depth is the number of + wildcards in the pattern:
-                    // +/ means direct children (depth 1), +/+ means grandchildren
-                    // (depth 2), etc.  # means unbounded.
-                    final int walkDepth = keyQless.hasPattern("#") ? Integer.MAX_VALUE
-                            : keyQless.hasPattern("+") ? (int) keyQless.asNode().path().stream().filter("+"::equals).count()
-                            : keyQless.asNode().path().size();
-                    try (final Stream<Path> walk = Files.walk(walkRoot, walkDepth)) {
-                        return walk
-                                .filter(p -> {
-                                    try {
-                                        return !p.equals(walkRoot)
-                                                && this.redirect(f(p.toString()), false).test(f("#"));
-                                    } catch (final Exception e) {
-                                        LOG.error(e);
-                                        return false;
-                                    }
-                                })
-                                .collect(Collectors.toMap(p -> {
-                                    final fURI routed = Space.Helper.routeToSpace(f(p.toString()), this.routes());
-                                    return routed; //p.toFile().isDirectory() ? routed.asBranch() : routed;
-                                }, p -> {
-                                    final File file = p.toFile();
-                                    return fileToObj(file, key.qMap());
-                                }, Obj::append, LinkedHashMap::new))
-                                .entrySet()
-                                .stream()
-                                .flatMap(kv -> {
-                                    if (kv.getValue().isPoly())
-                                        return Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), key.asNode().asRelative()).stream();
-                                    return Stream.of(IdObj.of(kv.getKey(), kv.getValue()));
-                                })
-                                .iterator();
-                    } catch (IOException e) {
-                        throw MTronException.of(e);
+            if (key.hasPattern())
+                return this.walk(key, false).iterator();
+            try {
+                final File file = Path.of(Space.Helper.routeFromSpace(keyQless, this.routes()).toString()).toFile();
+                if (!file.exists())
+                    return IteratorUtil.of();
+                if (file.isDirectory())
+                    return IteratorUtil.of();
+                final Obj value;
+                if (file.isFile() && file.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && key.hasQ(MIMEQ_PATTERN.toString()))) {
+                    final String engine = checkScriptEvaluation(file);
+                    if (engine != null) {
+                        final fURI execTID = this.vid().extend("exec").extend(file.getName()).dom(ALL.maybe()).rng(ALL_STAR);
+                        value = instC(execTID, lst(T(ALL.maybeSome())), (lhs, inst) -> {
+                            LOG.debug("executing: %s => %s", lhs, inst);
+                            return this.executeFile(file, engine, inst.args());
+                        });
+                    } else {
+                        value = this.fileToObj(file, key.qMap());
                     }
-
                 } else {
-                    try {
-                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless, this.routes()).toString());
-                        final File file = vidPath.toFile();
-                        if (!file.exists()) {
-                            final IdObj parentResult = navigateFromParentFile(file, keyQless, key.qMap());
-                            if (parentResult != null)
-                                return IteratorUtil.of(parentResult);
-                            return IteratorUtil.of();
-                        }
-                        final Obj value;
-                        if (file.isFile() && file.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && key.hasQ(MIMEQ_PATTERN.toString()))) {
-                            final String engine = checkScriptEvaluation(file);
-                            if (engine != null) {
-                                final fURI execTID = this.vid().extend("exec").extend(file.getName()).dom(ALL.maybe()).rng(ALL_STAR);
-                                value = instC(execTID, lst(T(ALL.maybeSome())), (lhs, inst) -> {
-                                    LOG.debug("executing: %s => %s", lhs, inst);
-                                    return this.executeFile(file, engine, inst.args());
-                                });
-                            } else {
-                                value = this.fileToObj(file, key.qMap());
-                            }
-                        } else {
-                            value = this.fileToObj(file, key.qMap());
-                        }
-                        return IteratorUtil.of(IdObj.of(key, value));
-                    } catch (final Exception e) {
-                        throw MTronException.of(e);
-                    }
+                    value = this.fileToObj(file, key.qMap());
                 }
+                return IteratorUtil.of(IdObj.of(key, value));
+            } catch (final Exception e) {
+                throw MTronException.of(e);
             }
         };
+    }
+
+    /**
+     * the files and directories a pattern reaches, to the depth its wildcards walk (a {@code +} per level, {@code #}
+     * all the way): a file with its obj, a directory as an interior node (noobj) -- each one the pattern matches (a
+     * walk reaches everything down to its depth). A pattern WRITE also lands in the slots of each stored poly
+     * ({@code unroll}), so a write fills a stored row or column in place.
+     */
+    private List<IdObj> walk(final fURI key, final boolean unroll) {
+        final fURI keyQless = key.qLess();
+        final fURI nodePattern = keyQless.asNode();
+        final Path walkRoot = Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes()).toString());
+        if (!Files.exists(walkRoot))
+            return List.of();
+        // The walk depth is the number of + wildcards in the pattern:
+        // +/ means direct children (depth 1), +/+ means grandchildren
+        // (depth 2), etc.  # means unbounded.
+        final int walkDepth = keyQless.hasPattern("#") ? Integer.MAX_VALUE
+                : keyQless.hasPattern("+") ? (int) keyQless.asNode().path().stream().filter("+"::equals).count()
+                : keyQless.asNode().path().size();
+        try (final Stream<Path> walk = Files.walk(walkRoot, walkDepth)) {
+            return walk
+                    .filter(p -> {
+                        try {
+                            return !p.equals(walkRoot) && this.redirect(f(p.toString()), false).test(f("#"));
+                        } catch (final Exception e) {
+                            LOG.error(e);
+                            return false;
+                        }
+                    })
+                    .map(p -> IdObj.of(Space.Helper.routeToSpace(f(p.toString()), this.routes()),
+                            p.toFile().isDirectory() ? noobj() : this.fileToObj(p.toFile(), key.qMap())))
+                    .flatMap(id -> Stream.concat(
+                            id.furi().test(nodePattern) ? Stream.of(id) : Stream.empty(),
+                            unroll && id.obj().isPoly()
+                                    ? Space.Helper.unrollPoly(id.furi(), id.obj().as(), nodePattern.asRelative()).stream()
+                                    : Stream.empty()))
+                    .toList();
+        } catch (final IOException e) {
+            throw MTronException.of(e);
+        }
     }
 
     /**
@@ -456,116 +391,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         return file.getAbsolutePath();
     }
 
-   /* @Override
-    public Stream<IdObj> readStream(final fURI pattern) {
-        final fURI keyQless = pattern.qLess();
-        if (pattern.equals(ALL))
-            throw MTronException.of("infinite recursive walks on file system currently prohibited");
-        if (pattern.hasPattern()) {
-            final fURI retracted = keyQless.retractPattern();
-            final Path walkRoot = Path.of(Space.Helper.routeFromSpace(retracted, this.routes()).toString());
-            if (!Files.exists(walkRoot))
-                return Stream.empty();
-            final fURI walkRootFuri = Space.Helper.routeToSpace(f(walkRoot.toString()), this.routes());
-            try (final Stream<Path> walk = Files.walk(walkRoot,
-                    keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size())) {
-                final Map<fURI, Obj> collected = walk
-                        .filter(p -> {
-                            try {
-                                return !p.equals(walkRoot)
-                                        && this.redirect(f(p.toString()), false).test(f("#"));
-                            } catch (final Exception e) {
-                                LOG.error(e);
-                                return false;
-                            }
-                        })
-                        .collect(Collectors.toMap(
-                                p -> Space.Helper.routeToSpace(f(p.toString()), this.routes()),
-                                p -> fileToObj(p.toFile(), pattern.qMap()),
-                                Obj::append,
-                                LinkedHashMap::new));
-                return collected.entrySet().stream()
-                        .flatMap(kv -> {
-                            final Stream<IdObj> direct = Stream.of(IdObj.of(kv.getKey(), kv.getValue()));
-                            if (kv.getValue().isPoly())
-                                return Stream.concat(direct,
-                                        Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode().asRelative()).stream());
-                            return direct;
-                        });
-            } catch (IOException e) {
-                throw MTronException.of(e);
-            }
-        }
-        try {
-            final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless, this.routes()).toString());
-            final File file = vidPath.toFile();
-            final Obj value;
-            if (file.exists() && file.isFile() && file.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && pattern.hasQ(MIMEQ_PATTERN.toString()))) {
-                final String engine = checkScriptEvaluation(file);
-                if (engine != null) {
-                    final fURI execTID = this.vid().extend("exec").extend(file.getName()).dom(ALL.maybe()).rng(ALL_STAR);
-                    value = instC(execTID,
-                            lst(),
-                            (lhs, inst) -> {
-                                LOG.debug("executing: %s => %s", lhs, inst);
-                                return this.executeFile(file, engine, inst.args());
-                            });
-                    return Stream.of(IdObj.of(execTID, value));
-                } else {
-                    value = this.fileToObj(file, pattern.qMap());
-                }
-            } else if (file.exists()) {
-                value = this.fileToObj(file, pattern.qMap());
-            } else {
-                value = noobj();
-            }
-            if (value.isNoObj()) {
-                // Try walking up to the nearest parent file and navigating into it
-                final IdObj parentResult = navigateFromParentFile(file, keyQless, pattern.qMap());
-                if (parentResult != null)
-                    return Stream.of(parentResult);
-                return Stream.empty();
-            }
-            // Exact-path read on a directory without .mtron: enumerate children at depth 1
-            if (value.isUri() && file.isDirectory()) {
-                try (final Stream<Path> children = Files.list(file.toPath())) {
-                    final Map<fURI, Obj> collected = children
-                            .filter(p -> {
-                                try {
-                                    return this.redirect(f(p.toString()), false).test(f("#"));
-                                } catch (final Exception e) {
-                                    LOG.error(e);
-                                    return false;
-                                }
-                            })
-                            .collect(Collectors.toMap(
-                                    p -> Space.Helper.routeToSpace(f(p.toString()), this.routes()),
-                                    p -> fileToObj(p.toFile(), pattern.qMap()),
-                                    Obj::append,
-                                    LinkedHashMap::new));
-                    if (!collected.isEmpty())
-                        return collected.entrySet().stream()
-                                .flatMap(kv -> {
-                                    if (kv.getValue().isPoly())
-                                        return Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode().asRelative()).stream();
-                                    return Stream.of(IdObj.of(kv.getKey(), kv.getValue()));
-                                });
-                } catch (final IOException e) {
-                    throw MTronException.of(e);
-                }
-            }
-            return value.isNoObj() ? Stream.empty() : Stream.of(IdObj.of(pattern, value));
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
-    }*/
 
-    /**
-     * Guards against reentrant writes through the Router during a write cycle.
-     * When depth exceeds 2 levels, {@link #write(fURI, Obj)} short-circuits to
-     * {@link #directWriter()} to avoid stack overflow through updateRecursion
-     * → Machine.write → resolveWrite → locateBasePoly → readStream.
-     */
     /**
      * When the exact file for a VID doesn't exist, walk up to find the nearest
      * parent file, parse it, navigate to the target field with {@code at()},
@@ -614,7 +440,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
+                // a pattern write lands on what is stored -- the files and, filling them in place, their slots -- and a
+                // delete on every file and directory it matches, each removed whole (deleting the slots of a lst one by
+                // one would shrink it under its own indices); a directory holds no value to write otherwise
+                this.walk(pattern, !obj.isNoObj()).stream()
+                        .filter(id -> obj.isNoObj() || !id.obj().isNoObj())
+                        .forEach(id -> this.write(id.furi(), obj));
             } else {
                 final Path path = Paths.get(this.redirect(pattern.basePath(), true).toString());
                 final File file = path.toFile();
@@ -623,7 +454,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         final File delete = new File(this.redirect(pattern, true).toString());
                         if (delete.isDirectory())
                             CommonUtil.deleteDirectory(delete.toPath());
-                        else
+                        // a slot inside a stored poly file (m/2/0 of the row file m/2) is no file of its own:
+                        // deleting it deletes nothing, where the filesystem would refuse a path through a file
+                        else if (delete.exists())
                             Files.deleteIfExists(delete.toPath());
                         return noobj();
                     } else if (!file.exists()) {
@@ -634,10 +467,19 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         // No parent found — create as a new file
                         this.objToFile(pattern.hasQ(MIMEQ_PATTERN) ? f(path.toString()).addQ(MIMEQ_PATTERN.toString(), pattern.q(MIMEQ_PATTERN.toString())) : f(path.toString()), obj);
                     } else if (file.isDirectory()) {
-                        if (!file.exists())
-                            file.mkdirs();
-                        if (obj.isPoly())
-                            this.objToFile(pattern.hasQ(MIMEQ_PATTERN) ? f(new File(file, ".mtron").getPath()).addQ(MIMEQ_PATTERN.toString(), pattern.q(MIMEQ_PATTERN.toString())) : f(new File(file, ".mtron").getPath()), obj);
+                        // a container written at a directory is laid out in it, an entry per slot (Marko, 2026-11-19:
+                        // containers written to a space are laid out in uri space): a rec reads back as itself, a lst
+                        // as a rec of its indices. A key with a wildcard is a segment of the data, and a path holding it
+                        // would be written as a pattern -- every file it matches -- so such a container is refused
+                        if (obj.isPoly()) {
+                            final List<Tuple.Pair<fURI, Obj>> slots = obj.<Poly<?, ?>>as().indexedStream()
+                                    .filter(slot -> null != slot.jvm().get1())
+                                    .map(slot -> Tuple.Pair.with(f(slot.jvm().get0().jvm().toString()), (Obj) slot.jvm().get1()))
+                                    .toList();
+                            if (slots.stream().anyMatch(slot -> slot.get0().hasPattern()))
+                                throw MTronException.of("%s is a directory: a container with a wildcard key cannot be laid out in it: %s", pattern, obj);
+                            slots.forEach(slot -> this.write(pattern.extend(slot.get0()), slot.get1()));
+                        }
                     } else {
                         this.objToFile(pattern.hasQ(MIMEQ_PATTERN) ? f(path.toString()).addQ(MIMEQ_PATTERN.toString(), pattern.q(MIMEQ_PATTERN.toString())) : f(path.toString()), obj);
                         /*if (pattern.hasQ("p")) {

@@ -37,12 +37,12 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
@@ -65,7 +65,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-
 
 public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
@@ -266,7 +265,9 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
         if (null != ret)
             return ret;
         if (pattern.hasPattern()) {
-            this.read(pattern.asBranch()).stream().map(r -> r.<Rel>as().first()).forEach(u -> this.write(u.uriValue(), obj));
+            // a pattern write lands where the cache's own write would (stored entries, else the slots of a stored poly),
+            // never on what a read answers: # reads only leaves, and a delete of x/# must remove the containers too
+            IteratorUtil.stream(this.cache.targets(pattern)).map(IdObj::furi).toList().forEach(u -> this.write(u, obj));
         } else
             this.send(pattern, obj);
        /* final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {

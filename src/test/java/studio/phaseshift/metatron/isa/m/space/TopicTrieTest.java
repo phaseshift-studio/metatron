@@ -358,4 +358,17 @@ public class TopicTrieTest extends AbstractMetatronTest {
         // Verify all items are present
         assertEquals(numThreads * opsPerThread, trie.size());
     }
+
+    /**
+     * the interior nodes one level down: the segments that hold no value of their own but lead to one -- a node kept
+     * after its value below was removed is not one
+     */
+    @Test
+    void testInteriorNamesOnlyLevelsWithAValueBelow() {
+        trie.put(f("/a/b/c"), jnt(1));
+        trie.put(f("/a/d"), jnt(2));
+        assertEquals(List.of("b"), trie.interior(f("/a")));
+        trie.remove(f("/a/b/c"));
+        assertEquals(List.of(), trie.interior(f("/a")));
+    }
 }

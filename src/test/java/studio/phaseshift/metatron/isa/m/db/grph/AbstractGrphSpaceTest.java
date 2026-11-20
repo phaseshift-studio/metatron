@@ -81,28 +81,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @SkipRegexTest({
-        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): the cases this
-        // space does not honor yet, by cause -- a fix deletes its lines
-        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {
-                // A: # answers structures beside the leaves (# answers only leaves, at full uris)
-                "^M8/(row|nested)$", "^X13/(nested|partial|pathkeys|split)$",
-                // B: an interior node of flat keys is not its subtree, not a + entry, not a walk step
-                "^X8/(entry|split)$", "^X9/(entry|split)$", "^X10/(entry|split)$", "^X11/split$", "^X12/split$",
-                "^X14/entry$", "^X16/(entry|split)$", "^W1/entry$", "^W2/entry$", "^W3/entry$",
-                // C: an interior node inside a path-keyed rec is not its subtree, not a + entry, not a walk step
-                "^X8/(partial|pathkeys)$", "^X9/(partial|pathkeys)$", "^X10/(partial|pathkeys)$", "^X11/(partial|pathkeys)$",
-                "^X12/(partial|pathkeys)$", "^X14/(partial|pathkeys)$", "^X16/(partial|pathkeys)$", "^W1/pathkeys$",
-                "^W2/pathkeys$", "^W3/pathkeys$",
-                // E: a wildcard key answers an address a literal path key prefixes
-                "^P1/pathkeys$", "^P2/pathkeys$",
-                // F: grphSpace (polys become vertices) -- this space reads the layout differently
-                "^M1/nested$", "^M2/nested$", "^M3/nested$", "^M4/nested$", "^M5/nested$", "^M6/nested$", "^M7/nested$",
-                "^X1/(nested|partial|pathkeys)$", "^X2/(nested|partial|pathkeys)$", "^X3/(nested|partial|pathkeys)$",
-                "^X4/(nested|partial|pathkeys)$", "^X5/(nested|partial|pathkeys)$", "^X6/(nested|partial|pathkeys)$",
-                "^X7/(nested|partial|pathkeys)$", "^X8/nested$", "^X9/nested$", "^X10/nested$", "^X11/nested$",
-                "^X12/nested$", "^X14/nested$", "^X16/nested$", "^W1/nested$", "^W2/nested$", "^W3/nested$",
-                "^W4/(nested|pathkeys)$", "^W5/(nested|pathkeys)$", "^P1/nested$", "^P2/nested$", "^N1/nested$"
-        }),
         // a graph is not an arbitrary key/value store (Marko, 2026-11-16): this spine's nested rec reads [<>=>[=>]]
         @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = {"/a/\\.>>\\.>>\\.\\*_"}),
         // an edge or person entry reads back as its schema type (rec::T[?[weight=>real::T]]@…/weighted_edge), not as
@@ -496,9 +474,9 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
                     uri("seller"), ObjmtronSerializer.parse("!(*/g/V/+.?[name=>'josh'])").apply(noobj())));
 
             // verify memSpace data is accessible directly
-            assertTrue(hot.readStream(f("/te/hot/1/+")).toList().size() == 2,
+            assertEquals(2, hot.read(f("/te/hot/1/+/")).stream().map(Obj::asRel).count(),
                     "memSpace should have 2 hot edges for vertex 1");
-            assertTrue(hot.readStream(f("/te/hot/4/+")).toList().size() == 1,
+            assertEquals(1, hot.read(f("/te/hot/4/+/")).stream().map(Obj::asRel).count(),
                     "memSpace should have 1 hot edge for vertex 4");
             final String[] tests = {
                     // ── hot edges: grphSpace vertex 1 → OUT via scheme label te:hot ──
@@ -672,6 +650,14 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     @Override
     @Disabled("a graph is not an arbitrary key/value store: the uri graph tree walk reads noobj")
     public void testUriGraphTreeWalk() {
+    }
+
+    // the factorization contract lays arbitrary key/value data out in uri space; a graph prescribes vertices and edges,
+    // and a key/value encoding (abc -> 35 as vertex[value=>35]@abc, what tbleSpace's kv_store does for tables) is
+    // deliberately not offered: no one would use it and it would need maintaining (Marko, 2026-11-19)
+    @Override
+    @Disabled("a graph is not an arbitrary key/value store: the contract's layouts are key/value data, not vertices and edges")
+    public void testReadsAreInvariantUnderFactorization(final String id, final String[] layout, final String read, final String expected) {
     }
 
     @Override

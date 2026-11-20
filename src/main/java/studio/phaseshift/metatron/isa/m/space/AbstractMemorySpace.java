@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -36,7 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -52,52 +51,35 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
         super(sjvm, config, tid, vid, autoRegister);
     }
 
+    /**
+     * ONLY WHAT IS STORED (Marko, 2026-11-19: a directReader "only return[s] what is explicitly in their store"): an
+     * exact address answers its stored value, a pattern the stored entries it matches. What a read means -- a poly's
+     * insides, an interior address's subtree, + and # -- is derived once, for every space, by Space.Helper.
+     */
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (qpattern) -> {
             final fURI pattern = qpattern.qLessExceptDomRng();
             if (pattern.equals(ALL))
                 return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue())).iterator();
-            else {
-                if (pattern.hasPattern()) {
-                    final fURI nodePattern = pattern.asNode();
-                    // stream 1: direct matches from trie
-                    final List<Map.Entry<fURI, Obj>> directMatches = this.sjvm().match(nodePattern);
-                    Stream<Map.Entry<fURI, Obj>> polyParents = Stream.empty();
-                    // stream 2: check parent paths for polys that can expand to match (no matches, requires deeper inspection)
-                    if (directMatches.isEmpty() && nodePattern.hasPattern()) {
-                        fURI parent = nodePattern.retract(1);
-                        while (parent.segmentLength() > 0) {
-                            final Obj parentValue = this.sjvm().get(parent);
-                            if (parentValue != null && parentValue.isPoly()) {
-                                polyParents = Stream.of(new AbstractMap.SimpleEntry<>(parent, parentValue));
-                                break;
-                            }
-                            parent = parent.retract(1);
-                        }
-                        /*  // also check root MIGHT NOT REQUIRED (WAITING FOR A FAILURE TO SHOW ITSELF)
-                        final Obj rootValue = this.sjvm().get(parent);
-                        if (rootValue != null && rootValue.isPoly()) {
-                            polyParents = Stream.concat(polyParents, Stream.of(new AbstractMap.SimpleEntry<>(parent, rootValue)));
-                        }*/
-                    }
-                    return Stream.concat(directMatches.stream(), polyParents)
-                            .flatMap(kv -> Stream.concat(
-                                    kv.getKey().test(nodePattern) ?
-                                            Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
-                                            Stream.empty(),
-                                    kv.getValue().isPoly() ?
-                                            Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
-                                            Stream.empty())).iterator();
-                } else {
-                    // resolve(): the writer (resolveWrite → directWriter) stores under vid.resolve(), so the reader
-                    // must resolve too — otherwise /. (the root's node vid) writes to / but reads back /. → noobj.
-                    final Obj value = this.sjvm().get(pattern.resolve());
-                    if (value != null)
-                        return IteratorUtil.of(IdObj.of(pattern, value));
-                    return readContainer(pattern);
-                }
+            if (pattern.hasPattern()) {
+                final fURI nodePattern = pattern.asNode();
+                final Stream<IdObj> stored = this.sjvm().match(nodePattern).stream()
+                        .filter(kv -> kv.getKey().test(nodePattern))
+                        .map(kv -> IdObj.of(kv.getKey(), kv.getValue()));
+                // a level listed with + also answers its interior nodes, as noobj: the trie keeps a node for each level
+                // of a flat key (a/b/c stored lays out a and a/b), so the uri walk lists a level from + alone
+                // the level the + lists: the root of /+ keeps its leading / (a full retract empties the path)
+                final fURI level = 1 == nodePattern.segmentLength() ? Space.Helper.root(nodePattern) : nodePattern.retract(1);
+                if (!"+".equals(nodePattern.name()) || level.hasPattern())
+                    return stored.iterator();
+                return Stream.concat(stored, this.sjvm().interior(level).stream()
+                        .map(segment -> IdObj.of(level.extend(segment), noobj()))).iterator();
             }
+            // resolve(): the writer (resolveWrite → directWriter) stores under vid.resolve(), so the reader
+            // must resolve too — otherwise /. (the root's node vid) writes to / but reads back /. → noobj.
+            final Obj value = this.sjvm().get(pattern.resolve());
+            return null == value ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, value));
         };
     }
 
@@ -111,7 +93,7 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
             // deadlock looks like from outside. Serializing the shared state has to happen at a level that does not
             // span both -- or the trie's own map has to be concurrent -- but not here.
             if (pattern.hasPattern()) {
-                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
+                this.targets(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
             } else {
                 final Obj current = this.sjvm().get(pattern);
                 if (obj.isNoObj()) {
@@ -128,71 +110,34 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
         };
     }
 
-    private Iterator<IdObj> readContainer(final fURI pattern) {
-        for (int depth = 1; depth <= 1; depth++) {
-            fURI wildcard = pattern;
-            for (int d = 0; d < depth; d++)
-                wildcard = wildcard.extend("+");
-            final List<Map.Entry<fURI, Obj>> matches = this.sjvm().match(wildcard.asNode());
-            if (!matches.isEmpty()) {
-                final Rec container = rec();
-                for (final Map.Entry<fURI, Obj> kv : matches) {
-                    final fURI childPath = kv.getKey().pretract(pattern.segmentLength()).asRelative();
-                    final List<String> segs = childPath.segments();
-                    if (segs.isEmpty()) continue;
-                    Map<Obj, Obj> level = container.jvm();
-                    for (int i = 0; i < segs.size() - 1; i++) {
-                        final Uri key = uri(segs.get(i));
-                        Obj child = level.get(key);
-                        if (child == null || !child.isRec()) {
-                            child = rec();
-                            level.put(key, child);
-                        }
-                        level = child.asRec().jvm();
-                    }
-                    level.put(uri(segs.getLast()), kv.getValue());
+    /**
+     * the addresses a PATTERN WRITE lands on: the stored entries it matches, else the slots of the nearest stored poly
+     * above them (a row or a column of a stored lst) -- entries that are stored, never an interior address a read derives,
+     * and never only the leaves a # read answers (a delete of x/# removes the containers too). A space that keeps a
+     * memSpace as its cache (mqttSpace) expands its own pattern writes with this.
+     */
+    public Iterator<IdObj> targets(final fURI qpattern) {
+        final fURI nodePattern = qpattern.qLessExceptDomRng().asNode();
+        final List<Map.Entry<fURI, Obj>> directMatches = this.sjvm().match(nodePattern);
+        Stream<Map.Entry<fURI, Obj>> polyParents = Stream.empty();
+        if (directMatches.isEmpty() && nodePattern.hasPattern()) {
+            fURI parent = nodePattern.retract(1);
+            while (parent.segmentLength() > 0) {
+                final Obj parentValue = this.sjvm().get(parent);
+                if (parentValue != null && parentValue.isPoly()) {
+                    polyParents = Stream.of(new AbstractMap.SimpleEntry<>(parent, parentValue));
+                    break;
                 }
-                if (!container.isEmpty())
-                    return IteratorUtil.of(IdObj.of(pattern, container));
+                parent = parent.retract(1);
             }
         }
-        return IteratorUtil.of();
-    }
-
-    @Override
-    public Stream<IdObj> readStream(final fURI pattern) {
-        if (pattern.equals(ALL))
-            return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue()));
-        if (pattern.hasPattern()) {
-            final fURI nodePattern = pattern.asNode();
-            final List<Map.Entry<fURI, Obj>> directMatches = this.sjvm().match(nodePattern);
-            Stream<Map.Entry<fURI, Obj>> polyParents = Stream.empty();
-            if (directMatches.isEmpty() && nodePattern.hasPattern()) {
-                fURI parent = nodePattern.retract(1);
-                while (parent.segmentLength() > 0) {
-                    final Obj parentValue = this.sjvm().get(parent);
-                    if (parentValue != null && parentValue.isPoly()) {
-                        polyParents = Stream.of(new AbstractMap.SimpleEntry<>(parent, parentValue));
-                        break;
-                    }
-                    parent = parent.retract(1);
-                }
-            }
-            return Stream.concat(directMatches.stream(), polyParents)
-                    .flatMap(kv -> kv.getValue().stream().map(kk -> new AbstractMap.SimpleEntry<>(kv.getKey(), kk)))
-                    .flatMap(kv -> Stream.concat(
-                            kv.getKey().test(nodePattern) ?
-                                    Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
-                                    Stream.empty(),
-                            kv.getValue().isPoly() ?
-                                    Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
-                                    Stream.empty()));
-        }
-        final Obj value = this.sjvm().get(pattern);
-        return null == value ?
-                Stream.empty() :
-                value.isObjs() ?
-                        value.stream().flatMap(o -> Stream.of(IdObj.of(pattern, o))) :
-                        Stream.of(IdObj.of(pattern, value));
+        return Stream.concat(directMatches.stream(), polyParents)
+                .flatMap(kv -> Stream.concat(
+                        kv.getKey().test(nodePattern) ?
+                                Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
+                                Stream.empty(),
+                        kv.getValue().isPoly() ?
+                                Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
+                                Stream.empty())).iterator();
     }
 }

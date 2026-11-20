@@ -273,25 +273,23 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
 
                 final fURI collId = resolveCollectionId(dp.collection(), false);
                 final String docId = aligned.toString();
-                // ── wildcard entry → all documents ──
+                // ── wildcard entry → all documents, each at its address in the space (a collection names a document
+                //    by its id; the space by the collection's address and that id) ──
                 if (dp.entryIsWildcard()) {
+                    final fURI level = pattern.asNode().retract(1);
                     final VectorDBClient.GetResult all = this.sjvm().getAll(collId);
-                    return resultToIdObjs(all).iterator();
+                    return all.entities().stream().map(e -> IdObj.of(level.extend(e.id()), e.obj())).iterator();
                 }
-                // ── exact entry ──
+                // ── exact entry: what is stored at the address asked ──
                 final VectorDBClient.GetResult result = this.sjvm().get(collId, List.of(f(docId).name()));
                 LOG.debug("retrieving: %s => %s", collId, result);
-                return IteratorUtil.asIterator(result.entities().stream().map(e -> IdObj.of(e.id(), e.obj())));
+                return IteratorUtil.asIterator(result.entities().stream().map(e -> IdObj.of(pattern, e.obj())));
             } catch (final Exception e) {
                 if (e.getMessage() != null && e.getMessage().contains("does not exist"))
                     return IteratorUtil.of();
                 throw MTronException.of(e);
             }
         };
-    }
-
-    private List<IdObj> resultToIdObjs(final VectorDBClient.GetResult all) {
-        return all.entities().stream().map(e -> IdObj.of(e.id(), e.obj())).toList();
     }
 
     private Iterator<IdObj> collect(final Iterator<IdObj> raw,

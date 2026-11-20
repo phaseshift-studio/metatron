@@ -312,15 +312,16 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
                 // Objs (coefficient collection): zip elements to matched keys by position
                 // so that bulk >>= on a wildcard URI writes each merged element to its
                 // corresponding key rather than writing the entire collection to every key
+                // a level's interior node (noobj: a deeper key passes through it, nothing is stored there) is no key
+                final List<IdObj> keys = IteratorUtil.stream(this.directReader().apply(pattern))
+                        .filter(kv -> !kv.obj().isNoObj())
+                        .toList();
                 if (obj.isObjs()) {
                     final List<Obj> elems = obj.asObjs().elements().toList();
-                    final Iterator<IdObj> keys = this.directReader().apply(pattern);
-                    int i = 0;
-                    while (keys.hasNext() && i < elems.size())
-                        this.write(keys.next().furi(), elems.get(i++));
-                } else {
-                    this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
-                }
+                    for (int i = 0; i < keys.size() && i < elems.size(); i++)
+                        this.write(keys.get(i).furi(), elems.get(i));
+                } else
+                    keys.forEach(kv -> this.write(kv.furi(), obj));
                 return noobj();
             }
 
@@ -477,7 +478,7 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
             // reserved kv_store first segment, or an unknown collection, reads the
             // entire relative path as a single key.
             if (this.isFlatRead(alignedPattern))
-                return this.readFlat(alignedPattern, pattern);
+                return this.flat(alignedPattern, pattern);
 
             final DataPath dp = this.resolveDataPath(alignedPattern);
 

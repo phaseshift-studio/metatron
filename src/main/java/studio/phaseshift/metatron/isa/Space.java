@@ -36,9 +36,12 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -74,35 +77,6 @@ public interface Space extends Addressable, Rec, Closeable {
 
     @Override
     Obj write(final fURI vid, final Obj obj);
-
-    /**
-     * Read all concrete addresses matching a pattern, returning each as an {@link IdObj} pair.
-     * The returned fURIs are always concrete paths (never wildcards).
-     * Default implementation wraps {@link #read(fURI)} for backward compatibility;
-     * space implementations should override for native bulk pattern support.
-     */
-    default Stream<IdObj> readStream(final fURI pattern) {
-        return Space.Helper.readStream(this, pattern);
-    }
-
-    /**
-     * Write an object to all concrete addresses matching a pattern, returning each
-     * written pair as an {@link IdObj}.  The returned fURIs are always concrete paths.
-     * Default implementation wraps {@link #write(fURI, Obj)} for backward compatibility;
-     * space implementations should override for native bulk pattern support.
-     */
-   /* default Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
-        if (pattern.hasPattern()) {
-            return this.readStream(pattern).map(kv -> {
-                this.write(kv.furi(), obj);
-                return IdObj.of(kv.furi(), obj);
-            });
-        }
-        final Obj result = this.write(pattern, obj);
-        if (result.isNoObj())
-            return Stream.empty();
-        return Stream.of(IdObj.of(result.hasVID() ? result.vid() : pattern, result));
-    }*/
 
     fURI redirect(final fURI furi, final boolean big);
 
@@ -146,23 +120,6 @@ public interface Space extends Addressable, Rec, Closeable {
 
         public static Iterator<IdObj> attachVIDs(final Iterator<IdObj> iterator) {
             return IteratorUtil.map(iterator, kv -> kv.obj().vid() != null ? kv : new IdObj(kv.furi(), kv.obj().selfVID(kv.furi())));
-        }
-
-        public static Stream<IdObj> readStream(final Space space, final fURI pattern) {
-            QProc.Helper.checkQProcs(space, pattern);
-            final java.util.Optional<Obj> preRead = QProc.Helper.processPreRead(space.qs(), pattern);
-            if (preRead.isPresent())
-                return Stream.of(IdObj.of(pattern, preRead.get()));
-            final Obj result = Space.Helper.resolveRead(space, pattern, space.directReader());
-            final Obj postResult = QProc.Helper.processPostRead(space.qs(), pattern, result);
-            if (postResult.isNoObj())
-                return Stream.empty();
-            if (postResult.isObjs())
-                return IteratorUtil.stream(postResult.objsValue().iterator())
-                        .map(o -> o.isRel()
-                                ? IdObj.of(o.asRel().first().uriValue(), o.asRel().second())
-                                : IdObj.of(null != o.vid() ? o.vid() : pattern, o));
-            return Stream.of(IdObj.of(pattern, postResult));
         }
 
         public static void recursivelyStripVID(final Obj obj, final boolean root) {
@@ -309,44 +266,303 @@ public interface Space extends Addressable, Rec, Closeable {
             return results;
         }
 
-        public static Obj resolveRead(final Space space, final fURI patternPre, final Function<fURI, Iterator<IdObj>> directReader) { //final Map<fURI, Obj> store) {
-            final fURI pattern = patternPre;//.qLessExceptDomRng();
-            // A TRAILING '/' ON AN ADDRESS NAMES THE RELATION from it to its obj (Marko, 2026-11-10): x/ is the one rel
-            // x => *x, the node read as any node is, and never x's entries, which are x/+/ (each at its own address).
-            // An address that holds nothing itself relates to the entries written below it, nested into a rec: a space
-            // that keeps no container of its own (tble, dcmnt) answers those only to a pattern
-            if (pattern.isBranch() && !pattern.hasPattern()) {
-                final fURI node = pattern.asNode();
-                final Obj obj = resolveRead(space, node, directReader);
-                final Rec nestRec = rec();
-                if (obj.isNoObj())
-                    directReader.apply(pattern.extend(fURI.Singleton.WILD_ONE)).forEachRemaining(kv ->
-                            nestRec.at(kv.furi().pretract(node.segmentLength()).toUri(), kv.obj(), MUTABLE));
-                return !obj.isNoObj() ? rel(uri(node), obj) : nestRec.isEmpty() ? obj : rel(uri(node), nestRec);
+        /**
+         * READ, WITH WHAT A READ MEANS — derived once, here, for every space. A space's {@code directReader} answers only
+         * what is explicitly in its store: an exact address its stored value, a pattern the stored entries it matches
+         * (Marko, 2026-11-19). Everything else follows from Space's law, that every layout of the same data reads alike
+         * (docs/website/adoc/uri.adoc; {@code AbstractSpaceTest#testReadsAreInvariantUnderFactorization}):
+         * <ul>
+         *     <li>an address answers what is stored at it, else what the nearest stored poly above it holds there, else —
+         *     an interior address — its whole subtree, nested from the entries stored below it;</li>
+         *     <li>a {@code +} step walks the logical tree one level: a held poly's keys, and the addresses the entries
+         *     stored below lie under;</li>
+         *     <li>{@code #} answers only leaves, each at its full flattened uri: a poly is structure, not data;</li>
+         *     <li>a trailing {@code /} names the relation from an address to its obj ({@code x/} is {@code x => *x}, and
+         *     {@code x/+/} each child's: Marko, 2026-11-10).</li>
+         * </ul>
+         */
+        public static Obj resolveRead(final Space space, final fURI pattern) {
+            final Function<fURI, Iterator<IdObj>> directReader = space.directReader();
+            final fURI node = pattern.asNode();
+            final List<IdObj> found = !node.hasPattern()
+                    ? Stream.of(IdObj.of(node, valueAt(node, directReader))).filter(id -> !id.obj().isNoObj()).toList()
+                    // a wildcard only in the scheme, the host or the query is no step of the tree: the store's own matches
+                    : node.segments().stream().noneMatch(step -> "+".equals(step) || "#".equals(step))
+                    ? IteratorUtil.stream(directReader.apply(node)).filter(id -> !id.obj().isNoObj()).toList()
+                    : node.hasPattern("#")
+                    ? leaves(node, directReader)
+                    : located(node, directReader).entrySet().stream()
+                    .flatMap(at -> at.getValue().isEmpty()
+                            ? Stream.of(IdObj.of(at.getKey(), valueAt(at.getKey(), directReader)))
+                            : at.getValue().stream().map(obj -> IdObj.of(at.getKey(), obj)))
+                    .filter(id -> !id.obj().isNoObj())
+                    .toList();
+            return pattern.isBranch()
+                    ? objs(found.stream().map(id -> rel(uri(id.furi()), id.obj())))
+                    : objs(found.stream().map(IdObj::obj).map(obj -> obj.autoResolve(obj)).toList());
+        }
+
+        /**
+         * the addresses a pattern names in a space's logical tree: its literal head, then every child for a {@code +}
+         * step, the one child for a literal step, and everything below for {@code #} — so it never names an address no
+         * data lies at or below (uri.adoc: navigation never invents an address). A level is read as its listing needs:
+         * the store's listing, and the poly held at the address.
+         */
+        public static List<fURI> addresses(final Space space, final fURI pattern) {
+            return new ArrayList<>(located(pattern.asNode(), space.directReader()).keySet());
+        }
+
+        /**
+         * the addresses a pattern names, each with the objs the store's own listing answered there — none where nothing
+         * was listed (an interior node, a step taken by name) and a read must derive it; several where a store lists
+         * several at one address (a graph's traversal). A {@code +} step lists the level once and keeps the objs the
+         * listing answered, so a {@code +} read looks up only what was not listed.
+         */
+        private static Map<fURI, List<Obj>> located(final fURI pattern, final Function<fURI, Iterator<IdObj>> directReader) {
+            final List<String> steps = pattern.segments();
+            final int literal = (int) steps.stream().takeWhile(step -> !"+".equals(step) && !"#".equals(step)).count();
+            Map<fURI, List<Obj>> frontier = new LinkedHashMap<>();
+            offer(frontier, 0 == literal ? root(pattern) : pattern.head(literal), List.of());
+            for (final String step : steps.subList(literal, steps.size())) {
+                final Map<fURI, List<Obj>> next = new LinkedHashMap<>();
+                if ("#".equals(step)) {
+                    // the frontier and every level below it, until a level lists nothing new
+                    for (Map<fURI, List<Obj>> level = frontier; !level.isEmpty(); ) {
+                        level.forEach((at, objs) -> offer(next, at, objs));
+                        final Map<fURI, List<Obj>> below = new LinkedHashMap<>();
+                        level.keySet().forEach(at -> children(at, directReader).forEach((child, objs) -> offer(below, child, objs)));
+                        below.keySet().removeAll(next.keySet());
+                        level = below;
+                    }
+                } else if ("+".equals(step))
+                    frontier.keySet().forEach(at -> children(at, directReader).forEach((child, objs) -> offer(next, child, objs)));
+                else
+                    frontier.keySet().forEach(at -> offer(next, at.extend(step), List.of()));
+                frontier = next;
             }
-            final Set<UriObj> listing = new HashSet<>();
-            directReader.apply(pattern).forEachRemaining(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
-            if (listing.isEmpty()) {
-                /*if(pattern.hasPattern()) {
-                    directReader.apply(pattern.retractPattern()).forEachRemaining(kv -> {
-                        listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
-                    });
-                }*/
-                directReader.apply((pattern.isBranch() ? pattern.extend(fURI.Singleton.WILD_ONE) : pattern.asBranch())).forEachRemaining(kv -> {
-                    listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
+            return frontier;
+        }
+
+        /**
+         * where a pattern that opens with a wildcard starts: its root -- its scheme and host as they are, and the leading
+         * {@code /} of an absolute path. {@code head(0)} (and a full retract, and retractPattern) answer an empty, relative
+         * path, so {@code /+} would list as the relative {@code +}; extending an empty path by the empty segment is
+         * {@code /}.
+         */
+        public static fURI root(final fURI pattern) {
+            final fURI root = pattern.head(0);
+            return pattern.isAbsolute() && !pattern.path().isEmpty() ? root.extend("") : root;
+        }
+
+        /**
+         * an address joins a level once, with every distinct obj a listing answers there ({@code null}: none yet)
+         */
+        private static void offer(final Map<fURI, List<Obj>> level, final fURI at, final Collection<Obj> objs) {
+            final List<Obj> listed = level.computeIfAbsent(at, k -> new ArrayList<>());
+            objs.stream().filter(obj -> !listed.contains(obj)).forEach(listed::add);
+        }
+
+        /**
+         * what an address holds in the logical tree: what {@link #held} finds, else — an interior address — its whole
+         * subtree
+         */
+        private static Obj valueAt(final fURI address, final Function<fURI, Iterator<IdObj>> directReader) {
+            final Obj held = held(address, directReader, false);
+            return held.isNoObj() ? subtree(address, directReader) : held;
+        }
+
+        /**
+         * what is stored at an address, else what the nearest stored entry above it holds there — an entry that is no poly
+         * holds nothing below it, and a stream of polys stored at one address (a value written as {@code {…}}) holds what
+         * each of them holds. A WALK ({@code walk}) follows the layout alone (see {@link #within}), so the uri tree it
+         * walks is the one the data lays out, and finite.
+         */
+        private static Obj held(final fURI address, final Function<fURI, Iterator<IdObj>> directReader, final boolean walk) {
+            final Obj stored = storedAt(address, directReader);
+            if (!stored.isNoObj())
+                return stored;
+            for (fURI base = address.retract(1); base.segmentLength() > 0; base = base.retract(1)) {
+                final Obj above = storedAt(base, directReader);
+                if (!above.isNoObj()) {
+                    // the rest below the base, a bare relative path: a rec's key is a path, never a scheme, a host or a q
+                    final fURI rest = address.pretract(base.segmentLength()).asRelative().scheme(null).host(null).qLess();
+                    final Obj inside = objs(above.stream()
+                            .filter(Obj::isPoly)
+                            .map(poly -> within(poly.as(), rest, walk))
+                            .filter(obj -> !obj.isNoObj())
+                            .toList());
+                    // an entry above that holds nothing there does not end the search: a store that answers inside its
+                    // documents (a field path) may answer an address no poly is stored at
+                    if (!inside.isNoObj())
+                        return inside;
+                }
+            }
+            return noobj();
+        }
+
+        /**
+         * what is stored at exactly this address: every obj the store answers there (a graph answers a traversal step
+         * with each element it reaches). An address holding a wildcard segment the layout put there (the key
+         * {@code http/#}) names that one entry, where the raw store would read it as a pattern: every entry it matches.
+         */
+        private static Obj storedAt(final fURI address, final Function<fURI, Iterator<IdObj>> directReader) {
+            return objs(IteratorUtil.stream(directReader.apply(address))
+                    .filter(id -> !address.hasPattern() || id.furi().equals(address))
+                    .map(IdObj::obj)
+                    .filter(obj -> !obj.isNoObj())
+                    .toList());
+        }
+
+        /**
+         * what a poly holds at a relative address. A rec's KEY IS A PATH, whatever obj it is (the int key 0 is the segment
+         * 0), compared segment by segment and LITERALLY: a wildcard in a key is a segment of the layout, never a query.
+         * The key that is the rest answers it (on a read as Rec.at answers, an auto_from firing); else the longest key
+         * the rest runs through is descended, so a literal path beats a wildcard key that would match it (the web
+         * gateway's {@code http/#} beside a dialed {@code http/quarry/8777}); else the rest is an interior address of the
+         * rec's path keys and reads as their subtree. Only then, and only on a READ of an address with no wildcard, does
+         * the poly answer by its own walk (a position, a wildcard key matching a concrete address, an auto_from chained
+         * through). A WALK stops at what the layout holds: no auto_from fires and no wildcard key matches deeper, or a
+         * key like {@code http/#} would answer every address below it, without end.
+         */
+        private static Obj within(final Poly<?, ?> poly, final fURI rest, final boolean walk) {
+            if (poly.isRec()) {
+                final Function<Obj, fURI> path = key -> key.isUri() ? key.uriValue() : f(key.jvm().toString());
+                final Map<Obj, Obj> entries = poly.asRec().jvm();
+                final Optional<Obj> exact = entries.keySet().stream()
+                        .filter(key -> path.apply(key).segments().equals(rest.segments()))
+                        .findFirst();
+                if (exact.isPresent())
+                    return walk || rest.hasPattern() ? entries.get(exact.get()) : poly.at(exact.get());
+                final Optional<Map.Entry<Obj, Obj>> through = entries.entrySet().stream()
+                        .filter(entry -> entry.getValue().isPoly() && runsThrough(path.apply(entry.getKey()), rest))
+                        .max(Comparator.comparingInt(entry -> path.apply(entry.getKey()).segmentLength()));
+                if (through.isPresent())
+                    return within(through.get().getValue().as(), rest.pretract(path.apply(through.get().getKey()).segmentLength()), walk);
+                final List<IdObj> under = entries.entrySet().stream()
+                        .filter(entry -> runsThrough(rest, path.apply(entry.getKey())))
+                        .map(entry -> IdObj.of(path.apply(entry.getKey()).pretract(rest.segmentLength()), entry.getValue()))
+                        .toList();
+                if (!under.isEmpty())
+                    return nest(under);
+                if (walk)
+                    return noobj();
+            }
+            if (rest.hasPattern())
+                return noobj();
+            return walk ? poly.atDirect(uri(rest)) : poly.at(uri(rest));
+        }
+
+        /**
+         * an interior address's whole subtree: every entry stored below it, nested by its path there
+         */
+        private static Obj subtree(final fURI address, final Function<fURI, Iterator<IdObj>> directReader) {
+            final List<IdObj> entries = new ArrayList<>();
+            directReader.apply(address.extend(fURI.Singleton.ALL)).forEachRemaining(id -> {
+                if (runsThrough(address, id.furi()) && !id.furi().hasQ() && !id.obj().isNoObj())
+                    entries.add(IdObj.of(id.furi().pretract(address.segmentLength()).asRelative().scheme(null).host(null).qLess(), id.obj()));
+            });
+            return nest(entries);
+        }
+
+        /**
+         * relative entries nested into one rec by their paths, a shallower entry first so a deeper one nests below it —
+         * an address holding a value with entries below it reads as its entries (uri.adoc: {@code *n/m} answers
+         * {@code [r=>[s=>2]]}); the stored objs are never mutated (each step answers a new rec)
+         */
+        private static Obj nest(final List<IdObj> entries) {
+            Rec tree = rec();
+            for (final IdObj entry : entries.stream().sorted(Comparator.comparingInt(entry -> entry.furi().segmentLength())).toList())
+                tree = tree.at(uri(entry.furi()), entry.obj());
+            return tree.isEmpty() ? noobj() : tree;
+        }
+
+        /**
+         * the addresses one level below an address in the logical tree, each with the obj the listing answered for it
+         * ({@code null}: derive it). The store lists the level itself with one {@code +}: what is stored there, and — a
+         * store that keeps its structure (a trie's nodes, a filesystem's directories) — the interior nodes there, as
+         * noobj. The poly the address holds adds its keys, each slot's obj as it is (the node form resolves it). Only a
+         * level that lists nothing is looked for below, with {@code #}: a store keeping flat keys and no node for the
+         * levels between (Marko, 2026-11-19: + is the everyday step, # is there for mqtt).
+         */
+        private static Map<fURI, List<Obj>> children(final fURI address, final Function<fURI, Iterator<IdObj>> directReader) {
+            final Map<fURI, List<Obj>> children = new LinkedHashMap<>();
+            final int depth = address.segmentLength();
+            directReader.apply(address.extend(fURI.Singleton.WILD_ONE)).forEachRemaining(id -> {
+                final boolean under = runsThrough(address, id.furi());
+                if (under && id.furi().segmentLength() == depth + 1) {
+                    if (!id.furi().hasQ())
+                        offer(children, id.furi(), id.obj().isNoObj() ? List.of() : List.of(id.obj()));
+                } else if (!id.obj().isNoObj())
+                    // a store may answer a level with what lives elsewhere (a database's collections by their types, each
+                    // addressed where its type lives): that answer is the child, at the address the store gives it
+                    offer(children, id.furi(), List.of(id.obj()));
+                else if (under && !id.furi().hasQ())
+                    offer(children, id.furi().head(depth + 1), List.of());
+            });
+            // a held poly the store also listed as a child is that child (a graph's step holds the elements it reaches),
+            // not a container whose keys are children
+            final Set<Obj> listed = children.values().stream().flatMap(List::stream).collect(Collectors.toSet());
+            held(address, directReader, true).stream().filter(Obj::isPoly).filter(poly -> !listed.contains(poly)).forEach(poly -> poly.<Poly<?, ?>>as().indexedStream()
+                    .filter(slot -> null != slot.jvm().get1())
+                    .forEach(slot -> {
+                        final fURI key = f(slot.jvm().get0().jvm().toString());
+                        if (key.segmentLength() > 0)
+                            offer(children, address.extend(key.head(1)), key.segmentLength() == 1 ? List.of(slot.jvm().get1()) : List.of());
+                    }));
+            if (children.isEmpty())
+                directReader.apply(address.extend(fURI.Singleton.ALL)).forEachRemaining(id -> {
+                    if (runsThrough(address, id.furi()) && !id.furi().hasQ())
+                        offer(children, id.furi().head(depth + 1), List.of());
+                });
+            return children;
+        }
+
+        /**
+         * {@code #}: the LEAVES of the uri tree at or below the addresses the pattern names before its {@code #} — the
+         * longest paths, each prefixing no other (Marko, 2026-11-19: the leaf uris of {@code x.{*}>>}) — with the value
+         * at each: data, at its full flattened uri, and never a poly, which is structure. A value stored at an address
+         * that has entries below it is not a leaf (uri.adoc: {@code *n/m} answers {@code [r=>[s=>2]]}).
+         */
+        private static List<IdObj> leaves(final fURI pattern, final Function<fURI, Iterator<IdObj>> directReader) {
+            final fURI before = 1 == pattern.segmentLength() ? root(pattern) : pattern.retract(1);
+            final Map<fURI, List<Obj>> leaves = new LinkedHashMap<>();
+            for (final fURI base : before.hasPattern() ? located(before, directReader).keySet() : Set.of(before)) {
+                held(base, directReader, true).stream().forEach(obj -> leavesOf(base, obj, leaves));
+                directReader.apply(base.extend(fURI.Singleton.ALL)).forEachRemaining(id -> {
+                    if (runsThrough(base, id.furi()) && !id.furi().hasQ())
+                        id.obj().stream().forEach(obj -> leavesOf(id.furi(), obj, leaves));
                 });
             }
-            if (listing.isEmpty() || pattern.hasPattern("#")) {
-                Helper.locateBasePoly(space, pattern.basePath()).forEach(base -> {
-                    final Poly<?, ?> poly = base.poly();
-                    Graphitty.log(space).trace("base poly found at %s: %s", base.furi(), poly);
-                    unrollPoly(base.furi(), poly, pattern).forEach(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
-                });
-            }
-            final Stream<UriObj> prefix = listing.stream().filter(kv -> !kv.obj().isNoObj() && !kv.uri().isNoObj());
-            return pattern.isNode() ?
-                    objs(prefix.map(UriObj::obj).map(o -> o.autoResolve(o)).toList()) :
-                    objs(prefix.map(kv -> rel(kv.uri(), kv.obj())));
+            // a leaf's proper heads are interior addresses, so a value stored at one is not a leaf
+            final Set<fURI> inner = leaves.keySet().stream()
+                    .flatMap(leaf -> IntStream.range(1, leaf.segmentLength()).mapToObj(leaf::head))
+                    .collect(Collectors.toSet());
+            return leaves.entrySet().stream()
+                    .filter(entry -> !inner.contains(entry.getKey()))
+                    .flatMap(entry -> entry.getValue().stream().map(obj -> IdObj.of(entry.getKey(), obj)))
+                    .toList();
+        }
+
+        private static void leavesOf(final fURI at, final Obj obj, final Map<fURI, List<Obj>> leaves) {
+            if (obj.isPoly())
+                obj.<Poly<?, ?>>as().indexedStream()
+                        .filter(slot -> null != slot.jvm().get1())
+                        .forEach(slot -> leavesOf(at.extend(f(slot.jvm().get0().jvm().toString())), slot.jvm().get1(), leaves));
+            else if (!obj.isNoObj())
+                offer(leaves, at, List.of(obj));
+        }
+
+        /**
+         * whether {@code prefix} is a proper prefix of {@code address}, segment by segment and literally — in a layout a
+         * wildcard is a segment like any other ({@code hasPrefix} would read it as a pattern)
+         */
+        private static boolean runsThrough(final fURI prefix, final fURI address) {
+            // the scheme and authority first, as hasPrefix asks them: an empty path (a store's root, mongo:) prefixes
+            // only the addresses of its own store, never every path
+            return (!prefix.hasScheme() || prefix.scheme().equals(address.scheme()))
+                    && (!prefix.hasAuthority() || prefix.authority().equals(address.authority()))
+                    && address.segmentLength() > prefix.segmentLength()
+                    && address.head(prefix.segmentLength()).segments().equals(prefix.segments());
         }
 
         private static Obj writeComplete(final Obj newObj, final Obj currentObj) {
@@ -511,17 +727,20 @@ public interface Space extends Addressable, Rec, Closeable {
          * concrete address — making it trivial for callers to compute the remaining
          * path segments with {@code originalFuri.removePrefix(poly.furi())}.
          * <p>
-         * final List<IdPoly> polys = space.read(newFuri).stream()
-         * .filter(Obj::isPoly)
-         * .map(oi -> IdPoly.of(newNewFuri, oi.asPoly()))
-         * .toList();
+         * <p>
+         * STORED POLYS ONLY, read off the space's raw store ({@code directReader}): a write lands in the poly that is
+         * stored, never in a subtree a read derives (an interior address's container is built for reading, and storing a
+         * copy of it would put the flat entries it came from beside it twice).
          */
         public static Stream<IdPoly> locateBasePoly(final Space space, final fURI furi) {
+            final Function<fURI, Iterator<IdObj>> directReader = space.directReader();
             fURI newFuri = furi.retract(1).resolve().asNode();
             while (!newFuri.segments().isEmpty()) {
-                final List<IdPoly> polys = space.readStream(newFuri)
-                        .filter(oi -> oi.obj().isPoly())
-                        .map(IdPoly::from)
+                // an exact lookup answers what is stored AT the address asked, so that is the poly's address -- a store may
+                // name its entries in its own terms (a vector collection by document id), and writing back there misses
+                final fURI at = newFuri;
+                final List<IdPoly> polys = IteratorUtil.stream(directReader.apply(at))
+                        .flatMap(id -> id.obj().stream().filter(Obj::isPoly).map(poly -> IdPoly.of(at, poly.as())))
                         .toList();
                 if (!polys.isEmpty())
                     return polys.stream();
@@ -560,10 +779,6 @@ public interface Space extends Addressable, Rec, Closeable {
             return new IdPoly(furi, poly);
         }
 
-        public static IdPoly from(final IdObj kv) {
-            return new IdPoly(kv.furi(), kv.obj().as());
-        }
-
         public IdObj toIdObj() {
             return IdObj.of(furi, (Obj) poly);
         }
@@ -591,13 +806,4 @@ public interface Space extends Addressable, Rec, Closeable {
         }
     }
 
-    record UriObj(Uri uri, Obj obj) implements Iterable<UriObj> {
-        public static UriObj of(final Uri uri, final Obj obj) {
-            return new UriObj(uri, obj);
-        }
-
-        public Iterator<UriObj> iterator() {
-            return IteratorUtil.of(this);
-        }
-    }
 }

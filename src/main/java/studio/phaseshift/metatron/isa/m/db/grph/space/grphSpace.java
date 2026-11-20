@@ -358,7 +358,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
      }
 
      // =========================================================================
-     //  I/O — readStream / writeStream (new API)
+     //  I/O — directReader / directWriter
      // =========================================================================
 
      /**
