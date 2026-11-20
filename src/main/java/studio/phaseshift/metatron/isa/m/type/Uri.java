@@ -414,9 +414,11 @@ public interface Uri extends Mono, Comparable<Uri> {
             if (!Machine.current().memory().hasSpaceFor(base))
                 return noobj();
             // every address the walk names lies under the base (a + in the base stands for any one segment), so its
-            // depth below the base is the difference in segment length
+            // depth below the base is the difference in segment length -- the base's dots resolved, as the walk resolves
+            // them (test:. is test:)
+            final int baseDepth = base.resolve().segmentLength();
             final List<fURI> uris = Space.Helper.addresses(Machine.current().memory().getSpaceFor(base), pattern).stream()
-                    .filter(u -> u.segmentLength() - base.segmentLength() == depth)
+                    .filter(u -> u.segmentLength() - baseDepth == depth)
                     .toList();
             // Preserve the base uri's absoluteness and branchness on every result — the
             // walk must not drift between relative/absolute or node/branch forms.
