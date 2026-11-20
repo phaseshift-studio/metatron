@@ -174,11 +174,11 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
-     * A HAND-WRITTEN LANE IS EXPLAINED WHERE IT RUNS (the background reviews of 9918f5c44, b3eb00097 and 8442f8f4f).
-     * Only the planner's leaf form, a point on the head and no other budget, is left alone; any other lane is asked,
-     * and its machine answers what it plans, reading budgets run by run: the shard plan's height of one where a run
-     * states none, a {@code ?hop} on a later fold for its run alone, the first budget of a run and never one it
-     * shadows. A home lane is explained by this machine's compiler and network, as BranchInst#lane runs it: its four
+     * A HAND-WRITTEN LANE IS EXPLAINED WHERE IT RUNS (the background reviews of 9918f5c44 through 876737ebc). Only
+     * the planner's leaf form, a point on the head and no other {@code ?hop} or {@code ?hops}, is left alone; any other
+     * lane is asked, and its machine answers what it plans, reading budgets run by run: a run's first budget and never
+     * one it shadows, else the budget of the run before it, and the head's run, stating none, the shard plan's height
+     * of one. A home lane is explained by this machine's compiler and network, as BranchInst#lane runs it: its four
      * are dealt over the three peers this machine holds (a branch whose one lane is home is that lane's code, compiled
      * here, so the row gives it a second lane). A lane at peer 1 is dealt over peers 2 and 3. A head budget that cannot
      * be read and a path that names no machine are drawn as their messages; a later budget the planner declines runs,
@@ -193,6 +193,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum?hop=1()) % [{]8[}]──┤                 % 1",
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum().plus(1).sum?hop=0()) % [{]8[}]──┤ % 1",
             "branch?<={0}(<P1> => start?hop=0({1,2,3,4,5}).plus(1).sum().{0,3}plus?hop=1(1).sum()) % [{]1[}]──┤ % 1",
+            "branch?<={0}(<P1> => start?hop=0({1,2,3,4,5}).plus(1).sum().{0,3}plus?hops=1(1).sum()) % [{]1[}]──┤ % 1",
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus?hop=1(1).sum?hop=-1()) % [{]8[}]──┤ % 1",
             "branch?<={0}(<P1> => start?hop=-1({1,2}).plus(1).sum())            % cannot be read as a hop    % 1",
             "branch?<={0}(<P1> => start({1,2}).plus(1).sum?hop=-1())            % cannot be read as a hop    % 0",
