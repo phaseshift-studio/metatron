@@ -1563,6 +1563,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             // catInstSetTest.testExplainReportsTheCompiledChain's job.
             "6.id().explain()>>desc>>rewrite>>desc>>insts        % 1            % desc.rewrite leads to the pre-analysis stage's explanation rec",
             "6.id().explain()>>desc>>rewrite>>desc>>rewrite      % noobj        % ... and that rec terminates the chain",
+            // EXPLAIN EXTENSIONS (Marko, 2026-11-20): each is a rewrite that writes its rec at ext/<name>. The topology
+            // extension draws a chain that fans out, and a chain that runs in one place has none to draw
+            "1.plus(2).explain()>>ext                            % noobj        % a chain that fans out nowhere has no topology",
+            "1.plus(2).explain()>>ext/topology/format            % noobj        % ... so it has no drawing to read",
+            "1.plus(2).explain()>>format.has('//local').count()  % 0            % ... and its table has nothing appended",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

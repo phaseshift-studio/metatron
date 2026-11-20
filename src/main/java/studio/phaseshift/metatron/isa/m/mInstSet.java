@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Topology;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -592,10 +593,12 @@ public class mInstSet extends AbstractInstSet {
                             uri(Tokens.F).maybe().asUri(), ALL_TYPE,
                             uri(FORM), URI_TYPE,
                             uri(C_DOM), INT_TYPE,
-                            uri(C_RNG), INT_TYPE))), Map.of(
+                            uri(C_RNG), INT_TYPE)),
+                    uri(EXT).maybe().asUri(), REC_TYPE), Map.of(
                     uri(FORMAT), "lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively",
                     uri(DESC), "expression-level metadata of the COMPILED chain: whole-expression dom/rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)",
-                    uri(PER_INST), "lst of per-instruction stage recs (op/dom/rng/args/f/form/c_dom/c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java/opaque)"))
+                    uri(PER_INST), "lst of per-instruction stage recs (op/dom/rng/args/f/form/c_dom/c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java/opaque)",
+                    uri(EXT), "the explain extensions (Marko, 2026-11-20): rewrites beside explain_analysis, each writing its rec at ext/<name> (ext/topology) and appending that rec's format to this one's"))
             .desc("a structured explanation of a resolved expression produced by explain()")
             .example("1.plus(2).explain()>>desc>>rng     [-- int — the type flowing out of the expression --]")
             .example("1.plus(2).explain()>>per_inst      [-- per-inst recs: [op=>start,args=>[1],form=>initial,c_dom=>0,c_rng=>1], [op=>plus,dom=>int,rng=>int,args=>[2],f=>'<j>',form=>mapper,c_dom=>1,c_rng=>1] --]")
@@ -928,7 +931,7 @@ public class mInstSet extends AbstractInstSet {
                 uri(REWRITE), lst(
                         // capture the original (pre-collapse) code for profile(): runs FIRST so the
                         // id/plus/mult collapses below don't strip the code before it is timed.
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_analysis").addQ("analysis"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_analysis").q(ZINDEX, 1000),
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
@@ -1528,7 +1531,7 @@ public class mInstSet extends AbstractInstSet {
                                                     // No optimization possible, return original
                                                     return matched;
                                                 })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left: \\(\\mathrm{split}([d \\cdot r, e \\cdot r]) \\cdot \\mathrm{merge} \\leadsto \\mathrm{split}([d, e]) \\cdot \\mathrm{merge} \\cdot r\\)"),
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_analysis").addQ("analysis"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_analysis").q(ZINDEX, 1000),
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
@@ -1571,6 +1574,33 @@ public class mInstSet extends AbstractInstSet {
                                     }
                                     return code.jvm(bundledCode);
                                 }), "rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. >>format) — \\(\\mathrm{explain} \\leadsto \\mathrm{explain\\_analysis}(\\ldots)\\), mirror of profile_analysis"),
+                        // AN EXPLAIN EXTENSION IS A REWRITE (Marko, 2026-11-20): no query processor and no plugin API. It
+                        // meets x.explain() before explain_analysis takes it (it keeps the default ?zindex) and puts an
+                        // instruction after the marker that holds x by closure, as explain_analysis does. explain_analysis
+                        // carries that instruction as it carries any after the marker, so at run time the explanation flows
+                        // through it: it writes its rec at ext/<name> and appends that rec's format to the explanation's.
+                        // x.explain()>>ext/topology/format is this extension's view, x.explain()>>format the table with the
+                        // view after it. A chain that fans out nowhere has no topology, and its explanation stays as it was.
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_topology"), code -> {
+                            final List<Inst> insts = code.insts();
+                            final fURI extension = EXPLAIN_INST_TID.extend(EXT).extend(TOPOLOGY);
+                            final int marker = IntStream.range(0, insts.size())
+                                    .filter(i -> EXPLAIN_INST_TID.equals(insts.get(i).tid().basePath())).findFirst().orElse(-1);
+                            if (0 >= marker || insts.stream().anyMatch(inst -> extension.equals(inst.tid().basePath())))
+                                return code;
+                            final List<Inst> asked = new ArrayList<>(insts.subList(0, marker));
+                            final List<Inst> extended = new ArrayList<>(insts);
+                            extended.add(marker + 1, instC(extension.dom(ALL.maybe()).rng(EXPLANATION_TID), lst(), (lhs, inst) -> {
+                                final String drawing = Topology.draw(MCode.of(new ArrayList<>(asked)).rewrite().resolve(noobj()));
+                                if (null == drawing || !lhs.isRec())
+                                    return lhs;
+                                final String table = lhs.asRec().at(uri(FORMAT)).strValue();
+                                return lhs.asRec()
+                                        .at(f(EXT).extend(TOPOLOGY), rec(uri(FORMAT), auto_(() -> str(drawing))), Poly.MUTABLE)
+                                        .at(f(FORMAT), auto_(() -> str(table + drawing)), Poly.MUTABLE);
+                            }));
+                            return code.jvm(extended);
+                        }), "an explain extension: the distribution topology of the compiled chain, its point coefficients alone (the seed, each lane's share and what its instructions leave, the merge at home and what the master's instructions leave), at explain()>>ext/topology/format and appended to explain()>>format"),
                         InstBuilder.build()
                                 .tid(M_ISA_REWRITE_TID.extend("pred_extract"))
                                 .body((code, inst) -> {

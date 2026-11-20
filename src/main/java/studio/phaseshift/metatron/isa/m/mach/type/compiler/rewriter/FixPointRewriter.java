@@ -28,12 +28,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static studio.phaseshift.metatron.Tokens.ANALYSIS;
 import static studio.phaseshift.metatron.Tokens.IN;
 import static studio.phaseshift.metatron.Tokens.MAX;
 import static studio.phaseshift.metatron.Tokens.OUT;
 import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.Tokens.TIME;
+import static studio.phaseshift.metatron.Tokens.ZINDEX;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
@@ -96,8 +96,11 @@ public class FixPointRewriter extends AbstractRewriter {
             // its frame, and an ISA no longer has to be a registered space for its rules to fire. A refinement may name
             // another set.
             //
-            // ANALYSIS RULES RUN LAST, and the order is stated here rather than inherited from the mount order.
-            // An analysis rule (profile_analysis, explain_analysis) CAPTURES the code before its marker and
+            // ?ZINDEX ORDERS THE PASS (Marko, 2026-11-20), read as CSS reads a z-index: unset is 0, a bigger number
+            // runs later, so a rule that must come after everything states a big one and a rule that must follow
+            // another states that one's plus one; equal numbers keep their registration order. The capture rules run
+            // last (?zindex=1000), and the order is stated here rather than inherited from the mount order.
+            // A capture rule (profile_analysis, explain_analysis) CAPTURES the code before its marker and
             // REPLACES the chain with one inst, so anything it captures is invisible to every later rule. The
             // base ISA is mounted before /m/math/cat, so without this ordering a base-ISA analysis rule runs
             // ahead of the category's distribution rules and swallows the fold: profile_analysis captured
@@ -143,11 +146,11 @@ public class FixPointRewriter extends AbstractRewriter {
     }
 
     /**
-     * The rules in the order this pass applies them — analysis rules last, registration order otherwise — cached
+     * The rules in the order this pass applies them — by {@code ?zindex}, registration order among equals — cached
      * against the rules themselves.
      * <p>
-     * The order is a pure function of the rule sequence: the sort reads the rule's own tid ({@code ?analysis}, the
-     * declared marker a capture rule carries), nothing else. So the same rules always answer the same order, and the
+     * The order is a pure function of the rule sequence: the sort reads the rule's own tid ({@code ?zindex}, the
+     * declared place a rule takes, 0 when unset), nothing else. So the same rules always answer the same order, and the
      * sort is work that only a CHANGED vocabulary needs to redo. It matters because the two things it costs are hot:
      * {@code apply} runs once per code value AND once per branch member it descends into, and the sort is a
      * comparison that resolves a tid per candidate ({@code O(n log n)} of them). A hit is instead one list copy and
@@ -173,7 +176,7 @@ public class FixPointRewriter extends AbstractRewriter {
         if (null != cached)
             return cached;
         final List<Inst> ordered = key.rules().stream()
-                .sorted(Comparator.comparingInt(rule -> rule.tid().hasQ(ANALYSIS) ? 1 : 0))
+                .sorted(Comparator.comparingInt(rule -> Objects.requireNonNullElse(rule.tid().qValue(ZINDEX, Integer.class), 0)))
                 .toList();
         // get/putIfAbsent rather than computeIfAbsent: the sort then happens OUTSIDE the map's own update, and a
         // racing loser keeps the winner's list — the two are interchangeable, since the order is a pure function of
@@ -189,8 +192,8 @@ public class FixPointRewriter extends AbstractRewriter {
      * {@link #orderedRules(Set)} for why both of those are the right choice. The sequence carries the sort's
      * input order, and the map's hashing is over {@link System#identityHashCode(Object)}, so a look-up never
      * touches a rule's tid, args or function.
-     * Whether a rule is an ?analysis rule — one that captures the code before a marker and answers a report
-     * about it ({@code profile_analysis}, {@code explain_analysis}).
+     * Why the capture rules state a big {@code ?zindex} — each captures the code before a marker and answers a
+     * report about it ({@code profile_analysis}, {@code explain_analysis}).
      * <p>
      * Such a rule REMOVES the chain it captures, so its position decides what every other rule can still see.
      * It must therefore run after the rewriting it describes, never before: a profile that captures an

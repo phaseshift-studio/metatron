@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.ANALYSIS;
+import static studio.phaseshift.metatron.Tokens.ZINDEX;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
@@ -54,12 +54,14 @@ public class FixPointRewriterTest extends AbstractMetatronTest {
     }
 
     /**
-     * A capture (analysis) rule — the declared marker is the {@code ?analysis} query, which is what
-     * {@code profile_analysis} and {@code explain_analysis} carry (see {@code mInstSet}), not a spelling of the name.
+     * A rule at a stated place in the pass, {@code ?zindex=z} (Marko, 2026-11-20): a capture rule states a big one
+     * ({@code profile_analysis} and {@code explain_analysis} carry 1000, see {@code mInstSet}), and a rule that must
+     * follow another states that one's plus one. The place is declared, never a spelling of the name.
      */
-    private static Inst analysisRule(final String name) {
-        return InstSet.Helper.rewriter(f(name).addQ(ANALYSIS), code -> code);
+    private static Inst rule(final String name, final int zindex) {
+        return InstSet.Helper.rewriter(f(name).q(ZINDEX, zindex), code -> code);
     }
+
 
     /**
      * A rule set, in registration order — the shape {@code instset().rewrites()} answers.
@@ -76,7 +78,7 @@ public class FixPointRewriterTest extends AbstractMetatronTest {
     @Test
     void shouldAnswerTheSameOrderForTheSameRules() {
         final Inst zulu = rule("zulu");
-        final Inst analysis = analysisRule("alpha_analysis");
+        final Inst analysis = rule("alpha_analysis", 1000);
         final Inst yankee = rule("yankee");
         final Set<Inst> first = rules(zulu, analysis, yankee);
         final Set<Inst> again = new LinkedHashSet<>(first); // a different set, the same rules
@@ -87,12 +89,13 @@ public class FixPointRewriterTest extends AbstractMetatronTest {
     }
 
     /**
-     * The applied order: analysis rules last, registration order otherwise (the sort is stable).
+     * The applied order: a bigger ?zindex later, registration order among equals (the sort is stable), so the capture
+     * rule runs after the unset rules it reports on.
      */
     @Test
     void shouldRunAnalysisRulesLastAndKeepRegistrationOrderOtherwise() {
         final Inst zulu = rule("zulu");
-        final Inst analysis = analysisRule("alpha_analysis");
+        final Inst analysis = rule("alpha_analysis", 1000);
         final Inst yankee = rule("yankee");
         assertIterableEquals(List.of(zulu, yankee, analysis),
                 FixPointRewriter.orderedRules(rules(zulu, analysis, yankee)),
@@ -106,7 +109,7 @@ public class FixPointRewriterTest extends AbstractMetatronTest {
     @Test
     void shouldNotReuseAnOrderForTheSameRulesInADifferentOrder() {
         final Inst zulu = rule("zulu");
-        final Inst analysis = analysisRule("alpha_analysis");
+        final Inst analysis = rule("alpha_analysis", 1000);
         final Inst yankee = rule("yankee");
         final List<Inst> oneWay = FixPointRewriter.orderedRules(rules(zulu, analysis, yankee));
         final List<Inst> otherWay = FixPointRewriter.orderedRules(rules(yankee, zulu, analysis));
@@ -146,7 +149,7 @@ public class FixPointRewriterTest extends AbstractMetatronTest {
     void shouldStillOrderEveryRuleSetPastTheCacheBudget() {
         for (int i = 0; i < 40; i++) {
             final Inst zulu = rule("zulu" + i);
-            final Inst analysis = analysisRule("alpha" + i + "_analysis");
+            final Inst analysis = rule("alpha" + i + "_analysis", 1000);
             assertIterableEquals(List.of(zulu, analysis),
                     FixPointRewriter.orderedRules(rules(analysis, zulu)),
                     "rule set " + i + " is ordered on its own merits, cached or not");
@@ -154,16 +157,29 @@ public class FixPointRewriterTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE MARKER IS DECLARED, NOT SPELLED. A rule that is named like a capture rule but carries no {@code ?analysis}
-     * query is an ordinary rule and runs with the others — which is what pairs the rule with the marker it replaces
-     * without making the ordering depend on a name that a rename could change.
+     * THE PLACE IS DECLARED, NOT SPELLED. A rule that is named like a capture rule but states no {@code ?zindex} is an
+     * ordinary rule and runs with the others, so the ordering never depends on a name that a rename could change.
      */
     @Test
     void shouldOrderByTheDeclaredMarkerAndNotByTheName() {
         final Inst spelled = rule("beta_analysis");
-        final Inst declared = analysisRule("gamma_analysis");
+        final Inst declared = rule("gamma_analysis", 1000);
         assertIterableEquals(List.of(spelled, declared),
                 FixPointRewriter.orderedRules(rules(declared, spelled)),
-                "the suffix alone is not the marker: the ?analysis query is");
+                "the suffix alone is not the place: the ?zindex query is");
+    }
+
+    /**
+     * PLUS ONE FOLLOWS (Marko, 2026-11-20): "make it big if you want it after everything, else make it +1 the thing you
+     * need it to go after". A rule at 1001 runs right after the capture rule at 1000, and both after the unset rules.
+     */
+    @Test
+    void shouldRunAPlusOneRuleRightAfterTheRuleItFollows() {
+        final Inst follower = rule("follower", 1001);
+        final Inst capture = rule("capture_analysis", 1000);
+        final Inst plain = rule("plain");
+        assertIterableEquals(List.of(plain, capture, follower),
+                FixPointRewriter.orderedRules(rules(follower, capture, plain)),
+                "1001 follows 1000, and both follow the unset 0");
     }
 }
