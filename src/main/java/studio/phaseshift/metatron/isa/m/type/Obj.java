@@ -1499,8 +1499,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .argLst(T(ALL.maybe()), "the obj to merge by (natural order when absent)")
                             .desc("a sorted merge function \\(f(X) \\mapsto X'\\): k-way merges the lhs sorted lists by the arg obj")
                             .body((lhs, inst) -> {
+                                // NO RUNS MERGE TO THE EMPTY LST, the merge's identity, as order of nothing is [,]: a
+                                // sharded sort whose lanes were all dealt nothing answers what the sort held home answers
                                 if (lhs.isNoObj())
-                                    return noobj();
+                                    return lst();
                                 final Comparator<Obj> cmp = inst.arg(0).isNoObj() ? ObjComparator.single() : ObjProjectionComparator.of(inst.arg(0));
                                 final List<List<Obj>> streams = lhs.elements()
                                         .map(o -> o.stream().flatMap(s -> s.<Obj>elements()).toList())
