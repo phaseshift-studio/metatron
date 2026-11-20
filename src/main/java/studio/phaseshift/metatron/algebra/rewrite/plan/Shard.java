@@ -246,8 +246,12 @@ public final class Shard {
                 ? roster(chain.env()) : axes.place();
         // THE SHARES: the place set resolved against the snapshot, one entry per share, the HOME place's shares FIRST.
         // A literal seed clamps the shares; a computed bag's size is the branch's to know; the ARITY caps the window.
-        final List<ResolvedPlace> shares = shares(resolve(chain.env(), chain.route(), candidates),
-                (int) Math.min(members, Integer.MAX_VALUE), fanout);
+        // NO PEER WITHOUT A MEMBER (Marko, 2026-11-20: "don't use all peers if we don't need to"): a literal seed of n
+        // members dealt in parts fills at most n shares, so its window is the arity or the seed, whichever is smaller. The
+        // run axis and a copy hand every lane the whole seed and take one lane per place, so their window stays the arity
+        final int cap = (int) Math.min(members, Integer.MAX_VALUE);
+        final List<ResolvedPlace> shares = shares(resolve(chain.env(), chain.route(), candidates), cap,
+                runAxis || Partition.Kind.COPY == split.kind() ? fanout : Math.min(fanout, cap));
         // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
         // here. Several home shares are the lanes case, a peerless machine sharding.
         if (1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal))
@@ -306,13 +310,17 @@ public final class Shard {
         // whole (a {*} dom over the carrier flowing into the run) and deals it by its keys -- or, under the run axis,
         // copies it to every lane, whose shares of the exponent are disjoint.
         // THE BRANCH STATES ITS TYPES IN GENERICS, NEVER #{*} (Marko, 2026-11-20), so compilation carries real types past
-        // it. Its dom is the carrier flowing into the run, else the A{*} the run binds. Its rng is what each lane's last
+        // it. Its dom is the carrier flowing into the run, or A{*} when the probe could not type it (#). Its rng is what each lane's last
         // instruction answers, once per lane: the branch's own B{*} is bound by nothing and resolves to #{*}, which the
         // combiner after it cannot bind (kmerge's lst[{*}A{*}]{*} fell back to # => #, a lst{1} read as {*}). Profiling
         // lanes answer reports, so they state none.
         final fURI carrier = chain.carriers().get(runIndex).typeId();
-        final fURI dom = literal ? fURI.Singleton.NOOBJ : null == carrier ? InstSet.A.maybeSome() : carrier.maybeSome();
-        final Inst answers = profiling ? null : chain.contracts().get(absorbs ? cut + 1 : 0 <= cut ? cut : runEnd - 1);
+        final fURI dom = literal ? fURI.Singleton.NOOBJ
+                : null == carrier || fURI.Singleton.ALL.basePath().equals(carrier.basePath()) ? InstSet.A.maybeSome()
+                : carrier.maybeSome();
+        // an absorbed select keeps a prefix of the cut's lst, so the cut's contract states what those lanes answer too; a
+        // lst select declares no element type, and its own contract would state a bare lst the combiner cannot bind
+        final Inst answers = profiling ? null : chain.contracts().get(0 <= cut ? cut : runEnd - 1);
         final fURI lane = null == answers || !answers.tid().hasRng() ? null : answers.rng().typeId();
         final fURI branch = literal && runAxis ? BRANCH_INST_TID.dom(dom)
                 : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY : PART);
@@ -708,7 +716,7 @@ public final class Shard {
     /**
      * THE LANES: the places the route's place axis resolves to against this application's snapshot, one place per
      * share; empty when nothing answered. The home place's shares come first, the resolver's order is kept, the data
-     * clamps each place's demand and the window, and the arity caps the window.
+     * clamps each place's demand (and a literal seed dealt in parts, the window), and the arity caps the window.
      */
     private static List<ResolvedPlace> resolve(final Env env, final Placement route, final PlaceSet places) {
         try {
@@ -726,11 +734,7 @@ public final class Shard {
         for (final ResolvedPlace place : ordered)
             for (int share = 0; share < asked(place, cap); share++)
                 shares.add(place);
-        // NO PEER WITHOUT A MEMBER (Marko, 2026-11-20: "don't use all peers if we don't need to"): a literal seed of n
-        // members fills at most n shares, so the window is the arity or the seed, whichever is smaller. A computed bag
-        // states no cap and is the branch's to deal when it runs.
-        final int window = Math.min(fanout, cap);
-        return shares.size() > window ? List.copyOf(shares.subList(0, window)) : shares;
+        return shares.size() > fanout ? List.copyOf(shares.subList(0, fanout)) : shares;
     }
 
     private static int asked(final ResolvedPlace place, final int cap) {

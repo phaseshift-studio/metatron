@@ -21,9 +21,8 @@ package studio.phaseshift.metatron.algebra.rewrite.plan;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -35,19 +34,37 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class TopologyTest extends AbstractMetatronTest {
 
-    @Training.SkipTraining(reason = "a Java-side drawing of hand-built lanes, not an mtron expression")
+    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
     @Test
     public void testTheDrawingMarkoSketched() {
-        final String drawing = Topology.draw(List.of(
-                new Topology.Run("{15}"),
-                new Topology.Fan(List.of(
-                        new Topology.Lane("//0", null, List.of(cInt.of(10), cInt.ONE())),
-                        new Topology.Lane("//1", null, List.of(cInt.of(2), cInt.ONE())),
-                        new Topology.Lane("//2", null, List.of(cInt.of(3), cInt.ONE())))),
-                new Topology.Run("──//local─►{3}─{1}")));
+        final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{15}'],"
+                + "[[place=>'//0',stage=>['{10}','{1}']],[place=>'//1',stage=>['{2}','{1}']],[place=>'//2',stage=>['{3}','{1}']]],"
+                + "['{3}','{1}']]").asLst());
         assertEquals(String.join("\n", "",
                 "      ┌─//0─►{10}─{1}─┐",
                 "{15}──┼─//1─►{2}──{1}─┼──//local─►{3}─{1}",
                 "      └─//2─►{3}──{1}─┘", ""), drawing);
+    }
+
+    /**
+     * A CHILD DRAWS ITS OWN SUBTREE: a lane whose peer re-planned it carries the peer's topology, a flow like any other,
+     * and its drawing goes below the root's, under the peer's name and indented.
+     */
+    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
+    @Test
+    public void testAChildDrawsItsOwnSubtreeUnderItsName() {
+        final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{8}'],"
+                + "[[place=>'//0',stage=>['{4}','{1}'],topology=>[flow=>[['{4}'],"
+                + "[[place=>'//2',stage=>['{2}','{1}']],[place=>'//3',stage=>['{2}','{1}']]],['{2}','{1}']]]],"
+                + "[place=>'//1',stage=>['{4}','{1}']]],"
+                + "['{2}','{1}']]").asLst());
+        assertEquals(String.join("\n", "",
+                "     ┌─//0─►{4}─{1}─┐",
+                "{8}──┤              ├──//local─►{2}─{1}",
+                "     └─//1─►{4}─{1}─┘",
+                "//0:",
+                "        ┌─//2─►{2}─{1}─┐",
+                "   {4}──┤              ├──//local─►{2}─{1}",
+                "        └─//3─►{2}─{1}─┘", ""), drawing);
     }
 }

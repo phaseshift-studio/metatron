@@ -141,6 +141,25 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE TREE IS DRAWN BY ITS NODES (Marko, 2026-11-20): explain()>>ext/topology draws the root's fan, and a lane that
+     * still carries a budget is explained by its own peer, whose compiler plans its subtree. The explanation comes back
+     * as data, and its flow is drawn here under the peer's name. The root deals its eight over the three peers it
+     * knows, and peer 1, which dialed peers 2 and 3, re-plans its share over them (two members or three, as the ports
+     * order the lanes). Each row: a pattern of the drawing % how many times the drawing holds it.
+     */
+    @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the drawing is the subject")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[{][23][}]──┤                 % 1",
+            "//localhost:[0-9]+:           % 1",
+            "├──//local─►[{]2[}]─[{]1[}]   % 1",
+    }, delimiter = '%')
+    void testTheTreeIsDrawnByItsNodes(final String pattern, final int expected) {
+        checkCodeParseApply(LOG, "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>ext/topology/format.has('" + pattern
+                + "').count()", String.valueOf(expected));
+    }
+
+    /**
      * THE KEYED TREE: a keyed fold planned at every level its budget allows. Peer 1 re-plans its part over its own
      * peers and recombines their partial recs through the pointwise combiner, and the root recombines peer 1's the same
      * way — the rec sum merges by key, then each key folds through its value's combiner. Each row: the source, its
