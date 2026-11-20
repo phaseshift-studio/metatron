@@ -47,24 +47,24 @@ public class TopologyTest extends AbstractMetatronTest {
     }
 
     /**
-     * A CHILD DRAWS ITS OWN SUBTREE: a lane whose peer re-planned it carries the peer's topology, a flow like any other,
-     * and its drawing goes below the root's, under the peer's name and indented.
+     * A TREE WITHIN THE TREE (Marko, 2026-11-20): a lane whose peer re-planned it carries the peer's topology, a flow like
+     * any other, drawn inside the lane, its merge at the lane's place (//0). The fan stacks lanes of any height: each
+     * joins the fork and the join on its own main row, the rows between the outer lanes carry a │, and the shorter lane
+     * runs out to the join.
      */
     @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
     @Test
-    public void testAChildDrawsItsOwnSubtreeUnderItsName() {
+    public void testAChildsSubtreeIsDrawnInsideItsLane() {
         final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{8}'],"
                 + "[[place=>'//0',stage=>['{4}','{1}'],topology=>[flow=>[['{4}'],"
                 + "[[place=>'//2',stage=>['{2}','{1}']],[place=>'//3',stage=>['{2}','{1}']]],['{2}','{1}']]]],"
                 + "[place=>'//1',stage=>['{4}','{1}']]],"
                 + "['{2}','{1}']]").asLst());
         assertEquals(String.join("\n", "",
-                "     ┌─//0─►{4}─{1}─┐",
-                "{8}──┤              ├──//local─►{2}─{1}",
-                "     └─//1─►{4}─{1}─┘",
-                "//0:",
-                "        ┌─//2─►{2}─{1}─┐",
-                "   {4}──┤              ├──//local─►{2}─{1}",
-                "        └─//3─►{2}─{1}─┘", ""), drawing);
+                "                 ┌─//2─►{2}─{1}─┐",
+                "     ┌─//0─►{4}──┤              ├──//0─►{2}─{1}─┐",
+                "     │           └─//3─►{2}─{1}─┘               │",
+                "{8}──┤                                          ├──//local─►{2}─{1}",
+                "     └─//1─►{4}─{1}─────────────────────────────┘", ""), drawing);
     }
 }

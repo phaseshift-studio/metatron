@@ -85,8 +85,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * THE TOPOLOGY IS DATA, ITS DRAWING IS DERIVED (Marko, 2026-11-20: get back the explain rec, recreate the format
  * locally). The extension's rec is {@code [flow => …, format => <the drawing>]}: the flow travels where a drawing, a
  * lambda, cannot. A lane that still carries a hop budget re-plans at its peer, which no other machine can compile for
- * it, so its peer explains the lane and sends its explanation back, and its flow is drawn here, under the peer's name.
- * Each child does the same for its own lanes, so the whole tree comes back.
+ * it, so its peer explains the lane and sends its explanation back, and its flow is drawn here, inside the lane, a tree
+ * within the tree whose merge is the peer's own place. Each child does the same for its own lanes, so the whole tree
+ * comes back.
  */
 public final class Topology {
 
@@ -168,7 +169,7 @@ public final class Topology {
     /**
      * A LANE WITH LEVELS LEFT RE-PLANS AT ITS PEER, so its peer explains it: the lane's own code, explained there by the
      * peer's compiler and network, sent through the peer's eval as a branch ships a lane (BranchInst.remote). What comes
-     * back is the explanation's data; its topology's flow is kept, and its format drawn here. A leaf states the bare
+     * back is the explanation's data; its topology's flow is kept and drawn here, inside the lane. A leaf states the bare
      * point 0 (Shard.emit), a place on this machine plans nothing new, and a failure is kept as its message.
      */
     private static Obj theirs(final fURI key, final List<Inst> program) {
@@ -254,22 +255,30 @@ public final class Topology {
     }
 
     /**
-     * THE DRAWING OF A FLOW: each run and fan drawn around its own main row, laid side by side along one main line (a run
-     * after a fan starts where the fan's lanes merge, at home), and then each lane that re-planned at its peer, drawn
-     * below under the peer's name. A fan with an odd number of lanes puts its middle lane on the main line; an even one
-     * puts a joint row between its halves. Each lane's columns are padded to the widest coefficient in that column.
+     * THE DRAWING OF A FLOW: its runs and fans side by side along one main line, a lane that re-planned at its peer drawn
+     * inside its fan as the peer drew it, a tree within the tree (Marko, 2026-11-20).
      */
     static String draw(final Lst flow) {
+        return block(flow, HOME).rows().stream().map(String::stripTrailing).collect(Collectors.joining("\n", "\n", "\n"));
+    }
+
+    private record Block(List<String> rows, int main) {
+    }
+
+    /**
+     * A flow as one block: each run and fan drawn around its own main row, laid side by side. A run after a fan starts
+     * where the fan's lanes merge, at {@code home}: //local for the explaining machine, a lane's own place inside it.
+     */
+    private static Block block(final Lst flow, final String home) {
         final List<Block> blocks = new ArrayList<>();
-        final StringBuilder below = new StringBuilder();
         boolean merged = false;
         for (final Obj segment : flow.<Obj>elements().toList()) {
             final List<Obj> parts = segment.asLst().<Obj>elements().toList();
             if (!parts.isEmpty() && parts.getFirst().isRec()) {
-                blocks.add(fan(parts, below));
+                blocks.add(fan(parts));
                 merged = true;
             } else {
-                blocks.add(new Block(List.of((merged ? "──" + HOME + "─►" : "")
+                blocks.add(new Block(List.of((merged ? "──" + home + "─►" : "")
                         + parts.stream().map(Obj::strValue).collect(Collectors.joining("─"))), 0));
                 merged = false;
             }
@@ -285,76 +294,80 @@ public final class Topology {
                 rows.get(r).append(text).append(" ".repeat(width - text.length()));
             }
         }
-        return rows.stream().map(row -> row.toString().stripTrailing()).collect(Collectors.joining("\n", "\n", "\n")) + below;
+        return new Block(rows.stream().map(StringBuilder::toString).toList(), above);
     }
 
-    private record Block(List<String> rows, int main) {
-    }
-
-    private static Block fan(final List<Obj> lanes, final StringBuilder below) {
+    /**
+     * A FAN: its lanes stacked, each joining the fork and the join on its own main row. A plain lane is its stages, the
+     * columns padded to the widest coefficient among the plain lanes; a lane that re-planned at its peer is the peer's
+     * own drawing, its merge at the lane's place. Every lane runs out to the join, and the fan carries a │ between its
+     * outer lanes. An odd fan puts its middle lane on the main line; an even one puts a joint row between its halves,
+     * and the main line enters the fork through two dashes, {11}──┤.
+     */
+    private static Block fan(final List<Obj> lanes) {
+        if (lanes.isEmpty())
+            return new Block(List.of("──"), 0);
         final List<String> places = lanes.stream().map(lane -> lane.asRec().at(uri(PLACE)).strValue()).toList();
+        final List<Obj> theirs = lanes.stream().map(lane -> (Obj) lane.asRec().at(uri(TOPOLOGY))).toList();
         final List<List<String>> stages = lanes.stream()
                 .map(lane -> lane.asRec().at(uri(STAGE)).asLst().<Obj>elements().map(Obj::strValue).toList()).toList();
         final int placeWidth = places.stream().mapToInt(String::length).max().orElse(0);
-        final int columns = stages.stream().mapToInt(List::size).max().orElse(0);
-        final int[] widths = new int[columns];
-        for (final List<String> lane : stages)
-            for (int j = 0; j < lane.size(); j++)
-                widths[j] = Math.max(widths[j], lane.get(j).length());
-        final List<String> bodies = new ArrayList<>();
+        final int[] widths = new int[stages.stream().mapToInt(List::size).max().orElse(0)];
+        for (int l = 0; l < lanes.size(); l++)
+            for (int j = 0; !theirs.get(l).isRec() && j < stages.get(l).size(); j++)
+                widths[j] = Math.max(widths[j], stages.get(l).get(j).length());
+        final List<Block> blocks = new ArrayList<>();
         for (int l = 0; l < lanes.size(); l++) {
-            final StringBuilder body = new StringBuilder("─").append(places.get(l))
-                    .append("─".repeat(placeWidth - places.get(l).length())).append("─►");
-            for (int j = 0; j < columns; j++) {
-                final String stage = j < stages.get(l).size() ? stages.get(l).get(j) : "";
-                body.append(0 == j ? "" : "─").append(stage).append("─".repeat(widths[j] - stage.length()));
+            final String entry = "─" + places.get(l) + "─".repeat(placeWidth - places.get(l).length()) + "─►";
+            if (theirs.get(l).isRec()) {
+                final Block child = block(theirs.get(l).asRec().at(uri(FLOW)).asLst(), places.get(l));
+                blocks.add(new Block(IntStream.range(0, child.rows().size())
+                        .mapToObj(r -> (r == child.main() ? entry : " ".repeat(entry.length())) + child.rows().get(r)).toList(), child.main()));
+            } else {
+                final StringBuilder body = new StringBuilder(entry);
+                for (int j = 0; j < stages.get(l).size(); j++)
+                    body.append(0 == j ? "" : "─").append(stages.get(l).get(j)).append("─".repeat(widths[j] - stages.get(l).get(j).length()));
+                blocks.add(new Block(List.of(body.toString()), 0));
             }
-            bodies.add(body.append('─').toString());
         }
-        final int width = bodies.stream().mapToInt(String::length).max().orElse(0);
-        final int k = lanes.size();
-        final int height = 1 == k % 2 ? k : k + 1;
-        final int main = height / 2;
-        final List<String> rows = new ArrayList<>(height);
-        int next = 0;
-        // the main line enters the fork through two dashes, {11}──┤ (Marko, 2026-11-20); the other rows keep their place
-        for (int r = 0; r < height; r++) {
-            final boolean lane = 1 == k % 2 || main != r;
-            rows.add((main == r ? "──" : "  ") + fork(r, height, main, lane)
-                    + (lane ? bodies.get(next++) : " ".repeat(width)) + join(r, height, main, lane));
+        final int width = blocks.stream().flatMap(block -> block.rows().stream()).mapToInt(String::length).max().orElse(0) + 1;
+        final List<String> rows = new ArrayList<>();
+        final List<Integer> mains = new ArrayList<>();
+        int joint = -1;
+        for (int l = 0; l < blocks.size(); l++) {
+            if (0 == blocks.size() % 2 && blocks.size() / 2 == l) {
+                joint = rows.size();
+                rows.add(" ".repeat(width));
+            }
+            final Block lane = blocks.get(l);
+            for (int r = 0; r < lane.rows().size(); r++)
+                rows.add(lane.rows().get(r) + (r == lane.main() ? "─" : " ").repeat(width - lane.rows().get(r).length()));
+            mains.add(rows.size() - lane.rows().size() + lane.main());
         }
-        // each lane that re-planned at its peer: the peer's drawing, from its flow, under the peer's name
-        for (int l = 0; l < lanes.size(); l++) {
-            final Obj theirs = lanes.get(l).asRec().at(uri(TOPOLOGY));
-            if (theirs.isRec())
-                below.append(places.get(l)).append(":\n").append(draw(theirs.asRec().at(uri(FLOW)).asLst()).substring(1).indent(3));
-            else if (theirs.isStr())
-                below.append(places.get(l)).append(":\n").append(theirs.strValue().indent(3));
+        final int main = -1 == joint ? mains.get(mains.size() / 2) : joint;
+        final int first = mains.getFirst();
+        final int last = mains.getLast();
+        final List<String> drawn = new ArrayList<>(rows.size());
+        for (int r = 0; r < rows.size(); r++) {
+            final boolean lane = mains.contains(r);
+            drawn.add((main == r ? "──" : "  ") + side(r, first, last, main, lane, "┌├┼└┤")
+                    + rows.get(r) + side(r, first, last, main, lane, "┐┤┼┘├"));
         }
-        return new Block(rows, main);
+        return new Block(drawn, main);
     }
 
-    private static char fork(final int row, final int height, final int main, final boolean lane) {
-        if (1 == height)
-            return '─';
-        if (0 == row)
-            return '┌';
-        if (height - 1 == row)
-            return '└';
-        if (main == row)
-            return lane ? '┼' : '┤';
-        return lane ? '├' : '│';
-    }
-
-    private static char join(final int row, final int height, final int main, final boolean lane) {
-        if (1 == height)
-            return '─';
-        if (0 == row)
-            return '┐';
-        if (height - 1 == row)
-            return '┘';
-        if (main == row)
-            return lane ? '┼' : '├';
-        return lane ? '┤' : '│';
+    /**
+     * One side of a fan at a row, from its five glyphs (top, lane, main lane, bottom, joint): a lane's own row joins it,
+     * the joint row of an even fan meets the main line, the rows between the outer lanes carry a │, and a fan of one
+     * lane is a straight line.
+     */
+    private static char side(final int row, final int first, final int last, final int main, final boolean lane, final String glyphs) {
+        if (first == last)
+            return lane ? '─' : ' ';
+        if (lane)
+            return row == first ? glyphs.charAt(0) : row == last ? glyphs.charAt(3) : row == main ? glyphs.charAt(2) : glyphs.charAt(1);
+        if (row == main)
+            return glyphs.charAt(4);
+        return first < row && row < last ? '│' : ' ';
     }
 }
