@@ -368,6 +368,12 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>format.has('├──//local─►[{]2[}]──[{]1[}]').count()             % 1",
             // a map keeps its lane's count and the fold leaves one: start, plus and sum in each lane
             "{1,2,3,4,5,6}.plus(1).sum().explain()>>ext/topology/format.has('─►[{]3[}]──[{]3[}]──[{]1[}]─').count()                 % 1",
+            // a span range is a sum of terms, one per exponent: each lane holds the one seed and turns it into its share of
+            // the sixteen unrolls. Marko's three-peer run (11-20) drew the seed as {3} and every stage as {1}
+            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('[{]1[}]┤').count()                                     % 1",
+            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('─►[{]1[}]──[{][0-9]+[}]──[{][0-9]+[}]──[{]1[}]─┐').count() % 1",
+            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('[{]1[}]──[{]1[}]──[{]1[}]──[{]1[}]').count()           % 0",
+            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('├──//local─►[{]2[}]──[{]1[}]').count()                % 1",
             // two top-ks in one job draw two fans, and the second is dealt what the merge left, a bag of unknown size
             "{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]>-.order(neg())==[{2}_].explain()>>ext/topology/format.has('[{][*][}]┤').count() % 1",
     }, delimiter = '%')

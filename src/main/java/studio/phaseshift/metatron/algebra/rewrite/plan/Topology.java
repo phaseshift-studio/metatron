@@ -100,8 +100,14 @@ public final class Topology {
         for (int i = 0; i < insts.size(); i++) {
             if (fans(insts.get(i))) {
                 final List<Lane> lanes = lanes((BranchInst) insts.get(i), c);
-                if (null == c) // a planned head: the seed is what its lanes were dealt
-                    run.append(label(lanes.stream().map(lane -> lane.stages().getFirst()).reduce(cInt::plus).orElse(cInt.ZERO())));
+                // a planned head: lanes dealt parts of the seed sum to it, while lanes that copy it (?split=copy, or the
+                // run axis, whose lanes share the seed and split a span's exponent) each hold all of it
+                if (null == c)
+                    run.append(label(((BranchInst) insts.get(i)).routes().<Rel>elements().allMatch(route -> {
+                        final String split = route.first().uriValue().q(SPLIT);
+                        return null == split || split.endsWith(COPY);
+                    }) ? lanes.getFirst().stages().getFirst()
+                            : lanes.stream().map(lane -> lane.stages().getFirst()).reduce(cInt::plus).orElse(cInt.ZERO())));
                 segments.add(new Run(run.toString()));
                 segments.add(new Fan(lanes));
                 c = lanes.stream().map(lane -> lane.stages().getLast()).reduce(cInt::plus).orElse(cInt.ZERO());
@@ -146,7 +152,9 @@ public final class Topology {
     /**
      * THE COEFFICIENT AN INSTRUCTION LEAVES, from its contract's: a dom of none starts a stream (its range is the
      * stream), a dom of at most one applies per obj (its range multiplies the stream's), and any other dom takes the
-     * stream whole (its range is what is left). An instruction no contract types leaves any number.
+     * stream whole (its range is what is left). The instruction's own coefficients then apply: a point copies, and a
+     * span range is a sum of terms, one per exponent ({@code {0,8}plus} turns one obj into nine), while an exact span
+     * is one composition and keeps the count. An instruction no contract types leaves any number.
      */
     private static cInt flow(final cInt in, final Inst inst, final Inst contract) {
         if (null == contract || !contract.tid().hasDom() || !contract.tid().hasRng())
@@ -157,7 +165,10 @@ public final class Topology {
                 : dom.within(dom.maybe()) ? in.mult(rng)
                 : rng;
         final cInt point = inst.tid().d();
-        return null == point || point.isOne() ? out : out.mult(point);
+        final cInt span = inst.tid().b();
+        final cInt pointed = null == point || point.isOne() ? out : out.mult(point);
+        return null == span || span.isExact() ? pointed
+                : pointed.mult(null == span.min() || null == span.max() ? span.maybeSome() : cInt.of(span.max() - span.min() + 1));
     }
 
     /**
