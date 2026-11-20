@@ -38,7 +38,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -48,6 +47,7 @@ import static studio.phaseshift.metatron.Tokens.COPY;
 import static studio.phaseshift.metatron.Tokens.EXT;
 import static studio.phaseshift.metatron.Tokens.FLOW;
 import static studio.phaseshift.metatron.Tokens.FORMAT;
+import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.Tokens.LOCAL;
 import static studio.phaseshift.metatron.Tokens.PLACE;
 import static studio.phaseshift.metatron.Tokens.SPLIT;
@@ -180,22 +180,19 @@ public final class Topology {
      * A LANE WITH LEVELS LEFT RE-PLANS WHERE IT RUNS (BranchInst#lane), so the machine it runs in explains it, by its
      * own compiler and network: a peer is sent the lane's code with {@code explain()>>ext/topology/flow} through the
      * network's eval ({@link Network#submit}) and answers the flow, and a place on this machine explains the lane in
-     * the machine it names. The planner there reads a budget run by run (Shard#apply): the head's run its own
-     * {@code ?hop}, else the shard plan's (Shard#hop), and a later run its own, else the one before it. So a lane plans
-     * nothing only when its head states a point and so does every {@code ?hop} it states, and a leaf asks nothing; any
-     * other lane is asked, and its machine answers what it plans. Only a lane that starts from its own part is asked
-     * (the caller's test): one dealt a bag the branch computes is planned only when the bag arrives, and explain runs
-     * nothing. A refusal is kept as its message, a peer's and this machine's alike: a path that names no machine, and
-     * a budget that cannot be read, which the planner there refuses too. A plan that declines refuses nothing, though:
-     * the rewriter keeps the code as written (FixPointRewriter), so such a lane runs unplanned.
+     * the machine it names. Only a leaf in the form the planner stamps it is left alone (Shard#stampHop: a point on the
+     * head and no other budget), since every run of it inherits that point. The planner reads any other lane's budgets
+     * run by run (Shard#apply), at cuts only that machine types, so any other lane is asked, and its machine answers
+     * what it plans. Only a lane that starts from its own part is asked (the caller's test): one dealt a bag the branch
+     * computes is planned only when the bag arrives, and explain runs nothing. A refusal is kept as its message: a
+     * peer's, a path that names no machine, and a head budget that cannot be read, this machine's own diagnosis (the
+     * planner there declines it, the rewriter keeps the code as written, and the lane runs unplanned).
      */
     private static Obj theirs(final fURI key, final List<Inst> program) {
         try {
-            // every budget the lane states is read, so one that cannot be read is its message wherever it stands
-            final Predicate<Hop> plans = hop -> !hop.isPoint() && !hop.arity().isZero();
-            final List<Hop> stated = program.stream().map(inst -> Shard.hopAxis(List.of(inst), Hop.point())).toList();
-            final boolean unstated = null == Shard.hopAxis(List.of(program.getFirst()), null);
-            if (!(unstated && plans.test(Shard.hop(PlanInterpreter.SHARD_PLAN))) && stated.stream().noneMatch(plans))
+            final Hop head = Shard.hopAxis(List.of(program.getFirst()), null);
+            if (null != head && (head.isPoint() || head.arity().isZero()) && program.stream().skip(1)
+                    .noneMatch(inst -> inst.tid().hasQ(HOP) || inst.tid().hasQ(Placement.HOP_ALIAS)))
                 return noobj();
             final fURI place = key.resolve().qLess();
             if (null == place.host())

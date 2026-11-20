@@ -128,7 +128,10 @@ public final class Shard {
         // effect brings the members home and the run after it goes out again; once nothing floats, the tail stays home.
         final InstPattern recombines = InstPattern.law(Law.blocked).combinedBy(chain.laws());
         final InstPattern floats = InstPattern.law(Law.floatable);
-        Axes axes = new Axes(hop(plan), route.split(), route.place(), false);
+        Axes axes = new Axes(plan.where().stream()
+                .filter(placement -> Placement.Shape.TREE == placement.shape())
+                .map(Placement::hopAxis)
+                .findFirst().orElse(Hop.point()), route.split(), route.place(), false);
         final List<Inst> master = new ArrayList<>(insts.size());
         boolean planned = false;
         int from = 0;
@@ -554,17 +557,6 @@ public final class Shard {
             final fURI tid = inst.tid().removeQ(HOP).removeQ(Placement.HOP_ALIAS);
             chain.set(i, inst.tid(0 == i ? tid.q(HOP, budget) : tid));
         }
-    }
-
-    /**
-     * THE PLAN'S OWN BUDGET, the one a chain that states none plans with: its tree placement's hop (law_shard's is one
-     * level, the star), else the point.
-     */
-    static Hop hop(final Plan plan) {
-        return plan.where().stream()
-                .filter(placement -> Placement.Shape.TREE == placement.shape())
-                .map(Placement::hopAxis)
-                .findFirst().orElse(Hop.point());
     }
 
     /**
