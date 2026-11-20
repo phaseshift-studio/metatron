@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.algebra.rewrite.plan;
 
+import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
@@ -26,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
@@ -34,6 +37,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static studio.phaseshift.metatron.Tokens.CONVERSE;
 import static studio.phaseshift.metatron.Tokens.COPY;
 import static studio.phaseshift.metatron.Tokens.LOCAL;
 import static studio.phaseshift.metatron.Tokens.SPLIT;
@@ -47,9 +51,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
  * each lane's share and what each of its instructions leaves, the lanes merging at home, and what the master's
  * instructions leave.
  * <pre>
- *     ┌──//0─►{10}──{1}─┐
- * {15}┼──//1─►{2}───{1}─┼──//local─►{3}──{1}
- *     └──//2─►{3}───{1}─┘
+ *       ┌──//0─►{10}──{1}─┐
+ * {15}──┼──//1─►{2}───{1}─┼──//local─►{3}──{1}
+ *       └──//2─►{3}───{1}─┘
  * </pre>
  * A COEFFICIENT IS A PRODUCT, READ LEFT TO RIGHT (Marko): each instruction's contract states the coefficient it takes
  * and the one it answers. One that takes at most one obj applies once per obj, so its range multiplies the stream's
@@ -69,9 +73,10 @@ public final class Topology {
     }
 
     /**
-     * One lane: the place it runs and the coefficient each of its stages leaves.
+     * One lane: the place it runs, the seed it starts from (null for a lane dealt its share), and the coefficient each
+     * of its stages leaves.
      */
-    record Lane(String place, List<cInt> stages) {
+    record Lane(String place, Obj seed, List<cInt> stages) {
     }
 
     /**
@@ -100,13 +105,12 @@ public final class Topology {
         for (int i = 0; i < insts.size(); i++) {
             if (fans(insts.get(i))) {
                 final List<Lane> lanes = lanes((BranchInst) insts.get(i), c);
-                // a planned head: lanes dealt parts of the seed sum to it, while lanes that copy it (?split=copy, or the
-                // run axis, whose lanes share the seed and split a span's exponent) each hold all of it
+                // a head branch: lanes that all start from one seed hold it once (a copy, or the run axis, whose lanes
+                // split a span's exponent), and lanes that start from parts of it sum to it
                 if (null == c)
-                    run.append(label(((BranchInst) insts.get(i)).routes().<Rel>elements().allMatch(route -> {
-                        final String split = route.first().uriValue().q(SPLIT);
-                        return null == split || split.endsWith(COPY);
-                    }) ? lanes.getFirst().stages().getFirst()
+                    run.append(label(!lanes.isEmpty() && lanes.stream().allMatch(lane -> null != lane.seed())
+                            && 1 == lanes.stream().map(Lane::seed).distinct().count()
+                            ? lanes.getFirst().stages().getFirst()
                             : lanes.stream().map(lane -> lane.stages().getFirst()).reduce(cInt::plus).orElse(cInt.ZERO())));
                 segments.add(new Run(run.toString()));
                 segments.add(new Fan(lanes));
@@ -144,7 +148,7 @@ public final class Topology {
                 stages.add(c);
             for (int i = 0; i < program.size(); i++)
                 stages.add(c = flow(c, program.get(i), contracts.get(i)));
-            lanes.add(new Lane(place(route.first().uriValue()), stages));
+            lanes.add(new Lane(place(route.first().uriValue()), seeded ? program.getFirst().arg(0) : null, stages));
         }
         return lanes;
     }
@@ -153,8 +157,11 @@ public final class Topology {
      * THE COEFFICIENT AN INSTRUCTION LEAVES, from its contract's: a dom of none starts a stream (its range is the
      * stream), a dom of at most one applies per obj (its range multiplies the stream's), and any other dom takes the
      * stream whole (its range is what is left). The instruction's own coefficients then apply: a point copies, and a
-     * span range is a sum of terms, one per exponent ({@code {0,8}plus} turns one obj into nine), while an exact span
-     * is one composition and keeps the count. An instruction no contract types leaves any number.
+     * span range is a sum of terms, one per exponent, as Inst walks it: the zero step is the lhs itself, each positive
+     * step leaves what the instruction leaves ({@code {0,8}plus} turns one obj into nine; {@code {0,1}sum} over three
+     * is the three and their sum, four), and the negative steps walk the declared converse, one step per exponent, else
+     * run as one blocked limbo per obj. An exact span is one composition and keeps the count. An instruction no contract
+     * types leaves any number.
      */
     private static cInt flow(final cInt in, final Inst inst, final Inst contract) {
         if (null == contract || !contract.tid().hasDom() || !contract.tid().hasRng())
@@ -167,8 +174,20 @@ public final class Topology {
         final cInt point = inst.tid().d();
         final cInt span = inst.tid().b();
         final cInt pointed = null == point || point.isOne() ? out : out.mult(point);
-        return null == span || span.isExact() ? pointed
-                : pointed.mult(null == span.min() || null == span.max() ? span.maybeSome() : cInt.of(span.max() - span.min() + 1));
+        if (null == span || span.isExact())
+            return pointed;
+        if (null == in || null == span.min() || null == span.max())
+            return pointed.mult(span.maybeSome());
+        final long below = Math.max(0L, Math.min(span.max(), -1L) - span.min() + 1);
+        final long above = Math.max(0L, span.max() - Math.max(span.min(), 1L) + 1);
+        cInt terms = pointed.mult(cInt.of(above));
+        if (span.min() <= 0 && 0 <= span.max())
+            terms = terms.plus(null == point || point.isOne() ? in : in.mult(point));
+        if (0 < below) {
+            final Obj claim = Machine.read(PendingWrites.decq(Inst.Helper.operationTid(contract.tid())));
+            terms = terms.plus(in.mult(cInt.of(claim.isRec() && null != TheoryHelper.roleAddress(claim.asRec(), CONVERSE) ? below : 1L)));
+        }
+        return terms;
     }
 
     /**
@@ -243,9 +262,11 @@ public final class Topology {
         final int main = height / 2;
         final List<String> rows = new ArrayList<>(height);
         int next = 0;
+        // the main line enters the fork through two dashes, {11}──┤ (Marko, 2026-11-20); the other rows keep their place
         for (int r = 0; r < height; r++) {
             final boolean lane = 1 == k % 2 || main != r;
-            rows.add(fork(r, height, main, lane) + (lane ? bodies.get(next++) : " ".repeat(width)) + join(r, height, main, lane));
+            rows.add((main == r ? "──" : "  ") + fork(r, height, main, lane)
+                    + (lane ? bodies.get(next++) : " ".repeat(width)) + join(r, height, main, lane));
         }
         return new Block(rows, main);
     }

@@ -41,13 +41,13 @@ public class TopologyTest extends AbstractMetatronTest {
         final String drawing = Topology.draw(List.of(
                 new Topology.Run("{15}"),
                 new Topology.Fan(List.of(
-                        new Topology.Lane("//0", List.of(cInt.of(10), cInt.ONE())),
-                        new Topology.Lane("//1", List.of(cInt.of(2), cInt.ONE())),
-                        new Topology.Lane("//2", List.of(cInt.of(3), cInt.ONE())))),
+                        new Topology.Lane("//0", null, List.of(cInt.of(10), cInt.ONE())),
+                        new Topology.Lane("//1", null, List.of(cInt.of(2), cInt.ONE())),
+                        new Topology.Lane("//2", null, List.of(cInt.of(3), cInt.ONE())))),
                 new Topology.Run("──//local─►{3}──{1}")));
         assertEquals(String.join("\n", "",
-                "    ┌──//0─►{10}──{1}─┐",
-                "{15}┼──//1─►{2}───{1}─┼──//local─►{3}──{1}",
-                "    └──//2─►{3}───{1}─┘", ""), drawing);
+                "      ┌──//0─►{10}──{1}─┐",
+                "{15}──┼──//1─►{2}───{1}─┼──//local─►{3}──{1}",
+                "      └──//2─►{3}───{1}─┘", ""), drawing);
     }
 }
