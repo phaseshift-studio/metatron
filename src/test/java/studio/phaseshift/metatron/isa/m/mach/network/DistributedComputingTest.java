@@ -341,6 +341,10 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{2,1,4,3}.order()==[{2}+1]                 % branch(start().order(),start().order()).kmerge().select()                                           % [2,3]",
             // k = 0 keeps nothing: on an axis a zero span lays no slot, so the pattern is empty, and it stays home
             "{2,1,4,3}.order()==[{0}_]                  % branch(start().order(),start().order()).kmerge().select()                                           % [,]",
+            // ...and an empty bag ships as any bag does: no lane is dealt a member, and kmerge of no runs is the empty lst,
+            // what the same sort answers held home (order of nothing is [,])
+            "{2,1,4,3}.order()==[{0}_]>-.order()==[{1}_] % branch(start().order(),start().order()).kmerge().select().merge().branch(order().select(),order().select()).kmerge().select() % [,]",
+            "{1,2}.is(gt(5)).order()>-.order()==[{1}_]   % branch(start().is().order(),start().is().order()).kmerge().merge().branch(order().select(),order().select()).kmerge().select() % [,]",
     }, delimiter = '%')
     void test_K_limit_topk_push_down(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);

@@ -1306,8 +1306,8 @@ public final class mInsts {
                         .argLst(T(ALL.maybe()), "a projection of A to compare")
                         // BULK, THEN SORT (Marko, 2026-11-20): a stream bulks, and it has no nested streams
                         // ({1,2,{5,3},5,{0,1,1}} is {{3}1,2,{2}5,3,0}). objs() bulks as it builds, so the sort meets each
-                        // distinct obj once with its whole mass ({{1000}4,3} sorts two entries, not 1,001), and equals
-                        // share one index even where a projection's ties would sort them apart
+                        // distinct obj once with its whole mass (equals that arrive apart, {1,2,3}.mult(0), sort as one
+                        // entry, not three), and equals share one index even where a projection's ties would sort them apart
                         .body((lhs, inst) -> {
                             final Comparator<Obj> cmp = inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0));
                             return lst(objs(lhs.stream()).stream().sorted(cmp).toList());

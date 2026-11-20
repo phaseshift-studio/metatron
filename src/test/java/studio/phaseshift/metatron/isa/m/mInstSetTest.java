@@ -128,6 +128,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "[[0],[0]].kmerge()                           % [{2}0]",
             "[[0,1,2],[0,1,2]].kmerge()                   % [{2}0,{2}1,{2}2]",
             "[[2,1,0],[2,1,0]].kmerge(neg())              % [{2}2,{2}1,{2}0]",
+            // no runs merge to the merge's identity, as order of nothing is the empty lst
+            "kmerge()                                     % [,]",
+            "order()                                      % [,]",
             // ...and the merge: whichever run a tie draws from first, every 1 shares one index
             "[[1,3],[1,3],[1]].kmerge(mod(2))             % [{3}1,{2}3]",
     }, delimiter = '%')
