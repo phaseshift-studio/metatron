@@ -58,10 +58,11 @@ import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_T
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * THE TREE — {@code law_shard} planned at every level its hop budget allows. This machine dials ONE peer, and that
- * peer dials the other two, so a budget of two makes the middle peer an INTERIOR node: applying the lane it is
- * handed compiles it, the rule fires again there, and the peer re-plans its part over its own dialed peers and
- * recombines their partials through the same combiner.
+ * THE TREE — {@code law_shard} planned at every level its hop budget allows. Peer 1 dials peers 2 and 3, so a budget
+ * of two makes it an INTERIOR node: applying the lane it is handed compiles it, the rule fires again there, and the
+ * peer re-plans its part over its own dialed peers and recombines their partials through the same combiner. This
+ * machine holds all three: it dials peer 1 as a console dials, and parsing the dial literals peer 1 is sent builds a
+ * client to peers 2 and 3 here too.
  */
 public class TreeShardTransportTest extends AbstractMetatronTest {
 
@@ -86,7 +87,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         // the construction registers its peer asynchronously -- wait (bounded) until peer 1 holds both
         for (int t = 0; t < 40 && !holdsChildren(); t++)
             Thread.sleep(250);
-        // THE ROOT: this machine dials peer 1 only, as a console dials
+        // THE ROOT: this machine dials peer 1 as a console dials (the literals parsed above dialed 2 and 3 here too)
         final WebSocketRec wsRec = new WebSocketRec(mutableMap(
                 uri(HOST), uri(endpoint(1)),
                 uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
@@ -141,22 +142,35 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE TREE IS DRAWN BY ITS NODES (Marko, 2026-11-20): explain()>>ext/topology draws the root's fan, and a lane that
-     * still carries a budget is explained by its own peer, whose compiler plans its subtree. The explanation comes back
-     * as data, and its flow is drawn inside the lane, its merge at the peer's own place. The root deals its eight over the three peers it
-     * knows, and peer 1, which dialed peers 2 and 3, re-plans its share over them (two members or three, as the ports
-     * order the lanes). Each row: a pattern of the drawing % how many times the drawing holds it.
+     * THE TREE IS DRAWN BY ITS NODES (Marko, 2026-11-20): explain()>>ext/topology draws the root's fan, and a lane
+     * that still carries a budget is explained by its own peer, whose compiler plans its subtree. Its flow comes back
+     * as data and is drawn inside the lane, its merge at the peer's own place, running out to the root's join. The root
+     * deals its eight over the three peers it knows, and peer 1, which dialed peers 2 and 3, re-plans its share over
+     * them (two members or three, as the ports order the lanes). The root names peers 2 and 3 two and three, and peer 1
+     * names them nothing, so the subtree reads the root's names: each name twice, once at the root and once inside
+     * peer 1's lane. {@code has} keeps the drawing when the pattern is found in it, so each row is a pattern of the
+     * drawing % 1 when the drawing holds it.
      */
     @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the drawing is the subject")
     @ParameterizedTest
     @CsvSource(value = {
-            "[{][23][}]──┤                              % 1",
-            "├──//localhost:[0-9]+─►[{]2[}]─[{]1[}]     % 1",
-            "──//local─►[{]3[}]─[{]1[}]                 % 1",
+            "[{][23][}]──┤                                    % 1",
+            "├──//localhost:[0-9]+─►[{]2[}]─[{]1[}]─+[┐┤┼┘]   % 1",
+            "──//local─►[{]3[}]─[{]1[}]                       % 1",
+            "//two─[^@]*//two─                                % 1",
+            "//three─[^@]*//three─                            % 1",
     }, delimiter = '%')
     void testTheTreeIsDrawnByItsNodes(final String pattern, final int expected) {
-        checkCodeParseApply(LOG, "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>ext/topology/format.has('" + pattern
-                + "').count()", String.valueOf(expected));
+        final Network network = Machine.current().network();
+        network.registerPrefix(f("two"), f(endpoint(2)));
+        network.registerPrefix(f("three"), f(endpoint(3)));
+        try {
+            checkCodeParseApply(LOG, "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>ext/topology/format.has('"
+                    + pattern + "').count()", String.valueOf(expected));
+        } finally {
+            network.unregisterPrefix(f("two"));
+            network.unregisterPrefix(f("three"));
+        }
     }
 
     /**

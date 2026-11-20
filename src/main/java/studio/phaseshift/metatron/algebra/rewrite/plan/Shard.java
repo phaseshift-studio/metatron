@@ -233,7 +233,8 @@ public final class Shard {
         if (!runAxis && (one || (0 > cut && !(cutless && runIndex < runEnd))))
             return null;
         // a copy has no fold to absorb the duplicates, so with no cut every member would come home once per lane
-        if (!runAxis && Partition.Kind.COPY == split.kind() && (0 > cut || !idempotentCombiner(combined, chain.carriers().get(cut))))
+        final boolean copy = Partition.Kind.COPY == split.kind();
+        if (!runAxis && copy && (0 > cut || !idempotentCombiner(combined, chain.carriers().get(cut))))
             return null;
         final long members = runAxis ? range.count() : seed;
         if (2 > members)
@@ -247,11 +248,12 @@ public final class Shard {
         // THE SHARES: the place set resolved against the snapshot, one entry per share, the HOME place's shares FIRST.
         // A literal seed clamps the shares; a computed bag's size is the branch's to know; the ARITY caps the window.
         // NO PEER WITHOUT A MEMBER (Marko, 2026-11-20: "don't use all peers if we don't need to"): a literal seed of n
-        // members dealt in parts fills at most n shares, so its window is the arity or the seed, whichever is smaller. The
-        // run axis and a copy hand every lane the whole seed and take one lane per place, so their window stays the arity
+        // members dealt in parts fills at most n shares, so its window is the arity or the seed, whichever is smaller.
+        // The run axis and a copy hand every lane the whole seed and take one lane per place, so their window stays the
+        // arity
         final int cap = (int) Math.min(members, Integer.MAX_VALUE);
         final List<ResolvedPlace> shares = shares(resolve(chain.env(), chain.route(), candidates), cap,
-                runAxis || Partition.Kind.COPY == split.kind() ? fanout : Math.min(fanout, cap));
+                runAxis || copy ? fanout : Math.min(fanout, cap));
         // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
         // here. Several home shares are the lanes case, a peerless machine sharding.
         if (1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal))
@@ -272,7 +274,6 @@ public final class Shard {
                 : range.point() ? splitEvenly(range.count(), lanes) : splitByCost(range.min(), range.max(), lanes);
         // A LITERAL SEED IS DEALT BY THE BRANCH'S OWN RULE (BranchInst#deal), so a planned part is the part the branch
         // would have dealt; under the copy kind and the run axis every lane holds the whole seed.
-        final boolean copy = Partition.Kind.COPY == split.kind();
         final List<List<Obj>> parts = literal && !runAxis
                 ? BranchInst.deal(head.arg(0), keys.stream().mapToLong(key -> copy ? 0L : key.getValue()).toArray())
                 : List.of();
@@ -309,17 +310,17 @@ public final class Shard {
         // lanes seeded with a literal take nothing, so the branch is the initial form; otherwise the branch takes the bag
         // whole (a {*} dom over the carrier flowing into the run) and deals it by its keys -- or, under the run axis,
         // copies it to every lane, whose shares of the exponent are disjoint.
-        // THE BRANCH STATES ITS TYPES IN GENERICS, NEVER #{*} (Marko, 2026-11-20), so compilation carries real types past
-        // it. Its dom is the carrier flowing into the run, or A{*} when the probe could not type it (#). Its rng is what each lane's last
-        // instruction answers, once per lane: the branch's own B{*} is bound by nothing and resolves to #{*}, which the
-        // combiner after it cannot bind (kmerge's lst[{*}A{*}]{*} fell back to # => #, a lst{1} read as {*}). Profiling
-        // lanes answer reports, so they state none.
+        // THE BRANCH STATES ITS TYPES IN GENERICS, NEVER #{*} (Marko, 2026-11-20), so compilation carries real types
+        // past it. Its dom is the carrier flowing into the run, or A{*} when the probe could not type it (#). Its rng
+        // is what each lane's last instruction answers, once per lane: the branch's own B{*} is bound by nothing and
+        // resolves to #{*}, which the combiner after it cannot bind (kmerge's lst[{*}A{*}]{*} fell back to # => #, a
+        // lst{1} read as {*}). Profiling lanes answer reports, so they state none.
         final fURI carrier = chain.carriers().get(runIndex).typeId();
         final fURI dom = literal ? fURI.Singleton.NOOBJ
                 : null == carrier || fURI.Singleton.ALL.basePath().equals(carrier.basePath()) ? InstSet.A.maybeSome()
                 : carrier.maybeSome();
-        // an absorbed select keeps a prefix of the cut's lst, so the cut's contract states what those lanes answer too; a
-        // lst select declares no element type, and its own contract would state a bare lst the combiner cannot bind
+        // an absorbed select keeps a prefix of the cut's lst, so the cut's contract states what those lanes answer too;
+        // a lst select declares no element type, and its own contract would state a bare lst the combiner cannot bind
         final Inst answers = profiling ? null : chain.contracts().get(0 <= cut ? cut : runEnd - 1);
         final fURI lane = null == answers || !answers.tid().hasRng() ? null : answers.rng().typeId();
         final fURI branch = literal && runAxis ? BRANCH_INST_TID.dom(dom)
@@ -563,7 +564,7 @@ public final class Shard {
      * instructions wins, else the axis it {@code inherits}. A value the projection cannot read is REFUSED — {@code hop}
      * is the tree's height and a silent zero is the point topology.
      */
-    private static Hop hopAxis(final List<Inst> insts, final Hop inherited) {
+    static Hop hopAxis(final List<Inst> insts, final Hop inherited) {
         for (final Inst inst : insts) {
             if (inst.tid().hasQ(HOP))
                 return hopAxis(inst.tid(), HOP);
