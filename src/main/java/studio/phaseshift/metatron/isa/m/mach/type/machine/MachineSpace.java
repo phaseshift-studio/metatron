@@ -30,8 +30,10 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -53,9 +55,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * wins its own addresses, as the most specific space always does. What it answers itself:
  * <ul>
  *     <li>{@code <vid>} — the machine itself, live;</li>
- *     <li>{@code <vid>/network/…} — handed to the network, a space of its own (a memSpace cache behind it): its fields
- *     and its members at their keys' paths are read as any memSpace's data, a member (a peer, a listener) is
- *     constructed, never written, and {@code -> noobj} retracts it
+ *     <li>{@code <vid>/network/…} — handed to the network, a space of its own (a memSpace store behind it, whose raw
+ *     reader the uri tree walks): its fields, its member maps and their members at their keys' paths are read as any
+ *     memSpace's data, a member (a peer, a listener) is constructed, never written, and {@code -> noobj} retracts it
  *     ({@link studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork}). The component itself, at
  *     {@code <vid>/network}, is read live as every component is;</li>
  *     <li>{@code <vid>/processor/…} — the processor, read live and written in place: the computers it indexes
@@ -185,6 +187,20 @@ public final class MachineSpace extends memSpace {
      */
     private boolean below(final fURI vid) {
         return vid.qLess().resolve().segments().size() > this.depth + 1;
+    }
+
+    /**
+     * THE RAW READER BELOW THE NETWORK BRANCH IS THE NETWORK'S, as every read and write there is (see {@link #read}):
+     * it is what the uri tree walks ({@code <vid>/network.>>}, Uri.Helper's child read). Everything else is this space's
+     * own store.
+     */
+    @Override
+    public Function<fURI, Iterator<IdObj>> directReader() {
+        final Function<fURI, Iterator<IdObj>> store = super.directReader();
+        return vid -> null != this.owner && this.covers(vid) && NETWORK.equals(this.part(vid)) && this.below(vid)
+                && !this.analyzes(vid) && this.owner.network() instanceof Space network
+                ? network.directReader().apply(vid)
+                : store.apply(vid);
     }
 
     @Override

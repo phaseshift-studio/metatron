@@ -51,45 +51,45 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * BasicNetwork — one level of a machine's network, and that level's address space: a {@link memSpace} {@code cache}
- * behind a space that intercepts what goes through it (the {@code dckrSpace} pattern).
+ * BasicNetwork — one level of a machine's network, and that level's address space: a {@link memSpace} is its store
+ * (its {@code sjvm}), behind a space that intercepts what goes through it (the {@code dckrSpace} pattern).
  * <p>
- * <b>EVERYTHING THE LEVEL KNOWS IS AN ENTRY IN ITS CACHE</b>, at an address relative to the level — so it is held
+ * <b>EVERYTHING THE LEVEL KNOWS IS AN ENTRY IN ITS STORE</b>, at an address relative to the level — so it is held
  * before the level has a machine — and is read as any memSpace's data is ({@code locateBasePoly}, {@code unrollPoly},
- * containers, q-procs). {@link #mount} stamps the branch, {@code <vid>/network/#}, and the machine's own space
+ * containers, q-procs): {@code host}, {@code status}, the root's {@code roster}, the {@code prefix} table, and the two
+ * member maps, {@code peer} and {@code listener}, each ONE entry keyed by its members' path encodings
+ * ({@code ws/localhost/8555/mtron => peer::T}). A path-keyed rec is addressed through its keys as in any space, so a
+ * member and its fields are read at their keys' paths and the uri tree walks a map a segment at a time.
+ * {@link #mount} stamps the branch, {@code <vid>/network/#}, and the machine's own space
  * ({@link studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace}) hands every address below it here:
  * <pre>
  *   *</network/roster>                                   [-- what the system knows --]
+ *   *<~/network/peer>                                    [-- what this machine reaches: <key> => peer::T --]
  *   *<~/network/peer/ws/localhost/8555/mtron>            [-- the peer::T --]
  *   *<~/network/peer/ws/localhost/8555/mtron/origin>     [-- one of its fields --]
- *   </network/peer/ws/localhost/8555/mtron> -> noobj      [-- hang up: the member leaves the cache --]
+ *   </network>.>>.>>.>>                                   [-- the level's uri tree, through the maps' keys --]
+ *   </network/peer/ws/localhost/8555/mtron> -> noobj      [-- hang up: the member leaves the map --]
  *   </network/peer/#> -> noobj                            [-- hang up every member --]
  *   *<~/network/listener/ws/localhost/8555/route>        [-- this machine's routes on its socket --]
  *   <~/network/listener/ws/localhost/8555> -> noobj       [-- stop serving --]
  * </pre>
  * <b>WHAT IT INTERCEPTS.</b> An address that is not this level's — another machine's, carrying a host — is the
  * authority dispatch ({@link Network#read}, {@link Network#write}). A MEMBER (a peer, a listener) is constructed,
- * never written: a client indexes itself and a server listens, each putting a typed member at its key, LITERALLY,
- * because a key is an encoded origin and may be a wildcard (the web gateway's {@code http/#}); and a member's deletion
- * is its retraction, since a member is a rec and closing a rec closes nothing it holds. The NAME TABLE is a door: it
- * reads what the frame sees and stores what the caller declares (AGENTS.md: a door reads meaning, a write declares
- * differences).
+ * never written: a client indexes itself and a server listens, each putting a typed member into its map at its key,
+ * LITERALLY, because a key is an encoded origin and may be a wildcard (the web gateway's {@code http/#}); and a
+ * member's deletion is its retraction, since a member is a rec and closing a rec closes nothing it holds. The NAME
+ * TABLE is a door: it reads what the frame sees and stores what the caller declares (AGENTS.md: a door reads meaning,
+ * a write declares differences).
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BasicNetwork extends AbstractSpace<Object> implements Network {
+public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
 
     /**
      * the pattern a network carries until it is mounted: the network branch of the machine it serves, unresolved. It
      * claims no address (a resolved vid never begins with {@code ~}), and {@link #mount} stamps the resolved branch.
      */
     private static final fURI UNMOUNTED = f("~/network/#");
-
-    /**
-     * what this level knows, at addresses relative to it: unregistered, so it is no mount of its own, and speaking this
-     * level's q-procs
-     */
-    private final memSpace cache;
 
     public BasicNetwork() {
         this(mutableMap());
@@ -112,16 +112,16 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
 
     public BasicNetwork(final Map<Obj, Obj> jvm) {
         // never self-registered: a network is answered through its machine's space (mount), not by being constructed --
-        // most are built before their machine exists
-        super(null, addFields(jvm), MACH_NETWORK_TID, null, false);
-        this.cache = memSpace.unregistered(ALL, null);
+        // most are built before their machine exists. Its STORE is a memSpace of its own, unregistered for the same
+        // reason: what this level knows, at addresses relative to it
+        super(memSpace.unregistered(ALL, null), addFields(jvm), MACH_NETWORK_TID, null, false);
         // THE Q-PROCS A NETWORK SUPPORTS. subq is the one that matters: a subscription to a peer's namespace is LOCAL
         // bookkeeping -- `ws://peer/x/#?subq -> code` must register here and fire here -- and the layer (QProc.Layer,
-        // applied by Machine.write) is what consumes the registration before it can reach the wire. The cache speaks
+        // applied by Machine.write) is what consumes the registration before it can reach the wire. The store speaks
         // the same ones, so a subscription below the branch is kept in the same registry.
         this.addQ(QCollection.subQ());
-        this.qs().lstValue().forEach(q -> this.cache.addQ(q.as()));
-        // THE REC IS THE SPACE'S CONFIGURATION; what the level was constructed with goes into the cache, each field at
+        this.qs().lstValue().forEach(q -> this.sjvm.addQ(q.as()));
+        // THE REC IS THE SPACE'S CONFIGURATION; what the level was constructed with goes into the store, each field at
         // its own address and through the door every other write takes. The ANALYZER stays in the rec, as every
         // component's does: the wire taps count into it per frame, and the machine's space answers it
         final Set<fURI> config = Set.of(f(PATTERN), f(QPROC), f(ANALYZER));
@@ -166,11 +166,11 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
     }
 
     /**
-     * the cache's address for {@code vid}: a relative one as it stands (the form the level's own methods use), one
+     * the store's address for {@code vid}: a relative one as it stands (the form the level's own methods use), one
      * below the branch with the branch taken off, or null for an address that is not this level's — another
      * machine's, or {@code ~}, which is the machine's address and not the component's
      */
-    private fURI cached(final fURI vid) {
+    private fURI stored(final fURI vid) {
         if (vid.isRelative())
             return vid.hasPrefix(f("~")) ? null : vid;
         final fURI at = vid.qLess().resolve();
@@ -179,19 +179,19 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
     }
 
     /**
-     * the address the caller asked in: a cache address named below the branch again, unless the caller asked relative
+     * the address the caller asked in: a store address named below the branch again, unless the caller asked relative
      */
     private fURI asked(final fURI vid, final fURI at) {
         return vid.isRelative() ? at : this.branch().extend(at);
     }
 
     // ──────────────────────────────────────────────
-    // reads: the cache's, but for the name table's door
+    // reads: the store's, but for the name table's door
     // ──────────────────────────────────────────────
 
     @Override
     public Obj read(final fURI vid) {
-        final fURI at = this.cached(vid);
+        final fURI at = this.stored(vid);
         if (null == at)
             return this.reach(vid, () -> Network.super.read(vid), listener -> listener.read(vid));
         // THE TABLE ANSWERS WHAT THIS FRAME SEES, shadowing included -- the question a reader standing in a frame
@@ -200,25 +200,22 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
         // read-then-write a no-op by dropping inherited rows.
         if (f(PREFIX).equals(at))
             return Network.Helper.markedTable(Component.Prefix.Helper.effectivePrefixes(this));
-        // THE BARE MAP IS THE ACCESSOR (a member's fields are not a rec's to walk: a KEY is the dial's own
-        // path, several segments long, so `at()` cannot descend from it into a field). Everything below the
-        // map is the cache's -- one entry, or one entry's fields, unrolled from the entry itself
-        // (Space.Helper#unrollPoly), which is the read path this branch documents.
-        if (f(PEER).equals(at))
-            return this.peers();
-        // THE q-PROCS ARE THE REC'S, not the cache's: they are a config field (addQ put them at `q`), so
+        // THE q-PROCS ARE THE REC'S, not the store's: they are a config field (addQ put them at `q`), so
         // `@~/network/q` must read the list the layer actually consults
         if (f(QPROC).equals(at))
             return this.at(uri(QPROC));
-        final Obj read = this.cache.read(at);
-        // a branch read answers rels at the cache's addresses: they are named where the caller asked (what @ anchors with)
+        // EVERYTHING ELSE IS THE STORE'S, read as any space's data is: a member map is one entry keyed by its members'
+        // path encodings, so the map, a member and a member's field are each read at their own address
+        // (Space.Helper#unrollPoly walks a path key like any other)
+        final Obj read = this.sjvm.read(at);
+        // a branch read answers rels at the store's addresses: they are named where the caller asked (what @ anchors with)
         return vid.isBranch() && !vid.isRelative()
                 ? objs(read.stream().map(kv -> rel(uri(this.asked(vid, kv.asRel().first().uriValue())), kv.asRel().second())))
                 : read;
     }
 
     /**
-     * A WIRE ADDRESS THIS LEVEL DOES NOT KEEP (see {@link #cached}) — what answers it, in order: a query the local
+     * A WIRE ADDRESS THIS LEVEL DOES NOT KEEP (see {@link #stored}) — what answers it, in order: a query the local
      * socket DECLARES (a socket's own meters are not a peer's to answer), then a declared PEER (an explicit reach into
      * the origin, which is what {@code ws://host:port/path} has always meant), then a socket THIS machine binds at that
      * origin (what no peer serves is the local server's). That last rung is why {@code *<origin>/#?analq} is the
@@ -243,13 +240,13 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return vid -> {
-            final fURI at = this.cached(vid);
-            return null == at ? IteratorUtil.of() : IteratorUtil.map(this.cache.directReader().apply(at), id -> IdObj.of(this.asked(vid, id.furi()), id.obj()));
+            final fURI at = this.stored(vid);
+            return null == at ? IteratorUtil.of() : IteratorUtil.map(this.sjvm.directReader().apply(at), id -> IdObj.of(this.asked(vid, id.furi()), id.obj()));
         };
     }
 
     // ──────────────────────────────────────────────
-    // writes: intercepted, then the cache's
+    // writes: intercepted, then the store's
     // ──────────────────────────────────────────────
 
     @Override
@@ -259,55 +256,73 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final fURI at = this.cached(vid);
+        final fURI at = this.stored(vid);
         if (null == at)
             return obj.isFail() // a fail is not shippable, and no socket serves it either: it stays local
                     ? noobj()
                     : this.reach(vid, () -> Network.super.write(vid, obj), listener -> listener.write(vid, obj));
-        // a q-proc's registration is the cache's, which speaks this level's q-procs
+        // a q-proc's registration is the store's, which speaks this level's q-procs
         if (at.hasQ())
-            return this.cache.write(at, obj);
+            return this.sjvm.write(at, obj);
         // THE q-PROCS ARE THE REC'S: `@~/network/q >>= …` declares the level's processors, and the layer reads them
-        // from here. The cache mirrors them so a registration below a branch speaks the same set.
+        // from here. The store mirrors them so a registration below a branch speaks the same set.
         if (f(QPROC).equals(at)) {
             this.at(uri(QPROC), obj, MUTABLE);
-            this.cache.at(uri(QPROC), obj, MUTABLE);
+            this.sjvm.at(uri(QPROC), obj, MUTABLE);
             return obj;
         }
         final String field = at.segments().isEmpty() ? "" : at.segments().getFirst();
         final boolean members = PEER.equals(field) || LISTENER.equals(field);
         if (obj.isNoObj()) {
-            // A MEMBER'S DELETION IS ITS RETRACTION. The member stored at exactly this address is the one it names
-            // (literal first: the gateway's http/# is a key, not a pattern); else every member the address matches as a
-            // pattern, or, for the bare map, every member it holds. Each leaves the cache, then what it held is
-            // released -- clear, then close.
-            (this.cache.sjvm().containsKey(at)
-                    ? (members ? List.of(at) : List.<fURI>of())
-                    : Stream.of(PEER, LISTENER)
-                    .flatMap(map -> this.cache.sjvm().match(f(map).extend(ALL)).stream()
-                            .map(Map.Entry::getKey)
-                            .filter(member -> !member.equals(f(map))))
-                    .filter(member -> member.test(at)
-                            || (members && 1 == at.segments().size() && field.equals(member.segments().getFirst())))
-                    .toList())
-                    .forEach(member -> {
-                        final Obj held = this.cache.sjvm().remove(member);
-                        if (null != held)
-                            Network.Helper.release(this, held);
-                    });
+            // A MEMBER'S DELETION IS ITS RETRACTION, from the map that holds it. An address the map's own address
+            // matches (the bare map, or a pattern over the level) names every member the map holds; else the member at
+            // exactly this key is the one it names (literal first: the gateway's http/# is a key, not a pattern); else
+            // every member the address matches as a pattern. Each leaves its map under the level's lock -- the one the
+            // peer mint and the listener mount hold -- and what it held is released outside it: clear, then close.
+            final List<Obj> retracted = new ArrayList<>();
+            synchronized (this) {
+                for (final String map : List.of(PEER, LISTENER)) {
+                    final fURI root = f(map);
+                    final Map<Obj, Obj> kept = new LinkedHashMap<>(this.map(map).jvm());
+                    final boolean whole = root.test(at);
+                    final boolean exact = kept.keySet().stream().anyMatch(key -> root.extend(key.uriValue()).equals(at));
+                    if (kept.entrySet().removeIf(row -> {
+                        final fURI member = root.extend(row.getKey().uriValue());
+                        return (whole || (exact ? member.equals(at) : member.test(at))) && retracted.add(row.getValue());
+                    })) {
+                        // AN EMPTY MAP IS AN ABSENT FIELD
+                        if (kept.isEmpty())
+                            this.sjvm.sjvm().remove(root);
+                        else
+                            this.sjvm.sjvm().put(root, rec(kept));
+                    }
+                }
+            }
+            retracted.forEach(member -> Network.Helper.release(this, member));
             // a member map takes nothing but its members' retraction (a field of a member is not deleted from mtron)
-            return members ? obj : this.cache.write(at, obj);
+            return members ? obj : this.sjvm.write(at, obj);
         }
         if (members) {
             // A MEMBER IS CONSTRUCTED, NOT WRITTEN: a client indexes itself at its key and a server listens at its
-            // socket, each putting its typed member there as it stands -- never fanned out, for a key may be a wildcard.
-            // Anything else written here (a field edit included) is refused rather than stored beside the member it
-            // would contradict.
+            // socket, each putting its typed member into its map there AS IT STANDS -- a key is an encoded origin and may
+            // be a wildcard (the web gateway's http/#), so it is a key of the map and never a path the store fans out.
+            // The map is kept in key order, because a fan-out lays its lanes out in the order it reads them. Anything
+            // else written here (a field edit included) is refused rather than stored beside the member it would
+            // contradict.
             if (1 == at.segments().size() || !obj.testNominally(PEER.equals(field) ? PEER_TYPE : LISTENER_TYPE)) {
                 LOG.warn("a %s is constructed, not written: %s -> %s refused", field, vid, obj);
                 return noobj();
             }
-            this.cache.sjvm().put(at, obj);
+            final fURI root = f(field);
+            final fURI key = at.removePrefix(root);
+            synchronized (this) {
+                final Map<Obj, Obj> rows = new LinkedHashMap<>();
+                Stream.concat(this.map(field).jvm().entrySet().stream().filter(row -> !row.getKey().uriValue().equals(key)),
+                                Stream.of(Map.entry((Obj) uri(key), obj)))
+                        .sorted(Comparator.comparing((Map.Entry<Obj, Obj> row) -> row.getKey().uriValue().toString()))
+                        .forEach(row -> rows.put(row.getKey(), row.getValue()));
+                this.sjvm.sjvm().put(root, rec(rows));
+            }
             return obj;
         }
         if (f(PREFIX).equals(at)) {
@@ -324,54 +339,50 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
             final Rec own = rec(stored.get().elements()
                     .filter(row -> !row.second().equals(Component.Prefix.Helper.inheritedPrefix(this, row.first().uriValue()))));
             // AN EMPTY TABLE IS AN ABSENT FIELD. The answer is the caller's obj: `x -> y` reports y, markers and all.
-            this.cache.write(at, own.isEmpty() ? noobj() : own);
+            this.sjvm.write(at, own.isEmpty() ? noobj() : own);
             return obj;
         }
-        return this.cache.write(at, obj);
+        return this.sjvm.write(at, obj);
     }
 
     // ──────────────────────────────────────────────
-    // the level's own maps, read off the cache's store
+    // the level's own maps, read off its store
     // ──────────────────────────────────────────────
 
     @Override
     public Rec peers() {
-        return this.members(PEER);
+        return this.map(PEER);
     }
 
     @Override
     public Rec listeners() {
-        return this.members(LISTENER);
-    }
-
-    /**
-     * one of this level's maps as {@code <key> => member}: every entry stored below it, keyed by its path there, in key
-     * order — the store is hashed and promises none, and a fan-out lays its lanes out in the order it reads them. Read
-     * off the store, not by a {@code #} read, which would unroll each member's fields beside it.
-     */
-    private Rec members(final String map) {
-        final fURI root = f(map);
-        return rec(this.cache.sjvm().match(root.extend(ALL)).stream()
-                .filter(entry -> !entry.getKey().equals(root))
-                .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::toString)))
-                .map(entry -> rel(uri(entry.getKey().removePrefix(root)), entry.getValue())));
+        return this.map(LISTENER);
     }
 
     @Override
     public Rec prefixes() {
-        final Obj table = this.cache.sjvm().get(f(PREFIX));
-        return null != table && table.isRec() ? table.asRec() : rec();
+        return this.map(PREFIX);
+    }
+
+    /**
+     * one of this level's maps as its store holds it — {@code peer} and {@code listener} as {@code <key> => member} in
+     * key order, {@code prefix} as this level's own rows — or the empty rec when the level holds none. Read off the
+     * store and not through the space's read, because the accessors answer this level's entry, never a door's view.
+     */
+    private Rec map(final String field) {
+        final Obj map = this.sjvm.sjvm().get(f(field));
+        return null != map && map.isRec() ? map.asRec() : rec();
     }
 
     /**
      * Release what this level dialed and serves. The reach and presence go first ({@link Network#close()}: supervision
-     * released, every member retracted — which is what hangs up a client and withdraws a route), then what the cache
+     * released, every member retracted — which is what hangs up a client and withdraws a route), then what the store
      * still holds.
      */
     @Override
     public void close() {
         Network.super.close();
-        this.cache.sjvm().forEach((at, value) -> CommonUtil.close(value));
-        this.cache.sjvm().clear();
+        this.sjvm.sjvm().forEach((at, value) -> CommonUtil.close(value));
+        this.sjvm.sjvm().clear();
     }
 }

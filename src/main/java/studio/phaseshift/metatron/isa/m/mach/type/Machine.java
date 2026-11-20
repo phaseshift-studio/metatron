@@ -698,7 +698,7 @@ public interface Machine extends Rec, AutoCloseable {
                             .filter(child -> child.isMachine() && machineVID.equals(child.parent().vid())));
                 })).tryToInst());
                 // THE NETWORK ANSWERS BELOW ITS BRANCH, through the machine's space: every field at its own address and a
-                // peer or a listener at its key's path, held in the network's cache, and a noobj write on a member that
+                // peer or a listener at its key's path, held in the network's store, and a noobj write on a member that
                 // member's retraction. mount stamps the branch; the network is not a space in memory.
                 if (machine.network() instanceof BasicNetwork network)
                     network.mount(machine);
