@@ -386,6 +386,24 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         }
 
         /**
+         * EQUAL NEIGHBOURS SHARE ONE INDEX (Marko, 2026-11-18: equal objs sort to one index as a point): a run of equal
+         * objs in a sorted sequence becomes one entry carrying the run's whole mass, so {@code 1,1,2} lays as
+         * {@code [{2}1,2]}, and an entry that came bulked keeps its mass. It is the one rule for the folds that answer a
+         * sorted lst, {@code order} and its combiner {@code kmerge}: the same bag sorts to the same lst whether its equals
+         * were bulked before the sort or met in it, so a sort sharded across places agrees with the sort held home.
+         */
+        public static List<Obj> bulkAdjacent(final List<Obj> sorted) {
+            final List<Obj> bulked = new ArrayList<>(sorted.size());
+            for (final Obj obj : sorted) {
+                if (!bulked.isEmpty() && bulked.getLast().clessEquals(obj))
+                    bulked.set(bulked.size() - 1, bulked.getLast().c(c -> c.plus(obj.c())));
+                else
+                    bulked.add(obj);
+            }
+            return bulked;
+        }
+
+        /**
          * A LST TESTS A LST INDEX BY INDEX (Marko, 2026-11-17), walked as a bracket is (Marko, 2026-11-18). An index is
          * an address that is not the obj, so a point is mass AT an index and a span a run OF indices: {@code [{2}3]} is
          * two 3s at index 0, a lst of one index, and {@code [3{2}]} a 3 at each of indices 0 and 1, a lst of two. A

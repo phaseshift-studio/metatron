@@ -1516,14 +1516,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     if (top[1] + 1 < streams.get(top[0]).size())
                                         heap.add(new int[]{top[0], top[1] + 1});
                                 }
-                                final List<Obj> collapsed = new ArrayList<>();
-                                for (final Obj o : merged) {
-                                    if (!collapsed.isEmpty() && collapsed.getLast().clessEquals(o))
-                                        collapsed.set(collapsed.size() - 1, collapsed.getLast().c(c -> c.plus(o.c())));
-                                    else
-                                        collapsed.add(o);
-                                }
-                                return lst(collapsed);
+                                // the same rule order sorts by, so a merge of sorted runs is the sort of their union
+                                return lst(Lst.Helper.bulkAdjacent(merged));
                             })
                             // CAUSAL: the first n of the merge read only the first n of each sorted run, so a prefix
                             // kept after it may be kept in every run first (law_shard's top-k)
