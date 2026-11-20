@@ -315,9 +315,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         // of it landing in this level AFTER the level became a union member. The bump is last so one number covers
         // every one of those doors, including the ones setup cannot know it triggered.
         this.vocabularyChanged();
-        // THE SET'S MTRON HALF, ONE TO ONE WITH ITS JAVA CLASS: ..isa.m.mach.machInstSet is completed by
-        // ..isa/m/mach/mach.mtron, written in src/main/mtron and packaged beside the class. It runs LAST, once
-        // the set's own vocabulary resolves; a half that fails is logged, not thrown, as every boot sets up /m/mach.
+        // THE SET'S .mtron FILE, ONE TO ONE WITH ITS JAVA CLASS: ..isa.m.mach.machInstSet has ..isa/m/mach/mach.mtron,
+        // written in src/main/mtron and packaged beside the class. It is evaluated at the end of this setup, once the
+        // set's own tables are in place (a subclass's lines after super.setup() run later); a file that fails is
+        // logged, not thrown, as every boot sets up /m/mach.
         final String mtron = this.getClass().getSimpleName().replaceFirst("InstSet$", "") + ".mtron";
         try (final InputStream source = this.getClass().getResourceAsStream(mtron)) {
             if (null != source)

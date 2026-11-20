@@ -40,10 +40,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * AN INSTRUCTION SET'S MTRON HALF LOADS WITH IT. Beside a java instruction set's class sits its mtron half, one to one
- * ({@code ..isa.m.mach.machInstSet} has {@code ..isa/m/mach/mach.mtron}), and {@code AbstractInstSet.setup()} evaluates
- * it last. The two fixture sets below are set up the way BootLoader sets up /m/mach (mount, then setup); their halves
- * are {@code src/test/mtron/isa/m/type/lighthouse.mtron} and {@code reef.mtron}.
+ * AN INSTRUCTION SET'S .mtron FILE LOADS WITH IT. Beside a java instruction set's class sits its .mtron file, one to
+ * one ({@code ..isa.m.mach.machInstSet} has {@code ..isa/m/mach/mach.mtron}), and {@code AbstractInstSet.setup()}
+ * evaluates it at the end. The two fixture sets below are set up the way BootLoader sets up /m/mach (mount, then
+ * setup); their files are {@code src/test/mtron/isa/m/type/lighthouse.mtron} and {@code reef.mtron}.
  */
 public class InstSetMtronTest extends AbstractMetatronTest {
 
@@ -51,7 +51,7 @@ public class InstSetMtronTest extends AbstractMetatronTest {
     private static final fURI REEF = f("/reef");
 
     /**
-     * a set whose mtron half calls this half's {@code flash()} while it loads
+     * a set whose .mtron file calls the set's {@code flash()} while it loads
      */
     public static final class lighthouseInstSet extends AbstractInstSet {
 
@@ -70,7 +70,7 @@ public class InstSetMtronTest extends AbstractMetatronTest {
     }
 
     /**
-     * a set whose mtron half does not parse
+     * a set whose .mtron file does not parse
      */
     public static final class reefInstSet extends AbstractInstSet {
 
@@ -99,24 +99,24 @@ public class InstSetMtronTest extends AbstractMetatronTest {
     @AfterAll
     static void unmountTheFixtureSets() {
         Stream.of(LIGHTHOUSE, REEF).forEach(vid -> Machine.current().memory().removeSpace(vid));
-        // the halves' variable-stack names
+        // the .mtron files' variable-stack names
         Stream.of("lighthouse", "reef").forEach(name -> Machine.write(f(name), noobj()));
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            // the half called the java half's flash() while it loaded: it ran after the java half was set up
+            // the file called the set's flash() while it loaded: it ran after the set's own setup
             "*lighthouse/range      % 12",
             // one setup, one evaluation
             "*lighthouse/lit        % 1",
-            // an instruction the half put on the variable stack, calling the java half
+            // an instruction the file put on the variable stack, calling the set's flash()
             "5.lighthouse/inst/ex() % 115",
-            // a half that does not parse is one parse: not even its first statement applies ...
+            // a file that does not parse is one parse: not even its first statement applies ...
             "*reef/charted          % noobj",
             // ... and its set is mounted all the same, the failure only logged
             "3.sound()              % 6",
     }, delimiter = '%')
-    void testTheMtronHalfLoadsWithItsSet(final String code, final String expected) {
+    void testTheMtronFileLoadsWithItsSet(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
 }
