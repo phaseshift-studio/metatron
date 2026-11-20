@@ -328,8 +328,15 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,2,3,4,5,6}.mod(3).order()==[{2}_]       % branch(start().mod().order().select(),start().mod().order().select()).kmerge().select()         % [{2}0,{2}1]",
             // ...and held home the answer is the same (Thm 19): order bulks the equals it meets, as kmerge does
             "{1,2,3,4,5,6}.mod(3).order?hop=0()==[{2}_] % start().mod().order().select()                                                                      % [{2}0,{2}1]",
+            // two top-ks in one job (Marko, 2026-11-20): every cut plans its own run, and >- unrolls the lst the first
+            // master answers into its integers, which the second cut deals: both sorts ship
+            "{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]>-.order(neg())==[{2}_] % branch(start().order(neg()).select(),start().order(neg()).select()).kmerge(neg()).select().select().merge().branch(order(neg()).select(),order(neg()).select()).kmerge(neg()).select() % [-2,-3]",
+            // ...and a map after the unroll floats, so it ships with the second sort
+            "{1,2,3,4,5}.order(neg())==[{4}_]>-.mult(-1).order(neg())==[{2}_] % branch(start().order(neg()).select(),start().order(neg()).select()).kmerge(neg()).select().merge().branch(mult(-1).order(neg()).select(),mult(-1).order(neg()).select()).kmerge(neg()).select() % [-2,-3]",
             // one member: nothing to deal, so nothing ships and the select runs where it stands
             "7.order()==[{2}_]                          % start().order().select()                                                                            % [7]",
+            // ...and so is the lst a fold answers: without >- the second sort meets one obj, the lst, and stays home
+            "{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)].order(neg())==[{2}_] % branch(start().order(neg()).select(),start().order(neg()).select()).kmerge(neg()).select().select().order(neg()).select() % [[-5,-4,-3,-2]]",
             // a select that MAPS is no projection: pushed into the lanes it would add 1 twice, so it stays home
             "{2,1,4,3}.order()==[{2}+1]                 % branch(start().order(),start().order()).kmerge().select()                                           % [2,3]",
             // k = 0 keeps nothing: on an axis a zero span lays no slot, so the pattern is empty, and it stays home

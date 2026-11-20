@@ -178,10 +178,11 @@ An instruction whose range may be many (`print` and `to` declare `A{*}<=A{?}`) l
 branch deals. **A point is an index set too:** `step{p}` is `p` copies of one term, and points add across a branch
 (`a{p} = a{p_1} + a{p_2}`), so the lanes take even shares of the copies — `id{5}()` over two places is `id{3}()` and
 `id{2}()`, each lane folding its copies through the cut. A run after a cut with neither a span range nor a point stays
-home: dealing one obj would hand the whole run to one lane — unless the run opens with a **flatmapper**, which turns
-the one obj into many. The flatmapper stays home and the rest of the run deals its bag, so
-`order(neg()).merge().plus(1).sum()` merges the sorted lst at home and ships `plus(1).sum()`
-(`branch().kmerge().merge().branch().sum()`).
+home: dealing one obj would hand the whole run to one lane — unless the run turns the one obj into many with a
+**flatmapper**. The flatmapper stays home, with whatever hands on one obj for one before it, and the rest of the run
+deals its bag, so `order(neg()).merge().plus(1).sum()` merges the sorted lst at home and ships `plus(1).sum()`
+(`branch().kmerge().merge().branch().sum()`), and K's chained top-k maps and unrolls the lst at home
+(`==[{4}mult(-1)]>-`) before its second sort ships.
 
 ```mtron
 {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
@@ -471,6 +472,13 @@ and `kmerge` bulk as a stream does (there is no nested stream: `{1,2,{5,3},5,{0,
 mass, whether its equals came bulked or apart (`{1,2}.mult(0).order()` is `[{2}0]`, as `{0,0}.order()` is), so a
 top-k sharded across places and the same chain held home answer the same lst. A zero span in a bracket lays no slot,
 so `==[{0}_]` keeps nothing; its empty pattern stays home.
+
+Top-ks chain in one job, since every cut plans its own run. The master of the first answers one lst, and a lone lst
+is one obj to a stream instruction, so a second sort over its integers starts with `>-`, which unrolls the lst into a
+bag the second cut deals. `{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]>-.order(neg())==[{2}_]` ships both sorts
+and is `[-2,-3]`: the map over the lst and the `>-` stay home, since one obj has nothing to deal, and a map written
+after the `>-` (`>-.mult(-1)`) ships with the second sort. Without the `>-`, the second sort meets the lst alone and
+stays home (`[[-5,-4,-3,-2]]`).
 
 ### T — migrating a frame of reference
 
