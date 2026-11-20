@@ -708,7 +708,7 @@ public final class Shard {
     /**
      * THE LANES: the places the route's place axis resolves to against this application's snapshot, one place per
      * share; empty when nothing answered. The home place's shares come first, the resolver's order is kept, the data
-     * clamps each place's demand and the arity caps the window.
+     * clamps each place's demand and the window, and the arity caps the window.
      */
     private static List<ResolvedPlace> resolve(final Env env, final Placement route, final PlaceSet places) {
         try {
@@ -726,7 +726,11 @@ public final class Shard {
         for (final ResolvedPlace place : ordered)
             for (int share = 0; share < asked(place, cap); share++)
                 shares.add(place);
-        return shares.size() > fanout ? List.copyOf(shares.subList(0, fanout)) : shares;
+        // NO PEER WITHOUT A MEMBER (Marko, 2026-11-20: "don't use all peers if we don't need to"): a literal seed of n
+        // members fills at most n shares, so the window is the arity or the seed, whichever is smaller. A computed bag
+        // states no cap and is the branch's to deal when it runs.
+        final int window = Math.min(fanout, cap);
+        return shares.size() > window ? List.copyOf(shares.subList(0, window)) : shares;
     }
 
     private static int asked(final ResolvedPlace place, final int cap) {
