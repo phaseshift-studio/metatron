@@ -103,7 +103,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <tr><td>H</td><td>redundant / hedged shards</td><td>x ⊕ x = x</td><td>a partition shipped to r peers</td><td>✅ ({@code ?split=copy})</td></tr>
  *   <tr><td>I</td><td>span/route interpreter</td><td>plan ↦ layout (infrastructure)</td><td>{@code [c]==[as(cat:path::T)]==[>>law_shard>>result]}</td><td></td></tr>
  *   <tr><td>J</td><td>algebraic aggregates</td><td>mean ≡ (sum, count)·div</td><td>{@code {...}.mean()}</td><td></td></tr>
- *   <tr><td>K</td><td>limit / top-k push-down</td><td>take(k)·⊕ = take(k)·⊕·take(k)</td><td>{@code {...}.order(>>).take(k)}</td><td></td></tr>
+ *   <tr><td>K</td><td>limit / top-k push-down</td><td>take(k)·⊕ = take(k)·⊕·take(k)</td><td>{@code {...}.order(s)==[{k}_]}</td><td></td></tr>
  *   <tr><td>L</td><td>mergeable sketches</td><td>ĥ(a ⊎ b) = ĥ(a) ⊕ ĥ(b)</td><td>{@code {...}.hll()}</td><td></td></tr>
  *   <tr><td>M</td><td>matrix multiplication</td><td>A·(B+C) = A·B + A·C</td><td>{@code mtrx::[…]}</td><td></td></tr>
  *   <tr><td>N</td><td>iterative / BSP</td><td>x* = x ∨ f(x) ∨ f²(x) ∨ ⋯</td><td>a sharded superstep repeated</td><td></td></tr>
@@ -411,11 +411,12 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     }
 
     // ================================================================================================
-    // THE UNWRITTEN ROWS (B, C, F, I, J, K, L, M, N, P, Q, R). Each is SOUND -- the law holds -- and each
+    // THE UNWRITTEN ROWS (B, C, F, I, J, L, M, N, P, Q, R). Each is SOUND -- the law holds -- and each
     // needs a premise the emitter does not hold yet, which is why the interpreter DECLINES it to the identity
     // rather than approximating a layout. These stubs WARN rather than fail: "not implemented" is a logged
     // target, not a silent absence, and a red suite is reserved for behaviour that regressed. When a row's
     // lowering lands, replace its body with that row's parameterized test in the three-column shape above.
+    // K's rows are written ahead of its lowering and wait behind @Disabled, as G's and H's do.
 
     /**
      * I -- span/route interpreter (infrastructure): plan ↦ layout. {@code PlanInterpreter} lowering
@@ -435,15 +436,49 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         LOG.warn("menu row J (algebraic aggregates) currently not implemented");
     }
 
-    /**
-     * K -- limit / top-k push-down: take(k)·⊕ = take(k)·⊕·take(k). Needs one general capability — copy the
-     * post-cut tail onto the LEAVES, so each shard returns its own top-k before shipping. {@code take(k)}
-     * declares no law today, so a law-gated push has nothing to read; the honest gate is the morphism's
-     * computed {@code class = retraction} (metadata {@code catRewrite} names as unconsumed).
-     */
-    @Test
-    void test_K_limit_topk_push_down() {
-        LOG.warn("menu row K (limit / top-k push-down) currently not implemented");
+    // ================================================================================================
+    // K — limit / top-k push-down: take(k)·⊕ = take(k)·⊕·take(k). Keeping the first k positions commutes with
+    // the sorted merge, as the first k of a merge draw only on the first k of each run. On a lst, take k is a
+    // span of identity slots, ==[{k}_]: the span lays k slots along the select's bracket, and a select keeps
+    // only the positions its pattern covers. So top-k is order(s)==[{k}_], with no new instruction, and the
+    // lowering is one step of the emitter: copy that select into each lane after the fold, and keep it at home
+    // after the combiner (lane start(part).order(s)==[{k}_], master kmerge(s)==[{k}_]), so a lane ships at
+    // most k members. The gate is the select's shape: a run of identity slots is a projection (idempotent, a
+    // retraction), while a select that maps is not, so it stays home.
+    // ================================================================================================
+
+    @Disabled("the push-down is unwritten: Shard.emit keeps the post-cut select home, so a lane compiles to start().order() "
+            + "where these rows expect start().order().select(); the held-home mod(3) row also needs order to put run-time "
+            + "equals at one index as kmerge does ([0,0] today), and the {0} row needs a zero span in a bracket to lay no slot")
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the canonical row: each lane sorts its part and keeps its first two; the master merges and keeps two
+            "{2,1,4,3}.order()==[{2}_]                  % branch(start().order().select(),start().order().select()).kmerge().select()                         % [1,2]",
+            // a selector rides into both folds: descending runs merge descending, so the top two are the largest
+            "{5,3,9,1,7}.order(neg())==[{2}_]           % branch(start().order(neg()).select(),start().order(neg()).select()).kmerge(neg()).select()     % [9,7]",
+            // the floatable run before the cut ships with it, and the select still follows the fold
+            "{1,2,3,4,5,6}.plus(10).order()==[{3}_]     % branch(start().plus(10).order().select(),start().plus(10).order().select()).kmerge().select()   % [11,12,13]",
+            // a computed bag: the effect runs home, the branch deals what it hands on, and each lane is order.select
+            "{4,2,3,1}.print(_).order()==[{2}_]         % start().print().branch(order().select(),order().select()).kmerge().select()                      % [1,2]",
+            // k = 1 is the minimum
+            "{5,3,9,1,7}.order()==[{1}_]                % branch(start().order().select(),start().order().select()).kmerge().select()                         % [1]",
+            // k past the end keeps what there is: no lane pads its run, and the master answers the whole merge
+            "{2,1}.order()==[{5}_]                      % branch(start().order().select(),start().order().select()).kmerge().select()                         % [1,2]",
+            // mass at a position: the literal bulks {2}1 and {2}3, and a position keeps its whole mass, so k counts values
+            "{3,1,3,1,2}.order()==[{2}_]                % branch(start().order().select(),start().order().select()).kmerge().select()                         % [{2}1,2]",
+            // equals made at run time straddle the lanes: each lane keeps its own 0 and 1, and kmerge adds their mass
+            "{1,2,3,4,5,6}.mod(3).order()==[{2}_]       % branch(start().mod().order().select(),start().mod().order().select()).kmerge().select()         % [{2}0,{2}1]",
+            // held home the answer must be the same (Thm 19); order keeps run-time equals at separate indices today, [0,0]
+            "{1,2,3,4,5,6}.mod(3).order?hop=0()==[{2}_] % start().mod().order().select()                                                                      % [{2}0,{2}1]",
+            // one member: nothing to deal, so nothing ships and the select runs where it stands
+            "7.order()==[{2}_]                          % start().order().select()                                                                            % [7]",
+            // a select that MAPS is no projection: pushed into the lanes it would add 1 twice, so it stays home
+            "{2,1,4,3}.order()==[{2}+1]                 % branch(start().order(),start().order()).kmerge().select()                                           % [2,3]",
+            // k = 0 keeps nothing: on an axis a zero span is the unit of concatenation, no slot (today it lays one id())
+            "{2,1,4,3}.order()==[{0}_]                  % branch(start().order().select(),start().order().select()).kmerge().select()                         % [,]",
+    }, delimiter = '%')
+    void test_K_limit_topk_push_down(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
     /**
