@@ -174,13 +174,14 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
-     * A HAND-WRITTEN LANE IS EXPLAINED WHERE IT RUNS (the background review of 9918f5c44): its budget is read as the
-     * planner there reads it, a {@code ?hop} on any of its instructions, else the shard plan's own height of one, and a
-     * home lane is explained by this machine's compiler and network, as BranchInst#lane runs it: its four are dealt
+     * A HAND-WRITTEN LANE IS EXPLAINED WHERE IT RUNS (the background reviews of 9918f5c44 and b3eb00097): its budget
+     * is read as the planner there reads it, run by run, a {@code ?hop} on any of its instructions, else the shard
+     * plan's own height of one, and a {@code ?hop=0} on a later fold keeps only that run home. A home lane is
+     * explained by this machine's compiler and network, as BranchInst#lane runs it: its four are dealt
      * over the three peers this machine holds (a branch whose one lane is home is that lane's code, compiled here, so
-     * the row gives it a second lane). A lane at peer 1 is dealt over peers 2 and 3. A budget that cannot be read is
-     * drawn as its message under the lane, not a failed explain. Each row: the branch, P1 standing for peer 1's
-     * endpoint % a pattern of its drawing % 1 when the drawing holds it.
+     * the row gives it a second lane). A lane at peer 1 is dealt over peers 2 and 3. A budget that cannot be read, or
+     * a path that names no machine, is drawn as its message under the lane, not a failed explain. Each row: the
+     * branch, P1 standing for peer 1's endpoint % a pattern of its drawing % 1 when the drawing holds it.
      */
     @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the drawing is the subject")
     @ParameterizedTest
@@ -189,6 +190,8 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum())       % [{]8[}]──┤                 % 1",
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum?hop=1()) % [{]8[}]──┤                 % 1",
             "branch?<={0}(<P1> => start({1,2}).plus(1).sum?hop=-1())            % cannot be read as a hop    % 1",
+            "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum().plus(1).sum?hop=0()) % [{]8[}]──┤ % 1",
+            "branch?<={0}(</nowhere> => start({1,2,3,4}).plus(1).sum(), <~> => start(5)) % found no machine % 1",
     }, delimiter = '%')
     void testAHandWrittenLaneIsExplainedWhereItRuns(final String branch, final String pattern, final int expected) {
         checkCodeParseApply(LOG, branch.replace("P1", endpoint(1)) + ".explain()>>ext/topology/format.has('"
