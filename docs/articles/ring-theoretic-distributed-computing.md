@@ -213,8 +213,8 @@ expansion and contraction of each cut in figure 2, and lists `law_shard` among t
 ```
 
 [To be written: the home instructions in general (what a contract must state for one object to survive them), and the
-leading flatmapper: with one object and no index set, `merge()` unrolls the lst a fold answered at home, and the rest of
-the run deals its members.]
+flatmapper: with one object and no index set, `merge()` unrolls the lst a fold answered at home, along with whatever
+hands on one object for one before it, and the rest of the run deals its members.]
 
 ```mtron_pre
 {1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()

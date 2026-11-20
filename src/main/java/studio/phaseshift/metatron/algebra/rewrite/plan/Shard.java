@@ -359,9 +359,11 @@ public final class Shard {
 
     /**
      * A RUN THAT TURNS ONE OBJ INTO MANY STARTS AFTER THE TURN. With one obj flowing in and no index set to factor, the
-     * run's leading flatmappers ({@code merge} unrolling the lst a fold answered) stay home and expand the obj into a
-     * bag, which the rest of the run deals by member: {@code order(neg()).merge().plus(1).sum()} merges at home and
-     * ships {@code plus(1).sum()}. Otherwise the run starts where it stood.
+     * run's flatmappers ({@code merge} unrolling the lst a fold answered) stay home and expand the obj into a bag, which
+     * the rest of the run deals by member: {@code order(neg()).merge().plus(1).sum()} merges at home and ships
+     * {@code plus(1).sum()}. What hands on one obj for one before the turn stays home with it, as one obj has nothing
+     * to deal: {@code ==[{4}mult(-1)]>-.order(neg())} maps the lst and merges it at home and ships the sort (Marko,
+     * 2026-11-20, two top-ks in one job). With no turn, the run starts where it stood.
      */
     private static int expanded(final Chain chain, final int from, final int cut, final int runIndex) {
         if (0 > cut)
@@ -372,10 +374,14 @@ public final class Shard {
                 : one(chain, runIndex);
         if (!one || null != runRange(chain.insts(), runIndex, cut))
             return runIndex;
-        int start = runIndex;
+        int turn = runIndex;
+        while (turn < cut && Inst.Form.flatmapper != Inst.Form.of(chain.typed().get(turn)).subring()
+                && null != chain.contracts().get(turn) && handsOnOne(chain.contracts().get(turn), chain.insts().get(turn)))
+            turn++;
+        int start = turn;
         while (start < cut && Inst.Form.flatmapper == Inst.Form.of(chain.typed().get(start)).subring())
             start++;
-        return start;
+        return turn == start ? runIndex : start;
     }
 
     private static boolean handsOnOne(final Inst contract, final Inst inst) {
