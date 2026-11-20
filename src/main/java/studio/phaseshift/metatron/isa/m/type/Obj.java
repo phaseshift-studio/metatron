@@ -1516,8 +1516,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     if (top[1] + 1 < streams.get(top[0]).size())
                                         heap.add(new int[]{top[0], top[1] + 1});
                                 }
-                                // the same rule order sorts by, so a merge of sorted runs is the sort of their union
-                                return lst(Lst.Helper.bulkAdjacent(merged));
+                                // the merge bulks as order's lhs does (objs() bulks as it builds), so a merge of sorted
+                                // runs is the sort of their union. A bulked obj keeps its first place, so the merge stays
+                                // sorted, and equals that a projection's ties left apart still share one index
+                                return lst(objs(merged.stream()).stream().toList());
                             })
                             // CAUSAL: the first n of the merge read only the first n of each sorted run, so a prefix
                             // kept after it may be kept in every run first (law_shard's top-k)
