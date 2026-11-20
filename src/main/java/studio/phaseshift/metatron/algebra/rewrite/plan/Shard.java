@@ -305,13 +305,21 @@ public final class Shard {
         // lanes seeded with a literal take nothing, so the branch is the initial form; otherwise the branch takes the bag
         // whole (a {*} dom over the carrier flowing into the run) and deals it by its keys -- or, under the run axis,
         // copies it to every lane, whose shares of the exponent are disjoint.
+        // THE BRANCH STATES ITS TYPES IN GENERICS, NEVER #{*} (Marko, 2026-11-20), so compilation carries real types past
+        // it. Its dom is the carrier flowing into the run, else the A{*} the run binds. Its rng is what each lane's last
+        // instruction answers, once per lane: the branch's own B{*} is bound by nothing and resolves to #{*}, which the
+        // combiner after it cannot bind (kmerge's lst[{*}A{*}]{*} fell back to # => #, a lst{1} read as {*}). Profiling
+        // lanes answer reports, so they state none.
         final fURI carrier = chain.carriers().get(runIndex).typeId();
-        final fURI dom = literal ? fURI.Singleton.NOOBJ : null == carrier ? ALL_STAR : carrier.maybeSome();
+        final fURI dom = literal ? fURI.Singleton.NOOBJ : null == carrier ? InstSet.A.maybeSome() : carrier.maybeSome();
+        final Inst answers = profiling ? null : chain.contracts().get(absorbs ? cut + 1 : 0 <= cut ? cut : runEnd - 1);
+        final fURI lane = null == answers || !answers.tid().hasRng() ? null : answers.rng().typeId();
+        final fURI branch = literal && runAxis ? BRANCH_INST_TID.dom(dom)
+                : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY : PART);
         final List<Inst> master = new ArrayList<>();
         if (!literal)
             master.addAll(insts.subList(from, runIndex));
-        master.add(instB(literal && runAxis ? BRANCH_INST_TID.dom(dom)
-                : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY : PART), rec(routes)));
+        master.add(instB(null == lane || fURI.Singleton.ALL.basePath().equals(lane.basePath()) ? branch : branch.rng(lane.maybeSome()), rec(routes)));
         if (profiling) {
             // THE MASTER'S RUN IS TIMED AROUND ITS BRANCH, whichever axis the run factored (a seed's members, a span's
             // unrolls, a point's copies): the lanes answer reports, not partials, so no combiner runs, and a bare
