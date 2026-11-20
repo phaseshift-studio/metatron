@@ -122,7 +122,8 @@ public final class Shard {
         // EVERY CUT PLANS THE RUN BEFORE IT. A cut is a fold whose partials recombine through a fold declaring the cut's
         // laws: its run ships, and its combiner brings the computation home, where the next run starts. A run states its
         // own axes; one that states none keeps the axes the run before it resolved, else the plan's, so a budget or a
-        // place set stated at the head governs the whole chain and a ?hop=0 on a later fold keeps only its own run home.
+        // place set stated at the head governs the whole chain, and a ?hop=0 on a later fold keeps its run home and
+        // every run after it that states none, never a run before it.
         // A run that declines stays as written. PAST THE LAST CUT (W) the rest is floatable runs and the home stretches
         // between them: each run ships on a branch of its own, dealing the bag the stretch before it hands on, so an
         // effect brings the members home and the run after it goes out again; once nothing floats, the tail stays home.
