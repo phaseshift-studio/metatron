@@ -46,6 +46,9 @@ menu, fix the five pieces a row names:
   `s{?}` admits);
 - a keyed fold `group([k ⇒ h])` recombines **pointwise** — `sum()==[_=>combiner(h)]` — which no single edge names.
 
+`Shard` extends a cut over a select that keeps a prefix (`==[{k}_]`) when the combiner declares `causal`, so the
+combiner of `order(s)==[{k}_]` is `kmerge(s)==[{k}_]` (entry K).
+
 ## the theorem bindings
 
 "Which law the anchor obeys" is the whole decision. The stream-ring theorems are the implementation sites:
@@ -264,7 +267,7 @@ single expression shows.
 | **H** | a part shipped to r peers                                          | every reply folds (at least once); non-idempotent: hedge, the first reply wins                     |
 | **I** | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | the plan's axes lowered over a real span `[(lo, hi, role)]`                                        |
 | **J** | `{...}.mean()`                                                     | tuple partials; the finalizer once at the master                                                   |
-| **K** | `{...}.order(s).take(k)`                                           | lanes `order(s).take(k)`; the master `kmerge(s).take(k)`                                           |
+| **K** | `{...}.order(s)==[{k}_]`                                           | lanes `order(s)==[{k}_]`; the master `kmerge(s)==[{k}_]`, as `kmerge` is `causal`                  |
 | **L** | `{...}.hll()`                                                      | A, E or H once the sketch declares its monoid theory                                               |
 | **M** | `mtrx::[...].mult(mtrx::[...])`                                    | O + an addressed union (rows); A with the matrix sum (inner k); G over block keys (2-D)            |
 | **N** | a sharded superstep, repeated                                      | `repeat` / `loop` around the layout                                                                |
@@ -285,6 +288,8 @@ is the data-index-space sibling of `V`: same "nothing ships" spirit, but its ind
 `V`'s index is the exponent. `W` done 2026-11-19 — the free law with no cut at all, right distributivity alone: a
 dealt seed ships its floatable run and only the branch's merge recombines (an index set was already the cutless run
 partition). Floating is `Inst.isPure`, so an instruction handed an effect keeps the run home.
+`K` done 2026-11-20 — top-k is `order(s)==[{k}_]`, the select of `id()` slots that keeps the first k positions, and the
+cut absorbs it because `kmerge` declares `causal`; see *K* below.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
 `lst`, never a bag); `M` is a note; `I` is infrastructure. `C` needs only Thm 5 and a pure chain. `T` is the machine
 semiring's groupoid, the stream ring's process dual. `V`'s unrolls are independent terms (Definition 3), which is why
@@ -309,7 +314,7 @@ multiply any fan-out and **composites** that build on the rest. The table keeps 
 distribution — the menu (A–W)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
 │  ├─ free · floatable (Thm 6)        → O:✅  W:✅
-│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J  K  L  H
+│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  K:✅  J  L  H
 │  ├─ pipeline · associative          → F
 │  └─ shuffle · keyed                 → (G's hash-route; M(3))
 ├─ by the location                (native · delegation — where the work lives)
@@ -441,6 +446,30 @@ partials append into a bag, and a bulked partial reads as its copies (the lanes'
 `select`, the per-key fold. A `lst` is an atom of the merge, so an `order`'s sorted partials bag whole per key and
 `kmerge` merges the runs.
 
+### K — top-k push-down (`order(s)==[{k}_]`)
+
+```mtron
+lane_i:   start?hop=0(<part_i>).order(s)==[{k}_]                       [-- each lane keeps its own first k --]
+master:   branch?<={0}&split=part(<p_1> => start?hop=0(<part_1>)…, <p_2> => …).kmerge(s)==[{k}_]
+```
+
+Top-k needs no instruction of its own. A positional select keeps only the positions its pattern covers, and a span
+on an entry lays that many slots along the select's bracket, so `==[{k}_]` is the lst's take: `[3,1,2]==[{2}_]` is
+`[3,1]`, and `{5,3,9,1,7}.order()==[{2}_]` is `[1,3]`. The cut **absorbs** that select when the cut's combiner
+declares `causal`: the first n of its output depend only on the first n of each input, so the longer cut recombines
+through the combiner followed by the select, `combiner(r·t) = combiner(r)·t`, computed rather than declared. `kmerge`
+is causal, since the first k of a sorted merge draw only on the first k of each run, so each lane sorts its part,
+keeps k and ships at most k members, and the master merges the runs and keeps k. It is not a `poset` law: `kmerge`
+is not monotone in the prefix order (`{[1],[3]}.kmerge()` is `[1,3]`, no prefix of `{[1,2],[3]}.kmerge()`,
+`[1,2,3]`).
+
+The select must keep a prefix and change nothing, every slot a bare `id()` (`_` is its sugar). A select that maps
+(`==[{2}+1]`) would map once in each lane and again at home, so it stays home, as do a point that copies
+(`id{2}()`) and a keyed pattern (`==[?<2=>_]`, which keeps every position, as a hole where its key fails). Two edges
+wait on other instructions: `order` keeps equals made at run time at separate indices (`{1,2}.mult(0).order()` is
+`[0,0]`, where the literal `{0,0}.order()` is `[{2}0]` and `kmerge` merges equals across lanes), and a zero span in a
+bracket lays one `id()` slot, so `==[{0}_]` keeps one position.
+
 ### T — migrating a frame of reference
 
 `move()` relocates the *frame of reference* — the machine the code runs in — rather than moving data. It is the
@@ -490,7 +519,8 @@ instruction is still bare when `law_shard` runs, before resolution, so it stays 
 
 ## how the entries compose
 
-- **E applies to every A-fold**, and to G, J and L: any combiner recombines at any interior node.
+- **E applies to every A-fold**, and to G, J, K and L: any combiner recombines at any interior node, and a K lane
+  re-planned below the root absorbs its select again.
 - **D multiplies everything** — its absence made distribution slower, not wrong.
 - **S applies to every fan-out** — the master (and every interior node) folds its own slice instead of only recombining.
 - **V multiplies A/E/G** — the seed and the run are independent multiplicities: a lane's narrowed span is itself an
@@ -508,7 +538,8 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
 1. **Declare the law.** A fold declares `monoidic` + `commutative` (or a `derivation`) beside itself, in its
    `?decq`: `InstBuilder…law(Law.monoidic, Law.commutative)`, or `.derivation(…)` for a derived fold.
 2. **Let the combiner compute.** `Law.Helper.combiner` reads it back — self-combining, derivation-defined, or pointwise
-   (`group`) — so no combiner is ever named.
+   (`group`) — so no combiner is ever named. A cut followed by a select that keeps a prefix (`==[{k}_]`) extends over it
+   when the combiner declares `causal`, and the longer cut recombines through the combiner followed by that select (K).
 3. **Author the plan in the axes.** `PlanBuilder.plan(name).cut(Cut.reducer(Law.monoidic, Law.commutative))`, then
    state each decision's three axes before the `where` they describe: the origin's tail is
    `.place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())` over `local(at, post)` (the home

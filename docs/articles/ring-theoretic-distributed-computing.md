@@ -6,7 +6,7 @@ author: |
   Dr. Stynx
 ---
 
-**DRAFT**: This article is currently being developed. As of November 18, 2026, the distribution rewrite it describes,
+**DRAFT**: This article is currently being developed. As of November 20, 2026, the distribution rewrite it describes,
 `law_shard`, is implemented in metatron for the patterns marked done in the distributed-computing
 reference [[3]](../skills/mtron/references/distributed-computing-mtron.html);
 the remaining sections are outlined.
@@ -156,6 +156,31 @@ The rewrite never names a combiner: it reads the fold's declared laws and comput
 [To be written: the computed combiner in full (self-combining, by derivation, pointwise for a keyed fold), and what a
 fold that declares neither law does (it stays home).]
 
+**A cut absorbs the prefix its combiner respects.** A fold may be followed by a projection that its combiner commutes
+with. Write $t_k$ for the select that keeps the first $k$ positions of a lst, `==[{k}_]` in mtron: a positional select
+keeps only the positions its pattern covers, and the span lays $k$ identity slots along its bracket. A combiner is
+*causal* when the first $n$ of its output depend only on the first $n$ of each input, and then
+
+$$
+(x \oplus y)\,t_k = (x\,t_k \oplus y\,t_k)\,t_k,
+$$
+
+so $r\,t_k$ is itself a cut whose combiner is $C(r)\,t_k$: the shard identity holds for the longer cut, with nothing
+declared beyond the combiner's law. `kmerge` is causal, as the first $k$ of a sorted merge draw only on the first $k$
+of each run, so top-k ships as each place's own top $k$.
+
+```mtron_pre
+{5,3,9,1,7}.order()==[{2}_]
+```
+
+```mtron_pre
+{5,3,9,1,7}.order().select([{2}_]).explain()>>format
+```
+
+Each place sorts its share and keeps two, and home merges the runs and keeps two, so no place sends more than two
+members. The law is causality, not monotonicity in the prefix order, which a sorted merge lacks: `[1]` is a prefix of
+`[1,2]`, yet merging each with `[3]` gives `[1,3]` and `[1,2,3]`.
+
 # Chains of Cuts
 
 A program with several cuts is planned cut by cut. Each cut plans the floatable run before it, never reaching back past
@@ -286,7 +311,7 @@ or compose the others (N, R, M, I).
 | **H** |              | redundant / hedged shards | $x \oplus x = x$                                                                                                                   | an idempotent fold lets a part ship to several peers and every reply fold; otherwise hedge, first wins                                 |
 | **I** |              | span/route interpreter    | $\mathrm{plan} \mapsto \mathrm{layout}$                                                                                            | the infrastructure: a plan's axes lowered to a layout                                                                                  |
 | **J** |              | algebraic aggregates      | $\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}$                                                           | pointwise tuple partials; the finalizer runs once at the master                                                                        |
-| **K** |              | limit / top-k push-down   | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                                                       |
+| **K** | $\checkmark$ | limit / top-k push-down   | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                                                       |
 | **L** |              | mergeable sketches        | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                                                                    |
 | **M** |              | matrix multiplication     | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)                                             |
 | **N** |              | iterative / BSP           | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a sharded superstep, repeated: the combiner is the superstep boundary                                                                  |
@@ -310,6 +335,8 @@ or compose the others (N, R, M, I).
   where a stream must contract.
 - The shard identity, $s\,f\,r = (s_1 f r + \cdots + s_k f r)\,C(r)$, is the one rewrite: floatable runs distribute
   because their subrings are right distributive, and a fold distributes when Theorem 19 holds for it.
+- A cut absorbs the prefix its combiner respects: when the combiner is causal, the select keeping the first $k$ ships
+  with the fold, $C(r\,t_k) = C(r)\,t_k$, which is top-k.
 - A program expands and contracts once per cut; one object survives the home instructions between cuts.
 - A coefficient is an index set: a span splits by its exponent, a point by its copies.
 - [To be written: what is open — the shuffle and pipeline shapes, and the laws a fold would declare to reach them.]
