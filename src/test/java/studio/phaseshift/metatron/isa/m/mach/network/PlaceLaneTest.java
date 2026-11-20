@@ -176,6 +176,26 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
+     * A LITERAL SEED OPENS NO EMPTY LANE (Marko, 2026-11-20: "don't use all peers if we don't need to"): three dialed
+     * peers and a seed of two members plan two lanes, one member each. Every peer used to take a lane, and the third
+     * was seeded with nothing. Each row: the fold % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "plus(1).sum() % 5",
+            "count()       % 2",
+    }, delimiter = '%')
+    void testALiteralSeedOpensNoEmptyLane(final String tail, final int expected) {
+        connectAll();
+        final Code emitted = PlanInterpreter.lower(PlanInterpreter.SHARD_PLAN,
+                ObjmtronSerializer.parse("start({1,2})." + tail).asCode());
+        final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
+        assertEquals(2, layout.lanes().size(), "two members, two lanes: " + emitted);
+        checkEquality(LOG, jnt(expected),
+                evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
      * THE DEFAULT — no {@code ?place}: the plan's own distributing set (the dialed peers), one lane per peer, no home
      * lane, and the master chain every literal seed emits ({@code branch·<combiner>}). This is C0's pin, re-read where
      * the place axis lands, so a change to the default would be a diff here and not only in the suites that pin it too.
