@@ -106,6 +106,30 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * ORDER AND ITS COMBINER BULK EQUALS ALIKE (Marko, 2026-11-18: equal objs sort to one index as a point). Each
+     * distinct value takes one index with its whole mass, whether its equals came bulked ({@code {0,0}} is parsed as
+     * {@code {2}0}) or met in the sort ({@code {1,2}.mult(0)} hands on two 0s), so a bag's sort and the merge of its
+     * parts' sorts answer the same lst: {@code law_shard} recombines {@code order} through {@code kmerge}, and both read
+     * the one rule, {@code Lst.Helper.bulkAdjacent}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a bag's sort: the equals a bulked literal holds, and the equals the sort meets, take one index each
+            "{0,0}.order()                                % [{2}0]",
+            "{1,2}.mult(0).order()                        % [{2}0]",
+            "{1,2,3,4,5,6}.mod(3).order()                 % [{2}0,{2}1,{2}2]",
+            "{1,2,3,4,5,6}.mod(3).order(neg())            % [{2}2,{2}1,{2}0]",
+            "{1,2,3,4,5,6}.mod(3).order().count()         % 1",
+            // the merge of its parts' sorts: the same lsts
+            "[[0],[0]].kmerge()                           % [{2}0]",
+            "[[0,1,2],[0,1,2]].kmerge()                   % [{2}0,{2}1,{2}2]",
+            "[[2,1,0],[2,1,0]].kmerge(neg())              % [{2}2,{2}1,{2}0]",
+    }, delimiter = '%')
+    public void testOrderAndKmergeBulkEqualsAlike(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
 
     @Test
     public void testBareStartQProcParses() {

@@ -326,6 +326,8 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{3,1,3,1,2}.order()==[{2}_]                % branch(start().order().select(),start().order().select()).kmerge().select()                         % [{2}1,2]",
             // equals made at run time straddle the lanes: each lane keeps its own 0 and 1, and kmerge adds their mass
             "{1,2,3,4,5,6}.mod(3).order()==[{2}_]       % branch(start().mod().order().select(),start().mod().order().select()).kmerge().select()         % [{2}0,{2}1]",
+            // ...and held home the answer is the same (Thm 19): order bulks the equals it meets, as kmerge does
+            "{1,2,3,4,5,6}.mod(3).order?hop=0()==[{2}_] % start().mod().order().select()                                                                      % [{2}0,{2}1]",
             // one member: nothing to deal, so nothing ships and the select runs where it stands
             "7.order()==[{2}_]                          % start().order().select()                                                                            % [7]",
             // a select that MAPS is no projection: pushed into the lanes it would add 1 twice, so it stays home
@@ -334,23 +336,6 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{2,1,4,3}.order()==[{0}_]                  % branch(start().order(),start().order()).kmerge().select()                                           % [,]",
     }, delimiter = '%')
     void test_K_limit_topk_push_down(final String code, final String expectedRewriteForm, final String expectedResult) {
-        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
-    }
-
-    /**
-     * K, A ROW THE LOWERING CANNOT TURN GREEN. It holds the push-down's own claim -- a chain answers alike sharded and
-     * held home (Thm 19) -- and is red for a reason in another instruction: {@code order} keeps equals made at run time
-     * at separate indices ({@code {1,2}.mult(0).order()} is {@code [0,0]}), while a literal's equals bulk when it is
-     * parsed ({@code {0,0}.order()} is {@code [{2}0]}) and {@code kmerge} merges equals across lanes: held home, the top
-     * two of {@code {1,…,6}.mod(3)} are {@code [0,0]}, and sharded they are {@code [{2}0,{2}1]}.
-     */
-    @Disabled("order keeps run-time equals at separate indices where kmerge merges them")
-    @ParameterizedTest
-    @CsvSource(value = {
-            // held home the answer must be the same as sharded (Thm 19); order keeps run-time equals apart today, [0,0]
-            "{1,2,3,4,5,6}.mod(3).order?hop=0()==[{2}_] % start().mod().order().select()                                         % [{2}0,{2}1]",
-    }, delimiter = '%')
-    void test_K_row_waiting_on_order(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 

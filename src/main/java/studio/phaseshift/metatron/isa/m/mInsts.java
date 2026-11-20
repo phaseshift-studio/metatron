@@ -1304,9 +1304,12 @@ public final class mInsts {
                         // any mass: lst[{*}A{*}], the left coefficient a bracket entry's mass (Marko, 2026-11-18)
                         .rng(LST_TID.poly(A.maybeSome().b(cInt.MAYBESOME())), "a sorted lst of the lhs A{*}")
                         .argLst(T(ALL.maybe()), "a projection of A to compare")
-                        .body((lhs, inst) -> inst.arg(0).isNoObj() ?
-                                lhs.stream().sorted(CommonUtil.ObjComparator.single()).collect(new CommonUtil.LstCollector()) :
-                                lhs.stream().sorted(CommonUtil.ObjProjectionComparator.of(inst.arg(0))).collect(new CommonUtil.LstCollector()))
+                        // equals met in the sort bulk as the equals of a bulked lhs did: one index each, the mass summed,
+                        // the rule kmerge recombines the runs by (Lst.Helper.bulkAdjacent)
+                        .body((lhs, inst) -> {
+                            final Comparator<Obj> cmp = inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0));
+                            return lst(Lst.Helper.bulkAdjacent(lhs.stream().sorted(cmp).toList()));
+                        })
                         .law(Law.pure)
                         .derivation(order_(T(ALL.maybe(), f("b"), null, null)), split_(lst(id_().tryToInst())).kmerge_(T(ALL.maybe(), f("b"), null, null)))
                         .create(),
