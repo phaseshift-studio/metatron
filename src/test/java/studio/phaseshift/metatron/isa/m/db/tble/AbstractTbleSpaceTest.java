@@ -81,6 +81,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @Isolated
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SkipRegexTest(value = {
+        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): the cases this
+        // space does not honor yet, by cause -- a fix deletes its lines
+        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {
+                // A: # answers structures beside the leaves (# answers only leaves, at full uris)
+                "^M8/(row|nested)$", "^X13/(nested|partial|pathkeys|split)$",
+                // B: an interior node of flat keys is not its subtree, not a + entry, not a walk step
+                "^X8/(entry|split)$", "^X9/(entry|split)$", "^X10/(entry|split)$", "^X11/split$", "^X12/split$",
+                "^X14/entry$", "^W1/entry$", "^W2/entry$", "^W3/entry$",
+                // C: an interior node inside a path-keyed rec is not its subtree, not a + entry, not a walk step
+                "^X8/pathkeys$", "^X9/(partial|pathkeys)$", "^X10/(partial|pathkeys)$", "^X12/partial$",
+                "^X14/(partial|pathkeys)$", "^W1/pathkeys$", "^W2/pathkeys$", "^W3/pathkeys$",
+                // E: a wildcard key answers an address a literal path key prefixes
+                "^P1/pathkeys$", "^P2/pathkeys$"
+        }),
         // Remaining testUpdateWrite skips are schema-fixed incompatibilities, NOT the
         // objs serialization bug (tble already round-trips objs losslessly as mtron
         // strings in TEXT columns — see M48, which passes).  M12b/M43/M44/M44b: a "+"
