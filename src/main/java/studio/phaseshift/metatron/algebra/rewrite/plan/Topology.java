@@ -51,9 +51,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
  * each lane's share and what each of its instructions leaves, the lanes merging at home, and what the master's
  * instructions leave.
  * <pre>
- *       ┌──//0─►{10}──{1}─┐
- * {15}──┼──//1─►{2}───{1}─┼──//local─►{3}──{1}
- *       └──//2─►{3}───{1}─┘
+ *       ┌─//0─►{10}─{1}─┐
+ * {15}──┼─//1─►{2}──{1}─┼──//local─►{3}─{1}
+ *       └─//2─►{3}──{1}─┘
  * </pre>
  * A COEFFICIENT IS A PRODUCT, READ LEFT TO RIGHT (Marko): each instruction's contract states the coefficient it takes
  * and the one it answers. One that takes at most one obj applies once per obj, so its range multiplies the stream's
@@ -119,7 +119,7 @@ public final class Topology {
                 run.append("──").append(HOME).append("─►").append(label(c));
             } else {
                 c = flow(c, insts.get(i), contracts.get(i));
-                run.append(run.isEmpty() ? "" : "──").append(label(c));
+                run.append(run.isEmpty() ? "" : "─").append(label(c));
             }
         }
         segments.add(new Run(run.toString()));
@@ -248,11 +248,11 @@ public final class Topology {
                 widths[j] = Math.max(widths[j], label(lane.stages().get(j)).length());
         final List<String> bodies = new ArrayList<>();
         for (final Lane lane : lanes) {
-            final StringBuilder body = new StringBuilder("──").append(lane.place())
+            final StringBuilder body = new StringBuilder("─").append(lane.place())
                     .append("─".repeat(placeWidth - lane.place().length())).append("─►");
             for (int j = 0; j < columns; j++) {
                 final String stage = j < lane.stages().size() ? label(lane.stages().get(j)) : "";
-                body.append(0 == j ? "" : "──").append(stage).append("─".repeat(widths[j] - stage.length()));
+                body.append(0 == j ? "" : "─").append(stage).append("─".repeat(widths[j] - stage.length()));
             }
             bodies.add(body.append('─').toString());
         }

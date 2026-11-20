@@ -1572,7 +1572,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             // once, and a span from 0 keeps the lhs as its zero step (three, and their sum, four)
             "branch?<={0}(<~> => start({1,2,3}).plus(10), </.> => start({4}).plus(20)).explain()>>ext/topology/format.has('[{]4[}]──┤').count()  % 1 % parts of a seed sum to it",
             "branch?<={0}(<~> => start({1,2}).plus(10), </.> => start({1,2}).plus(20)).explain()>>ext/topology/format.has('[{]2[}]──┤').count()  % 1 % one seed copied is held once",
-            "branch?<={0}(<~> => start({1,2,3}).{0,1}sum(), </.> => start({4}).plus(1)).explain()>>ext/topology/format.has('─►[{]3[}]──[{]4[}]').count() % 1 % the zero step is the lhs",
+            "branch?<={0}(<~> => start({1,2,3}).{0,1}sum(), </.> => start({4}).plus(1)).explain()>>ext/topology/format.has('─►[{]3[}]─[{]4[}]').count() % 1 % the zero step is the lhs",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
