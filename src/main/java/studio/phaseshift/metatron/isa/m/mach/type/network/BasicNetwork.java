@@ -170,7 +170,7 @@ public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
      * below the branch with the branch taken off, or null for an address that is not this level's — another
      * machine's, or {@code ~}, which is the machine's address and not the component's
      */
-    private fURI stored(final fURI vid) {
+    protected fURI stored(final fURI vid) {
         if (vid.isRelative())
             return vid.hasPrefix(f("~")) ? null : vid;
         final fURI at = vid.qLess().resolve();
@@ -181,7 +181,7 @@ public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
     /**
      * the address the caller asked in: a store address named below the branch again, unless the caller asked relative
      */
-    private fURI asked(final fURI vid, final fURI at) {
+    protected fURI asked(final fURI vid, final fURI at) {
         return vid.isRelative() ? at : this.branch().extend(at);
     }
 

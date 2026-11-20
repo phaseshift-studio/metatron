@@ -238,4 +238,28 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
     })
     void testReachIsFrameLocalAndKnowledgeIsShared() {
     }
+
+    /**
+     * A CHILD'S ROSTER IS THE ROOT'S, AT THE CHILD'S OWN ADDRESS. Knowledge is one listing, so a machine that is not
+     * the root answers {@code ~/network/roster/x/y/z} as {@code *</network/roster/x/y/z>} — read, written and walked by
+     * the uri tree there — and a declaration made from the child lands in the root's roster and outlives the frame.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[ROSTER_CLEAR]",
+            "[DECLARE ws://known-to-root:1111]",
+            "[STATE] *~.push(machine_b)",
+            "*~/network/roster                          % */network/roster              % true   [-- the child reads the one roster at its own address --]",
+            "*</machine_b/network/roster/machine>       % */network/roster/machine      % true   [-- and everything below it --]",
+            "</machine_b/network/roster>.>>             % </machine_b/network/roster/machine>    [-- the uri tree walks it from the child's branch --]",
+            "[STATE] </machine_b/network/roster/machine/lab> -> <ws://lab:8555>",
+            "*</network/roster/machine/lab>             % <ws://lab:8555>                        [-- knowledge declared from the child lands in the root's roster --]",
+            "[PROBE_MACHINES]",
+            "*/m/networkProbe/machines % 2",
+            "[STATE] *~.pop(_)",
+            "*</network/roster/machine/lab>             % <ws://lab:8555>                        [-- and outlives the frame that declared it --]",
+            "[ROSTER_CLEAR]"
+    })
+    void testAChildsRosterIsTheRoots() {
+    }
 }
