@@ -563,8 +563,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
           args=&gt;[
-           {?}timeout=&gt;'a real number denoting timeout of ...',
-           cmd=&gt;'the terminal command to evaluate (...'],
+           cmd=&gt;'the terminal command to evaluate (...',
+           {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -581,10 +581,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  7.2M ...',
+    'tmpfs                  6.1G  6.8M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  595G ...',
-    'tmpfs                   31G   64M ...',
+    '/dev/nvme1n1p2         916G  591G ...',
+    'tmpfs                   31G  3.5M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -734,12 +734,12 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;66
+==&gt;65
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::712.0,
-    free_mem_jvm=&gt;mB::520.2079,
+    free_mem_jvm=&gt;mB::203.2416,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::191.7920,
+    used_mem_jvm=&gt;mB::508.7583,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-43-generic',
     arch=&gt;'amd64',
@@ -797,11 +797,15 @@ is doing — the sugar is short precisely because it is legible once:</p>
        *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 </code></pre>
 <h3>walking the tree</h3>
-<p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion:</p>
-<pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/main/java/+/&gt;                  [-- the child of src/main/java --]
-==&gt;mfs:src/main/java/studio=&gt;mfs:src/main/java/studio
-mtron&gt; *&lt;mfs:docs/skills/mtron/+/&gt;  [-- this doc's siblings, with their content --]
-...
+<p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion. A directory stores
+nothing, so it reads as its subtree: <code>*&lt;x/+/&gt;</code> reads every file below <code>x</code>. The walk <code>.&gt;&gt;</code>
+names the children and reads nothing below them:</p>
+<pre><code class="language-mtron">mtron&gt; mfs:src/main/java.&gt;&gt;                     [-- the children of src/main/java --]
+==&gt;mfs:src/main/java/studio
+mtron&gt; mfs:docs/skills/mtron.&gt;&gt;                 [-- this doc's siblings --]
+==&gt;&lt;mfs:docs/skills/mtron/SKILL.md&gt;
+==&gt;mfs:docs/skills/mtron/references
+==&gt;mfs:docs/skills/mtron/assets
 </code></pre>
 <h3>text work on the tree</h3>
 <p>A file is a string and a string splits: <code>-&lt;</code> divides on the separator, and the rec

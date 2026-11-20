@@ -262,7 +262,7 @@ A server can be built from a skill instead: its instructions become tools and it
 
 ```mtron
 [-- a skill as a server; `.as(mcp_server::T)` is the whole mapping --]
-*<mtronfs:skills/mtron>.as(skill::T).as(mcp_server::T)@~/memory/space/mcp/mtron_skill
+<mtronfs:skills/mtron>.as(skill::T).as(mcp_server::T)@~/memory/space/mcp/mtron_skill
 ```
 
 #### resources and prompts

@@ -137,33 +137,33 @@ reconstructs the lst rather than a string that looks like one.
 
 ```mtron
 mtron> *tbledoc:person/+              [-- every row as a rec --]
-==>[name=>'grant',age=>25]
-==>[name=>'xilo',age=>33,skill=>'graph']
-==>[name=>'metis',age=>41]
-==>[name=>'vela',age=>53]
 ==>[name=>'marko',age=>29]
+==>[name=>'grant',age=>25]
+==>[name=>'metis',age=>41]
+==>[name=>'xilo',age=>33,skill=>'graph']
+==>[name=>'vela',age=>53]
 mtron> *tbledoc:person/1              [-- one row --]
 ==>[name=>'marko',age=>29]
 mtron> *tbledoc:person/+/             [-- vid => row --]
-==>tbledoc:person/2=>[name=>'grant',age=>25]
-==>tbledoc:person/4=>[name=>'xilo',age=>33,skill=>'graph']
-==>tbledoc:person/3=>[name=>'metis',age=>41]
-==>tbledoc:person/5=>[name=>'vela',age=>53]
 ==>tbledoc:person/1=>[name=>'marko',age=>29]
+==>tbledoc:person/2=>[name=>'grant',age=>25]
+==>tbledoc:person/3=>[name=>'metis',age=>41]
+==>tbledoc:person/4=>[name=>'xilo',age=>33,skill=>'graph']
+==>tbledoc:person/5=>[name=>'vela',age=>53]
 mtron> *tbledoc:person/+/name         [-- one column, across rows --]
-==>'xilo'
-==>'metis'
-==>'grant'
 ==>'marko'
+==>'grant'
+==>'metis'
+==>'xilo'
 ==>'vela'
 mtron> *tbledoc:person/1/name         [-- one field: the row is unrolled --]
 ==>'marko'
 mtron> *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
-==>2
-==>5
-==>4
 ==>1
+==>2
 ==>3
+==>4
+==>5
 ```
 Rows come back in whatever order the backend chose — say so in the expression (`.order(select(col))`) when position
 matters.
@@ -175,29 +175,29 @@ matters.
 
 ```mtron
 mtron> *tbledoc:person/+/+      [-- clone: fields detached from their rows --]
-==>'xilo'
-==>'metis'
+==>'marko'
 ==>29
 ==>'grant'
 ==>25
-==>33
-==>'marko'
+==>'metis'
 ==>41
+==>'xilo'
+==>33
 ==>'graph'
-==>53
 ==>'vela'
+==>53
 mtron> @tbledoc:person/+/+      [-- anchor: the same fields, each still addressed to its row --]
-==>'xilo'@tbledoc:person/4/name
-==>'metis'@tbledoc:person/3/name
+==>'marko'@tbledoc:person/1/name
 ==>29@tbledoc:person/1/age
 ==>'grant'@tbledoc:person/2/name
 ==>25@tbledoc:person/2/age
-==>33@tbledoc:person/4/age
-==>'marko'@tbledoc:person/1/name
+==>'metis'@tbledoc:person/3/name
 ==>41@tbledoc:person/3/age
+==>'xilo'@tbledoc:person/4/name
+==>33@tbledoc:person/4/age
 ==>'graph'@tbledoc:person/4/skill
-==>53@tbledoc:person/5/age
 ==>'vela'@tbledoc:person/5/name
+==>53@tbledoc:person/5/age
 ```
 The same holds for a rewrite's result — it is the clone path that hands rows back with a placeholder vid, which is why
 the anchored form is the one to keep when the rows might be written back:
@@ -237,11 +237,11 @@ mtron> *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person -
 mtron> *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
 ==>36.2
 mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
-==>[name=>'grant']
-==>[name=>'xilo']
-==>[name=>'metis']
-==>[name=>'vela']
 ==>[name=>'marko']
+==>[name=>'grant']
+==>[name=>'metis']
+==>[name=>'xilo']
+==>[name=>'vela']
 mtron> *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
 ==>[[
      name=>'grant',
@@ -452,6 +452,7 @@ mtron> *tbledoc:kv/session/1/cart      [-- a field of the stored document --]
 ==>['fig','olive']
 mtron> *tbledoc:kv/+/                  [-- vid => value --]
 ==>tbledoc:kv/greeting=>'salve, metatron'
+==>tbledoc:kv/session=>[<1>=>[user=>'marko',cart=>['fig','olive']]]
 ```
 ## patching a row (a write replaces it)
 
@@ -482,60 +483,62 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/49
+==>[body=>'a note with a database-assigned key']@tbledoc:note/51
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/50
+==>[body=>'another one']@tbledoc:note/52
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>27
-==>12
-==>21
-==>18
-==>9
+==>1
+==>2
 ==>3
 ==>4
-==>35
-==>19
-==>45
-==>13
-==>11
-==>14
-==>17
-==>28
-==>22
-==>33
-==>44
-==>25
-==>47
-==>30
-==>39
-==>36
-==>50
-==>24
-==>41
-==>15
-==>6
-==>16
-==>38
-==>7
-==>42
-==>32
-==>48
-==>1
-==>10
-==>49
-==>8
-==>37
-==>34
-==>31
-==>29
-==>40
-==>26
-==>43
-==>20
-==>46
-==>23
-==>2
 ==>5
+==>6
+==>7
+==>8
+==>9
+==>10
+==>11
+==>12
+==>13
+==>14
+==>15
+==>16
+==>17
+==>18
+==>19
+==>20
+==>21
+==>22
+==>23
+==>24
+==>25
+==>26
+==>27
+==>28
+==>29
+==>30
+==>31
+==>32
+==>33
+==>34
+==>35
+==>36
+==>37
+==>38
+==>39
+==>40
+==>41
+==>42
+==>43
+==>44
+==>45
+==>46
+==>47
+==>48
+==>49
+==>50
+==>51
+==>52
 ```
 ## taking the space down
 

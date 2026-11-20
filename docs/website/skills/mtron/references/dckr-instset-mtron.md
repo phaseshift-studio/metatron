@@ -402,9 +402,9 @@ mtron> *mydb:people/+/                                          [-- all rows key
 ==>mydb:people/2=>[name=>'stynx',role=>developer]
 ==>mydb:people/3=>[name=>'metis',role=>oracle]
 mtron> *mydb:people/+/name                                      [-- all names             --]
+==>'marko'
 ==>'stynx'
 ==>'metis'
-==>'marko'
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
