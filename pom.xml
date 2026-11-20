@@ -591,6 +591,15 @@
                     <include>META-INF/services/**</include>
                 </includes>
             </resource>
+            <!-- an instruction set's mtron half lands beside its java class: src/main/mtron/isa/m/mach/mach.mtron is
+                 studio/phaseshift/metatron/isa/m/mach/mach.mtron, next to machInstSet.class (AbstractInstSet.setup) -->
+            <resource>
+                <directory>src/main/mtron</directory>
+                <targetPath>studio/phaseshift/metatron</targetPath>
+                <includes>
+                    <include>**/*.mtron</include>
+                </includes>
+            </resource>
         </resources>
         <testResources>
             <testResource>
@@ -601,6 +610,14 @@
                 <excludes>
                     <exclude>scratch/target/**</exclude>
                 </excludes>
+            </testResource>
+            <!-- a test instruction set's mtron half, beside its java class, as src/main/mtron is for main -->
+            <testResource>
+                <directory>src/test/mtron</directory>
+                <targetPath>studio/phaseshift/metatron</targetPath>
+                <includes>
+                    <include>**/*.mtron</include>
+                </includes>
             </testResource>
         </testResources>
         <!--

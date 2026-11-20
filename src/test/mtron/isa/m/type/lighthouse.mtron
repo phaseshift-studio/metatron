@@ -1,0 +1,7 @@
+[== the mtron half of InstSetMtronTest.lighthouseInstSet, evaluated as the last step of its setup().
+    flash() is the java half's instruction: called while this file loads, it resolves only because the
+    java half was set up first. lit counts this file's evaluations, and ex is an instruction on the
+    variable stack. ==]
+4.flash().to(lighthouse/range);
+lighthouse/lit -> (*lighthouse/lit.else(0) + 1);
+inst?int<=int(){flash().plus(100)}@lighthouse/inst/ex

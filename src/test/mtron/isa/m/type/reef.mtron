@@ -1,0 +1,4 @@
+[== the mtron half of InstSetMtronTest.reefInstSet: its first statement parses and its second does not.
+    the file is one parse, so neither applies, and the set is mounted all the same. ==]
+true.to(reef/charted);
+3.sound().to(reef/depth
