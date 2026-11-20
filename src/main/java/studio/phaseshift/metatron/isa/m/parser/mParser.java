@@ -459,8 +459,19 @@ public class mParser {
      * data locally and ship the data across the wire instead of the generator.
      */
     private static List<Obj> laidArgs(final Object tid, final List<Obj> args) {
+        // the arguments arrive as an axis leaves them, a lone zero span kept; a curled term has no axis, so there a zero
+        // span is the identity, as in a chain
         return tid instanceof fURI furi && (START_INST_TID.name().equals(furi.name()) || BRANCH_INST_TID.name().equals(furi.name())) ?
-                args : Lst.Helper.laid(args);
+                new ArrayList<>(args.stream().map(mParser::zeroSpanIsId).toList()) : Lst.Helper.laid(args);
+    }
+
+    /**
+     * A ZERO SPAN WITH NO AXIS IS id() (Marko, 2026-11-16): {@code {0}f} is f to the zero, the identity, and its point
+     * stays (Marko, 2026-11-17): {@code {0}f{c}} is {@code c·f⁰}, {@code id{c}()}. On an axis the same zero lays no slot
+     * (Marko, 2026-11-20), which {@link Lst.Helper#laid} does, so this applies only where nothing lays.
+     */
+    private static Obj zeroSpanIsId(final Obj obj) {
+        return obj instanceof Inst inst && inst.tid().b().isZero() ? instB(ID_INST_TID.d(inst.tid().d()), lst()) : obj;
     }
 
     private static List<Obj> laidArgsOf(final Object tid, final Obj... args) {
@@ -684,6 +695,15 @@ public class mParser {
     }
 
     public static Parser m_call_prefix(final Parser objParser, final fURI headTID) {
+        return m_call_prefix(objParser, headTID, false);
+    }
+
+    /**
+     * An obj, optionally followed by a chain. {@code onAxis} says the obj is an entry of an axis -- a lst's entries, an
+     * argument list -- where a lone instruction keeps its zero span, so {@link Lst.Helper#laid} lays it as no slot
+     * (Marko, 2026-11-20). Everywhere else a zero span with no chain after it is the identity, as one in a chain is.
+     */
+    private static Parser m_call_prefix(final Parser objParser, final fURI headTID, final boolean onAxis) {
         // a dot before a brace is the chain's own, so the brace is read as a branch: 1.{a,b} is 1..{a,b}, and 1.{2}plus(1) stays
         // a span on its instruction (the chain's instruction element takes its dot optionally)
         return seq(opt(objParser, null), opt(seq(of(".").trim(), of('{').trim().not()), '.'),
@@ -699,10 +719,11 @@ public class mParser {
             // A SPAN STAYS ON ITS INSTRUCTION (Marko, 2026-11-15), at the head of an expression as in a chain (m_code):
             // {2}*a is one from(a), a run of two that applying it walks (Inst.Helper.runs). A ZERO SPAN IS id() (Marko,
             // 2026-11-16): {0}*a is f to the zero, the identity, never the noobj that annihilated the chain after it. ITS
-            // POINT STAYS (Marko, 2026-11-17): {0}f{c} is c·f⁰, id{c}()
-            final Obj lead = first.isInst() && first.asInst().tid().b().isZero() ? instB(ID_INST_TID.d(first.asInst().tid().d()), lst()) : first;
+            // POINT STAYS (Marko, 2026-11-17): {0}f{c} is c·f⁰, id{c}(). ON AN AXIS IT LAYS NO SLOT (Marko, 2026-11-20):
+            // instruction concatenation yields id(), lst expansion yields no slot, so a lone entry keeps its zero span
+            final Obj lead = zeroSpanIsId(first);
             if (null == second)
-                return lead;
+                return onAxis ? first : lead;
             final List<Inst> newCode = new ArrayList<>();
             if (lead.isNoObj() || !lead.isInst())
                 newCode.add(instB(headTID, lst(lead.isInst() ? noobj() : lead)));
@@ -713,7 +734,8 @@ public class mParser {
     }
 
     public static Parser lst_internal() {
-        return choice(of(','), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim())).map(t -> t.equals(',') ? mutableList() : mutableList(((List) t).stream().filter(o -> o instanceof Obj).toList()));
+        // a lst's entries, and a positional argument list, are an axis: a lone instruction keeps its zero span for laying
+        return choice(of(','), m_call_prefix(m_paren_wrap(obj_no_code_parser), MAP_INST_TID, true).separatedBy(of(',').trim())).map(t -> t.equals(',') ? mutableList() : mutableList(((List) t).stream().filter(o -> o instanceof Obj).toList()));
     }
 
     public static Parser rec_internal(final Parser keyParser, final Parser valueParser) {
