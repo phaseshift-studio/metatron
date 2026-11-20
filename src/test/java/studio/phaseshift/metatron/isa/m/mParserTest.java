@@ -404,6 +404,16 @@ public class mParserTest extends AbstractMetatronTest {
             "1.{2}*a.plus(1)                 % 1.{2}from(a).plus(1)",
             "{2}!*a                          % {2}auto_from(a)",
             "{0}*a                           % {0}from(a)",
+            // a prefix sugar's leading coefficient is its span, as a named instruction's is (Marko, 2026-11-19): {0,3}>>a
+            // is {0,3}rshift(a); the dot writes the branch the sugar follows ({0,3}.>>a is branch.rshift)
+            "{0,3}>>a                         % {0,3}rshift(a)",
+            "{0,3}>>                          % {0,3}rshift()",
+            "1.{0,3}>>a                       % 1.{0,3}rshift(a)",
+            "1.{0,3}>>a.plus(1)               % 1.{0,3}rshift(a).plus(1)",
+            "{0,3}.>>a                        % {0,3}.rshift(a)",
+            "{0,3}<<a                         % {0,3}lshift(a)",
+            "{2}->a                           % {2}ref(a)",
+            "{2}@a                            % {2}at(a)",
             // a value is {point}value{span} (Marko, 2026-11-10): a span of one is no span (testValueSpans has the rest)
             "2{1}                            % 2",
             // an argument list lays a value's span (testAnArgumentListLaysAValuesSpan has the rest; a branch's terms are
@@ -590,6 +600,10 @@ public class mParserTest extends AbstractMetatronTest {
             "{1,2}.{2}plus(10).count()                % 2",
             // a run that leaves the step's domain halts (Marko, 2026-11-15): 5>>a takes no step, so the walk ends at 5
             "[a=>[a=>5]].{0,5}rshift(a)               % {[a=>[a=>5]],[a=>5],5}",
+            // a scatter/gather sugar carries a span like its named instruction (Marko, 2026-11-19): {0,3}>>a is
+            // {0,3}rshift(a), the run of the scatter
+            "[a=>[a=>5]].{0,3}>>a                     % {[a=>[a=>5]],[a=>5],5}",
+            "[a=>[a=>5]].{+}>>a                       % {[a=>5],5}",
             // ... and a run of another type resolves the call again, as each copy of an unrolled run did: as(str) casts
             // to the uri str names, and 1.as(str).as(str) is <1> (its second cast an as?uri<=uri the first never was)
             "1.{2}as(str)                             % <1>",
