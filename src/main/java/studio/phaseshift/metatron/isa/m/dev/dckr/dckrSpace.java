@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.charset.StandardCharsets;
@@ -43,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -163,9 +163,13 @@ public class dckrSpace extends AbstractMemorySpace {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                // Expand wildcard: read matching entries, write obj to each
+                // Expand wildcard: read matching entries, write obj to each -- an interior node a + listing reports
+                // (noobj, nothing stored there) is no entry to write
                 this.directReader().apply(pattern)
-                        .forEachRemaining(kv -> this.write(kv.furi(), obj));
+                        .forEachRemaining(kv -> {
+                            if (!kv.obj().isNoObj())
+                                this.write(kv.furi(), obj);
+                        });
             } else {
                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
                 if (obj.isNoObj()) {
@@ -535,14 +539,13 @@ public class dckrSpace extends AbstractMemorySpace {
         final fURI routed = Space.Helper.routeFromSpace(vid, this.routes());
         final DataPath dp = DataPath.withoutDB(routed);
 
-        // Expand + wildcard in entry position: write obj to each concrete child
+        // Expand + wildcard in entry position: write obj to each concrete child -- each entry the cache stores there
+        // (its write targets), never an interior node a read derives
         if (dp.hasEntry() && "+".equals(dp.entry())) {
-            final fURI parentRouted = routed.retract(1);
-            this.cache.readStream(parentRouted.asBranch()).forEach(kv -> {
-                final fURI concreteRouted = kv.furi();
-                final fURI concreteVID = Space.Helper.routeToSpace(concreteRouted, this.routes());
-                this.write(concreteVID, obj);
-            });
+            IteratorUtil.stream(this.cache.targets(routed.retract(1).extend("+")))
+                    .map(child -> Space.Helper.routeToSpace(child.furi(), this.routes()))
+                    .toList()
+                    .forEach(concreteVID -> this.write(concreteVID, obj));
             return obj;
         }
 
@@ -601,13 +604,6 @@ public class dckrSpace extends AbstractMemorySpace {
         // Store write value in internal store (compose configs, image metadata, etc.)
         this.cache.write(routed, obj);
         return obj;
-    }
-
-    @Override
-    public Stream<IdObj> readStream(final fURI id) {
-        final fURI routed = Space.Helper.routeFromSpace(id, this.routes());
-        return this.cache.readStream(routed).map(i ->
-                IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
     }
 
     // ===================================================================

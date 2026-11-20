@@ -413,9 +413,12 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
             fURI aligned = null;
             try {
                 if (pattern.hasPattern()) {
-                    // Wildcard write: expand to matching keys, write to each
-                    this.directReader().apply(pattern)
-                            .forEachRemaining(kv -> this.write(kv.furi(), obj));
+                    // Wildcard write: expand to matching keys, write to each -- a level's interior node (noobj: a
+                    // deeper key passes through it, nothing is stored there) is no key to write
+                    IteratorUtil.stream(this.directReader().apply(pattern))
+                            .filter(kv -> !kv.obj().isNoObj())
+                            .toList()
+                            .forEach(kv -> this.write(kv.furi(), obj));
                 } else {
                     aligned = Space.Helper.routeFromSpace(pattern, this.routes());
 
@@ -556,7 +559,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                 }
 
                 // ── key-value path ──
-                return this.readFlat(aligned, pattern);
+                return this.flat(aligned, pattern);
 
             } catch (final Error | Exception e) {
                 throw MTronException.of(e);

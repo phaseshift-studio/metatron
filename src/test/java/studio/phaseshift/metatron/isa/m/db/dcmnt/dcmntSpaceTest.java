@@ -82,17 +82,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @SkipRegexTest(value = {
-        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): the cases this
-        // space does not honor yet, by cause -- a fix deletes its lines
-        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {
-                // A: # answers structures beside the leaves (# answers only leaves, at full uris)
-                "^M8/(row|nested)$", "^X13/(nested|partial|pathkeys|entry|split)$",
-                // C: an interior node inside a path-keyed rec is not its subtree, not a + entry, not a walk step
-                "^X8/pathkeys$", "^X9/(partial|pathkeys)$", "^X10/(partial|pathkeys)$", "^X11/(partial|pathkeys)$",
-                "^X12/(partial|pathkeys)$", "^X14/(partial|pathkeys)$", "^W1/pathkeys$", "^W2/pathkeys$", "^W3/pathkeys$",
-                // E: a wildcard key answers an address a literal path key prefixes
-                "^P1/pathkeys$"
-        }),
+        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): dcmntSpace's reader
+        // answers a field path inside a document itself -- its slow path fetches the document, unrolls it and matches with
+        // Rec.at -- so beside the literal path key http/quarry/8777 the wildcard key http/# answers first, and Space.Helper's
+        // literal-first descent never sees the document. Dropping that unrolling from the reader clears this line
+        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {"^P1/pathkeys$"}),
         // The mono-at-root flat tests (string/int/real/bool/list/CRUD/type/special)
         // now route through the reserved mongo:kv_store/ flat namespace and are enabled.
         @SkipRegexTest.Skip(method = "testMultiFieldUpdates"),

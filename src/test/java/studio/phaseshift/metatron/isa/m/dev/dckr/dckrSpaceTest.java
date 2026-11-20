@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.dev.dckr;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -39,6 +38,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -64,23 +65,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@SkipRegexTest({
-        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): the cases this
-        // space does not honor yet, by cause -- a fix deletes its lines
-        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {
-                // A: # answers structures beside the leaves (# answers only leaves, at full uris)
-                "^M8/(row|nested)$", "^X13/(nested|partial|pathkeys|split)$",
-                // B: an interior node of flat keys is not its subtree, not a + entry, not a walk step
-                "^X9/(entry|split)$", "^X10/(entry|split)$", "^X11/split$", "^X12/split$", "^W1/entry$", "^W2/entry$",
-                // C: an interior node inside a path-keyed rec is not its subtree, not a + entry, not a walk step
-                "^X8/pathkeys$", "^X9/(partial|pathkeys)$", "^X10/(partial|pathkeys)$", "^X12/partial$",
-                "^X14/(partial|pathkeys)$", "^X16/pathkeys$", "^W1/pathkeys$", "^W2/pathkeys$", "^W3/pathkeys$",
-                // D: a pattern across a stored rec and flat keys answers one of them, never both
-                "^X4/split$", "^X5/split$",
-                // E: a wildcard key answers an address a literal path key prefixes
-                "^P1/pathkeys$"
-        })
-})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class dckrSpaceTest extends AbstractSpaceTest {
 
@@ -729,6 +713,26 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         } finally {
             space.write(f("dtest:container/" + containerName), noobj());
             space.write(f("dtest:volume/" + volName), noobj());
+        }
+    }
+
+    /**
+     * a {@code +} entry write lands on every entry the cache stores at that level, and never on an interior node a read
+     * derives (fanout/deep holds only the entry below it); fanout is a cache-only collection, so no container is touched
+     */
+    @Test
+    void testEntryWildcardWriteLandsOnStoredEntries() {
+        try {
+            ObjmtronSerializer.parse("dtest:fanout/a -> [tag => 1]").apply();
+            ObjmtronSerializer.parse("dtest:fanout/b -> [tag => 2]").apply();
+            ObjmtronSerializer.parse("dtest:fanout/deep/x -> 3").apply();
+            ObjmtronSerializer.parse("dtest:fanout/+ -> [tag => 9]").apply();
+            checkCodeParseApply(LOG, "*dtest:fanout/a/tag", "9");
+            checkCodeParseApply(LOG, "*dtest:fanout/b/tag", "9");
+            checkCodeParseApply(LOG, "*dtest:fanout/deep", "[x => 3]");
+        } finally {
+            for (final String at : List.of("a", "b", "deep/x"))
+                ObjmtronSerializer.parse("dtest:fanout/" + at + " -> noobj").apply();
         }
     }
 }

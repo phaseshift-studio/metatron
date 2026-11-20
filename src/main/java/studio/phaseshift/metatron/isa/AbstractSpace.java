@@ -28,10 +28,8 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -79,25 +77,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         QProc.Helper.checkQProcs(this, vid);
         // the q-proc pipeline (pre_read, this space's read, post_read) has one home (QProc.Layer), so a source
         // declares its q-procs and never re-derives the order
-        return QProc.Layer.read(this, vid, () -> Space.Helper.resolveRead(this, vid, this.directReader()));
-    }
-
-    @Override
-    public Stream<IdObj> readStream(final fURI pattern) {
-        QProc.Helper.checkQProcs(this, pattern);
-        final java.util.Optional<Obj> preRead = QProc.Helper.processPreRead(this.qs(), pattern);
-        if (preRead.isPresent())
-            return Stream.of(IdObj.of(pattern, preRead.get()));
-        final Obj result = Space.Helper.resolveRead(this, pattern, directReader());
-        final Obj postResult = QProc.Helper.processPostRead(this.qs(), pattern, result);
-        if (postResult.isNoObj())
-            return Stream.empty();
-        if (postResult.isObjs())
-            return IteratorUtil.stream(postResult.objsValue().iterator())
-                    .map(o -> o.isRel()
-                            ? IdObj.of(o.asRel().first().uriValue(), o.asRel().second())
-                            : IdObj.of(null != o.vid() ? o.vid() : pattern, o));
-        return Stream.of(IdObj.of(pattern, postResult));
+        return QProc.Layer.read(this, vid, () -> Space.Helper.resolveRead(this, vid));
     }
 
     @Override

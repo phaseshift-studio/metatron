@@ -166,7 +166,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @CsvSource(value = {
             "1.to(a)                                               % *a                                % 1",
             "$$ -> [a,b,c]                                         % *<$$>                              % [a,b,c]",
-            ".                                                     % *<$$/#>                            % {[a,b,c],a,b,c}",
+            // # answers only leaves, each at its full uri: the lst is structure, not data (Marko, 2026-11-19)
+            ".                                                     % *<$$/#>                            % {a,b,c}",
             ".                                                     % *<$$/0>                            % a",
             ".                                                     % *<$$/1>                            % b",
             ".                                                     % *<$$/2>                            % c",
@@ -737,7 +738,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
      * ({@code {x,y}}) is addition, and distributivity makes every layout of the same data a factorization of one term —
      * flat keys ({@code $$/x/a/b/c -> 1}), a path-keyed rec ({@code [a/b/c=>1]}), nested recs
      * ({@code [a=>[b=>[c=>1]]]}), or any mix across writes. So every read answers alike whatever the layout, and a
-     * distributed structure looks colocated (Marko, 2026-11-19; target/temp/uri.adoc, "Spatial Embeddings"):
+     * distributed structure looks colocated (Marko, 2026-11-19; docs/website/adoc/uri.adoc, "Spatial Embeddings"):
      * <ul>
      *     <li>an element read, and a {@code +} read at any depth (a matrix's row and its column);</li>
      *     <li>an interior address reads as its whole subtree, and {@code +} lists every address a direct read
@@ -765,9 +766,13 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             assertEquals(ObjmtronSerializer.parse(make(expected)).apply(), answer.selfVID(null),
                     id + ": " + make(read) + " after " + make(String.join("; ", layout)));
         } finally {
-            // only the roots this case wrote ($$/m, $$/x, ...): a space may hold data of its own beside them
-            Stream.of(layout).map(write -> write.split("[/ ]")[1]).distinct()
-                    .forEach(root -> Machine.current().memory().write(make("$$/" + root + "/#"), noobj()));
+            // only the roots this case wrote ($$/m, $$/x, ...): a space may hold data of its own beside them. Everything
+            // below a root, and the root itself -- a pattern below it does not reach a value stored AT it (fsSpace keeps
+            // a whole container in one file there), and the next layout would merge into what this one left
+            Stream.of(layout).map(write -> write.split("[/ ]")[1]).distinct().forEach(root -> {
+                Machine.current().memory().write(make("$$/" + root + "/#"), noobj());
+                Machine.current().memory().write(make("$$/" + root), noobj());
+            });
         }
     }
 

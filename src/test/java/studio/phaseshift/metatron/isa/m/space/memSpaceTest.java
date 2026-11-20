@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.space;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.TestReport;
@@ -40,6 +39,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.io.File;
 import java.util.Map;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.DATA;
@@ -47,24 +47,8 @@ import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
-@SkipRegexTest({
-        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): the cases this
-        // space does not honor yet, by cause -- a fix deletes its lines
-        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {
-                // A: # answers structures beside the leaves (# answers only leaves, at full uris)
-                "^M8/(row|nested)$", "^X13/(nested|partial|pathkeys|split)$",
-                // B: an interior node of flat keys is not its subtree, not a + entry, not a walk step
-                "^X9/(entry|split)$", "^X10/(entry|split)$", "^X11/split$", "^X12/split$", "^W1/entry$", "^W2/entry$",
-                // C: an interior node inside a path-keyed rec is not its subtree, not a + entry, not a walk step
-                "^X8/pathkeys$", "^X9/(partial|pathkeys)$", "^X10/(partial|pathkeys)$", "^X12/partial$",
-                "^X14/(partial|pathkeys)$", "^X16/pathkeys$", "^W1/pathkeys$", "^W2/pathkeys$", "^W3/pathkeys$",
-                // D: a pattern across a stored rec and flat keys answers one of them, never both
-                "^X4/split$", "^X5/split$",
-                // E: a wildcard key answers an address a literal path key prefixes
-                "^P1/pathkeys$"
-        })
-})
 @TestReport
 public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest, LockQTest, IncrQTest, DecQTest, AnalQTest {
 
@@ -217,5 +201,20 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
     @Override
     protected boolean skipBasicOperations() {
         return false;
+    }
+
+    /**
+     * a stream of polys stored at one address holds what each of them holds, so {@code #} answers every leaf obj there,
+     * as {@code +} does (Space.Helper keeps each distinct obj a listing or a leaf answers at an address)
+     */
+    @Test
+    public void testLeavesKeepEveryObjAtAnAddress() {
+        try {
+            ObjmtronSerializer.parse("/t/multi -> {[a=>1],[a=>2]}").apply();
+            checkCodeParseApply(LOG, "*</t/multi/+>", "{1,2}");
+            checkCodeParseApply(LOG, "*</t/multi/#>", "{1,2}");
+        } finally {
+            Machine.current().memory().write(f("/t/multi"), noobj());
+        }
     }
 }

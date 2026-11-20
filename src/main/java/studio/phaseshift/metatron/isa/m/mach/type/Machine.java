@@ -692,7 +692,7 @@ public interface Machine extends Rec, AutoCloseable {
                 final fURI entries = machineVID.resolve().extend("+/");
                 machine.jvm().put(uri(CHILD), auto_(instC(M_ISA_INST_TID.rng(ALL_STAR), lst(), (lhs, inst) -> {
                     final Space registry = Machine.root().memory().getSpaceFor(entries);
-                    return objs(Space.Helper.resolveRead(registry, entries, registry.directReader()).stream()
+                    return objs(Space.Helper.resolveRead(registry, entries).stream()
                             .map(Obj::asRel)
                             .map(Rel::secondDirect)
                             .filter(child -> child.isMachine() && machineVID.equals(child.parent().vid())));

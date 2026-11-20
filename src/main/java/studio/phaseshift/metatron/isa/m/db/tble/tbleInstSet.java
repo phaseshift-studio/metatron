@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.db.tble.tbleSpace.SQL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.db.tble.tbleSpace.TBLE_SPACE_TID;
@@ -833,6 +834,21 @@ public class tbleInstSet extends AbstractInstSet {
                                         .matchSpacePredicate(kvGuard)
                                         .optimizeWithURI("kv_from_count", (space, dp, expandedURI, coeff) -> {
                                             final fURI stored = Space.Helper.routeFromSpace(expandedURI, space.routes());
+                                            // a + level counts its distinct heads, as the read lists them: the levels a
+                                            // deeper key passes through are children too
+                                            final KVStoreUtil.PlusLevel level = KVStoreUtil.plusLevel(stored.segments());
+                                            if (null != level) {
+                                                final String sql = "SELECT furi FROM kv_store WHERE " + level.where();
+                                                try (final Statement stmt = space.sjvm().createStatement();
+                                                     final ResultSet rs = stmt.executeQuery(sql)) {
+                                                    final Set<fURI> heads = new HashSet<>();
+                                                    while (rs.next())
+                                                        heads.add(f(rs.getString(1)).head(level.depth()));
+                                                    return jnt(heads.size()).c(c -> c.mult((cInt) coeff));
+                                                } catch (SQLException e) {
+                                                    throw MTronException.of(e, "%s", sql);
+                                                }
+                                            }
                                             final String whereClause = KVStoreUtil.translateKVPatternToSQL(stored);
                                             if (whereClause == null)
                                                 throw MTronException.of("untranslatable KV pattern: %s", stored);
@@ -903,6 +919,30 @@ public class tbleInstSet extends AbstractInstSet {
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
                 final fURI stored = Space.Helper.routeFromSpace(expandedfURI, typedSpace.routes());
+                // a + level takes its first distinct heads, as the read lists them, each read as the space reads it (an
+                // interior head is its subtree)
+                final KVStoreUtil.PlusLevel level = KVStoreUtil.plusLevel(stored.segments());
+                if (null != level)
+                    return java.util.List.of(instC(
+                            this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                            lst(uri(expandedfURI), jnt(limitValue)),
+                            (lhs, inst) -> {
+                                final String sql = "SELECT furi FROM kv_store WHERE " + level.where();
+                                try (final Statement stmt = typedSpace.sjvm().createStatement();
+                                     final ResultSet rs = stmt.executeQuery(sql)) {
+                                    final Set<fURI> heads = new LinkedHashSet<>();
+                                    while (heads.size() < limitValue && rs.next())
+                                        heads.add(f(rs.getString(1)).head(level.depth()));
+                                    final Objs rows = objs0();
+                                    heads.forEach(head -> {
+                                        final fURI headVID = Space.Helper.routeToSpace(head, typedSpace.routes());
+                                        rows.append(typedSpace.read(headVID).selfVID(headVID));
+                                    });
+                                    return rows.asObjs();
+                                } catch (SQLException e) {
+                                    throw MTronException.of(e, "%s", sql);
+                                }
+                            }));
                 final String whereClause = KVStoreUtil.translateKVPatternToSQL(stored);
                 if (whereClause == null)
                     return matchedInsts.stream().map(Obj::asInst).toList();

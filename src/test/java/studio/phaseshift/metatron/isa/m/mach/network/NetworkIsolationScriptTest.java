@@ -258,6 +258,13 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
             "*/m/networkProbe/machines % 2",
             "[STATE] *~.pop(_)",
             "*</network/roster/machine/lab>             % <ws://lab:8555>                        [-- and outlives the frame that declared it --]",
+            "[STATE] *~.push(machine_b)",
+            "[STATE] *~.push(machine_c)",
+            "*</machine_b/machine_c/network/roster/machine/lab> % <ws://lab:8555>            [-- a grandchild's roster is the root's too --]",
+            "[STATE] *~.pop(_)",
+            "[STATE] </machine_b/network/roster/machine/lab> -> noobj",
+            "*</network/roster/machine/lab>             % noobj                                  [-- and a child's noobj write retracts the root's row --]",
+            "[STATE] *~.pop(_)",
             "[ROSTER_CLEAR]"
     })
     void testAChildsRosterIsTheRoots() {

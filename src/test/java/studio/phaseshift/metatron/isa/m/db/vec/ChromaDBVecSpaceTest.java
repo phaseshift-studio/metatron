@@ -48,27 +48,17 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @SkipRegexTest({
-        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): the cases this
-        // space does not honor yet, by cause -- a fix deletes its lines
+        // the factorization contract (AbstractSpaceTest#testReadsAreInvariantUnderFactorization): a vector collection
+        // names a document by its LAST segment (vecSpace writes f(aligned.name())), so a key of several segments collides
+        // with every other key ending alike -- m/0/0 and m/1/0 are both document 0, and after the row layout *m/0/0 reads
+        // document 0, the row m/0. The flat layouts (entry, row, split) cannot be held; a fix deletes its lines
         @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {
-                // A: # answers structures beside the leaves (# answers only leaves, at full uris)
-                "^M8/(entry|row|nested)$", "^X13/(nested|partial|entry|split)$",
-                // B: an interior node of flat keys is not its subtree, not a + entry, not a walk step
-                "^X8/(entry|split)$", "^X9/(entry|split)$", "^X10/(entry|split)$", "^X11/(entry|split)$",
-                "^X12/(entry|split)$", "^X14/entry$", "^X16/(entry|split)$", "^W1/entry$", "^W2/entry$", "^W3/entry$",
-                // C: an interior node inside a path-keyed rec is not its subtree, not a + entry, not a walk step
-                "^X8/pathkeys$", "^X9/(partial|pathkeys)$", "^X10/(partial|pathkeys)$", "^X11/(partial|pathkeys)$",
-                "^X12/(partial|pathkeys)$", "^X14/(partial|pathkeys)$", "^X16/pathkeys$", "^W1/pathkeys$", "^W2/pathkeys$",
-                "^W3/pathkeys$",
-                // D: a pattern across a stored rec and flat keys answers one of them, never both
-                "^X4/split$", "^X5/split$",
-                // E: a wildcard key answers an address a literal path key prefixes
-                "^P1/pathkeys$", "^P2/pathkeys$",
-                // F: vecSpace -- this space reads the layout differently
-                "^M1/(entry|row)$", "^M3/entry$", "^M4/(entry|row)$", "^M5/(entry|row)$", "^M6/(entry|row|nested)$",
-                "^M7/(entry|row|nested)$", "^X1/(entry|split)$", "^X2/entry$", "^X3/(partial|entry)$", "^X4/entry$",
-                "^X5/(partial|entry)$", "^X6/(partial|entry|split)$", "^X7/(entry|split)$", "^X11/nested$", "^X12/nested$",
-                "^W2/nested$", "^W4/entry$", "^W5/(entry|nested|pathkeys)$"
+                "^M1/(entry|row)$", "^M3/entry$", "^M4/(entry|row)$", "^M5/(entry|row)$", "^M6/(entry|row)$",
+                "^M7/entry$", "^M8/(entry|row)$", "^W[1-5]/entry$",
+                "^X1/(entry|split)$", "^X2/entry$", "^X3/entry$", "^X4/(entry|split)$", "^X5/(entry|split)$",
+                "^X6/(entry|split)$", "^X7/(entry|split)$", "^X8/(entry|split)$", "^X9/(entry|split)$",
+                "^X10/(entry|split)$", "^X11/(entry|split)$", "^X12/(entry|split)$", "^X13/(entry|split)$",
+                "^X14/entry$", "^X16/(entry|split)$"
         }),
         @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine")
 })

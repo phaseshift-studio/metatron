@@ -46,7 +46,8 @@ isa/mach/type/machine/MachineSpace.java     ← the machine's own space, mounted
                                         and its components live; ~/sys and its data in its store
 isa/mach/type/network/BasicNetwork.java     ← one level of network, a space over a memSpace store (the dckrSpace
                                         pattern); answers <vid>/network/# when the machine's space hands it an address
-isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
+isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited; its roster is the
+                                        root's, at /network/roster
 isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
                                         enclosing machine's (via `previous`)
@@ -117,7 +118,7 @@ Nesting is **read-through via `previous`**, built at push time, one level per co
 |-----------|----------------------------------------------------------------------------------------------------------------------------------------------------|
 | memory    | `MemoryUnion(this.memory())` — the child's own spaces over the enclosing memory's                                                                  |
 | instset   | `BasicInstSet(this.instset())` — the child's own declarations over the enclosing vocabulary                                                        |
-| network   | `NetworkUnion()` — a fresh level, NOT a read-through: reach starts empty, knowledge is the one root roster, and the level's supervision is its own |
+| network   | `NetworkUnion()` — a fresh level, NOT a read-through: reach starts empty, knowledge is the one root roster (a child's `~/network/roster[/…]` is read, written and walked at the root's `/network/roster`), and the level's supervision is its own |
 
 Reads go **through** (own first, then `previous`), writes reach only the own level, and a popped frame takes its own
 spaces and imports with it: it can never close what it inherited. Release is structural, not bookkeeping.
@@ -164,9 +165,10 @@ map is ONE entry keyed by its members' path encodings (`peer => [<ws/localhost/8
 `network::T` declares). `Machine.bootstrap()` stamps the branch `<vid>/network/#`, and the machine's `MachineSpace`
 hands it every address below the component, its raw reader included, so the uri tree (`</network>.>>.>>`) walks the
 level (the component itself, `<vid>/network`, is read live like any component); `BasicNetwork` takes the branch off,
-and its own methods use the relative form. Reads go to the store, so they are a memSpace's (`locateBasePoly`,
-`unrollPoly`, containers, q-procs): `*</network/+>` hands out the maps with the other entries, `*</network/peer>` is a
-read like any other, and `*</network/peer/ws/localhost/8555/mtron/origin>` walks a member through its map's path key.
+and its own methods use the relative form. Its raw reader is the store's, and every read is derived from it once, by
+`Space.Helper` (an interior node reads as its subtree, a member through its map's path key, literal keys first):
+`*</network/+>` hands out the maps with the other entries, `*</network/peer>` is a read like any other, and
+`*</network/peer/ws/localhost/8555/mtron/origin>` walks a member through its map's path key.
 Writes are intercepted on the way: a member is put into its map at its key LITERALLY (a key is an encoded origin, and
 the web gateway's is the wildcard `http/#`) and only as a typed `peer::T`/`listener::T` — any other value at a member is
 refused (a peer is constructed, not written); a noobj write retracts the member at exactly that key, else every member

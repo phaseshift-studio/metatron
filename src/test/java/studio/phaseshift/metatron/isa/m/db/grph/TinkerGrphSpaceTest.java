@@ -565,8 +565,8 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             // ── wildcard counts (no ID needed) ──
             "*/g/V/+.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",
-            // ── wildcard traversals ──
-            "*/g/V/#>>name                                                                   % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
+            // ── wildcard traversals ── (+ walks the vertices; # answers only leaves, the property values: Marko, 2026-11-19)
+            "*/g/V/+>>name                                                                  % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+/OUT.count()                                                              % 6",
             "*/g/V/+.outE().count()                                                        % 6",
             "*/g/V/+>>OUT/+.count()                                                          % 6",

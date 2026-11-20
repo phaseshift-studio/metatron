@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
@@ -406,35 +407,19 @@ public interface Uri extends Mono, Comparable<Uri> {
          * the {@code >>.>>.>>} broadcast, so {@code >> N} is referentially the chain.
          */
         private static Obj readChildUris(final fURI pattern, final fURI base, final int depth) {
-            // Read the space's RAW reader (real stored children only).  The resolving read
-            // (resolveRead) fabricates child uris via locateBasePoly/unrollPoly when the direct
-            // read is empty.  The walk never invents an address from nothing, but when no uri
-            // sits exactly at `depth` it falls back to projecting deeper uris onto their
-            // depth-`depth` prefix — the implicit "directory spine" a flat space lacks.  When
-            // no space supports the base uri, the walk is simply empty — not an error.
+            // THE WALK IS THE SPACE'S LOGICAL TREE (Space.Helper#addresses): a stored entry, an address inside a stored
+            // poly, and an interior address entries are stored below -- the directory a filesystem would materialize on
+            // the way to a file -- are each a child, whatever the layout. The walk never invents an address: every one it
+            // names has data at or below it. When no space supports the base uri, the walk is simply empty.
             if (!Machine.current().memory().hasSpaceFor(base))
                 return noobj();
-            // The real reference spine: stored uris sitting exactly `depth` below base
-            // (e.g. fsSpace directories).  This is the common, non-synthesizing path.
-            final List<fURI> uris = new ArrayList<>(IteratorUtil.stream(
-                            Machine.current().memory().getSpaceFor(base).directReader().apply(pattern))
-                    .map(IdObj::furi)
-                    .filter(u -> relativeDepth(u, base) == depth)
-                    .toList());
-            // Synthesize the directory spine: when nothing sits exactly at `depth`, project
-            // every uri deeper than `depth` onto its depth-`depth` prefix — the segment a
-            // filesystem would materialize as a directory on the way to a file.  Read-time
-            // only (nothing is written), so * on a synthesized uri still resolves to noobj.
-            if (uris.isEmpty()) {
-                IteratorUtil.stream(Machine.current().memory().getSpaceFor(base).directReader().apply(base.extend(fURI.Singleton.ALL)))
-                        .map(IdObj::furi)
-                        .filter(u -> relativeDepth(u, base) > depth)
-                        .map(u -> u.retract(relativeDepth(u, base) - depth))
-                        .forEach(uris::add);
-            }
+            // every address the walk names lies under the base (a + in the base stands for any one segment), so its
+            // depth below the base is the difference in segment length
+            final List<fURI> uris = Space.Helper.addresses(Machine.current().memory().getSpaceFor(base), pattern).stream()
+                    .filter(u -> u.segmentLength() - base.segmentLength() == depth)
+                    .toList();
             // Preserve the base uri's absoluteness and branchness on every result — the
-            // walk must not drift between relative/absolute or node/branch forms as it
-            // reads real children or synthesizes the directory spine.
+            // walk must not drift between relative/absolute or node/branch forms.
             return objs(uris.stream()
                     .map(u -> base.isRelative() ? u.asRelative() : u.asAbsolute())
                     .map(u -> base.isBranch() ? u.asBranch() : u.asNode())
@@ -454,16 +439,6 @@ public interface Uri extends Mono, Comparable<Uri> {
             // the parser reports an unparseable literal as a fail::T VALUE, not a throw, so the
             // free-text fallback tests the result rather than catching
             return parsed.stream().anyMatch(Obj::isFail) ? str(value) : parsed;
-        }
-
-        private static int relativeDepth(final fURI child, final fURI base) {
-            // The path lst carries the leading slash as a leading "" (["","a","b"] is /a/b) —
-            // drop it from both before comparing, so relative depth is plain segment counting.
-            final List<String> cp = child.path().stream().filter(s -> !s.isEmpty()).toList();
-            final List<String> bp = base.path().stream().filter(s -> !s.isEmpty()).toList();
-            int i = 0;
-            while (i < bp.size() && i < cp.size() && cp.get(i).equals(bp.get(i))) i++;
-            return cp.size() - i;
         }
 
         public static Obj rshiftUri(final Uri lhs, final Obj arg) {

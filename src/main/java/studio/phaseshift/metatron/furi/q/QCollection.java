@@ -579,8 +579,7 @@ public final class QCollection {
      * <p>
      * An access that CARRIES a query ({@code /t/a?docq}, {@code /t/a?subq}) is metadata traffic, not data traffic, and
      * so is pulling the analysis itself: neither is counted nor timed. A source that runs its own q-proc sequence
-     * ({@code mqttSpace}, an instset) is counted but not timed, and a streamed read ({@code readStream}) bypasses the
-     * layer and is not recorded at all yet.
+     * ({@code mqttSpace}, an instset) is counted but not timed.
      */
     public static QProc analQ() {
         final BasicAnalyzer analyzer = new BasicAnalyzer();

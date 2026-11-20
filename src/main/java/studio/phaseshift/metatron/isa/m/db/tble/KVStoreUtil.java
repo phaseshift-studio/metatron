@@ -100,6 +100,28 @@ public final class KVStoreUtil {
         return "furi LIKE '" + minPattern + "'";
     }
 
+    /**
+     * a + level of kv_store: the clause naming every key at least as deep as the level, and the depth of the level.
+     */
+    public record PlusLevel(String where, int depth) {
+    }
+
+    /**
+     * THE LEVEL A + PATTERN NAMES IN KV_STORE (a literal prefix, then only + steps), by the law: its children are the
+     * distinct heads at its depth of every key at least that deep -- a flat key lays out the levels it passes through,
+     * so a + lists those too (Marko, 2026-11-19: flat and nested keys read the same). {@code null} for any other
+     * pattern, which keeps its own clause.
+     */
+    public static PlusLevel plusLevel(final List<String> segs) {
+        final int literal = (int) segs.stream().takeWhile(s -> !isKVPlus(s) && !isKVStar(s)).count();
+        final List<String> steps = segs.subList(literal, segs.size());
+        if (0 == literal || steps.isEmpty() || !steps.stream().allMatch(KVStoreUtil::isKVPlus))
+            return null;
+        final StringBuilder like = new StringBuilder(String.join("/", segs.subList(0, literal)).replace("'", "''"));
+        steps.forEach(step -> like.append("/%"));
+        return new PlusLevel("furi LIKE '" + like + "'", segs.size());
+    }
+
     private static boolean isKVPlus(final String segment) {
         return fURI.Singleton.WILD_ONE.name().equals(segment);
     }
