@@ -1,4 +1,4 @@
-inst?{0}<={0}(){
+/m/mach/inst/auto_cluster?{0}<={0}() {
   print('initializing auto_cluster for ${*/network/host}').
   /network/roster/machine/#?subq -> sub::[code=>(_){
     *0.?[uri::T=>uri{+}::T].
@@ -6,4 +6,4 @@ inst?{0}<={0}(){
       -<[//${>>as(rec::T).>>host} => -<[host=>_].as(ws_client::T)].
       ==[_ => >>host.as(rec::T)>>host] <<= +<@/network/prefix>;.
   print('\t to disconnect: /network/roster/machine/#?subq -> noobj')
-}@/m/mach/network/auto_cluster
+}@/m/mach/inst/auto_cluster
