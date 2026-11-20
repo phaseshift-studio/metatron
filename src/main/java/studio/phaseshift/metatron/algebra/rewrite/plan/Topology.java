@@ -79,8 +79,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * ({@code {3}} through {@code plus}, {@code int{1} => int{1}}, stays {@code {3}}); one that takes the stream whole
  * applies once and leaves its range ({@code {15}} through {@code sum} is {@code {1}}); one that takes nothing starts a
  * stream ({@code start({1,2,3})} is {@code {3}}); a point copies what it answers. A branch is the ring's sum: its lanes'
- * coefficients add where they merge. A lane is labelled by the name the network calls its place, and home is
- * {@code //local}.
+ * coefficients add where they merge. A lane's place is kept as its address and named where the drawing is made, by the
+ * name that machine's network calls it ({@code ws://localhost:1111} reads {@code //0}), so a child's lanes read by the
+ * asker's names; home is {@code //local}.
  * <p>
  * THE TOPOLOGY IS DATA, ITS DRAWING IS DERIVED (Marko, 2026-11-20: get back the explain rec, recreate the format
  * locally). The extension's rec is {@code [flow => …, format => <the drawing>]}: the flow travels where a drawing, a
@@ -141,7 +142,7 @@ public final class Topology {
                 first = null == first ? stages.getFirst() : first;
                 firsts = firsts.plus(stages.getFirst());
                 lasts = lasts.plus(stages.getLast());
-                fan.add(rec(uri(PLACE), str(place(route.first().uriValue())), uri(STAGE), lst(stages.stream().map(t -> (Obj) label(t)).toList()),
+                fan.add(rec(uri(PLACE), uri(route.first().uriValue().resolve().qLess()), uri(STAGE), lst(stages.stream().map(t -> (Obj) label(t)).toList()),
                         uri(TOPOLOGY), theirs(route.first().uriValue(), program)));
             }
             // a head branch's seed: lanes that all start from one seed hold it once (a copy, or the run axis, whose lanes
@@ -307,7 +308,10 @@ public final class Topology {
     private static Block fan(final List<Obj> lanes) {
         if (lanes.isEmpty())
             return new Block(List.of("──"), 0);
-        final List<String> places = lanes.stream().map(lane -> lane.asRec().at(uri(PLACE)).strValue()).toList();
+        // a place is named where the drawing is made, so a child's lanes read by the names this machine calls them; a name
+        // written as one draws as written
+        final List<String> places = lanes.stream().map(lane -> (Obj) lane.asRec().at(uri(PLACE)))
+                .map(place -> place.isUri() ? place(place.uriValue()) : place.strValue()).toList();
         final List<Obj> theirs = lanes.stream().map(lane -> (Obj) lane.asRec().at(uri(TOPOLOGY))).toList();
         final List<List<String>> stages = lanes.stream()
                 .map(lane -> lane.asRec().at(uri(STAGE)).asLst().<Obj>elements().map(Obj::strValue).toList()).toList();

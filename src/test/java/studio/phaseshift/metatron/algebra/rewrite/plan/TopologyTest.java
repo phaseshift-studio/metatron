@@ -21,10 +21,13 @@ package studio.phaseshift.metatron.algebra.rewrite.plan;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
  * THE TOPOLOGY DRAWING, pinned against the one Marko sketched (2026-11-20): fifteen objs dealt to three peers as ten, two
@@ -66,5 +69,28 @@ public class TopologyTest extends AbstractMetatronTest {
                 "     │           └─//3─►{2}─{1}─┘               │",
                 "{8}──┤                                          ├──//local─►{2}─{1}",
                 "     └─//1─►{4}─{1}─────────────────────────────┘", ""), drawing);
+    }
+
+    /**
+     * A PLACE IS NAMED WHERE THE DRAWING IS MADE (Marko, 2026-11-20: //0, not //localhost:1111): the flow keeps a lane's
+     * address, and the drawing names it by this machine's network prefixes, so a peer named zero reads //zero, and a peer
+     * the network names nothing keeps its authority.
+     */
+    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, named by a prefix the test registers")
+    @Test
+    public void testAPlaceIsNamedWhereTheDrawingIsMade() {
+        final Network network = Machine.current().network();
+        network.registerPrefix(f("zero"), f("ws://localhost:1111"));
+        try {
+            final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{2}'],"
+                    + "[[place=><ws://localhost:1111>,stage=>['{1}','{1}']],[place=><ws://localhost:1112>,stage=>['{1}','{1}']]],"
+                    + "['{2}','{1}']]").asLst());
+            assertEquals(String.join("\n", "",
+                    "     ┌─//zero───────────►{1}─{1}─┐",
+                    "{2}──┤                           ├──//local─►{2}─{1}",
+                    "     └─//localhost:1112─►{1}─{1}─┘", ""), drawing);
+        } finally {
+            network.unregisterPrefix(f("zero"));
+        }
     }
 }
