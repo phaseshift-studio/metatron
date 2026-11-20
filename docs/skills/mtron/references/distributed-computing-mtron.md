@@ -466,10 +466,11 @@ is not monotone in the prefix order (`{[1],[3]}.kmerge()` is `[1,3]`, no prefix 
 The select must keep a prefix and change nothing, every slot a bare `id()` (`_` is its sugar). A select that maps
 (`==[{2}+1]`) would map once in each lane and again at home, so it stays home, as do a point that copies
 (`id{2}()`) and a keyed pattern (`==[?<2=>_]`, which keeps every position, as a hole where its key fails). `order`
-and `kmerge` bulk equals by one rule (`Lst.Helper.bulkAdjacent`): each distinct value takes one index with its whole
-mass, whether its equals came bulked or met in the sort (`{1,2}.mult(0).order()` is `[{2}0]`, as `{0,0}.order()` is),
-so a top-k sharded across places and the same chain held home answer the same lst. A zero span in a bracket lays no
-slot, so `==[{0}_]` keeps nothing; its empty pattern stays home.
+and `kmerge` bulk as a stream does (there is no nested stream: `{1,2,{5,3},5,{0,1,1}}` is `{{3}1,2,{2}5,3,0}`), and
+`order` bulks before it sorts, so `{{1000}4,3}` sorts two entries. Each distinct value takes one index with its whole
+mass, whether its equals came bulked or apart (`{1,2}.mult(0).order()` is `[{2}0]`, as `{0,0}.order()` is), so a
+top-k sharded across places and the same chain held home answer the same lst. A zero span in a bracket lays no slot,
+so `==[{0}_]` keeps nothing; its empty pattern stays home.
 
 ### T — migrating a frame of reference
 

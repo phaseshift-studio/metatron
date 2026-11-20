@@ -1304,11 +1304,13 @@ public final class mInsts {
                         // any mass: lst[{*}A{*}], the left coefficient a bracket entry's mass (Marko, 2026-11-18)
                         .rng(LST_TID.poly(A.maybeSome().b(cInt.MAYBESOME())), "a sorted lst of the lhs A{*}")
                         .argLst(T(ALL.maybe()), "a projection of A to compare")
-                        // equals met in the sort bulk as the equals of a bulked lhs did: one index each, the mass summed,
-                        // the rule kmerge recombines the runs by (Lst.Helper.bulkAdjacent)
+                        // BULK, THEN SORT (Marko, 2026-11-20): a stream bulks, and it has no nested streams
+                        // ({1,2,{5,3},5,{0,1,1}} is {{3}1,2,{2}5,3,0}). objs() bulks as it builds, so the sort meets each
+                        // distinct obj once with its whole mass ({{1000}4,3} sorts two entries, not 1,001), and equals
+                        // share one index even where a projection's ties would sort them apart
                         .body((lhs, inst) -> {
                             final Comparator<Obj> cmp = inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0));
-                            return lst(Lst.Helper.bulkAdjacent(lhs.stream().sorted(cmp).toList()));
+                            return lst(objs(lhs.stream()).stream().sorted(cmp).toList());
                         })
                         .law(Law.pure)
                         .derivation(order_(T(ALL.maybe(), f("b"), null, null)), split_(lst(id_().tryToInst())).kmerge_(T(ALL.maybe(), f("b"), null, null)))
