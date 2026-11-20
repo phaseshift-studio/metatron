@@ -23,10 +23,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.StatefulCSVSource;
 import studio.phaseshift.metatron.StatefulParametrizedTest;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -199,35 +199,35 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
     }
 
     /**
-     * REACH AND KNOWLEDGE ACROSS THE FRAME STACK — the network\u0027s two laws, asserted where they live.
+     * REACH AND KNOWLEDGE ACROSS THE FRAME STACK — the network's two laws, asserted where they live.
      * REACH IS NEVER SHARED: push mints the child its own {@code NetworkUnion} level (the same parade as
      * MemoryUnion and the child instset), peers are neither inherited from the parent (not even shadowed)
-     * nor shared with children, a pop drops exactly the popped machine\u0027s dials, and a sibling never sees
-     * them. KNOWLEDGE IS SHARED: the roster is ONE listing at the root address — like Memory\u0027s base
-     * frame, but machine-global — so a declaration made standing anywhere is every frame\u0027s fact.
+     * nor shared with children, a pop drops exactly the popped machine's dials, and a sibling never sees
+     * them. KNOWLEDGE IS SHARED: the roster is ONE listing at the root address — like Memory's base
+     * frame, but machine-global — so a declaration made standing anywhere is every frame's fact.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[ROSTER_CLEAR]",
             "[CONNECT loop://root-self]",
             "[PROBE_PEERCOUNT]",
-            "*/m/networkProbe/peercount % 1                  [-- root\u0027s own reach: one identity peer --]",
+            "*/m/networkProbe/peercount % 1                  [-- root's own reach: one identity peer --]",
             "[STATE] *~.push(machine_b)",
             "*~/network.?/m/mach/component/network::T.count() % 1      [-- the child has a network LEVEL of its own --]",
             "[PROBE_PEERCOUNT]",
-            "*/m/networkProbe/peercount % 0                  [-- REACH IS NOT INHERITED: the parent\u0027s dials are not the child\u0027s --]",
+            "*/m/networkProbe/peercount % 0                  [-- REACH IS NOT INHERITED: the parent's dials are not the child's --]",
             "[CONNECT loop://machine_b]",
             "[PROBE_PEERCOUNT]",
-            "*/m/networkProbe/peercount % 1                  [-- the child\u0027s dial lands on the child\u0027s level --]",
+            "*/m/networkProbe/peercount % 1                  [-- the child's dial lands on the child's level --]",
             "[DECLARE ws://declared-inside-b:1111]",
             "[PROBE_MACHINES]",
             "*/m/networkProbe/machines % 1                     [-- knowledge declared while standing in machine_b --]",
             "[STATE] *~.pop(_)",
             "[PROBE_PEERCOUNT]",
-            "*/m/networkProbe/peercount % 1                  [-- pop dropped exactly machine_b\u0027s dials; the root\u0027s stand --]",
+            "*/m/networkProbe/peercount % 1                  [-- pop dropped exactly machine_b's dials; the root's stand --]",
             "[STATE] *~.push(machine_a)",
             "[PROBE_PEERCOUNT]",
-            "*/m/networkProbe/peercount % 0                  [-- a sibling never sees another machine\u0027s reach --]",
+            "*/m/networkProbe/peercount % 0                  [-- a sibling never sees another machine's reach --]",
             "[PROBE_MACHINES]",
             "*/m/networkProbe/machines % 1                     [-- but knowledge IS shared: one roster, whoever declared it --]",
             "[STATE] *~.pop(_)",

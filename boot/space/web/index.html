@@ -116,7 +116,7 @@
                 </svg>
                 <span class="brand-title"><a class="brand-name" href="http://metatron.phaseshift.studio" target="_blank"
                                              rel="noopener">metatron</a><span class="brand-tag">: a ring-oriented language and virtual machine</span></span>
-                <span class="dot busy" id="pulse-dot" aria-hidden="true"></span>
+                <span class="dot up" id="pulse-dot" aria-hidden="true"></span>
                 <span class="sr" id="pulse" aria-live="polite">probing surfaces</span>
             </div>
             <div class="topbar-stats" id="topbar-stats" aria-label="physical machine stats"></div>
@@ -962,7 +962,15 @@
        pinned card (title left, vid right, unpin). the card owns its views and
        reads; the codecs are shared. */
     function emptyObjCard() {
-        return {views: {}, tab: "mtron", env: null, prettyLoaded: false, jsonLoaded: false, objPanel: null, history: []};
+        return {
+            views: {},
+            tab: "mtron",
+            env: null,
+            prettyLoaded: false,
+            jsonLoaded: false,
+            objPanel: null,
+            history: []
+        };
     }
 
     function objCardButton(host, tab) {
@@ -1092,7 +1100,9 @@
             instance: wsBase,
             mtron: (expr) => evalMtron(expr),
             open: (env) => inspectReference(env || {}),
-            at: (text) => { if (host.at) host.at.textContent = text; },
+            at: (text) => {
+                if (host.at) host.at.textContent = text;
+            },
             frame: (vid) => {
                 pageFrame = (!vid || vid === "/.") ? null : String(vid);
             },
@@ -1226,7 +1236,13 @@
             jsonLoaded: objCard.jsonLoaded,
             objPanel: objCard.objPanel
         });
-        inspectObjCard(objCard, host, {tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid, isType: obj.isType},
+        inspectObjCard(objCard, host, {
+                tid: obj.tid,
+                vid: obj.vid,
+                raw: obj.raw,
+                shortTid: obj.shortTid,
+                isType: obj.isType
+            },
             {open: true, keepHistory: true, expr: "nested " + obj.tid});
     }
 
@@ -1301,7 +1317,13 @@
             out: root.querySelector(".popup-out"),
             dot: null,
             back: null,
-            openObject: (obj) => inspectReference({tid: obj.tid, vid: obj.vid, raw: obj.raw, shortTid: obj.shortTid, isType: obj.isType})
+            openObject: (obj) => inspectReference({
+                tid: obj.tid,
+                vid: obj.vid,
+                raw: obj.raw,
+                shortTid: obj.shortTid,
+                isType: obj.isType
+            })
         };
         const objCard = emptyObjCard();
         root.querySelector(".obj-card-unpin").addEventListener("click", () => {

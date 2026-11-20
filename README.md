@@ -8,10 +8,12 @@ metatron is a distributed, data-oriented computing language and virtual machine 
 using a universal uri address space that is processed by a distributed vm controlled by an object-oriented/functional
 language called mtron.
 
-**metatron** is the runtime (VM, machines, spaces, instruction sets); **mtron** is the language that drives it. A value
-is an **obj**, an obj lives at a **uri**, and **code** is built from **inst** (instructions) using the ring operators
-`*` (serial
-composition) and `+` (parallel branching).
+**metatron** is the runtime (VM, machines, spaces, instruction sets) and **mtron** is the language that drives it. An
+**obj** is the core abstraction for all types and values. **inst** objs are composed using the ring
+operators `*` (serial concatenation) and `+` (parallel branching) to create **code** objs. All objs have a **uri**
+address. A uri may reference a processor stack, local memory, the local file system, a databases, as well as remote
+objs such as those accessible via http and, with the same level of granularity, objs on another metatron instance with a
+metatron cluster.
 
 | Language                                        | Runtime       | Version        |
 |-------------------------------------------------|---------------|----------------|

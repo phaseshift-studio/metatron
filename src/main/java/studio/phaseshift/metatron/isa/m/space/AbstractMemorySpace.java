@@ -27,7 +27,10 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -191,21 +194,5 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
                 value.isObjs() ?
                         value.stream().flatMap(o -> Stream.of(IdObj.of(pattern, o))) :
                         Stream.of(IdObj.of(pattern, value));
-    }
-
-    @Override
-    public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
-        if (pattern.hasPattern()) {
-            final List<IdObj> results = new ArrayList<>();
-            this.directReader().apply(pattern).forEachRemaining(kv -> {
-                this.write(kv.furi(), obj);
-                results.add(IdObj.of(kv.furi(), obj));
-            });
-            return results.stream();
-        }
-        final Obj result = this.write(pattern, obj);
-        if (result.isNoObj())
-            return Stream.empty();
-        return Stream.of(IdObj.of(pattern, result));
     }
 }
