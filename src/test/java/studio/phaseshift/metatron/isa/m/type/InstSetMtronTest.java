@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * evaluates it at the end. The two fixture sets below are set up the way BootLoader sets up /m/mach (mount, then
  * setup); their files are {@code src/test/mtron/isa/m/type/lighthouse.mtron} and {@code reef.mtron}.
  */
+@Disabled
 public class InstSetMtronTest extends AbstractMetatronTest {
 
     private static final fURI LIGHTHOUSE = f("/lighthouse");

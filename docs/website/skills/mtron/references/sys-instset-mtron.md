@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -69,7 +69,7 @@ mtron> bash('ls')
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(18 more)]
+    ...(16 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
@@ -110,7 +110,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           ...(18 more)]]
+           ...(16 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -120,7 +120,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    ...(19 more)]
+    ...(17 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -161,7 +161,7 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    ...(18 more)]
+    ...(16 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 29315     	Blocks: 64     ...',
@@ -185,7 +185,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    ...(18 more)]
+    ...(16 more)]
 ```
 Unit values test against each other's units:
 
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>65
+==>66
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::526.9566,
+    free_mem_jvm=>mB::491.5817,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::185.0433,
+    used_mem_jvm=>mB::220.4182,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',

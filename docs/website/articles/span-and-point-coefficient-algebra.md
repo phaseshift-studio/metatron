@@ -444,7 +444,8 @@ it holds no zero-step run. In mtron, `{n}a{c}` is $c\,a^n$, the point on the run
 `id{c}()` and an instruction is `noobj` exactly when its point is zero. So is a type, which as a step is a filter:
 `{0}int{3}::T` runs its filter no times, so it takes every object three times, while `int{0}::T` is `noobj`. The run of
 the pointed term, $(ca)^n$, is the pointed step written out, or a span on the branch its point stands for, so
-$(0a)^0 = 1$ is a zero span on the branch of no members. Tested by the product $c \cdot n$, which is the count of a value's copies, the zero span read as the
+$(0a)^0 = 1$ is a zero span on the branch of no members. Tested by the product $c \cdot n$, which is the count of a
+value's copies, the zero span read as the
 zero: a branch member `{0}a` dropped its object, $\langle 5 \rangle (a^0 + b)$ answering $\langle 5 \rangle b$
 alone.
 
@@ -826,11 +827,11 @@ record without the field, and a count steps on from nothing:
 $\langle\rangle c^{[1,2]} = \langle 0 \rangle + \langle 1 \rangle$.
 
 ```mtron
-mtron> [a=>[a=>5]].{0,5}rshift(a)
+mtron> [a=>[a=>5]].{0,5}>>(a)
 ==>[a=>[a=>5]]
 ==>[a=>5]
 ==>5
-mtron> [a=>[a=>[b=>5]]].{*}rshift(a)
+mtron> [a=>[a=>[b=>5]]].{*}>>(a)
 ==>[a=>[a=>[b=>5]]]
 ==>[a=>[b=>5]]
 ==>[b=>5]
@@ -911,11 +912,11 @@ mtron> 1.{4}mult(2)
 ==>16
 mtron> 1.repeat(code=>mult(2),until=>loop().is(eq(4)))
 ==>16
-mtron> [a=>[a=>[b=>5]]].{*}rshift(a)
+mtron> [a=>[a=>[b=>5]]].{*}>>(a)
 ==>[a=>[a=>[b=>5]]]
 ==>[a=>[b=>5]]
 ==>[b=>5]
-mtron> [a=>[a=>[b=>5]]].repeat(code=>rshift(a),emit=>true)
+mtron> [a=>[a=>[b=>5]]].repeat(code=>>>(a),emit=>true)
 ==>[a=>[a=>[b=>5]]]
 ==>[a=>[b=>5]]
 ==>[b=>5]
@@ -941,7 +942,8 @@ cancels the forward one, as a function that sends two objects to one place canno
 *converse*: the relation the function states, read from its other end [4].
 
 Read a function as that relation, with multiplicities. If $a \in \mathcal{F}$, let $\mu_a (x,y)$ be the coefficient of
-$y$ in $\langle x \rangle a$, so that $\langle x \rangle a = \sum_y \mu_a (x,y)\, y$, each output once by the bulk axiom.
+$y$ in $\langle x \rangle a$, so that $\langle x \rangle a = \sum_y \mu_a (x,y)\, y$, each output once by the bulk
+axiom.
 By the apply, split and bulk axioms, composition multiplies these relations as matrices,
 $\mu_{a \cdot b} (x,z) = \sum_y \mu_a (x,y)\, \mu_b (y,z)$; by the split and merge axioms, a branch adds them,
 $\mu_{a + b} = \mu_a + \mu_b$; and a point scales them, $\mu_{ca} = c\, \mu_a$.
@@ -967,9 +969,7 @@ $a^{[m,n]} = \sum_{k=m}^{n} a^k$ (Definition 3) may cross zero. In mtron a negat
 ::: **Theorem 11** (The converse is an involution). If $a,b \in \mathcal{F}$ and $c \in \mathcal{C}$, with
 $\mathcal{C}$ commutative, then
 $$
-\begin{equation*}
-(a + b)^{\smile} = a^{\smile} + b^{\smile}, \quad (a \cdot b)^{\smile} = b^{\smile} \cdot a^{\smile}, \quad
-(ca)^{\smile} = c\, a^{\smile}, \quad (a^{\smile})^{\smile} = a, \quad 1^{\smile} = 1, \quad 0^{\smile} = 0.
+\begin{equation*} (a + b)^{\smile} = a^{\smile} + b^{\smile}, \quad (a \cdot b)^{\smile} = b^{\smile} \cdot a^{\smile}, \quad (ca)^{\smile} = c\, a^{\smile}, \quad (a^{\smile})^{\smile} = a, \quad 1^{\smile} = 1, \quad 0^{\smile} = 0.
 \end{equation*}
 $$
 :::
@@ -993,7 +993,8 @@ So the stream ring with its converse is a ring with an involution, a $*$-ring. O
 conjugates the coefficient as well, $(ca)^{\smile} = \bar{c}\, a^{\smile}$, and the converse of a quantum walk is its
 adjoint: the conjugate transpose with which [1] inverts a wave. The adjoint of a unitary is its inverse.
 
-::: **Corollary 9** (A converse is no inverse). If $a$ is a bijection, then $a \cdot a^{\smile} = a^{\smile} \cdot a = 1$,
+::: **Corollary 9** (A converse is no inverse). If $a$ is a bijection,
+then $a \cdot a^{\smile} = a^{\smile} \cdot a = 1$,
 and $a^{-1}$ is the inverse of $a$. In general $a \cdot a^{\smile} \neq 1$.
 :::
 
@@ -1012,7 +1013,8 @@ $mn \geq 0$, then $a^m \cdot a^n = a^{m+n}$.
 :::
 
 ::: *Proof.* If $m,n \geq 0$, this is Theorem 5. If $m,n \leq 0$, then
-$a^m \cdot a^n = (a^{\smile})^{-m} \cdot (a^{\smile})^{-n} = (a^{\smile})^{-m-n} = a^{m+n}$ by Definition 5 and Theorem 5
+$a^m \cdot a^n = (a^{\smile})^{-m} \cdot (a^{\smile})^{-n} = (a^{\smile})^{-m-n} = a^{m+n}$ by Definition 5 and Theorem
+5
 for $a^{\smile}$. If $m > 0 > n$, the law holds for a bijection and fails in general, as $a \cdot a^{-1} \neq a^0$
 (Corollary 9). ◻
 :::
@@ -1024,8 +1026,7 @@ $\mathcal{C}$ commutative, and $n \in \mathbb{N}$, then $(ca)^{-n} = c^n a^{-n}$
 ::: *Proof.*
 $$
 \begin{equation*}
-\begin{array}{lclll}
-(ca)^{-n} &=& ((ca)^{\smile})^n && [\text{Definition 5}] \\
+\begin{array}{lclll} (ca)^{-n} &=& ((ca)^{\smile})^n && [\text{Definition 5}] \\
 &=& (c\, a^{\smile})^n && [\text{Theorem 11}] \\
 &=& c^n (a^{\smile})^n = c^n a^{-n} && [\text{Theorem 7, Definition 5}].
 \end{array}
@@ -1049,7 +1050,8 @@ $a^{\smile}$ and forward through $a$.
 $\langle x \rangle f \in \{\langle x \rangle, \langle\rangle\}$, then $f^{\smile} = f$.
 :::
 
-::: *Proof.* $\mu_f (x,y) = 0$ wherever $y \neq x$, and a relation that holds only where $x = y$ reads the same from both
+::: *Proof.* $\mu_f (x,y) = 0$ wherever $y \neq x$, and a relation that holds only where $x = y$ reads the same from
+both
 ends. ◻
 :::
 
@@ -1097,7 +1099,8 @@ mtron> 0.{-3,3}plus(1)
 ==>3
 ```
 A negative point cancels and a negative span reverses: $3 + (-1)3 = 0$, and
-$\langle 5 \rangle (b + (-1)b) = \langle 6, (-1)6 \rangle = \langle\rangle$, while $\langle 5 \rangle b^{-1} = \langle 4 \rangle$.
+$\langle 5 \rangle (b + (-1)b) = \langle 6, (-1)6 \rangle = \langle\rangle$,
+while $\langle 5 \rangle b^{-1} = \langle 4 \rangle$.
 
 ```mtron
 mtron> {3,{-1}3}.count()
@@ -1140,7 +1143,8 @@ parse. A type used as a step is a filter, and so its own converse (Theorem 14).
   with a $1$ at row $x$ and column $y$ [2], so the swap is its transpose, the converse
   $(x \Rightarrow y)^{\smile} = y \Rightarrow x$, and not its additive inverse, which is the point `{-1}(1=>2)`.
 - A lst under test lays a span as indices, a value's, a type's or an instruction's, and reads a point as mass at its
-  index, so `[{-1}3,4]` is no `[int::T]`: its index 0 holds a mass of $-1$. A run of like slots read backward is the same run, so a value's
+  index, so `[{-1}3,4]` is no `[int::T]`: its index 0 holds a mass of $-1$. A run of like slots read backward is the
+  same run, so a value's
   negative span could lay its length, but a value's span is never negative: `3{-1}` does not parse.
 
 ## Point and Span Coefficients Type Systems
