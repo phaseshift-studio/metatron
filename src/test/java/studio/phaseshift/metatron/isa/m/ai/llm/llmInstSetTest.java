@@ -72,7 +72,7 @@ public class llmInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "*<local:skills/mtron>.as(skill::T) | *skill | true",
+            "<local:skills/mtron>.as(skill::T) | *skill | true",               // the directory's reference: *<dir> reads it whole
     }, delimiter = '|')
     public void testAs(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
         Obj result = ObjmtronSerializer.parse(noNoObjCode).apply();

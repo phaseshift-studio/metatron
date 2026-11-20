@@ -283,7 +283,8 @@ public interface Space extends Addressable, Rec, Closeable {
          */
         public static Obj resolveRead(final Space space, final fURI pattern) {
             final Function<fURI, Iterator<IdObj>> directReader = space.directReader();
-            final fURI node = pattern.asNode();
+            // a dot segment is no level of the tree (test:. is test:): the walk compares segments literally
+            final fURI node = pattern.asNode().resolve();
             final List<IdObj> found = !node.hasPattern()
                     ? Stream.of(IdObj.of(node, valueAt(node, directReader))).filter(id -> !id.obj().isNoObj()).toList()
                     // a wildcard only in the scheme, the host or the query is no step of the tree: the store's own matches
@@ -309,7 +310,7 @@ public interface Space extends Addressable, Rec, Closeable {
          * the store's listing, and the poly held at the address.
          */
         public static List<fURI> addresses(final Space space, final fURI pattern) {
-            return new ArrayList<>(located(pattern.asNode(), space.directReader()).keySet());
+            return new ArrayList<>(located(pattern.asNode().resolve(), space.directReader()).keySet());
         }
 
         /**

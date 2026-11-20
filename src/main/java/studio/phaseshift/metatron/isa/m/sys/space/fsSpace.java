@@ -114,8 +114,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 if (file.isFile()) {
                     return readFileAsObj(file, qMap).vid(null);
                 } else if (file.isDirectory()) {
-                    // A directory stores nothing (its value is its subtree, which Space.Helper derives: the reader
-                    // never reads one as a value); a direct caller gets its uri.
+                    // A directory stores nothing (its value is its subtree, which Space.Helper derives); a
+                    // representation query (?mimeq) and a direct caller get its uri, the reference a serializer renders.
                     return uri(this.redirect(f(file.getPath()), false));//.asBranch());
                 }
             }
@@ -244,8 +244,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 final File file = Path.of(Space.Helper.routeFromSpace(keyQless, this.routes()).toString()).toFile();
                 if (!file.exists())
                     return IteratorUtil.of();
+                // a directory stores nothing -- except to a representation query (?mimeq), which renders the address
+                // itself: the serializer gets the directory's reference (a zip of a directory is its files)
                 if (file.isDirectory())
-                    return IteratorUtil.of();
+                    return key.hasQ(MIMEQ_PATTERN.toString())
+                            ? IteratorUtil.of(IdObj.of(key, this.fileToObj(file, key.qMap())))
+                            : IteratorUtil.of();
                 final Obj value;
                 if (file.isFile() && file.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && key.hasQ(MIMEQ_PATTERN.toString()))) {
                     final String engine = checkScriptEvaluation(file);

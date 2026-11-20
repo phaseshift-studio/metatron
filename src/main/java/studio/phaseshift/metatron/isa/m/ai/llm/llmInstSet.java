@@ -202,7 +202,7 @@ public class llmInstSet extends AbstractInstSet {
                             uri(RESOURCE).maybe(), "skill assets, references, and scripts",
                             uri(TOOL).maybe(), "skill tools"))
                     .desc("a skill.md specification to augment llm with specialized abilities")
-                    .example("*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]")
+                    .example("<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]")
                     .create();
         // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
         // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
@@ -779,7 +779,7 @@ public class llmInstSet extends AbstractInstSet {
                                 "a mtron encoding of the specified skill",
                                 mutableMap(jnt(0), "the skill type"),
                                 "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",
-                                "*<local:.agent/skills>.as(skill::T)"),
+                                "<local:.agent/skills>.as(skill::T)"),
                         docWrap(instC(AS_INST_TID.dom(LLM_AGENT_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.agentToSkill(lhs.<Agent>as())),
                                 "an agent",
                                 "a skill aggregating the agent's capabilities",
