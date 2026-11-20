@@ -727,6 +727,165 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         assertEquals(expected, lookup, "lookup: " + lookupExpr + " | expected: " + make(expectedExpression));
     }
 
+    // ========================================
+    // Factorization invariance
+    // ========================================
+
+    /**
+     * FACTORIZATION INVARIANCE — the law Space exists for. A rec or a lst written to a space is laid out in the uri
+     * address space: in the uri reference ring extension ({@code x/y}) is multiplication and branching
+     * ({@code {x,y}}) is addition, and distributivity makes every layout of the same data a factorization of one term —
+     * flat keys ({@code $$/x/a/b/c -> 1}), a path-keyed rec ({@code [a/b/c=>1]}), nested recs
+     * ({@code [a=>[b=>[c=>1]]]}), or any mix across writes. So every read answers alike whatever the layout, and a
+     * distributed structure looks colocated (Marko, 2026-11-19; target/temp/uri.adoc, "Spatial Embeddings"):
+     * <ul>
+     *     <li>an element read, and a {@code +} read at any depth (a matrix's row and its column);</li>
+     *     <li>an interior address reads as its whole subtree, and {@code +} lists every address a direct read
+     *     answers;</li>
+     *     <li>{@code #} answers only non-poly leaves, each at its full flattened uri;</li>
+     *     <li>the uri tree ({@code .>>}) walks the same addresses, and never invents one;</li>
+     *     <li>a literal key that prefixes an address answers it before a wildcard key that merely matches it.</li>
+     * </ul>
+     * A case id is {@code <structure><read>/<layout>}, so a space that does not honor a read (or a layout) yet skips it
+     * by id with {@link studio.phaseshift.metatron.SkipRegexTest} until it does.
+     */
+    @TestCategory.Read
+    @ParameterizedTest
+    @MethodSource("provideFactorizationCases")
+    public void testReadsAreInvariantUnderFactorization(final String id, final String[] layout, final String read, final String expected) {
+        try {
+            for (final String write : layout) {
+                final Obj written = ObjmtronSerializer.parse(make(write)).apply();
+                if (written.isFail() && expectWriteRejection(written))
+                    return;
+            }
+            if (this.sleepBetweenReads > 0)
+                CommonUtil.sleepThread(this.sleepBetweenReads);
+            final Obj answer = ObjmtronSerializer.parse(make(read)).apply();
+            assertEquals(ObjmtronSerializer.parse(make(expected)).apply(), answer.selfVID(null),
+                    id + ": " + make(read) + " after " + make(String.join("; ", layout)));
+        } finally {
+            // only the roots this case wrote ($$/m, $$/x, ...): a space may hold data of its own beside them
+            Stream.of(layout).map(write -> write.split("[/ ]")[1]).distinct()
+                    .forEach(root -> Machine.current().memory().write(make("$$/" + root + "/#"), noobj()));
+        }
+    }
+
+    /**
+     * the platonic 3x4 matrix of uri.adoc ("Isomorphic != Identical"): entry-wise, row-wise, and one nested lst
+     */
+    private static final List<Map.Entry<String, String[]>> MATRIX = List.of(
+            Map.entry("entry", new String[]{
+                    "$$/m/0/0 -> 0", "$$/m/0/1 -> 1", "$$/m/0/2 -> 2", "$$/m/0/3 -> 3",
+                    "$$/m/1/0 -> 4", "$$/m/1/1 -> 5", "$$/m/1/2 -> 6", "$$/m/1/3 -> 7",
+                    "$$/m/2/0 -> 8", "$$/m/2/1 -> 9", "$$/m/2/2 -> 10", "$$/m/2/3 -> 11"}),
+            Map.entry("row", new String[]{"$$/m/0 -> [0,1,2,3]", "$$/m/1 -> [4,5,6,7]", "$$/m/2 -> [8,9,10,11]"}),
+            Map.entry("nested", new String[]{"$$/m -> [[0,1,2,3],[4,5,6,7],[8,9,10,11]]"}));
+
+    private static final String[] MATRIX_READS = {
+            "*$$/m/0/0          % 0",
+            "*$$/m/2/3          % 11",
+            "*$$/m/0/+          % {0,1,2,3}",
+            "*$$/m/+/0          % {0,4,8}",
+            "*$$/m/+/+          % {0,1,2,3,4,5,6,7,8,9,10,11}",
+            "$$/m.>>            % {$$/m/0,$$/m/1,$$/m/2}",
+            "$$/m/1.>>          % {$$/m/1/0,$$/m/1/1,$$/m/1/2,$$/m/1/3}",
+            "*$$/m/#/           % {$$/m/0/0=>0,$$/m/0/1=>1,$$/m/0/2=>2,$$/m/0/3=>3,$$/m/1/0=>4,$$/m/1/1=>5,$$/m/1/2=>6,$$/m/1/3=>7,$$/m/2/0=>8,$$/m/2/1=>9,$$/m/2/2=>10,$$/m/2/3=>11}"};
+
+    /**
+     * the rec of uri.adoc ("The Algebraic Structure of Data"): nested, partly and fully path-keyed, flat keys, and split
+     * across writes (the second write lands in the rec the first stored)
+     */
+    private static final List<Map.Entry<String, String[]>> REC = List.of(
+            Map.entry("nested", new String[]{"$$/x -> [a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]"}),
+            Map.entry("partial", new String[]{"$$/x -> [a/b=>[c=>1,d=>2],a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b=>[c=>6]]"}),
+            Map.entry("pathkeys", new String[]{"$$/x -> [a/b/c=>1,a/b/d=>2,a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b/c=>6]"}),
+            Map.entry("entry", new String[]{
+                    "$$/x/a/b/c -> 1", "$$/x/a/b/d -> 2", "$$/x/a/e/c -> 3", "$$/x/a/e/d -> 4", "$$/x/a/e/f -> 5", "$$/x/g/b/c -> 6"}),
+            Map.entry("split", new String[]{"$$/x/a -> [b=>[c=>1,d=>2]]", "$$/x/a/e -> [c=>3,d=>4,f=>5]", "$$/x/g/b/c -> 6"}));
+
+    private static final String[] REC_READS = {
+            "*$$/x/a/b/c        % 1",
+            "*$$/x/a/b/+        % {1,2}",
+            "*$$/x/a/+/+        % {1,2,3,4,5}",
+            "*$$/x/+/b/+        % {1,2,6}",
+            "*$$/x/+/+/c        % {1,3,6}",
+            "*$$/x/a/+/c        % {1,3}",
+            "*$$/x/g/+/+        % 6",
+            "*$$/x/g/b          % [c=>6]",
+            "*$$/x/g            % [b=>[c=>6]]",
+            "*$$/x/+            % {[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]]}",
+            "$$/x.>>            % {$$/x/a,$$/x/g}",
+            "$$/x.>>.>>         % {$$/x/a/b,$$/x/a/e,$$/x/g/b}",
+            "*$$/x/#/           % {$$/x/a/b/c=>1,$$/x/a/b/d=>2,$$/x/a/e/c=>3,$$/x/a/e/d=>4,$$/x/a/e/f=>5,$$/x/g/b/c=>6}",
+            "$$/x/a.>>e         % $$/x/a/e",
+            "$$/x/a.>>z         % noobj",
+            "*$$/x/g/b/         % ($$/x/g/b=>[c=>6])"};
+
+    /**
+     * a stored leaf beside a branch that is only stored deeper (a network level's host beside its web/ws server)
+     */
+    private static final List<Map.Entry<String, String[]>> BESIDE = List.of(
+            Map.entry("entry", new String[]{"$$/w/host -> 'h'", "$$/w/web/ws -> 1", "$$/w/web/http -> 2"}),
+            Map.entry("nested", new String[]{"$$/w -> [host=>'h',web=>[ws=>1,http=>2]]"}),
+            Map.entry("pathkeys", new String[]{"$$/w -> [host=>'h',web/ws=>1,web/http=>2]"}));
+
+    private static final String[] BESIDE_READS = {
+            "*$$/w/+            % {'h',[ws=>1,http=>2]}",
+            "$$/w.>>            % {$$/w/host,$$/w/web}",
+            "*$$/w/web          % [ws=>1,http=>2]",
+            "*$$/w/+/+          % {1,2}",
+            "*$$/w/web/+/       % {$$/w/web/ws=>1,$$/w/web/http=>2}"};
+
+    /**
+     * a literal key beside a wildcard key that also matches the address (the web gateway's http/# beside a dialed
+     * http member): the literal key that prefixes the address answers it
+     */
+    private static final List<Map.Entry<String, String[]>> WILDCARD = List.of(
+            Map.entry("nested", new String[]{"$$/p -> [http=>[<#>=>[origin=>'gateway'],quarry=>[<8777>=>[origin=>'quarry']]]]"}),
+            Map.entry("pathkeys", new String[]{"$$/p -> [<http/#>=>[origin=>'gateway'],<http/quarry/8777>=>[origin=>'quarry']]"}));
+
+    private static final String[] WILDCARD_READS = {
+            "*$$/p/http/quarry/8777/origin  % 'quarry'",
+            "*$$/p/http/quarry/8777         % [origin=>'quarry']"};
+
+    /**
+     * navigating the reference (uri.adoc, "Navigating the Reference Structure"): a uri walks to a child that exists,
+     * retracts to its parent, descends zero, and never invents an address
+     */
+    private static final List<Map.Entry<String, String[]>> NAVIGATION = List.of(
+            Map.entry("entry", new String[]{"$$/n/m/r -> 1"}),
+            Map.entry("nested", new String[]{"$$/n -> [m=>[r=>1]]"}));
+
+    private static final String[] NAVIGATION_READS = {
+            "$$/n/m.>>r         % $$/n/m/r",
+            "$$/n/m/r.<<        % $$/n/m",
+            "$$/n/m/r.>>0       % $$/n/m/r",
+            "$$/n/m.>>q         % noobj"};
+
+    protected static Stream<Arguments> provideFactorizationCases() {
+        return Stream.of(
+                        factorizations("M", MATRIX, MATRIX_READS),
+                        factorizations("X", REC, REC_READS),
+                        factorizations("W", BESIDE, BESIDE_READS),
+                        factorizations("P", WILDCARD, WILDCARD_READS),
+                        factorizations("N", NAVIGATION, NAVIGATION_READS))
+                .flatMap(cases -> cases);
+    }
+
+    /**
+     * every read of a structure against every layout of it: the law is the product, so the cases are too
+     */
+    private static Stream<Arguments> factorizations(final String structure, final List<Map.Entry<String, String[]>> layouts, final String[] reads) {
+        final List<Arguments> cases = new ArrayList<>();
+        for (int i = 0; i < reads.length; i++) {
+            final String[] read = reads[i].split("%");
+            for (final Map.Entry<String, String[]> layout : layouts)
+                cases.add(Arguments.of(structure + (i + 1) + "/" + layout.getKey(), layout.getValue(), read[0].trim(), read[1].trim()));
+        }
+        return cases.stream();
+    }
+
     @ParameterizedTest
     @TestData(oneTime = false, value = {""})
     @CsvSource(value = {
