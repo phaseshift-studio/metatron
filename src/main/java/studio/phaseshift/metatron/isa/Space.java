@@ -91,7 +91,7 @@ public interface Space extends Addressable, Rec, Closeable {
      * Default implementation wraps {@link #write(fURI, Obj)} for backward compatibility;
      * space implementations should override for native bulk pattern support.
      */
-    default Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
+   /* default Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
         if (pattern.hasPattern()) {
             return this.readStream(pattern).map(kv -> {
                 this.write(kv.furi(), obj);
@@ -102,7 +102,7 @@ public interface Space extends Addressable, Rec, Closeable {
         if (result.isNoObj())
             return Stream.empty();
         return Stream.of(IdObj.of(result.hasVID() ? result.vid() : pattern, result));
-    }
+    }*/
 
     fURI redirect(final fURI furi, final boolean big);
 

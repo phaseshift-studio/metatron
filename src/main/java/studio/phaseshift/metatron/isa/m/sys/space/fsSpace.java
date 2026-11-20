@@ -24,11 +24,11 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.FS_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -60,7 +61,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.FS_SPACE_TID;
 
 public class fsSpace extends AbstractSpace<FileSystem> {
 
@@ -559,22 +559,6 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             throw MTronException.of(e);
         }
     }*/
-
-    @Override
-    public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
-        if (pattern.hasPattern()) {
-            final List<IdObj> results = new ArrayList<>();
-            readStream(pattern).forEach(kv -> {
-                this.directWriter().apply(kv.furi(), obj);
-                results.add(IdObj.of(kv.furi(), obj));
-            });
-            return results.stream();
-        }
-        final Obj result = this.directWriter().apply(pattern, obj);
-        if (result.isNoObj())
-            return Stream.empty();
-        return Stream.of(IdObj.of(pattern, result));
-    }
 
     /**
      * Guards against reentrant writes through the Router during a write cycle.

@@ -1718,7 +1718,7 @@ public class fURITest extends AbstractMetatronTest {
     @CsvSource(value = {
             "person[ninja]?rng=person       | person?rng=person",
             "person[ninja]{2}?rng=person    | person{2}?rng=person",
-            "/m/lst[/m/int,/m/str]?a=b     | /m/lst?a=b",
+            "/m/lst[/m/int,/m/str]?a=b      | /m/lst?a=b",
             "person[ninja]                  | person",
             "person                         | person",
     }, delimiter = '|')
@@ -1752,10 +1752,10 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // "http://localhost:80/a/b/c       |[a,b,c]",
-            // "http://localhost:80/a/b/c/      |[a,b,c,<>]",
-            // "http://localhost:80//a/b/c      |[<>,a,b,c]",
-            // "http://localhost:80//a/b/c/     |[<>,a,b,c,<>]",
+            "http://localhost:80/a/b/c       |[<>,a,b,c]",
+            "http://localhost:80/a/b/c/      |[<>,a,b,c,<>]",
+            "http://localhost:80//a/b/c      |[<>,<>,a,b,c]",
+            "http://localhost:80//a/b/c/     |[<>,<>,a,b,c,<>]",
             "a/b/c{2}                |[a,b,c]",
             "a/b/c                   |[a,b,c]",
             "a/b/c{*}                |[a,b,c]",
@@ -1765,18 +1765,18 @@ public class fURITest extends AbstractMetatronTest {
             "/a/b/c/{2}              |[<>,a,b,c,<>]",
             "/a/b/c/?a=b&c=2         |[<>,a,b,c,<>]",
             "/a/                     |[<>,a,<>]",
-            /*"//                      |[]", // resolves to the schema://host 
-            "///                     |[]", // resolves to the schema://host 
-            "////                    |[]", // resolves to the schema://host */
+            "//                      |[]",
+            "///                     |[]",
+            "////                    |[]",
             "c{*}                    |[c]",
             "+                       |[+]",
             "/                       |[<>]",
-            "/#                       |[<>,#]",
-            "#/                       |[#,<>]",
-            "/#/                       |[<>,#,<>]",
+            "/#                      |[<>,#]",
+            "#/                      |[#,<>]",
+            "/#/                     |[<>,#,<>]",
             "#                       |[#]",
             "a/b/..                  |[a,b,<..>]",
-            // "/a/b/.                   |[<>,a,b,.]",
+            "/a/b/.                  |[<>,a,b,<.>]",
     }, delimiter = '|')
     void testPathStructure(final String furi, final String path) {
         final fURI f = idem(furi);

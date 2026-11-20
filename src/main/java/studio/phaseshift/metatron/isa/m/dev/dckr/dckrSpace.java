@@ -30,10 +30,10 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.ProgressTableWidget;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -607,13 +607,6 @@ public class dckrSpace extends AbstractMemorySpace {
     public Stream<IdObj> readStream(final fURI id) {
         final fURI routed = Space.Helper.routeFromSpace(id, this.routes());
         return this.cache.readStream(routed).map(i ->
-                IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
-    }
-
-    @Override
-    public Stream<IdObj> writeStream(final fURI id, final Obj obj) {
-        final fURI routed = Space.Helper.routeFromSpace(id, this.routes());
-        return this.cache.writeStream(routed, obj).map(i ->
                 IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
     }
 

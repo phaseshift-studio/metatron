@@ -30,8 +30,6 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -100,22 +98,6 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
                             ? IdObj.of(o.asRel().first().uriValue(), o.asRel().second())
                             : IdObj.of(null != o.vid() ? o.vid() : pattern, o));
         return Stream.of(IdObj.of(pattern, postResult));
-    }
-
-    @Override
-    public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
-        if (pattern.hasPattern()) {
-            final List<IdObj> results = new ArrayList<>();
-            this.readStream(pattern).forEach(kv -> {
-                final Obj result = this.directWriter().apply(kv.furi(), obj);
-                results.add(IdObj.of(kv.furi(), result));
-            });
-            return results.stream();
-        }
-        final Obj result = this.write(pattern, obj);
-        if (result.isNoObj())
-            return Stream.empty();
-        return Stream.of(IdObj.of(pattern, result));
     }
 
     @Override
