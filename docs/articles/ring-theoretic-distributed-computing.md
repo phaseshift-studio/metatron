@@ -35,14 +35,14 @@ distributed program: two lanes, each computing its own partial, and a final fold
 fold's declared laws, *monoidic* and *commutative*, are the license; no other feature is needed.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
-![figure 1](images/ring-theoretic-distributed-computing/fig-01.svg){width=70%}
+![figure 1](images/ring-theoretic-distributed-computing/fig-01.svg)
 
 A program may contract more than once. Every fold that declares these laws is a *cut*, and each cut plans the run of
 instructions before it. The program **expands** across the available machines, **contracts** at the fold, and starts
 again from the one value the fold left at home.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
-![figure 2](images/ring-theoretic-distributed-computing/fig-02.svg){width=70%}
+![figure 2](images/ring-theoretic-distributed-computing/fig-02.svg)
 
 This article develops that reading. The first section recalls the distributive laws of the stream ring and its
 function subrings. The second states the *shard identity*, the one rewrite every distribution pattern below lowers to,

@@ -685,10 +685,11 @@ An instruction whose range may be many (<code>print</code> and <code>to</code> d
 branch deals. <strong>A point is an index set too:</strong> <code>step{p}</code> is <code>p</code> copies of one term, and points add across a branch
 (<code>a{p} = a{p_1} + a{p_2}</code>), so the lanes take even shares of the copies — <code>id{5}()</code> over two places is <code>id{3}()</code> and
 <code>id{2}()</code>, each lane folding its copies through the cut. A run after a cut with neither a span range nor a point stays
-home: dealing one obj would hand the whole run to one lane — unless the run opens with a <strong>flatmapper</strong>, which turns
-the one obj into many. The flatmapper stays home and the rest of the run deals its bag, so
-<code>order(neg()).merge().plus(1).sum()</code> merges the sorted lst at home and ships <code>plus(1).sum()</code>
-(<code>branch().kmerge().merge().branch().sum()</code>).</p>
+home: dealing one obj would hand the whole run to one lane — unless the run turns the one obj into many with a
+<strong>flatmapper</strong>. The flatmapper stays home, with whatever hands on one obj for one before it, and the rest of the run
+deals its bag, so <code>order(neg()).merge().plus(1).sum()</code> merges the sorted lst at home and ships <code>plus(1).sum()</code>
+(<code>branch().kmerge().merge().branch().sum()</code>), and K's chained top-k maps and unrolls the lst at home
+(<code>==[{4}mult(-1)]&gt;-</code>) before its second sort ships.</p>
 <pre><code class="language-mtron">{1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
 ⇒ branch?&lt;={0}(&lt;p_1&gt; =&gt; start?hop=0({1,4}).plus(1).sum(), &lt;p_2&gt; =&gt; …).sum()
      .branch?&lt;=int{*}&amp;split=copy(&lt;p_1&gt; =&gt; {0,1}plus?hop=0(1).sum(), &lt;p_2&gt; =&gt; {2,2}plus?hop=0(1).sum(),
@@ -950,10 +951,19 @@ is not monotone in the prefix order (<code>{[1],[3]}.kmerge()</code> is <code>[1
 <code>[1,2,3]</code>).</p>
 <p>The select must keep a prefix and change nothing, every slot a bare <code>id()</code> (<code>_</code> is its sugar). A select that maps
 (<code>==[{2}+1]</code>) would map once in each lane and again at home, so it stays home, as do a point that copies
-(<code>id{2}()</code>) and a keyed pattern (<code>==[?&lt;2=&gt;_]</code>, which keeps every position, as a hole where its key fails). Two edges
-wait on other instructions: <code>order</code> keeps equals made at run time at separate indices (<code>{1,2}.mult(0).order()</code> is
-<code>[0,0]</code>, where the literal <code>{0,0}.order()</code> is <code>[{2}0]</code> and <code>kmerge</code> merges equals across lanes), and a zero span in a
-bracket lays one <code>id()</code> slot, so <code>==[{0}_]</code> keeps one position.</p>
+(<code>id{2}()</code>) and a keyed pattern (<code>==[?&lt;2=&gt;_]</code>, which keeps every position, as a hole where its key fails). <code>order</code>
+and <code>kmerge</code> bulk as a stream does (there is no nested stream: <code>{1,2,{5,3},5,{0,1,1}}</code> is <code>{{3}1,2,{2}5,3,0}</code>), and
+<code>order</code> bulks before it sorts, so equals that arrive apart sort once (<code>{1,2,3}.mult(0).order()</code> sorts one entry, not
+three). Each distinct value takes one index with its whole
+mass, whether its equals came bulked or apart (<code>{1,2}.mult(0).order()</code> is <code>[{2}0]</code>, as <code>{0,0}.order()</code> is), so a
+top-k sharded across places and the same chain held home answer the same lst. A zero span in a bracket lays no slot,
+so <code>==[{0}_]</code> keeps nothing; its empty pattern stays home.</p>
+<p>Top-ks chain in one job, since every cut plans its own run. The master of the first answers one lst, and a lone lst
+is one obj to a stream instruction, so a second sort over its integers starts with <code>&gt;-</code>, which unrolls the lst into a
+bag the second cut deals. <code>{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]&gt;-.order(neg())==[{2}_]</code> ships both sorts
+and is <code>[-2,-3]</code>: the map over the lst and the <code>&gt;-</code> stay home, since one obj has nothing to deal, and a map written
+after the <code>&gt;-</code> (<code>&gt;-.mult(-1)</code>) ships with the second sort. Without the <code>&gt;-</code>, the second sort meets the lst alone and
+stays home (<code>[[-5,-4,-3,-2]]</code>).</p>
 <h4>T — migrating a frame of reference</h4>
 <p><code>move()</code> relocates the <em>frame of reference</em> — the machine the code runs in — rather than moving data. It is the
 machine ring's serial <code>·</code> (<code>move</code> points the machine pointer at an existing machine, and the value flows through

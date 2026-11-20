@@ -101,7 +101,8 @@ strong {
 
 .article-body table th,
 .article-body table td {
-    border-color: rgba(108, 114, 147, 0.35);
+    padding: 0.25rem 0.375rem;
+    text-align: left;
 }
 
 .article-body blockquote {
