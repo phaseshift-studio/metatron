@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -178,23 +179,29 @@ public final class Topology {
      * A LANE WITH LEVELS LEFT RE-PLANS WHERE IT RUNS (BranchInst#lane), so the machine it runs in explains it, by its
      * own compiler and network: a peer is sent the lane's code with {@code explain()>>ext/topology/flow} through the
      * network's eval ({@link Network#submit}) and answers the flow, and a place on this machine explains the lane in
-     * the machine it names. The budget is read as the peer's planner reads it (Shard#hopAxis), so a leaf, a point,
-     * asks nothing. Only a lane that starts from its own part is asked (the caller's test): one dealt a bag the branch
-     * computes is planned only when the bag arrives, and explain runs nothing. A failure is kept as its message.
+     * the machine it names. The budget is read as the planner there reads it: a {@code ?hop} on any of the lane's
+     * instructions (Shard#hopAxis), else the shard plan's own (Shard#hop), so only a leaf, a point, asks nothing.
+     * Only a lane that starts from its own part is asked (the caller's test): one dealt a bag the branch computes is
+     * planned only when the bag arrives, and explain runs nothing. A refusal is kept as its message, a peer's and
+     * this machine's alike (an unreadable budget, a path that names no machine, a re-plan that declines a split).
      */
     private static Obj theirs(final fURI key, final List<Inst> program) {
-        final Hop hop = Shard.hopAxis(program, Hop.point());
-        if (hop.isPoint() || hop.arity().isZero())
-            return noobj();
-        final fURI place = key.resolve().qLess();
-        if (null == place.host())
-            return Machine.Helper.evalAt(Machine.current().fetch(key.qLess()),
-                    () -> explain(code(program).rewrite().resolve(noobj())));
-        final List<Inst> asked = new ArrayList<>(program);
-        asked.add(instB(EXPLAIN_INST_TID, lst()));
-        asked.add(instB(RSHIFT_INST_TID, lst(uri(f(EXT).extend(TOPOLOGY).extend(FLOW)))));
-        final Obj flow = Machine.current().network().submit(place, code(asked));
-        return flow.isLst() ? topology(flow.asLst()) : flow.isFail() ? str(flow.toString()) : noobj();
+        try {
+            final Hop hop = Shard.hopAxis(program, Shard.hop(PlanInterpreter.SHARD_PLAN));
+            if (hop.isPoint() || hop.arity().isZero())
+                return noobj();
+            final fURI place = key.resolve().qLess();
+            if (null == place.host())
+                return Machine.Helper.evalAt(Machine.current().fetch(key.qLess()),
+                        () -> explain(code(program).rewrite().resolve(noobj())));
+            final List<Inst> asked = new ArrayList<>(program);
+            asked.add(instB(EXPLAIN_INST_TID, lst()));
+            asked.add(instB(RSHIFT_INST_TID, lst(uri(f(EXT).extend(TOPOLOGY).extend(FLOW)))));
+            final Obj flow = Machine.current().network().submit(place, code(asked));
+            return flow.isLst() ? topology(flow.asLst()) : flow.isFail() ? str(flow.toString()) : noobj();
+        } catch (final MTronException e) {
+            return str(e.getMessage());
+        }
     }
 
     private static boolean fans(final Inst inst) {
