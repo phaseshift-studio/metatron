@@ -351,6 +351,31 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     }
 
     // ================================================================================================
+    // THE TOPOLOGY VIEW (Marko, 2026-11-20): explain()>>ext/topology/format draws a sharded chain's point coefficients
+    // alone: the seed, each lane's share and what its instructions leave, the merge at //local and what the master's
+    // instructions leave. A coefficient is the product of the contracts' coefficients read left to right. The lanes
+    // carry the network's names for their peers, so these rows read the coefficients and the joints, not the places.
+    // ================================================================================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // fifteen dealt to two lanes, eight and seven, each summed to one; the two merge at home and sum to one
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('[{]15[}]┤').count()                    % 1",
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('─►[{]8[}]──[{]1[}]─┐').count()         % 1",
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('─►[{]7[}]──[{]1[}]─┘').count()         % 1",
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('├──//local─►[{]2[}]──[{]1[}]').count() % 1",
+            // the drawing is appended to the explanation's own table
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>format.has('├──//local─►[{]2[}]──[{]1[}]').count()             % 1",
+            // a map keeps its lane's count and the fold leaves one: start, plus and sum in each lane
+            "{1,2,3,4,5,6}.plus(1).sum().explain()>>ext/topology/format.has('─►[{]3[}]──[{]3[}]──[{]1[}]─').count()                 % 1",
+            // two top-ks in one job draw two fans, and the second is dealt what the merge left, a bag of unknown size
+            "{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]>-.order(neg())==[{2}_].explain()>>ext/topology/format.has('[{][*][}]┤').count() % 1",
+    }, delimiter = '%')
+    void test_topology_explain_extension(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    // ================================================================================================
     // O — broadcast constants. A constant rides as an ARGUMENT of the floatable run (Thm 6: the
     // coefficient floats through non-reduce chains), so it changes nothing about the fan-out: the layout
     // is A's. It is "free today -- it needs no plumbing", which is exactly why it is worth a row: the
@@ -553,7 +578,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * {@code profile_analysis} rule captures the run before it and mints the collator over it. What the collator
      * captured must END IN THE BRANCH: were the analysis to run before {@code law_shard}, it would capture the
      * undistributed chain (start, plus, sum) and describe a computation that never happened, in a report well formed
-     * either way. Only the rewriter orders the two rules (analysis rules run last), and this assertion is what notices.
+     * either way. Only the rewriter orders the two rules (the capture rule's ?zindex runs it last), and this assertion is what notices.
      * <p>
      * THE RESULT IS THE NEST'S SHAPE, folded bottom-up as each node collates: the depth, the leaves (how many, and the
      * objs their runs carried, a coefficient sum, so the bulked {@code {2}3} counts twice) and the places per level.

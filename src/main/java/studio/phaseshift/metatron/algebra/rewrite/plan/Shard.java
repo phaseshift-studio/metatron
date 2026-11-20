@@ -315,8 +315,8 @@ public final class Shard {
         if (profiling) {
             // THE MASTER'S RUN IS TIMED AROUND ITS BRANCH, whichever axis the run factored (a seed's members, a span's
             // unrolls, a point's copies): the lanes answer reports, not partials, so no combiner runs, and a bare
-            // profile_collate() marks where the master's run ends. The profile_analysis rule, an analysis rule and so
-            // applied after this one, captures everything before the marker (the master's whole run, the branch's gather
+            // profile_collate() marks where the master's run ends. The profile_analysis rule, whose ?zindex runs it
+            // after this one, captures everything before the marker (the master's whole run, the branch's gather
             // wait included), times it as profile() times a local run and nests the lanes' reports under it
             // (mInstSet.profileCollate). Whatever followed profile(), a >>format, follows the marker.
             master.add(instB(PROFILE_COLLATE_TID, lst()));

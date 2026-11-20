@@ -409,6 +409,9 @@ public final class Tokens {
     public static final String ARG = "arg";
     public static final String YIELD = "yield";
     public static final String DESC = "desc";
+    public static final String EXT = "ext";
+    public static final String TOPOLOGY = "topology";
+    public static final String ZINDEX = "zindex";
     public static final String DIR = "dir";
     public static final String FILE = "file";
     public static final String CONTENT = "content";
