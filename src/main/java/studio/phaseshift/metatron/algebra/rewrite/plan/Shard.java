@@ -64,6 +64,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * axis per run: the seed first, the run's span range or point when the seed is one obj. A fold answers one obj, so the
  * run after a cut factors its span range or point, with that obj copied to every lane.
  *
+ * <p><b>A prefix the combiner respects joins the cut.</b> A select keeping the first k positions right after a fold
+ * whose combiner is {@link Law#causal} ships with the fold: {@code order(s)==[{k}_]} runs in every lane and
+ * {@code kmerge(s)==[{k}_]} at home, so each lane sends at most k members. The combiner of the longer cut is the
+ * combiner's own law at work, {@code combiner(r·t) = combiner(r)·t}, and no instruction declares it (menu entry K).
+ *
  * <p><b>The lane's budget is stated on its first instruction</b> ({@code ?hop}, {@code 0} at a leaf), so the metadata
  * is where a human and a re-planning peer read it. A copied instruction carries no budget of its own: both spellings
  * ({@code hop} and the deprecated {@code hops}) are stripped as the lane is written, or a peer handed a lane would
@@ -141,11 +146,16 @@ public final class Shard {
             // reaches the end
             final boolean profiling = 0 <= cut && insts.size() > cut + 1
                     && PROFILE_INST_TID.equals(insts.get(cut + 1).tid().basePath());
-            final int end = 0 > cut ? runEnd(insts, typed, floats, run) : profiling ? insts.size() : cut + 1;
+            // A PREFIX THE COMBINER RESPECTS JOINS THE CUT (K, top-k): a select keeping the first k positions, right after
+            // a fold whose combiner is causal, ships with the fold. Each lane keeps its own first k and home keeps the
+            // first k of the merge, so combiner(r·t) = combiner(r)·t -- computed from the combiner's law, never declared
+            final boolean absorbs = 0 <= cut && !profiling && insts.size() > cut + 1
+                    && keepsPrefix(insts.get(cut + 1)) && causalCombiner(typed.get(cut), chain.laws());
+            final int end = 0 > cut ? runEnd(insts, typed, floats, run) : profiling ? insts.size() : absorbs ? cut + 2 : cut + 1;
             final List<Inst> own = insts.subList(from, end);
             axes = new Axes(hopAxis(own, axes.hop()), split(own, axes.split()), place(own, axes.place()),
                     axes.placed() || own.stream().anyMatch(inst -> inst.tid().hasQ(PLACE)));
-            final List<Inst> emitted = emit(chain, from, cut, end, axes, profiling);
+            final List<Inst> emitted = emit(chain, from, cut, end, axes, profiling, absorbs);
             master.addAll(null == emitted ? own : emitted);
             planned |= null != emitted;
             from = end;
@@ -161,10 +171,12 @@ public final class Shard {
      * the run ships through, and the combiner that brings it home — or null when the run declines and stays as written.
      * A {@code cut} of -1 is a stretch past the last cut, {@code [from, end)}: the home instructions before one floatable
      * run, and the run itself, which ends at {@code end}. It ships as the cutless run partition (an index set at the
-     * head) or dealt over places (W), with nothing to recombine but the branch's own merge.
+     * head) or dealt over places (W), with nothing to recombine but the branch's own merge. When the cut {@code absorbs}
+     * the select right after it (a prefix kept after a causal combiner, K), every lane ends in that select too, and the
+     * master's combiner is followed by it, as the stretch {@code [from, end)} already holds it.
      */
     private static List<Inst> emit(final Chain chain, final int from, final int cut, final int end, final Axes axes,
-                                   final boolean profiling) {
+                                   final boolean profiling, final boolean absorbs) {
         final List<Inst> insts = chain.insts();
         final List<Inst> typed = chain.typed();
         // THE HOP AXIS: how many more levels of the tree may be planned from here, and how many children one level may
@@ -281,6 +293,8 @@ public final class Shard {
             }
             if (0 <= cut)
                 lane.add(raw(insts.get(cut)));
+            if (absorbs)
+                lane.add(raw(insts.get(cut + 1)));
             if (profiling)
                 lane.add(instB(PROFILE_INST_TID, lst()));
             stampHop(lane, budget);
@@ -630,6 +644,41 @@ public final class Shard {
         final List<Inst> folds = combined.insts();
         return !folds.isEmpty() && (declares(folds.getLast(), carrier, Law.idempotent)
                 || Law.Helper.declares(folds.getLast().tid(), Law.idempotent));
+    }
+
+    /**
+     * A SELECT THAT KEEPS A PREFIX: one positional pattern whose every slot is a bare {@code id()} -- {@code ==[{k}_]},
+     * the span laid along the select's bracket as k identity slots. A positional select keeps only the positions its
+     * pattern covers, so this one keeps the first k and leaves each as it was: a projection. A slot that maps
+     * ({@code ==[{2}+1]}) is none -- pushed into the lanes it would map twice -- a point ({@code id{2}()}) copies, and a
+     * keyed pattern ({@code ==[?<2=>_]}) keeps every position, as a hole where its key fails.
+     */
+    private static boolean keepsPrefix(final Inst inst) {
+        if (!SELECT_INST_TID.equals(inst.tid().basePath()) || 1 != inst.args().count() || !inst.arg(0).isLst())
+            return false;
+        final List<Obj> slots = inst.arg(0).asLst().<Obj>elements().toList();
+        return !slots.isEmpty() && slots.stream().allMatch(slot -> {
+            final Obj step = slot.isCode() && 1 == slot.asCode().insts().size() ? slot.asCode().insts().getFirst() : slot;
+            // a laid slot states its point as one: no point and a point of one are the same single copy
+            return step.isObjInst() && ID_INST_TID.equals(step.tid().basePath())
+                    && step.asInst().args().isEmpty() && (null == step.tid().d() || step.tid().d().isOne());
+        });
+    }
+
+    /**
+     * THE CUT'S COMBINER IS CAUSAL: the first n of its output depend only on the first n of each input, so a prefix kept
+     * after it may be kept in every lane first. Read where {@link Law.Helper#combiner} reads the combiner's own laws: a
+     * self-combining fold at its declared n-tid, a derived one ({@code order ↦ kmerge}) at the cut's range. A chain
+     * combiner, a keyed fold's pointwise merge, is no one fold and declares nothing.
+     */
+    private static boolean causalCombiner(final Inst keyed, final Law[] laws) {
+        final Call combined = Law.Helper.combiner(keyed, laws);
+        if (null == combined)
+            return false;
+        if (keyed == combined)
+            return Law.Helper.declares(keyed.tid(), Law.causal);
+        final List<Inst> folds = combined.insts();
+        return 1 == folds.size() && Law.Helper.declares(folds.getFirst(), keyed.rng(), Law.causal);
     }
 
     /**

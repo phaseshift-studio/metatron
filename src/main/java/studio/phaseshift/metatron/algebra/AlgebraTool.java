@@ -800,6 +800,7 @@ public final class AlgebraTool {
             case poset -> "the type declares no order operation to compare";
             case action -> "an action needs a monoid acting on the carrier, which no role declares";
             case magmadic -> "closure only — the law demands no equation";
+            case causal -> "a prefix property over every truncation length, not a finite operand test";
             case kleene -> "an unbounded iterate, not a finite operand test";
             case nilpotent -> "an unbounded iterate to a zero power, not a finite operand test";
             case partial -> "the zeroable lift of a value, not an equation";
