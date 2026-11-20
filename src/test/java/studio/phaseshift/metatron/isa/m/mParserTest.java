@@ -391,6 +391,13 @@ public class mParserTest extends AbstractMetatronTest {
             "{0}plus(1)                      % id()",
             "{0}plus(9).plus(1)              % id().plus(1)",
             "1.branch({0}plus(1),plus(2))    % 1.branch(id(),plus(2))",
+            // ON AN AXIS A ZERO SPAN LAYS NO SLOT (Marko, 2026-11-20): instruction concatenation yields id(), lst expansion
+            // yields no slot. A lst's entries and a positional argument list are an axis; a branch's terms are not
+            "[{0}plus(1),plus(2)]            % [plus(2)]",
+            "[1,{0}plus(1),2]                % [1,2]",
+            "[{0}_]                          % [,]",
+            "[{0}plus{3}(1)]                 % [,]",
+            "1.map({0}plus(1))               % 1.map()",
             "1.{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
             "1..{2}{plus(34),plus(34),plus(34)} % 1.{2}branch(plus(34),plus(34),plus(34))",
             "1.plus(1).{2}{plus(1),mult(2)}  % 1.plus(1).{2}branch(plus(1),mult(2))",

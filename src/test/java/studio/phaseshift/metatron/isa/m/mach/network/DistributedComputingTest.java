@@ -330,32 +330,27 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "7.order()==[{2}_]                          % start().order().select()                                                                            % [7]",
             // a select that MAPS is no projection: pushed into the lanes it would add 1 twice, so it stays home
             "{2,1,4,3}.order()==[{2}+1]                 % branch(start().order(),start().order()).kmerge().select()                                           % [2,3]",
+            // k = 0 keeps nothing: on an axis a zero span lays no slot, so the pattern is empty, and it stays home
+            "{2,1,4,3}.order()==[{0}_]                  % branch(start().order(),start().order()).kmerge().select()                                           % [,]",
     }, delimiter = '%')
     void test_K_limit_topk_push_down(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
     /**
-     * K, TWO ROWS THE LOWERING CANNOT TURN GREEN. Each holds the push-down's own claim -- a chain answers alike sharded
-     * and held home (Thm 19) -- and each is red for a reason in another instruction:
-     * <ul>
-     *   <li>{@code order} keeps equals made at run time at separate indices ({@code {1,2}.mult(0).order()} is
-     *       {@code [0,0]}), while a literal's equals bulk when it is parsed ({@code {0,0}.order()} is {@code [{2}0]}) and
-     *       {@code kmerge} merges equals across lanes: held home, the top two of {@code {1,…,6}.mod(3)} are
-     *       {@code [0,0]}, and sharded they are {@code [{2}0,{2}1]};</li>
-     *   <li>a zero span in a bracket lays one {@code id()} slot, as the parser reads {@code {0}a} as {@code id()} before
-     *       the bracket lays it, so {@code ==[{0}_]} keeps one position where it should keep none.</li>
-     * </ul>
+     * K, A ROW THE LOWERING CANNOT TURN GREEN. It holds the push-down's own claim -- a chain answers alike sharded and
+     * held home (Thm 19) -- and is red for a reason in another instruction: {@code order} keeps equals made at run time
+     * at separate indices ({@code {1,2}.mult(0).order()} is {@code [0,0]}), while a literal's equals bulk when it is
+     * parsed ({@code {0,0}.order()} is {@code [{2}0]}) and {@code kmerge} merges equals across lanes: held home, the top
+     * two of {@code {1,…,6}.mod(3)} are {@code [0,0]}, and sharded they are {@code [{2}0,{2}1]}.
      */
-    @Disabled("order keeps run-time equals at separate indices where kmerge merges them, and a zero span in a bracket lays one id() slot")
+    @Disabled("order keeps run-time equals at separate indices where kmerge merges them")
     @ParameterizedTest
     @CsvSource(value = {
             // held home the answer must be the same as sharded (Thm 19); order keeps run-time equals apart today, [0,0]
             "{1,2,3,4,5,6}.mod(3).order?hop=0()==[{2}_] % start().mod().order().select()                                         % [{2}0,{2}1]",
-            // k = 0 keeps nothing: on an axis a zero span is the unit of concatenation, no slot (today it lays one id())
-            "{2,1,4,3}.order()==[{0}_]                  % branch(start().order().select(),start().order().select()).kmerge().select() % [,]",
     }, delimiter = '%')
-    void test_K_rows_waiting_on_order_and_the_zero_span(final String code, final String expectedRewriteForm, final String expectedResult) {
+    void test_K_row_waiting_on_order(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 

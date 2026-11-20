@@ -638,6 +638,13 @@ public class LstTest extends AbstractAlgebraTest {
             "start([{4}int::T])                 % [int::T,int::T,int::T,int::T]",
             "start([{2}plus(1)])                % [plus(1),plus(1)]",
             "start([{0}int::T])                 % [,]",
+            // an instruction's zero span lays no slot on a lst either (Marko, 2026-11-20); its point has no slot to sit at
+            "start([{0}plus(1)])                % [,]",
+            "start([{0}plus(1),mult(2)])        % [mult(2)]",
+            "start([{0}plus{3}(1)])             % [,]",
+            "1-<[{0}plus(1),mult(2)]            % [2]",
+            "[1,2,3]==[{0}plus(1),_]            % [1]",
+            "{2,1,4,3}.order()==[{0}_]          % [,]",
             // extension on an argument list, a sugar's too
             "1.isa({4}int::T)                   % 1",
             "1?{4}int::T                        % 1",
@@ -646,6 +653,9 @@ public class LstTest extends AbstractAlgebraTest {
             // no axis: the span is the instruction's run
             "1.{2}plus(1)                       % 3",
             "1.branch({2}plus(1),mult(5))       % {3,5}",
+            // no axis: a zero span is the identity, f to the zero, in a chain and in a branch's term alike
+            "1.{0}plus(1).mult(5)               % 5",
+            "1.branch({0}plus(1),mult(5))       % {1,5}",
     }, delimiter = '%')
     public void testASpanOnAnAxisIsExtension(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

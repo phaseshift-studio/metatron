@@ -651,7 +651,9 @@ public final class Shard {
      * the span laid along the select's bracket as k identity slots. A positional select keeps only the positions its
      * pattern covers, so this one keeps the first k and leaves each as it was: a projection. A slot that maps
      * ({@code ==[{2}+1]}) is none -- pushed into the lanes it would map twice -- a point ({@code id{2}()}) copies, and a
-     * keyed pattern ({@code ==[?<2=>_]}) keeps every position, as a hole where its key fails.
+     * keyed pattern ({@code ==[?<2=>_]}) keeps every position, as a hole where its key fails. An empty pattern, a zero
+     * span laid ({@code ==[{0}_]}), stays home for now: shipping it is sound at k = 0, but empty partials through the
+     * branch and the merge are untested.
      */
     private static boolean keepsPrefix(final Inst inst) {
         if (!SELECT_INST_TID.equals(inst.tid().basePath()) || 1 != inst.args().count() || !inst.arg(0).isLst())
