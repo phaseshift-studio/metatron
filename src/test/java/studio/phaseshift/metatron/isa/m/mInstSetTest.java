@@ -1568,6 +1568,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.plus(2).explain()>>ext                            % noobj        % a chain that fans out nowhere has no topology",
             "1.plus(2).explain()>>ext/topology/format            % noobj        % ... so it has no drawing to read",
             "1.plus(2).explain()>>format.has('//local').count()  % 0            % ... and its table has nothing appended",
+            // a head branch's seed: lanes that start from parts of it sum to it, lanes that start from one seed hold it
+            // once, and a span from 0 keeps the lhs as its zero step (three, and their sum, four)
+            "branch?<={0}(<~> => start({1,2,3}).plus(10), </.> => start({4}).plus(20)).explain()>>ext/topology/format.has('[{]4[}]──┤').count()  % 1 % parts of a seed sum to it",
+            "branch?<={0}(<~> => start({1,2}).plus(10), </.> => start({1,2}).plus(20)).explain()>>ext/topology/format.has('[{]2[}]──┤').count()  % 1 % one seed copied is held once",
+            "branch?<={0}(<~> => start({1,2,3}).{0,1}sum(), </.> => start({4}).plus(1)).explain()>>ext/topology/format.has('─►[{]3[}]──[{]4[}]').count() % 1 % the zero step is the lhs",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
