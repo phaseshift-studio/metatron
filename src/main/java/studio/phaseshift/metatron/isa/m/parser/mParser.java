@@ -364,13 +364,18 @@ public class mParser {
                     sugar.getArgCount(),
                     null == endToken ? null : of(endToken)
             );
-            // A DEREF'S LEADING COEFFICIENT IS ITS SPAN (Marko, 2026-11-10: read left to right, greedy until a syntax
-            // error): {2}*a is {2}from(a), the run from(a).from(a), as {2}from(a) is. '*' is a bare-uri char, so without
-            // this the uri *a took the coefficient as its point. A deref reads its address, never its lhs, so no stream
-            // before it is lost; a sugar that takes its lhs keeps a leading brace as that stream ({1,2}-<[...])
-            final boolean deref = sugar.getPosition() == Sugar.Position.PREFIX && sugar.getInstChain().size() == 1
-                    && (FROM_INST_TID.equals(sugar.getInstChain().getFirst()) || AUTO_FROM_INST_TID.equals(sugar.getInstChain().getFirst()));
-            PARSERS.put(key, !deref ? parser : seq(opt(m_furi_coefficient(), null), parser).map(t -> {
+            // A PREFIX SUGAR'S LEADING COEFFICIENT IS ITS SPAN, as a named instruction's is (Marko, 2026-11-10: read
+            // left to right, greedy until a syntax error, and 2026-11-19: every sugar but the stream ops): {2}*a is
+            // {2}from(a), the run from(a).from(a), and {0,3}>> is {0,3}rshift(), a run of the scatter. '*' is a bare-uri
+            // char, so without this the uri *a took the coefficient as its point. A coefficient glued to the sugar (no
+            // dot) is the span; a dot separates two instructions, so {0,3}.>> writes the branch the sugar follows. The
+            // stream ops -<, >- and -<| read their lhs AS that brace ({1,2}-<[...]), so they keep it.
+            final fURI head = sugar.getInstChain().getFirst();
+            final boolean leadingSpan = sugar.getPosition() == Sugar.Position.PREFIX
+                    && !SPLIT_INST_TID.equals(head)
+                    && !MERGE_INST_TID.equals(head)
+                    && !CHOOSE_INST_TID.equals(head);
+            PARSERS.put(key, !leadingSpan ? parser : seq(opt(m_furi_coefficient(), null), parser).map(t -> {
                 final Inst inst = pick(t, 1);
                 return null == pick(t, 0) ? inst : inst.tid(inst.tid().b(coefficientOrOne(pick(t, 0))));
             }));
