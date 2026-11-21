@@ -62,6 +62,9 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
      * {@code ~} to the machine's own address, files the thread there, and stamps the thread with that address. Refusing
      * the stamp left a virtual thread naming itself by a {@code ~} that every reader resolved against its own machine:
      * its doc, the executor's pointers to it, and a child thread's source all missed it from anywhere else.
+     * <p>
+     * A computer ({@code BasicSwarmComputer}) keeps an override of its own that still refuses the stamp: its vid
+     * stays {@code ~/processor/computer/<n>}, and so does the source of every thread its evaluation spawns.
      */
     @Override
     public VirtualThread self(final Object jvm, final fURI tid, final fURI vid) {

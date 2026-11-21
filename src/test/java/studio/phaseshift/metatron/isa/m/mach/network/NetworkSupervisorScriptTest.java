@@ -41,6 +41,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -521,9 +522,9 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             assertTrue(link.redialed.await(5, TimeUnit.SECONDS), "the supervisor redials a link that is down");
             final AbstractThread attempt = assertInstanceOf(VirtualThread.class, link.redialedOn.get(),
                     "the attempt is a virtual thread");
-            // the supervisor's thread is named by the address it is filed at, so its vid reads it back from here
-            final fURI supervisor = attempt.sourceVid().orElseThrow();
-            assertEquals("supervisor_thread", supervisor.name(), "spawned by the supervisor's own thread");
+            // the supervisor's thread is named by the address it is filed at, its level's own, not by the minted ~
+            final fURI supervisor = this.network().machine().vid().extend(f("sys/thread/supervisor_thread")).resolve();
+            assertEquals(Optional.of(supervisor), attempt.sourceVid(), "spawned by the supervisor's own thread");
             assertInstanceOf(VirtualThread.class, Machine.read(supervisor), "whose vid reads it back: " + supervisor);
             assertEquals(this.network().machine().vid(), link.redialedIn.get().vid(), "standing in the level's machine");
             assertTrue(listedThreads(RUN).contains(attempt.vid()),
@@ -543,6 +544,9 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
      */
     @Test
     public void testARedialThatCannotBeMadeIsMadeLater() throws Exception {
+        // the level's supervisor is started first: it makes a thread of its own, which the guard would refuse, so the
+        // test would otherwise rest on an earlier test having dialed the level
+        NetworkSupervisor.watch(this.network());
         final AtomicBoolean refusing = new AtomicBoolean(true);
         refuseThreads(this.network().machine(), refusing);
         final fURI host = f("loop://cold_kiln");

@@ -185,7 +185,9 @@ public class mqttServerTest extends AbstractMetatronTest {
             refuseThreads(Machine.current(), refusing);
             refusing.set(true);
             try (final Socket refused = open(live.port())) {
-                refused.setSoTimeout(WINDOW_MS);
+                // well inside the handshake's own connect timeout: a close seen here is the refusal, at once, never a
+                // handshake that gave up on a client that sent nothing
+                refused.setSoTimeout(1_000);
                 assertEquals(-1, refused.getInputStream().read(), "the refused connection is closed unanswered");
             }
             refusing.set(false);
