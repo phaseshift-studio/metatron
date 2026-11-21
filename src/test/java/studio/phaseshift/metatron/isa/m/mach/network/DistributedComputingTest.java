@@ -53,6 +53,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PROFILING_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -60,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
@@ -215,54 +217,42 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      */
     private static WebSocketRec wsRec(final int oneBased) {
         return new WebSocketRec(mutableMap(
-                uri(HOST), uri("ws://localhost:" + cluster.port(oneBased) + PeerCluster.MTRON_ROUTE),
+                uri(HOST), uri(cluster.dialURI(oneBased)),
                 uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
                 uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null);
     }
 
     /**
-     * Whether peer {@code from} holds a dialed peer at peer {@code to}'s endpoint, read off its peer map, where a member
-     * sits at its encoded origin. The reply is the member's host, a uri, so this machine builds nothing from it.
+     * Whether peer {@code from} holds a dialed peer at peer {@code to}'s endpoint: its peer map holds a member at the
+     * endpoint's encoded origin, whose host is the endpoint. The reply is that host, a uri, so this machine builds
+     * nothing from it.
      */
     private static boolean dialed(final int from, final int to) {
-        return cluster.transport(from).apply(ObjmtronSerializer.parse(
-                "*/network/peer/ws/localhost/" + cluster.port(to) + "/mtron/host")).isUri();
+        return uri(cluster.dialURI(to)).equals(cluster.transport(from).apply(
+                from_(f("/network/peer").extend(cluster.dialURI(to).pathEncoding()).extend(HOST))));
     }
 
     /**
-     * THE TREE AS ITS PLACES PLAN IT, read off the topology {@code explain()} answers: a fan's lanes are the places at one
-     * level, and a lane its place re-plans carries that place's own flow, so the whole tree comes back without running.
-     * Its depth, its leaves (the lanes no place re-plans) and the places per level.
+     * THE TREE AS ITS PLACES PLAN IT, walked off the topology {@code explain()} answers. A fan is a segment of lanes
+     * (Topology reads it so: its first part is a rec), each lane a place at this depth, and a lane its place re-plans
+     * carries that place's own flow, so the whole tree comes back without running. Counts each level's places into
+     * {@code levels}, and answers the leaves: the lanes no place re-plans.
      */
-    private static Rec planned(final Obj flow) {
-        final List<Long> levels = new ArrayList<>();
-        final long leaves = planned(flow, 0, levels);
-        return rec(uri(DEPTH), jnt(levels.size()), uri(LEAF), jnt(leaves),
-                uri(LEVEL), lst(levels.stream().map(count -> (Obj) jnt(count)).toList()));
-    }
-
     private static long planned(final Obj flow, final int depth, final List<Long> levels) {
         long leaves = 0L;
-        for (final Obj lane : flow.asLst().<Obj>elements().flatMap(segment -> segment.asLst().<Obj>elements())
-                .filter(Obj::isRec).toList()) {
-            if (levels.size() == depth)
-                levels.add(0L);
-            levels.set(depth, levels.get(depth) + 1L);
-            final Obj theirs = lane.asRec().at(uri(TOPOLOGY));
-            leaves += theirs.isRec() ? planned(theirs.asRec().at(uri(FLOW)), depth + 1, levels) : 1L;
+        for (final Obj segment : flow.asLst().<Obj>elements().toList()) {
+            final List<Obj> parts = segment.asLst().<Obj>elements().toList();
+            if (parts.isEmpty() || !parts.getFirst().isRec())
+                continue;
+            for (final Obj lane : parts) {
+                if (levels.size() == depth)
+                    levels.add(0L);
+                levels.set(depth, levels.get(depth) + 1L);
+                final Obj theirs = lane.asRec().at(uri(TOPOLOGY)).orElse(rec0()).at(uri(FLOW));
+                leaves += theirs.isNoObj() ? 1L : planned(theirs, depth + 1, levels);
+            }
         }
         return leaves;
-    }
-
-    /**
-     * The nest's shape a row asserts, folded bottom-up as each node collates: the depth, the leaves (how many, and the
-     * objs their runs carried) and the places per level.
-     */
-    private static Rec nest(final Rec report) {
-        return rec(
-                uri(DEPTH), report.at(uri(DEPTH)),
-                uri(LEAF), rec(uri(COUNT), report.at(uri(f(LEAF).extend(COUNT))), uri(C_SUM), report.at(uri(f(LEAF).extend(C_SUM)))),
-                uri(LEVEL), lst(report.at(uri(LEVEL)).elements().map(level -> (Obj) level.asRec().at(uri(COUNT))).toList()));
     }
 
     // ================================================================================================
@@ -394,9 +384,12 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         });
         // COLUMN 5 -- THE TREE AS ITS PLACES PLAN IT: the budget unrolled over the dial graph, each place explaining the
         // lanes it re-plans
-        if (null != expectedTree)
-            checkEquality(LOG, ObjmtronSerializer.parse(expectedTree),
-                    planned(Machine.evaluate(Machine.parse(code + ".explain()>>ext/topology/flow").asCode())), true);
+        if (null != expectedTree) {
+            final List<Long> levels = new ArrayList<>();
+            final long leaves = planned(Machine.evaluate(Machine.parse(code + ".explain()>>ext/topology/flow").asCode()), 0, levels);
+            checkEquality(LOG, ObjmtronSerializer.parse(expectedTree), rec(uri(DEPTH), jnt(levels.size()), uri(LEAF), jnt(leaves),
+                    uri(LEVEL), lst(levels.stream().map(count -> (Obj) jnt(count)).toList())), true);
+        }
     }
 
     /**
@@ -771,7 +764,10 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         final Rec report = Machine.evaluate(Machine.parse(code).asCode()).asRec();
         checkEquality(LOG, uri(PROFILING_TID), uri(report.tid().basePath()), true);
         checkEquality(LOG, uri(BRANCH_INST_TID.name()), report.at(uri(PER_INST)).elements().reduce((a, b) -> b).orElseThrow().asRec().at(uri(NAME)), true);
-        checkEquality(LOG, ObjmtronSerializer.parse(expectedResult.trim()), nest(report), true);
+        checkEquality(LOG, ObjmtronSerializer.parse(expectedResult.trim()), rec(
+                uri(DEPTH), report.at(uri(DEPTH)),
+                uri(LEAF), rec(uri(COUNT), report.at(uri(f(LEAF).extend(COUNT))), uri(C_SUM), report.at(uri(f(LEAF).extend(C_SUM)))),
+                uri(LEVEL), lst(report.at(uri(LEVEL)).elements().map(level -> (Obj) level.asRec().at(uri(COUNT))).toList())), true);
         // EVERY PLACE AT EVERY LEVEL: a profiling::T keyed by the machine that made it, naming its machine, its insts and
         // its stages; the critical path starts at one of the root's places
         final List<Rec> nest = new ArrayList<>(List.of(report));

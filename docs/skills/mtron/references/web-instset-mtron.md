@@ -256,6 +256,11 @@ console's `*<ws://host:port/x>` reaches a peer this way: the network ships the r
 * **the answer is the whole value.** A coefficient is part of it: `{3}34` answers `{3}34`.
 * **failures are answers.** A program that fails, or throws, answers its `fail`; the client never waits out its
   deadline for a reply that is not coming.
+* **a connection's programs run side by side.** Each frame is evaluated on a pooled thread of its own, so a program
+  waiting on another machine (a tree's lane, a remote read) holds no frame behind it, and the answers leave in the
+  order the programs finish. A client that waits for each answer (the console, `bin/wsplus`) reads them in the order
+  it asked; one that sends several frames before reading tags each request and matches the answers by tag, as
+  `ws_client` does.
 * **the connection picks the serialization.** `?in=` and `?out=` on the connection uri choose the serializers —
   `application/x-mtron` both ways by default, `?out=application/x-mtron-ui` for the console's rendering, and
   `?out=application/json` for a json client (lossy by design: coefficients, vids and tids do not survive json).
