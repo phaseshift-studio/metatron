@@ -310,7 +310,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         final fURI at = Space.Helper.routeToSpace(f(p.toString()), this.routes());
                         return IdObj.of(at, p.toFile().isDirectory() ? noobj()
                                 : unroll ? this.fileToObj(p.toFile(), key.qMap())
-                                // the reference reads the file as the walk would have: in the representation asked for
+                                // the reference reads the file as a direct read of it does (a script answers its
+                                // instruction, never its run), in the representation asked for
                                 : auto_from_(key.hasQ(MIMEQ_PATTERN.toString()) ? at.addQ(MIMEQ_PATTERN.toString(), key.q(MIMEQ_PATTERN.toString())) : at).tryToInst());
                     })
                     .flatMap(id -> Stream.concat(

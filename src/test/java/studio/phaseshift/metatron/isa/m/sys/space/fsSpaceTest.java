@@ -39,7 +39,6 @@ import java.nio.file.FileSystems;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -458,38 +457,68 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
      * ({@code !*<file>}) that reads the file only when its own key is called, so reading a directory runs no program in
      * it -- the splash page's {@code GET /} read its web root, and so evaluated every boot helper there. A reference is
      * the same data as the file's obj, rendered differently: {@code atDirect} walks the tree past it, {@code at} reads
-     * it.
+     * it as a direct read of the file does. A listing ({@code +/}) names the references; a read of values ({@code +},
+     * {@code #}) reads every file it reaches, in the representation it asks for; a script reads as its instruction,
+     * and runs only when applied.
      */
     @Test
     public void testADirectoryReadRunsNoProgramInIt() {
-        final java.nio.file.Path mark = java.nio.file.Path.of("/tmp/fsspace_test/lazymark");
         try {
             final java.nio.file.Path root = java.nio.file.Path.of("/tmp/fsspace_test/lazy");
             java.nio.file.Files.createDirectories(root.resolve("sub"));
-            // a program that leaves a mark where it runs
+            // a program and a script, each leaving its own mark where it runs
             java.nio.file.Files.writeString(root.resolve("prog.mtron"), "test:lazymark -> 'fired'");
+            java.nio.file.Files.writeString(root.resolve("run.sh"), "#!/bin/sh\necho ran > /tmp/fsspace_test/runmark\n");
+            assertTrue(root.resolve("run.sh").toFile().setExecutable(true, false), "the script is executable");
             java.nio.file.Files.writeString(root.resolve("sub/notes.txt"), "notes");
 
+            // the directory is laid out from the names alone, and neither a listing nor a walk past a reference reads
             final Obj dir = ObjmtronSerializer.parse("*test:lazy").apply();
-            assertFalse(java.nio.file.Files.exists(mark), "reading a directory must run no program in it");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+            // assertEquals, not checkEquality: its message is drawn by the UI serializer, whose renderAutoFromTarget
+            // reads every !* target to see whether it is an instruction -- drawing the tree would run its program
             assertEquals(rec(
-                            uri("prog.mtron"), auto_from_(f("test:lazy/prog.mtron")).tryToInst(),
-                            uri("sub"), rec(uri("notes.txt"), auto_from_(f("test:lazy/sub/notes.txt")).tryToInst())),
-                    dir, "the tree is laid out from the names alone, each file by reference");
-            assertTrue(dir.asRec().atDirect(uri("prog.mtron")).isAutoFrom(), "atDirect walks past a reference, got: " + dir);
-            assertFalse(java.nio.file.Files.exists(mark), "walking the tree runs no program either");
+                    uri("prog.mtron"), auto_from_(f("test:lazy/prog.mtron")).tryToInst(),
+                    uri("run.sh"), auto_from_(f("test:lazy/run.sh")).tryToInst(),
+                    uri("sub"), rec(uri("notes.txt"), auto_from_(f("test:lazy/sub/notes.txt")).tryToInst())), dir);
+            assertEquals(auto_from_(f("test:lazy/prog.mtron")).tryToInst(), dir.asRec().atDirect(uri("prog.mtron")));
+            ObjmtronSerializer.parse("*test:lazy/+/").apply();
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
 
-            // the key called reads its file -- the program runs -- and answers what a direct read of the file answers
+            // a read of values in a representation reads each file in it: as text, a program is its source, never run
+            final Obj text = ObjmtronSerializer.parse("*<test:lazy/+?mimeq=text/plain>").apply();
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+            assertTrue(text.toString().contains("lazymark"), "the program reads as its source text, got: " + text);
+
+            // a key called reads its file as a direct read of it does: the program runs
             final Obj prog = dir.asRec().at(uri("prog.mtron"));
-            assertTrue(java.nio.file.Files.exists(mark), "calling a file's key runs its program, got: " + prog);
-            assertEquals(ObjmtronSerializer.parse("*<test:lazy/prog.mtron>").apply(), prog);
-            assertEquals(ObjmtronSerializer.parse("*<test:lazy/sub/notes.txt>").apply(), dir.asRec().at(uri("sub/notes.txt")));
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "1");
+            checkEquality(LOG, ObjmtronSerializer.parse("*<test:lazy/prog.mtron>").apply(), prog, true);
+            checkEquality(LOG, ObjmtronSerializer.parse("*<test:lazy/sub/notes.txt>").apply(), dir.asRec().at(uri("sub/notes.txt")), true);
+
+            // + and # read values, so each reads every file it reaches (# flattening what a file holds)
+            Machine.current().memory().write(make("$$/lazymark"), noobj());
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+            ObjmtronSerializer.parse("*test:lazy/+").apply();
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "1");
+            Machine.current().memory().write(make("$$/lazymark"), noobj());
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+            ObjmtronSerializer.parse("*test:lazy/#").apply();
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "1");
+
+            // a script reads as its instruction -- by its key as directly, and through + and # above -- and runs only
+            // when applied (each read mints its instruction anew, so the two compare by operation)
+            assertEquals(ObjmtronSerializer.parse("*<test:lazy/run.sh>").apply().tid(), dir.asRec().at(uri("run.sh")).tid());
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:runmark.count()", "0");
+            ObjmtronSerializer.parse("<test:lazy/run.sh>()").apply();
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:runmark.count()", "1");
         } catch (final java.io.IOException e) {
             throw MTronException.of(e);
         } finally {
             Machine.current().memory().write(make("$$/lazy/#"), noobj());
             Machine.current().memory().write(make("$$/lazy"), noobj());
             Machine.current().memory().write(make("$$/lazymark"), noobj());
+            Machine.current().memory().write(make("$$/runmark"), noobj());
         }
     }
 
