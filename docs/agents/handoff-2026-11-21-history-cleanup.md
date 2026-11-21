@@ -58,9 +58,14 @@ Paths are under `src/main/java/studio/phaseshift/metatron/`.
   files the thread rec at that vid: an obj built with a vid is written there (`Obj.Helper.objCheckAndSave`,
   `isa/m/type/Obj.java`). So a thread leaves two entries, its rec in memory and its pointer in `stop`.
 - That write resolves the `~` and stamps the thread with the absolute address (`Memory.write`), so a thread's vid is
-  where it is filed and its pointers read the same from any machine. Until 2026-11-21 a `VirtualThread` refused the
+  where it is filed, and it and its pointers read back from that machine and the machines below it (whether a parent
+  or a sibling can read into a live child machine was not checked). Until 2026-11-21 a `VirtualThread` refused the
   stamp (its `self` override) and kept `~/sys/thread/<id>`: every reader resolved that against its own machine, so its
   doc and the executor's pointers to it missed from anywhere else.
+- A computer still refuses the stamp: `BasicSwarmComputer.self` keeps its own override, so a computer's vid stays
+  `~/processor/computer/<n>`. A console line runs its computer as a thread, so the executor lists that `~` vid, and
+  every thread the line spawns (a `timeout` alarm, a branch lane) carries `source => auto_from_(~/processor/computer/<n>)`,
+  which misses from any other machine (metatron-reviewer, 2026-11-21).
 - A `docWrap`ped thread's `Docs` rec holds the thread itself (`Docs.doc` puts `obj => <the thread>`): pruning a
   thread's rec and its `stop` pointer frees nothing while its doc still holds it.
 - `run` and `stop` are `CopyOnWriteArrayList`s (`:89-90`), so every append copies the whole list: as `stop` grows, each
