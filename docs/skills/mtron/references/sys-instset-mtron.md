@@ -243,10 +243,12 @@ is doing — the sugar is short precisely because it is legible once:
 Wildcards are space-side. `+` is one segment, `#` is the recursion. A directory stores
 nothing, so it reads as its subtree, laid out from the names alone: each file in it is a
 lazy `!*<file>` reference, read (a program in it run) only when it is read -- its key
-called, or a read of values like `*<x/+>` or `*<x/#>`, which reads every file it reaches.
-Drawing a reference reads nothing. `*<x/+/>` names each file in `x` with its reference and
-each directory with its lazy subtree (an empty one holds nothing, so it is not named). The
-walk `.>>` names the children and reads nothing below them:
+called, or a read of values: `*<x/+>` reads each file directly in `x` (a directory answers
+its lazy subtree), `*<x/#>` every file below `x`. Drawing a file, writing over it and
+deleting it read nothing; a pattern write that fills the polys stored in files reads those
+files. `*<x/+/>` names each file in `x` with its reference and each directory with its lazy
+subtree (an empty one holds nothing, so it is not named). The walk `.>>` names the children
+and reads nothing below them:
 
 ```mtron_pre
 mfs:src/main/java.>>                     [-- the children of src/main/java --]

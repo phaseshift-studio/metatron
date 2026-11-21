@@ -82,6 +82,8 @@ public class MRel extends MObj implements Rel {
 
     @Override
     public String toShortString() {
-        return this.first().toShortString() + "=>" + this.second().toShortString();
+        // A REL IS DRAWN AS IT IS HELD (Marko, 2026-11-21: drawing reads nothing): first() and second() would read a
+        // !* range -- a file, and the program in it, run by the console or a log line that drew the rel
+        return this.firstDirect().toShortString() + "=>" + this.secondDirect().toShortString();
     }
 }

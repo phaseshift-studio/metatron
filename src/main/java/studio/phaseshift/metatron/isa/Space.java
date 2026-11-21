@@ -587,9 +587,11 @@ public interface Space extends Addressable, Rec, Closeable {
             //     obj = obj.apply();
             //  }
 
+            // A WRITE ASKS ONLY WHETHER SOMETHING IS STORED AT ITS ADDRESS, never what (Marko, 2026-11-21): the value is
+            // not taken, so a store whose read does work (a file decoded, a program in it run) does none to be written
+            // over or deleted. A store holding live objects closes what a delete removes itself (AbstractMemorySpace).
             final Iterator<IdObj> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
-                writeComplete(obj, current.next().obj());
                 return directWriter.apply(vid.resolve(), obj);
             } else {
                 final Iterator<IdPoly> itty = Helper.locateBasePoly(space, vid.basePath().resolve()).iterator();
