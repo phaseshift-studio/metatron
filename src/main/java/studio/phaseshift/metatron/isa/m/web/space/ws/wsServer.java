@@ -47,10 +47,10 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -182,9 +182,9 @@ public final class wsServer extends Listener {
 
     /**
      * a connection's lot: the route it took, its session, the inbound peer it minted there (null when declined), and
-     * the thread evaluating its message (empty between messages, and once a hang-up has interrupted it)
+     * the threads evaluating its frames (none between frames, and none once a hang-up has interrupted them)
      */
-    private record Session(Route route, WebSocketRec rec, fURI peer, AtomicReference<Thread> evaluating) {
+    private record Session(Route route, WebSocketRec rec, fURI peer, Set<Thread> evaluating) {
     }
 
     /**
@@ -358,7 +358,7 @@ public final class wsServer extends Listener {
             // ADOPTED BY THE SOCKET THAT SERVED IT: the session's frames are counted in this server's analyzer, at the
             // wire address its route answers (the handshake path under the socket's origin)
             session.servedBy(this, request.origin(this.origin()).qLess());
-            final AtomicReference<Thread> evaluating = new AtomicReference<>();
+            final Set<Thread> evaluating = ConcurrentHashMap.newKeySet();
             this.sessions.put(conn, new Session(taken, session, null, evaluating));
             session.onOpen(conn, handshake);
             final fURI peer = this.admit(taken, conn, session);
@@ -384,17 +384,17 @@ public final class wsServer extends Listener {
         final Session session = this.sessions.remove(conn);
         if (null == session)
             return;
-        // A HANG-UP ENDS THE EVALUATION OF ITS MESSAGE (2026-11-16): the session evaluates on the socket's worker,
-        // where nothing else ends an endless evaluation (an open span's walk asks its thread once a run), and its
-        // answer has no one to reach now. Given under the lock message() ends it under, the interrupt reaches this
-        // message and never the next one the worker takes. A connection closed by its own evaluation interrupts
-        // nothing.
+        // A HANG-UP ENDS THE EVALUATION OF ITS FRAMES (2026-11-16): nothing else ends an endless evaluation (an open
+        // span's walk asks its thread once a run), and their answers have no one to reach now. Every thread still
+        // evaluating one, the socket's worker or a program's own thread, is interrupted under the lock evaluate() ends
+        // under, so the interrupt reaches that frame and never the next one a worker takes. A connection closed by its
+        // own evaluation interrupts nothing.
         synchronized (session.evaluating()) {
-            final Thread evaluating = session.evaluating().get();
-            if (null != evaluating && Thread.currentThread() != evaluating) {
-                session.evaluating().set(null);
-                evaluating.interrupt();
-            }
+            for (final Thread evaluating : List.copyOf(session.evaluating()))
+                if (Thread.currentThread() != evaluating) {
+                    session.evaluating().remove(evaluating);
+                    evaluating.interrupt();
+                }
         }
         // A HANG-UP IS A DELETE: a write of noobj at the wire address the session served — the analq's write/delete
         // subset, counted and timed like any other write through the socket
@@ -412,9 +412,26 @@ public final class wsServer extends Listener {
         final Session session = this.sessions.get(conn);
         if (null == session)
             return;
+        // A PROGRAM IS EVALUATED OFF THE SOCKET'S WORKER (2026-11-21), on a virtual thread of its own. On the worker, a
+        // frame waiting on another machine held its connection and every frame queued behind it: three levels of a tree
+        // over peers that dial each other send an interior lane and then a leaf down one connection, the leaf behind the
+        // lane that, through the other connection, waits for it. A program answers under the tag its request carries
+        // (WebSocketObj#sendRecv), so a connection's programs may answer in any order, and a console sends its next line
+        // once the last is answered. Any other session's frames keep their order, on the worker.
+        if (session.rec() instanceof mtron_wsHandler program && program.evaluates())
+            Thread.ofVirtual().name("metatron-ws-frame-" + System.identityHashCode(conn))
+                    .start(() -> guard(conn, () -> this.evaluate(conn, session, message)));
+        else
+            this.evaluate(conn, session, message);
+    }
+
+    /**
+     * One frame, evaluated as the machine whose route the connection took, on the thread that runs it.
+     */
+    private void evaluate(final WebSocket conn, final Session session, final String message) {
         // the frame is counted where it is handled — the session's on_message read (WebSocketRec), in this socket's
         // analyzer — so there is no second meter here
-        session.evaluating().set(Thread.currentThread());
+        session.evaluating().add(Thread.currentThread());
         try {
             // a hang-up between the lookup and here found no thread to interrupt, so the session is asked for again
             if (session == this.sessions.get(conn))
@@ -423,7 +440,7 @@ public final class wsServer extends Listener {
             // THE HANG-UP'S INTERRUPT ENDS WITH THE EVALUATION: the worker serves the socket's other connections, and
             // Java-WebSocket's worker loop exits on an interrupt left set
             synchronized (session.evaluating()) {
-                if (null == session.evaluating().getAndSet(null))
+                if (!session.evaluating().remove(Thread.currentThread()))
                     Thread.interrupted();
             }
         }

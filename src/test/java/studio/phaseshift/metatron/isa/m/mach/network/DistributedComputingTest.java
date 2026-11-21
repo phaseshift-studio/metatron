@@ -347,6 +347,12 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,2,3,4,5,6,7,8}.plus(1).sum?hop={2}2()                 % branch().sum()                % {2}1  % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
             // an arity of one is the chain: the root ships all eight to one peer, which ships them to one of its own
             "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=[2,1]()                % branch().sum()                % [1,1] % 44  % [depth=>2,leaf=>1,level=>[1,1]]",
+            // height 3: a lane that lands on peer 1 or 2 re-plans once more, and one that lands on peer 3 is a leaf of two.
+            // Each connection between peers 1 and 2 carries an interior lane and then the leaf the other's lane waits for,
+            // which a peer answers only because it evaluates each program on a thread of its own (wsServer)
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=3()                    % branch().sum()                % 2     % 44  % [depth=>3,leaf=>6,level=>[2,4,4]]",
+            // the members bound the depth too: a lane of one member has nothing to deal, so a fourth level never forms
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=4()                    % branch().sum()                % 3     % 44  % [depth=>3,leaf=>6,level=>[2,4,4]]",
             // a budget on the head governs the run, and the earliest statement wins over a later one, either way round
             "start?hop=2({1,2,3,4,5,6,7,8}).plus(1).sum()             % branch().sum()                % 1     % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
             "start?hop=2({1,2,3,4,5,6,7,8}).plus(1).sum?hop=1()       % branch().sum()                % 1     % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
@@ -391,28 +397,6 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         if (null != expectedTree)
             checkEquality(LOG, ObjmtronSerializer.parse(expectedTree),
                     planned(Machine.evaluate(Machine.parse(code + ".explain()>>ext/topology/flow").asCode())), true);
-    }
-
-    /**
-     * E, THREE LEVELS DEEP OVER PEERS THAT DIAL EACH OTHER: the plan is right (each row's planned tree is what explain()
-     * draws), but the run times out at the lanes' 5 s deadline. At the third level each connection between peers 1 and
-     * 2 carries an interior lane and, queued behind it, a leaf the interior lane on the other connection waits for: a
-     * peer evaluates a connection's frames one at a time, on the socket's worker (wsServer), so neither leaf runs. Over
-     * an acyclic chain the same depth answers at once (root, 1, 2, 3: 44 in 134 ms, a forked-peer probe on 2026-11-21).
-     * The rows are the transport fix's regression; each is E's five columns.
-     */
-    @Disabled("three levels over peers that dial each other time out: a lane crosses a peer connection a waiting lane holds, and a connection's frames run one at a time")
-    @ParameterizedTest
-    @CsvSource(value = {
-            // height 3: a lane that lands on peer 1 or 2 re-plans once more, and one that lands on peer 3 is a leaf of two
-            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=3()                    % branch().sum()                % 2     % 44  % [depth=>3,leaf=>6,level=>[2,4,4]]",
-            // the members bound the depth too: a lane of one member has nothing to deal, so a fourth level never forms
-            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=4()                    % branch().sum()                % 3     % 44  % [depth=>3,leaf=>6,level=>[2,4,4]]",
-    }, delimiter = '%')
-    void test_E_tree_reduction_crossing_a_connection_twice(final String code, final String expectedRewriteForm,
-                                                           final String budget, final String expectedResult,
-                                                           final String expectedTree) {
-        this.test_E_tree_reduction(code, expectedRewriteForm, budget, expectedResult, expectedTree);
     }
 
     /**
