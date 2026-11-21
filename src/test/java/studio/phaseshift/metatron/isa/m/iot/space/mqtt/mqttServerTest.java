@@ -20,8 +20,11 @@ package studio.phaseshift.metatron.isa.m.iot.space.mqtt;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -41,14 +44,20 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.LST_TID;
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.RUN;
+import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.iot.space.mqtt.MqttPacket.Qos.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -116,6 +125,46 @@ public class mqttServerTest extends AbstractMetatronTest {
             MqttCodec.write(client.getOutputStream(), new MqttPacket.Disconnect());
             assertTrue(awaitsCount(live.server(), 0), "session should retire after DISCONNECT");
             client.close();
+        }
+    }
+
+    /**
+     * A SESSION READS ON A METATRON THREAD. A client's publish is written by its session's reader, a core thread of the
+     * system executor (it blocks on the socket for the connection's life), which a subscriber's thread names as its
+     * source; the reader is listed as running while the session lives and as ended once the client hangs up. The reader
+     * was started by the handshake, a core thread too, which ended once the session was up.
+     */
+    @Test
+    public void aSessionReadsOnAThreadTheExecutorLists() throws Exception {
+        final fURI topic = FOUNDRY.extend("kiln/4/temp");
+        final AtomicReference<AbstractThread> heardOn = new AtomicReference<>();
+        // a typed subscription (pub in, noobj out), as the server registers its own
+        Machine.write(topic.addQ(SUBQ), instLambda("kiln_watch", LST_TID, NOOBJ_TID, (pub, inst) -> {
+            heardOn.compareAndSet(null, BootLoader.CURRENT_THREAD.get());
+            return noobj();
+        }));
+        try (final Live live = serve()) {
+            final Socket client = open(live.port());
+            MqttCodec.write(client.getOutputStream(), connect("kiln-gauge"));
+            readConnAck(client);
+            MqttCodec.write(client.getOutputStream(), new MqttPacket.Publish(topic,
+                    "{\"temp\":1180}".getBytes(StandardCharsets.UTF_8), AT_MOST_ONCE, false, false, 0));
+            final long deadline = System.currentTimeMillis() + WINDOW_MS;
+            while (null == heardOn.get() && System.currentTimeMillis() < deadline)
+                Thread.sleep(20);
+            assertNotNull(heardOn.get(), "the subscriber hears the publish");
+            final fURI reader = heardOn.get().sourceVid().orElseThrow();
+            final CoreThread readerThread = assertInstanceOf(CoreThread.class, Machine.read(reader),
+                    "the publish is written on the session's reader, a core thread");
+            assertTrue(listedThreads(RUN).contains(reader), "listed as running while the session lives");
+            final fURI handshake = readerThread.sourceVid().orElseThrow();
+            assertInstanceOf(CoreThread.class, Machine.read(handshake), "the handshake started it, a core thread too");
+            assertTrue(awaitsStopped(handshake, WINDOW_MS), "and listed as ended once the session was up");
+            MqttCodec.write(client.getOutputStream(), new MqttPacket.Disconnect());
+            assertTrue(awaitsStopped(reader, WINDOW_MS), "the hang-up ends the reader");
+            client.close();
+        } finally {
+            Machine.write(topic.addQ(SUBQ), noobj());
         }
     }
 

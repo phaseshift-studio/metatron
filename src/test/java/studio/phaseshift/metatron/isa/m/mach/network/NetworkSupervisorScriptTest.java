@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.StatefulCSVSource;
@@ -32,21 +33,33 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
 
@@ -492,5 +505,71 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             "*<~/network/supervisor/status> % <supervising>   [-- the dial's supervision filed it --]"
     })
     public void testADialFilesTheSupervisor() {
+    }
+
+    /**
+     * A REDIAL RUNS ON A METATRON THREAD. A link that is down is redialed on a virtual thread of the system executor (the
+     * attempt mostly waits on the far side), spawned by the supervisor's own thread and standing in the supervised
+     * level's machine; the attempt is listed as running while it waits for its answer, and as ended once it has one.
+     */
+    @Test
+    public void testARedialRunsOnAThreadTheExecutorLists() throws Exception {
+        final fURI host = f("loop://kiln");
+        final DownLink link = new DownLink(host);
+        this.network().index(link);
+        try {
+            assertTrue(link.redialed.await(5, TimeUnit.SECONDS), "the supervisor redials a link that is down");
+            final AbstractThread attempt = assertInstanceOf(VirtualThread.class, link.redialedOn.get(),
+                    "the attempt is a virtual thread");
+            assertEquals(Optional.of(f("~/sys/thread/supervisor_thread")), attempt.sourceVid(),
+                    "spawned by the supervisor's own thread");
+            assertEquals(this.network().machine().vid(), link.redialedIn.get().vid(), "standing in the level's machine");
+            assertTrue(listedThreads(RUN).contains(attempt.vid()), "listed as running while it waits on the far side");
+            link.answer.countDown();
+            assertTrue(awaitsStopped(attempt.vid(), 5_000), "and listed as ended once it has its answer");
+        } finally {
+            link.answer.countDown();
+            this.network().drop(host);
+        }
+    }
+
+    /**
+     * A client whose link stays down: its redial records the thread it runs on and the machine that thread stands in,
+     * then waits for the test to let it answer (that it is still down).
+     */
+    private static final class DownLink extends MRec implements Network.Link {
+
+        private final AtomicReference<AbstractThread> redialedOn = new AtomicReference<>();
+        private final AtomicReference<Machine> redialedIn = new AtomicReference<>();
+        private final CountDownLatch redialed = new CountDownLatch(1);
+        private final CountDownLatch answer = new CountDownLatch(1);
+
+        private DownLink(final fURI host) {
+            super(mutableMap(uri(HOST), uri(host), uri(INST), rec(uri(EVAL_INST_TID),
+                    Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> inst.arg(0).apply(lhs)))), REC_TID, null);
+        }
+
+        @Override
+        public boolean connected() {
+            return false;
+        }
+
+        @Override
+        public boolean hungUp() {
+            return false;
+        }
+
+        @Override
+        public boolean redial() {
+            this.redialedOn.compareAndSet(null, BootLoader.CURRENT_THREAD.get());
+            this.redialedIn.compareAndSet(null, Machine.current());
+            this.redialed.countDown();
+            try {
+                this.answer.await(10, TimeUnit.SECONDS);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return false;
+        }
     }
 }

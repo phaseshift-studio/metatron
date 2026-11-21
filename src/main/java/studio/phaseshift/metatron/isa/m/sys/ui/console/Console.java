@@ -484,8 +484,8 @@ public class Console extends MRec implements Closeable, Runnable {
             this.status.close();
             final FloatingSurface surface = this.getFloatingSurface();
             // Everything that has been asked for is in the terminal before the terminal
-            // is given back: the render thread is a daemon and exiting will not wait for
-            // it, so without this drain its queued lines — the shutdown log among them —
+            // is given back: the exit (a System.exit) will not wait for the render thread,
+            // so without this drain its queued lines — the shutdown log among them —
             // would race the shell's prompt for the same tty
             surface.drain();
             // Stop the render thread once it has drained, not merely wait for it.  A

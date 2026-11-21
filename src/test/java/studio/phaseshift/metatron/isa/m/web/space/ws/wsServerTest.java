@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
-import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -261,7 +261,11 @@ public class wsServerTest extends AbstractMetatronTest {
     @Test
     void testAHangUpEndsEveryProgramItsSessionRuns() throws Exception {
         wsServer.serve(this.socket, mtron("/mtron"));
-        final Supplier<Obj> running = () -> ThreadExecutor.instance().summary().at(uri(RUN));
+        // the pooled platform threads alone: the executor also lists the virtual threads that come and go beside the
+        // walks on their own schedule (a frame's network analyzer publishes a step later, on one of its own)
+        final Supplier<Obj> running = () -> jnt(listedThreads(RUN).stream()
+                .filter(thread -> Machine.read(thread) instanceof CoreThread)
+                .count());
         final long idle = running.get().intValue();
         final WebSocketClient client = this.client("/mtron", new LinkedBlockingQueue<>());
         assertTrue(client.connectBlocking(2, TimeUnit.SECONDS), "the client dials the route");
