@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
@@ -365,7 +366,40 @@ public class AnalyzerTest extends AbstractMetatronTest {
             final fURI publication = heardOn.get().sourceVid().orElseThrow();
             assertTrue(scheduled.contains(publication), "the change lists its publication at once: " + scheduled);
             assertInstanceOf(VirtualThread.class, Machine.read(publication), "a virtual thread");
-            assertTrue(awaitsStopped(publication, PUBLISHED_MS), "listed as ended once it has published");
+            assertTrue(awaitsStopped(publication, PUBLISHED_MS),
+                    () -> "listed as ended once it has published: " + listedThreads(STOP));
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * A PUBLICATION THAT CANNOT BE MADE HOLDS BACK NONE AFTER IT. Making a publication's thread writes it at its vid;
+     * with that write refused, the change is still counted and goes unpublished, and the next change, once threads can
+     * be made again, publishes both.
+     */
+    @Test
+    void shouldPublishAfterAPublicationThatCouldNotBeMade() {
+        final Machine machine = Machine.current().push(f("analyzer_refused"));
+        try {
+            final AtomicInteger heard = new AtomicInteger();
+            final AtomicReference<Obj> last = new AtomicReference<>(noobj());
+            Machine.write(f("~/network/analyzer/analysis").addQ(SUBQ), instLambda((pub, inst) -> {
+                heard.incrementAndGet();
+                last.set(pub.asLst().lstValue().get(1));
+                return noobj();
+            }));
+            final AtomicBoolean refusing = new AtomicBoolean(true);
+            refuseThreads(machine, refusing);
+            final Analyzer network = machine.network().analyzer();
+            network.incr(f(WIRE), f(SENT), 1L);
+            CommonUtil.sleepThread(PUBLISHED_MS);
+            assertEquals(0, heard.get(), "a change whose publication cannot be made goes unpublished");
+            refusing.set(false);
+            network.incr(f(WIRE), f(SENT), 1L);
+            CommonUtil.sleepThread(PUBLISHED_MS);
+            assertEquals(1, heard.get(), "and the next change publishes");
+            assertEquals(2L, read(last.get(), "wire/sent"), "carrying the change that went unpublished");
         } finally {
             machine.pop();
         }

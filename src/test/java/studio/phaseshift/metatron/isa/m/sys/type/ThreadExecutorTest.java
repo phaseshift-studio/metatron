@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
@@ -48,6 +49,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -57,6 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -178,8 +182,9 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         Thread.sleep(250);
 
         final Lst stop = executor.at(uri(STOP));
-        assertTrue(stop.lstValue().stream().map(Obj.Helper::getAutoPointer).filter(Optional::isPresent).anyMatch(o -> o.get().equals(vid)),
-                "stop threads should contain the finished thread vid");
+        // the thread is named by the address it is filed at: the minted ~ resolved in this machine
+        assertTrue(stop.lstValue().stream().map(Obj.Helper::getAutoPointer).filter(Optional::isPresent).anyMatch(o -> o.get().equals(thread.vid())),
+                () -> "stop threads should contain the finished thread vid " + thread.vid() + ": " + listedThreads(STOP));
     }
 
     // =========================================================
@@ -556,7 +561,8 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
             thread.applyAsync();
             assertTrue(sleeping.await(5, TimeUnit.SECONDS), "the thread is running");
             thread.stop();
-            assertTrue(awaitsStopped(thread.vid(), 5_000), "a stopped thread is listed as ended");
+            assertTrue(awaitsStopped(thread.vid(), 5_000),
+                () -> "a stopped thread is listed as ended: " + listedThreads(STOP));
         } finally {
             root.detachAppender(logged);
         }
@@ -590,7 +596,8 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         thread.applyAsync().get(5, TimeUnit.SECONDS);
         assertSame(ranOn.get(), knownAs.get(), "while it runs, its java thread is the one its code runs on");
         assertEquals(virtual, ranOn.get().isVirtual(), kind + " thread");
-        assertTrue(awaitsStopped(thread.vid(), 5_000), "the thread is listed as ended");
+        assertTrue(awaitsStopped(thread.vid(), 5_000),
+                () -> "the thread is listed as ended: " + listedThreads(STOP));
         assertNull(thread.javaThread(), "and once it has ended, it runs on nothing");
     }
 
@@ -605,7 +612,8 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final Inst code = instLambda(_ -> noobj());
         final AbstractThread thread = "core".equals(kind) ? CoreThread.core(code) : VirtualThread.virtual(code);
         thread.applyAsync().get(5, TimeUnit.SECONDS);
-        assertTrue(awaitsStopped(thread.vid(), 5_000), "the thread is listed as ended");
+        assertTrue(awaitsStopped(thread.vid(), 5_000),
+                () -> "the thread is listed as ended: " + listedThreads(STOP));
         final CountDownLatch released = new CountDownLatch(1);
         final AtomicReference<Boolean> interrupted = new AtomicReference<>(false);
         final Thread otherWork = Thread.ofPlatform().start(() -> {
@@ -621,5 +629,36 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         otherWork.join(5_000);
         assertFalse(interrupted.get(), "a late stop must not interrupt the work its java thread took up next");
         assertEquals(uri(STOP), thread.at(uri(STATE)), "and the thread stays stopped");
+    }
+
+    /**
+     * A THREAD IS NAMED BY THE ADDRESS IT IS FILED AT. Its vid is minted {@code ~/sys/thread/<id>}, and the write that
+     * files it resolves the {@code ~} to the machine it is made in and stamps the thread with the result — a virtual
+     * thread as a core thread — so the thread and its doc read back by its vid in that machine and in one below it,
+     * where a {@code ~} would name the reader's own. The rows are {@code kind}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {"core", "virtual"}, delimiter = '%')
+    void testAThreadIsNamedByTheAddressItIsFiledAt(final String kind) {
+        final Machine kiln = Machine.current().push(f("kiln"));
+        try {
+            final Inst code = instLambda(_ -> noobj());
+            final AbstractThread thread = docWrap("core".equals(kind) ? CoreThread.core(code) : VirtualThread.virtual(code),
+                    "the kiln's thermocouple poller");
+            checkEquality(LOG, uri(kiln.vid().extend(f("sys/thread")).extend(thread.vid().name()).resolve()),
+                    uri(thread.vid()), true);
+            checkEquality(LOG, str("the kiln's thermocouple poller"),
+                    Machine.read(thread.vid().addQ(DOCQ)).orElse(rec0()).at(uri(DESC)), true);
+            final Machine below = Machine.current().push(f("probe"));
+            try {
+                checkEquality(LOG, uri(thread.tid()), uri(Machine.read(thread.vid()).tid()), true);
+                checkEquality(LOG, str("the kiln's thermocouple poller"),
+                        Machine.read(thread.vid().addQ(DOCQ)).orElse(rec0()).at(uri(DESC)), true);
+            } finally {
+                below.pop();
+            }
+        } finally {
+            kiln.pop();
+        }
     }
 }

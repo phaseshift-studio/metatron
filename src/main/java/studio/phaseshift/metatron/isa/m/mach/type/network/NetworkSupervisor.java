@@ -295,21 +295,29 @@ public final class NetworkSupervisor extends MRec implements Closeable {
         });
         if (!retry.due() || !retry.claim())
             return;
-        // a metatron thread, listed under /sys/thread/executor while the attempt waits on the far side
+        // a metatron thread, listed under /sys/thread/executor while the attempt waits on the far side. Making one
+        // writes it at its vid, here on the supervisor's thread: an attempt that cannot be made is a failed one, and its
+        // claim is given back, else every tick after it finds the attempt in flight and the link is never redialed
         final Machine owner = this.machine;
-        docWrap(VirtualThread.virtual(instLambda(_ -> {
-            Machine.current(owner);
-            try {
-                if (this.closed || !link.redial())
+        try {
+            docWrap(VirtualThread.virtual(instLambda(_ -> {
+                Machine.current(owner);
+                try {
+                    if (this.closed || !link.redial())
+                        retry.failed();
+                } catch (final Throwable e) {
+                    LOG.debug("redial of %s failed: %s", service, e);
                     retry.failed();
-            } catch (final Throwable e) {
-                LOG.debug("redial of %s failed: %s", service, e);
-                retry.failed();
-            } finally {
-                retry.release();
-            }
-            return noobj();
-        })), "metatron-peer-redial-" + System.identityHashCode(link)).applyAsync();
+                } finally {
+                    retry.release();
+                }
+                return noobj();
+            })), "metatron-peer-redial-" + System.identityHashCode(link)).applyAsync();
+        } catch (final RuntimeException e) {
+            LOG.debug("unable to schedule the redial of %s: %s", service, e.getMessage());
+            retry.failed();
+            retry.release();
+        }
     }
 
     /**

@@ -245,7 +245,7 @@ public class FloatingSurface {
                     if (!running) break;
                 } catch (final Throwable t) {
                     // A closed terminal is the normal teardown path — the terminal
-                    // went away while the daemon still had a queued write, and
+                    // went away while the render thread still had a queued write, and
                     // nothing this thread writes will land anymore.  Stop quietly:
                     // the message is noise, not a fault.
                     if (isClosedTerminal(t)) {
@@ -253,7 +253,7 @@ public class FloatingSurface {
                         break;
                     }
                     // Never let the render thread die — an uncaught exception
-                    // would silently kill the daemon and stall every caller
+                    // would silently end the render loop and stall every caller
                     // blocked in submitAndWait.
                     Console.rawErr().println("[terminal-writer] task threw: " + t.getMessage());
                 }

@@ -41,6 +41,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.RUN;
+import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
@@ -1385,8 +1386,10 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         assertTrue(passed.await(10, java.util.concurrent.TimeUnit.SECONDS), "the pass runs");
         assertInstanceOf(CoreThread.class, renderer.get(), "the pass runs on a core thread");
         assertTrue(nestedMs.get() < 1_000L, "a write from the render thread runs inline: " + nestedMs.get() + " ms");
-        assertTrue(listedThreads(RUN).contains(renderer.get().vid()), "listed as running while the surface lives");
+        assertTrue(listedThreads(RUN).contains(renderer.get().vid()),
+                () -> "listed as running while the surface lives: " + listedThreads(RUN));
         surface.shutdown();
-        assertTrue(awaitsStopped(renderer.get().vid(), 5_000), "and listed as ended once it is shut down");
+        assertTrue(awaitsStopped(renderer.get().vid(), 5_000),
+                () -> "and listed as ended once it is shut down: " + listedThreads(STOP));
     }
 }

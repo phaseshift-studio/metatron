@@ -20,7 +20,9 @@ package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
@@ -43,6 +45,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -231,7 +234,7 @@ public abstract class AbstractMetatronTest {
     /**
      * Close a console a test built. {@link Console#close()} gives back the console statics and stops the floating
      * surface's render thread; the shutdown here is an idempotent re-stop for a close that threw before reaching
-     * its own, so a reused fork never carries a daemon polling every couple of milliseconds.
+     * its own, so a reused fork never carries a render loop polling every couple of milliseconds.
      */
     protected static void closeConsole(final Console console) {
         console.close();
@@ -261,6 +264,22 @@ public abstract class AbstractMetatronTest {
             CommonUtil.sleepThread(10);
         }
         return false;
+    }
+
+    /**
+     * Refuse, while {@code refusing} holds, every thread made in {@code machine}: a guard on the space that files the
+     * machine's threads throws at the write that making one does, so the making throws — the failure a site that
+     * schedules a thread must survive. The guard stays declared once {@code refusing} is cleared, and from then on lets
+     * every write through.
+     */
+    public static void refuseThreads(final Machine machine, final AtomicBoolean refusing) {
+        final fURI threads = machine.vid().extend(f("sys/thread")).resolve();
+        machine.memory().<Space>getSpaceFor(threads).addQ(QProc.Helper.build(f("/m/qproc/cold_kiln"), f("cold_kiln"))
+                .qlessWrite((vid, obj) -> {
+                    if (refusing.get() && vid.hasPrefix(threads))
+                        throw MTronException.of("a cold kiln makes no threads: %s", vid);
+                    return noobj();
+                }).create());
     }
 
     /**

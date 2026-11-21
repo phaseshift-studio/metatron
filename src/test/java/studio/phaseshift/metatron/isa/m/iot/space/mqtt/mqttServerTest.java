@@ -44,6 +44,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
@@ -52,6 +53,7 @@ import static studio.phaseshift.metatron.Tokens.LST_TID;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.Tokens.RUN;
+import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -156,15 +158,44 @@ public class mqttServerTest extends AbstractMetatronTest {
             final fURI reader = heardOn.get().sourceVid().orElseThrow();
             final CoreThread readerThread = assertInstanceOf(CoreThread.class, Machine.read(reader),
                     "the publish is written on the session's reader, a core thread");
-            assertTrue(listedThreads(RUN).contains(reader), "listed as running while the session lives");
+            assertTrue(listedThreads(RUN).contains(reader),
+                () -> "listed as running while the session lives: " + listedThreads(RUN));
             final fURI handshake = readerThread.sourceVid().orElseThrow();
             assertInstanceOf(CoreThread.class, Machine.read(handshake), "the handshake started it, a core thread too");
-            assertTrue(awaitsStopped(handshake, WINDOW_MS), "and listed as ended once the session was up");
+            assertTrue(awaitsStopped(handshake, WINDOW_MS),
+                () -> "and listed as ended once the session was up: " + listedThreads(STOP));
             MqttCodec.write(client.getOutputStream(), new MqttPacket.Disconnect());
-            assertTrue(awaitsStopped(reader, WINDOW_MS), "the hang-up ends the reader");
+            assertTrue(awaitsStopped(reader, WINDOW_MS),
+                () -> "the hang-up ends the reader: " + listedThreads(STOP));
             client.close();
         } finally {
             Machine.write(topic.addQ(SUBQ), noobj());
+        }
+    }
+
+    /**
+     * A HANDSHAKE THAT CANNOT BE MADE REFUSES ITS CONNECTION, NEVER THE ACCEPTOR. Making the handshake's thread writes
+     * it at its vid; with that write refused, the connection is closed unanswered, and the next client, once threads
+     * can be made again, is answered by the same acceptor.
+     */
+    @Test
+    public void aHandshakeThatCannotBeMadeRefusesOnlyItsConnection() throws Exception {
+        final AtomicBoolean refusing = new AtomicBoolean(false);
+        try (final Live live = serve()) {
+            refuseThreads(Machine.current(), refusing);
+            refusing.set(true);
+            try (final Socket refused = open(live.port())) {
+                refused.setSoTimeout(WINDOW_MS);
+                assertEquals(-1, refused.getInputStream().read(), "the refused connection is closed unanswered");
+            }
+            refusing.set(false);
+            try (final Socket client = open(live.port())) {
+                client.setSoTimeout(WINDOW_MS);
+                MqttCodec.write(client.getOutputStream(), connect("kiln-gauge"));
+                readConnAck(client);
+            }
+        } finally {
+            refusing.set(false);
         }
     }
 
