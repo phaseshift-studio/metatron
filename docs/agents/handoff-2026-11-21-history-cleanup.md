@@ -57,9 +57,15 @@ Paths are under `src/main/java/studio/phaseshift/metatron/`.
   `CommonUtil.mintShortUUID(CURRENT_SYS_THREAD, true)`, which reads memory to rule out a collision), and constructing it
   files the thread rec at that vid: an obj built with a vid is written there (`Obj.Helper.objCheckAndSave`,
   `isa/m/type/Obj.java`). So a thread leaves two entries, its rec in memory and its pointer in `stop`.
-- A `VirtualThread` keeps its vid relative, `~/sys/thread/<id>` (its `self` override, `VirtualThread.java:60`); a
-  `CoreThread`'s ends up absolute. A doc written for a virtual thread (`docWrap`) is therefore keyed under `~` and a
-  `<vid>?docq` read misses it.
+- That write resolves the `~` and stamps the thread with the absolute address (`Memory.write`), so a thread's vid is
+  where it is filed and its pointers read the same from any machine. Until 2026-11-21 a `VirtualThread` refused the
+  stamp (its `self` override) and kept `~/sys/thread/<id>`: every reader resolved that against its own machine, so its
+  doc and the executor's pointers to it missed from anywhere else.
+- A `docWrap`ped thread's `Docs` rec holds the thread itself (`Docs.doc` puts `obj => <the thread>`): pruning a
+  thread's rec and its `stop` pointer frees nothing while its doc still holds it.
+- `run` and `stop` are `CopyOnWriteArrayList`s (`:89-90`), so every append copies the whole list: as `stop` grows, each
+  new entry costs more (metatron-reviewer, 2026-11-21). A `{1..n}.timeout(...)` walk appends n alarms, O(n·|stop|).
+  Whatever bounds `stop` bounds this cost too.
 - `execute(Runnable)` wraps a foreign `Runnable` in a one-shot `CoreThread` (`:172-180`), so it gets the same veneer and
   leaves the same entry. `summary()` answers `[run=>n, stop=>m]`.
 
