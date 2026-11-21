@@ -35,16 +35,20 @@ import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.DATA;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -201,6 +205,63 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
     @Override
     protected boolean skipBasicOperations() {
         return false;
+    }
+
+    /**
+     * a live obj a test can watch close: it counts its closes
+     */
+    private static final class Held extends MStr implements AutoCloseable {
+        private final AtomicInteger closes = new AtomicInteger();
+
+        private Held(final String value) {
+            super(value);
+        }
+
+        @Override
+        public void close() {
+            this.closes.incrementAndGet();
+        }
+    }
+
+    /**
+     * A DELETE CLOSES WHAT IT REMOVES, once -- a stream stored at an address closing each of its members (Marko,
+     * 2026-11-21: a stream closes as its members do). A write asks only whether something is stored
+     * (Space.Helper.resolveWrite), so the store that holds live objects is the one that closes them.
+     */
+    @Test
+    public void testADeleteClosesEachMemberOfAStoredStream() {
+        final Held first = new Held("first");
+        final Held second = new Held("second");
+        final Held single = new Held("single");
+        try {
+            Machine.current().memory().write(f("/t/held"), objs(List.<Obj>of(first, second)));
+            Machine.current().memory().write(f("/t/one"), single);
+            checkCodeParseApply(LOG, "*</t/held>.count()", "2");
+            Machine.current().memory().write(f("/t/held"), noobj());
+            Machine.current().memory().write(f("/t/one"), noobj());
+            assertEquals(1, first.closes.get(), "a stream's first member is closed once");
+            assertEquals(1, second.closes.get(), "a stream's second member is closed once");
+            assertEquals(1, single.closes.get(), "a single value is closed once");
+        } finally {
+            Machine.current().memory().write(f("/t/held"), noobj());
+            Machine.current().memory().write(f("/t/one"), noobj());
+        }
+    }
+
+    /**
+     * A SPACE CLOSING CLOSES WHAT IT HOLDS, a stream's members one by one, and spares a machine and itself wherever they
+     * sit -- alone at an address or a member of a stream there. Here the stream holds the space itself: closed whole, it
+     * would close the space within its own close; the same per-member filter spares a machine.
+     */
+    @Test
+    public void testClosingASpaceClosesEachMemberAndSparesItself() {
+        final memSpace store = memSpace.of(f("/tc/#"), f("/sys/space/close_" + System.nanoTime()));
+        final Held first = new Held("first");
+        final Held second = new Held("second");
+        store.write(f("/tc/members"), objs(List.<Obj>of(first, second, store)));
+        store.close();
+        assertEquals(1, first.closes.get(), "the stream's first member is closed once");
+        assertEquals(1, second.closes.get(), "the stream's second member is closed once");
     }
 
     /**

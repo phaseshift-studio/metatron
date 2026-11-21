@@ -588,8 +588,9 @@ public interface Space extends Addressable, Rec, Closeable {
             //  }
 
             // A WRITE ASKS ONLY WHETHER SOMETHING IS STORED AT ITS ADDRESS, never what (Marko, 2026-11-21): the value is
-            // not taken, so a store whose read does work (a file decoded, a program in it run) does none to be written
-            // over or deleted. A store holding live objects closes what a delete removes itself (AbstractMemorySpace).
+            // not taken, so a store that answers that without reading (fsSpace, by the file's name) reads nothing to be
+            // written over or deleted -- one that decodes in its exact read (tble, grph) still does. A store holding
+            // live objects closes what a delete removes itself (AbstractMemorySpace, each member of a stream too).
             final Iterator<IdObj> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
                 return directWriter.apply(vid.resolve(), obj);

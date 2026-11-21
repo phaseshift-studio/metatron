@@ -99,6 +99,9 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
                 if (obj.isNoObj()) {
                     LOG.trace("removing %s", pattern);
                     this.sjvm().remove(pattern);
+                    // A DELETE CLOSES WHAT IT REMOVES -- a stream closes each of its members (MObjs.close): the store
+                    // holding live objects is the one that closes them, since a write asks only whether something is
+                    // stored (Space.Helper.resolveWrite)
                     CommonUtil.close(current);
                 } else {
                     if (obj.isRec())

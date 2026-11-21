@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -36,7 +37,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.ALL_STAR;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
-public class MObjs implements Objs {
+public class MObjs implements Objs, AutoCloseable {
 
     public static final int BULK_TRIGGER = 10000;
 
@@ -55,6 +56,27 @@ public class MObjs implements Objs {
         this.tid = tid;
         if (null != vid)
             Machine.write(vid, this);
+    }
+
+    /**
+     * A STREAM CLOSES AS ITS MEMBERS DO (Marko, 2026-11-21): a stream at an address is each of its objs there, so
+     * closing it closes each member, once -- every member, though one fails: the address the stream was at may be
+     * gone already, and a member left open would stay open. The first failure is thrown after, the rest suppressed in it.
+     */
+    @Override
+    public void close() {
+        final List<RuntimeException> failures = new ArrayList<>();
+        this.jvm.forEach(member -> {
+            try {
+                CommonUtil.close(member);
+            } catch (final RuntimeException e) {
+                failures.add(e);
+            }
+        });
+        if (!failures.isEmpty()) {
+            failures.subList(1, failures.size()).forEach(failures.getFirst()::addSuppressed);
+            throw failures.getFirst();
+        }
     }
 
     @Override
