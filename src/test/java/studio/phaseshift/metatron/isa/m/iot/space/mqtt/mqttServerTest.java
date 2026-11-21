@@ -18,14 +18,18 @@
 
 package studio.phaseshift.metatron.isa.m.iot.space.mqtt;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -40,16 +44,21 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.DESC;
 import static studio.phaseshift.metatron.Tokens.LST_TID;
+import static studio.phaseshift.metatron.Tokens.MACH_ISA_TID;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.Tokens.RUN;
@@ -57,9 +66,12 @@ import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.iot.space.mqtt.MqttPacket.Qos.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -82,6 +94,12 @@ public class mqttServerTest extends AbstractMetatronTest {
      * a plain space without subq — a filter over it must be refused, not mutated
      */
     private static final fURI PLAIN = f("/plain");
+
+    @BeforeAll
+    public static void importMach() {
+        // mtron's thread instructions (stop) live in /m/mach
+        InstSet.importInstSet(MACH_ISA_TID);
+    }
 
     public mqttServerTest() {
         final memSpace foundry = memSpace.of(FOUNDRY.extend(ALL), f("~/memory/space/mqtt/foundry"));
@@ -170,6 +188,83 @@ public class mqttServerTest extends AbstractMetatronTest {
             client.close();
         } finally {
             Machine.write(topic.addQ(SUBQ), noobj());
+        }
+    }
+
+    /**
+     * A STOPPED READER CLOSES ITS SESSION. mtron's stop on a session's reader closes the session's socket, which wakes
+     * the read it is blocked in (a core thread's interrupt alone would not): the reader is listed as ended, the session
+     * is retired and its client hung up on, while another client's session goes on being served.
+     */
+    @Test
+    public void aStopOnTheReaderClosesItsSession() throws Exception {
+        try (final Live live = serve();
+             final Socket stopped = open(live.port());
+             final Socket other = open(live.port())) {
+            stopped.setSoTimeout(WINDOW_MS);
+            other.setSoTimeout(WINDOW_MS);
+            MqttCodec.write(stopped.getOutputStream(), connect("annealer-probe"));
+            readConnAck(stopped);
+            MqttCodec.write(other.getOutputStream(), connect("quench-gauge"));
+            readConnAck(other);
+            assertTrue(awaitsCount(live.server(), 2), "both sessions are live");
+            final fURI reader = awaitsReader("annealer-probe");
+            instructThread(reader, "stop");
+            assertTrue(awaitsStopped(reader, WINDOW_MS),
+                    () -> "a stopped reader is listed as ended: " + listedThreads(RUN));
+            assertTrue(awaitsCount(live.server(), 1), "its session is retired");
+            assertEquals(-1, stopped.getInputStream().read(), "its client is hung up on");
+            MqttCodec.write(other.getOutputStream(), new MqttPacket.PingReq());
+            assertInstanceOf(MqttPacket.PingResp.class, MqttCodec.read(other.getInputStream()),
+                    "the other client's session is still served");
+        }
+    }
+
+    /**
+     * A STOP DURING A PUBLISH SERVES NOTHING BEHIND IT. The reader is held in a publish (a guard on the topic's space
+     * waits, swallowing any interrupt) with another PUBLISH buffered behind it when it is stopped. Its stop closes the
+     * session before it interrupts, so the held publish finishes and the reader then finds the session hung up: the
+     * buffered packet never lands, and the stop is not lost to the swallowed interrupt.
+     */
+    @Test
+    public void aStopDuringAPublishServesNothingBehindIt() throws Exception {
+        final fURI held = FOUNDRY.extend("annealer/3/temp");
+        final fURI behind = FOUNDRY.extend("annealer/4/temp");
+        final CountDownLatch writing = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final AtomicBoolean holding = new AtomicBoolean(true);
+        Machine.current().memory().<Space>getSpaceFor(held).addQ(QProc.Helper.build(f("/m/qproc/kiln_hold"), f("kiln_hold"))
+                .qlessWrite((vid, obj) -> {
+                    if (holding.get() && vid.hasPrefix(held)) {
+                        writing.countDown();
+                        try {
+                            release.await(WINDOW_MS, TimeUnit.MILLISECONDS);
+                        } catch (final InterruptedException e) {
+                            // swallowed: the stop's interrupt never reaches the reader's loop
+                        }
+                    }
+                    return noobj();
+                }).create());
+        try (final Live live = serve();
+             final Socket client = open(live.port())) {
+            client.setSoTimeout(WINDOW_MS);
+            MqttCodec.write(client.getOutputStream(), connect("annealer-probe"));
+            readConnAck(client);
+            final fURI reader = awaitsReader("annealer-probe");
+            MqttCodec.write(client.getOutputStream(), new MqttPacket.Publish(held,
+                    "{\"temp\":1040}".getBytes(StandardCharsets.UTF_8), AT_MOST_ONCE, false, false, 0));
+            assertTrue(writing.await(WINDOW_MS, TimeUnit.MILLISECONDS), "the reader is held in the publish");
+            MqttCodec.write(client.getOutputStream(), new MqttPacket.Publish(behind,
+                    "{\"temp\":1120}".getBytes(StandardCharsets.UTF_8), AT_MOST_ONCE, false, false, 0));
+            instructThread(reader, "stop");
+            release.countDown();
+            assertTrue(awaitsStopped(reader, WINDOW_MS),
+                    () -> "a stopped reader is listed as ended: " + listedThreads(RUN));
+            assertTrue(awaitsCount(live.server(), 0), "its session is retired");
+            assertTrue(await(behind).isNoObj(), "the packet behind the held publish never lands");
+        } finally {
+            holding.set(false);
+            release.countDown();
         }
     }
 
@@ -666,6 +761,24 @@ public class mqttServerTest extends AbstractMetatronTest {
             Thread.sleep(20);
         }
         return noobj();
+    }
+
+    /**
+     * The vid of a client's session reader once the executor lists it as running: the running thread documented as
+     * {@code mqtt-session-<client>-reader}. Asserted present.
+     */
+    private static fURI awaitsReader(final String clientId) throws InterruptedException {
+        final long deadline = System.currentTimeMillis() + WINDOW_MS;
+        while (System.currentTimeMillis() < deadline) {
+            final Optional<fURI> reader = listedThreads(RUN).stream()
+                    .filter(vid -> str("mqtt-session-" + clientId + "-reader")
+                            .equals(Machine.read(vid.addQ(DOCQ)).orElse(rec0()).at(uri(DESC))))
+                    .findFirst();
+            if (reader.isPresent())
+                return reader.get();
+            Thread.sleep(20);
+        }
+        return fail("the session reader of " + clientId + " is not listed as running: " + listedThreads(RUN));
     }
 
     private static boolean awaitsCount(final mqttServer server, final int count) throws InterruptedException {

@@ -267,6 +267,19 @@ public abstract class AbstractMetatronTest {
     }
 
     /**
+     * Apply one of mtron's thread instructions ({@code stop}, {@code pause}, {@code resume}) to a thread by its address,
+     * {@code *<thread>.inst()}, walking its answer: the thread itself. The instruction resolves against the thread's rec
+     * ({@code thread::T}), so an answer that is a fail is an instruction that never reached the thread, and the assertion
+     * says why. Needs {@code /m/mach} imported.
+     */
+    public static void instructThread(final fURI thread, final String inst) {
+        final List<Obj> answer = Machine.parse("*<" + thread + ">." + inst + "()").apply(noobj()).stream().toList();
+        assertEquals(List.of(thread.toString()),
+                answer.stream().map(obj -> obj.isFail() ? obj.asFail().message() : String.valueOf(obj.vid())).toList(),
+                "mtron's " + inst + " answers the thread it reached");
+    }
+
+    /**
      * Refuse, while {@code refusing} holds, every thread made in {@code machine}: a guard on the space that files the
      * machine's threads throws at the write that making one does, so the making throws — the failure a site that
      * schedules a thread must survive. The guard stays declared once {@code refusing} is cleared, and from then on lets

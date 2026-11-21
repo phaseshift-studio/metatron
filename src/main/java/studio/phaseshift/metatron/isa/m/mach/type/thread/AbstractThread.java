@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.mach.type.thread;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
+import studio.phaseshift.metatron.isa.m.type.NotDetachable;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -49,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractThread extends MRec implements mThread, Closeable {
+public abstract class AbstractThread extends MRec implements mThread, Closeable, NotDetachable {
 
     protected static Uri threadState(final Thread thread) {
         if (null == thread)

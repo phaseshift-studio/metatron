@@ -1217,7 +1217,8 @@ public class mathInstSet extends AbstractInstSet {
                                         a time-bounded function \\(f(x) \\mapsto \\mathrm{code}(x)\\): the code's answer if it gives one
                                         within the time, and a catchable fail::T otherwise. The time runs out by interrupting the
                                         evaluating thread, so the code stops where it next looks: a span walk once a run, a sleep or
-                                        a wait at once.""")
+                                        a wait at once. The alarm that keeps the time is a thread listed under
+                                        /sys/thread/executor, and a stop on it runs the time out at once.""")
                                 .example("1.timeout(plus(1),second::1.0)               [-- 2 --]",
                                         "1.timeout({*}plus(0),millis::100.0).catch(0) [-- 0: the endless walk is cut off --]")
                                 .body((lhs, inst) -> {
@@ -1226,18 +1227,24 @@ public class mathInstSet extends AbstractInstSet {
                                     // (a lazy stream would outlive it). The code settling and the alarm firing race for `settled`:
                                     // an alarm that lost is stopped, and one that won is waited out (its future completes once its
                                     // interrupt has landed) and the interrupt consumed, so the thread, a pooled one most often, is
-                                    // never left interrupted. The alarm is a metatron thread, listed under /sys/thread/executor.
+                                    // never left interrupted. The alarm is a metatron thread, listed under /sys/thread/executor,
+                                    // and A STOPPED ALARM FIRES: a stop from anywhere but the settled code brings the deadline
+                                    // forward to now, and never takes it away.
                                     final long millis = inst.arg(1).as(MILLIS_TYPE).realValue().longValue();
                                     final Thread evaluator = Thread.currentThread();
                                     final AtomicBoolean settled = new AtomicBoolean();
+                                    final AtomicBoolean stopped = new AtomicBoolean();
                                     final VirtualThread alarm = VirtualThread.virtual(instLambda(_ -> {
                                         try {
-                                            Thread.sleep(millis);
-                                            if (settled.compareAndSet(false, true))
-                                                evaluator.interrupt();
+                                            // a time already run out (zero, or negative) fires at once
+                                            Thread.sleep(Math.max(0L, millis));
                                         } catch (final InterruptedException e) {
-                                            // stood down: the code settled first
+                                            // a stop: the timeout's own once the code has settled (it holds `settled`, so
+                                            // nothing fires below), or one from elsewhere, which runs the time out now
+                                            stopped.set(true);
                                         }
+                                        if (settled.compareAndSet(false, true))
+                                            evaluator.interrupt();
                                         return noobj();
                                     }));
                                     alarm.applyAsync();
@@ -1259,7 +1266,9 @@ public class mathInstSet extends AbstractInstSet {
                                         }
                                     }
                                     Thread.interrupted();
-                                    return fail("%s took more than %s", inst.arg(0), inst.arg(1));
+                                    return stopped.get()
+                                            ? fail("%s was stopped before %s ran out", inst.arg(0), inst.arg(1))
+                                            : fail("%s took more than %s", inst.arg(0), inst.arg(1));
                                 })
                                 .law(Law.pure)
                                 .create(),

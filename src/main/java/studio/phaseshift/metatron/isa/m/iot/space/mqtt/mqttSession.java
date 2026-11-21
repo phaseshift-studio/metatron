@@ -41,6 +41,7 @@ import java.util.List;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.iot.iotInstSet.IOT_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_CORE_THREAD_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -105,11 +106,20 @@ public class mqttSession extends MRec implements Closeable {
             return noobj();
         }));
         // the reader blocks on the socket for the connection's life: a core thread, so it holds a platform thread of
-        // the system executor's pool (listed under /sys/thread/executor) and no virtual thread's carrier
-        this.reader = docWrap(CoreThread.core(instLambda(_ -> {
+        // the system executor's pool (listed under /sys/thread/executor). A platform thread's interrupt leaves socket
+        // I/O alone, where a virtual thread's closes whatever socket it is blocked on (a JDBC connection's, mid-publish),
+        // so A STOPPED READER CLOSES ITS SESSION itself, before the stop's interrupt: closing the socket wakes the read,
+        // and a reader woken mid-publish finds the session hung up rather than serving a packet behind it
+        this.reader = docWrap(new CoreThread(mutableMap(uri(CODE), instLambda(_ -> {
             this.readLoop();
             return noobj();
-        })), "mqtt-session-" + connect.clientId() + "-reader");
+        })), MACH_CORE_THREAD_TID, null) {
+            @Override
+            public void stop() {
+                mqttSession.this.close();
+                super.stop();
+            }
+        }, "mqtt-session-" + connect.clientId() + "-reader");
     }
 
     /**

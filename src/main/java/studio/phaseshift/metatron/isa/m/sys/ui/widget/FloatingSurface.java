@@ -19,8 +19,10 @@
 package studio.phaseshift.metatron.isa.m.sys.ui.widget;
 
 import org.jline.terminal.Terminal;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.sys.ui.ScrollView;
 import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
@@ -34,9 +36,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.STATE;
+import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * A rendering surface that draws {@link Widget} instances at fixed or
@@ -233,7 +238,10 @@ public class FloatingSurface {
         // a core thread for the surface's life: a loop that polls, and a write that blocks on the terminal, hold a
         // platform thread of the system executor's pool (listed under /sys/thread/executor), never a carrier
         this.renderThread = docWrap(CoreThread.core(instLambda(_ -> {
-            while (running) {
+            // A STOP IS THE SURFACE'S SHUTDOWN. The loop is the surface's one writer, so mtron's stop on it ends the
+            // surface as shutdown() does. The state is read on every pass, as a pass may swallow the stop's interrupt.
+            final AbstractThread self = BootLoader.CURRENT_THREAD.get();
+            while (this.running && !self.at(STATE).equals(uri(STOP))) {
                 try {
                     // urgent (widget) passes first, then console output; polling
                     // rather than blocking on one queue so neither can starve
@@ -242,7 +250,7 @@ public class FloatingSurface {
                         task = this.renderQueue.poll(RENDER_POLL_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
                     if (null != task) task.run();
                 } catch (final InterruptedException e) {
-                    if (!running) break;
+                    // a stop's interrupt: the state ends the loop above, and an interrupt that is no stop ends nothing
                 } catch (final Throwable t) {
                     // A closed terminal is the normal teardown path — the terminal
                     // went away while the render thread still had a queued write, and
@@ -258,8 +266,11 @@ public class FloatingSurface {
                     Console.rawErr().println("[terminal-writer] task threw: " + t.getMessage());
                 }
             }
+            this.running = false;
+            // the tail: what was queued before the loop ended, widget passes first as in the loop, so a caller waiting
+            // on its own task is released rather than left to the submit timeout
             Runnable tail;
-            while ((tail = renderQueue.poll()) != null) {
+            while ((tail = this.urgentQueue.poll()) != null || (tail = this.renderQueue.poll()) != null) {
                 try {
                     tail.run();
                 } catch (final Throwable t) { /* drain quietly */ }
@@ -302,6 +313,15 @@ public class FloatingSurface {
     private void submitAndWait(final Runnable task, final boolean urgent) {
         if (Thread.currentThread() == this.renderThread.javaThread()) {
             task.run();
+            return;
+        }
+        // a shut-down surface (shutdown(), or a stop on its render thread) whose render thread has ENDED has nothing to
+        // wait on: the write lands inline, under the terminal's lock as the timeout fallback's does, without first waiting
+        // the timeout out. Until the thread has ended, a write queues as before, behind the tail it drains
+        if (!this.running && null == this.renderThread.javaThread()) {
+            synchronized (this.terminal) {
+                task.run();
+            }
             return;
         }
         final var latch = new java.util.concurrent.CountDownLatch(1);
@@ -731,7 +751,8 @@ public class FloatingSurface {
      * {@link #render()} cannot answer.
      */
     public void renderNow() {
-        if (!hasSlots()) return;
+        // a shut-down surface draws no widget pass (see shutdown())
+        if (!hasSlots() || !this.running) return;
         submitAndWait(this::renderInternal, true);
     }
 
@@ -840,8 +861,12 @@ public class FloatingSurface {
     }
 
     /**
-     * Shut down the render thread.  After this, no more terminal writes
-     * will be processed.
+     * Shut down the render thread.  After this, no widget pass, paint or slot
+     * clear runs, and once the thread has drained what was queued and ended, a
+     * console write ({@link #writeToTerminal}) lands inline.  A console in screen
+     * mode paints its lines through this surface, so its output then shows at its
+     * next prompt.  mtron's stop on the render thread shuts the surface down the
+     * same way.
      */
     public void shutdown() {
         this.running = false;
@@ -850,8 +875,8 @@ public class FloatingSurface {
 
     /**
      * Whether the render thread has been asked to stop (see {@link #shutdown()}).
-     * True once {@link #shutdown()} has been called; the thread drains any stragglers
-     * quietly and then exits.
+     * True once {@link #shutdown()} has been called, or once a stop on the render
+     * thread has ended its loop; the thread drains any stragglers quietly and then exits.
      */
     public boolean isShutdown() {
         return !this.running;
@@ -1735,7 +1760,8 @@ public class FloatingSurface {
      * the widget's own columns so overlapping widgets are never blanked.
      */
     private void clearSlot(final Slot slot) {
-        if (slot.prevHeight <= 0) return;
+        // a shut-down surface clears nothing (see shutdown())
+        if (slot.prevHeight <= 0 || !this.running) return;
         submitAndWait(() -> {
             final var sb = new StringBuilder(64);
             // Reset SGR before writing clear-spaces — this runs outside the

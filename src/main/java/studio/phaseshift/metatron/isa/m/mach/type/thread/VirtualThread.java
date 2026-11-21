@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.mach.type.thread;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.NotDetachable;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
@@ -38,7 +37,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class VirtualThread extends AbstractThread implements NotDetachable {
+public class VirtualThread extends AbstractThread {
 
     public VirtualThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(mutableMap(jvm), tid, vid);

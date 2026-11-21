@@ -62,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_THREAD_TYPE;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -629,6 +630,69 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         otherWork.join(5_000);
         assertFalse(interrupted.get(), "a late stop must not interrupt the work its java thread took up next");
         assertEquals(uri(STOP), thread.at(uri(STATE)), "and the thread stays stopped");
+    }
+
+    /**
+     * A RUNNING THREAD IS A thread::T, AND ITS DEREFERENCE IS THE THREAD ITSELF, SO mtron's STOP REACHES IT. The executor
+     * computes a running thread's runtime (an !auto in its rec), and a nominal slot refuses an inst-valued field, so
+     * thread::T's runtime slot takes any obj: with time::T there, no running thread was a thread::T, and stop, pause and
+     * resume resolved against none. A thread is not detached by a dereference: a copy shared its Java thread but not its
+     * rec. The rows are {@code kind}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {"core", "virtual"}, delimiter = '%')
+    void testMtronsStopReachesARunningThread(final String kind) throws Exception {
+        final CountDownLatch sleeping = new CountDownLatch(1);
+        final Inst code = instLambda(_ -> {
+            sleeping.countDown();
+            try {
+                Thread.sleep(10_000);
+            } catch (final InterruptedException e) {
+                // stopped: answer
+            }
+            return noobj();
+        });
+        final AbstractThread thread = "core".equals(kind) ? CoreThread.core(code) : VirtualThread.virtual(code);
+        thread.applyAsync();
+        assertTrue(sleeping.await(5, TimeUnit.SECONDS), "the thread is running");
+        assertTrue(thread.test(MACH_THREAD_TYPE), "a running thread is a thread::T");
+        assertSame(thread, Machine.parse("*<" + thread.vid() + ">").apply(noobj()).stream().toList().getFirst(),
+                "its dereference is the thread itself");
+        instructThread(thread.vid(), "stop");
+        assertTrue(awaitsStopped(thread.vid(), 5_000), () -> "a stopped thread is listed as ended: " + listedThreads(RUN));
+        checkEquality(LOG, uri(STOP), thread.at(uri(STATE)), true);
+    }
+
+    /**
+     * mtron's PAUSE HOLDS A LOOPING THREAD, AND RESUME LETS IT RUN ON. Both write only the thread's state, which the loop
+     * reads between cycles, so they reach a thread only through its own rec, never a detached copy of it. The rows are
+     * {@code kind}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {"core", "virtual"}, delimiter = '%')
+    void testMtronsPauseHoldsALoopingThread(final String kind) throws Exception {
+        final java.util.concurrent.atomic.AtomicInteger cycles = new java.util.concurrent.atomic.AtomicInteger();
+        final Inst code = instLambda(_ -> jnt(cycles.incrementAndGet()));
+        final AbstractThread thread = "core".equals(kind) ? CoreThread.core(code) : VirtualThread.virtual(code);
+        thread.jvm().put(uri(LOOP), real(5.0d));
+        thread.applyAsync();
+        final long started = System.currentTimeMillis() + 5_000;
+        while (cycles.get() < 3 && System.currentTimeMillis() < started)
+            Thread.sleep(5);
+        assertTrue(cycles.get() >= 3, "the thread loops");
+        instructThread(thread.vid(), "pause");
+        Thread.sleep(100); // the cycle the pause found in flight ends
+        final int held = cycles.get();
+        Thread.sleep(200);
+        checkEquality(LOG, jnt(held), jnt(cycles.get()), true);
+        checkEquality(LOG, uri(PAUSE), thread.at(uri(STATE)), true);
+        instructThread(thread.vid(), "resume");
+        final long resumed = System.currentTimeMillis() + 5_000;
+        while (cycles.get() <= held && System.currentTimeMillis() < resumed)
+            Thread.sleep(5);
+        assertTrue(cycles.get() > held, () -> "a resumed thread loops again: " + cycles.get() + " after " + held);
+        instructThread(thread.vid(), "stop");
+        assertTrue(awaitsStopped(thread.vid(), 5_000), () -> "a stopped thread is listed as ended: " + listedThreads(RUN));
     }
 
     /**
