@@ -1,9 +1,3 @@
-/m/mach/inst/auto_cluster?{0}<={0}() {
-  print('initializing auto_cluster for ${*/network/host}').
-  /network/roster/machine/#?subq -> sub::[code=>inst(_){
-    *0.?[uri::T=>uri{+}::T].
-      minus(*/network/roster/machine).
-      -<[//${>>as(rec::T).>>host} => -<[host=>_].as(ws_client::T)].
-      ==[_ => >>host.as(rec::T)>>host] <<= +<@/network/prefix>;.
-  print('\t to disconnect: /network/roster/machine/#?subq -> noobj')
-}@/m/mach/inst/auto_cluster
+harvest -> |harvest?rec<=int{*}(uri{?}::T){
+  spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0).
+    -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}

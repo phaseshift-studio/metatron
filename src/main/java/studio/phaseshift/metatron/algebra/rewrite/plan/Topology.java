@@ -26,12 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -42,21 +37,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.CONVERSE;
-import static studio.phaseshift.metatron.Tokens.COPY;
-import static studio.phaseshift.metatron.Tokens.EXT;
-import static studio.phaseshift.metatron.Tokens.FLOW;
-import static studio.phaseshift.metatron.Tokens.FORMAT;
-import static studio.phaseshift.metatron.Tokens.HOP;
-import static studio.phaseshift.metatron.Tokens.LOCAL;
-import static studio.phaseshift.metatron.Tokens.PLACE;
-import static studio.phaseshift.metatron.Tokens.SPLIT;
-import static studio.phaseshift.metatron.Tokens.STAGE;
-import static studio.phaseshift.metatron.Tokens.TOPOLOGY;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.EXPLAIN_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.RSHIFT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -73,9 +56,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * each lane's share and what each of its instructions leaves, the lanes merging at home, and what the master's
  * instructions leave.
  * <pre>
- *       ┌─//0─►{10}─{1}─┐
- * {15}──┼─//1─►{2}──{1}─┼──//local─►{3}─{1}
- *       └─//2─►{3}──{1}─┘
+ *       ┌─►//0─{10}─{1}─┐
+ * {15}──┼─►//1─{2}──{1}─┼─►//local─{3}─{1}
+ *       └─►//2─{3}──{1}─┘
  * </pre>
  * A COEFFICIENT IS A PRODUCT, READ LEFT TO RIGHT (Marko): each instruction's contract states the coefficient it takes
  * and the one it answers. One that takes at most one obj applies once per obj, so its range multiplies the stream's
@@ -307,7 +290,7 @@ public final class Topology {
                 blocks.add(fan(parts, home, host));
                 merged = true;
             } else {
-                blocks.add(new Block(List.of((merged ? "──" + home + "─►" : "")
+                blocks.add(new Block(List.of((merged ? "─►" + home + "─" : "")
                         + parts.stream().map(Obj::strValue).collect(Collectors.joining("─"))), 0));
                 merged = false;
             }
@@ -321,7 +304,7 @@ public final class Topology {
             for (int r = 0; r < rows.size(); r++) {
                 final int row = r - (above - block.main());
                 final String text = 0 <= row && row < block.rows().size() ? block.rows().get(row) : "";
-                rows.get(r).append(text).append(" ".repeat(width - text.length()));
+                rows.get(r).append(text).repeat(" ", width - text.length());
             }
         }
         return new Block(rows.stream().map(StringBuilder::toString).toList(), above);
@@ -353,7 +336,7 @@ public final class Topology {
                 widths[j] = Math.max(widths[j], stages.get(l).get(j).length());
         final List<Block> blocks = new ArrayList<>();
         for (int l = 0; l < lanes.size(); l++) {
-            final String entry = "─" + places.get(l) + "─".repeat(placeWidth - places.get(l).length()) + "─►";
+            final String entry = "─►" + places.get(l) + "─".repeat(placeWidth - places.get(l).length()) + "─";
             final String indent = " ".repeat(entry.length());
             if (theirs.get(l).isRec()) {
                 // the lane's machine planned its subtree, so a loopback address in it is on that machine's host
@@ -367,7 +350,7 @@ public final class Topology {
                 final StringBuilder body = new StringBuilder(entry);
                 for (int j = 0; j < stages.get(l).size(); j++) {
                     final String stage = stages.get(l).get(j);
-                    body.append(0 == j ? "" : "─").append(stage).append("─".repeat(widths[j] - stage.length()));
+                    body.append(0 == j ? "" : "─").append(stage).repeat("─", widths[j] - stage.length());
                 }
                 // a lane its machine could not explain carries the message under its stages
                 blocks.add(new Block(Stream.concat(Stream.of(body.toString()), theirs.get(l).isStr()

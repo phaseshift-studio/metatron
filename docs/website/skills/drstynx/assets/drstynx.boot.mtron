@@ -182,10 +182,10 @@ tblespace::[pattern    => </log/metatron/#>,
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
             route      => [/log/metatron/ => <>]]@<~/memory/space/log/metatron>;
 ws_server::[origin     => !*<boot/args/external/web/ws>,
-            route    => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
-                         /mcp     => mcp_mtron,
-                         /message => mcp_message,
-                         /mtron   => mtron_ws]]@~/network/web/ws;
+            route      => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
+                           /mcp     => mcp_mtron,
+                           /message => mcp_message,
+                           /mtron   => mtron_ws]]@~/network/web/ws;
 [== discovery is LAST of the listeners: it announces every surface mounted above, so it must
     come after the web servers or it publishes an incomplete set (http but not ws) ==]
 mdns_discovery::[=>];

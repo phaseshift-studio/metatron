@@ -1548,6 +1548,16 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.plus(2).explain()>>per_inst>>1>>args              % [2]          % the arg as its own obj, not a string",
             "1.plus(2).explain()>>per_inst>>0>>args              % [1]          % start's literal, its own obj",
             "1.plus(2).explain()>>per_inst>>1>>c_rng             % 1            % per-inst range coefficient",
+            // a branch reports its own rule: c_dom is its grain ({?} → {1}), c_rng the sum of its branches' rngs
+            "1.branch(+1,+2).explain()>>per_inst>>1>>c_dom        % 1            % a branch's c_dom is its grain, one obj",
+            "1.branch(+1,+2).explain()>>per_inst>>1>>c_rng        % 2            % ... and its c_rng the sum of its branches' rngs",
+            "1.branch(+1,+2).explain()>>format.has('#[{]2[}]::T').count() % 1  % the rng type names the summed count over unresolved branches (#)",
+            // c_out is the running product of c_rng, seeded at one
+            "1.plus(2).explain()>>per_inst>>0>>c_out             % 1            % the running output starts at one",
+            "1.branch(+1,+2).explain()>>per_inst>>1>>c_out       % 2            % ... and is the product of the c_rngs so far (1 × 2)",
+            "1.branch(+1,+2).branch(+1,+2).explain()>>per_inst>>2>>c_out % 4    % 1 × 2 × 2, the branch compounding",
+            "1.branch(+1,+2).plus(10).sum().explain()>>per_inst>>3>>c_out % 1    % a reducer's {*} dom collapses the output to its rng",
+            "{1,2,3}.plus?int{2}<=int{3}(1).explain()>>per_inst>>1>>c_out % 2   % a page ({3} dom) groups the stream and scales ({2} rng): 3/3 × 2",
             "1.plus(2).explain()>>format.count()                 % 1            % one report table (a bulk analysis dom applied it twice)",
             "1.plus(2).explain()>>format.type()                  % str::T       % the table is a plain str, not a str{2} multiplicity",
             // a span is one instruction (Marko, 2026-11-15), and the table writes it {span}inst{point}, as the language does
@@ -1572,11 +1582,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             // once, and a span from 0 keeps the lhs as its zero step (three, and their sum, four)
             "branch?<={0}(<~> => start({1,2,3}).plus(10), </.> => start({4}).plus(20)).explain()>>ext/topology/format.has('[{]4[}]──┤').count()  % 1 % parts of a seed sum to it",
             "branch?<={0}(<~> => start({1,2}).plus(10), </.> => start({1,2}).plus(20)).explain()>>ext/topology/format.has('[{]2[}]──┤').count()  % 1 % one seed copied is held once",
-            "branch?<={0}(<~> => start({1,2,3}).{0,1}sum(), </.> => start({4}).plus(1)).explain()>>ext/topology/format.has('─►[{]3[}]─[{]4[}]').count() % 1 % the zero step is the lhs",
+            "branch?<={0}(<~> => start({1,2,3}).{0,1}sum(), </.> => start({4}).plus(1)).explain()>>ext/topology/format.has('─►//local─[{]3[}]─[{]4[}]').count() % 1 % the zero step is the lhs",
             // negative steps walk the declared converse, one pointed step per exponent, else one limbo per obj
-            "branch?<={0}(<~> => start(5).{-2,0}plus(1), </.> => start(1)).explain()>>ext/topology/format.has('─►[{]1[}]─[{]3[}]').count()          % 1 % int plus declares its converse: three",
-            "branch?<={0}(<~> => start('marko').{-2,0}plus('a'), </.> => start(1)).explain()>>ext/topology/format.has('─►[{]1[}]─[{]2[}]').count() % 1 % str plus declares none: a limbo and the lhs",
-            "branch?<={0}(<~> => start(5).{-1,1}plus{3}(1), </.> => start(1)).explain()>>ext/topology/format.has('─►[{]1[}]─[{]9[}]').count()       % 1 % every step is pointed: nine",
+            "branch?<={0}(<~> => start(5).{-2,0}plus(1), </.> => start(1)).explain()>>ext/topology/format.has('─►//local─[{]1[}]─[{]3[}]').count()          % 1 % int plus declares its converse: three",
+            "branch?<={0}(<~> => start('marko').{-2,0}plus('a'), </.> => start(1)).explain()>>ext/topology/format.has('─►//local─[{]1[}]─[{]2[}]').count() % 1 % str plus declares none: a limbo and the lhs",
+            "branch?<={0}(<~> => start(5).{-1,1}plus{3}(1), </.> => start(1)).explain()>>ext/topology/format.has('─►//local─[{]1[}]─[{]9[}]').count()       % 1 % every step is pointed: nine",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

@@ -48,9 +48,9 @@ public class TopologyTest extends AbstractMetatronTest {
                 + "[place=>'//2',stage=>['{3}','{1}']]],"
                 + "['{3}','{1}']]").asLst());
         assertEquals(String.join("\n", "",
-                "      ┌─//0─►{10}─{1}─┐",
-                "{15}──┼─//1─►{2}──{1}─┼──//local─►{3}─{1}",
-                "      └─//2─►{3}──{1}─┘", ""), drawing);
+                "      ┌─►//0─{10}─{1}─┐",
+                "{15}──┼─►//1─{2}──{1}─┼─►//local─{3}─{1}",
+                "      └─►//2─{3}──{1}─┘", ""), drawing);
     }
 
     /**
@@ -68,11 +68,11 @@ public class TopologyTest extends AbstractMetatronTest {
                 + "[place=>'//1',stage=>['{4}','{1}']]],"
                 + "['{2}','{1}']]").asLst());
         assertEquals(String.join("\n", "",
-                "                 ┌─//2─►{2}─{1}─┐",
-                "     ┌─//0─►{4}──┤              ├──//0─►{2}─{1}─┐",
-                "     │           └─//3─►{2}─{1}─┘               │",
-                "{8}──┤                                          ├──//local─►{2}─{1}",
-                "     └─//1─►{4}─{1}─────────────────────────────┘", ""), drawing);
+                "                 ┌─►//2─{2}─{1}─┐",
+                "     ┌─►//0─{4}──┤              ├─►//0─{2}─{1}─┐",
+                "     │           └─►//3─{2}─{1}─┘              │",
+                "{8}──┤                                         ├─►//local─{2}─{1}",
+                "     └─►//1─{4}─{1}────────────────────────────┘", ""), drawing);
     }
 
     /**
@@ -90,9 +90,9 @@ public class TopologyTest extends AbstractMetatronTest {
         network.registerPrefix(f("zero"), f("ws://localhost:1111"));
         try {
             assertEquals(String.join("\n", "",
-                    "     ┌─//zero───────────►{1}─{1}─┐",
-                    "{1}──┤                           ├──//local─►{2}",
-                    "     └─//localhost:1112─►{1}─{1}─┘", ""), Topology.draw(flow.asLst()));
+                    "     ┌─►//zero───────────{1}─{1}─┐",
+                    "{1}──┤                           ├─►//local─{2}",
+                    "     └─►//localhost:1112─{1}─{1}─┘", ""), Topology.draw(flow.asLst()));
         } finally {
             network.unregisterPrefix(f("zero"));
         }
@@ -121,11 +121,11 @@ public class TopologyTest extends AbstractMetatronTest {
                     + "[place=><ws://localhost:1114>,stage=>['{2}','{1}'],topology=>'unreachable']],"
                     + "['{3}','{1}']]").asLst());
             assertEquals(String.join("\n", "",
-                    "     ┌─//b─►{2}─{1}" + "─".repeat(30) + "┐",
-                    "     │           ┌─//g──►{1}─{1}─┐               │",
-                    "{6}──┼─//g─►{2}──┤               ├──//g─►{2}─{1}─┼──//local─►{3}─{1}",
-                    "     │           └─//g3─►{1}─{1}─┘               │",
-                    "     └─//d─►{2}─{1}" + "─".repeat(30) + "┘",
+                    "     ┌─►//b─{2}─{1}" + "─".repeat(29) + "┐",
+                    "     │           ┌─►//g──{1}─{1}─┐              │",
+                    "{6}──┼─►//g─{2}──┤               ├─►//g─{2}─{1}─┼─►//local─{3}─{1}",
+                    "     │           └─►//g3─{1}─{1}─┘              │",
+                    "     └─►//d─{2}─{1}" + "─".repeat(29) + "┘",
                     "            unreachable", ""), drawing);
         } finally {
             prefixes.keySet().forEach(network::unregisterPrefix);
@@ -139,7 +139,7 @@ public class TopologyTest extends AbstractMetatronTest {
     @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
     @Test
     public void testAFanOfNoLanes() {
-        assertEquals(String.join("\n", "", "{8}────//local─►{0}", ""),
+        assertEquals(String.join("\n", "", "{8}───►//local─{0}", ""),
                 Topology.draw(ObjmtronSerializer.parse("[['{8}'],[,],['{0}']]").asLst()));
     }
 }

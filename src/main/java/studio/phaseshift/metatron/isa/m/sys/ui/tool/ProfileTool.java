@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.sys.ui.tool;
 
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.AbstractWidget;
@@ -47,29 +48,26 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
     protected TableWidget instTable;
 
     public ProfileTool(final Call call, final int argsWidth) {
-        this.instTable = new TableWidget(List.of("op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng"));
-        cInt dom = cInt.ONE();
-        cInt rng = cInt.ONE();
-        boolean first = true;
+        this.instTable = new TableWidget(List.of("op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng", "c_out"));
+        cInt running = cInt.ONE();
         for (final Inst i : call.insts()) {
+            final mInstSet.ExplainTypes e = mInstSet.explainTypes(i);
             final Inst.Form form = Inst.Form.of(i);
-            dom = first ? i.dom().c() : rng;
-            boolean inDom = i.dom().c().lte(rng);
-            // an initial inst makes its objs from its args, not from what flows in (the head, and the start() after
-            // every ';'), so its count is its own range's -- as a reducer's is one
-            rng = (form == Inst.Form.reducer) ? cInt.ONE() : (first || form == Inst.Form.initial ? i.rng().c() : i.rng().c().mult(dom));
-            first = false;
+            running = (e.cDom().isZero() || null == e.cDom().max()) ? e.cRng()
+                    : e.cDom().lte(cInt.ONE()) ? running.mult(e.cRng())
+                    : running.div(e.cDom()).mult(e.cRng());
             boolean found = !Machine.current().memory().read(i.tid().basePath()).isNoObj();
             this.instTable.addRow(List.of(
                     (found ? "{{b}}" : "{{r}}") + (i.tid().b().isOne() ? "" : ("{" + i.tid().b() + "}")) + i.tid().name() + (i.tid().d().isOne() ? "" : ("{" + i.tid().d() + "}")),
-                    i.dom().vid().small() + "::T",
-                    i.rng().vid().small() + "::T",
+                    e.dom().vid().small() + "::T",
+                    e.rng().vid().small() + "::T",
                     (i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}") + argsSummary(i.args(), argsWidth),
                     i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
                     "{{m}}" + form.toString(),
-                    "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
-                    "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
-            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), i, dom, rng));
+                    "{{g}}{{{y}}" + e.cDom().toString() + "{{g}}}{{X}}",
+                    "{{g}}{{{y}}" + e.cRng().toString() + "{{g}}}{{X}}",
+                    "{{g}}{{{y}}" + running.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
+            this.instTable.addMetadata(List.of(i, e.dom(), e.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), i, e.cDom(), e.cRng(), running));
         }
         this.style().attachment(this.instTable, true).apply();
     }
