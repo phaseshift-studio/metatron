@@ -60,6 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -787,7 +788,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
      * {@code !*<file>} -- is measured by what each reference reads. The walk itself fires nothing: a rec's values and a
      * rel's range are taken direct ({@code secondDirect}, as {@code atDirect} takes them, where {@code second()} would
      * fire any auto), so only a {@code !*} reference is read, once and deliberately. An answer holding none is the
-     * answer itself; a rebuilt rec or rel is its clone, with its tid and vid.
+     * answer itself; a rebuilt rec or rel keeps its tid, and none carries a vid, so rebuilding writes nothing (a clone
+     * that carries a vid saves itself through Machine.write).
      */
     private static Obj readThrough(final Obj answer) {
         if (answer.isAutoFrom())
@@ -795,12 +797,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         if (answer.isObjs()) {
             final List<Obj> each = answer.stream().toList();
             final List<Obj> read = each.stream().map(AbstractSpaceTest::readThrough).toList();
-            return IntStream.range(0, each.size()).allMatch(i -> read.get(i) == each.get(i)) ? answer : objs(read, answer.tid(), answer.vid());
+            return IntStream.range(0, each.size()).allMatch(i -> read.get(i) == each.get(i)) ? answer : objs(read);
         }
         if (answer.isRel()) {
             final Obj range = answer.asRel().secondDirect();
             final Obj read = readThrough(range);
-            return read == range ? answer : answer.asRel().second(read);
+            return read == range ? answer : rel(answer.asRel().firstDirect(), read, answer.tid(), null);
         }
         if (answer.isRec()) {
             final List<Rel> entries = answer.asRec().elements().toList();
@@ -810,7 +812,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 return answer;
             final Map<Obj, Obj> rebuilt = new LinkedHashMap<>();
             IntStream.range(0, entries.size()).forEach(i -> rebuilt.put(entries.get(i).firstDirect(), read.get(i)));
-            return answer.asRec().jvm(rebuilt);
+            return rec(rebuilt, answer.tid(), null);
         }
         return answer;
     }
