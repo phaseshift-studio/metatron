@@ -158,8 +158,7 @@ public class mtron_wsHandler extends WebSocketRec {
      */
     @Override
     public void onMessage(final WebSocket conn, final String message) {
-        final MIME.MIMEType input = this.getIO().input();
-        if (!input.isMtron() && !input.isMtronUI()) {
+        if (!this.evaluates()) {
             super.onMessage(conn, message);
             return;
         }
@@ -167,6 +166,15 @@ public class mtron_wsHandler extends WebSocketRec {
         // the guard the serializer read applies: an uncaught fail would skip on_message's function, and the client
         // would wait out its deadline for a reply that is never sent
         this.onMessage(conn, answer.isFail() ? answer.asFail().caughtTransient() : answer);
+    }
+
+    /**
+     * Whether this session's frames are programs: its input is mtron (or mtron UI), so each frame is evaluated once and
+     * answered under the tag its request carries, and {@code wsServer} may evaluate a connection's programs together.
+     */
+    public boolean evaluates() {
+        final MIME.MIMEType input = this.getIO().input();
+        return input.isMtron() || input.isMtronUI();
     }
 
     private static Obj evaluate(final String frame) {

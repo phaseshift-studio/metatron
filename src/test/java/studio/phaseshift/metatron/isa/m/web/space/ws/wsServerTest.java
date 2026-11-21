@@ -37,12 +37,12 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
@@ -50,6 +50,7 @@ import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -175,24 +176,18 @@ public class wsServerTest extends AbstractMetatronTest {
     }
 
     /**
-     * A HANG-UP ENDS THE EVALUATION OF ITS MESSAGE (2026-11-16). A session evaluates a frame on the socket's worker, and
-     * {@code 1.{*}plus(0)} never leaves plus's domain, so its walk loops on, as the expression says. The client hangs up
-     * without a closing handshake (a handshake would wait in the worker's queue behind the evaluation): the socket's
-     * close interrupts the worker, and the walk, which asks its thread once a run, answers a fail. The connection is
-     * the server's only one, so the selector reads the hang-up with the spare buffer its connection brought (the frame
-     * under evaluation holds the other). The worker serves the server's other connections too, so it must outlive the
-     * interrupt: a flag left set would end its loop.
+     * A raw client on this socket's {@code /mtron} route, outside metatron's own: it sends text frames, and queues the
+     * frames it is answered with.
      */
-    @Test
-    void testAHangUpEndsTheEvaluationOfItsMessage() throws Exception {
-        wsServer.serve(this.socket, mtron("/mtron"));
-        final WebSocketClient client = new WebSocketClient(URI.create(this.socket + "/mtron")) {
+    private WebSocketClient client(final BlockingQueue<String> replies) {
+        return new WebSocketClient(URI.create(this.socket + "/mtron")) {
             @Override
             public void onOpen(final ServerHandshake handshake) {
             }
 
             @Override
             public void onMessage(final String message) {
+                replies.add(message);
             }
 
             @Override
@@ -203,32 +198,64 @@ public class wsServerTest extends AbstractMetatronTest {
             public void onError(final Exception ex) {
             }
         };
+    }
+
+    /**
+     * A HANG-UP ENDS THE EVALUATION OF ITS MESSAGE (2026-11-16). {@code 1.{*}plus(0)} never leaves plus's domain, so its
+     * walk loops on, as the expression says. A program is evaluated on a virtual thread of its own (2026-11-21), which no
+     * stack dump lists, so the socket's analysis is the witness: a frame is a read there once it is answered, and this
+     * one is answered only when something ends its walk. The client hangs up without a closing handshake: the session's
+     * close interrupts the program, the walk, which asks its thread once a run, answers a fail to no one, and the read is
+     * counted. The socket serves the next connection.
+     */
+    @Test
+    void testAHangUpEndsTheEvaluationOfItsMessage() throws Exception {
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final fURI analysis = this.socket.extend(ALL).addQ("analq");
+        final Supplier<Obj> answered = () -> {
+            final Obj read = Machine.read(analysis).asRec().at(uri("read"));
+            return jnt(read.isRec() ? read.asRec().at(uri("count")).intValue() : 0L);
+        };
+        final WebSocketClient client = this.client(new LinkedBlockingQueue<>());
         assertTrue(client.connectBlocking(2, TimeUnit.SECONDS), "the client dials the route");
         client.send("1.{*}plus(0)");
-        // the worker evaluating the frame is the thread with wsServer.message on its stack
-        final Predicate<StackTraceElement> evaluating = frame ->
-                wsServer.class.getName().equals(frame.getClassName()) && "message".equals(frame.getMethodName());
-        final long found = System.currentTimeMillis() + 5000;
-        Thread worker = null;
-        while (null == worker && System.currentTimeMillis() < found) {
-            Thread.sleep(50);
-            worker = Thread.getAllStackTraces().entrySet().stream()
-                    .filter(entry -> Arrays.stream(entry.getValue()).anyMatch(evaluating))
-                    .map(Map.Entry::getKey).findFirst().orElse(null);
-        }
-        assertNotNull(worker, "the server evaluates the frame");
-        Thread.sleep(250);
-        assertTrue(Arrays.stream(worker.getStackTrace()).anyMatch(evaluating), "the walk is still walking before the hang-up");
+        Thread.sleep(500);
+        checkEquality(LOG, jnt(0), answered.get(), true);
         client.closeConnection(CloseFrame.ABNORMAL_CLOSE, "hung up");
-        // the worker leaves the evaluation and parks in its queue again, or dies if the interrupt outlived the evaluation
-        final long ended = System.currentTimeMillis() + 5000;
-        while (System.currentTimeMillis() < ended && worker.isAlive()
-                && (Thread.State.WAITING != worker.getState() || Arrays.stream(worker.getStackTrace()).anyMatch(evaluating)))
+        for (int waited = 0; waited < 5_000 && jnt(0).equals(answered.get()); waited += 50)
             Thread.sleep(50);
-        final StackTraceElement[] stack = worker.getStackTrace();
-        assertFalse(Arrays.stream(stack).anyMatch(evaluating),
-                "the hang-up ends the evaluation within five seconds, not at " + Arrays.toString(stack));
-        assertTrue(worker.isAlive(), "the worker outlives the interrupt: it serves the server's other connections");
+        checkEquality(LOG, jnt(1), answered.get(), true);
+        final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
+        final WebSocketClient next = this.client(replies);
+        assertTrue(next.connectBlocking(2, TimeUnit.SECONDS), "the next client dials the route");
+        try {
+            next.send("1.plus(1)");
+            checkEquality(LOG, jnt(2), ObjmtronSerializer.parse(String.valueOf(replies.poll(5, TimeUnit.SECONDS))), true);
+        } finally {
+            next.closeConnection(CloseFrame.NORMAL, "done");
+        }
+    }
+
+    /**
+     * A PROGRAM THAT WAITS HOLDS NO FRAME BEHIND IT (2026-11-21). Each program a session is sent is evaluated on a virtual
+     * thread of its own, so a walk that never ends leaves its connection free: the next frame on the same connection is
+     * answered while the first walks on. On the socket's worker it waited behind the walk for good, the queue a tree three
+     * levels deep over peers that dial each other deadlocked on (DistributedComputingTest, row E). Programs answer under
+     * their requests' tags, so they may answer out of order.
+     */
+    @Test
+    void testAProgramThatWaitsHoldsNoFrameBehindIt() throws Exception {
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
+        final WebSocketClient client = this.client(replies);
+        assertTrue(client.connectBlocking(2, TimeUnit.SECONDS), "the client dials the route");
+        try {
+            client.send("1.{*}plus(0)");
+            client.send("1.plus(1)");
+            checkEquality(LOG, jnt(2), ObjmtronSerializer.parse(String.valueOf(replies.poll(5, TimeUnit.SECONDS))), true);
+        } finally {
+            client.closeConnection(CloseFrame.ABNORMAL_CLOSE, "hung up");
+        }
     }
 
     @Test
