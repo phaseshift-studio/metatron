@@ -1640,27 +1640,64 @@ public class mInstSet extends AbstractInstSet {
 
 
     /**
+     * The per-evaluation dom and rng of one instruction, the branch applying its own rule: its c_dom is its
+     * grain ({?} refines to {1}, an explicit {*} barrier or {n} page is kept), and its c_rng is the sum of its
+     * branches' rngs, each branch program typed at that grain. Every other instruction reports its compiled
+     * dom/rng as-is — those are its declared coefficients, since a {1} dom feeds one obj per evaluation and the
+     * stream's multiplicity is c_out's business, not c_dom's. This is the single source of truth for the
+     * instruction table, shared by explain()'s table and the ExplainTool widget.
+     */
+    public record ExplainTypes(Type dom, Type rng, cInt cDom, cInt cRng) {}
+
+    public static ExplainTypes explainTypes(final Inst i) {
+        // only a positional (local) branch applies its own rule; a keyed branch is a route table the plan
+        // rewriter types, and its rng is the compiler's (the topology extension owns the distributed count)
+        if (!i.tid().basePath().equals(BRANCH_INST_TID) || !i.args().isLst())
+            return new ExplainTypes(i.dom(), i.rng(), i.dom().c(), i.rng().c());
+        final cInt grain = i.dom().c().isMaybe() ? cInt.ONE() : i.dom().c();
+        final List<Obj> programs = i.args().values().filter(b -> !b.isNoObj()).toList();
+        // a branch program emits its range times the coefficients of its instructions: plus{2}(2) is two ints, and a
+        // collapsed code carries its summed coefficient on an inner inst
+        final cInt sum = programs.stream()
+                .map(o -> o.isCall()
+                        ? o.asCall().insts().stream().map(Obj::c).reduce(o.isCode() ? o.rng().c().mult(o.c()) : o.rng().c(), cInt::mult)
+                        : o.c())
+                .reduce(cInt.ZERO(), cInt::plus);
+        final List<Type> rngs = programs.stream().filter(Obj::isCall).map(o -> o.asCall().rng()).toList();
+        final Type lcd = rngs.isEmpty() ? i.rng() : Type.Helper.findLCD(rngs);
+        return new ExplainTypes(T(i.dom().tid().c(grain)), T(lcd.tid().c(sum)), grain, sum);
+    }
+
+    /**
      * Build a column-justified text table of the instructions in {@code code}. A cell may hold SEVERAL
      * LINES (the UI serializer breaks a branch's place-keyed args one entry per line), so a row is as
      * tall as its tallest cell. Terminal-free — suitable for use in rewrites and non-interactive contexts.
      */
     private static String explainTable(final Code code) {
         final List<String> headers = List.of(
-                "op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng");
+                "op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng", "c_out");
         final List<List<String>> rows = new ArrayList<>();
         rows.add(headers);
+        cInt running = cInt.ONE();
         for (final Inst i : code.insts()) {
             // AN INSTRUCTION IS {span}inst{point}, written as the language writes it: c() is span x point, a value's
             // count of copies, so {10}plus(4) read as plus{10}, a point of ten, and {2}plus{3}(1) as plus{6}
+            final ExplainTypes e = explainTypes(i);
+            // c_out is the running output count. {0} (initial) and {*} (gather) reset it to c_rng; {1} and {?}
+            // (per-element, at most one obj per eval) scale it by c_rng; {n>1} (page) groups the stream and scales it
+            running = (e.cDom().isZero() || null == e.cDom().max()) ? e.cRng()
+                    : e.cDom().lte(cInt.ONE()) ? running.mult(e.cRng())
+                    : running.div(e.cDom()).mult(e.cRng());
             rows.add(List.of(
                     (i.tid().b().isOne() ? "" : ("{" + i.tid().b() + "}")) + i.tid().name() + (i.tid().d().isOne() ? "" : ("{" + i.tid().d() + "}")),
-                    i.dom().vid().small() + "::T",
-                    i.rng().vid().small() + "::T",
+                    e.dom().vid().small() + "::T",
+                    e.rng().vid().small() + "::T",
                     explainArgs(i),
                     i.hasf() ? (i.f().isLambda() ? "<j>" : "<m>") : "<?>",
                     Inst.Form.of(i).toString(),
-                    "{" + i.dom().c() + "}",
-                    "{" + i.rng().c() + "}"));
+                    "{" + e.cDom() + "}",
+                    "{" + e.cRng() + "}",
+                    "{" + running + "}"));
         }
         final int cols = headers.size();
         final int[] widths = new int[cols];
@@ -1748,17 +1785,23 @@ public class mInstSet extends AbstractInstSet {
         final List<Inst> insts = code.insts();
         // per-instruction stage records
         final List<Obj> perInstRecs = new ArrayList<>();
+        cInt running = cInt.ONE();
         for (final Inst i : insts) {
+            final ExplainTypes e = explainTypes(i);
+            running = (e.cDom().isZero() || null == e.cDom().max()) ? e.cRng()
+                    : e.cDom().lte(cInt.ONE()) ? running.mult(e.cRng())
+                    : running.div(e.cDom()).mult(e.cRng());
             perInstRecs.add(rec(
                     uri(OP), uri(f(i.tid().name())),
-                    uri(DOM), domRngValue(i.dom()),
-                    uri(RNG), domRngValue(i.rng()),
+                    uri(DOM), domRngValue(e.dom()),
+                    uri(RNG), domRngValue(e.rng()),
                     // the args as their own objs (ints, calls, ...), not their string renderings
                     uri(ARGS), lst(i.args().elements().toList()),
                     uri(Tokens.F), i.hasf() ? (i.f().isLambda() ? str("<j>") : i.getMtronFunctionObj()) : noobj(),
                     uri(FORM), uri(f(Inst.Form.of(i).toString())),
-                    uri(C_DOM), jnt(i.dom().c().min()),
-                    uri(C_RNG), jnt(i.rng().c().min())));
+                    uri(C_DOM), jnt(e.cDom().min()),
+                    uri(C_RNG), jnt(e.cRng().min()),
+                    uri(C_OUT), jnt(running.min())));
         }
         // rewrite-stage chain: this rec describes the COMPILED code, so it points BACK at the submitted
         // expression's rec; that rec is the chain's last and terminates it (noobj). explain() therefore
@@ -1767,8 +1810,8 @@ public class mInstSet extends AbstractInstSet {
         return rec(
                 mutableMap(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(explainTable(code)))),
                         uri(DESC), rec(
-                                uri(DOM), domRngValue(insts.getFirst().dom()),
-                                uri(RNG), domRngValue(insts.getLast().rng()),
+                                uri(DOM), domRngValue(explainTypes(insts.getFirst()).dom()),
+                                uri(RNG), domRngValue(explainTypes(insts.getLast()).rng()),
                                 uri(INSTS), jnt(insts.size()),
                                 uri(REWRITE), submittedRec),
                         uri(PER_INST), lst(perInstRecs)), EXPLANATION_TID, null);

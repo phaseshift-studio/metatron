@@ -7,4 +7,7 @@ import(/m/web,web);
 mdns_discovery::[=>];
 fsspace::[pattern=>fs:#,
           route  => [fs: => <~>]]@~/memory/space/fs;
+harvest?rec<=int{*}(uri{?}::T){
+  spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0).
+    -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest;
 

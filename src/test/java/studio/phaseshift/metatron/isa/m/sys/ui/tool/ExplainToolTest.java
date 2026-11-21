@@ -131,18 +131,18 @@ public class ExplainToolTest extends AbstractMetatronTest {
     }
 
     /**
-     * The c_dom/c_rng columns of the compiled table (what space draws) walk the chain: an inst takes in what the one
-     * before it put out, and scales it. An initial inst makes its objs from its args, not from what flows in, so its
-     * count is its own range's -- the head's, and the start() after every ';', which does not inherit the end()'s {0}.
+     * The c_dom/c_rng columns report the compiled instruction's own per-evaluation coefficients (i.dom().c() and
+     * i.rng().c()) — what it takes in and puts out on one evaluation, never the stream's multiplicity (that is
+     * c_out's business). An {@code end()} takes int{**} and emits {0}; a {@code count()} takes A{*} and emits one.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             "1+2                              % {0} {1}                     % {1} {1}",
-            "1+2; 3; plus(2)                  % {0} {1} {1} {0} {1} {0} {0} % {1} {1} {0} {1} {0} {0} {0}",
-            "1+2; 3; count()                  % {0} {1} {1} {0} {1} {0} {0} % {1} {1} {0} {1} {0} {0} {1}",
-            "{3}5; 2                          % {0} {3} {0}                 % {3} {0} {1}",
-            "1.plus(1).end().start(7).plus(1) % {0} {1} {1} {0} {1}         % {1} {1} {0} {1} {1}"})
-    public void testCoefficientsRestartAtEveryInitialInst(final String expression, final String cDom, final String cRng) {
+            "1+2; 3; plus(2)                  % {0} {1} {**} {0} {**} {0} {1} % {1} {1} {0} {1} {0} {0} {1}",
+            "1+2; 3; count()                  % {0} {1} {**} {0} {**} {0} {*} % {1} {1} {0} {1} {0} {0} {1}",
+            "{3}5; 2                          % {0} {**} {0}                 % {3} {0} {1}",
+            "1.plus(1).end().start(7).plus(1) % {0} {1} {**} {0} {1}         % {1} {1} {0} {1} {1}"})
+    public void testCoefficientsArePerEvaluation(final String expression, final String cDom, final String cRng) {
         final Code parsed = parse(expression);
         final Code code = parsed.resolve(noobj()).asCode();
         final TableWidget table = new ProfileTool(code, ProfileTool.ARGS_MIN_WIDTH).instTable;
