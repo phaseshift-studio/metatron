@@ -116,10 +116,10 @@ public class TimeoutInstTest extends AbstractInstSetTest {
         final Obj answers = Machine.parse(expected);
         checkEquality(LOG, answers.isCall() ? answers.apply() : answers, answer, true);
         final long deadline = System.currentTimeMillis() + 5_000;
-        while (alarmsOf(evaluator, listedThreads(STOP).subList(listed, listedThreads(STOP).size())).size() < alarms
+        while (alarmsOf(evaluator, endedSince(listed)).size() < alarms
                 && System.currentTimeMillis() < deadline)
             Thread.sleep(10);
-        assertEquals(alarms, alarmsOf(evaluator, listedThreads(STOP).subList(listed, listedThreads(STOP).size())).size(),
+        assertEquals(alarms, alarmsOf(evaluator, endedSince(listed)).size(),
                 "each alarm is listed as ended, at once");
         assertEquals(List.of(), alarmsOf(evaluator, listedThreads(RUN)), "and none is still running");
     }
@@ -141,7 +141,17 @@ public class TimeoutInstTest extends AbstractInstSetTest {
         }
         assertEquals(1, waiting.size(), "the alarm is listed while the walk runs");
         checkEquality(LOG, jnt(5), answer.get(20, TimeUnit.SECONDS), true);
-        assertTrue(awaitsStopped(waiting.getFirst(), 5_000), "and listed as ended once it has cut the walk off");
+        assertTrue(awaitsStopped(waiting.getFirst(), 5_000),
+                () -> "and listed as ended once it has cut the walk off: " + listedThreads(STOP));
+    }
+
+    /**
+     * the threads listed as ended since the list held {@code listed}: the list is read once, as a thread that ends
+     * between two reads would leave the bound of the second past the end of the first
+     */
+    private static List<fURI> endedSince(final int listed) {
+        final List<fURI> ended = listedThreads(STOP);
+        return ended.subList(listed, ended.size());
     }
 
     /**

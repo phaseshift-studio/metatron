@@ -41,9 +41,9 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
@@ -521,13 +521,41 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             assertTrue(link.redialed.await(5, TimeUnit.SECONDS), "the supervisor redials a link that is down");
             final AbstractThread attempt = assertInstanceOf(VirtualThread.class, link.redialedOn.get(),
                     "the attempt is a virtual thread");
-            assertEquals(Optional.of(f("~/sys/thread/supervisor_thread")), attempt.sourceVid(),
-                    "spawned by the supervisor's own thread");
+            // the supervisor's thread is named by the address it is filed at, so its vid reads it back from here
+            final fURI supervisor = attempt.sourceVid().orElseThrow();
+            assertEquals("supervisor_thread", supervisor.name(), "spawned by the supervisor's own thread");
+            assertInstanceOf(VirtualThread.class, Machine.read(supervisor), "whose vid reads it back: " + supervisor);
             assertEquals(this.network().machine().vid(), link.redialedIn.get().vid(), "standing in the level's machine");
-            assertTrue(listedThreads(RUN).contains(attempt.vid()), "listed as running while it waits on the far side");
+            assertTrue(listedThreads(RUN).contains(attempt.vid()),
+                    () -> "listed as running while it waits on the far side: " + listedThreads(RUN));
             link.answer.countDown();
-            assertTrue(awaitsStopped(attempt.vid(), 5_000), "and listed as ended once it has its answer");
+            assertTrue(awaitsStopped(attempt.vid(), 5_000), () -> "and listed as ended once it has its answer: " + listedThreads(STOP));
         } finally {
+            link.answer.countDown();
+            this.network().drop(host);
+        }
+    }
+
+    /**
+     * A REDIAL THAT CANNOT BE MADE IS A FAILED ATTEMPT, NOT ONE IN FLIGHT FOREVER. Making the attempt's thread writes it
+     * at its vid; with that write refused, no attempt is made and its claim is given back, so once threads can be made
+     * again the next attempt its backoff allows redials the link.
+     */
+    @Test
+    public void testARedialThatCannotBeMadeIsMadeLater() throws Exception {
+        final AtomicBoolean refusing = new AtomicBoolean(true);
+        refuseThreads(this.network().machine(), refusing);
+        final fURI host = f("loop://cold_kiln");
+        final DownLink link = new DownLink(host);
+        try {
+            this.network().index(link);
+            // the first attempt is due at once, and each refused one is due again a backoff later
+            CommonUtil.sleepThread(3 * NetworkSupervisor.TICK_MS);
+            assertEquals(1L, link.redialed.getCount(), "no attempt is made while its thread cannot be");
+            refusing.set(false);
+            assertTrue(link.redialed.await(15, TimeUnit.SECONDS), "its claim was given back: the link is redialed once it can be");
+        } finally {
+            refusing.set(false);
             link.answer.countDown();
             this.network().drop(host);
         }

@@ -317,11 +317,22 @@ public final class mqttServer extends Listener {
     }
 
     private void handle(final Socket conn) {
-        // a core thread, as the acceptor that spawns it: the handshake blocks on the socket, up to its connect timeout
-        docWrap(CoreThread.core(instLambda((_, _) -> {
-            this.connected(conn);
-            return noobj();
-        })), "mqtt-connect").applyAsync();
+        // a core thread, as the acceptor that spawns it: the handshake blocks on the socket, up to its connect timeout.
+        // Making one writes it at its vid, here on the acceptor: a handshake that cannot be made refuses its connection
+        // (closes it), and never ends the acceptor, which would leave the port bound and every client after it unanswered
+        try {
+            docWrap(CoreThread.core(instLambda((_, _) -> {
+                this.connected(conn);
+                return noobj();
+            })), "mqtt-connect").applyAsync();
+        } catch (final RuntimeException e) {
+            LOG.debug("unable to take the mqtt connection from %s: %s", conn.getRemoteSocketAddress(), e.getMessage());
+            try {
+                conn.close();
+            } catch (final IOException ignored) {
+                // already closing
+            }
+        }
     }
 
     /**

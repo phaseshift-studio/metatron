@@ -56,8 +56,15 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
         return new VirtualThread(mutableMap(uri(CODE), code), MACH_VIRTUAL_THREAD_TID, null);
     }
 
+    /**
+     * A THREAD NEVER LOSES ITS VID, and takes the address a write files it at. Its vid is minted relative,
+     * {@code ~/sys/thread/<id>}, and the save that constructing it makes is the door's: {@code Memory.write} resolves
+     * {@code ~} to the machine's own address, files the thread there, and stamps the thread with that address. Refusing
+     * the stamp left a virtual thread naming itself by a {@code ~} that every reader resolved against its own machine:
+     * its doc, the executor's pointers to it, and a child thread's source all missed it from anywhere else.
+     */
     @Override
     public VirtualThread self(final Object jvm, final fURI tid, final fURI vid) {
-        return (VirtualThread) super.self(jvm, tid, null == this.vid() ? vid : this.vid());
+        return (VirtualThread) super.self(jvm, tid, null == vid ? this.vid() : vid);
     }
 }
