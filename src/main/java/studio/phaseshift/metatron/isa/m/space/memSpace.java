@@ -91,14 +91,18 @@ public class memSpace extends AbstractMemorySpace {
     @Override
     public void close() {
         this.save();
-        this.sjvm().entrySet().forEach(kv -> {
-            try {
-                if (!(kv.getValue() instanceof Machine) && kv.getValue() != this)
-                    CommonUtil.close(kv.getValue());
-            } catch (final Exception e) {
-                LOG.warn(e);
-            }
-        });
+        // a space closing closes what it holds, a stream's members one by one, and spares a machine and itself wherever
+        // they sit -- alone at an address or a member of a stream there (Marko, 2026-11-21: a stream closes as its
+        // members do, so closing the stream whole would close a machine, or this space within its own close)
+        this.sjvm().entrySet().forEach(kv -> kv.getValue().stream()
+                .filter(value -> !(value instanceof Machine) && value != this)
+                .forEach(value -> {
+                    try {
+                        CommonUtil.close(value);
+                    } catch (final Exception e) {
+                        LOG.warn(e);
+                    }
+                }));
         super.close();
     }
 

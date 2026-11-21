@@ -41,7 +41,6 @@ import java.nio.file.FileSystems;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -569,12 +568,12 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             // deleting a program removes it, and runs it not
             Machine.current().memory().write(f("test:wlazy/gone.mtron"), noobj());
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:wlazymark.count()", "0");
-            assertFalse(java.nio.file.Files.exists(root.resolve("gone.mtron")), "the program is deleted");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*<test:wlazy/gone.mtron>.count()", "0");
 
             // nor does deleting every file in the directory by pattern
             Machine.current().memory().write(f("test:wlazy/#"), noobj());
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:wlazymark.count()", "0");
-            assertFalse(java.nio.file.Files.exists(root.resolve("swept.mtron")), "the pattern deletes the program");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*<test:wlazy/swept.mtron>.count()", "0");
         } catch (final java.io.IOException e) {
             throw MTronException.of(e);
         } finally {

@@ -27,13 +27,17 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -77,6 +81,52 @@ public class ObjsTest extends AbstractObjTest {
     }, delimiter = '|')
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
         super.testTake(current, remove, retrieved, remaining);
+    }
+
+    /**
+     * a live obj a test can watch close: it counts its closes, and a failing one throws after counting
+     */
+    private static final class Held extends MStr implements AutoCloseable {
+        private final AtomicInteger closes = new AtomicInteger();
+        private final boolean failing;
+
+        private Held(final String value, final boolean failing) {
+            super(value);
+            this.failing = failing;
+        }
+
+        @Override
+        public void close() {
+            this.closes.incrementAndGet();
+            if (this.failing)
+                throw new IllegalStateException("cannot close " + this.strValue());
+        }
+    }
+
+    /**
+     * A STREAM CLOSES AS ITS MEMBERS DO (Marko, 2026-11-21): a stream at an address is each of its objs there, so closing
+     * it closes each member, once -- what a delete, or a space or network closing what it holds, relies on.
+     */
+    @Test
+    public void testClosingAStreamClosesEachMember() {
+        final Held first = new Held("first", false);
+        final Held second = new Held("second", false);
+        CommonUtil.close(objs(List.<Obj>of(first, second)));
+        assertEquals(1, first.closes.get(), "the stream's first member is closed once");
+        assertEquals(1, second.closes.get(), "the stream's second member is closed once");
+    }
+
+    /**
+     * every member is closed though one fails -- the address the stream was at may be gone already, and a member left
+     * open would stay open -- and the failure is thrown after
+     */
+    @Test
+    public void testClosingAStreamClosesEveryMemberThoughOneFails() {
+        final Held failing = new Held("failing", true);
+        final Held after = new Held("after", false);
+        assertThrows(RuntimeException.class, () -> CommonUtil.close(objs(List.<Obj>of(failing, after))));
+        assertEquals(1, failing.closes.get(), "the failing member is closed once");
+        assertEquals(1, after.closes.get(), "the member after a failing one is closed too");
     }
 
     @Test
