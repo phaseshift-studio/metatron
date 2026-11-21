@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.fURI.Singleton;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -51,6 +53,22 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         Assertions.assertTrue(written.contains("{{link}}"), written);
         Assertions.assertTrue(written.contains("{{/link}}"), written);
         Assertions.assertTrue(written.contains("/a/b/c"), written);
+    }
+
+    /**
+     * A POINTER IS DRAWN AS A POINTER (Marko, 2026-11-21): an {@code !*} to an instruction is not the instruction, so the
+     * console never draws it as one, and drawing reads nothing -- a file in a directory's rec is read when its key is
+     * (fsSpaceTest#testADirectoryReadRunsNoProgramInIt). The pointer here is int's ring add, the kind a type's algebra
+     * holds; its target is an instruction, which the console once drew in the pointer's place.
+     */
+    @Test
+    public void testAPointerToAnInstructionDrawsAsAPointer() {
+        final fURI add = mInstSet.PLUS_INST_TID.dom(Tokens.INT_TID).rng(Tokens.INT_TID);
+        final Obj target = Machine.read(add);
+        Assertions.assertTrue(target.isInst(), "the pointer's target is an instruction, got: " + target);
+        final String drawn = ObjmtronUISerializer.single().write(MRec.rec(MUri.uri("add"), mFluent.StartLess.auto_from_(add).tryToInst()));
+        Assertions.assertTrue(drawn.contains("!*"), "the pointer is drawn as a pointer, got: " + drawn);
+        Assertions.assertNotEquals(ObjmtronUISerializer.single().write(MRec.rec(MUri.uri("add"), target)), drawn);
     }
 
     @Test

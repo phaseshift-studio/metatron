@@ -1239,27 +1239,6 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 // ── Clip writer (the UI one) ─────────────────────────────────
 
     /**
-     * Draw an auto-from pointer whose target is an instruction as the instruction it points to.
-     * A theory's law rec holds auto-from pointers to its live operations (the graph is the refs,
-     * not a copy), so a nested {@code add} drew the pointer's address while the same value reached
-     * directly dereferences to the instruction's short name.  Dereferencing here makes the nested
-     * read match the direct one.  A pointer whose target is not an instruction (or is not there)
-     * keeps the address form: there the reference, not a value, is what a reader needs.
-     */
-    private boolean renderAutoFromTarget(final StringBuilder sb, final Inst inst) {
-        if (!inst.isAutoFrom())
-            return false;
-        final Obj target = inst.arg(0);
-        if (null == target || !target.isUri())
-            return false;
-        final Obj resolved = Machine.read(target.uriValue());
-        if (resolved.isNoObj() || !resolved.isInst() || Obj.Helper.isAutoPointer(resolved))
-            return false;
-        this.generateInst(sb, resolved.asInst(), 0);
-        return true;
-    }
-
-    /**
      * Write a scalar leaf, clipped for the reader.  An inst and a uri always go through
      * the virtual writers — a value written any other way is one no renderer can tag —
      * everything else is drawn at its clip limit, with the exact value where the limit
@@ -1271,10 +1250,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final Inst inst = obj.asInst();
             if (inst.isNoObj())
                 sb.append(this.writeInst(inst));
-            else if (this.renderAutoFromTarget(sb, inst))
-                ; // the pointer's target is an instruction: drawn dereferenced, like the instruction itself
             else if (Obj.Helper.isAutoPointer(inst))
-                sb.append(this.writeInst(inst));  // an !@ pointer, or an !* pointer whose target is not an instruction: draw the address
+                // A POINTER IS DRAWN AS A POINTER (Marko, 2026-11-21): an !* to an instruction is not the
+                // instruction, and drawing never reads -- a file in a directory's rec is read when its key is
+                sb.append(this.writeInst(inst));
             else
                 // render the inst into the SHARED buffer, not writeInst's fresh one, so its broken
                 // argument lines indent against the column the inst actually sits at

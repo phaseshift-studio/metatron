@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -475,15 +476,19 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             // the directory is laid out from the names alone, and neither a listing nor a walk past a reference reads
             final Obj dir = ObjmtronSerializer.parse("*test:lazy").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
-            // assertEquals, not checkEquality: its message is drawn by the UI serializer, whose renderAutoFromTarget
-            // reads every !* target to see whether it is an instruction -- drawing the tree would run its program
-            assertEquals(rec(
+            checkEquality(LOG, rec(
                     uri("prog.mtron"), auto_from_(f("test:lazy/prog.mtron")).tryToInst(),
                     uri("run.sh"), auto_from_(f("test:lazy/run.sh")).tryToInst(),
-                    uri("sub"), rec(uri("notes.txt"), auto_from_(f("test:lazy/sub/notes.txt")).tryToInst())), dir);
-            assertEquals(auto_from_(f("test:lazy/prog.mtron")).tryToInst(), dir.asRec().atDirect(uri("prog.mtron")));
+                    uri("sub"), rec(uri("notes.txt"), auto_from_(f("test:lazy/sub/notes.txt")).tryToInst())), dir, true);
+            checkEquality(LOG, auto_from_(f("test:lazy/prog.mtron")).tryToInst(), dir.asRec().atDirect(uri("prog.mtron")), true);
             ObjmtronSerializer.parse("*test:lazy/+/").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+
+            // nor does drawing it: the console draws each file by its address (checkEquality's message above drew it
+            // as a log line does), so looking at a directory reads none of its files
+            final String drawn = ObjmtronUISerializer.single().write(dir);
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+            assertTrue(drawn.contains("prog.mtron") && drawn.contains("run.sh"), "the console draws each file, got: " + drawn);
 
             // a read of values in a representation reads each file in it: as text, a program is its source, never run
             final Obj text = ObjmtronSerializer.parse("*<test:lazy/+?mimeq=text/plain>").apply();
