@@ -252,22 +252,21 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     return key.hasQ(MIMEQ_PATTERN.toString())
                             ? IteratorUtil.of(IdObj.of(key, this.fileToObj(file, key.qMap())))
                             : IteratorUtil.of();
-                final Obj value;
-                if (file.isFile() && file.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && key.hasQ(MIMEQ_PATTERN.toString()))) {
-                    final String engine = checkScriptEvaluation(file);
-                    if (engine != null) {
-                        final fURI execTID = this.vid().extend("exec").extend(file.getName()).dom(ALL.maybe()).rng(ALL_STAR);
-                        value = instC(execTID, lst(T(ALL.maybeSome())), (lhs, inst) -> {
-                            LOG.debug("executing: %s => %s", lhs, inst);
-                            return this.executeFile(file, engine, inst.args());
-                        });
-                    } else {
-                        value = this.fileToObj(file, key.qMap());
+                // the file is there by its name, and is read only when its value is taken: a write asks only whether
+                // something is stored here (Space.Helper.resolveWrite), so writing over a file or deleting it reads it not
+                return IteratorUtil.map(IteratorUtil.of(file), stored -> {
+                    if (stored.isFile() && stored.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && key.hasQ(MIMEQ_PATTERN.toString()))) {
+                        final String engine = checkScriptEvaluation(stored);
+                        if (engine != null) {
+                            final fURI execTID = this.vid().extend("exec").extend(stored.getName()).dom(ALL.maybe()).rng(ALL_STAR);
+                            return IdObj.of(key, instC(execTID, lst(T(ALL.maybeSome())), (lhs, inst) -> {
+                                LOG.debug("executing: %s => %s", lhs, inst);
+                                return this.executeFile(stored, engine, inst.args());
+                            }));
+                        }
                     }
-                } else {
-                    value = this.fileToObj(file, key.qMap());
-                }
-                return IteratorUtil.of(IdObj.of(key, value));
+                    return IdObj.of(key, this.fileToObj(stored, key.qMap()));
+                });
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }

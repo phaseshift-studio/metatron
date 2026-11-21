@@ -41,13 +41,17 @@ import java.nio.file.FileSystems;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -468,13 +472,15 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
         try {
             final java.nio.file.Path root = java.nio.file.Path.of("/tmp/fsspace_test/lazy");
             java.nio.file.Files.createDirectories(root.resolve("sub"));
+            java.nio.file.Files.createDirectories(root.resolve("empty"));
             // a program and a script, each leaving its own mark where it runs
             java.nio.file.Files.writeString(root.resolve("prog.mtron"), "test:lazymark -> 'fired'");
             java.nio.file.Files.writeString(root.resolve("run.sh"), "#!/bin/sh\necho ran > /tmp/fsspace_test/runmark\n");
             assertTrue(root.resolve("run.sh").toFile().setExecutable(true, false), "the script is executable");
             java.nio.file.Files.writeString(root.resolve("sub/notes.txt"), "notes");
 
-            // the directory is laid out from the names alone, and neither a listing nor a walk past a reference reads
+            // the directory is laid out from the names alone -- an empty one holds nothing, so it is not in the tree --
+            // and neither a listing nor a walk past a reference reads
             final Obj dir = ObjmtronSerializer.parse("*test:lazy").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
             checkEquality(LOG, rec(
@@ -482,8 +488,12 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
                     uri("run.sh"), auto_from_(f("test:lazy/run.sh")).tryToInst(),
                     uri("sub"), rec(uri("notes.txt"), auto_from_(f("test:lazy/sub/notes.txt")).tryToInst())), dir, true);
             checkEquality(LOG, auto_from_(f("test:lazy/prog.mtron")).tryToInst(), dir.asRec().atDirect(uri("prog.mtron")), true);
-            ObjmtronSerializer.parse("*test:lazy/+/").apply();
+            final Obj listing = ObjmtronSerializer.parse("*test:lazy/+/").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+            checkEquality(LOG, objs(List.<Obj>of(
+                    rel(uri(f("test:lazy/prog.mtron")), auto_from_(f("test:lazy/prog.mtron")).tryToInst()),
+                    rel(uri(f("test:lazy/run.sh")), auto_from_(f("test:lazy/run.sh")).tryToInst()),
+                    rel(uri(f("test:lazy/sub")), rec(uri("notes.txt"), auto_from_(f("test:lazy/sub/notes.txt")).tryToInst())))), listing, true);
 
             // nor does drawing it (checkEquality's message above drew it as a log line does): the console draws each
             // file as its pointer -- three files, three !* -- so a draw that put a file's value in its pointer's place
@@ -491,6 +501,9 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             final String drawn = ObjmtronUISerializer.single().write(dir);
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
             assertEquals(3, drawn.split("!\\*", -1).length - 1, "the console draws each file as its pointer, got: " + drawn);
+            final String drawnListing = ObjmtronUISerializer.single().write(listing);
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
+            assertEquals(3, drawnListing.split("!\\*", -1).length - 1, "the console draws the listing's pointers, got: " + drawnListing);
 
             // a read of values in a representation reads each file in it: as text, a program is its source, never run
             final Obj text = ObjmtronSerializer.parse("*<test:lazy/+?mimeq=text/plain>").apply();
@@ -529,6 +542,45 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             Machine.current().memory().write(make("$$/lazy"), noobj());
             Machine.current().memory().write(make("$$/lazymark"), noobj());
             Machine.current().memory().write(make("$$/runmark"), noobj());
+        }
+    }
+
+    /**
+     * A WRITE READS NOTHING IT REPLACES (Marko, 2026-11-21): Space.Helper.resolveWrite asks a store only whether
+     * something is stored at an address, and fsSpace answers that from the file's name, so writing over a program,
+     * deleting it, or deleting every file in its directory by pattern runs none of them. A store holding live objects
+     * closes what a delete removes itself. (A pattern write that fills the polys stored in files reads those files: it
+     * writes into them.)
+     */
+    @Test
+    public void testAWriteReadsNothingItReplaces() {
+        try {
+            final java.nio.file.Path root = java.nio.file.Path.of("/tmp/fsspace_test/wlazy");
+            java.nio.file.Files.createDirectories(root);
+            // programs that leave a mark where they run
+            for (final String program : List.of("over.mtron", "gone.mtron", "swept.mtron"))
+                java.nio.file.Files.writeString(root.resolve(program), "test:wlazymark -> 'fired'");
+
+            // writing over a program writes over it, and runs it not
+            Machine.current().memory().write(f("test:wlazy/over.mtron"), str("v2"));
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:wlazymark.count()", "0");
+            checkEquality(LOG, str("v2"), ObjmtronSerializer.parse("*<test:wlazy/over.mtron>").apply(), true);
+
+            // deleting a program removes it, and runs it not
+            Machine.current().memory().write(f("test:wlazy/gone.mtron"), noobj());
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:wlazymark.count()", "0");
+            assertFalse(java.nio.file.Files.exists(root.resolve("gone.mtron")), "the program is deleted");
+
+            // nor does deleting every file in the directory by pattern
+            Machine.current().memory().write(f("test:wlazy/#"), noobj());
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*test:wlazymark.count()", "0");
+            assertFalse(java.nio.file.Files.exists(root.resolve("swept.mtron")), "the pattern deletes the program");
+        } catch (final java.io.IOException e) {
+            throw MTronException.of(e);
+        } finally {
+            Machine.current().memory().write(make("$$/wlazy/#"), noobj());
+            Machine.current().memory().write(make("$$/wlazy"), noobj());
+            Machine.current().memory().write(make("$$/wlazymark"), noobj());
         }
     }
 
