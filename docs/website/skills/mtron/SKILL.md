@@ -204,19 +204,19 @@ and the unsugar'd text table is the lazy `>>format` inst (materialized in the in
 ```mtron
 mtron> start(/a).rshift().rshift().rshift().explain()>>format
 ==>"""
-    op      dom          rng      args     f    desc     c_dom  c_rng 
-    start   noobj{0}::T  uri::T   [/a]     <j>  initial  {0}    {1}   
-    rshift  uri::T       #{*}::T  [noobj]  <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
+    op      dom          rng      args     f    desc     c_dom  c_rng  c_out 
+    start   noobj{0}::T  uri::T   [/a]     <j>  initial  {0}    {1}    {1}   
+    rshift  uri::T       #{*}::T  [noobj]  <j>  scatter  {1}    {*}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}    {*}   
    """
 mtron> /a.>>.>>.>>.explain()>>format
 ==>"""
-    op      dom          rng      args     f    desc     c_dom  c_rng 
-    start   noobj{0}::T  uri::T   [/a]     <j>  initial  {0}    {1}   
-    rshift  uri::T       #{*}::T  [noobj]  <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
-    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}   
+    op      dom          rng      args     f    desc     c_dom  c_rng  c_out 
+    start   noobj{0}::T  uri::T   [/a]     <j>  initial  {0}    {1}    {1}   
+    rshift  uri::T       #{*}::T  [noobj]  <j>  scatter  {1}    {*}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}    {*}   
+    rshift  A::T         B{*}::T           <j>  scatter  {1}    {*}    {*}   
    """
 ```
 Traversing the graph non-sugar'd vs sugar'd (`>>` = `rshift`):

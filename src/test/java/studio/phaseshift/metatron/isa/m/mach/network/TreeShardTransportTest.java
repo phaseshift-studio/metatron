@@ -25,15 +25,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -155,8 +151,8 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[{][23][}]──┤                                    % 1",
-            "├──//localhost:[0-9]+─►[{]2[}]─[{]1[}]─+[┐┤┼┘]   % 1",
-            "──//local─►[{]3[}]─[{]1[}]                       % 1",
+            "├─►//localhost:[0-9]+─[{]2[}]─[{]1[}]─+[┐┤┼┘]   % 1",
+            "─►//local─[{]3[}]─[{]1[}]                       % 1",
             "//two─[^@]*//two─                                % 1",
             "//three─[^@]*//three─                            % 1",
     }, delimiter = '%')
@@ -188,7 +184,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the drawing is the subject")
     @ParameterizedTest
     @CsvSource(value = {
-            "branch?<={0}(<~> => start?hop=1({1,2,3,4}).plus(1).sum(), </.> => start(5)) % //local─►[{]4[}]──┼ % 1",
+            "branch?<={0}(<~> => start?hop=1({1,2,3,4}).plus(1).sum(), </.> => start(5)) % ─►//local─[{]4[}]──┼ % 1",
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum())       % [{]8[}]──┤                 % 1",
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum?hop=1()) % [{]8[}]──┤                 % 1",
             "branch?<={0}(<P1> => start({1,2,3,4,5,6,7,8}).plus(1).sum().plus(1).sum?hop=0()) % [{]8[}]──┤ % 1",

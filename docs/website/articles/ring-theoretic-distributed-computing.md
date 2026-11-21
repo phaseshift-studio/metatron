@@ -127,8 +127,7 @@ mtron> harvest?rec<=int{*}(uri{?}::T){
            -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest
 ...
 mtron> {0,1}.harvest()
-==>[0=>ws://localhost:1111/mtron,
-    1=>ws://localhost:1112/mtron]
+==>fail::[MacHiNe fAILED][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/processor/fail/3
 ```
 The serial program
 
@@ -141,14 +140,10 @@ is rewritten by `law_shard`, and `explain()` prints the code the machine runs:
 ```mtron
 mtron> {1,2,3,4}.plus(1).sum().explain()>>format
 ==>"""
-    op      dom          rng        args                                                     f    desc      c_dom  c_rng 
-    branch  noobj{0}::T  int{*}::T  [ws://localhost:1111=>start?hop=0({1,3}).plus(1).sum(),  <j>  standard  {0}    {*}   
-                                     ws://localhost:1112=>start?hop=0({2,4}).plus(1).sum()]                              
-    sum     int{*}::T    int::T                                                              <j>  reducer   {*}    {1}   
-   
-        ┌─//0─►{2}─{2}─{1}─┐
-   {4}──┤                  ├──//local─►{2}─{1}
-        └─//1─►{2}─{2}─{1}─┘
+    op     dom          rng        args         f    desc     c_dom  c_rng  c_out 
+    start  noobj{0}::T  int{4}::T  [{1,2,3,4}]  <j>  initial  {0}    {4}    {4}   
+    plus   int::T       int::T     [1]          <j>  mapper   {1}    {1}    {4}   
+    sum    int{*}::T    int::T                  <j>  reducer  {*}    {1}    {1}   
    """
 ```
 The `branch` is keyed by the two places. Each lane starts from its share of the seed, `{1,3}` or `{2,4}` (the members
@@ -159,14 +154,9 @@ it: each place counts its share, and home sums the counts.
 ```mtron
 mtron> {1,2,3,4}.count().explain()>>format
 ==>"""
-    op      dom          rng        args                                               f    desc      c_dom  c_rng 
-    branch  noobj{0}::T  int{*}::T  [ws://localhost:1111=>start?hop=0({1,3}).count(),  <j>  standard  {0}    {*}   
-                                     ws://localhost:1112=>start?hop=0({2,4}).count()]                              
-    sum     int{*}::T    int::T                                                        <j>  reducer   {*}    {1}   
-   
-        ┌─//0─►{2}─{1}─┐
-   {4}──┤              ├──//local─►{2}─{1}
-        └─//1─►{2}─{1}─┘
+    op     dom          rng        args         f    desc     c_dom  c_rng  c_out 
+    start  noobj{0}::T  int{4}::T  [{1,2,3,4}]  <j>  initial  {0}    {4}    {4}   
+    count  int{*}::T    int::T                  <j>  reducer  {*}    {1}    {1}   
    """
 ```
 The rewrite never names a combiner: it reads the fold's declared laws and computes one.
@@ -194,15 +184,10 @@ mtron> {5,3,9,1,7}.order()==[{2}_]
 ```mtron
 mtron> {5,3,9,1,7}.order().select([{2}_]).explain()>>format
 ==>"""
-    op      dom                 rng                   args                                                                     f    desc      c_dom  c_rng 
-    branch  noobj{0}::T         lst[{*}int{*}]{*}::T  [ws://localhost:1111=>start?hop=0({5,9,7}).order().select([id(),id()]),  <j>  standard  {0}    {*}   
-                                                       ws://localhost:1112=>start?hop=0({3,1}).order().select([id(),id()])]                                
-    kmerge  lst[{*}A{*}]{*}::T  lst[{*}int{*}]::T     [noobj]                                                                  <j>  reducer   {*}    {1}   
-    select  lst::T              lst{?}::T             [[id(),id()]]                                                            <j>  mapper    {1}    {?}   
-   
-        ┌─//0─►{3}─{1}─{?}─┐
-   {5}──┤                  ├──//local─►{0,2}─{1}─{?}
-        └─//1─►{2}─{1}─{?}─┘
+    op      dom          rng                args           f    desc     c_dom  c_rng  c_out 
+    start   noobj{0}::T  int{5}::T          [{5,3,9,1,7}]  <j>  initial  {0}    {5}    {5}   
+    order   int{*}::T    lst[{*}int{*}]::T  [noobj]        <j>  reducer  {*}    {1}    {1}   
+    select  lst::T       lst{?}::T          [[id(),id()]]  <j>  mapper   {1}    {?}    {?}   
    """
 ```
 Each place sorts its share and keeps two, and home merges the runs and keeps two, so no place sends more than two
@@ -230,17 +215,12 @@ mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
 ==>86
 mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().explain()>>format
 ==>"""
-    op      dom          rng        args                                                       f    desc      c_dom  c_rng 
-    branch  noobj{0}::T  int{*}::T  [ws://localhost:1111=>start?hop=0({1,3,5}).plus(1).sum(),  <j>  standard  {0}    {*}   
-                                     ws://localhost:1112=>start?hop=0({2,4}).plus(1).sum()]                                
-    sum     int{*}::T    int::T                                                                <j>  reducer   {*}    {1}   
-    branch  int{*}::T    int{*}::T  [ws://localhost:1111=>{0,2}plus?hop=0(1).sum(),            <j>  standard  {*}    {*}   
-                                     ws://localhost:1112=>{3}plus?hop=0(1).sum()]                                          
-    sum     int{*}::T    int::T                                                                <j>  reducer   {*}    {1}   
-   
-        ┌─//0─►{3}─{3}─{1}─┐                    ┌─//0─►{1}─{3}─{1}─┐
-   {5}──┤                  ├──//local─►{2}─{1}──┤                  ├──//local─►{2}─{1}
-        └─//1─►{2}─{2}─{1}─┘                    └─//1─►{1}─{1}─{1}─┘
+    op         dom          rng        args           f    desc     c_dom  c_rng  c_out 
+    start      noobj{0}::T  int{5}::T  [{1,2,3,4,5}]  <j>  initial  {0}    {5}    {5}   
+    plus       int::T       int::T     [1]            <j>  mapper   {1}    {1}    {5}   
+    sum        int{*}::T    int::T                    <j>  reducer  {*}    {1}    {1}   
+    {0,3}plus  int::T       int::T     [1]            <j>  mapper   {1}    {1}    {1}   
+    sum        int{*}::T    int::T                    <j>  reducer  {*}    {1}    {1}   
    """
 ```
 The plan has a `branch` and a `sum` for each cut. The first deals the seed. The second has one object, the `20` the
@@ -252,103 +232,34 @@ expansion and contraction of each cut in figure 2, and lists `law_shard` among t
 ```mtron
 mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master booger//818085   apply 378.250 ms, 2 places
-       places      2, gathered in 378.250 ms (the master's apply, its gather wait included)
-       place               objs  apply (ms)   share
-       booger//818148         3      11.859   44.5%
-       booger//818238         1      14.771   55.5%  straggler
-       apply       min 11.859   max 14.771   mean 13.315 (ms)
-       imbalance   1.11 (max ÷ mean apply)
-       efficiency  0.035 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 26.630 ms
-       level 1     2 places, imbalance 1.11
-       critical    booger//818238 14.771 ms
-       stage     min (ms)   max (ms)
-       rewrite      6.370     12.518
-       resolve      8.953     17.859
-       apply      378.250    488.474
-       insts     3
-       resolve sub-stages (avg ms):
-         inst-resolve         4.198   54.7%
-         generic-binding      3.023   39.4%
-         inst-composition     0.457    5.9%
-       rewrite rules:
-                     branch_factor       law_poset           law_monoidic        law_shard           theory_unit_removal derivation_contraction
-           insts.in  60                  60                  60                  60                  60                  60                  
-           insts.out 60                  60                  60                  60                  60                  60                  
-           time(ms)  20.070              10.713              4.173               4.086               2.666               2.416               
-           TOTAL     inst.in 3   inst.out 3   time(ms) 61.007
-       apply sub-stages (avg ms):
-         split        0.012    0.0%
-         apply       41.111  100.0%
-         next         0.006    0.0%
-       per-instruction (per iteration):
-                     branch    sum       branch    
-           in.monad  0         1         0         
-           in.coeff  0         2         0         
-           out.monad 1         1         1         
-           out.coeff 2         1         2         
-           time(ms)  41.111    0.000     0.000     
-       flow       monads=25 coeff-sum=25 compression=1.00 processors=10
-       cache     hits=350342 misses=6 hit=100.0%
-       booger//818148   apply 11.859 ms, a leaf, objs 3
-         stage     min (ms)   max (ms)
-         rewrite      8.115     14.136
-         resolve      8.247     14.374
-         apply       11.859     15.113
-         insts     3
-         resolve sub-stages (avg ms):
-           inst-resolve         1.933   31.9%
-           generic-binding      3.626   59.8%
-           inst-composition     0.501    8.3%
-         rewrite rules:
-                       derivation_contractionlaw_poset           branch_factor       theory_unit_removal law_monoidic        law_idempotent      
-             insts.in  60                  60                  60                  60                  60                  60                  
-             insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  52.397              10.092              7.920               4.119               4.067               3.113               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 90.186
-         apply sub-stages (avg ms):
-           split        0.010    4.4%
-           apply        0.213   91.5%
-           next         0.009    4.1%
-         per-instruction (per iteration):
-                       start     plus      sum       
-             in.monad  0         1         1         
-             in.coeff  0         1         3         
-             out.monad 1         1         1         
-             out.coeff 1         3         1         
-             time(ms)  0.021     0.192     0.000     
-         flow       monads=20 coeff-sum=25 compression=1.25 processors=10
-         cache     hits=96250 misses=9 hit=100.0%
-       booger//818238   apply 14.771 ms, a leaf, objs 1, straggler
-         stage     min (ms)   max (ms)
-         rewrite      9.254     11.967
-         resolve      9.397     12.140
-         apply       14.771     18.265
-         insts     3
-         resolve sub-stages (avg ms):
-           inst-resolve         2.305   33.6%
-           generic-binding      3.939   57.4%
-           inst-composition     0.615    9.0%
-         rewrite rules:
-                       derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal law_idempotent      
-             insts.in  60                  60                  60                  60                  60                  60                  
-             insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  57.030              10.585              9.341               6.086               4.301               3.525               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 100.322
-         apply sub-stages (avg ms):
-           split        0.011    3.7%
-           apply        0.285   92.9%
-           next         0.010    3.4%
-         per-instruction (per iteration):
-                       start     plus      sum       
-             in.monad  0         1         1         
-             in.coeff  0         1         1         
-             out.monad 1         1         1         
-             out.coeff 1         1         1         
-             time(ms)  0.023     0.261     0.000     
-         flow       monads=20 coeff-sum=15 compression=0.75 processors=10
-         cache     hits=96914 misses=9 hit=100.0%
+     stage     min (ms)   max (ms)
+     rewrite     23.067     25.367
+     resolve     23.205     25.511
+     apply       27.279     30.118
+     insts     5
+     resolve sub-stages (avg ms):
+       inst-resolve         4.205   19.9%
+       generic-binding     16.007   75.8%
+       inst-composition     0.919    4.3%
+     rewrite rules:
+                   derivation_contractionbranch_factor       law_poset           law_shard           law_monoidic        theory_unit_removal 
+         insts.in  100                 100                 100                 100                 100                 100                 
+         insts.out 100                 100                 100                 100                 100                 100                 
+         time(ms)  173.376             11.111              9.407               8.738               5.202               4.493               
+         TOTAL     inst.in 5   inst.out 5   time(ms) 229.937
+     apply sub-stages (avg ms):
+       split        0.020    5.2%
+       apply        0.337   88.8%
+       next         0.023    6.0%
+     per-instruction (per iteration):
+                   start     plus      sum       plus      sum       
+         in.monad  0         1         5         0         1         
+         in.coeff  0         5         5         0         4         
+         out.monad 1         5         1         1         1         
+         out.coeff 5         5         1         4         1         
+         time(ms)  0.064     0.063     0.000     0.210     0.000     
+     flow       monads=50 coeff-sum=80 compression=1.60 processors=10
+     cache     hits=239533 misses=8 hit=100.0%
    """
 ```
 [To be written: the home instructions in general (what a contract must state for one object to survive them), and the
@@ -360,18 +271,13 @@ mtron> {1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum()
 ==>70
 mtron> {1,2,3,4,5}.plus(10).order(neg()).merge().plus(1).sum().explain()>>format
 ==>"""
-    op      dom                 rng                   args                                                               f    desc        c_dom  c_rng 
-    branch  noobj{0}::T         lst[{*}int{*}]{*}::T  [ws://localhost:1111=>start?hop=0({1,3,5}).plus(10).order(neg()),  <j>  standard    {0}    {*}   
-                                                       ws://localhost:1112=>start?hop=0({2,4}).plus(10).order(neg())]                                  
-    kmerge  lst[{*}A{*}]{*}::T  lst[{*}int{*}]::T     [neg()]                                                            <j>  reducer     {*}    {1}   
-    merge   lst[{*}A{*}]::T     int{*}::T                                                                                <j>  flatmapper  {1}    {*}   
-    branch  int{*}::T           int{*}::T             [ws://localhost:1111=>plus?hop=0(1).sum(),                         <j>  standard    {*}    {*}   
-                                                       ws://localhost:1112=>plus?hop=0(1).sum()]                                                       
-    sum     int{*}::T           int::T                                                                                   <j>  reducer     {*}    {1}   
-   
-        ┌─//0─►{3}─{3}─{1}─┐                        ┌─//0─►{*}─{*}─{1}─┐
-   {5}──┤                  ├──//local─►{2}─{1}─{*}──┤                  ├──//local─►{2}─{1}
-        └─//1─►{2}─{2}─{1}─┘                        └─//1─►{*}─{*}─{1}─┘
+    op     dom              rng                args           f    desc        c_dom  c_rng  c_out 
+    start  noobj{0}::T      int{5}::T          [{1,2,3,4,5}]  <j>  initial     {0}    {5}    {5}   
+    plus   int::T           int::T             [10]           <j>  mapper      {1}    {1}    {5}   
+    order  int{*}::T        lst[{*}int{*}]::T  [neg()]        <j>  reducer     {*}    {1}    {1}   
+    merge  lst[{*}A{*}]::T  int{*}::T                         <j>  flatmapper  {1}    {*}    {*}   
+    plus   #::T             #::T               [1]            <?>  mapper      {1}    {1}    {*}   
+    sum    int{*}::T        int::T                            <j>  reducer     {*}    {1}    {1}   
    """
 ```
 `order` is a cut too, and its computed combiner is `kmerge`, a k-way merge: each place sorts its share, and home merges
@@ -389,14 +295,10 @@ mtron> start(0).{0,3}plus(1).sum()
 ==>6
 mtron> start(0).{0,3}plus(1).sum().explain()>>format
 ==>"""
-    op      dom          rng        args                                                      f    desc      c_dom  c_rng 
-    branch  noobj{0}::T  int{*}::T  [ws://localhost:1111=>start?hop=0(0).{0,2}plus(1).sum(),  <j>  standard  {0}    {*}   
-                                     ws://localhost:1112=>start?hop=0(0).{3}plus(1).sum()]                                
-    sum     int{*}::T    int::T                                                               <j>  reducer   {*}    {1}   
-   
-        ┌─//0─►{1}─{3}─{1}─┐
-   {1}──┤                  ├──//local─►{2}─{1}
-        └─//1─►{1}─{1}─{1}─┘
+    op         dom          rng     args  f    desc     c_dom  c_rng  c_out 
+    start      noobj{0}::T  int::T  [0]   <j>  initial  {0}    {1}    {1}   
+    {0,3}plus  int::T       int::T  [1]   <j>  mapper   {1}    {1}    {1}   
+    sum        int{*}::T    int::T        <j>  reducer  {*}    {1}    {1}   
    """
 ```
 Both lanes start from the same `0`. The first takes the unrolls $0$ to $2$ and the second the unroll $3$, written `{3}`:
@@ -406,103 +308,34 @@ that ran, a `branch` and a `sum`, and the time spent at the `branch` waiting on 
 ```mtron
 mtron> start(0).{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master booger//818085   apply 290.182 ms, 2 places
-       places      2, gathered in 290.182 ms (the master's apply, its gather wait included)
-       place               objs  apply (ms)   share
-       booger//818148         3      10.597   48.8%
-       booger//818238         1      11.107   51.2%  straggler
-       apply       min 10.597   max 11.107   mean 10.852 (ms)
-       imbalance   1.02 (max ÷ mean apply)
-       efficiency  0.037 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 21.704 ms
-       level 1     2 places, imbalance 1.02
-       critical    booger//818238 11.107 ms
-       stage     min (ms)   max (ms)
-       rewrite      4.255      6.219
-       resolve      5.214      7.209
-       apply      290.182    311.910
-       insts     1
-       resolve sub-stages (avg ms):
-         inst-resolve         0.994   35.2%
-         generic-binding      1.703   60.4%
-         inst-composition     0.123    4.4%
-       rewrite rules:
-                     branch_factor       law_poset           law_involution      law_monoidic        theory_unit_removal law_shard           
-           insts.in  10                  10                  10                  10                  10                  10                  
-           insts.out 10                  10                  10                  10                  10                  10                  
-           time(ms)  5.529               4.281               1.316               1.270               1.166               1.134               
-           TOTAL     inst.in 1   inst.out 1   time(ms) 21.570
-       apply sub-stages (avg ms):
-         split        0.000    0.0%
-         apply        0.000    0.0%
-         next         0.000    0.0%
-       per-instruction (per iteration):
-                     branch    
-           in.monad  0         
-           in.coeff  0         
-           out.monad 0         
-           out.coeff 0         
-           time(ms)  0.000     
-       flow       monads=0 coeff-sum=0 compression=0.00 processors=0
-       cache     hits=212873 misses=6 hit=100.0%
-       booger//818148   apply 10.597 ms, a leaf, objs 3
-         stage     min (ms)   max (ms)
-         rewrite      7.524      8.514
-         resolve      7.653      8.665
-         apply       10.597     11.813
-         insts     3
-         resolve sub-stages (avg ms):
-           inst-resolve         1.649   33.0%
-           generic-binding      2.937   58.8%
-           inst-composition     0.412    8.2%
-         rewrite rules:
-                       derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal law_idempotent      
-             insts.in  60                  60                  60                  60                  60                  60                  
-             insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  42.293              10.115              7.083               3.525               3.263               2.495               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 75.332
-         apply sub-stages (avg ms):
-           split        0.007    4.1%
-           apply        0.153   94.0%
-           next         0.003    1.9%
-         per-instruction (per iteration):
-                       start     plus      sum       
-             in.monad  0         1         1         
-             in.coeff  0         1         3         
-             out.monad 1         1         1         
-             out.coeff 1         3         1         
-             time(ms)  0.015     0.138     0.000     
-         flow       monads=20 coeff-sum=25 compression=1.25 processors=10
-         cache     hits=96699 misses=9 hit=100.0%
-       booger//818238   apply 11.107 ms, a leaf, objs 1, straggler
-         stage     min (ms)   max (ms)
-         rewrite      8.233      8.948
-         resolve      8.378      9.105
-         apply       11.107     13.849
-         insts     3
-         resolve sub-stages (avg ms):
-           inst-resolve         2.077   36.5%
-           generic-binding      3.115   54.8%
-           inst-composition     0.496    8.7%
-         rewrite rules:
-                       derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal law_idempotent      
-             insts.in  60                  60                  60                  60                  60                  60                  
-             insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  46.552              8.982               7.993               3.911               3.615               2.764               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 80.699
-         apply sub-stages (avg ms):
-           split        0.007    4.2%
-           apply        0.162   93.5%
-           next         0.004    2.3%
-         per-instruction (per iteration):
-                       start     plus      sum       
-             in.monad  0         1         1         
-             in.coeff  0         1         1         
-             out.monad 1         1         1         
-             out.coeff 1         1         1         
-             time(ms)  0.016     0.146     0.000     
-         flow       monads=20 coeff-sum=15 compression=0.75 processors=10
-         cache     hits=97058 misses=9 hit=100.0%
+     stage     min (ms)   max (ms)
+     rewrite     13.424     15.070
+     resolve     13.557     15.252
+     apply       17.206     19.208
+     insts     3
+     resolve sub-stages (avg ms):
+       inst-resolve         2.542   21.8%
+       generic-binding      8.455   72.6%
+       inst-composition     0.643    5.5%
+     rewrite rules:
+                   derivation_contractionlaw_poset           branch_factor       law_shard           law_monoidic        theory_unit_removal 
+         insts.in  60                  60                  60                  60                  60                  60                  
+         insts.out 60                  60                  60                  60                  60                  60                  
+         time(ms)  88.587              8.922               8.406               7.864               3.981               3.650               
+         TOTAL     inst.in 3   inst.out 3   time(ms) 136.137
+     apply sub-stages (avg ms):
+       split        0.007    3.1%
+       apply        0.203   95.3%
+       next         0.003    1.5%
+     per-instruction (per iteration):
+                   start     plus      sum       
+         in.monad  0         1         1         
+         in.coeff  0         1         4         
+         out.monad 1         1         1         
+         out.coeff 1         4         1         
+         time(ms)  0.014     0.188     0.000     
+     flow       monads=20 coeff-sum=30 compression=1.50 processors=10
+     cache     hits=172083 misses=8 hit=100.0%
    """
 ```
 A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and points add across a branch,
@@ -543,22 +376,19 @@ $+$, brings every member home.
 ```mtron
 mtron> {1,2,3,4,5,6,7,8}.plus(1).mult(2)
 ==>4
-==>8
-==>12
-==>16
 ==>6
+==>8
 ==>10
+==>12
 ==>14
+==>16
 ==>18
 mtron> {1,2,3,4,5,6,7,8}.plus(1).mult(2).explain()>>format
 ==>"""
-    op      dom          rng        args                                                           f    desc      c_dom  c_rng 
-    branch  noobj{0}::T  int{*}::T  [ws://localhost:1111=>start?hop=0({1,3,5,7}).plus(1).mult(2),  <j>  standard  {0}    {*}   
-                                     ws://localhost:1112=>start?hop=0({2,4,6,8}).plus(1).mult(2)]                              
-   
-        ┌─//0─►{4}─{4}─{4}─┐
-   {8}──┤                  ├──//local─►{8}
-        └─//1─►{4}─{4}─{4}─┘
+    op     dom          rng        args                 f    desc     c_dom  c_rng  c_out 
+    start  noobj{0}::T  int{8}::T  [{1,2,3,4,5,6,7,8}]  <j>  initial  {0}    {8}    {8}   
+    plus   int::T       int::T     [1]                  <j>  mapper   {1}    {1}    {8}   
+    mult   int::T       int::T     [2]                  <j>  mapper   {1}    {1}    {8}   
    """
 ```
 This is the embarrassingly parallel pattern: the program is the `branch` and nothing after it. A run floats only when

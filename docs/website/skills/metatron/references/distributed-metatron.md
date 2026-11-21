@@ -82,7 +82,7 @@ Only `ws_server` + `ws_client` carry **metatron-to-metatron** traffic today. The
 
 | handler                                                  | transport         | what it does                                                                        | witness                    |
 |----------------------------------------------------------|-------------------|-------------------------------------------------------------------------------------|----------------------------|
-| `mtron_ws`                                               | ws                | evaluates each frame's mtron expression once, returns the answer                    | `mtron_wsHandler.java`     |
+| `mtron_ws`                                               | ws                | evaluates each frame once on a pooled thread; answers in the order frames finish    | `mtron_wsHandler.java`     |
 | `mtron_http`                                             | http              | declared `mtron::T`, but does not evaluate yet: answers the request rec it received | `mtron_httpHandler.java`   |
 | `web_httpHandler`                                        | http              | REST verbs → `writeToSpace` (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`)                   | `web_httpHandler.java`     |
 | `mcp_wsHandler` / `mcp_httpHandler` / `mcp_stdioHandler` | ws / http / stdio | MCP servers                                                                         | `isa/web/space/*/handler/` |

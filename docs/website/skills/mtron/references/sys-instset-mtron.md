@@ -74,9 +74,9 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.8M ...',
+    'tmpfs                  6.1G  6.9M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  592G ...',
+    '/dev/nvme1n1p2         916G  594G ...',
     'tmpfs                   31G  3.5M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -140,11 +140,11 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
    ...
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
 ==>"""
-    op      dom          rng      args                  f    desc     c_dom  c_rng 
-    start   noobj{0}::T  lst::T   [['ls','whoami']]     <j>  initial  {0}    {1}   
-    select  lst::T       lst::T   [[id()=>bash(id())]]  <j>  mapper   {1}    {1}   
-    rshift  lst::T       #{*}::T  [noobj]               <j>  scatter  {1}    {*}   
-    sum     #{*}::T      #::T                           <?>  reducer  {*}    {1}   
+    op      dom          rng      args                  f    desc     c_dom  c_rng  c_out 
+    start   noobj{0}::T  lst::T   [['ls','whoami']]     <j>  initial  {0}    {1}    {1}   
+    select  lst::T       lst::T   [[id()=>bash(id())]]  <j>  mapper   {1}    {1}    {1}   
+    rshift  lst::T       #{*}::T  [noobj]               <j>  scatter  {1}    {*}    {*}   
+    sum     #{*}::T      #::T                           <?>  reducer  {*}    {1}    {1}   
    """
 ```
 ### pipe over the results
@@ -167,7 +167,7 @@ mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
     '  Size: 29315     	Blocks: 64     ...',
     'Device: 259,3	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-19 13:40:09.242352...',
+    'Access: 2026-11-20 21:25:07.721205...',
    ...
 ```
 ### a shape of its own
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>66
+==>78
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::712.0,
-    free_mem_jvm=>mB::491.5817,
+    free_mem_jvm=>mB::179.2428,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::220.4182,
+    used_mem_jvm=>mB::532.7571,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-43-generic',
     arch=>'amd64',
@@ -334,8 +334,14 @@ mtron> *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag,
 ## walking the tree
 
 Wildcards are space-side. `+` is one segment, `#` is the recursion. A directory stores
-nothing, so it reads as its subtree: `*<x/+/>` reads every file below `x`. The walk `.>>`
-names the children and reads nothing below them:
+nothing, so it reads as its subtree, laid out from the names alone: each file in it is a
+lazy `!*<file>` reference, read (a program in it run) only when it is read -- its key
+called, or a read of values: `*<x/+>` reads each file directly in `x` (a directory answers
+its lazy subtree), `*<x/#>` every file below `x`. Drawing a file, writing over it and
+deleting it read nothing; a pattern write that fills the polys stored in files reads those
+files. `*<x/+/>` names each file in `x` with its reference and each directory with its lazy
+subtree (an empty one holds nothing, so it is not named). The walk `.>>` names the children
+and reads nothing below them:
 
 ```mtron
 mtron> mfs:src/main/java.>>                     [-- the children of src/main/java --]
