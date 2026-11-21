@@ -25,11 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -40,7 +42,9 @@ import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -49,10 +53,14 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PROFILING_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -127,6 +135,12 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * through its own {@code ws_client}, which self-registers into {@code /network/peer} — the exact trigger
  * the guard reads.
  *
+ * <p>The cluster is a small DIAL GRAPH, not a star, because a tree follows it (row E): this machine dials peers 1 and 2,
+ * and they dial each other and peer 3, which dials no one. A place handed a lane with budget left re-plans it over the
+ * peers IT dialed, so peers 1 and 2 are interior nodes wherever a budget of two or more lands them, and peer 3 is a leaf
+ * whatever it is handed. Every peer mounts the category, or law_shard would not be in its rewrite pool. A row that
+ * states no budget plans one level (the star), so every lane it ships is a leaf.
+ *
  * <p>Type checking is on for this suite, the boot default (every check but code_resolve). A planned branch states what
  * its lanes answer, the contract of the cut or of the run's last instruction once per lane, in generics and never
  * {@code #{*}} (Marko, 2026-11-20), so the master re-derives the fold's type past the branch and the combiner after it
@@ -148,9 +162,28 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
-        cluster = PeerCluster.of(2).start();
-        for (int i = 1; i <= cluster.size(); i++)
+        // every peer mounts the category too: a lane with budget left is re-planned where it lands only if law_shard is
+        // in that machine's rewrite pool
+        cluster = PeerCluster.of(3).seed("import(/m/math)", "import(/m/math/cat)").start();
+        // THE DIAL GRAPH THE TREE FOLLOWS (row E): peers 1 and 2 dial each other and peer 3, which dials no one. A dial
+        // is construction, so it happens THERE: a peer is sent the ws_client rec as a value, and constructing it there
+        // dials from that peer and indexes the client as its own. Code naming ws_client::T does not travel (this
+        // machine's parser binds the type's constructor here, which the peer cannot locate), and the reply is a count
+        // because a client read back here would dial from this machine too, where every row is written for two lanes.
+        final int[][] edges = {{1, 2}, {1, 3}, {2, 1}, {2, 3}};
+        for (final int[] edge : edges)
+            cluster.transport(edge[0]).apply(start_(wsRec(edge[1])).count_());
+        // a dial registers its peer asynchronously -- wait (bounded) until every edge is a dialed peer of its source
+        for (int t = 0; t < 40 && !Arrays.stream(edges).allMatch(edge -> dialed(edge[0], edge[1])); t++)
+            Thread.sleep(250);
+        for (final int[] edge : edges)
+            assertTrue(dialed(edge[0], edge[1]), "peer " + edge[0] + " never dialed peer " + edge[1]);
+        // THE ROOT: this machine dials peers 1 and 2, the two lanes every row is written for; peer 3 it reaches only
+        // through them
+        for (int i = 1; i <= 2; i++)
             clients.add(dial(i));
+        assertEquals(2L, Machine.current().network().peers().elements().count(),
+                "this machine holds peers 1 and 2 alone: " + Machine.current().network().peers());
     }
 
     @AfterAll
@@ -171,13 +204,65 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * {@code ws_client::[host=>…]} in mtron.
      */
     private static WebSocketRecClient dial(final int oneBased) {
-        final WebSocketRec wsRec = new WebSocketRec(mutableMap(
+        final WebSocketRecClient client = new WebSocketRecClient(wsRec(oneBased));
+        Network.Helper.index(client);
+        return client;
+    }
+
+    /**
+     * The {@code ws_client} rec for one peer's endpoint: data, so building it dials nothing. {@link #dial} constructs a
+     * client from it here, and a peer sent it constructs and dials its own.
+     */
+    private static WebSocketRec wsRec(final int oneBased) {
+        return new WebSocketRec(mutableMap(
                 uri(HOST), uri("ws://localhost:" + cluster.port(oneBased) + PeerCluster.MTRON_ROUTE),
                 uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
                 uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null);
-        final WebSocketRecClient client = new WebSocketRecClient(wsRec);
-        Network.Helper.index(client);
-        return client;
+    }
+
+    /**
+     * Whether peer {@code from} holds a dialed peer at peer {@code to}'s endpoint, read off its peer map, where a member
+     * sits at its encoded origin. The reply is the member's host, a uri, so this machine builds nothing from it.
+     */
+    private static boolean dialed(final int from, final int to) {
+        return cluster.transport(from).apply(ObjmtronSerializer.parse(
+                "*/network/peer/ws/localhost/" + cluster.port(to) + "/mtron/host")).isUri();
+    }
+
+    /**
+     * THE TREE AS ITS PLACES PLAN IT, read off the topology {@code explain()} answers: a fan's lanes are the places at one
+     * level, and a lane its place re-plans carries that place's own flow, so the whole tree comes back without running.
+     * Its depth, its leaves (the lanes no place re-plans) and the places per level.
+     */
+    private static Rec planned(final Obj flow) {
+        final List<Long> levels = new ArrayList<>();
+        final long leaves = planned(flow, 0, levels);
+        return rec(uri(DEPTH), jnt(levels.size()), uri(LEAF), jnt(leaves),
+                uri(LEVEL), lst(levels.stream().map(count -> (Obj) jnt(count)).toList()));
+    }
+
+    private static long planned(final Obj flow, final int depth, final List<Long> levels) {
+        long leaves = 0L;
+        for (final Obj lane : flow.asLst().<Obj>elements().flatMap(segment -> segment.asLst().<Obj>elements())
+                .filter(Obj::isRec).toList()) {
+            if (levels.size() == depth)
+                levels.add(0L);
+            levels.set(depth, levels.get(depth) + 1L);
+            final Obj theirs = lane.asRec().at(uri(TOPOLOGY));
+            leaves += theirs.isRec() ? planned(theirs.asRec().at(uri(FLOW)), depth + 1, levels) : 1L;
+        }
+        return leaves;
+    }
+
+    /**
+     * The nest's shape a row asserts, folded bottom-up as each node collates: the depth, the leaves (how many, and the
+     * objs their runs carried) and the places per level.
+     */
+    private static Rec nest(final Rec report) {
+        return rec(
+                uri(DEPTH), report.at(uri(DEPTH)),
+                uri(LEAF), rec(uri(COUNT), report.at(uri(f(LEAF).extend(COUNT))), uri(C_SUM), report.at(uri(f(LEAF).extend(C_SUM)))),
+                uri(LEVEL), lst(report.at(uri(LEVEL)).elements().map(level -> (Obj) level.asRec().at(uri(COUNT))).toList()));
     }
 
     // ================================================================================================
@@ -240,18 +325,94 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     // ================================================================================================
     // E — tree reduction. ?hop is a TREE shape: the height (how many times a rule may re-plan what it
     // produced) and, as a leading coefficient, the arity (children per node). The form is RESTATED at
-    // each level ({2}3 ⇒ {2}2 ⇒ {2}1 ⇒ 0) and rides the slave's FOLD, never its seed.
+    // each level ({2}3 ⇒ {2}2 ⇒ {2}1 ⇒ 0) on the lane's HEAD, never its fold. THE DIAL GRAPH IS THE TREE: a
+    // place handed a lane with budget left re-plans it over the peers IT dialed, so a peer that mounts no
+    // category or dials no one is a leaf whatever budget it carries. Peers 1 and 2 dial each other and peer 3
+    // (startPeers), so they are the interior nodes and peer 3 a leaf. The master's op sequence is the same at
+    // every height, so a row reads the tree where it shows: the budget every lane of the root states, and the
+    // tree as its places plan it, which explain()'s topology carries whole (each place explains a lane it
+    // re-plans), without running: a profile() nests the same tree, but it runs every level six times. Each row:
+    // the chain % the master's op sequence % the budget each root lane states (none when nothing ships) % the
+    // value, sharded or whole % the planned tree: its depth, its leaves, the places per level (none when nothing
+    // ships).
     // ================================================================================================
 
     @ParameterizedTest
     @CsvSource(value = {
-            // height 2, at most 2 children: the master shards to one peer, which shards again
-            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop={2}2()   % branch().sum() % 44",
-            // height 1 is the star -- today's default, stated explicitly
-            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=1()      % branch().sum() % 44",
+            // height 1 is the star, today's default stated: every lane is a leaf
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=1()                    % branch().sum()                % 0     % 44  % [depth=>1,leaf=>2,level=>[2]]",
+            // height 2: peers 1 and 2 each re-plan their four over the two they dialed, so four leaves of two
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2()                    % branch().sum()                % 1     % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
+            // a stated arity rides the restated form; two children is every node's out-degree here, so the tree is the same
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop={2}2()                 % branch().sum()                % {2}1  % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
+            // an arity of one is the chain: the root ships all eight to one peer, which ships them to one of its own
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=[2,1]()                % branch().sum()                % [1,1] % 44  % [depth=>2,leaf=>1,level=>[1,1]]",
+            // a budget on the head governs the run, and the earliest statement wins over a later one, either way round
+            "start?hop=2({1,2,3,4,5,6,7,8}).plus(1).sum()             % branch().sum()                % 1     % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
+            "start?hop=2({1,2,3,4,5,6,7,8}).plus(1).sum?hop=1()       % branch().sum()                % 1     % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
+            "start?hop=1({1,2,3,4,5,6,7,8}).plus(1).sum?hop=2()       % branch().sum()                % 0     % 44  % [depth=>1,leaf=>2,level=>[2]]",
+            // the deprecated spelling plans the same tree and the lanes state the singular key; at one position ?hop wins
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hops=2()                   % branch().sum()                % 1     % 44  % [depth=>2,leaf=>4,level=>[2,4]]",
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=1&hops=2()             % branch().sum()                % 0     % 44  % [depth=>1,leaf=>2,level=>[2]]",
+            // every combiner recombines at every interior node: count's through sum, order's through kmerge
+            "{1,2,3,4,5,6,7,8}.plus(1).count?hop=2()                  % branch().sum()                % 1     % 8   % [depth=>2,leaf=>4,level=>[2,4]]",
+            "{8,7,6,5,4,3,2,1}.plus(1).order?hop=2()                  % branch().kmerge()             % 1     % [2,3,4,5,6,7,8,9] % [depth=>2,leaf=>4,level=>[2,4]]",
+            // the run's own index set recurses: each interior node splits its share of the unrolls again, by work
+            "start(0).{0,7}plus(1).sum?hop=2()                        % branch().sum()                % 1     % 28  % [depth=>2,leaf=>4,level=>[2,4]]",
+            // a run after a cut keeps the budget the run before it resolved: both branches' lanes state it. explain() asks
+            // only a lane that starts from its own part, so the second fan, dealt the fold's answer when it runs, plans as
+            // two leaves beside the first fan's subtrees
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().{0,3}plus(1).sum() % branch().sum().branch().sum() % 1     % 182 % [depth=>2,leaf=>6,level=>[4,4]]",
+            // height 0 is the point, and so is an arity of zero at any height, in either spelling: nothing ships
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=0()                    % start().plus().sum()          %       % 44  %",
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop={0}2()                 % start().plus().sum()          %       % 44  %",
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=[2,0]()                % start().plus().sum()          %       % 44  %",
     }, delimiter = '%')
-    void test_E_tree_reduction(final String code, final String expectedRewriteForm, final String expectedResult) {
+    void test_E_tree_reduction(final String code, final String expectedRewriteForm, final String budget,
+                               final String expectedResult, final String expectedTree) {
+        // COLUMNS 2 AND 4 -- THE LAYOUT AND THE VALUE: the master's op sequence, and one answer sharded or whole (Thm 19)
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+        // COLUMN 3 -- THE FORM IS RESTATED, NEVER THE NUMBER: every lane of every branch the root emits states the budget
+        // on its head, and no other instruction states one under either spelling
+        final List<Inst> master = Machine.parse(code).asCode().rewrite().asCode().insts();
+        final List<DistributedSweep.Lane> lanes = IntStream.range(0, master.size())
+                .filter(i -> BRANCH_INST_TID.equals(master.get(i).tid().basePath()) && master.get(i).args().isRec())
+                .mapToObj(i -> DistributedSweep.layout(code(master.subList(i, master.size()))).lanes())
+                .flatMap(List::stream)
+                .toList();
+        checkEquality(LOG, bool(null == budget), bool(lanes.isEmpty()), true);
+        lanes.forEach(lane -> {
+            checkEquality(LOG, str(budget), str(String.valueOf(lane.budget())), true);
+            checkEquality(LOG, bool(false), bool(lane.code().insts().stream().skip(1)
+                    .anyMatch(inst -> inst.tid().hasQ(HOP) || inst.tid().hasQ(Placement.HOP_ALIAS))), true);
+        });
+        // COLUMN 5 -- THE TREE AS ITS PLACES PLAN IT: the budget unrolled over the dial graph, each place explaining the
+        // lanes it re-plans
+        if (null != expectedTree)
+            checkEquality(LOG, ObjmtronSerializer.parse(expectedTree),
+                    planned(Machine.evaluate(Machine.parse(code + ".explain()>>ext/topology/flow").asCode())), true);
+    }
+
+    /**
+     * E, THREE LEVELS DEEP OVER PEERS THAT DIAL EACH OTHER: the plan is right (each row's planned tree is what explain()
+     * draws), but the run times out at the lanes' 5 s deadline. At the third level each connection between peers 1 and
+     * 2 carries an interior lane and, queued behind it, a leaf the interior lane on the other connection waits for: a
+     * peer evaluates a connection's frames one at a time, on the socket's worker (wsServer), so neither leaf runs. Over
+     * an acyclic chain the same depth answers at once (root, 1, 2, 3: 44 in 134 ms, a forked-peer probe on 2026-11-21).
+     * The rows are the transport fix's regression; each is E's five columns.
+     */
+    @Disabled("three levels over peers that dial each other time out: a lane crosses a peer connection a waiting lane holds, and a connection's frames run one at a time")
+    @ParameterizedTest
+    @CsvSource(value = {
+            // height 3: a lane that lands on peer 1 or 2 re-plans once more, and one that lands on peer 3 is a leaf of two
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=3()                    % branch().sum()                % 2     % 44  % [depth=>3,leaf=>6,level=>[2,4,4]]",
+            // the members bound the depth too: a lane of one member has nothing to deal, so a fourth level never forms
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=4()                    % branch().sum()                % 3     % 44  % [depth=>3,leaf=>6,level=>[2,4,4]]",
+    }, delimiter = '%')
+    void test_E_tree_reduction_crossing_a_connection_twice(final String code, final String expectedRewriteForm,
+                                                           final String budget, final String expectedResult,
+                                                           final String expectedTree) {
+        this.test_E_tree_reduction(code, expectedRewriteForm, budget, expectedResult, expectedTree);
     }
 
     /**
@@ -601,9 +762,9 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * unrolls (V), where a lane's objs are the terms it unrolled. The format, the user's {@code >>format}, opens with
      * the master's header, leads with the summary over the root's places, and names every place.
      * <p>
-     * THE TREE IS {@link TreeShardTransportTest}'s. Here no node below the root can re-plan: the forked peers mount no
-     * category and dial no one, and {@code ?place=[local,peer]} lands both lanes on the peers (no home lane), so the
-     * master's own lane cannot be an interior node either.
+     * THE TREE IS E's (and {@link TreeShardTransportTest}'s). These rows state no budget, so every lane the root ships
+     * is a leaf, though peers 1 and 2 could re-plan one; and this machine listens on nothing, so it has no local place
+     * ({@code ?place=[local,peer]} lands both lanes on the peers) and none of its own lanes can be an interior node.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -626,10 +787,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         final Rec report = Machine.evaluate(Machine.parse(code).asCode()).asRec();
         checkEquality(LOG, uri(PROFILING_TID), uri(report.tid().basePath()), true);
         checkEquality(LOG, uri(BRANCH_INST_TID.name()), report.at(uri(PER_INST)).elements().reduce((a, b) -> b).orElseThrow().asRec().at(uri(NAME)), true);
-        checkEquality(LOG, ObjmtronSerializer.parse(expectedResult.trim()), rec(
-                uri(DEPTH), report.at(uri(DEPTH)),
-                uri(LEAF), rec(uri(COUNT), report.at(uri(f(LEAF).extend(COUNT))), uri(C_SUM), report.at(uri(f(LEAF).extend(C_SUM)))),
-                uri(LEVEL), lst(report.at(uri(LEVEL)).elements().map(level -> (Obj) level.asRec().at(uri(COUNT))).toList())), true);
+        checkEquality(LOG, ObjmtronSerializer.parse(expectedResult.trim()), nest(report), true);
         // EVERY PLACE AT EVERY LEVEL: a profiling::T keyed by the machine that made it, naming its machine, its insts and
         // its stages; the critical path starts at one of the root's places
         final List<Rec> nest = new ArrayList<>(List.of(report));
