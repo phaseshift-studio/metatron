@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.SkipRegexTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.LineQTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
@@ -458,9 +459,9 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
      * ({@code !*<file>}) that reads the file only when its own key is called, so reading a directory runs no program in
      * it -- the splash page's {@code GET /} read its web root, and so evaluated every boot helper there. A reference is
      * the same data as the file's obj, rendered differently: {@code atDirect} walks the tree past it, {@code at} reads
-     * it as a direct read of the file does. A listing ({@code +/}) names the references; a read of values ({@code +},
-     * {@code #}) reads every file it reaches, in the representation it asks for; a script reads as its instruction,
-     * and runs only when applied.
+     * it as a direct read of the file does. Drawing it reads nothing. A listing ({@code +/}) names each file by its
+     * reference; a read of values one wildcard step deep ({@code +}, {@code #}) reads every file it reaches, in the
+     * representation it asks for; a script reads as its instruction, and runs only when applied.
      */
     @Test
     public void testADirectoryReadRunsNoProgramInIt() {
@@ -484,11 +485,12 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             ObjmtronSerializer.parse("*test:lazy/+/").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
 
-            // nor does drawing it: the console draws each file by its address (checkEquality's message above drew it
-            // as a log line does), so looking at a directory reads none of its files
+            // nor does drawing it (checkEquality's message above drew it as a log line does): the console draws each
+            // file as its pointer -- three files, three !* -- so a draw that put a file's value in its pointer's place
+            // (a script's instruction) fails the count, and one that ran the program fails the mark
             final String drawn = ObjmtronUISerializer.single().write(dir);
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
-            assertTrue(drawn.contains("prog.mtron") && drawn.contains("run.sh"), "the console draws each file, got: " + drawn);
+            assertEquals(3, drawn.split("!\\*", -1).length - 1, "the console draws each file as its pointer, got: " + drawn);
 
             // a read of values in a representation reads each file in it: as text, a program is its source, never run
             final Obj text = ObjmtronSerializer.parse("*<test:lazy/+?mimeq=text/plain>").apply();
@@ -501,19 +503,22 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             checkEquality(LOG, ObjmtronSerializer.parse("*<test:lazy/prog.mtron>").apply(), prog, true);
             checkEquality(LOG, ObjmtronSerializer.parse("*<test:lazy/sub/notes.txt>").apply(), dir.asRec().at(uri("sub/notes.txt")), true);
 
-            // + and # read values, so each reads every file it reaches (# flattening what a file holds)
+            // + and # read values, so each reads every file it reaches (# flattening what a file holds), and each holds
+            // the script as its instruction (each read mints the instruction anew, so it is found by its operation)
+            final fURI script = ObjmtronSerializer.parse("*<test:lazy/run.sh>").apply().tid();
             Machine.current().memory().write(make("$$/lazymark"), noobj());
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
-            ObjmtronSerializer.parse("*test:lazy/+").apply();
+            final Obj values = ObjmtronSerializer.parse("*test:lazy/+").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "1");
+            assertTrue(values.stream().anyMatch(obj -> script.equals(obj.tid())), "+ holds the script's instruction, got: " + values);
             Machine.current().memory().write(make("$$/lazymark"), noobj());
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "0");
-            ObjmtronSerializer.parse("*test:lazy/#").apply();
+            final Obj leaves = ObjmtronSerializer.parse("*test:lazy/#").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:lazymark.count()", "1");
+            assertTrue(leaves.stream().anyMatch(obj -> script.equals(obj.tid())), "# holds the script's instruction, got: " + leaves);
 
-            // a script reads as its instruction -- by its key as directly, and through + and # above -- and runs only
-            // when applied (each read mints its instruction anew, so the two compare by operation)
-            assertEquals(ObjmtronSerializer.parse("*<test:lazy/run.sh>").apply().tid(), dir.asRec().at(uri("run.sh")).tid());
+            // a script reads as its instruction by its key as directly, and runs only when applied
+            assertEquals(script, dir.asRec().at(uri("run.sh")).tid());
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:runmark.count()", "0");
             ObjmtronSerializer.parse("<test:lazy/run.sh>()").apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "*test:runmark.count()", "1");
