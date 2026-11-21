@@ -29,6 +29,9 @@ import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.sys.ui.Widget;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet;
@@ -37,6 +40,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.RUN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
@@ -1322,8 +1326,8 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
     // ── drain: the close's barrier ──────────────────────────────────
 
     /**
-     * drain() is the close sequence's barrier: the render thread is a daemon and
-     * {@code System.exit} will not wait for it, so without the drain the shutdown's last
+     * drain() is the close sequence's barrier: {@code System.exit} will not wait for
+     * the render thread, so without the drain the shutdown's last
      * lines are still queued — or mid-flight — when the shell takes the tty back, and
      * they land interleaved with the shell's prompt.
      *
@@ -1357,5 +1361,32 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
                 "drain must not return until the render task enqueued ahead of it has executed");
         surface.shutdown();
         term.close();
+    }
+
+    /**
+     * THE RENDER LOOP IS A METATRON THREAD: a core thread of the system executor (it polls for the surface's life, and a
+     * write may block on the terminal), listed as running while the surface lives and as ended once it is shut down. A
+     * pass sees it as its current thread, and a write the pass makes runs inline — queued, it would wait out the
+     * submit timeout behind the very pass that asked for it.
+     */
+    @Test
+    public void theRenderLoopIsAThreadTheExecutorLists() throws Exception {
+        final java.util.concurrent.atomic.AtomicReference<AbstractThread> renderer = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicLong nestedMs = new java.util.concurrent.atomic.AtomicLong(-1L);
+        final java.util.concurrent.CountDownLatch passed = new java.util.concurrent.CountDownLatch(1);
+        surface.writeAndRender(() -> {
+            renderer.set(BootLoader.CURRENT_THREAD.get());
+            final long t0 = System.nanoTime();
+            surface.writeToTerminal("a line the pass writes itself\n");
+            nestedMs.set((System.nanoTime() - t0) / 1_000_000L);
+            passed.countDown();
+            return "";
+        });
+        assertTrue(passed.await(10, java.util.concurrent.TimeUnit.SECONDS), "the pass runs");
+        assertInstanceOf(CoreThread.class, renderer.get(), "the pass runs on a core thread");
+        assertTrue(nestedMs.get() < 1_000L, "a write from the render thread runs inline: " + nestedMs.get() + " ms");
+        assertTrue(listedThreads(RUN).contains(renderer.get().vid()), "listed as running while the surface lives");
+        surface.shutdown();
+        assertTrue(awaitsStopped(renderer.get().vid(), 5_000), "and listed as ended once it is shut down");
     }
 }

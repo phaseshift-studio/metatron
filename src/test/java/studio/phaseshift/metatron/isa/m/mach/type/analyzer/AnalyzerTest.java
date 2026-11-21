@@ -25,9 +25,12 @@ import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -335,6 +338,34 @@ public class AnalyzerTest extends AbstractMetatronTest {
             machine.processor().analyzer().incr(f(FLOW), f(MONADS), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(1, heard.get(), "a step of " + step + " publishes the change");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * THE PUBLICATION IS A METATRON THREAD: a subscriber hears it on a thread whose source is a virtual thread (it mostly
+     * sleeps), which the executor listed as running the moment the change scheduled it and as ended once it had
+     * published.
+     */
+    @Test
+    void shouldPublishFromAThreadTheExecutorLists() {
+        final Machine machine = Machine.current().push(f("analyzer_thread"));
+        try {
+            final AtomicReference<AbstractThread> heardOn = new AtomicReference<>();
+            Machine.write(f("~/network/analyzer/analysis").addQ(SUBQ), instLambda((pub, inst) -> {
+                heardOn.compareAndSet(null, BootLoader.CURRENT_THREAD.get());
+                return noobj();
+            }));
+            final List<fURI> running = listedThreads(RUN);
+            machine.network().analyzer().incr(f(WIRE), f(SENT), 1L);
+            final List<fURI> scheduled = listedThreads(RUN).stream().filter(thread -> !running.contains(thread)).toList();
+            CommonUtil.sleepThread(PUBLISHED_MS);
+            assertNotNull(heardOn.get(), "the subscriber hears the change");
+            final fURI publication = heardOn.get().sourceVid().orElseThrow();
+            assertTrue(scheduled.contains(publication), "the change lists its publication at once: " + scheduled);
+            assertInstanceOf(VirtualThread.class, Machine.read(publication), "a virtual thread");
+            assertTrue(awaitsStopped(publication, PUBLISHED_MS), "listed as ended once it has published");
         } finally {
             machine.pop();
         }

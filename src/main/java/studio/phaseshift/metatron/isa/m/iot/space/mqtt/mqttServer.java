@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PUB_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TID;
@@ -316,9 +317,11 @@ public final class mqttServer extends Listener {
     }
 
     private void handle(final Socket conn) {
-        final Thread connect = new Thread(() -> this.connected(conn), "mqtt-connect");
-        connect.setDaemon(true);
-        connect.start();
+        // a core thread, as the acceptor that spawns it: the handshake blocks on the socket, up to its connect timeout
+        docWrap(CoreThread.core(instLambda((_, _) -> {
+            this.connected(conn);
+            return noobj();
+        })), "mqtt-connect").applyAsync();
     }
 
     /**
@@ -376,8 +379,9 @@ public final class mqttServer extends Listener {
      * THE PROJECTION'S WRITE HALF: an mqtt topic IS a metatron address, so a PUBLISH is a write to the space graph,
      * resolved by {@link Machine#write} to whichever space claims the address. The received message is a READ at its
      * topic in this broker's own analysis — the layer brackets the write, so read/count and read/latency are the
-     * messages this broker took. Runs as the machine that owns this socket, where a session thread otherwise stands in
-     * no machine.
+     * messages this broker took. Runs as the machine that owns this socket, named outright rather than taken from the
+     * thread (a session thread starts there: the executor carries the acceptor's machine to the handshake, and on to
+     * the reader).
      */
     void publish(final fURI topic, final Obj obj) {
         // the $SYS namespace belongs to the broker — a client publish there is counted, never served

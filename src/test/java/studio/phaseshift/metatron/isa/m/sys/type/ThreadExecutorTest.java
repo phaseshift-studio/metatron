@@ -18,17 +18,24 @@
 
 package studio.phaseshift.metatron.isa.m.sys.type;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -36,6 +43,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -44,6 +52,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -509,5 +518,108 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final VirtualThread thread = VirtualThread.virtual(jnt(1));
         assertFalse(thread.jvm().containsKey(uri(LOOP)),
                 "LOOP should not be in jvm just because STATE=RUN was set");
+    }
+
+    // =========================================================
+    // Stopping: the levers a thread's owner pulls
+    // =========================================================
+
+    /**
+     * A STOPPED LOOP SAYS SO; A THREAD THAT DOES NOT LOOP ENDS QUIETLY. A loop's stop breaks it between passes, and it
+     * warns that it was interrupted; a one-pass thread's stop is its end (a timeout's alarm stood down, a reader whose
+     * session hung up), so it warns of nothing. Each thread here sleeps until it is stopped, then answers, and either way
+     * the executor lists it as ended. The rows are {@code loop millis (none) % warnings}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "     % 0",
+            "5.0  % 1",
+    }, delimiter = '%')
+    void testOnlyAStoppedLoopWarnsItWasInterrupted(final Double loop, final int warnings) throws Exception {
+        final CountDownLatch sleeping = new CountDownLatch(1);
+        final VirtualThread thread = VirtualThread.virtual(instLambda(_ -> {
+            sleeping.countDown();
+            try {
+                Thread.sleep(10_000);
+            } catch (final InterruptedException e) {
+                // stopped: answer
+            }
+            return noobj();
+        }));
+        if (null != loop)
+            thread.jvm().put(uri(LOOP), real(loop));
+        final ListAppender<ILoggingEvent> logged = new ListAppender<>();
+        logged.start();
+        final Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.addAppender(logged);
+        try {
+            thread.applyAsync();
+            assertTrue(sleeping.await(5, TimeUnit.SECONDS), "the thread is running");
+            thread.stop();
+            assertTrue(awaitsStopped(thread.vid(), 5_000), "a stopped thread is listed as ended");
+        } finally {
+            root.detachAppender(logged);
+        }
+        assertEquals(warnings, logged.list.stream()
+                        .map(ILoggingEvent::getFormattedMessage)
+                        .filter(message -> message.contains(thread.vid().name()) && message.contains("interrupted"))
+                        .count(),
+                "a stop warns only when it breaks a loop: " + logged.list);
+    }
+
+    /**
+     * A THREAD KNOWS THE JAVA THREAD ITS TASK RUNS ON: none before it starts, the one its code runs on while it runs —
+     * a pooled platform thread for a core thread, a virtual one for a virtual thread — and none once it has ended (a
+     * pooled thread goes on to other work). The rows are {@code kind % virtual}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "core    % false",
+            "virtual % true",
+    }, delimiter = '%')
+    void testAThreadKnowsTheJavaThreadItsTaskRunsOn(final String kind, final boolean virtual) throws Exception {
+        final AtomicReference<Thread> ranOn = new AtomicReference<>();
+        final AtomicReference<Thread> knownAs = new AtomicReference<>();
+        final Inst code = instLambda(_ -> {
+            ranOn.set(Thread.currentThread());
+            knownAs.set(BootLoader.CURRENT_THREAD.get().javaThread());
+            return noobj();
+        });
+        final AbstractThread thread = "core".equals(kind) ? CoreThread.core(code) : VirtualThread.virtual(code);
+        assertNull(thread.javaThread(), "an unstarted thread runs on nothing yet");
+        thread.applyAsync().get(5, TimeUnit.SECONDS);
+        assertSame(ranOn.get(), knownAs.get(), "while it runs, its java thread is the one its code runs on");
+        assertEquals(virtual, ranOn.get().isVirtual(), kind + " thread");
+        assertTrue(awaitsStopped(thread.vid(), 5_000), "the thread is listed as ended");
+        assertNull(thread.javaThread(), "and once it has ended, it runs on nothing");
+    }
+
+    /**
+     * A STOP AFTER THE END INTERRUPTS NOTHING. A core thread's java thread is a pooled one, which takes up other work
+     * once the task is done (here, a thread waiting on a latch stands in for that work), so a late stop — a second
+     * shutdown, a close racing the task's own end — must leave it alone. The rows are {@code kind}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {"core", "virtual"}, delimiter = '%')
+    void testAStopAfterTheEndInterruptsNothing(final String kind) throws Exception {
+        final Inst code = instLambda(_ -> noobj());
+        final AbstractThread thread = "core".equals(kind) ? CoreThread.core(code) : VirtualThread.virtual(code);
+        thread.applyAsync().get(5, TimeUnit.SECONDS);
+        assertTrue(awaitsStopped(thread.vid(), 5_000), "the thread is listed as ended");
+        final CountDownLatch released = new CountDownLatch(1);
+        final AtomicReference<Boolean> interrupted = new AtomicReference<>(false);
+        final Thread otherWork = Thread.ofPlatform().start(() -> {
+            try {
+                released.await();
+            } catch (final InterruptedException e) {
+                interrupted.set(true);
+            }
+        });
+        thread.setJavaThread(otherWork);
+        thread.stop();
+        released.countDown();
+        otherWork.join(5_000);
+        assertFalse(interrupted.get(), "a late stop must not interrupt the work its java thread took up next");
+        assertEquals(uri(STOP), thread.at(uri(STATE)), "and the thread stays stopped");
     }
 }

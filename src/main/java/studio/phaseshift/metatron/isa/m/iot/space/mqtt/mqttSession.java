@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.iot.space.mqtt;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
@@ -72,7 +74,7 @@ public class mqttSession extends MRec implements Closeable {
 
     private final Socket socket;
     private final mqttServer server;
-    private final Thread reader;
+    private final CoreThread reader;
     private volatile boolean hungUp = false;
 
     public mqttSession(final Socket socket, final MqttPacket.Connect connect, final mqttServer server, final fURI vid) {
@@ -102,8 +104,12 @@ public class mqttSession extends MRec implements Closeable {
                 this.deliver(pub.asLst());
             return noobj();
         }));
-        this.reader = new Thread(this::readLoop, "mqtt-session-" + connect.clientId() + "-reader");
-        this.reader.setDaemon(true);
+        // the reader blocks on the socket for the connection's life: a core thread, so it holds a platform thread of
+        // the system executor's pool (listed under /sys/thread/executor) and no virtual thread's carrier
+        this.reader = docWrap(CoreThread.core(instLambda(_ -> {
+            this.readLoop();
+            return noobj();
+        })), "mqtt-session-" + connect.clientId() + "-reader");
     }
 
     /**
@@ -111,7 +117,7 @@ public class mqttSession extends MRec implements Closeable {
      * instant it connected retires a session the server already holds rather than one it has not yet.
      */
     public void start() {
-        this.reader.start();
+        this.reader.applyAsync();
     }
 
     private void readLoop() {
@@ -216,7 +222,7 @@ public class mqttSession extends MRec implements Closeable {
         } catch (final IOException ignored) {
             // already closing
         }
-        this.reader.interrupt();
+        this.reader.stop();
         this.server.retire(this);
     }
 }

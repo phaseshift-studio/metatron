@@ -67,6 +67,11 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
     }
 
     protected Thread thread;
+    /**
+     * THE TASK HAS ENDED, and the Java thread that ran it is no longer this thread's: a core thread's is a pooled one,
+     * which takes up other work, so a stop that comes later must interrupt nothing. Guarded by this thread's monitor.
+     */
+    private boolean ended = false;
     protected final FutureObj<Obj> future = new FutureObj<>();
 
     private Machine landedPerspective;
@@ -180,6 +185,15 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
     }
 
     /**
+     * The Java thread this thread's task runs on: null until it starts, and null again once it has ended. A core
+     * thread's is set by the pooled thread that takes it up, and that thread marks the end, so only it is sure to see
+     * either at once -- which is what "am I this thread?" asks.
+     */
+    public Thread javaThread() {
+        return this.ended ? null : this.thread;
+    }
+
+    /**
      * @return the URI vid of the Obj that spawned this thread, or empty uri if unset
      */
     public Obj source() {
@@ -221,7 +235,10 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                     final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(LHS));
                     this.jvm().put(uri(RESULT), result);
                     this.complete(result);
-                    if (this.thread.isInterrupted() || this.at(STATE).equals(uri(STOP))) {
+                    // A STOPPED LOOP BREAKS HERE, and says so. A thread that does not loop has made its one pass by
+                    // now, so its stop is its end, not an interruption: a timeout's alarm stood down, a reader whose
+                    // session hung up, a render loop shut down -- each would warn for ending as it was asked to
+                    if (this.jvm().containsKey(uri(LOOP)) && (this.thread.isInterrupted() || this.at(STATE).equals(uri(STOP)))) {
                         if (!this.thread.isInterrupted())
                             this.thread.interrupt();
                         this.logger().warn("thread {{y}}interrupted{{X}} at %s",
@@ -273,6 +290,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                 if (null != this.future && !this.future.isDone())
                     this.future.cancel(false);
                 synchronized (AbstractThread.this) {
+                    this.ended = true;
                     AbstractThread.this.notifyAll();
                 }
             }
@@ -320,7 +338,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
     public void stop() {
         synchronized (this) {
             this.jvm().put(uri(STATE), uri(STOP));
-            if (null != this.thread && !this.thread.isInterrupted())
+            if (!this.ended && null != this.thread && !this.thread.isInterrupted())
                 this.thread.interrupt();
             this.notifyAll();
         }

@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -294,8 +295,9 @@ public final class NetworkSupervisor extends MRec implements Closeable {
         });
         if (!retry.due() || !retry.claim())
             return;
+        // a metatron thread, listed under /sys/thread/executor while the attempt waits on the far side
         final Machine owner = this.machine;
-        Thread.ofVirtual().name("metatron-peer-redial-" + System.identityHashCode(link)).start(() -> {
+        docWrap(VirtualThread.virtual(instLambda(_ -> {
             Machine.current(owner);
             try {
                 if (this.closed || !link.redial())
@@ -306,7 +308,8 @@ public final class NetworkSupervisor extends MRec implements Closeable {
             } finally {
                 retry.release();
             }
-        });
+            return noobj();
+        })), "metatron-peer-redial-" + System.identityHashCode(link)).applyAsync();
     }
 
     /**

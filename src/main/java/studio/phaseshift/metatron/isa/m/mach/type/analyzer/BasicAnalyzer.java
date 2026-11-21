@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.mach.type.analyzer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -38,6 +39,7 @@ import java.util.concurrent.atomic.LongAdder;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_ANALYZER_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -186,9 +188,13 @@ public class BasicAnalyzer extends MRec implements Analyzer {
 
     /**
      * A CHANGE PUBLISHES A STEP LATER, on a thread of its own, in the machine the change was recorded in — an analyzer is
-     * reached through {@code Machine.current()}, so that machine's space holds its subscriptions. The pending flag is
-     * cleared before the analysis is read, so a change landing during the publication schedules the next one: the last
-     * change of a burst is never left unpublished.
+     * reached through {@code Machine.current()}, so that machine's space holds its subscriptions, and the executor
+     * starts the thread where its caller stands. The pending flag is cleared before the analysis is read, so a change
+     * landing during the publication schedules the next one: the last change of a burst is never left unpublished.
+     * <p>
+     * The thread is a metatron one, listed under {@code /sys/thread/executor} while it waits out its step. Making one
+     * writes it at its vid, here, on the thread that recorded the change: if that fails, the change goes unpublished
+     * and the recording goes on, and the next change schedules again.
      */
     private Analyzer changed() {
         if (null == this.component || !Machine.loaded() || !this.pending.compareAndSet(false, true))
@@ -199,23 +205,29 @@ public class BasicAnalyzer extends MRec implements Analyzer {
             return this;
         }
         final fURI address = machine.vid().resolve().extend(this.component).extend(ANALYZER).extend(ANALYSIS);
-        Thread.ofVirtual().name("metatron-analyzer-" + this.component).start(() -> {
-            Machine.current(machine);
-            try {
-                // the step is any int the type admits: a negative one is no wait, not a sleep that throws
-                CommonUtil.sleepThread(Math.max(0L, this.at(uri(STEP)).orElse(jnt(DEFAULT_STEP)).intValue()));
-            } finally {
-                this.pending.set(false);
-            }
-            try {
-                final Obj subscriptions = Machine.read(address.addQ(SUBQ));
-                if (subscriptions.isLst() && !subscriptions.asLst().isEmpty())
-                    QCollection.publish(subscriptions.asLst().elements(), address, this.analysis());
-            } catch (final Exception e) {
-                // a statistic that can break what it measures is worse than none
-                this.logger().debug("unable to publish %s: %s", address, e.getMessage());
-            }
-        });
+        try {
+            QCollection.docWrap(VirtualThread.virtual(instLambda(_ -> {
+                try {
+                    // the step is any int the type admits: a negative one is no wait, not a sleep that throws
+                    CommonUtil.sleepThread(Math.max(0L, this.at(uri(STEP)).orElse(jnt(DEFAULT_STEP)).intValue()));
+                } finally {
+                    this.pending.set(false);
+                }
+                try {
+                    final Obj subscriptions = Machine.read(address.addQ(SUBQ));
+                    if (subscriptions.isLst() && !subscriptions.asLst().isEmpty())
+                        QCollection.publish(subscriptions.asLst().elements(), address, this.analysis());
+                } catch (final Exception e) {
+                    // a statistic that can break what it measures is worse than none
+                    this.logger().debug("unable to publish %s: %s", address, e.getMessage());
+                }
+                return noobj();
+            })), "metatron-analyzer-" + this.component).applyAsync();
+        } catch (final Exception e) {
+            // ... and so is one that breaks the recording, or stops every publication after it
+            this.pending.set(false);
+            this.logger().debug("unable to schedule the publication of %s: %s", address, e.getMessage());
+        }
         return this;
     }
 }

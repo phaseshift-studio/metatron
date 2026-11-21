@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.sys.ui.widget;
 import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.sys.ui.ScrollView;
 import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
 import studio.phaseshift.metatron.isa.m.sys.ui.Widget;
@@ -32,6 +33,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 
 /**
  * A rendering surface that draws {@link Widget} instances at fixed or
@@ -111,7 +116,7 @@ public class FloatingSurface {
             java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
 
     // ── Render thread + queue ──────────────────────────────────────
-    // ALL terminal writes are serialized through this single daemon.
+    // ALL terminal writes are serialized through this single thread.
     // Console output:  submitAndWait  (blocks caller until written)
     // Widget renders:  submit         (fire-and-forget, coalesced)
 
@@ -138,7 +143,7 @@ public class FloatingSurface {
      * {@code -Dmetatron.render.trace=true} logs a line per rendered pass.
      */
     private static final boolean RENDER_TRACE = Boolean.getBoolean("metatron.render.trace");
-    private final Thread renderThread;
+    private final CoreThread renderThread;
     private volatile boolean running = true;
 
     /**
@@ -225,7 +230,9 @@ public class FloatingSurface {
     private static final int MIN_HEIGHT = 3;
 
     {
-        renderThread = new Thread(() -> {
+        // a core thread for the surface's life: a loop that polls, and a write that blocks on the terminal, hold a
+        // platform thread of the system executor's pool (listed under /sys/thread/executor), never a carrier
+        this.renderThread = docWrap(CoreThread.core(instLambda(_ -> {
             while (running) {
                 try {
                     // urgent (widget) passes first, then console output; polling
@@ -257,9 +264,9 @@ public class FloatingSurface {
                     tail.run();
                 } catch (final Throwable t) { /* drain quietly */ }
             }
-        }, "terminal-writer");
-        renderThread.setDaemon(true);
-        renderThread.start();
+            return noobj();
+        })), "terminal-writer");
+        this.renderThread.applyAsync();
     }
 
     /**
@@ -293,7 +300,7 @@ public class FloatingSurface {
     }
 
     private void submitAndWait(final Runnable task, final boolean urgent) {
-        if (Thread.currentThread() == this.renderThread) {
+        if (Thread.currentThread() == this.renderThread.javaThread()) {
             task.run();
             return;
         }
@@ -454,8 +461,8 @@ public class FloatingSurface {
      * is flushed.  The caller's marker rides the queue behind them, so by the time it
      * has run there is nothing left to render.
      *
-     * <p>The close sequence uses this before it gives the terminal back: the render
-     * thread is a daemon and exiting does not wait for it, so without the drain it is
+     * <p>The close sequence uses this before it gives the terminal back: the exit (a
+     * System.exit) does not wait for the render thread, so without the drain it is
      * still sitting on the shutdown's own log lines when the shell takes the tty, and
      * they land interleaved with the shell's prompt.  A stalled render thread cannot
      * stall the close more than it stalls any other console write (the same timeout
@@ -838,7 +845,7 @@ public class FloatingSurface {
      */
     public void shutdown() {
         this.running = false;
-        this.renderThread.interrupt();
+        this.renderThread.stop();
     }
 
     /**

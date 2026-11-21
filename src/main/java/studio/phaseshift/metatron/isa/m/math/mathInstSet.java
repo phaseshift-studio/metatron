@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
@@ -40,6 +41,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
@@ -52,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -1221,12 +1224,13 @@ public class mathInstSet extends AbstractInstSet {
                                     // THE DEADLINE INTERRUPTS THE EVALUATING THREAD. The code runs on the caller's thread, so the
                                     // machine and the evaluation's state stay its own, and its answer is collected within the time
                                     // (a lazy stream would outlive it). The code settling and the alarm firing race for `settled`:
-                                    // an alarm that lost stands down, and one that won is waited out and its interrupt consumed,
-                                    // so the thread, a pooled one most often, is never left interrupted.
+                                    // an alarm that lost is stopped, and one that won is waited out (its future completes once its
+                                    // interrupt has landed) and the interrupt consumed, so the thread, a pooled one most often, is
+                                    // never left interrupted. The alarm is a metatron thread, listed under /sys/thread/executor.
                                     final long millis = inst.arg(1).as(MILLIS_TYPE).realValue().longValue();
                                     final Thread evaluator = Thread.currentThread();
                                     final AtomicBoolean settled = new AtomicBoolean();
-                                    final Thread alarm = Thread.ofVirtual().start(() -> {
+                                    final VirtualThread alarm = VirtualThread.virtual(instLambda(_ -> {
                                         try {
                                             Thread.sleep(millis);
                                             if (settled.compareAndSet(false, true))
@@ -1234,7 +1238,9 @@ public class mathInstSet extends AbstractInstSet {
                                         } catch (final InterruptedException e) {
                                             // stood down: the code settled first
                                         }
-                                    });
+                                        return noobj();
+                                    }));
+                                    alarm.applyAsync();
                                     Obj answer;
                                     try {
                                         answer = objs(inst.arg(0).apply(lhs).stream().toList());
@@ -1242,13 +1248,13 @@ public class mathInstSet extends AbstractInstSet {
                                         answer = fail(e);
                                     }
                                     if (settled.compareAndSet(false, true)) {
-                                        alarm.interrupt();
+                                        alarm.stop();
                                         return answer;
                                     }
-                                    while (alarm.isAlive()) {
+                                    while (!alarm.future().isDone()) {
                                         try {
-                                            alarm.join();
-                                        } catch (final InterruptedException e) {
+                                            alarm.future().get();
+                                        } catch (final InterruptedException | ExecutionException e) {
                                             // the alarm's own interrupt, consumed below
                                         }
                                     }

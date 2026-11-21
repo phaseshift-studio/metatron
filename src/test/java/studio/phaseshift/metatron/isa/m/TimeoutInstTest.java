@@ -22,14 +22,27 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.RUN;
+import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /**
  * timeout(code, time): the code's answer on the lhs if it gives one within the time, and a catchable fail::T
@@ -78,5 +91,66 @@ public class TimeoutInstTest extends AbstractInstSetTest {
         assertTrue(elapsed >= 200L && elapsed < 5_000L, () -> "it ends after its 200 ms, and soon after: " + elapsed + " ms");
         assertFalse(Thread.currentThread().isInterrupted(), "the alarm's interrupt must not outlive the timeout");
         checkCodeParseApply(LOG, "1.plus(1)", "2");
+    }
+
+    /**
+     * EACH ALARM IS A METATRON THREAD, ended by the time the timeout answers: stopped when the code settled first, run out
+     * when it did not. The rows are {@code code % answer % alarms}. A row runs on an evaluating thread of its own, so its
+     * alarms are the threads whose source that thread is — one per lhs obj, one per timeout. A stopped alarm does not sit
+     * out its time (30 s here) under the executor's run list.
+     */
+    @ParameterizedTest
+    @Timeout(30)
+    @CsvSource(delimiter = '%', value = {
+            "1.timeout(plus(1),second::30.0)                                    % 2       % 1",
+            "{1,2,3}.timeout(plus(1),second::30.0)                              % {2,3,4} % 3",
+            "1.timeout({*}plus(0),millis::200.0).catch(5)                       % 5       % 1",
+            "1.timeout(timeout({*}plus(0),millis::100.0).catch(7),second::30.0) % 7       % 2",
+    })
+    public void testEachAlarmIsAThreadThatHasEndedByTheAnswer(final String code, final String expected, final int alarms)
+            throws Exception {
+        final int listed = listedThreads(STOP).size();
+        final VirtualThread evaluator = VirtualThread.virtual(instLambda(_ ->
+                objs(Machine.parse(code).apply(noobj()).stream().toList())));
+        final Obj answer = evaluator.applyAsync().get(20, TimeUnit.SECONDS);
+        final Obj answers = Machine.parse(expected);
+        checkEquality(LOG, answers.isCall() ? answers.apply() : answers, answer, true);
+        final long deadline = System.currentTimeMillis() + 5_000;
+        while (alarmsOf(evaluator, listedThreads(STOP).subList(listed, listedThreads(STOP).size())).size() < alarms
+                && System.currentTimeMillis() < deadline)
+            Thread.sleep(10);
+        assertEquals(alarms, alarmsOf(evaluator, listedThreads(STOP).subList(listed, listedThreads(STOP).size())).size(),
+                "each alarm is listed as ended, at once");
+        assertEquals(List.of(), alarmsOf(evaluator, listedThreads(RUN)), "and none is still running");
+    }
+
+    /**
+     * AN ALARM IS LISTED WHILE IT WAITS: a walk that outlasts its time leaves its alarm under the executor's run list until
+     * the alarm cuts it off, and the alarm is listed as ended once it has.
+     */
+    @Test
+    @Timeout(30)
+    public void testAnAlarmIsListedWhileItWaits() throws Exception {
+        final VirtualThread evaluator = VirtualThread.virtual(instLambda(_ ->
+                objs(Machine.parse("1.timeout({*}plus(0),second::1.0).catch(5)").apply(noobj()).stream().toList())));
+        final FutureObj<Obj> answer = evaluator.applyAsync();
+        List<fURI> waiting = List.of();
+        while (waiting.isEmpty() && !answer.isDone()) {
+            waiting = alarmsOf(evaluator, listedThreads(RUN));
+            Thread.sleep(5);
+        }
+        assertEquals(1, waiting.size(), "the alarm is listed while the walk runs");
+        checkEquality(LOG, jnt(5), answer.get(20, TimeUnit.SECONDS), true);
+        assertTrue(awaitsStopped(waiting.getFirst(), 5_000), "and listed as ended once it has cut the walk off");
+    }
+
+    /**
+     * the listed threads an evaluating thread spawned: those whose source it is
+     */
+    private static List<fURI> alarmsOf(final AbstractThread evaluator, final List<fURI> threads) {
+        return threads.stream()
+                .filter(vid -> Machine.read(vid) instanceof AbstractThread thread
+                        && thread.sourceVid().filter(evaluator.vid()::equals).isPresent())
+                .toList();
     }
 }

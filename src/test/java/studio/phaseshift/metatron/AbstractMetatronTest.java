@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -50,6 +51,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Base for every VM-booting test. The class-level {@link Timeout} caps each inherited test method at five minutes, so a
@@ -234,6 +236,31 @@ public abstract class AbstractMetatronTest {
     protected static void closeConsole(final Console console) {
         console.close();
         console.getFloatingSurface().shutdown();
+    }
+
+    /**
+     * The vids of the threads the system executor lists under {@code list}: {@code run} while a metatron thread runs,
+     * {@code stop} once it has ended.
+     */
+    public static List<fURI> listedThreads(final String list) {
+        return ThreadExecutor.instance().at(uri(list)).asLst().lstValue().stream()
+                .map(Obj.Helper::getAutoPointer)
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    /**
+     * Wait up to {@code millis} for the system executor to list a thread as ended: under {@code stop}, and no longer
+     * under {@code run}.
+     */
+    public static boolean awaitsStopped(final fURI thread, final long millis) {
+        final long deadline = System.currentTimeMillis() + millis;
+        while (System.currentTimeMillis() < deadline) {
+            if (listedThreads(Tokens.STOP).contains(thread) && !listedThreads(Tokens.RUN).contains(thread))
+                return true;
+            CommonUtil.sleepThread(10);
+        }
+        return false;
     }
 
     /**
