@@ -54,8 +54,12 @@ Paths are under `src/main/java/studio/phaseshift/metatron/`.
 - The class comment describes `/sys/thread/active` and `/sys/thread/inactive`; the code keys are `run` and `stop` under
   `/sys/thread/executor`. Settle which spelling is meant.
 - Every `AbstractThread` mints its vid under `~/sys/thread` (`isa/m/mach/type/thread/AbstractThread.java:134`,
-  `CommonUtil.mintShortUUID(CURRENT_SYS_THREAD, true)`, which reads memory to rule out a collision). Whether the thread
-  rec itself is also filed at that vid was not checked.
+  `CommonUtil.mintShortUUID(CURRENT_SYS_THREAD, true)`, which reads memory to rule out a collision), and constructing it
+  files the thread rec at that vid: an obj built with a vid is written there (`Obj.Helper.objCheckAndSave`,
+  `isa/m/type/Obj.java`). So a thread leaves two entries, its rec in memory and its pointer in `stop`.
+- A `VirtualThread` keeps its vid relative, `~/sys/thread/<id>` (its `self` override, `VirtualThread.java:60`); a
+  `CoreThread`'s ends up absolute. A doc written for a virtual thread (`docWrap`) is therefore keyed under `~` and a
+  `<vid>?docq` read misses it.
 - `execute(Runnable)` wraps a foreign `Runnable` in a one-shot `CoreThread` (`:172-180`), so it gets the same veneer and
   leaves the same entry. `summary()` answers `[run=>n, stop=>m]`.
 
@@ -65,9 +69,16 @@ Paths are under `src/main/java/studio/phaseshift/metatron/`.
 - Every mtron program frame a ws server evaluates, since `d5f005d2a` (`isa/m/web/space/ws/wsServer.java:427` hands it to
   `ThreadExecutor.execute(Runnable)`): one thread per frame, whether it is a console line, a remote read, or a lane
   landing at a peer. Such a frame also mints a computer in its route's machine, so it leaves two entries.
-- In progress on 2026-11-21: a subagent is routing the raw thread sites through the funnel (analyzer publications in
-  `BasicAnalyzer`, one per change burst; peer redials in `NetworkSupervisor`; math alarms; mqtt session readers and
-  connects; the floating surface's render loop). Check what landed and how often each runs.
+- Since the thread-executor conversion (`refactor(thread): the raw threads run through the system executor`), six
+  more sites leave entries. Five of them also write a `Docs` rec (`docWrap`, a third entry); the alarm writes none.
+  - `BasicAnalyzer` publication (`VirtualThread`): at most one per step (250 ms by default) per publishing analyzer,
+    whether or not anything subscribes. The network analyzer changes on every ws frame in or out, so steady traffic
+    adds about 4 a second per machine. The processor's analyzer publishes while it profiles.
+  - `NetworkSupervisor` redial (`VirtualThread`): per down link, one at once, then after 0.5, 1, 2, 4 and 8 s, then
+    every 10 s while it stays down; none while every link is up.
+  - `mathInstSet` timeout alarm (`VirtualThread`): one per `timeout()` per lhs obj, nested timeouts each their own.
+  - mqtt: the handshake (`CoreThread`), one per accepted connection; the session reader (`CoreThread`), one per session.
+  - `FloatingSurface` render loop (`CoreThread`): one per surface, so one per console.
 
 ## Questions to put to Marko first
 
