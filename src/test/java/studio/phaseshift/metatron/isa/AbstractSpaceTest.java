@@ -60,7 +60,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -785,9 +784,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * an answer as its data reads. A reference is the same data as the obj it reads, only rendered differently (Marko,
      * 2026-11-21), so a space that answers by reference -- fsSpace lays a directory out with each file a lazy
-     * {@code !*<file>} -- is measured by what each reference reads. The walk fires nothing on its own (a rec's elements,
-     * like {@code atDirect}, come back unfired): only a reference is read, deliberately, and an answer holding none is
-     * the answer itself.
+     * {@code !*<file>} -- is measured by what each reference reads. The walk itself fires nothing: a rec's values and a
+     * rel's range are taken direct ({@code secondDirect}, as {@code atDirect} takes them, where {@code second()} would
+     * fire any auto), so only a {@code !*} reference is read, once and deliberately. An answer holding none is the
+     * answer itself; a rebuilt rec or rel is its clone, with its tid and vid.
      */
     private static Obj readThrough(final Obj answer) {
         if (answer.isAutoFrom())
@@ -795,21 +795,22 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         if (answer.isObjs()) {
             final List<Obj> each = answer.stream().toList();
             final List<Obj> read = each.stream().map(AbstractSpaceTest::readThrough).toList();
-            return IntStream.range(0, each.size()).allMatch(i -> read.get(i) == each.get(i)) ? answer : objs(read);
+            return IntStream.range(0, each.size()).allMatch(i -> read.get(i) == each.get(i)) ? answer : objs(read, answer.tid(), answer.vid());
         }
         if (answer.isRel()) {
-            final Obj range = readThrough(answer.asRel().second());
-            return range == answer.asRel().second() ? answer : rel(answer.asRel().first(), range);
+            final Obj range = answer.asRel().secondDirect();
+            final Obj read = readThrough(range);
+            return read == range ? answer : answer.asRel().second(read);
         }
         if (answer.isRec()) {
-            final Map<Obj, Obj> read = new LinkedHashMap<>();
-            boolean referenced = false;
-            for (final Rel entry : answer.asRec().elements().toList()) {
-                final Obj value = readThrough(entry.second());
-                referenced |= value != entry.second();
-                read.put(entry.first(), value);
-            }
-            return referenced ? rec(read) : answer;
+            final List<Rel> entries = answer.asRec().elements().toList();
+            final List<Obj> values = entries.stream().map(Rel::secondDirect).toList();
+            final List<Obj> read = values.stream().map(AbstractSpaceTest::readThrough).toList();
+            if (IntStream.range(0, values.size()).allMatch(i -> read.get(i) == values.get(i)))
+                return answer;
+            final Map<Obj, Obj> rebuilt = new LinkedHashMap<>();
+            IntStream.range(0, entries.size()).forEach(i -> rebuilt.put(entries.get(i).firstDirect(), read.get(i)));
+            return answer.asRec().jvm(rebuilt);
         }
         return answer;
     }
