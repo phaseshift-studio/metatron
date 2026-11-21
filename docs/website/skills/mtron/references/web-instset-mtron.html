@@ -819,6 +819,11 @@ itself: <code>[plus(2).plus(2)]==[as(inst::T)]&gt;-</code> answers the lambda, a
 <li><strong>the answer is the whole value.</strong> A coefficient is part of it: <code>{3}34</code> answers <code>{3}34</code>.</li>
 <li><strong>failures are answers.</strong> A program that fails, or throws, answers its <code>fail</code>; the client never waits out its
 deadline for a reply that is not coming.</li>
+<li><strong>a connection's programs run side by side.</strong> Each frame is evaluated on a pooled thread of its own, so a program
+waiting on another machine (a tree's lane, a remote read) holds no frame behind it, and the answers leave in the
+order the programs finish. A client that waits for each answer (the console, <code>bin/wsplus</code>) reads them in the order
+it asked; one that sends several frames before reading tags each request and matches the answers by tag, as
+<code>ws_client</code> does.</li>
 <li><strong>the connection picks the serialization.</strong> <code>?in=</code> and <code>?out=</code> on the connection uri choose the serializers —
 <code>application/x-mtron</code> both ways by default, <code>?out=application/x-mtron-ui</code> for the console's rendering, and
 <code>?out=application/json</code> for a json client (lossy by design: coefficients, vids and tids do not survive json).</li>

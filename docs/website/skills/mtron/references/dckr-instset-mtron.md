@@ -423,7 +423,8 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
         f=>'<j>',
         form=>standard,
         c_dom=>0,
-        c_rng=>0],
+        c_rng=>0,
+        c_out=>0],
        [
         op=>select,
         dom=><#>,
@@ -431,7 +432,8 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
         args=>[[name=>id()]],
         form=>mapper,
         c_dom=>1,
-        c_rng=>1]]]],
+        c_rng=>1,
+        ...(1 more)]]]],
     per_inst=>[
      [
       op=>sql_where,
@@ -439,7 +441,8 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
       f=>'<j>',
       form=>standard,
       c_dom=>0,
-      c_rng=>0],
+      c_rng=>0,
+      c_out=>0],
      [
       op=>select,
       dom=><#>,
@@ -447,7 +450,8 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
       args=>[[name=>id()]],
       form=>mapper,
       c_dom=>1,
-      c_rng=>1]]]
+      c_rng=>1,
+      ...(1 more)]]]
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
@@ -465,14 +469,16 @@ mtron> *mydb:people/+.count().explain()                         [-- sql rewrite 
                   f=>'<j>',
                   form=>initial,
                   c_dom=>0,
-                  c_rng=>1]]]],
+                  c_rng=>1,
+                  ...(1 more)]]]],
     per_inst=>[[op=>sql_count,
                 rng=>int,
                 args=>[people/+],
                 f=>'<j>',
                 form=>initial,
                 c_dom=>0,
-                c_rng=>1]]]
+                c_rng=>1,
+                ...(1 more)]]]
 ```
 ### step 5: The container sees the same data
 

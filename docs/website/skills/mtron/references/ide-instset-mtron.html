@@ -611,9 +611,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
      mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::823.0,
+            runtime=&gt;millis::893.0,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/6e91303f]
+            output=&gt;!*/sys/tmp/27096a92]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -862,7 +862,8 @@ with it, then save (<code>code/N.to</code>).</p>
         f=&gt;'&lt;j&gt;',
         form=&gt;standard,
         c_dom=&gt;0,
-        c_rng=&gt;0],
+        c_rng=&gt;0,
+        c_out=&gt;0],
        [
         op=&gt;update,
         dom=&gt;&lt;#&gt;,
@@ -872,7 +873,8 @@ with it, then save (<code>code/N.to</code>).</p>
    ')]],
         form=&gt;mapper,
         c_dom=&gt;1,
-        c_rng=&gt;1]]]],
+        c_rng=&gt;1,
+        ...(1 more)]]]],
     per_inst=&gt;[
      [
       op=&gt;at,
@@ -880,7 +882,8 @@ with it, then save (<code>code/N.to</code>).</p>
       f=&gt;'&lt;j&gt;',
       form=&gt;standard,
       c_dom=&gt;0,
-      c_rng=&gt;0],
+      c_rng=&gt;0,
+      c_out=&gt;0],
      [
       op=&gt;update,
       dom=&gt;&lt;#&gt;,
@@ -890,7 +893,8 @@ with it, then save (<code>code/N.to</code>).</p>
    ')]],
       form=&gt;mapper,
       c_dom=&gt;1,
-      c_rng=&gt;1]]]
+      c_rng=&gt;1,
+      ...(1 more)]]]
 </code></pre>
 <p><strong>NOTE</strong>: when working in the <code>console::T</code>, the the interactive <code>explain_tool::T</code> provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified

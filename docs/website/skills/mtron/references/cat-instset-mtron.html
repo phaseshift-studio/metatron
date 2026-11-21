@@ -548,19 +548,19 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 ==&gt;object[int]::[obj=&gt;int::T,
                  theory=&gt;[
                   ring=&gt;ring_theory::[
-                   add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
-                   mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                   add=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                   mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                    zero=&gt;0,
                    one=&gt;1],
                   add_group=&gt;group_theory::[
-                   op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
                    id=&gt;0,
-                   inv=&gt;neg?int&lt;=int(){&lt;j&gt;}],
+                   inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
                   add_monoid=&gt;monoid_theory::[
-                   op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
                    id=&gt;0],
                   mul_monoid=&gt;monoid_theory::[
-                   op=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                   op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                    id=&gt;1]],
                  morphed_to=&gt;!λ(){&lt;j&gt;},
                  morphed_from=&gt;!λ(){&lt;j&gt;}]
@@ -932,11 +932,11 @@ shape per line — so that every rewrite applied is visible:</p>
 ==&gt;3
 mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-    op     dom          rng     args  f    desc     c_dom  c_rng 
-    start  noobj{0}::T  int::T  [6]   &lt;j&gt;  initial  {0}    {1}   
-    minus  int::T       int::T  [3]   &lt;j&gt;  mapper   {1}    {1}   
-    mult   int::T       int::T  [2]   &lt;j&gt;  mapper   {1}    {1}   
-    div    int::T       int::T  [2]   &lt;j&gt;  mapper   {1}    {1}   
+    op     dom          rng     args  f    desc     c_dom  c_rng  c_out 
+    start  noobj{0}::T  int::T  [6]   &lt;j&gt;  initial  {0}    {1}    {1}   
+    minus  int::T       int::T  [3]   &lt;j&gt;  mapper   {1}    {1}    {1}   
+    mult   int::T       int::T  [2]   &lt;j&gt;  mapper   {1}    {1}    {1}   
+    div    int::T       int::T  [2]   &lt;j&gt;  mapper   {1}    {1}    {1}   
    &quot;&quot;&quot;
 </code></pre>
 <p>Only two instructions remain in the explain table: the seed and the one operation that survives. The other

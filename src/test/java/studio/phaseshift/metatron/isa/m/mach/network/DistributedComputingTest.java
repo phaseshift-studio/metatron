@@ -30,12 +30,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -46,7 +41,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
@@ -499,24 +495,24 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @CsvSource(value = {
             // fifteen dealt to two lanes, eight and seven, each summed to one; the two merge at home and sum to one
             "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('[{]15[}]──┤').count()                    % 1",
-            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('─►[{]8[}]─[{]1[}]─┐').count()         % 1",
-            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('─►[{]7[}]─[{]1[}]─┘').count()         % 1",
-            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('├──//local─►[{]2[}]─[{]1[}]').count() % 1",
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('─[{]8[}]─[{]1[}]─┐').count()         % 1",
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('─[{]7[}]─[{]1[}]─┘').count()         % 1",
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>ext/topology/format.has('├─►//local─[{]2[}]─[{]1[}]').count() % 1",
             // the drawing is appended to the explanation's own table
-            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>format.has('├──//local─►[{]2[}]─[{]1[}]').count()             % 1",
+            "{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}.sum().explain()>>format.has('├─►//local─[{]2[}]─[{]1[}]').count()             % 1",
             // a map keeps its lane's count and the fold leaves one: start, plus and sum in each lane
-            "{1,2,3,4,5,6}.plus(1).sum().explain()>>ext/topology/format.has('─►[{]3[}]─[{]3[}]─[{]1[}]─').count()                 % 1",
+            "{1,2,3,4,5,6}.plus(1).sum().explain()>>ext/topology/format.has('─[{]3[}]─[{]3[}]─[{]1[}]─').count()                 % 1",
             // a span range is a sum of terms, one per exponent: each lane holds the one seed and turns it into its share of
             // the sixteen unrolls. Marko's three-peer run (11-20) drew the seed as {3} and every stage as {1}
             "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('[{]1[}]──┤').count()                                     % 1",
-            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('─►[{]1[}]─[{]11[}]─[{]11[}]─[{]1[}]─┐').count()     % 1",
-            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('─►[{]1[}]─[{]5[}]──[{]5[}]──[{]1[}]─┘').count()     % 1",
+            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('─[{]1[}]─[{]11[}]─[{]11[}]─[{]1[}]─┐').count()     % 1",
+            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('─[{]1[}]─[{]5[}]──[{]5[}]──[{]1[}]─┘').count()     % 1",
             "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('[{]1[}]─[{]1[}]─[{]1[}]─[{]1[}]').count()           % 0",
-            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('├──//local─►[{]2[}]─[{]1[}]').count()                % 1",
+            "0.{0,15}plus(1).mult(10).sum().explain()>>ext/topology/format.has('├─►//local─[{]2[}]─[{]1[}]').count()                % 1",
             // the branch states what its lanes answer, a lst per lane and never #{*}, so the kmerge after it binds its own
             // dom (lst[{*}A{*}]{*}) and answers one lst
             "{2,1,4,3}.order().explain()>>per_inst>>1>>c_rng                                                                % 1",
-            "{2,1,4,3}.order().explain()>>ext/topology/format.has('//local─►[{]2[}]─[{]1[}]').count()                    % 1",
+            "{2,1,4,3}.order().explain()>>ext/topology/format.has('//local─[{]2[}]─[{]1[}]').count()                    % 1",
             // ...and after an absorbed top-k: the select keeps a prefix of the cut's lst, so the branch states the cut's type
             "{2,1,4,3}.order()==[{2}_].explain()>>per_inst>>1>>c_rng                                                         % 1",
             // a run with no cut states what its last instruction answers: lanes that end in gt(3) answer bools

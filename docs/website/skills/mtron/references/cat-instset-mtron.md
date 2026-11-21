@@ -49,19 +49,19 @@ mtron> int::T.as(object::T)
 ==>object[int]::[obj=>int::T,
                  theory=>[
                   ring=>ring_theory::[
-                   add=>plus?int<=int(int::T){<j>},
-                   mul=>mult?int<=int(int::T){<j>},
+                   add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                   mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
                    zero=>0,
                    one=>1],
                   add_group=>group_theory::[
-                   op=>plus?int<=int(int::T){<j>},
+                   op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
                    id=>0,
-                   inv=>neg?int<=int(){<j>}],
+                   inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
                   add_monoid=>monoid_theory::[
-                   op=>plus?int<=int(int::T){<j>},
+                   op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
                    id=>0],
                   mul_monoid=>monoid_theory::[
-                   op=>mult?int<=int(int::T){<j>},
+                   op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
                    id=>1]],
                  morphed_to=>!λ(){<j>},
                  morphed_from=>!λ(){<j>}]
@@ -434,11 +434,11 @@ mtron> 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2)
 ==>3
 mtron> 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()>>format
 ==>"""
-    op     dom          rng     args  f    desc     c_dom  c_rng 
-    start  noobj{0}::T  int::T  [6]   <j>  initial  {0}    {1}   
-    minus  int::T       int::T  [3]   <j>  mapper   {1}    {1}   
-    mult   int::T       int::T  [2]   <j>  mapper   {1}    {1}   
-    div    int::T       int::T  [2]   <j>  mapper   {1}    {1}   
+    op     dom          rng     args  f    desc     c_dom  c_rng  c_out 
+    start  noobj{0}::T  int::T  [6]   <j>  initial  {0}    {1}    {1}   
+    minus  int::T       int::T  [3]   <j>  mapper   {1}    {1}    {1}   
+    mult   int::T       int::T  [2]   <j>  mapper   {1}    {1}    {1}   
+    div    int::T       int::T  [2]   <j>  mapper   {1}    {1}    {1}   
    """
 ```
 Only two instructions remain in the explain table: the seed and the one operation that survives. The other

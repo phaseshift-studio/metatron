@@ -852,7 +852,8 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
         f=&gt;'&lt;j&gt;',
         form=&gt;standard,
         c_dom=&gt;0,
-        c_rng=&gt;0],
+        c_rng=&gt;0,
+        c_out=&gt;0],
        [
         op=&gt;select,
         dom=&gt;&lt;#&gt;,
@@ -860,7 +861,8 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
         args=&gt;[[name=&gt;id()]],
         form=&gt;mapper,
         c_dom=&gt;1,
-        c_rng=&gt;1]]]],
+        c_rng=&gt;1,
+        ...(1 more)]]]],
     per_inst=&gt;[
      [
       op=&gt;sql_where,
@@ -868,7 +870,8 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
       f=&gt;'&lt;j&gt;',
       form=&gt;standard,
       c_dom=&gt;0,
-      c_rng=&gt;0],
+      c_rng=&gt;0,
+      c_out=&gt;0],
      [
       op=&gt;select,
       dom=&gt;&lt;#&gt;,
@@ -876,7 +879,8 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
       args=&gt;[[name=&gt;id()]],
       form=&gt;mapper,
       c_dom=&gt;1,
-      c_rng=&gt;1]]]
+      c_rng=&gt;1,
+      ...(1 more)]]]
 mtron&gt; *mydb:people/+.count()                                   [-- number of rows        --]
 ==&gt;3
 mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
@@ -894,14 +898,16 @@ mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewri
                   f=&gt;'&lt;j&gt;',
                   form=&gt;initial,
                   c_dom=&gt;0,
-                  c_rng=&gt;1]]]],
+                  c_rng=&gt;1,
+                  ...(1 more)]]]],
     per_inst=&gt;[[op=&gt;sql_count,
                 rng=&gt;int,
                 args=&gt;[people/+],
                 f=&gt;'&lt;j&gt;',
                 form=&gt;initial,
                 c_dom=&gt;0,
-                c_rng=&gt;1]]]
+                c_rng=&gt;1,
+                ...(1 more)]]]
 </code></pre>
 <h4>step 5: The container sees the same data</h4>
 <p>The Docker container has the database mounted at <code>/data/mydb.sqlite</code>. Any process inside the container can read and

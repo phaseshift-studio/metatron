@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}typer=>'the fourth stage — the per-machine...',
-           {?}resolver=>'the third stage — the walk that th...',
            {?}rewriter=>'the second stage — the code::T to ...',
-           {?}parser=>'the first stage — source text to o...'],
+           {?}parser=>'the first stage — source text to o...',
+           {?}typer=>'the fourth stage — the per-machine...',
+           {?}resolver=>'the third stage — the walk that th...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -277,10 +277,10 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
+           {?}analyzer=>"the processor's statistics (analyz...",
            {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
            {?}result=>'the objs the last evaluation produ...',
-           {?}analyzer=>"the processor's statistics (analyz...",
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -341,7 +341,7 @@ mtron> */m/mach/thread?docq
 ==>docs::[obj=>rec::T[?[
      code=><#>::T,
      {?}source=>uri::T,
-     {?}runtime=>real::T@/m/math/time,
+     {?}runtime=><#>::T,
      {?}yield=>/m/mach/thread::T,
      {?}loop=>real::T@/m/math/time,
      {?}timeout=>real::T@/m/math/time,
@@ -410,12 +410,12 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
+           {?}status=>'the health method — an auto inst c...',
            {?}listener=>'the sockets this machine serves th...',
            {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per...",
            {?}analyzer=>"the network's statistics (analyzer...",
-           {?}roster=>'known machines, connectionless: <h...',
-           {?}status=>'the health method — an auto inst c...'],
+           {?}roster=>'known machines, connectionless: <h...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
