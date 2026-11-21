@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.FS_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -228,9 +229,10 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     /**
      * ONLY WHAT IS STORED (Marko, 2026-11-19), the filesystem's own way: a file stores its obj, and a directory stores
      * nothing -- its value is its subtree, which Space.Helper derives (a container written at a directory is laid out
-     * in it). A pattern walks the files and directories it reaches, each directory an interior node (noobj), so a
-     * {@code +} listing names the level without reading below it. An address inside a stored file (a field of a rec,
-     * a slot of a lst) is no file: Space.Helper reads it from the file above it.
+     * in it). A pattern walks the files and directories it reaches, each directory an interior node (noobj) and each
+     * file a reference to it ({@link #walk}), so a {@code +} listing and a directory's subtree name the tree without
+     * opening a file. An address inside a stored file (a field of a rec, a slot of a lst) is no file: Space.Helper
+     * reads it from the file above it.
      */
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
@@ -274,9 +276,13 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     /**
      * the files and directories a pattern reaches, to the depth its wildcards walk (a {@code +} per level, {@code #}
-     * all the way): a file with its obj, a directory as an interior node (noobj) -- each one the pattern matches (a
-     * walk reaches everything down to its depth). A pattern WRITE also lands in the slots of each stored poly
-     * ({@code unroll}), so a write fills a stored row or column in place.
+     * all the way) -- each one the pattern matches (a walk reaches everything down to its depth): a directory as an
+     * interior node (noobj), and a file BY REFERENCE, {@code !*<file>}. A LAZY TREE (Marko, 2026-11-21): the tree is
+     * known from the names alone, so a walk opens no file, and a file is read -- a program in it evaluated -- only when
+     * its own key is (a directory read once evaluated every program below it, and reading the web root re-ran the
+     * boot helpers in it). A reference is the same data as the obj it reads; only its rendering differs. A pattern
+     * WRITE reads the files it reaches, and lands in the slots of each stored poly ({@code unroll}), so a write fills a
+     * stored row or column in place.
      */
     private List<IdObj> walk(final fURI key, final boolean unroll) {
         final fURI keyQless = key.qLess();
@@ -300,8 +306,13 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                             return false;
                         }
                     })
-                    .map(p -> IdObj.of(Space.Helper.routeToSpace(f(p.toString()), this.routes()),
-                            p.toFile().isDirectory() ? noobj() : this.fileToObj(p.toFile(), key.qMap())))
+                    .map(p -> {
+                        final fURI at = Space.Helper.routeToSpace(f(p.toString()), this.routes());
+                        return IdObj.of(at, p.toFile().isDirectory() ? noobj()
+                                : unroll ? this.fileToObj(p.toFile(), key.qMap())
+                                // the reference reads the file as the walk would have: in the representation asked for
+                                : auto_from_(key.hasQ(MIMEQ_PATTERN.toString()) ? at.addQ(MIMEQ_PATTERN.toString(), key.q(MIMEQ_PATTERN.toString())) : at).tryToInst());
+                    })
                     .flatMap(id -> Stream.concat(
                             id.furi().test(nodePattern) ? Stream.of(id) : Stream.empty(),
                             unroll && id.obj().isPoly()

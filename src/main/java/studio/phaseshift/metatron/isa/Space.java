@@ -454,7 +454,9 @@ public interface Space extends Addressable, Rec, Closeable {
         }
 
         /**
-         * an interior address's whole subtree: every entry stored below it, nested by its path there
+         * an interior address's whole subtree: every entry stored below it, nested by its path there. An entry the store
+         * answers by reference stays one (fsSpace's files: Marko, 2026-11-21), so the tree is laid out without reading a
+         * leaf, and a leaf is read when its key is ({@code Rec.at} fires the reference; {@code atDirect} walks past it).
          */
         private static Obj subtree(final fURI address, final Function<fURI, Iterator<IdObj>> directReader) {
             final List<IdObj> entries = new ArrayList<>();
@@ -529,9 +531,13 @@ public interface Space extends Addressable, Rec, Closeable {
             final Map<fURI, List<Obj>> leaves = new LinkedHashMap<>();
             for (final fURI base : before.hasPattern() ? located(before, directReader).keySet() : Set.of(before)) {
                 held(base, directReader, true).stream().forEach(obj -> leavesOf(base, obj, leaves));
+                // a store may answer an entry by reference (fsSpace's lazy files: Marko, 2026-11-21) -- the same data
+                // as the obj it reads, so its leaves are the leaves of that obj: # answers data, and reads through it
                 directReader.apply(base.extend(fURI.Singleton.ALL)).forEachRemaining(id -> {
                     if (runsThrough(base, id.furi()) && !id.furi().hasQ())
-                        id.obj().stream().forEach(obj -> leavesOf(id.furi(), obj, leaves));
+                        id.obj().stream()
+                                .flatMap(obj -> obj.isAutoFrom() ? obj.dereference().stream() : Stream.of(obj))
+                                .forEach(obj -> leavesOf(id.furi(), obj, leaves));
                 });
             }
             // a leaf's proper heads are interior addresses, so a value stored at one is not a leaf
