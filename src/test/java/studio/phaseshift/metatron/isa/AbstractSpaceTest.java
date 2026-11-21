@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -47,6 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,8 +57,10 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -747,8 +751,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
      *     <li>the uri tree ({@code .>>}) walks the same addresses, and never invents one;</li>
      *     <li>a literal key that prefixes an address answers it before a wildcard key that merely matches it.</li>
      * </ul>
-     * A case id is {@code <structure><read>/<layout>}, so a space that does not honor a read (or a layout) yet skips it
-     * by id with {@link studio.phaseshift.metatron.SkipRegexTest} until it does.
+     * An answer is compared as its data reads ({@link #readThrough}): a space may answer a lazy reference where a layout
+     * holds the value, and the two are the same data (fsSpace's files). A case id is {@code <structure><read>/<layout>},
+     * so a space that does not honor a read (or a layout) yet skips it by id with
+     * {@link studio.phaseshift.metatron.SkipRegexTest} until it does.
      */
     @TestCategory.Read
     @ParameterizedTest
@@ -763,7 +769,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             if (this.sleepBetweenReads > 0)
                 CommonUtil.sleepThread(this.sleepBetweenReads);
             final Obj answer = ObjmtronSerializer.parse(make(read)).apply();
-            assertEquals(ObjmtronSerializer.parse(make(expected)).apply(), answer.selfVID(null),
+            assertEquals(ObjmtronSerializer.parse(make(expected)).apply(), readThrough(answer.selfVID(null)),
                     id + ": " + make(read) + " after " + make(String.join("; ", layout)));
         } finally {
             // only the roots this case wrote ($$/m, $$/x, ...): a space may hold data of its own beside them. Everything
@@ -774,6 +780,38 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 Machine.current().memory().write(make("$$/" + root), noobj());
             });
         }
+    }
+
+    /**
+     * an answer as its data reads. A reference is the same data as the obj it reads, only rendered differently (Marko,
+     * 2026-11-21), so a space that answers by reference -- fsSpace lays a directory out with each file a lazy
+     * {@code !*<file>} -- is measured by what each reference reads. The walk fires nothing on its own (a rec's elements,
+     * like {@code atDirect}, come back unfired): only a reference is read, deliberately, and an answer holding none is
+     * the answer itself.
+     */
+    private static Obj readThrough(final Obj answer) {
+        if (answer.isAutoFrom())
+            return readThrough(answer.dereference());
+        if (answer.isObjs()) {
+            final List<Obj> each = answer.stream().toList();
+            final List<Obj> read = each.stream().map(AbstractSpaceTest::readThrough).toList();
+            return IntStream.range(0, each.size()).allMatch(i -> read.get(i) == each.get(i)) ? answer : objs(read);
+        }
+        if (answer.isRel()) {
+            final Obj range = readThrough(answer.asRel().second());
+            return range == answer.asRel().second() ? answer : rel(answer.asRel().first(), range);
+        }
+        if (answer.isRec()) {
+            final Map<Obj, Obj> read = new LinkedHashMap<>();
+            boolean referenced = false;
+            for (final Rel entry : answer.asRec().elements().toList()) {
+                final Obj value = readThrough(entry.second());
+                referenced |= value != entry.second();
+                read.put(entry.first(), value);
+            }
+            return referenced ? rec(read) : answer;
+        }
+        return answer;
     }
 
     /**

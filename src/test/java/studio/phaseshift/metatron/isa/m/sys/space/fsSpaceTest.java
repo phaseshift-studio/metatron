@@ -39,9 +39,11 @@ import java.nio.file.FileSystems;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -327,10 +329,6 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
     }
 
     /**
-     * A directory reads as a navigable dir::T rec — child-name => !*<child uri> refs, single
-     * depth and lazy.  {@code >>sub>>sub} descends one level at a time through the Router.
-     */
-    /**
      * The general {@code space::T} tree: {@code Space.Helper.treeFromUri} builds the
      * navigable obj tree from the universal {@code root/+/} child query — independent
      * of any space's native container type.  {@code >>} descends it (referent side),
@@ -452,6 +450,46 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             assertTrue(app.isStr(), "/ path navigation must reach the file, got: " + app);
         } finally {
             Machine.current().memory().write(make("$$/dirpoly/#"), noobj());
+        }
+    }
+
+    /**
+     * A DIRECTORY IS A LAZY TREE (Marko, 2026-11-21): it is laid out from the names alone, each file a reference
+     * ({@code !*<file>}) that reads the file only when its own key is called, so reading a directory runs no program in
+     * it -- the splash page's {@code GET /} read its web root, and so evaluated every boot helper there. A reference is
+     * the same data as the file's obj, rendered differently: {@code atDirect} walks the tree past it, {@code at} reads
+     * it.
+     */
+    @Test
+    public void testADirectoryReadRunsNoProgramInIt() {
+        final java.nio.file.Path mark = java.nio.file.Path.of("/tmp/fsspace_test/lazymark");
+        try {
+            final java.nio.file.Path root = java.nio.file.Path.of("/tmp/fsspace_test/lazy");
+            java.nio.file.Files.createDirectories(root.resolve("sub"));
+            // a program that leaves a mark where it runs
+            java.nio.file.Files.writeString(root.resolve("prog.mtron"), "test:lazymark -> 'fired'");
+            java.nio.file.Files.writeString(root.resolve("sub/notes.txt"), "notes");
+
+            final Obj dir = ObjmtronSerializer.parse("*test:lazy").apply();
+            assertFalse(java.nio.file.Files.exists(mark), "reading a directory must run no program in it");
+            assertEquals(rec(
+                            uri("prog.mtron"), auto_from_(f("test:lazy/prog.mtron")).tryToInst(),
+                            uri("sub"), rec(uri("notes.txt"), auto_from_(f("test:lazy/sub/notes.txt")).tryToInst())),
+                    dir, "the tree is laid out from the names alone, each file by reference");
+            assertTrue(dir.asRec().atDirect(uri("prog.mtron")).isAutoFrom(), "atDirect walks past a reference, got: " + dir);
+            assertFalse(java.nio.file.Files.exists(mark), "walking the tree runs no program either");
+
+            // the key called reads its file -- the program runs -- and answers what a direct read of the file answers
+            final Obj prog = dir.asRec().at(uri("prog.mtron"));
+            assertTrue(java.nio.file.Files.exists(mark), "calling a file's key runs its program, got: " + prog);
+            assertEquals(ObjmtronSerializer.parse("*<test:lazy/prog.mtron>").apply(), prog);
+            assertEquals(ObjmtronSerializer.parse("*<test:lazy/sub/notes.txt>").apply(), dir.asRec().at(uri("sub/notes.txt")));
+        } catch (final java.io.IOException e) {
+            throw MTronException.of(e);
+        } finally {
+            Machine.current().memory().write(make("$$/lazy/#"), noobj());
+            Machine.current().memory().write(make("$$/lazy"), noobj());
+            Machine.current().memory().write(make("$$/lazymark"), noobj());
         }
     }
 
