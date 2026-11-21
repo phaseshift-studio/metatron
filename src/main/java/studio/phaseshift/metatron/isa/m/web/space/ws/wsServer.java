@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -412,15 +413,18 @@ public final class wsServer extends Listener {
         final Session session = this.sessions.get(conn);
         if (null == session)
             return;
-        // A PROGRAM IS EVALUATED OFF THE SOCKET'S WORKER (2026-11-21), on a virtual thread of its own. On the worker, a
-        // frame waiting on another machine held its connection and every frame queued behind it: three levels of a tree
-        // over peers that dial each other send an interior lane and then a leaf down one connection, the leaf behind the
-        // lane that, through the other connection, waits for it. A program answers under the tag its request carries
+        // A PROGRAM IS EVALUATED OFF THE SOCKET'S WORKER (2026-11-21), on a thread of its own. On the worker, a frame
+        // waiting on another machine held its connection and every frame queued behind it: three levels of a tree over
+        // peers that dial each other send an interior lane and then a leaf down one connection, the leaf behind the lane
+        // that, through the other connection, waits for it. A program answers under the tag its request carries
         // (WebSocketObj#sendRecv), so a connection's programs may answer in any order, and a console sends its next line
-        // once the last is answered. Any other session's frames keep their order, on the worker.
+        // once the last is answered. The thread is one of the system executor's pooled platform threads, not a virtual
+        // one: a program that computes without blocking keeps a virtual thread's carrier, so as many runaway programs as
+        // there are cores would stall every virtual thread in the VM, where a platform thread is time-sliced. It goes
+        // back to the pool warm (a per-thread cache outlives one frame) and is listed under /sys/thread/executor while it
+        // runs. Any other session's frames keep their order, on the worker.
         if (session.rec() instanceof mtron_wsHandler program && program.evaluates())
-            Thread.ofVirtual().name("metatron-ws-frame-" + System.identityHashCode(conn))
-                    .start(() -> guard(conn, () -> this.evaluate(conn, session, message)));
+            ThreadExecutor.instance().execute(() -> guard(conn, () -> this.evaluate(conn, session, message)));
         else
             this.evaluate(conn, session, message);
     }
