@@ -193,7 +193,9 @@ public class machInstSet extends AbstractInstSet {
     public static Type THREAD_EXECUTOR_TYPE;
     public static final Type MACH_MONAD_TYPE = TypeBuilder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
     public static Type MACH_VIRTUAL_THREAD_TYPE;
-    // Common thread predicate shared by core and virtual
+    // Common thread predicate shared by core and virtual. A RUNNING THREAD IS A thread::T: its runtime is computed (the
+    // executor stores an !auto), and a nominal slot (time::T) refuses an inst-valued field, so the slot takes any obj --
+    // with time::T there, no running thread was a thread::T, and stop, pause and resume resolved against none
     public static final Type MACH_THREAD_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(MACH_THREAD_TID)
@@ -201,7 +203,7 @@ public class machInstSet extends AbstractInstSet {
                     rec(uri(CODE), T(ALL),
                             uri(SOURCE).maybe(), URI_TYPE,
                             uri(TIME).maybe(), DATETIME_TYPE,
-                            uri(RUNTIME).maybe(), TIME_TYPE,
+                            uri(RUNTIME).maybe(), T(ALL),
                             uri(YIELD).maybe(), T(MACH_THREAD_TID),
                             uri(LOOP).maybe(), TIME_TYPE,
                             uri(TIMEOUT).maybe(), TIME_TYPE,
@@ -1056,7 +1058,10 @@ public class machInstSet extends AbstractInstSet {
                                         interrupted and any waiter is woken: a stopped thread runs no further cycle, and
                                         `resume` refuses it — a stop ends a thread's life, where a pause holds it. The rec
                                         stays where it was, so `result` and `runtime` remain readable from the address that
-                                        held it.""")
+                                        held it. A stop ends what the thread does for its owner too: a console's render loop
+                                        shuts its surface down (its widgets stop, and a console that paints its screen shows
+                                        output at its next prompt), an mqtt session's reader closes the session, and a
+                                        timeout's alarm runs the time out at once.""")
                                 .example("*<~/thread/ping>.stop()    [-- halt the loop at ping, keeping its rec --]")
                                 .body((lhs, inst) -> {
                                     ((AbstractThread) lhs).stop();

@@ -1350,8 +1350,11 @@ public final class mInsts {
                                     // component read through an address is the ONE object stored there. Copying one made
                                     // every dereference of `*~/instset` a different object from `*</instset>` — two
                                     // reads of one slot that could not be compared — and no identity-stable read of a
-                                    // memory, an ISA or a mounted space was possible at all.
+                                    // memory, an ISA or a mounted space was possible at all. A NotDetachable obj (a thread)
+                                    // is one too: a copy shared the thread's Java thread but not its rec, so mtron's stop
+                                    // wrote its state into the copy, and pause and resume reached no thread at all.
                                     return readObj.isType() || readObj.isMachine() || readObj.isAddressable()
+                                            || readObj instanceof NotDetachable
                                             ? readObj
                                             : readObj.clone().selfVID(null);
                                 })

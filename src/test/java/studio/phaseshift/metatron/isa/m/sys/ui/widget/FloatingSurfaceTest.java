@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.sys.ui.widget;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -35,11 +36,13 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.sys.ui.Widget;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 
 import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.MACH_ISA_TID;
 import static studio.phaseshift.metatron.Tokens.RUN;
 import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -53,6 +56,12 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
 
     private static final int TERM_HEIGHT = 40;
     private static final int TERM_WIDTH = 120;
+
+    @BeforeAll
+    public static void importMach() {
+        // mtron's thread instructions (stop) live in /m/mach
+        InstSet.importInstSet(MACH_ISA_TID);
+    }
 
     // ── Anchor.parse ───────────────────────────────────────────────
 
@@ -1391,5 +1400,69 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         surface.shutdown();
         assertTrue(awaitsStopped(renderer.get().vid(), 5_000),
                 () -> "and listed as ended once it is shut down: " + listedThreads(STOP));
+    }
+
+    /**
+     * A STOP ON THE RENDER LOOP SHUTS ITS SURFACE DOWN. mtron's stop ends the loop as {@link FloatingSurface#shutdown()}
+     * does: the executor lists it as ended, a pass queued after the stop never runs, and a console write lands inline
+     * rather than after the submit timeout. The rows are {@code swallowed}: the loop is stopped between passes, or during
+     * a pass that swallows the stop's interrupt, so the thread's state, not the interrupt, has to end the loop.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {"false", "true"}, delimiter = '%')
+    public void aStopOnTheRenderLoopShutsTheSurfaceDown(final boolean swallowed) throws Exception {
+        final java.util.concurrent.atomic.AtomicReference<AbstractThread> renderer = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.CountDownLatch passed = new java.util.concurrent.CountDownLatch(1);
+        surface.writeAndRender(() -> {
+            renderer.set(BootLoader.CURRENT_THREAD.get());
+            passed.countDown();
+            if (swallowed) {
+                try {
+                    Thread.sleep(10_000);
+                } catch (final InterruptedException e) {
+                    // the stop's interrupt, swallowed: this pass ends and says nothing
+                }
+            }
+            return "";
+        });
+        assertTrue(passed.await(10, java.util.concurrent.TimeUnit.SECONDS), "the pass runs");
+        final studio.phaseshift.metatron.furi.fURI loop = renderer.get().vid();
+        instructThread(loop, "stop");
+        assertTrue(awaitsStopped(loop, 5_000), () -> "a stopped render loop is listed as ended: " + listedThreads(RUN));
+        assertTrue(surface.isShutdown(), "its surface is shut down");
+        final java.util.concurrent.atomic.AtomicBoolean ranAfter = new java.util.concurrent.atomic.AtomicBoolean(false);
+        surface.writeAndRender(() -> {
+            ranAfter.set(true);
+            return "";
+        });
+        Thread.sleep(250);
+        assertFalse(ranAfter.get(), "a pass queued after the stop never runs");
+        final long t0 = System.nanoTime();
+        surface.writeToTerminal("a line the console writes after the stop\n");
+        final long writeMs = (System.nanoTime() - t0) / 1_000_000L;
+        assertTrue(writeMs < 1_000L, "a console write after the stop lands inline: " + writeMs + " ms");
+    }
+
+    /**
+     * AN INTERRUPT THAT IS NO STOP ENDS NOTHING. A pass that leaves its thread interrupted (an interrupt it raised itself)
+     * is followed by the next pass, and the loop stays listed as running: only the thread's stop shuts the surface down.
+     */
+    @Test
+    public void anInterruptThatIsNoStopLeavesTheRenderLoopRunning() throws Exception {
+        final java.util.concurrent.atomic.AtomicReference<AbstractThread> renderer = new java.util.concurrent.atomic.AtomicReference<>();
+        surface.writeAndRender(() -> {
+            renderer.set(BootLoader.CURRENT_THREAD.get());
+            Thread.currentThread().interrupt();
+            return "";
+        });
+        final java.util.concurrent.CountDownLatch next = new java.util.concurrent.CountDownLatch(1);
+        surface.writeAndRender(() -> {
+            next.countDown();
+            return "";
+        });
+        assertTrue(next.await(10, java.util.concurrent.TimeUnit.SECONDS), "the pass after the interrupt runs");
+        assertFalse(surface.isShutdown(), "the surface is not shut down");
+        assertTrue(listedThreads(RUN).contains(renderer.get().vid()),
+                () -> "the loop is still listed as running: " + listedThreads(RUN));
     }
 }

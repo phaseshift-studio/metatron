@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.List;
@@ -37,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.MACH_ISA_TID;
 import static studio.phaseshift.metatron.Tokens.RUN;
 import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -56,6 +59,12 @@ public class TimeoutInstTest extends AbstractInstSetTest {
         super(mathInstSet::new);
     }
 
+    @BeforeAll
+    public static void importMach() {
+        // mtron's thread instructions (stop) live in /m/mach
+        InstSet.importInstSet(MACH_ISA_TID);
+    }
+
     /**
      * The rows are {@code code % what it answers}. A time with a unit is converted to milliseconds
      * ({@code second::1.0} is a thousand). The lhs is fed one obj at a time, each with the whole time, and an inner
@@ -72,6 +81,7 @@ public class TimeoutInstTest extends AbstractInstSetTest {
             "1.timeout({*}plus(0),millis::100.0).catch(5)                      % 5",
             "1.timeout({*}plus(0),millis::100.0).catch(5).plus(1)              % 6",
             "1.timeout(timeout({*}plus(0),millis::100.0).catch(7),second::5.0) % 7",
+            "1.timeout({*}plus(0),millis::-1.0).catch(5)                       % 5",
     })
     public void testATimeoutAnswersInTimeOrFails(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
@@ -143,6 +153,43 @@ public class TimeoutInstTest extends AbstractInstSetTest {
         checkEquality(LOG, jnt(5), answer.get(20, TimeUnit.SECONDS), true);
         assertTrue(awaitsStopped(waiting.getFirst(), 5_000),
                 () -> "and listed as ended once it has cut the walk off: " + listedThreads(STOP));
+    }
+
+    /**
+     * A STOPPED ALARM RUNS THE TIME OUT AT ONCE: mtron's stop brings an alarm's deadline forward to now and never takes
+     * it away, so the walk it guards is cut off and its timeout answers then, though its time (30 s here) is far off. The
+     * rows are {@code code % alarms % stopped % answer}: the code's alarms, listed in the order its timeouts start (the
+     * outer first), and the one stopped. A stopped inner alarm's fail is caught inside the outer timeout; a stopped outer
+     * alarm fails the outer timeout, saying it was stopped.
+     */
+    @ParameterizedTest
+    @Timeout(30)
+    @CsvSource(delimiter = '%', value = {
+            "1.timeout({*}plus(0),second::30.0).catch(5)                        % 1 % 0 % 5",
+            "1.timeout({*}plus(0),second::30.0)                                 % 1 % 0 % <ERROR>",
+            "1.timeout(timeout({*}plus(0),second::30.0).catch(7),second::30.0)  % 2 % 1 % 7",
+            "1.timeout(timeout({*}plus(0),second::30.0).catch(7),second::30.0)  % 2 % 0 % <ERROR>",
+    })
+    public void testAStoppedAlarmRunsTheTimeOutAtOnce(final String code, final int alarms, final int stopped,
+                                                      final String expected) throws Exception {
+        final VirtualThread evaluator = VirtualThread.virtual(instLambda(_ ->
+                objs(Machine.parse(code).apply(noobj()).stream().toList())));
+        final FutureObj<Obj> answer = evaluator.applyAsync();
+        List<fURI> waiting = List.of();
+        while (waiting.size() < alarms && !answer.isDone()) {
+            waiting = alarmsOf(evaluator, listedThreads(RUN));
+            Thread.sleep(5);
+        }
+        assertEquals(alarms, waiting.size(), "the alarms are listed while the walk runs");
+        instructThread(waiting.get(stopped), "stop");
+        final Obj answered = answer.get(5, TimeUnit.SECONDS);
+        if ("<ERROR>".equals(expected))
+            assertTrue(answered.stream().anyMatch(o -> o.isFail() && o.asFail().message().contains("was stopped before")),
+                    () -> "the stopped timeout fails, saying so: " + answered);
+        else
+            checkEquality(LOG, Machine.parse(expected), answered, true);
+        assertTrue(awaitsStopped(waiting.get(stopped), 5_000),
+                () -> "the stopped alarm is listed as ended: " + listedThreads(RUN));
     }
 
     /**
