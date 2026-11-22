@@ -267,6 +267,9 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,2,3,4}.plus(1).count()         % branch().sum() % 4",
             // prod is self-combining: the master re-applies prod
             "{1,2,3,4}.plus(1).prod()          % branch().prod() % 120",
+            // sup and inf are a join and a meet, self-combining too: each lane folds its share and home folds the partials
+            "{3,1,4,1,5,9,2,6}.sup()           % branch(start().sup(),start().sup()).sup()               % 9",
+            "{3,1,4,1,5,9,2,6}.plus(1).inf()   % branch(start().plus().inf(),start().plus().inf()).inf() % 2",
             // a filter handed an effect does not float, so it stays home and only the fold ships over its bag
             "{1,2,3,4,5,6}.is(print(_).gt(2)).sum()  % start().is().branch().sum() % 18",
     }, delimiter = '%')
@@ -424,10 +427,18 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     // when it does not. The legality suite owns the gate itself; this row owns the positive case.
     // ================================================================================================
 
-    @Disabled("needs an idempotent, commutative fold in the vocabulary to exercise the positive copy case")
+    /**
+     * H, REDUNDANT SHARDS (2026-11-22): sup and inf are a join and a meet, commutative monoid folds that are idempotent, so a copy
+     * ships the whole seed to every lane and the replies fold to the answer of one. Every lane answers the same
+     * extremum, the branch's merge adds the copies' masses ({k}9), and the extremum of copies is itself. A sum would
+     * answer k times its total; SplitLegalityTest#testCopyOnSumDeclines pins that it declines instead. Hedging a fold that
+     * is not idempotent (the first reply wins, the rest are dropped) is not written yet.
+     */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4}.sum?split=copy()   % branch().sum() % 10",
+            "{3,1,4,1,5,9,2,6}.sup?split=copy()          % branch(start().sup(),start().sup()).sup()                     % 9",
+            "{3,1,4,1,5,9,2,6}.plus(1).inf?split=copy()  % branch(start().plus().inf(),start().plus().inf()).inf()       % 2",
+            "{{3}5,1,4}.sup?split=copy()                 % branch(start({{3}5,1,4}).sup(),start({{3}5,1,4}).sup()).sup() % 5",
     }, delimiter = '%')
     void test_H_redundant_shards(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -818,6 +829,8 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,1,1,5}.mean()                                                % start?hop=0({1,1,1,5}).mean()",
             "{1,1,1,2,3,3}.group([mod(2)=>mean()])                           % start?hop=0({1,1,1,2,3,3}).group([mod(2)=>mean()])",
             "{1,1,2,2,3,3}.mod(2).group([cc()=>count()])                     % start?hop=0({1,1,2,2,3,3}).mod(2).group([cc()=>count()])",
+            "{1,1,2,2,3}.sup()                                               % start?hop=0({1,1,2,2,3}).sup()",
+            "{5,5,1,3}.plus(1).inf?split=copy()                              % start?hop=0({5,5,1,3}).plus(1).inf()",
             "{1,1,2,2,3,3}.plus(1).mean?hop=2()                              % start?hop=0({1,1,2,2,3,3}).plus(1).mean()",
             "{1,1,2}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)         % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
             "{1,1,2}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)   % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",

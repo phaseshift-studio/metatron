@@ -275,7 +275,7 @@ single expression shows.
 | **E** | `{1,…,8}.plus(1).sum?hop=2()`                                      | a nested `start?hop=n-1(p_i)…` at each interior node: the dial graph is the tree                   |
 | **F** | a `lst`-partitioned fold                                           | a pipeline: the running total travels neighbor to neighbor                                         |
 | **G** | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `branch?<={0}(<p_i> => start?hop=0(part_i).group([mod(3)=>sum()]), …).sum()==[_=>sum()]`           |
-| **H** | a part shipped to r peers                                          | every reply folds (at least once); non-idempotent: hedge, the first reply wins                     |
+| **H** | `{...}.sup?split=copy()`                                           | `branch?<={0}&split=copy(<p_i> => start?hop=0(seed).sup(), …).sup()`; hedging (first reply wins) unwritten |
 | **I** | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | the plan's axes lowered over a real span `[(lo, hi, role)]`                                        |
 | **J** | `{1,1,1,5}.mean()`                                                 | `branch?<={0}(<p_i> => start?hop=0(part_i).split?<=int{*}([mean(),count()]).cc(_>>1)>>0, …).mean()` |
 | **K** | `{...}.order(s)==[{k}_]`                                           | lanes `order(s)==[{k}_]`; the master `kmerge(s)==[{k}_]`, as `kmerge` is `causal`                  |
@@ -304,6 +304,9 @@ cut absorbs it because `kmerge` declares `causal`; see *K* below. Since 2026-11-
 sorts at home, where every mass is whole.
 `J` done 2026-11-22 — `mean ↦ ℓ·mean`: each lane runs the lift `ℓ`, its mean weighted by its count (`{n}m`, the
 count riding the coefficient), and home runs the weighted mean; see *J* below.
+`H` done 2026-11-22 for idempotent folds — `sup` and `inf`, a join and a meet, are self-combining and idempotent, so
+`?split=copy` ships the whole seed to every lane and folds every reply; hedging a fold that is not idempotent (the
+first reply wins) is not written yet.
 `N` done 2026-11-22 — `law_bsp`, its own rule beside `law_shard` (Marko): a whole-frontier `repeat?<=A{*}` whose code
 is pure and floatable has its code dealt over the dialed peers on every pass, the loop and its predicates home; see *N*
 below.
@@ -331,7 +334,7 @@ multiply any fan-out and **composites** that build on the rest. The table keeps 
 distribution — the menu (A–W)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
 │  ├─ free · floatable (Thm 6)        → O:✅  W:✅
-│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J:✅  K:✅  L  H
+│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J:✅  K:✅  H:✅  L
 │  ├─ pipeline · associative          → F
 │  └─ shuffle · keyed                 → (G's hash-route; M(3))
 ├─ by the location                (native · delegation — where the work lives)
