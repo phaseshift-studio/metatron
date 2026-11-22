@@ -530,7 +530,7 @@ public final class Shard {
      * machine bound: not the resolved signature, not a bound function and not a position vid. What stays is the op
      * address, the caller's own query, the coefficient and the arguments.
      */
-    private static Inst raw(final Inst inst) {
+    static Inst raw(final Inst inst) {
         final Poly args = inst.args().isRec()
                 ? rec(inst.args().asRec().elements().map(kv -> rel(kv.first(), rawArg(kv.second()))))
                 : lst(inst.args().elements().map(Shard::rawArg).toList());
@@ -550,7 +550,7 @@ public final class Shard {
      * stripped of both spellings first: the root has already read the level above's budget, and a slave handed to a
      * peer must not carry it (under either spelling, or the peer would re-plan with the root's height).
      */
-    private static void stampHop(final List<Inst> chain, final Obj budget) {
+    static void stampHop(final List<Inst> chain, final Obj budget) {
         if (chain.isEmpty())
             return;
         for (int i = 0; i < chain.size(); i++) {

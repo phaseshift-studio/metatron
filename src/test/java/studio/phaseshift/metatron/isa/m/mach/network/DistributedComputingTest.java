@@ -681,12 +681,39 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     }
 
     /**
-     * N -- iterative / BSP: x* = x ∨ f(x) ∨ f²(x) ∨ ⋯. Needs a superstep — the emitted layout wrapped in
-     * {@code repeat}/{@code loop}, with the combiner as the barrier between rounds.
+     * N -- iterative / BSP: x* = x ∨ f(x) ∨ f²(x) ∨ ⋯, a superstep repeated (Marko, 2026-11-22). A whole-frontier repeat
+     * ({@code repeat?<=A{*}}) gathers its frontier once per pass, and law_bsp deals each pass over the dialed peers: its
+     * code becomes {@code branch?<=A{*}&split=part(<peer 1> => f?hop=0, <peer 2> => f?hop=0)}, so the loop stays home and
+     * every pass parts the frontier over peers 1 and 2 and merges their answers before the next pass (lock step). A
+     * bulked member goes whole to one lane. A fold in the code ({@code sum()}) answers a partial per lane, so law_bsp
+     * leaves it home, and the superstep still meets the whole frontier: 1+2+3.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)     % start().repeat(branch(plus(),plus()),loop().is())     % {5,6,7}",
+            "{1,2,3}.repeat?<=int{*}(code=>mult(2),until=>loop()?>2)     % start().repeat(branch(mult(),mult()),loop().is())     % {8,16,24}",
+            "{1,2,3}.repeat?<=int{*}(code=>sum(),until=>loop()?>0)       % start().repeat(sum(),loop().is())                     % 6",
+    }, delimiter = '%')
+    void test_N_iterative_bsp(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
+    /**
+     * A BULKED MEMBER KEEPS ITS COUNT ON A REMOTE LANE: {@code {1,1,2}} is {@code {{2}1,2}}, so one lane of plus(1) answers
+     * {@code {{2}2,3}}. Over these forked peers a remote lane answers {@code {2,3}}: the count is dropped whether the
+     * branch deals (split=part), copies, or holds one lane, so law_bsp's lanes inherit it, and a bulked BSP frontier loses
+     * its traversers' counts between passes. It is not the transport: Marko's live checks drop the count locally too
+     * ({{2}1,2}.plus(1) answers {2,3}, as do {{2}1,2}.branch(id()) and {1,1,2}.branch?<=int{*}(plus(1))), so a bulked
+     * member's count is lost before any lane ships.
      */
     @Test
-    void test_N_iterative_bsp() {
-        LOG.warn("menu row N (iterative / BSP) currently not implemented");
+    @Disabled("a remote branch lane drops a bulked member's count over the forked peers: {1,1,2}.branch?<=int{*}(<peer> => plus(1)) "
+            + "answers {2,3}, not {{2}2,3}; dealt and copied branches drop it the same way, so law_bsp's lanes inherit it "
+            + "(probe 2026-11-22). Not the transport: live, {{2}1,2}.plus(1) answers {2,3} on one machine (Marko); unresolved")
+    void test_N_a_bulked_member_keeps_its_count_on_a_remote_lane() {
+        final String peer = Machine.current().network().peers().elements()
+                .map(rel -> rel.second().asRec().at(uri(HOST)).uriValue().toString()).findFirst().orElseThrow();
+        checkCodeParseApply(LOG, "{1,1,2}.branch?<=int{*}(<" + peer + "> => plus(1))", "{{2}2,3}");
     }
 
     /**
