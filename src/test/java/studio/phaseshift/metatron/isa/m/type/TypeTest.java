@@ -455,6 +455,32 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * THE PREDICATE JUDGES WHAT THE CONSTRUCTOR BUILT (Marko, 2026-11-22). A type with an explicit constructor
+     * ({@code int::T[?>10][plus(1)]}: the first bracket the predicate, the second the constructor) returned whatever
+     * the constructor built, unchecked, so {@code cnat::2} answered {@code cnat::3}. The constructed value is checked
+     * now: 2 builds 3, which is not ?>10, and is refused; 10 builds 11, which is, and is kept, so the check is on the
+     * value built, never on the input. (testTyping's table can't pin this: a row that should fail falls back to
+     * {@code inst.test(type)}, which runs the predicate itself.)
+     */
+    @Test
+    void testAConstructedValueMeetsThePredicate() {
+        try {
+            Machine.evaluate("int::T[?>10][plus(1)]@cnat");
+            assertEquals(21, Machine.evaluate("cnat::20").asInt().intValue(), "20 builds 21, which is ?>10");
+            assertEquals(11, Machine.evaluate("cnat::10").asInt().intValue(), "10 is not ?>10, but it builds 11, which is");
+            Obj refused;
+            try {
+                refused = Machine.evaluate("cnat::2");
+            } catch (final RuntimeException e) {
+                refused = null; // refused by a throw
+            }
+            assertTrue(null == refused || refused.isFail(), "2 builds 3, which is not ?>10, so cnat::2 is refused: " + refused);
+        } finally {
+            Machine.write(f("cnat"), noobj());
+        }
+    }
+
     @Training.SkipTraining(reason = "rows register a tid and later rows reuse it via '.', so each claim is stateful and cannot be re-evaluated alone")
     @ParameterizedTest
     @CsvSource(value = {

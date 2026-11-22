@@ -1324,6 +1324,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 // objClone sibling does exactly this)
                                 throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
+                            objTypeCheck(constructedObj);
                             // the constructor's own store, outside objCheckAndSave: a reply read stores nothing here either
                             if (null != vid && !SELF_VID.isBound())
                                 Machine.write(vid, constructedObj);
