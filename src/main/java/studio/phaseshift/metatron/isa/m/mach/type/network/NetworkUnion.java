@@ -72,6 +72,19 @@ public class NetworkUnion extends BasicNetwork {
     }
 
     @Override
+    public <OBJ extends Obj> OBJ at(final Obj key) {
+        // The roster is the ROOT's alone (knowledge is shared), and an ancestor resolving a descendant's address walks
+        // the descendant's rec with Rec.at, never network.read — so this level must redirect roster addresses here too,
+        // or */a/b/network/roster read from the root answers noobj (this level's own store holds no roster).
+        if (key.isUri()) {
+            final fURI at = this.rostered(key.uriValue());
+            if (null != at)
+                return (OBJ) Machine.read(ROOT_ROSTER.retract(1).extend(at));
+        }
+        return super.at(key);
+    }
+
+    @Override
     public Obj write(final fURI vid, final Obj obj) {
         // a child DECLARES knowledge, it never shadows it: the write lands in the one listing
         final fURI at = this.rostered(vid);

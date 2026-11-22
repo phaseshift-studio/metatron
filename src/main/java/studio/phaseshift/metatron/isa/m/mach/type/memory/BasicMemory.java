@@ -252,7 +252,9 @@ public class BasicMemory extends MRec implements Memory {
      * writes that entry rather than a copy into some store beside it.
      */
     private fURI mountKey(final fURI mountVID) {
-        final Machine machine = this.machine();
+        // the own level's machine is reached through the union (this level is never parented), exactly as
+        // vocabulary() does -- this.machine() answers mach0() here and would key the mount under the wrong address
+        final Machine machine = null != this.union ? this.union.machine() : this.machine();
         // a machine-relative mount (~/memory/space/dev) is resolved before keying: the constructor receives the spelling
         // the mount expression used, and an unresolved ~ would key the space beside its own address
         final fURI vid = mountVID.hasPrefix(f("~")) && null != Machine.current() && null != Machine.current().vid()

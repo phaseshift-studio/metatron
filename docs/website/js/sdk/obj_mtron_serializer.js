@@ -477,7 +477,7 @@ class Reader {
         while (j < this.text.length) {
             const ch = this.text[j];
             if (ch === '{') { brace += 1; j += 1; continue; }
-            if (ch === '}') { brace -= 1; j += 1; continue; }
+            if (ch === '}') { if (brace === 0) break; brace -= 1; j += 1; continue; }
             if (brace === 0 && (WS.test(ch) || ch === '(' || ch === '.' || ch === ',' || ch === ']' || ch === ')' ||
                     (ch === '=' && this.text[j + 1] === '>'))) break;
             if (ch === '<' && this.text[j + 1] !== '=') { const e = this.text.indexOf('>', j + 1); j = e < 0 ? j + 1 : e + 1; continue; }

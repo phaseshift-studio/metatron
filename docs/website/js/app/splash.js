@@ -1,6 +1,7 @@
 import * as MtronEnvelope from '../sdk/mtron-envelope.js';
 import * as MtronIO from '../sdk/mtron-io.js';
 import * as MtronObjPanels from '../ui/mtron-obj-panels.js';
+import { typesetMath } from '../ui/mathjax.js';
 
 "use strict";
 
@@ -129,7 +130,7 @@ function spanOf(value) {
     const rec = value && value.isRec ? plain(value) : (value && typeof value === "object" ? value : {});
     return {
         col: Math.max(1, Math.min(4, Number(rec.col) || 1)),
-        row: Math.max(1, Number(rec.row) || 1)
+        row: rec.row == null ? null : Math.max(1, Number(rec.row) || 1)
     };
 }
 
@@ -143,10 +144,16 @@ function wordOf(value) {
 function applySpan(el, col, row) {
     const span = spanOf({col: col, row: row});
     el.dataset.col = String(span.col);
-    el.dataset.row = String(span.row);
+    if (span.row != null) {
+        el.dataset.row = String(span.row);
+        el.style.setProperty("--rows", String(span.row));
+    } else {
+        delete el.dataset.row;
+        el.style.removeProperty("--rows");
+    }
     el.style.gridColumn = span.col > 1 ? "span " + span.col : "";
-    el.style.gridRow = span.row > 1 ? "span " + span.row : "";
-    el.style.alignSelf = span.row > 1 ? "stretch" : "";
+    el.style.gridRow = (span.row != null && span.row > 1) ? "span " + span.row : "";
+    el.style.alignSelf = (span.row != null && span.row > 1) ? "stretch" : "";
 }
 
 /* ── card move + resize ─────────────────────────────────────────────────
@@ -337,6 +344,7 @@ function paint(el, text, kind) {
         if (language !== "json" || (HL.getLanguage && HL.getLanguage("json"))) {
             try {
                 el.innerHTML = HL.highlight(text, {language: language, ignoreIllegals: true}).value;
+                typesetMath(el, text);
                 return;
             } catch (ignored) {
                 // a grammar that cannot read a fragment is not a reason to lose the fragment
@@ -344,6 +352,7 @@ function paint(el, text, kind) {
         }
     }
     el.textContent = text;
+    typesetMath(el, text);
 }
 
 function retint(el) {
@@ -853,8 +862,13 @@ function mountObjPanel(objCard, host, env) {
             if (host.at) host.at.textContent = text;
         },
         frame: (vid) => {
-            pageFrame = (!vid || vid === "/.") ? null : String(vid);
+            const next = (!vid || vid === "/.") ? null : String(vid);
+            if (next !== pageFrame) {
+                pageFrame = next;
+                document.dispatchEvent(new CustomEvent("metatron:frame", {detail: next}));
+            }
         },
+        currentFrame: () => pageFrame,
         paint: (el, text, kind) => paint(el, text, kind),
         announce: (tools) => announceMcpTools(tools)
     };
@@ -1617,18 +1631,33 @@ document.addEventListener("visibilitychange", () => {
         });
     }
 
+    /* read one element as a leaf card or (a .multi-card) a group of cards */
+    function readCards(container) {
+        return Array.from(container.children).map((el) => {
+            if (el.classList && el.classList.contains("multi-card")) {
+                const body = el.querySelector(".multi-card-body");
+                return {
+                    label: el.dataset.label || null,
+                    col: Number(el.dataset.col) || 1,
+                    row: el.dataset.row != null ? (Number(el.dataset.row) || 1) : null,
+                    card: body ? readCards(body) : []
+                };
+            }
+            if (!(el.dataset && el.dataset.tid)) return null;
+            return {
+                tid: el.dataset.tid,
+                vid: el.dataset.vid || null,
+                label: el.dataset.label || null,
+                view: el.dataset.view || "panel",
+                col: Number(el.dataset.col) || 1,
+                row: el.dataset.row != null ? (Number(el.dataset.row) || 1) : null
+            };
+        }).filter((card) => card != null);
+    }
+
     function pageCards() {
         if (loadedGrid && !loadedGrid.hidden) {
-            return Array.from(loadedGrid.children)
-                .filter((el) => el.dataset && el.dataset.tid)
-                .map((el) => ({
-                    tid: el.dataset.tid,
-                    vid: el.dataset.vid || null,
-                    label: el.dataset.label || null,
-                    view: el.dataset.view || "panel",
-                    col: Number(el.dataset.col) || 1,
-                    row: Number(el.dataset.row) || 1
-                }));
+            return readCards(loadedGrid);
         }
         const cards = BEFORE.map((entry) => ({...entry}));
         $$("#pinned .obj-card").forEach((root) => {
@@ -1639,11 +1668,82 @@ document.addEventListener("visibilitychange", () => {
                 label: root.dataset.label || null,
                 view: root.dataset.view || "panel",
                 col: Number(root.dataset.col) || 1,
-                row: Number(root.dataset.row) || 1
+                row: root.dataset.row != null ? (Number(root.dataset.row) || 1) : null
             });
         });
         AFTER.forEach((entry) => cards.push({...entry}));
         return cards;
+    }
+
+    /* a layout entry: a leaf splash_card (tid/vid) or a group (card => [cards]) */
+    function mountLayoutCard(rec, parent) {
+        if (!rec) return null;
+        if (Array.isArray(rec.card)) return mountMultiCard(rec, parent);
+        const tid = rec.tid ? String(rec.tid) : null;
+        const cvid = rec.vid ? String(rec.vid) : null;
+        if (!tid) return null;
+        const known = KNOWN[tid];
+        const cardTid = known ? known[0] : tid;
+        const cardVid = cvid || (known ? known[1] : null);
+        const span = spanOf(rec.span);
+        const view = wordOf(rec.view) || "panel";
+        if (cardVid) {
+            return mountPinnedObjCard({tid: cardTid, vid: cardVid, raw: ""}, {
+                label: rec.label ? String(rec.label) : tid,
+                view: view,
+                col: span.col,
+                row: span.row,
+                parent: parent
+            });
+        }
+        const objCard = $$("#page-panel [data-tid]").find((el) => el.dataset.tid === cardTid);
+        if (!objCard) return null;
+        const label = rec.label ? String(rec.label) : (objCard.dataset.label || tid);
+        const heading = objCard.querySelector("header h2");
+        if (heading) heading.textContent = label;
+        objCard.dataset.label = label;
+        applySpan(objCard, span.col, span.row);
+        parent.appendChild(objCard);
+        return objCard;
+    }
+
+    /* a group of cards under one collapsible header; its body is a nested 4-col
+       grid, so each child card's own span still applies within the group */
+    function mountMultiCard(rec, parent) {
+        const root = document.createElement("section");
+        root.className = "multi-card";
+        const span = spanOf(rec.span || {col: 4});
+        applySpan(root, span.col, span.row);
+        root.dataset.label = rec.label ? String(rec.label) : "";
+
+        const head = document.createElement("header");
+        head.className = "multi-card-head";
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "multi-card-toggle";
+        toggle.textContent = "▾";
+        toggle.title = "collapse";
+        const title = document.createElement("span");
+        title.className = "multi-card-title";
+        title.textContent = rec.label ? String(rec.label) : "group";
+        head.appendChild(toggle);
+        head.appendChild(title);
+        root.appendChild(head);
+
+        const body = document.createElement("div");
+        body.className = "multi-card-body";
+        root.appendChild(body);
+
+        head.addEventListener("click", () => {
+            const collapsed = body.hidden;
+            body.hidden = !collapsed;
+            toggle.textContent = collapsed ? "▾" : "▸";
+            toggle.title = collapsed ? "collapse" : "expand";
+        });
+
+        (rec.card || []).forEach((child) => mountLayoutCard(child, body));
+        parent.appendChild(root);
+        return root;
     }
 
     async function loadPage(source) {
@@ -1686,35 +1786,7 @@ document.addEventListener("visibilitychange", () => {
         if (!page) throw last || new Error("no page at " + vid);
         const layout = Array.isArray(page.layout) ? page.layout : [];
         loadedGrid.textContent = "";
-        layout.forEach((rec) => {
-            if (!rec) return;
-            const tid = rec.tid ? String(rec.tid) : null;
-            const cvid = rec.vid ? String(rec.vid) : null;
-            if (!tid) return;
-            const known = KNOWN[tid];
-            const cardTid = known ? known[0] : tid;
-            const cardVid = cvid || (known ? known[1] : null);
-            const span = spanOf(rec.span);
-            const view = wordOf(rec.view) || "panel";
-            if (cardVid) {
-                mountPinnedObjCard({tid: cardTid, vid: cardVid, raw: ""}, {
-                    label: rec.label ? String(rec.label) : tid,
-                    view: view,
-                    col: span.col,
-                    row: span.row,
-                    parent: loadedGrid
-                });
-            } else {
-                const objCard = $$("#page-panel [data-tid]").find((el) => el.dataset.tid === cardTid);
-                if (!card) return;
-                const label = rec.label ? String(rec.label) : (objCard.dataset.label || tid);
-                const heading = card.querySelector("header h2");
-                if (heading) heading.textContent = label;
-                objCard.dataset.label = label;
-                applySpan(objCard, span.col, span.row);
-                loadedGrid.appendChild(card);
-            }
-        });
+        layout.forEach((rec) => mountLayoutCard(rec, loadedGrid));
         $$("#page-panel main > *").forEach((el) => {
             if (el !== loadedGrid) el.hidden = true;
         });
@@ -1727,9 +1799,43 @@ document.addEventListener("visibilitychange", () => {
         if (page.title) {
             pageTitle = String(page.title);
             document.title = pageTitle;
+            /* the machine's hostname prefixes the page title: "booger - metatron" */
+            localRead("application/json", "/network/host").then((host) => {
+                const name = String(host == null ? "" : host).trim();
+                if (name && name !== "noobj" && !/^fail::/.test(name)) {
+                    document.title = name + " - " + pageTitle;
+                }
+            }).catch(() => {});
         }
         cache.clear();
         if (!encoding.hidden) show(currentView);
+    }
+
+    /* a leaf card or a group back to its splash_card::[…] spelling */
+    function serializeCard(card) {
+        if (card.card) {
+            const parts = [];
+            if (card.label) parts.push("label=>'" + String(card.label).replace(/'/g, "\\'") + "'");
+            if (card.col > 1 || card.row != null) {
+                const sp = [];
+                if (card.col > 1) sp.push("col=>" + card.col);
+                if (card.row != null) sp.push("row=>" + card.row);
+                parts.push("span=>[" + sp.join(",") + "]");
+            }
+            parts.push("card=>[" + card.card.map(serializeCard).join(",") + "]");
+            return "splash_card::[" + parts.join(",") + "]";
+        }
+        const parts = ["tid=><" + card.tid + ">"];
+        if (card.vid) parts.push("vid=><" + card.vid + ">");
+        if (card.label) parts.push("label=>'" + String(card.label).replace(/'/g, "\\'") + "'");
+        if (card.view && card.view !== "panel") parts.push("view=>" + card.view);
+        if (card.col > 1 || card.row != null) {
+            const sp = [];
+            if (card.col > 1) sp.push("col=>" + card.col);
+            if (card.row != null) sp.push("row=>" + card.row);
+            parts.push("span=>[" + sp.join(",") + "]");
+        }
+        return "splash_card::[" + parts.join(",") + "]";
     }
 
     async function savePage(destination) {
@@ -1739,19 +1845,7 @@ document.addEventListener("visibilitychange", () => {
             pageSave.textContent = "saving…";
         }
         try {
-            const layout = pageCards().map((card) => {
-                const parts = ["tid=><" + card.tid + ">"];
-                if (card.vid) parts.push("vid=><" + card.vid + ">");
-                if (card.label) parts.push("label=>'" + String(card.label).replace(/'/g, "\\'") + "'");
-                if (card.view && card.view !== "panel") parts.push("view=>" + card.view);
-                if (card.col > 1 || card.row > 1) {
-                    const sp = [];
-                    if (card.col > 1) sp.push("col=>" + card.col);
-                    if (card.row > 1) sp.push("row=>" + card.row);
-                    parts.push("span=>[" + sp.join(",") + "]");
-                }
-                return "splash_card::[" + parts.join(",") + "]";
-            });
+            const layout = pageCards().map(serializeCard);
             const value = "[title=>'" + String(pageTitle).replace(/'/g, "\\'") + "',layout=>[" + layout.join(",") + "]]";
             const target = String(vid).charAt(0) === "<" ? String(vid) : "<" + vid + ">";
             const expr = target + " -> splash_page::" + value;

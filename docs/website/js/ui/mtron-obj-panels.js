@@ -18,6 +18,7 @@ import { parse, write, quote, real, int } from '../sdk/obj_mtron_serializer.js';
 import { f } from '../sdk/furi.js';
 import { parse as envelope } from '../sdk/mtron-envelope.js';
 import { toElement } from './mtron-dom.js';
+import { typesetMath } from './mathjax.js';
 
 "use strict";
 
@@ -67,6 +68,14 @@ import { toElement } from './mtron-dom.js';
         } catch (ignored) {
             return String(value);
         }
+    }
+
+    /* resolve a ~-prefixed address against the current frame (null, "/." and "/"
+       are the root): ~/network at /foo is /foo/network, at the root is /network */
+    function resolveFrame(vid, frame) {
+        if (typeof vid !== "string" || vid.charAt(0) !== "~") return vid;
+        const rest = vid.slice(1);
+        return (frame && frame !== "/." && frame !== "/") ? frame + rest : rest;
     }
 
     /* a spinner + label for slow panel reads (schema discovery, table load) */
@@ -962,12 +971,17 @@ import { toElement } from './mtron-dom.js';
        client and tools; the `#` route templates are rendered dimmed). */
     function networkPanel(env, api) {
         const box = node("div", "mpanel network-panel");
-        const readJson = (api && api.json) || (() => Promise.resolve(null));
-        const readFresh = (vid) => (api && api.evalJson)
-            ? api.evalJson("*<" + vid + ">")
-            : readJson();
-        const base = (((env && env.vid) || "/network").replace(/\/+$/, "")) || "/network";
-        const root = "/network";
+        const evalJson = (api && api.evalJson) || (() => Promise.resolve(null));
+        const declared = String((env && env.vid) || "/network");
+        const dynamic = declared.charAt(0) === "~";
+        let frame = (api && api.currentFrame) ? api.currentFrame() : null;
+        /* keep the ~ so the network's parental-prefix inheritance resolves against
+           the frame: an absolute /a/b/network reads only the child's own slot, but
+           the roster and peers are shared, so they live at the parent */
+        const base = declared.replace(/\/+$/, "") || "/network";
+        const readFresh = (vid) => evalJson((dynamic && frame)
+            ? "move(<" + frame + ">).*<" + vid + ">"
+            : "*<" + vid + ">");
         let token = 0;
 
         const head = node("div", "mpanel-head");
@@ -1044,10 +1058,10 @@ import { toElement } from './mtron-dom.js';
         async function load() {
             const my = ++token;
             try {
-                const network = await readJson();
+                const network = await readFresh(declared);
                 if (my !== token) return;
                 if (network && typeof network === "object" && network.pattern) pattern.textContent = String(network.pattern);
-                const roster = await readFresh(root + "/roster");
+                const roster = await readFresh(base + "/roster");
                 if (my !== token) return;
                 const machines = roster && roster.machine && typeof roster.machine === "object" ? roster.machine : {};
                 const authorities = Object.keys(machines).sort();
@@ -1083,6 +1097,13 @@ import { toElement } from './mtron-dom.js';
 
         sectionHead(knownHead, "known", "roster", null);
         sectionHead(peerHead, "connected", "peer", null);
+        if (dynamic) {
+            document.addEventListener("metatron:frame", (ev) => {
+                if (!box.isConnected) return;
+                frame = ev.detail;
+                load();
+            });
+        }
         load();
         /* the roster and the peers move; the api.read cache would pin them, so the
            poll takes the uncached socket read */
@@ -1094,6 +1115,94 @@ import { toElement } from './mtron-dom.js';
 
     register("/m/mach/component/network", networkPanel);
     register("network", networkPanel);
+
+    /* memory — the machine's registered spaces: a gateway that lists every space
+       at /memory/space as an accordion (the space uri is the header); opening one
+       reads the space obj and lays its key/value fields out as an objTree. */
+    function memoryPanel(env, api) {
+        const box = node("div", "mpanel memory-panel");
+        const evalJson = (api && api.evalJson) || (() => Promise.resolve(null));
+        const evalPretty = (api && api.eval) || (() => Promise.resolve(""));
+        const strip = (t) => String(t == null ? "" : t).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "").trim();
+        const declared = String((env && env.vid) || "/memory");
+        const dynamic = declared.charAt(0) === "~";
+        let frame = (api && api.currentFrame) ? api.currentFrame() : null;
+
+        /* one space: a native details accordion, lazy-reading its pretty form */
+        function space(vid) {
+            const details = document.createElement("details");
+            details.className = "memory-space";
+            const summary = document.createElement("summary");
+            summary.className = "memory-space-head";
+            summary.textContent = vid;
+            details.appendChild(summary);
+            const body = node("div", "memory-space-body");
+            body.appendChild(spinner("reading space…"));
+            details.appendChild(body);
+
+            let loaded = false;
+            details.addEventListener("toggle", () => {
+                if (!details.open || loaded) return;
+                loaded = true;
+                (async () => {
+                    try {
+                        const text = await evalPretty("*<" + vid + ">");
+                        const clean = strip(text);
+                        body.textContent = "";
+                        if (!clean || clean === "noobj" || /^fail::/.test(clean)) {
+                            body.appendChild(node("div", "mpanel-empty", "noobj"));
+                            return;
+                        }
+                        const code = node("pre", "memory-space-code", "");
+                        if (api && api.paint) api.paint(code, clean, "mtron");
+                        else code.textContent = clean;
+                        body.appendChild(code);
+                    } catch (problem) {
+                        body.textContent = "";
+                        body.appendChild(node("div", "mpanel-empty", String(problem && problem.message ? problem.message : problem)));
+                    }
+                })();
+            });
+            return details;
+        }
+
+        async function loadSpaces() {
+            const mem = resolveFrame(declared, frame);
+            box.textContent = "";
+            box.appendChild(spinner("reading spaces…"));
+            try {
+                const raw = await evalJson("*<" + mem + ">>>space.>>.vid()");
+                /* one space answers a single uri (a bare string in JSON), several answer
+                   a list/objs (an array) — normalize both to a list of vid strings */
+                const list = raw == null ? [] : (Array.isArray(raw) ? raw : [raw]);
+                const vids = list.map((v) => String(v)).filter((v) => v && v !== "noobj");
+                box.textContent = "";
+                if (!vids.length) {
+                    box.appendChild(node("div", "mpanel-empty", "no registered spaces"));
+                    return;
+                }
+                vids.sort();
+                vids.forEach((vid) => box.appendChild(space(vid)));
+            } catch (problem) {
+                box.textContent = "";
+                box.appendChild(node("div", "mpanel-empty", "cannot read memory spaces: " + (problem && problem.message ? problem.message : problem)));
+            }
+        }
+
+        if (dynamic) {
+            document.addEventListener("metatron:frame", (ev) => {
+                if (!box.isConnected) return;
+                frame = ev.detail;
+                loadSpaces();
+            });
+        }
+        loadSpaces();
+
+        return box;
+    }
+
+    register("/m/mach/component/memory", memoryPanel);
+    register("memory", memoryPanel);
 
 
     /* the web surfaces: the server obj's own route table, not a probe. the obj's
@@ -1595,10 +1704,12 @@ import { toElement } from './mtron-dom.js';
         if (window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron")) {
             try {
                 el.innerHTML = window.hljs.highlight(text, {language: "mtron", ignoreIllegals: true}).value;
+                typesetMath(el, text);
                 return;
             } catch (ignored) { }
         }
         el.textContent = text;
+        typesetMath(el, text);
     }
 
     register("type", async function (env, api) {
@@ -1637,7 +1748,11 @@ import { toElement } from './mtron-dom.js';
         }
         box.appendChild(head);
 
-        if (desc && desc !== "noobj") box.appendChild(node("p", "type-desc", desc));
+        if (desc && desc !== "noobj") {
+            const p = node("p", "type-desc", desc);
+            typesetMath(p, desc);
+            box.appendChild(p);
+        }
 
         if (predicate.length) {
             box.appendChild(node("div", "type-section", "predicate"));
@@ -1694,7 +1809,11 @@ import { toElement } from './mtron-dom.js';
         if (!doc || typeof doc !== "object") { box.appendChild(node("div", "mpanel-empty", "no documentation")); return box; }
 
         const desc = doc.desc != null ? String(doc.desc).trim() : "";
-        if (desc && desc !== "noobj") box.appendChild(node("p", "docs-desc", desc));
+        if (desc && desc !== "noobj") {
+            const p = node("p", "docs-desc", desc);
+            typesetMath(p, desc);
+            box.appendChild(p);
+        }
 
         const dom = doc.dom != null ? String(doc.dom).trim() : "";
         const rng = doc.rng != null ? String(doc.rng).trim() : "";

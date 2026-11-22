@@ -35,13 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.ToLongFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -135,7 +129,7 @@ public class NetworkPanelTool extends AccordionWidget {
 
     public NetworkPanelTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid, false);
-        this.title(Machine.current().network().read(f(HOST)).orElse(uri(LOCALHOST)) + " network");
+        this.title("\uD83D\uDCE1 " + Machine.current().network().read(f(HOST)).orElse(uri(LOCALHOST)));
         // the defaults apply only when the creator wrote no style of their own — a creator's style is their write
         // and must survive the re-hydration every .display() performs, not be overwritten by the panel's defaults
         if (!Stylable.Style.isStyle(this.at(uri(studio.phaseshift.metatron.Tokens.STYLE)))) {

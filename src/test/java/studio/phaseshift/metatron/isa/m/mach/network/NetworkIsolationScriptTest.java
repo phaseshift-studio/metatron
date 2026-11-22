@@ -269,4 +269,27 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
     })
     void testAChildsRosterIsTheRoots() {
     }
+
+    /**
+     * A DESCENDANT'S ROSTER READ FROM AN ANCESTOR IS THE ROOT'S TOO. A child answers its roster through its own
+     * {@code NetworkUnion.read} (redirect), but an ancestor resolving {@code /a/b/network/roster} walks the child's
+     * rec with {@code Rec.at} — which must redirect the same way, or the ancestor reads {@code noobj} instead of the
+     * one shared roster.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[ROSTER_CLEAR]",
+            "[DECLARE ws://known-to-root:1111]",
+            "[STATE] *~.push(machine_b)",
+            "[STATE] *~.push(machine_c)",
+            "[STATE] move(/.)",
+            "*</machine_b/machine_c/network/roster/machine> % */network/roster/machine % true   [-- the descendant's roster, read from the root --]",
+            "*</machine_b/machine_c/network/roster>          % */network/roster         % true   [-- and the whole listing --]",
+            "[STATE] move(/machine_b/machine_c)",
+            "[STATE] *~.pop(_)",
+            "[STATE] *~.pop(_)",
+            "[ROSTER_CLEAR]"
+    })
+    void testADescendantsRosterReadFromTheRootIsTheRoots() {
+    }
 }
