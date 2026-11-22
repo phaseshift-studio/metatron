@@ -437,19 +437,42 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * The summary rides the stream ring's coefficient: {@code mean ↦ ℓ·mean}, where the lift {@code ℓ} answers a part's
      * mean weighted by its count, {@code {n}m} ({@code split?<=int{*}([mean(),count()]).cc(_>>1)>>0}). Every lane runs
      * {@code ℓ} in the mean's place, the branch's merge adds the weights of equal summaries, and home runs the weighted
-     * mean, the equation's own last fold (Law.Helper#lifted), so Σnᵢmᵢ/Σnᵢ is the mean of the whole. A bulked member
-     * weighs its copies on both sides: {@code {1,1,1,5}} deals {@code {3}1} to one lane whole, the lanes answer
-     * {@code {3}1.0} and {@code 5.0}, and their weighted mean is 2.0 (their plain mean, 3.0, is the answer the row
-     * refuses). A keyed mean, {@code group([k=>mean()])}, does not shard yet: its lanes would need the lift per key.
+     * mean, the equation's own last fold (Law.Helper#lifted), so Σnᵢmᵢ/Σnᵢ is the mean of the whole. Each form names
+     * the instructions in every lane, so a row pins the rewrite, not only its answer: a lane is its share, the floatable
+     * run, then the lift's split, cc and projection.
+     * <ul>
+     *   <li>A bulked member weighs its copies: {@code {1,1,1,5}} deals {@code {3}1} to one lane whole, the lanes answer
+     *       {@code {3}1.0} and {@code 5.0}, and their weighted mean is 2.0 (their plain mean, 3.0, is the answer refused).</li>
+     *   <li>A typer does not float: {@code as(real::T)} stays home, the branch deals the bag it hands on (so no lane
+     *       starts with a share), and the lift is real's, {@code split?<=real{*}}.</li>
+     *   <li>A filter may empty a lane: its books weigh zero, {@code {0}0.0} is noobj, and nothing of it reaches home.</li>
+     *   <li>Home runs the equation's fold, never the cut as written ({@code mean?<=int{*}()} would refuse the lanes'
+     *       reals); what follows the mean runs home after it; and a point on the mean rides home's mean.</li>
+     *   <li>A lane with budget left ({@code ?hop=2}) is planned again where it lands. The lift is a split and a
+     *       projection, no cut, so the lane ships only its floatable run a level down and lifts what comes back.
+     *       {@code checkCodeRewrite} rewrites each lane it recurses into, so the form shows that level too.</li>
+     * </ul>
+     * A keyed mean, {@code group([k=>mean()])}, does not shard yet: its lanes would need the lift per key.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6,7,8}.mean()              % branch().mean() % 4.5",
-            "{1,2,3,4,5,6}.plus(1).mean()          % branch().mean() % 4.5",
-            "{1.5,2.5,3.5,4.5}.mean()              % branch().mean() % 3.0",
-            "{1,1,1,5}.mean()                      % branch().mean() % 2.0",
+            "{1,2,3,4,5,6,7,8}.mean()                 % branch(start().split().cc().rshift(),start().split().cc().rshift()).mean()                                           % 4.5",
+            "{1,2,3,4,5,6}.plus(1).mean()             % branch(start().plus().split().cc().rshift(),start().plus().split().cc().rshift()).mean()                             % 4.5",
+            "{1.5,2.5,3.5,4.5}.mean()                 % branch(start().split().cc().rshift(),start().split().cc().rshift()).mean()                                           % 3.0",
+            "{1,1,1,5}.mean()                         % branch(start({3}1).split().cc().rshift(),start(5).split().cc().rshift()).mean()                                      % 2.0",
+            "{1,1,1,5}.plus(2).mean()                 % branch(start({3}1).plus().split().cc().rshift(),start(5).plus().split().cc().rshift()).mean()                        % 4.0",
+            "{1,1,1,5}.as(real::T).plus(2.0).mean()   % start().as().branch(plus().split().cc().rshift(),plus().split().cc().rshift()).mean()                                % 4.0",
+            "{1,2,3,4,5,6}.mult(2).plus(1).mean()     % branch(start().mult().plus().split().cc().rshift(),start().mult().plus().split().cc().rshift()).mean()               % 8.0",
+            "{0.5,1.5,2.5,3.5}.mult(2.0).mean()       % branch(start().mult().split().cc().rshift(),start().mult().split().cc().rshift()).mean()                             % 4.0",
+            "{1,2,3,4,5,6,7,8}.is(gt(2)).mean()       % branch(start().is().split().cc().rshift(),start().is().split().cc().rshift()).mean()                                 % 5.5",
+            // only 4 passes, so the lane dealt {1,3} answers books of weight zero, and home's mean meets one book
+            "{1,2,3,4}.is(gt(3)).mean()               % branch(start().is().split().cc().rshift(),start().is().split().cc().rshift()).mean()                                 % 4.0",
+            "{1,2,3,4,5,6,7,8}.plus(1).mean().mult(2.0)  % branch(start().plus().split().cc().rshift(),start().plus().split().cc().rshift()).mean().mult()                 % 11.0",
+            "{1,1,2,2,3,3}.plus(1).mean{2}()          % branch(start().plus().split().cc().rshift(),start().plus().split().cc().rshift()).mean()                             % {2}3.0",
+            // a lane with budget left re-plans its share: it ships the floatable run a level down and lifts what comes back
+            "{1,2,3,4,5,6,7,8}.plus(1).mean?hop=2()   % branch(branch(start().plus(),start().plus()).split().cc().rshift(),branch(start().plus(),start().plus()).split().cc().rshift()).mean() % 5.5",
             // home runs the fold as its equation states it, over the lanes' reals, never the cut as written (int{*})
-            "{1,2,3,4,5,6,7,8}.mean?<=int{*}()     % branch().mean() % 4.5",
+            "{1,2,3,4,5,6,7,8}.mean?<=int{*}()        % branch(start().split().cc().rshift(),start().split().cc().rshift()).mean()                                           % 4.5",
     }, delimiter = '%')
     void test_J_algebraic_aggregates(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
