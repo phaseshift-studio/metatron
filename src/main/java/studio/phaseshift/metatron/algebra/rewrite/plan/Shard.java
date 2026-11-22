@@ -207,10 +207,11 @@ public final class Shard {
         // the fold its definition names; a keyed fold through the chain its pointwise combiner computes. A FOLD THAT
         // RECOMBINES THROUGH ITSELF AFTER A LIFT (J, mean ↦ ℓ·mean) has every lane run the lift in its place, so a lane
         // answers a summary of its part, and home runs the fold as its equation states it, over the summaries
-        // A POINT ON A KEYED FOLD'S VALUE (group([k=>mean{2}()])) multiplies each key's answer, and neither a lane nor the
-        // per-key combiner carries it, as keying the spec writes each value's declared n-tid over its point: such a group
-        // stays home
-        if (0 <= cut && pointedValues(insts.get(cut)))
+        // A POINT OR A SPAN ON A KEYED FOLD'S VALUE (group([k=>mean{2}()]), group([k=>{2}count()])) changes each key's
+        // answer, and neither a lane nor the per-key combiner carries it, as keying the spec writes each value's declared
+        // n-tid over both: such a group stays home. A span on the cut itself ({2}count(), count twice) is the cut run
+        // again over its own answer, which no lane can run on a part: it stays home too
+        if (0 <= cut && (pointedValues(insts.get(cut)) || !insts.get(cut).tid().b().isOne()))
             return null;
         final Call combined = 0 > cut ? null : Law.Helper.combiner(typed.get(cut), chain.laws());
         final Law.Helper.Lift lifted = 0 > cut || null != combined ? null : Law.Helper.lifted(typed.get(cut));
@@ -382,7 +383,8 @@ public final class Shard {
                 && cut.arg(0).asRec().elements().anyMatch(kv -> {
             final Obj value = kv.secondDirect();
             final List<Inst> folds = value.isObjInst() ? List.of(value.asInst()) : value.isCode() ? value.asCode().insts() : List.of();
-            return folds.stream().anyMatch(fold -> (null != fold.tid().d() && !fold.tid().d().isOne()) || pointedValues(fold));
+            return folds.stream().anyMatch(fold -> (null != fold.tid().d() && !fold.tid().d().isOne())
+                    || !fold.tid().b().isOne() || pointedValues(fold));
         });
     }
 
@@ -415,7 +417,8 @@ public final class Shard {
             final Inst contract = chain.contracts().get(i);
             if (null == contract)
                 return false;
-            if (contract.isReducing())
+            // a fold answers one obj, at most: a declared reducer whose range admits none (sup, inf: A{?}) as well
+            if (contract.isReducing() || Inst.Form.reducer == Inst.Form.of(contract))
                 return true;
             if (!handsOnOne(contract, chain.insts().get(i)))
                 return false;

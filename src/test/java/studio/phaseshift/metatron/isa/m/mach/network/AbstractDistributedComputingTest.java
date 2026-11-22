@@ -439,6 +439,12 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{3,1,4,1,5,9,2,6}.sup?split=copy()          % branch(start().sup(),start().sup()).sup()                     % 9",
             "{3,1,4,1,5,9,2,6}.plus(1).inf?split=copy()  % branch(start().plus().inf(),start().plus().inf()).inf()       % 2",
             "{{3}5,1,4}.sup?split=copy()                 % branch(start({{3}5,1,4}).sup(),start({{3}5,1,4}).sup()).sup() % 5",
+            // sup answers one obj at most, so what follows it stays home rather than shipping its one answer out again
+            "{1,2,3,4,5,6}.is(gt(2)).sup().mult(2)       % branch(start().is().sup(),start().is().sup()).sup().mult()    % 12",
+            // a span on the cut runs it again over its own answer, which no lane can run on a part, and a span on a value is
+            // written over when the spec is keyed: both stay home and answer as written
+            "{1,2,3,4}.{2}count()                        % start().count()                                               % 1",
+            "{1,3,2,5,4,6}.group([mod(2)=>{2}count()])   % start().group()                                               % [1=>3,0=>3]",
     }, delimiter = '%')
     void test_H_redundant_shards(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -507,8 +513,8 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             // a self-combining fold re-applies its key at home, so kmerge(cc()) is no cut either: sharded, the lanes
             // merged {[{2}9],[1,{2}9]} and {[{3}2]} by partial masses and answered [1,{3}2,{4}9]
             "{[{2}9],[{3}2],[1,{2}9]}.kmerge(cc())                       % start().kmerge()            % [1,{4}9,{3}2]",
-            // a typer key cannot read mass (its domain is one copy), so the sort still ships
-            "{3,1,2,4}.plus(1).order(as(str::T))                         % branch(start().plus().order(),start().plus().order()).kmerge() % [2,3,4,5]",
+            // a typer key cannot read mass (its domain is one copy), so the sort still ships; '10' sorts before '8' as strs
+            "{7,8,9,10}.plus(1).order(as(str::T))                        % branch(start().plus().order(),start().plus().order()).kmerge() % [10,11,8,9]",
     }, delimiter = '%')
     void test_K_a_sort_by_mass_sorts_at_home(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);

@@ -1171,15 +1171,15 @@ public enum Law {
          * WHETHER A CODE IS BLIND TO MASS: the test a key passes before a combiner may re-apply it to each member, as
          * {@code order(s) ↦ split([_])·kmerge(s)} re-applies the sort's key at home. A shard parts a value's mass across
          * its lanes, since equal members from two parts meet only in the branch's merge, so a lane holds part of a
-         * coefficient. A key whose answer reads the coefficient compares partial masses in the lanes and whole ones at
-         * home: {@code cc()} answers mass, and a fold such as {@code count()} reads copies. What reads mass is a contract
-         * SHAPED AS A REDUCER, one that gathers any number of copies into one answer ({@link Inst#isReducing}), read off
-         * each contract's own coefficients rather than the op's declared form, which is one form per op. A contract
-         * whose domain is one copy cannot read mass (the processor hands it a single copy, and the coefficient floats
-         * past it, Thm 6), and neither can one that hands every copy back (an identity's barrier). So a typer
-         * ({@code as(str::T)}) is blind, and {@code cc()} is not, whichever of its overloads was built first. Every code
-         * an instruction is handed must be blind too: {@code is(gt(2))} compares the member, {@code is(cc().gt(1))} its
-         * mass. A literal is blind, and so is noobj, the absent key. An instruction nothing declares is not: fail closed.
+         * coefficient, and a key whose answer reads it compares partial masses in the lanes and whole ones at home. Each
+         * instruction is judged by the contracts its op declares AT ITS ARITY ({@code cc()} by its reader alone), read
+         * off each contract's own coefficients, never the op's declared form, which is one form per op. Each must be
+         * unable to read mass: it takes one copy (a mapper, filter or flatmapper by its shape: the processor hands it a
+         * single copy and the coefficient floats past it, Thm 6), or it is a typer (one copy too), or it is an identity
+         * that hands every copy back ({@code id}'s barrier, which declares {@code unit}). A gather that reads copies is
+         * refused: {@code cc()} answers mass, {@code count()} counts copies, and {@code skip(2)} drops them, so a lane
+         * holding {@code {2}1} of a value's {@code {4}1} would skip all of it. Every code an instruction is handed must
+         * be blind too. A literal is blind, and so is noobj, the absent key. An instruction nothing declares is not.
          */
         public static boolean massBlind(final Obj code) {
             final List<Inst> insts = code.isObjInst() ? List.of(code.asInst()) : code.isCode() ? code.asCode().insts() : List.of();
@@ -1187,14 +1187,24 @@ public enum Law {
                 return true;
             final Map<fURI, Claim> read = claims().read();
             return insts.stream().allMatch(inst -> {
-                final List<Inst> contracts = read.entrySet().stream()
-                        .filter(claim -> inst.tid().basePath().equals(claim.getKey().basePath()))
-                        .map(claim -> claim.getValue().inst()).toList();
-                return !contracts.isEmpty() && contracts.stream().noneMatch(Inst::isReducing)
+                final List<Claim> contracts = read.entrySet().stream()
+                        .filter(claim -> inst.tid().basePath().equals(claim.getKey().basePath())
+                                && claim.getValue().inst().args().count() == inst.args().count())
+                        .map(Map.Entry::getValue).toList();
+                return !contracts.isEmpty() && contracts.stream().allMatch(claim -> oneCopy(claim.inst())
+                        || Inst.Form.typer == Inst.Form.of(claim.inst()) || claim.claimed().containsKey(Law.unit))
                         && inst.args().elements().allMatch(arg -> arg.isRel()
                         ? massBlind(arg.asRel().first()) && massBlind(arg.asRel().secondDirect())
                         : massBlind(arg));
             });
+        }
+
+        /**
+         * Whether a contract takes one copy at a time, by its own shape: a mapper, filter, flatmapper or scatter, never a
+         * gather.
+         */
+        private static boolean oneCopy(final Inst contract) {
+            return !contract.isGather() && (contract.isFilter() || contract.isMap() || contract.isFlatMap() || contract.isScatter());
         }
 
         /**
