@@ -700,6 +700,23 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         }
 
         /**
+         * A PLACE'S NAME, AS THE NETWORK CALLS IT (Marko, 2026-11-20: //0, not //localhost:1111): an address read
+         * against the network's prefixes, so a peer named zero reads {@code //zero}, and one the network names nothing
+         * keeps its authority, {@code //host:port}. The one rule every place a machine reports goes by: the topology's
+         * lanes and a profile's places (Marko, 2026-11-22: "align it with //<prefix> or ws://<host>:<port>").
+         */
+        public static String placeName(final Network network, final fURI address) {
+            final List<Rel> prefixes = null == network ? List.of()
+                    : Component.Prefix.Helper.effectivePrefixes(network).<Rel>elements().toList();
+            return prefixes.stream()
+                    .filter(row -> row.second().isUri() && address.host().equals(row.second().uriValue().host())
+                            && address.port() == row.second().uriValue().port())
+                    .map(row -> markedName(row.first().uriValue()).toString())
+                    .findFirst()
+                    .orElse("//" + address.host() + (0 > address.port() ? "" : ":" + address.port()));
+        }
+
+        /**
          * THE TABLE AS THE DOOR SHOWS IT: every row keyed by the marked spelling, so what {@code *</network/prefix>}
          * answers is exactly what may be written back to it — which is what makes a legacy row (a marked key stored
          * beside the component, resolvable by nothing) repairable by writing back what the door shows.

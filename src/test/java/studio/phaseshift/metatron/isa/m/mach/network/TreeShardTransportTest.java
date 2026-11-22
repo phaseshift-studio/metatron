@@ -256,8 +256,15 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         final Obj format = Machine.evaluate(Machine.parse(source + ">>format").asCode());
         LOG.debug("profile of %s: %s", source, format);
         checkEquality(LOG, bool(true), bool(format.isStr()), true);
-        machines.stream().skip(1).forEach(machine -> checkEquality(LOG, bool(true),
-                bool(format.strValue().contains(machine.uriValue().pathEncoding().toString())), true));
+        // EVERY PLACE IS NAMED AS THE TOPOLOGY NAMES ITS LANE (Marko, 2026-11-22), by the machine that dealt it: the
+        // root's three peers and peer 1's two, //localhost:<port> each, and the format shows every one
+        final java.util.Set<String> peers = Stream.of(1, 2, 3).map(i -> "//localhost:" + cluster.port(i))
+                .collect(java.util.stream.Collectors.toSet());
+        checkEquality(LOG, bool(true), bool(peers.equals(report.at(uri(PLACE)).asRec().<Rel>elements()
+                .map(place -> place.first().toString()).collect(java.util.stream.Collectors.toSet()))), true);
+        Stream.concat(report.at(uri(PLACE)).asRec().<Rel>elements().map(Rel::first),
+                        interiors.getFirst().at(uri(PLACE)).asRec().<Rel>elements().map(Rel::first))
+                .forEach(key -> checkEquality(LOG, bool(true), bool(format.strValue().contains(key.toString())), true));
     }
 
     /**
