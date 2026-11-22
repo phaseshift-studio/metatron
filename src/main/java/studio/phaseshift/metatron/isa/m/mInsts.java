@@ -136,7 +136,8 @@ public final class mInsts {
                         .create(),
                 InstBuilder.build().tid(MEAN_INST_TID, "the mean of an int stream")
                         .dom(INT_TID.maybeSome(), "a stream of int")
-                        .rng(REAL_TID, "the mean of the lhs int stream").argLst()
+                        .rng(REAL_TID.maybe(), "the mean of the lhs int stream, or noobj for none").argLst()
+                        .form(Inst.Form.reducer)
                         .body((lhs, inst) -> mean(lhs, member -> member.intValue()))
                         .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
@@ -313,8 +314,9 @@ public final class mInsts {
                         .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MEAN_INST_TID, "the mean of a stream of reals")
-                        .dom(REAL_TID.maybeSome(), "a stream of reals").rng(REAL_TID, "the mean of the lhs real stream")
+                        .dom(REAL_TID.maybeSome(), "a stream of reals").rng(REAL_TID.maybe(), "the mean of the lhs real stream, or noobj for none")
                         .argLst()
+                        .form(Inst.Form.reducer)
                         .body((lhs, inst) -> mean(lhs, Obj::realValue))
                         .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
@@ -1671,7 +1673,10 @@ public final class mInsts {
 
     /**
      * THE MEAN OF A BAG: each member weighs its coefficient, as count() counts it (Marko, 2026-11-22: "that's bad").
-     * {1,1,2} is {{2}1,2}, whose mean is 4/3, never the 1.5 of its two distinct members. An empty bag's mean is 0.
+     * {1,1,2} is {{2}1,2}, whose mean is 4/3, never the 1.5 of its two distinct members. An empty bag's mean is noobj
+     * (Marko, 2026-11-22: mean has no seed, so nothing has no mean): a sharded mean's emptied lane runs mean() inside
+     * its lift and must vanish in the merge, where a zero-division fail would fail the branch. So the range is real{?},
+     * and the reducer form is declared, which the range alone no longer shows.
      */
     private static Obj mean(final Obj lhs, final java.util.function.ToDoubleFunction<Obj> value) {
         double sum = 0.0;
@@ -1682,7 +1687,7 @@ public final class mInsts {
             sum += weight * value.applyAsDouble(member);
             copies += weight;
         }
-        return real(0L == copies ? 0.0 : sum / copies);
+        return 0L == copies ? noobj() : real(sum / copies);
     }
 
     /**
@@ -1697,12 +1702,12 @@ public final class mInsts {
     }
 
     /**
-     * The mean of a carrier's stream as a chain, {@code mean?<=carrier{*}()}: the lhs of that overload's equation. It
-     * states its domain because a keyed mean binds an equation's lhs as a value tests a type, and a bare {@code mean()}
-     * declares the domain {@code #}, which a stream does not fit.
+     * The mean of a carrier's stream as a chain, {@code mean?real{?}<=carrier{*}()}: the lhs of that overload's equation.
+     * It states its domain and range because a keyed mean binds an equation's lhs as a value tests a type, and a bare
+     * {@code mean()} declares {@code #} for both, which neither a stream nor a range that admits none fits.
      */
     private static Code mean_(final fURI carrier) {
-        return inst_(MInst.instB(MEAN_INST_TID.dom(carrier.maybeSome()), lst()));
+        return inst_(MInst.instB(MEAN_INST_TID.dom(carrier.maybeSome()).rng(REAL_TID.maybe()), lst()));
     }
 
     /**
