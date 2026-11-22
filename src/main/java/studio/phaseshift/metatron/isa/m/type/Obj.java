@@ -1808,16 +1808,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .desc("logical \\(\\texttt{or}\\) function \\(f(X) \\mapsto \\mathtt{true}\\) if any \\(X\\) are true")
                             .body((lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_FALSE)).anyMatch(Obj::boolValue)))
                             .create(),
-                    InstBuilder.build()
-                            .tid(APPLY_INST_TID)
-                            .dom(INST_TID, "the lhs inst obj")
-                            .rng(ALL_STAR, "the result of the lhs inst application")
-                            .args(rec(uri(LHS).maybe().asUri(), T(ALL_STAR), uri(ARGS).maybe(), LST_TYPE.maybe()))
-                            .argDocs(Map.of(uri(LHS), "the obj to apply the lhs inst to",
-                                    uri(ARGS), "the inst args (optional)"))
-                            .desc("an apply function \\(f(x) \\mapsto x'\\): applies the lhs inst to the given obj with the given args")
-                            .body((lhs, inst) -> (inst.args().count() == 1 ? lhs.asInst() : lhs.asInst().args(inst.arg(1).asPoly())).apply(inst.arg(0)))
-                            .create(),
+                    // THE KEYED apply(lhs=>x, args=>a) IS RETIRED (Marko, 2026-11-22): its parameters are the call frame's
+                    // reserved keys, which every instruction now takes (Selector.Helper#tryRawRecArgs: plus(lhs=>3,
+                    // args=>[10]) is 3.plus(10)), and it never worked: the processor adds its own lhs to a keyed call's
+                    // args, so the caller's lhs=>3 and the blocked inst summed to lhs=>[3, plus(1)]
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(ALL_MAYBE_TYPE), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     InstBuilder.build()
                             .tid(FILTER_INST_TID)

@@ -81,9 +81,19 @@ public class SpecificitySelector extends MRec implements Selector {
 
     @Override
     public Inst apply(final Obj lhs, final Inst userInst, final Binder binder) {
+        final Inst selected = this.select(lhs, userInst, binder);
+        // THE CALL FRAME: a call no signature matches may be its own application written as data, [lhs=>x, args=>a]
+        return null != selected || userInst.hasf() || userInst.isNoObj() ? selected
+                : Selector.Helper.tryRawRecArgs(userInst);
+    }
+
+    private Inst select(final Obj lhs, final Inst userInst, final Binder binder) {
         if (userInst.hasf())
             return userInst;
         if (userInst.isNoObj())
+            return null;
+        // a frame matches no pattern (Selector.Helper#isRawRecArgs): its lhs is the processor's key, never a parameter
+        if (Selector.Helper.isRawRecArgs(userInst))
             return null;
         /////////////////////// FROM/AS FAST RESOLUTION ///////////////////////
         if (!userInst.hasRng()) {

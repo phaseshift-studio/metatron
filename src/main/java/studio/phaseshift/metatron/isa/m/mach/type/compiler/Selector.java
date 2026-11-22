@@ -18,11 +18,26 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.type.FiberedRec;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.List;
+import java.util.Map;
+
+import static studio.phaseshift.metatron.Tokens.ARGS;
+import static studio.phaseshift.metatron.Tokens.BLOCK;
+import static studio.phaseshift.metatron.Tokens.LHS;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Selector — the per-call strategy of the resolution stage: given a left-hand-side and the user
@@ -69,6 +84,42 @@ public interface Selector extends Component {
      * processor runs a bundle's call like any other.
      */
     final class Helper {
+
+        /**
+         * THE CALL FRAME, a selector's last resort (Marko, 2026-11-22: "the resolver will not match an existing pattern,
+         * then it will check if it's a rec with lhs and args, and if so, apply it accordingly"). A call whose args are
+         * exactly {@code [lhs=>x, args=>a]} is its own application written as data: {@code f(lhs=>x, args=>a)} is
+         * {@code x.f(a)}, the args {@code a} an ordered call's lst, a keyed call's rec, or a lone value as one arg. The
+         * frame runs {@code start(x).f(a)}, so the call is resolved and applied as any chain's is, per monad or over
+         * the whole stream as {@code f} declares, whatever the chain hands the frame. The frame itself runs per monad
+         * ({@code #{?}}, which also takes the empty head of a chain), so a stream of n monads answers n copies, as any
+         * constant function does. Its args stay raw ({@code ?block}): the processor computes a keyed call's args and
+         * adds its own {@code lhs} to them, and the frame reads neither. Null when the call is no frame.
+         */
+        public static Inst tryRawRecArgs(final Inst user) {
+            if (!isRawRecArgs(user))
+                return null;
+            final Map<Obj, Obj> frame = user.args().asRec().jvm();
+            final Obj on = frame.get(uri(LHS));
+            final Obj args = frame.get(uri(ARGS));
+            final fURI tid = user.tid().removeQ(ARGS);
+            final Inst call = instB(tid, args.isPoly() ? args.asPoly() : lst(args));
+            return instC(tid.dom(ALL.maybe()).rng(ALL.maybeSome()).addQ(BLOCK), user.args(),
+                    (ignored, self) -> start_(on).addInsts(List.of(call)).apply(noobj()));
+        }
+
+        /**
+         * Whether a call's args are a frame, exactly {@code [lhs=>x, args=>a]}. A FRAME MATCHES NO PATTERN: {@code lhs}
+         * is the processor's own key (it adds the lhs to every keyed call's computed args), so no signature can declare
+         * it, and an open-world rec signature, which takes keys it never named, would otherwise take the frame as its own
+         * call and bind its parameters to nothing ({@code repeat(lhs=>…, args=>…)} ran with no code).
+         */
+        public static boolean isRawRecArgs(final Inst user) {
+            if (!user.args().isRec())
+                return false;
+            final Map<Obj, Obj> frame = user.args().asRec().jvm();
+            return 2 == frame.size() && frame.containsKey(uri(LHS)) && frame.containsKey(uri(ARGS));
+        }
 
         private Helper() {
             // do nothing
