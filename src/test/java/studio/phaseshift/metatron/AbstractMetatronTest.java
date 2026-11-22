@@ -304,6 +304,17 @@ public abstract class AbstractMetatronTest {
         // instance that still names the root (/.); popping a root whose parent isn't a Machine is a no-op, so an
         // identity check would spin forever.
         final fURI rootVID = Machine.root().vid();
+        // every [THREAD …] cursor pushed its own submachines too, so pop each chain before the script's own
+        for (final String name : new ArrayList<>(this.threadCursors.keySet())) {
+            final Machine at = this.threadCursors.get(name);
+            if (null == at)
+                continue;
+            Machine.current(at);
+            while (Machine.current() != null && !Machine.current().vid().equals(rootVID))
+                Machine.current().pop();
+        }
+        this.threadCursors.clear();
+        this.currentThread = null;
         while (Machine.current() != null && !Machine.current().vid().equals(rootVID))
             Machine.current().pop();
     }
@@ -339,6 +350,17 @@ public abstract class AbstractMetatronTest {
     private final Map<String, String> scriptVars = new LinkedHashMap<>();
 
     /**
+     * THREAD CURSORS — a script's named threads. A script runs on ONE JVM thread, so a "thread" is a named cursor into
+     * the machine tree ({@link Machine#current()} is a thread-local, and there is only ever one of it): {@code [THREAD
+     * CREATE a]} opens a fresh cursor at the root and switches onto it, {@code [THREAD a]} switches back, and each
+     * cursor keeps its own pushed submachines and mounted spaces.
+     */
+    private final Map<String, Machine> threadCursors = new LinkedHashMap<>();
+
+    /** the named thread the script stands on, or {@code null} for the script's own (unnamed) thread */
+    private String currentThread = null;
+
+    /**
      * Bind a script variable: every {@code {{name}}} in later lines becomes {@code value}.
      */
     protected void bind(final String name, final String value) {
@@ -358,6 +380,12 @@ public abstract class AbstractMetatronTest {
      */
     private void directive(final String call) {
         final String[] parts = call.split("\\s+");
+        // THREAD is the one directive every suite shares, so it is dispatched here rather than through directives():
+        // a suite's directives() stays the sole place it declares its own, private vocabulary.
+        if ("THREAD".equals(parts[0])) {
+            this.thread(parts);
+            return;
+        }
         final Directive directive = this.directives().get(parts[0]);
         if (null == directive)
             throw MTronException.of("no such directive: %s (this suite offers %s)", parts[0], this.directives().keySet());
@@ -366,6 +394,47 @@ public abstract class AbstractMetatronTest {
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
+    }
+
+    /**
+     * The {@code [THREAD …]} directive — a named cursor into the machine tree, so a script can stand several "threads"
+     * at once and move between them. {@code [THREAD CREATE <name>]} opens a fresh cursor at the root and switches onto
+     * it; {@code [THREAD <name>]} switches onto {@code <name>} (created at the root if absent); {@code [THREAD DROP
+     * <name>]} pops {@code <name>}'s chain and forgets it, landing back at the root. Switching away always saves the
+     * cursor being left, so each thread's submachines and spaces stay put until it is switched back onto.
+     */
+    private void thread(final String[] parts) {
+        if (2 == parts.length) {
+            // [THREAD <name>] — switch onto <name>
+            if (null != this.currentThread)
+                this.threadCursors.put(this.currentThread, Machine.current());
+            Machine.current(this.threadCursors.getOrDefault(parts[1], Machine.root()));
+            this.currentThread = parts[1];
+            return;
+        }
+        if (3 == parts.length && "CREATE".equals(parts[1])) {
+            // [THREAD CREATE <name>] — a fresh thread starts at the root
+            if (null != this.currentThread)
+                this.threadCursors.put(this.currentThread, Machine.current());
+            this.threadCursors.put(parts[2], Machine.root());
+            Machine.current(Machine.root());
+            this.currentThread = parts[2];
+            return;
+        }
+        if (3 == parts.length && "DROP".equals(parts[1])) {
+            // [THREAD DROP <name>] — pop the cursor's chain, forget it, land back at the root
+            final Machine at = this.threadCursors.remove(parts[2]);
+            if (null != at) {
+                Machine.current(at);
+                final fURI rootVID = Machine.root().vid();
+                while (Machine.current() != null && !Machine.current().vid().equals(rootVID))
+                    Machine.current().pop();
+            }
+            this.currentThread = null;
+            Machine.current(Machine.root());
+            return;
+        }
+        throw MTronException.of("THREAD: [THREAD <name>] | [THREAD CREATE <name>] | [THREAD DROP <name>]");
     }
 
     /**

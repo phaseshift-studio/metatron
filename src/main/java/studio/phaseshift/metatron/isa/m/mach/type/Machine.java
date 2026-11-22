@@ -55,7 +55,10 @@ import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -685,15 +688,15 @@ public interface Machine extends Rec, AutoCloseable {
                 // without end. The parent filters the entries: a pushed machine starts with a snapshot of its parent's
                 // keys, its siblings among them. Seeded into the map as push seeds the components: bootstrap runs before
                 // the machine is published, and a rec write on a machine saves it into the current frame.
-                //final fURI machineVID = machine.vid();
-                /*final fURI entries = machineVID.resolve().extend("+/");
+                final fURI machineVID = machine.vid();
+                final fURI entries = machineVID.resolve().extend("+/");
                 machine.jvm().put(uri(CHILD), auto_(instC(M_ISA_INST_TID.rng(ALL_STAR), lst(), (lhs, inst) -> {
                     final Space registry = Machine.root().memory().getSpaceFor(entries);
                     return objs(Space.Helper.resolveRead(registry, entries).stream()
                             .map(Obj::asRel)
                             .map(Rel::secondDirect)
                             .filter(child -> child.isMachine() && machineVID.equals(child.parent().vid())));
-                })).tryToInst());*/
+                })).tryToInst());
                 // THE NETWORK ANSWERS BELOW ITS BRANCH, through the machine's space: every field at its own address and a
                 // peer or a listener at its key's path, held in the network's store, and a noobj write on a member that
                 // member's retraction. mount stamps the branch; the network is not a space in memory.

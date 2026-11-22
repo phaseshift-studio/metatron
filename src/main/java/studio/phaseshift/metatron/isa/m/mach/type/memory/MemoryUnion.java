@@ -31,8 +31,10 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Set;
 
+import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MEMORY_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -62,6 +64,12 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
         // the own level routes the instruction sets ITS frame mounted, so it must know the frame: the union's machine
         // (the level itself stays unparented — its machine-key fallback is untouched)
         this.current = new BasicMemory().union(this);
+        // The space index is reflected into the union's OWN bindings, exactly as BasicMemory reflects its own
+        // (`this.jvm().put(uri(SPACE), this.spaces)`). MachineSpace.read answers a mounted space by walking
+        // owner.at("memory/space/<name>") through the memory rec's jvm, so without this entry a space mounted in a
+        // pushed machine is unreachable-as-live: the read falls through to a flattened copy and the space's tid
+        // degrades to /m/rec. `spaces()` delegates to `current.spaces()`, a stable Rec field, so this is the live index.
+        this.jvm().put(uri(SPACE), this.spaces());
     }
 
     // ======================== the union ========================

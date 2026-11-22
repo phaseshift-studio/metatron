@@ -18,10 +18,16 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
  * The variable stack (the machine's arg stack) is where a relative write ({@code a -> 14}) must persist
@@ -57,5 +63,24 @@ public class variableStackTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testBranchBindings(final String code, final String expected) {
         checkCodeEvaluate(LOG, code, expected);
+    }
+
+    @Test
+    void testConstructingAStackInAChildDoesNotShadowTheParent() {
+        final Machine parent = Machine.current();
+        final Machine child = parent.push();
+        try {
+            // The arg stack is the thread's local variables, reached via Memory.argStack(), not a machine space.
+            // Constructing one while a child is current must not put a +/# into the child's index — its +/# would
+            // match /sys/log and /m/inst and shadow the parent's real spaces.
+            new variableStack(f("+/#"));
+
+            final boolean stackSpaceInIndex = child.memory().spaces().jvm().values().stream()
+                    .map(o -> (Space) o)
+                    .anyMatch(s -> f("+/#").equals(s.pattern()));
+            assertFalse(stackSpaceInIndex, "the arg stack must not register +/# into the frame's space index");
+        } finally {
+            child.pop();
+        }
     }
 }

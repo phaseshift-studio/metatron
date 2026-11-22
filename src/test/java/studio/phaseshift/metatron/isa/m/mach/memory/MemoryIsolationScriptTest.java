@@ -18,9 +18,20 @@
 
 package studio.phaseshift.metatron.isa.m.mach.memory;
 
+import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.StatefulCSVSource;
 import studio.phaseshift.metatron.StatefulParametrizedTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * MEMORY isolation as a stateful script — mutation and its observation are one line each, in order. The
@@ -36,6 +47,8 @@ import studio.phaseshift.metatron.StatefulParametrizedTest;
  *     <li><b>write isolation</b> — a child's write is its own; it does not leak up or across.</li>
  *     <li><b>executor is global</b> — one funnel at {@code /sys/thread/executor}, not a per-machine component.</li>
  *     <li><b>the nest is a stack</b> — a name is bound in the machine that bound it, so each level reads its own.</li>
+ *     <li><b>space mounts</b> — a space mounted in a child keeps its type when read back at its mount address, and its
+ *         data is visible to its own machine and every descendant, never to a parent or a sibling.</li>
  * </ol>
  */
 public class MemoryIsolationScriptTest extends AbstractMetatronTest {
@@ -170,17 +183,18 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
             "*~/processor % *</processor> % false",
             "*</xyz/processor> % *</processor> % false",
             "*</.>     % *<~>                 % false",
-            /*"~/memory() % /memory() % false",
+            "[STATE] move(/xyz)",
+            "~/memory() % /memory() % false",
             "*~/memory % *</memory> % false",
             "*~/instset % *</instset> % false",
             "*~/network % *</network> % false",
-            "*~/compiler % *</compiler> % false",
-            "*~/processor % *</processor> % false",*/
-           /* "*~/memory % *</./memory> % false",
+            "*~/compiler % *</compiler> % true", // compiler propagates through
+            "*~/processor % *</processor> % false",
+            "*~/memory % *</./memory> % false",
             "*~/instset % *</./instset> % false",
             "*~/network % *</./network> % false",
-            "*~/compiler % *</./compiler> % false",
-            "*~/processor % *</./processor> % false",*/
+            "*~/compiler % *</./compiler> % true", // compiler propagates through
+            "*~/processor % *</./processor> % false",
             "*~/memory % noobj % false",
             "*~/instset % noobj % false",
             "*~/network % noobj % false",
@@ -245,5 +259,254 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
             "[STATE] move(/b/b1)", "*~/sys/who % 5 % true", "*who % 55 % true",
     })
     void testHierarchyMoves() {
+    }
+
+    // ======================== space mounts ========================
+
+    /**
+     * A space mounted in a non-root machine keeps its type when read back through either spelling of its mount
+     * address — the relative {@code ~/memory/space/<name>} and the fully resolved {@code /a/memory/space/<name>}.
+     * The read answers the LIVE space (tid {@code memspace::T}), not a flattened copy (tid {@code /m/rec}).
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] *~.push(a)",
+            "[STATE] memspace::[pattern=>/stuff/#]@~/memory/space/stuff",
+            "*~/memory/space/stuff.tid()                         % /m/space/memspace",
+            "*/a/memory/space/stuff.tid()                        % /m/space/memspace",
+            "[STATE] /stuff/x -> 1",
+            "*/stuff/x                                            % 1     % true",
+            "[STATE] *~.pop(_)"
+    })
+    void testNonRootSpaceKeepsItsType() {
+    }
+
+    /**
+     * A parent cannot reach data held in a space its child mounted: the child's space lives in the child's own index,
+     * so once the parent is current again the address answers nothing.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] *~.push(a)",
+            "[STATE] memspace::[pattern=>/child/#]@~/memory/space/child",
+            "[STATE] /child/x -> 1",
+            "*/child/x                                            % 1     % true",
+            "[STATE] move(/.)",
+            "*/child/x                                            % noobj % true"
+    })
+    void testParentCannotReachChildSpaceData() {
+    }
+
+    /**
+     * A sibling cannot reach data held in a space another sibling mounted: the space is in its owner's index alone.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] *~.push(a)",
+            "[STATE] memspace::[pattern=>/aspace/#]@~/memory/space/aspace",
+            "[STATE] /aspace/x -> 1",
+            "*/aspace/x                                           % 1     % true",
+            "[STATE] move(/.)",
+            "[STATE] *~.push(b)",
+            "*/aspace/x                                           % noobj % true",
+            "[STATE] *~.pop(_)"
+    })
+    void testSiblingCannotReachSiblingSpaceData() {
+    }
+
+    /**
+     * A child reads data held in a space its parent mounted: the union walks outward and the parent's space answers.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] memspace::[pattern=>/parent/#]@/memory/space/parent",
+            "[STATE] /parent/x -> 1",
+            "[STATE] *~.push(a)",
+            "*/parent/x                                           % 1     % true",
+            "[STATE] *~.pop(_)"
+    })
+    void testChildReachesParentSpaceData() {
+    }
+
+    /**
+     * A descendant at arbitrary depth reads data held in a space the root mounted: the union walk recurses to the
+     * root, so a grandchild sees what a child sees.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] memspace::[pattern=>/grand/#]@/memory/space/grand",
+            "[STATE] /grand/x -> 1",
+            "[STATE] *~.push(a)",
+            "*/grand/x                                            % 1     % true",
+            "[STATE] *~.push(a1)",
+            "*/grand/x                                            % 1     % true",
+            "[STATE] *~.pop(_)",
+            "[STATE] *~.pop(_)"
+    })
+    void testArbitraryDepthChildReachesParentSpaceData() {
+    }
+
+    /**
+     * A child's space of the same pattern shadows the parent's for the child alone; the parent keeps its own — the
+     * union installs alongside, it never evicts.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] memspace::[pattern=>/shadow/#]@/memory/space/shadow",
+            "[STATE] /shadow/x -> 1",
+            "[STATE] *~.push(a)",
+            "[STATE] memspace::[pattern=>/shadow/#]@~/memory/space/shadow-child",
+            "[STATE] /shadow/x -> 2",
+            "*/shadow/x                                           % 2     % true",
+            "[STATE] move(/.)",
+            "*/shadow/x                                           % 1     % true"
+    })
+    void testShadowingDoesNotEvictTheParentSpace() {
+    }
+
+    // ======================== thread isolation ========================
+
+    /**
+     * {@code Machine.current()} is a THREAD-LOCAL: two threads can stand in different submachines at the same time.
+     * Each thread pushes its own chain, mounts its own {@code memspace::T} and writes into it; neither sees the other's
+     * space, and neither leaks up to the root — exactly as if the two had run one after the other instead of side by
+     * side.
+     */
+    @Test
+    void testTwoThreadsStandInDifferentSubmachinesWithoutLeakingState() throws Exception {
+        final CountDownLatch bothAtTheirMachine = new CountDownLatch(2);
+        final AtomicReference<Throwable> failure = new AtomicReference<>();
+        final AtomicReference<Machine> first = new AtomicReference<>();
+        final AtomicReference<Machine> second = new AtomicReference<>();
+
+        final Thread one = worker("t-one", "iso-one", 11, first, bothAtTheirMachine, failure);
+        final Thread two = worker("t-two", "iso-two", 22, second, bothAtTheirMachine, failure);
+        one.start();
+        two.start();
+        one.join();
+        two.join();
+        if (null != failure.get())
+            throw new AssertionError("a worker thread failed", failure.get());
+
+        // the two threads stood in different submachines
+        assertNotEquals(first.get().vid().resolve(), second.get().vid().resolve(),
+                "thread one and thread two stood in different machines");
+
+        // each thread's machine answers only its own space — no leak across the threads
+        Machine.current(first.get());
+        assertEquals(11, Machine.read(f("/iso-one/value")).intValue(), "thread one reads its own space");
+        assertEquals(noobj(), Machine.read(f("/iso-two/value")), "thread one does not read thread two's space");
+        assertEquals(f("/m/space/memspace"), Machine.read(f("~/memory/space/iso-one")).tid(),
+                "thread one's mount is a live memspace::T");
+
+        Machine.current(second.get());
+        assertEquals(22, Machine.read(f("/iso-two/value")).intValue(), "thread two reads its own space");
+        assertEquals(noobj(), Machine.read(f("/iso-one/value")), "thread two does not read thread one's space");
+        assertEquals(f("/m/space/memspace"), Machine.read(f("~/memory/space/iso-two")).tid(),
+                "thread two's mount is a live memspace::T");
+
+        // neither leaked up to the root
+        Machine.current(Machine.root());
+        assertEquals(noobj(), Machine.read(f("/iso-one/value")), "the root does not read thread one's space");
+        assertEquals(noobj(), Machine.read(f("/iso-two/value")), "the root does not read thread two's space");
+
+        // pop the two chains so they do not linger in the root's store for the next test
+        Machine.current(first.get());
+        Machine.current().pop();
+        Machine.current().pop();
+        Machine.current(second.get());
+        Machine.current().pop();
+        Machine.current().pop();
+    }
+
+    /**
+     * A worker that pushes its own submachine chain, mounts a {@code memspace::T}, writes a value, then records the
+     * machine it stands in once both workers have done so — proving the other worker's push never moved it.
+     */
+    private static Thread worker(final String leaf, final String pattern, final int value,
+                                 final AtomicReference<Machine> sink, final CountDownLatch barrier,
+                                 final AtomicReference<Throwable> failure) {
+        return new Thread(() -> {
+            try {
+                Machine.current().push(f(leaf));   // root -> /t-<leaf>
+                Machine.current().push(f("deep")); // -> /t-<leaf>/deep
+                Machine.evaluate("memspace::[pattern=>/" + pattern + "/#]@~/memory/space/" + pattern);
+                Machine.evaluate("/" + pattern + "/value -> " + value);
+            } catch (final Throwable t) {
+                failure.compareAndSet(null, t);
+            } finally {
+                barrier.countDown(); // never strand the other worker
+            }
+            try {
+                if (!barrier.await(30, TimeUnit.SECONDS))
+                    failure.compareAndSet(null, new AssertionError(leaf + " timed out waiting for the other thread"));
+                sink.set(Machine.current());
+            } catch (final Throwable t) {
+                failure.compareAndSet(null, t);
+            }
+        }, leaf);
+    }
+
+    /**
+     * The same no-leak property as the live-thread test above, expressed as named CURSORS instead of live threads: a
+     * script runs on one JVM thread, so {@code [THREAD …]} is a saved machine position, not a concurrent thread. Each
+     * named thread pushes its own submachines and mounts its own {@code memspace::T}; switching between them verifies
+     * each reads only its own space.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[THREAD CREATE a]",
+            "*~.vid() % </.>",
+            "[STATE] *~.push(t-a)",
+            "[STATE] *~.push(deep)",
+            "[STATE] memspace::[pattern=>/iso-a/#]@~/memory/space/iso-a",
+            "[STATE] /iso-a/value -> 11",
+
+            "[THREAD CREATE b]",
+            "*~.vid() % </.>",
+            "[STATE] *~.push(t-b)",
+            "[STATE] *~.push(deep)",
+            "[STATE] memspace::[pattern=>/iso-b/#]@~/memory/space/iso-b",
+            "[STATE] /iso-b/value -> 22",
+
+            // back onto a: it reads its own space, and none of b's
+            "[THREAD a]",
+            "*/iso-a/value % 11 % true",
+            "*/iso-b/value % noobj % true",
+            "*~/memory/space/iso-a.tid() % /m/space/memspace",
+
+            // and b reads its own, none of a's
+            "[THREAD b]",
+            "*/iso-b/value % 22 % true",
+            "*/iso-a/value % noobj % true",
+            "*~/memory/space/iso-b.tid() % /m/space/memspace",
+
+            // b moves to a-side, then pops off machines
+            "*~.vid() % </t-b/deep>",
+            "[STATE] move(/t-a/deep)",
+            "*/iso-a/value % 11 % true",
+            "*~.vid() % </t-a/deep>",
+            "[STATE] pop()",
+            "*~.vid() % </t-a>",
+            "[STATE] pop()",
+            "*~.vid() % </.>",
+
+            // b is machine-less due to pop
+            // moves to a-side, then pops off machines
+            "[THREAD a]",
+            "*~.vid() % noobj",
+            "[STATE] move(/)",
+            "*~.vid() % </.>",
+            "[STATE] move(/t-b/deep)",
+            "*/iso-b/value % 22 % true",
+            "*~.vid() % </t-b/deep>",
+            "[STATE] pop()",
+            "*~.vid() % </t-b>",
+            "[STATE] pop()",
+            "*~.vid() % </.>",
+
+
+    })
+    void testThreadPerspectivesDoNotLeakAcross() {
     }
 }

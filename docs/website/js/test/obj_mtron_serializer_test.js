@@ -133,6 +133,7 @@ exact('a=>b', 'rel');
 exact('(a=>b)=>c', 'nested rel');
 exact('{1,2,3}', 'objs');
 exact('{true,false,{1,0},{-100,12.35,-12.35}}', 'objs of mixed values');
+exact('{/space,/memory/space/usr/marko}', 'objs of bare uris');
 eq(write(parse('{,}')), 'noobj', 'empty objs is noobj');
 
 /* ---- types ---- */
