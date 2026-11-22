@@ -783,7 +783,8 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * its figures add or fold), so a profile distributes for the same reason A does: each lane ends in
      * {@code profile()} and answers its own report, and the master answers ONE profiling::T, its own run timed around
      * the branch (so its apply holds the gather wait no lane can report), with each lane's report under {@code place},
-     * keyed by the machine that made it.
+     * keyed by the place it was dealt to, named as the topology names it ({@code //localhost:<port>} here, where this
+     * machine names its peers nothing).
      * <p>
      * THE REWRITE FORM IS ONE INSTRUCTION: the plan ends the master's run in a bare {@code profile_collate()}, and the
      * {@code profile_analysis} rule captures the run before it and mints the collator over it. What the collator
@@ -829,11 +830,15 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         // EVERY PLACE AT EVERY LEVEL: a profiling::T keyed by the machine that made it, naming its machine, its insts and
         // its stages; the critical path starts at one of the root's places
         final List<Rec> nest = new ArrayList<>(List.of(report));
+        final List<Obj> named = new ArrayList<>();
         for (int i = 0; i < nest.size(); i++) {
             final Obj places = nest.get(i).at(uri(PLACE));
             if (!places.isNoObj())
                 places.asRec().<Rel>elements().forEach(place -> {
-                    checkEquality(LOG, place.first(), uri(place.second().asRec().at(uri(MACHINE)).uriValue().pathEncoding()), true);
+                    // A PLACE IS NAMED AS THE TOPOLOGY NAMES ITS LANE (Marko, 2026-11-22): //name or //host:port, never
+                    // the path-encoded machine (booger//633589)
+                    checkEquality(LOG, bool(true), bool(place.first().uriValue().toString().startsWith("//")), true);
+                    named.add(place.first());
                     checkEquality(LOG, bool(true), bool(place.second().asRec().at(uri(INSTS)).isInt()), true);
                     checkEquality(LOG, bool(true), bool(place.second().asRec().at(uri(f(STAGE).extend(APPLY).extend(MIN))).isReal()), true);
                     nest.add(place.second().asRec());
@@ -841,12 +846,14 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         }
         checkEquality(LOG, bool(true), bool(report.at(uri(PLACE)).asRec().<Rel>elements()
                 .anyMatch(place -> place.first().equals(report.at(uri(PATH)).elements().findFirst().orElseThrow()))), true);
+        // the root's places are the two peers it deals to, by the names this machine calls them (it names them nothing)
+        checkEquality(LOG, bool(true), bool(report.at(uri(PLACE)).asRec().<Rel>elements().map(place -> place.first().toString())
+                .allMatch(key -> key.equals("//localhost:" + cluster.port(1)) || key.equals("//localhost:" + cluster.port(2)))), true);
         // THE FORMAT, as a user asks for it: every place's machine, and the summary over the root's places
         final Obj format = Machine.evaluate(Machine.parse(code + ">>format").asCode());
         LOG.debug("profile of %s: %s", code, format);
         checkEquality(LOG, bool(true), bool(format.isStr()), true);
-        nest.stream().skip(1).forEach(place -> checkEquality(LOG, bool(true),
-                bool(format.strValue().contains(place.at(uri(MACHINE)).uriValue().pathEncoding().toString())), true));
+        named.forEach(key -> checkEquality(LOG, bool(true), bool(format.strValue().contains(key.toString())), true));
         for (final String line : List.of("master", "gathered in", "straggler", "imbalance", "efficiency", "tree", "critical"))
             checkEquality(LOG, bool(true), bool(format.strValue().contains(line)), true);
     }

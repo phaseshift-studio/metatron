@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
@@ -673,7 +674,7 @@ public class mInstSet extends AbstractInstSet {
                     Map.entry(uri(FLOW), "bulk-compression flow (monads propagated vs coefficient sum)"),
                     Map.entry(uri(CACHE), "type-graph cache hit/miss/hit-rate"),
                     Map.entry(uri(MACHINE), "the machine the report was made on: its host, its vid and its process id"),
-                    Map.entry(uri(PLACE), "a distributed profile's places: each lane's report, keyed by the path-encoded machine that made it"),
+                    Map.entry(uri(PLACE), "a distributed profile's places: each lane's report, keyed by the place it was dealt to, named as the topology names it (//0, else //host:port, //local at home)"),
                     Map.entry(uri(DEPTH), "the levels of places below this report (a star is 1)"),
                     Map.entry(uri(LEAF), "the leaves below this report: how many (count), the objs their runs carried (c_sum) and their summed apply (time)"),
                     Map.entry(uri(LEVEL), "per level below this report, the places' apply: count, min, max and total"),
@@ -1905,20 +1906,35 @@ public class mInstSet extends AbstractInstSet {
         return InstBuilder.build()
                 .tid(PROFILE_COLLATE_TID, "the master's half of a distributed profile: its run timed around the branch, the lanes' reports nested under it")
                 .dom(ALL.maybe(), "the monads the master's run produced up to the marker")
-                .rng(PROFILING_TID, "the master's own report, each lane's report under place, keyed by the machine that made it")
+                .rng(PROFILING_TID, "the master's own report, each lane's report under place, keyed by the place it was dealt to")
                 .args(lst(run))
                 .form(Inst.Form.reducer)
                 .law(Law.monoidic, Law.commutative, Law.pure)
                 .body((lhs, inst) -> {
                     final AtomicReference<Obj> gathered = new AtomicReference<>(noobj());
                     final Rec own = profileTable(run, gathered);
-                    // THE PLACES: each report the last timed run gathered, keyed by the machine that made it. A report
-                    // that names no machine (one made in a machine without a vid) is the local one by construction.
+                    // THE PLACES: each report the last timed run gathered, NAMED AS THE TOPOLOGY NAMES ITS LANE (Marko,
+                    // 2026-11-22: "booger//633589 ... align it with //<prefix> or ws://<host>:<port>"): by the address
+                    // the master dealt the lane to, read through this machine's names (//0), else //host:port, and
+                    // //local for a lane at home. The keyed lanes answer in route order, one report each
+                    // (BranchInst#route), so report i is route i's. A run whose reports do not line up with its routes
+                    // keys them by the machine that made them, as does a name two lanes share (several lanes at home):
+                    // a report is never dropped for a collision. A report that names no machine (one made in a machine
+                    // without a vid) is the local one by construction.
+                    final List<Obj> reports = gathered.get().stream().filter(Obj::isRec).toList();
+                    final List<Obj> keys = run.insts().stream()
+                            .filter(i -> BRANCH_INST_TID.equals(i.tid().basePath()) && i.args().isRec())
+                            .findFirst()
+                            .map(branch -> studio.phaseshift.metatron.isa.m.type.impl.BranchInst.routes(branch)
+                                    .<Rel>elements().map(Rel::first).toList())
+                            .orElse(List.of());
                     final Map<Obj, Obj> places = new LinkedHashMap<>();
-                    gathered.get().stream().filter(Obj::isRec).forEach(report -> {
-                        final Obj where = report.asRec().at(uri(MACHINE));
-                        places.put(where.isUri() ? uri(where.uriValue().pathEncoding()) : uri(LOCAL), report);
-                    });
+                    for (int r = 0; r < reports.size(); r++) {
+                        final Obj where = reports.get(r).asRec().at(uri(MACHINE));
+                        final Obj byMachine = where.isUri() ? uri(where.uriValue().pathEncoding()) : uri(LOCAL);
+                        final Obj named = keys.size() == reports.size() ? uri(f(placeName(keys.get(r)))) : byMachine;
+                        places.put(places.containsKey(named) ? byMachine : named, reports.get(r));
+                    }
                     // THE SUBTREE, FOLDED BOTTOM-UP: leaves, objs and lane time add, depth takes the max, and a place's
                     // level i is this node's level i + 1, merged as counts and totals add and min and max fold
                     long leaves = 0L, objs = 0L, depth = 0L;
@@ -1971,16 +1987,15 @@ public class mInstSet extends AbstractInstSet {
                             uri(TOTAL), real(level[3], MILLIS_TYPE.vid(), null))).toList()));
                     fields.put(uri(PATH), lst(path));
                     // THE ROOT'S HEADER, its body one level in, as each place's header heads the place's body
-                    final Obj machine = own.at(uri(MACHINE));
                     final StringBuilder root = new StringBuilder(String.format("%n  master %s   apply %.3f ms, %d places%n",
-                            machine.isUri() ? machine.uriValue().pathEncoding() : LOCAL,
+                            "//" + LOCAL,
                             own.at(uri(f(STAGE).extend(APPLY).extend(MIN))).realValue(), places.size()));
                     profileText(rec(fields), true).lines().forEach(line -> root.append("  ").append(line).append('\n'));
                     final String text = root.toString();
                     fields.put(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (self, format) -> str(text))));
                     return rec(fields, PROFILING_TID, null);
                 })
-                .desc("the master's half of a distributed profile: the plan ends a profiled master's run in a bare profile_collate(), and the profile_analysis rule mints this instruction over the run before it. It times the master's run as profile() times a local run, so its apply holds the branch's gather wait, and nests the report each lane answered under place, keyed by the machine that made it (path-encoded). A tree nests like the tree, and the figures of the whole tree (depth, leaf, level, path) fold bottom-up as each node collates. Same laws as profile(): monoidic, commutative, pure.")
+                .desc("the master's half of a distributed profile: the plan ends a profiled master's run in a bare profile_collate(), and the profile_analysis rule mints this instruction over the run before it. It times the master's run as profile() times a local run, so its apply holds the branch's gather wait, and nests the report each lane answered under place, keyed by the place it was dealt to, named as the topology names it (//0, else //host:port). A tree nests like the tree, and the figures of the whole tree (depth, leaf, level, path) fold bottom-up as each node collates. Same laws as profile(): monoidic, commutative, pure.")
                 .create();
     }
 
@@ -2008,6 +2023,15 @@ public class mInstSet extends AbstractInstSet {
      * since this runs inside a profile); a machine with no vid — a rootless construct — contributes no
      * identity rather than a bare host, which would read as a machine called "".
      */
+    /**
+     * A LANE'S PLACE, NAMED AS THE TOPOLOGY NAMES IT: a key with no host is home, //local; any other is read through
+     * this machine's names (Network.Helper#placeName).
+     */
+    private static String placeName(final Obj key) {
+        final fURI written = key.uriValue().resolve().qLess();
+        return null == written.host() ? "//" + LOCAL : Network.Helper.placeName(Machine.current().network(), written);
+    }
+
     private static Obj machineIdentity() {
         final Machine machine = Machine.current();
         final fURI vid = machine.vid();

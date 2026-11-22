@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
@@ -292,15 +291,7 @@ public final class Topology {
         if (null == written.host())
             return home;
         final fURI place = null != host && written.isLoopbackHost() ? written.host(host) : written;
-        final Network network = Machine.current().network();
-        final List<Rel> prefixes = null == network ? List.of()
-                : Component.Prefix.Helper.effectivePrefixes(network).<Rel>elements().toList();
-        return prefixes.stream()
-                .filter(row -> row.second().isUri() && place.host().equals(row.second().uriValue().host())
-                        && place.port() == row.second().uriValue().port())
-                .map(row -> Network.Helper.markedName(row.first().uriValue()).toString())
-                .findFirst()
-                .orElse("//" + place.host() + (0 > place.port() ? "" : ":" + place.port()));
+        return Network.Helper.placeName(Machine.current().network(), place);
     }
 
     private static Obj label(final cInt c) {
