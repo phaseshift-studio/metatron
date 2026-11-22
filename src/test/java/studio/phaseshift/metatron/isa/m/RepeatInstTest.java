@@ -142,6 +142,26 @@ public class RepeatInstTest extends AbstractMetatronTest {
     }
 
     /**
+     * AN OPTIONAL KEY IS BOUND ONCE (Marko, 2026-11-22: "this is strange. until and {?}until."): repeat declares its
+     * until as {?}until, and the binding filed the bound value under the declared key, beside the caller's until
+     * instead of over it, so every compiled repeat carried both and explain()>>format printed both. Bound, the args are
+     * the caller's keys, each once, and the repeat still exits on its until.
+     */
+    @Test
+    public void testAnOptionalKeyIsBoundOnce() {
+        final String source = "{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)";
+        final studio.phaseshift.metatron.isa.m.type.Code compiled = Machine.current().compiler()
+                .apply(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(source)).asCode();
+        final studio.phaseshift.metatron.isa.m.type.Inst repeat = compiled.insts().stream()
+                .filter(inst -> studio.phaseshift.metatron.isa.m.mInstSet.REPEAT_INST_TID.equals(inst.tid().basePath()))
+                .findFirst().orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of("code", "until"),
+                repeat.args().asRec().jvm().keySet().stream().map(Object::toString).toList(),
+                "each key bound once, under its name: " + repeat);
+        checkCodeParseApply(LOG, source, "{5,6,7}");
+    }
+
+    /**
      * A FAILING MEMBER LEAVES THE FRONTIER: a fail passes through every predicate ({@code booleanCheck()} is false on a
      * fail), so a member that became one stayed in the frontier and the loop never ended. It leaves as its answer, and
      * the evaluation returns. Preemptive, so a regression fails here instead of hanging the run.

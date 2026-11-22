@@ -1010,7 +1010,11 @@ public interface Inst extends Call {
                 final AtomicInteger counter = new AtomicInteger(0);
                 apiInst.args().asRec().elements().forEach(kv -> {
                     final Obj thisArg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
-                    given.put(kv.first(), Helper.bindParam(kv.first(), kv.second(), thisArg));
+                    // THE BOUND VALUE IS FILED UNDER THE PARAMETER'S NAME, never under the declared key: an optional
+                    // key is declared with its coefficient ({?}until), and filed under it the bound value sat BESIDE
+                    // the caller's own entry instead of over it, so every compiled repeat carried until and {?}until
+                    // (Marko, 2026-11-22: "this is strange. until and {?}until.")
+                    given.put(uri(kv.first().uriValue()), Helper.bindParam(kv.first(), kv.second(), thisArg));
                 });
                 return rec(given);
             } else
