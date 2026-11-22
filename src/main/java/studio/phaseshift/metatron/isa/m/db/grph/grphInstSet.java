@@ -31,6 +31,7 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -747,31 +748,102 @@ public class grphInstSet extends AbstractInstSet {
                         docWrap(instC(VALUES_INST_TID.dom(REC_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) ->
                                         inst.arg(0).isNoObj() ? lhs.asRec().at(uri("+")) : objs(inst.args().valueElements().map(key -> lhs.asRec().at(key)))),
                                 "an element", "the element values", mutableMap(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values"),
-                        docWrap(instC(INV_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> edgeVertex(lhs, Direction.IN)),
-                                "an edge", "the incoming vertex", Map.of(), "returns the lhs edge head vertex"),
-                        docWrap(instC(OUTV_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> edgeVertex(lhs, Direction.OUT)),
-                                "an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex"),
-                        docWrap(instC(BOTHV_INST_TID.dom(REC_TID).rng(REC_TID.c(cInt.of(2))), lst(), (lhs, inst) -> edgeVertices(lhs)),
-                                "an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices"),
+                        InstBuilder.build()
+                                .tid(INV_INST_TID)
+                                .dom(REC_TID, "an edge")
+                                .rng(REC_TID, "the incoming vertex")
+                                .argLst()
+                                .desc("returns the lhs edge head vertex")
+                                .body((lhs, inst) -> edgeVertex(lhs, Direction.IN))
+                                .converse(INE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
+                                .law(Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(OUTV_INST_TID)
+                                .dom(REC_TID, "an edge")
+                                .rng(REC_TID, "the outgoing vertex")
+                                .argLst()
+                                .desc("returns the lhs edge tail vertex")
+                                .body((lhs, inst) -> edgeVertex(lhs, Direction.OUT))
+                                .converse(OUTE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
+                                .law(Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(BOTHV_INST_TID)
+                                .dom(REC_TID, "an edge")
+                                // rec{*}, as out/in/both state theirs: a declared rec{2} failed the range check on the first
+                                // answer (a stream of two distinct recs), order-dependently (2026-11-22)
+                                .rng(REC_TID.maybeSome(), "both vertices: the edge's head and tail")
+                                .argLst()
+                                .desc("returns the lhs edge's head and tail vertices")
+                                .body((lhs, inst) -> edgeVertices(lhs))
+                                .converse(BOTHE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
+                                .law(Law.pure)
+                                .create(),
                     /*    docWrap(instC(GRPH_INST_TID.extend("graph").dom(ALL.maybe()).rng(GRAPH_SPACE_TID),
                                         lst(GRAPH_CONFIG),
                                         (lhs, inst) -> grphSpace.of(inst.arg(0).asRec(), lhs.vid())),
                                 "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),*/
-                        docWrap(InstBuilder.declareConverse(instC(OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
-                                        IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
-                                "a vertex", "out adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices"),
-                        docWrap(InstBuilder.declareConverse(instC(IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
-                                        OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
-                                "a vertex", "in adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming vertices"),
-                        docWrap(InstBuilder.declareConverse(instC(BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH)),
-                                        BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome())),
-                                "a vertex", "both adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing vertices"),
-                        docWrap(instC(OUTE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
-                                "a vertex", "out adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing edges"),
-                        docWrap(instC(INE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN)),
-                                "a vertex", "in adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming edges"),
-                        docWrap(instC(BOTHE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH)),
-                                "a vertex", "both adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges"),
+                        InstBuilder.build()
+                                .tid(OUT_INST_TID)
+                                .dom(REC_TID, "a vertex")
+                                .rng(REC_TID.maybeSome(), "out adjacent vertices")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
+                                .desc("returns the lhs vertex arg-adjacent outgoing vertices")
+                                .body(V_V_FUNCTION(Direction.OUT))
+                                .converse(IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
+                                .law(Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(IN_INST_TID)
+                                .dom(REC_TID, "a vertex")
+                                .rng(REC_TID.maybeSome(), "in adjacent vertices")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
+                                .desc("returns the lhs vertex arg-adjacent incoming vertices")
+                                .body(V_V_FUNCTION(Direction.IN))
+                                .converse(OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
+                                .law(Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(BOTH_INST_TID)
+                                .dom(REC_TID, "a vertex")
+                                .rng(REC_TID.maybeSome(), "both adjacent vertices")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
+                                .desc("returns the lhs vertex arg-adjacent incoming and outgoing vertices")
+                                .body(V_V_FUNCTION(Direction.BOTH))
+                                .converse(BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
+                                .law(Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(OUTE_INST_TID)
+                                .dom(REC_TID, "a vertex")
+                                .rng(REC_TID.maybeSome(), "out adjacent edges")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
+                                .desc("returns the lhs vertex arg-adjacent outgoing edges")
+                                .body(V_E_FUNCTION(Direction.OUT))
+                                .converse(OUTV_INST_TID.dom(REC_TID).rng(REC_TID))
+                                .law(Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(INE_INST_TID)
+                                .dom(REC_TID, "a vertex")
+                                .rng(REC_TID.maybeSome(), "in adjacent edges")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
+                                .desc("returns the lhs vertex arg-adjacent incoming edges")
+                                .body(V_E_FUNCTION(Direction.IN))
+                                .converse(INV_INST_TID.dom(REC_TID).rng(REC_TID))
+                                .law(Law.pure)
+                                .create(),
+                        InstBuilder.build()
+                                .tid(BOTHE_INST_TID)
+                                .dom(REC_TID, "a vertex")
+                                .rng(REC_TID.maybeSome(), "both adjacent edges")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
+                                .desc("returns the lhs vertex arg-adjacent incoming and outgoing edges")
+                                .body(V_E_FUNCTION(Direction.BOTH))
+                                .converse(BOTHV_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()))
+                                .law(Law.pure)
+                                .create(),
                         instC(ADDE_INST_TID.dom(REC_TID).rng(REC_TID), lst(URI_TYPE, T(REC_TID.some()), T(REC_TID.maybe())), (lhs, inst) -> {
                             if (!(lhs instanceof VertexRec vr)) return noobj();
                             final Vertex outVertex = vr.vertex();

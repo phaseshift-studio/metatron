@@ -105,9 +105,14 @@ public class BspRuleTest extends AbstractMetatronTest {
      * and parts it over the two peers, each lane the code as written with {@code ?hop=0}, so a peer runs it and plans
      * nothing further. until is untouched: the loop stays home.
      */
-    @Test
-    public void testAWholeFrontierRepeatDealsItsCodeOverThePeers() {
-        final Code before = program("{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)");
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource(value = {
+            "{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)          % plus",
+            // THE GRAPH WALK (Marko, 2026-11-22): a space read is untyped (#), and both() is declared pure, so it deals
+            "*g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4)              % both",
+    }, delimiter = '%')
+    public void testAWholeFrontierRepeatDealsItsCodeOverThePeers(final String mtron, final String step) {
+        final Code before = program(mtron.trim());
         final Code after = Bsp.apply(before, dialed(ALPHA, BETA));
         LOG.debug("law_bsp: %s  |->  %s", before, after);
         final Inst repeat = repeatOf(after);
@@ -122,7 +127,7 @@ public class BspRuleTest extends AbstractMetatronTest {
         assertEquals(2, lanes.size(), "one lane per dialed peer: " + lanes);
         for (final Rel lane : lanes) {
             final Inst head = lane.second().asCall().insts().getFirst();
-            assertEquals(f("plus"), f(head.tid().name()), "each lane runs the code as written: " + lane);
+            assertEquals(f(step.trim()), f(head.tid().name()), "each lane runs the code as written: " + lane);
             assertEquals("0", head.tid().q(HOP), "each lane plans nothing further: " + lane);
         }
         assertEquals(repeatOf(before).arg(f(UNTIL), 2).toString(), repeat.arg(f(UNTIL), 2).toString(), "until stays home, as written");
