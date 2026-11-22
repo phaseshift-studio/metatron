@@ -35,7 +35,7 @@ and the point squares to `9`. Thus, $(3a)^2$ and
 
 ```mtron
 mtron> 1.plus{3}(34).plus{3}(34)
-==>{2}69
+==>{9}69
 ```
 In _branch normal form_, the point expanded, $3a = a + a + a$, so $(3a)^2 = (a + a + a)^2$:
 
@@ -55,16 +55,16 @@ mtron> 1.{plus(34).plus(34),
           plus(34).plus(34),
           plus(34).plus(34),
           plus(34).plus(34)}
-==>{2}69
+==>{9}69
 ```
 Written on one instruction, the two coefficients are its two extents: `{2}plus{3}(34)` is three lanes of the run
 `plus(34).plus(34)`, $3a^2$, its point taken once, as `map{3}` takes it once for the run it maps:
 
 ```mtron
 mtron> 1.{2}plus{3}(34)
-==>{2}69
+==>{3}69
 mtron> 1.plus(34).plus{3}(34)
-==>{2}69
+==>{3}69
 mtron> 1.map{3}(plus(34).plus(34))
 ==>{3}69
 ```
@@ -223,17 +223,17 @@ float past it (Theorem 17 of [1]). ◻
 
 ```mtron
 mtron> 5.branch(id{2}(),id{3}())
-==>{2}5
+==>{5}5
 mtron> 5.id{2}().id{3}()
-==>{2}5
+==>{6}5
 mtron> 5.id{3}().id{2}()
-==>{2}5
+==>{6}5
 mtron> 5.id{3}().plus(1)
-==>{2}6
+==>{3}6
 mtron> 5.plus{3}(1)
-==>{2}6
+==>{3}6
 mtron> 5.plus(1).id{3}()
-==>{2}6
+==>{3}6
 ```
 ::: **Theorem 4** (A zero point annihilates). If $a \in \mathcal{F}$,
 then $0a = 0$.
@@ -454,17 +454,17 @@ alone.
 
 ```mtron
 mtron> 5.id{3}().id{3}()
-==>{2}5
+==>{9}5
 mtron> 5.{2}id{3}()
-==>{2}5
+==>{3}5
 mtron> 5.{2}id().id{3}()
-==>{2}5
+==>{3}5
 mtron> 5.id{2}().id{2}().id{2}()
-==>{2}5
+==>{8}5
 mtron> 5.{3}id{2}()
 ==>{2}5
 mtron> 5.{0}id{3}()
-==>{2}5
+==>{3}5
 mtron> 5.{0}id{0}()
 mtron> 5.plus{0}(1)
 mtron> 5.branch({0}plus(1),plus(2))
@@ -658,11 +658,11 @@ mtron> 1.{2,3}{plus(1),plus(1),plus(1)}
 ==>{9}3
 ==>{27}4
 mtron> 1.{2,3}plus{3}(1)
-==>3
-==>4
+==>{3}3
+==>{3}4
 mtron> {2}1.{2,3}plus{3}(1)
-==>3
-==>4
+==>{6}3
+==>{6}4
 ```
 A range on a point is a range of multiplicities: if $b (x) = x + 2$, then
 $\langle 1 \rangle\, [0,1]\, b = \langle ([0,1])3 \rangle$, a three held zero
@@ -703,13 +703,13 @@ mtron> 0.{0,6}plus(1)
 ==>5
 ==>6
 mtron> 0.{0,6}plus{2}(1)
-==>0
-==>1
-==>2
-==>3
-==>4
-==>5
-==>6
+==>{2}0
+==>{2}1
+==>{2}2
+==>{2}3
+==>{2}4
+==>{2}5
+==>{2}6
 ```
 An open range is the Kleene star [3],
 $a^{[0,\infty)} = a^* = 1 + a + a^2 + \cdots$. If $a (x) = x + 1$, then
@@ -804,16 +804,16 @@ object: $\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \r
 ```mtron
 mtron> {1,2,3}.{0,1}sum()
 ==>1
-==>3
-==>4
 ==>2
-==>10
+==>3
+==>6
 mtron> {1,2,3}.branch(id(),sum())
 ==>{2}1
 ==>{2}2
 ==>{2}3
 mtron> {1,2,3}.{1,2}count()
-==>4
+==>3
+==>1
 mtron> {1,2}.{0,2}plus(1)
 ==>1
 ==>{2}2
@@ -836,7 +836,8 @@ mtron> [a=>[a=>[b=>5]]].{*}>>(a)
 ==>[a=>[b=>5]]
 ==>[b=>5]
 mtron> {1,2,3}.is(gt(5)).{1,2}count()
-==>2
+==>0
+==>1
 ```
 In mtron, `{n}a` and `{m,n}a` are each one instruction, and the processor walks it: the input, then each run one step
 past the last, the runs from $m$ on kept, until the run $n$ or a run that leaves the domain of `a`. How much of a run a
@@ -1116,13 +1117,13 @@ pointed term backward, Theorem 13's $(ca)^{-n} = c^n a^{-n}$, is the converse st
 
 ```mtron
 mtron> 5.{2}plus{3}(1)
-==>{2}7
+==>{3}7
 mtron> 5.{-1}plus{3}(1)
-==>{2}4
+==>{3}4
 mtron> 5.{-2}plus{3}(1)
-==>{2}3
+==>{3}3
 mtron> 5.minus{3}(1).minus{3}(1)
-==>{2}3
+==>{9}3
 ```
 In mtron, an instruction declares its converse in its `?decq` claim, as the contract it runs backward:
 `plus?int<=int(int)` names `minus?int<=int(int)`, and `neg` names itself. The walk of Theorem 10 splits a span at zero
@@ -1158,11 +1159,11 @@ value's copies (`{3}5{3}` counts nine): `0.{10}plus(4)` is typed one `int`, not 
 
 ```mtron
 mtron> 5.{2}plus{3}(1).type().cc()
-==>2
+==>3
 mtron> 5.plus{3}(1).plus{3}(1).type().cc()
-==>2
+==>9
 mtron> 5.plus(1).id{3}().type().cc()
-==>2
+==>3
 ```
 A type is an object that performs a computation as well as one that is used in one, and which it is depends on where
 it stands. With no axis, as a step or as a term of a branch, a type is a filter:

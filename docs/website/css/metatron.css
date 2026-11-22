@@ -304,6 +304,18 @@ table {
     color: #000 !important;
 }
 
+/* the tractatus: a "draft" chapter is grayed out and unclickable until published */
+.tutorial-grid .btn.tractatus-draft {
+    opacity: .45;
+    filter: grayscale(100%);
+    border-color: var(--bs-gray-dark);
+    color: var(--bs-gray);
+    box-shadow: none;
+    cursor: not-allowed;
+    pointer-events: none;
+    text-decoration: line-through;
+}
+
 #custom-docs-button {
     color: #6C7293;
 }

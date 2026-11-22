@@ -294,7 +294,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="tractatus.html">the
+                <a class="nav-link" href="tractatus/index.html">the
                     tractatus</a>
             </li>
             <!-- SKILLS-MENU:START -->
@@ -521,32 +521,51 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 <main class="container my-4 flex-grow-1"><h2 id="sec-quick-start" class="discrete">Quick Start</h2>
 <div class="legend-index">
 <ul>
-<li class="legend-lvl-3"><a href="#sec-core-concepts" onclick="var t=document.getElementById('sec-core-concepts');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Core Concepts</a></li>
-<li class="legend-lvl-4"><a href="#sec-core-data-types" onclick="var t=document.getElementById('sec-core-data-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Core Data Types</a></li>
-<li class="legend-lvl-4"><a href="#sec-router-and-space" onclick="var t=document.getElementById('sec-router-and-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Router and Space</a></li>
-<li class="legend-lvl-3"><a href="#sec-installation" onclick="var t=document.getElementById('sec-installation');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Installation</a></li>
-<li class="legend-lvl-3"><a href="#sec-console" onclick="var t=document.getElementById('sec-console');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Console</a></li>
-<li class="legend-lvl-3"><a href="#sec-space" onclick="var t=document.getElementById('sec-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Space</a></li>
+<li class="legend-lvl-3"><a href="#sec-install" onclick="var t=document.getElementById('sec-install');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Install</a></li>
+<li class="legend-lvl-3"><a href="#sec-your-first-expression" onclick="var t=document.getElementById('sec-your-first-expression');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Your first expression</a></li>
+<li class="legend-lvl-3"><a href="#sec-the-console" onclick="var t=document.getElementById('sec-the-console');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The console</a></li>
+<li class="legend-lvl-3"><a href="#sec-where-next" onclick="var t=document.getElementById('sec-where-next');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Where next</a></li>
 </ul>
 </div>
-<img src="images/metatron-character-ansi.png" width="250px" style="float:left; margin:10px;"></a>
 <div class="paragraph">
-<p>Software is an endless maze of standards, specifications, packages, frameworks, utilities&#8201;&#8212;&#8201;all touching fundamental concepts regarding the nature of the world we find ourselves in.
-This collective endeavour marks a high-point in rational human thought and in being so, serves as a "legoland" for the well-tuned mind that finds joy in discovering and manipulating abstract structures using cold, discrete mechanical processes all without breaking a sweat nor leaving the comfort of one&#8217;s home.
-From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are <em>clickity clacking</em> away&#8201;&#8212;&#8201;sewing a massive technological quilt. metatron is one such patch that provides a distillation of computing down to a few fundamental patterns that, when used together, transform the complex morass of seemingly orthogonal technologies into a comprehensible and usable set of constructs not easily realized nor written using prior art.</p>
+<p>metatron is a data-oriented virtual machine and its language, <strong>mtron</strong>. A row in a
+database, a tag in an HTML page, a vertex in a graph, a value in memory on an IoT
+device — all of it lives in one address space and is read and written through a
+single referential model.</p>
 </div>
 <div class="paragraph">
-<p>metatron touches on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of that enables one to speak to this world at large, simply and effectively.</p>
+<p>This page takes you from nothing to a running REPL, then points at the parts of the
+documentation worth reading next.</p>
 </div>
-<h3 id="sec-core-concepts" class="discrete">Core Concepts</h3>
+<h3 id="sec-install" class="discrete">Install</h3>
 <div class="paragraph">
-<p>metatron is a data-oriented programming environment with its own data-flow language called <strong>mtron</strong>.</p>
+<p>Pick one. A POSIX shell is all that is required.</p>
 </div>
-<div class="openblock card">
-<div class="title">metatron terminal program</div>
+<div class="listingblock">
 <div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>The simplest way to use metatron is as a terminal program.</p>
+<p>Or run it in a container.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+</div>
+</div>
+<h3 id="sec-your-first-expression" class="discrete">Your first expression</h3>
+<div class="paragraph">
+<p>metatron evaluates mtron. A one-off expression runs with <code>-e</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -555,298 +574,56 @@ From web technologies, to database technologies, to AI technologies, and so fort
 </div>
 </div>
 <div class="paragraph">
-<p>However, such stateless one-off interactions don&#8217;t capture the full power of metatron.
-To use metatron as it was intended to be used is through instances of <code>console::T</code> or <code>desktop::T</code>&#8201;&#8212;&#8201;the REPL terminal application and/or the desktop application, respectively.</p>
+<p><code>1-&lt;[&#8230;&#8203;]</code> reads one object and applies two instructions to it, branching the one
+into two results — hence <code>[3,4]</code>. Everything in mtron is built from two operators:
+<code>*</code> composes instructions and <code>+</code> branches them.</p>
 </div>
+<h3 id="sec-the-console" class="discrete">The console</h3>
+<div class="paragraph">
+<p>For interactive use, open the console — a REPL with syntax highlighting,
+step-through compilation, and type checking.</p>
 </div>
-</div>
-<div class="openblock card">
-<div class="title">metatron console</div>
+<div class="listingblock">
 <div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ bin/metatron -e "console::[=&gt;]"
+mtron&gt;</code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>$ bin/metatron -e "console::[&#8658;]"</p>
+<p>Try a few expressions.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">1 + 2
+1-&lt;[_,+2,*5]&gt;-.sum()
+[a=&gt;1,b=&gt;[c=&gt;[5,6,7]]]&gt;&gt;b/c/1</code></pre>
 </div>
 </div>
-</div>
-<h4 id="sec-core-data-types" class="discrete">Core Data Types</h4>
 <div class="paragraph">
-<p>In metatron, everything is an <strong>obj</strong> (an object).
-There are 3 categories of objs:</p>
+<p>To boot a headless instance from a boot file, pass it at startup.</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>mono</strong>: objs not composed of other objs:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ bin/metatron "[boot=&gt;start.mtron,log=&gt;info]"</code></pre>
+</div>
+</div>
+<h3 id="sec-where-next" class="discrete">Where next</h3>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>bytes</strong>, <strong>bool</strong>, <strong>int</strong>, <strong>real</strong>, <strong>str</strong>, and <strong>uri</strong>.</p>
+<p><a href="tractatus/index.html">The tractatus</a> — chapters on the language and the
+machine. Begin with <a href="tractatus/ring.html">ring</a>,
+<a href="tractatus/uri.html">fURI</a>, and <a href="tractatus/type.html">types</a>.</p>
+</li>
+<li>
+<p><a href="instset/index.html">Instruction sets</a> — the domains of discourse.</p>
+</li>
+<li>
+<p><a href="articles/stream-ring-theory.html">Stream ring theory</a> — the algebra the whole
+thing is built on.</p>
 </li>
 </ul>
-</div>
-</li>
-<li>
-<p><strong>poly</strong>: objs composed of other objs in support of nested structures:</p>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>rel</strong>, <strong>lst</strong>, and <strong>rec</strong>.</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>call</strong>: objs that can be evaluated by a <em>lhs</em> obj (left-hand side) and an <em>arg</em> obj (lst or rec) to yield a <em>rhs</em> obj (right-hand side):</p>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>inst</strong> and <strong>code</strong>.</p>
-</li>
-</ul>
-</div>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>\[
-\tt lhs \underbrace{\Rightarrow}_* inst(\underbrace{arg_0,arg_1,\ldots,arg_n}_+) \underbrace{\Rightarrow}_= rhs \]</p>
-</div>
-<div class="paragraph">
-<p>\[
-\tt lhs \underbrace{\Rightarrow}_* code\{{\underbrace{inst_0 \cdot \underbrace{(inst_1 + inst_2)}_+ \cdot \ldots \cdot inst_n}_*}\} \underbrace{\Rightarrow}_= rhs \]</p>
-</div>
-<div class="paragraph">
-<p>There is one <a href="https://en.wikipedia.org/wiki/Universal_property">universal</a> obj that is a mono, a poly, and a call: <code>noobj</code>. <code>noobj</code> is similar to the <a href="https://en.wikipedia.org/wiki/Null_pointer">null</a> value found in many programming languages save that it has an operational semantic aligned with its role as the <a href="https://en.wikipedia.org/wiki/Zero_object_(algebra)">0-object</a> (zero) of the algebraic ring formed by the set of all objs along with the two ring operators: <code>*</code> and <code>+</code> (apply/compose and branch/split, respectively).
-Finally, at the other end of the spectrum, there is an obj which serves as the 1-object (one) called "all" and denoted <code>#</code>.</p>
-</div>
-<table class="tableblock frame-all grid-all table-bordered small center" style="width: 70%;">
-<colgroup>
-<col style="width: 40%;">
-<col style="width: 60%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>Any obj with <code>c</code> of <code>{0}</code> is isomorphic to <code>noobj</code>.</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {0}1 + 1  [-- noobj * noobj --]
-mtron&gt; [noobj,noobj]&gt;-   [-- noobj + noobj --]
-mtron&gt; noobj-&lt;[#]&gt;-      [-- noobj * #     --]
-mtron&gt; [noobj, #]&gt;-      [-- noobj + #     --]
-==&gt;&lt;#&gt;</code></pre>
-</div>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>Any obj applied to <code>#</code> is that obj. Hence why <code>noobj * # =&gt; noobj</code>.</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; #.-&lt;[#]&gt;-          [-- # * #     --]
-==&gt;&lt;#&gt;
-mtron&gt; [#,#]&gt;-            [-- # + #     --]
-==&gt;{2}&lt;#&gt;
-mtron&gt; #.-&lt;[noobj]&gt;-      [-- # * noobj --]
-mtron&gt; [#,noobj]&gt;-        [-- # + noobj --]
-==&gt;&lt;#&gt;</code></pre>
-</div>
-</div></div></td>
-</tr>
-</tbody>
-</table>
-<div class="openblock card">
-<div class="content">
-<h4 id="_ring_theory" class="discrete">Ring Theory</h4>
-<div class="paragraph">
-<p><a href="https://en.wikipedia.org/wiki/Ring_theory">Ring theory</a> is the beating heart of metatron.
-Its axioms and subsequent theorems are carefully woven throughout the design, where rings are coupled with rings through the various layers of computing abstraction.
-The most prominent uses are found in:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>the <a href="https://en.wikipedia.org/wiki/Function_composition_(computer_science)">composition</a> of instructions to form code.</p>
-</li>
-<li>
-<p>the <a href="https://en.wikipedia.org/wiki/Function_application">application</a> of objs to other objs.</p>
-</li>
-<li>
-<p>the <a href="https://en.wikipedia.org/wiki/Object_composition">joining</a> of objs to form poly(nomial) structures.</p>
-</li>
-<li>
-<p>the <a href="https://en.wikipedia.org/wiki/Optimizing_compiler">optimization</a> of machine execution via rewrite equivalences.</p>
-</li>
-<li>
-<p>the <a href="https://en.wikipedia.org/wiki/Type_theory">construction</a> of types and their constraints on values.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>There is nothing "difficult" about ring theory.
-In fact, grade school has already ingrained the most important concepts&#8201;&#8212;&#8201;namely, how <code>*</code> and <code>+</code> operate on objects (e.g. numbers) individually and in concert with one another (e.g. the <a href="https://en.wikipedia.org/wiki/FOIL_method">foil method</a>).
-In metatron, its not just numbers that are constrained by these axioms, but more generally, objs and various constructions of objs.</p>
-</div>
-<div class="paragraph">
-<p>For a gentle, yet thorough presentation on ring theory and its use in metatron, please review <a href="http://metatron.phaseshift.studio/articles/stream-ring-theory">stream ring theory</a>.</p>
-</div>
-</div>
-</div>
-<h4 id="sec-router-and-space" class="discrete">Router and Space</h4>
-<div class="paragraph">
-<p>There are 2 "special" <code>rec</code> structures called <strong>router</strong> and <strong>space</strong>.
-They are special in that while they appear as <code>rec</code> objs, they maintain auxiliary data structures (with little reflection enabling reification) accessible only through a particular api not available to other objs.</p>
-</div>
-<div class="paragraph">
-<p><strong>router</strong>: the purpose of the router is to handle namespace prefix rewrites for local and remote dispatching of read and write calls to spaces.
-Every instance of metatron has a single running router.</p>
-</div>
-<div class="paragraph">
-<p><strong>space</strong>: the purpose of a space is to store objs and manage process execution.
-It is up to the space implementation to determine how objs will be indexed and persisted.
-However, within metatron, all spaces are functionally equivalent as dictated by a well-defined read/write contract.</p>
-</div>
-<h3 id="sec-installation" class="discrete">Installation</h3>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Download metatron either as an <code>npm</code> package, a <code>dckr</code> container, or a <code>maven</code> project.</p>
-</li>
-<li>
-<p>Load metatron using a boot file.
-To run a headless boot in the background, don&#8217;t add any UI objs to your boot file.
-For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it will spawn an interactive <code>console::T</code> <a href="https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop">REPL</a>.</p>
-</li>
-</ol>
-</div>
-<div class="listingblock">
-<div class="title">start.mtron bootloader</div>
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">       import(/m/web);
-       memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
-       memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
-       fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
-       httpspace::[pattern =&gt;http://#,
-             host    =&gt;http://localhost:8765,
-             route   =&gt;[/            =&gt;local:]]@/sys/space/http;
-       console::[=&gt;]@/usr/ui/console;</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>To boot a metatron instance from the terminal using <code>start.boot</code>, execute:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">$ bin/metatron "[boot=&gt;start.mtron,log=&gt;info]"</code></pre>
-</div>
-</div>
-<h3 id="sec-console" class="discrete">Console</h3>
-<div class="paragraph">
-<p>After metatron boots, the cursor should be to the right of a <code>mtron&gt;</code> prompt.
-This is a <code>console::T</code>.
-The console takes mtron expressions and creates <strong>machines</strong> to execute them.
-A machine can be thought of as an executing process.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1 + 2
-==&gt;3
-mtron&gt; ab * xyz * mn?i=1&amp;j=2
-==&gt;ab/xyz/mn?j=2&amp;i=1
-mtron&gt; 1-&lt;[_,+ 2,* 5]&gt;-.sum()
-==&gt;9
-mtron&gt; {1,2,3}-&lt;|[?&gt;1 =&gt; +20, _ =&gt; * -1]&gt;&gt;
-==&gt;-1
-==&gt;22
-==&gt;23
-mtron&gt; 1873-&lt;[http://localhost:${+10}/mcp]
-==&gt;[http://localhost:1883/mcp]
-mtron&gt; 10.inst(a=&gt;+2,b=&gt;?int::T){ *a + *b }
-==&gt;22
-mtron&gt; a=&gt;b=&gt;c=&gt;d=&gt;e=&gt;f
-==&gt;a=&gt;(b=&gt;(c=&gt;(d=&gt;(e=&gt;f))))
-mtron&gt; a=&gt;b=&gt;c=&gt;d=&gt;e=&gt;f.&gt;&gt;.&gt;&gt;.&gt;&gt;.&gt;&gt;.&gt;&gt;
-==&gt;f
-mtron&gt; [a=&gt;1,b=&gt;[c=&gt;[5,6,7]]]&gt;&gt;b/c/1
-==&gt;6</code></pre>
-</div>
-</div>
-<h3 id="sec-space" class="discrete">Space</h3>
-<div class="openblock card">
-<div class="content">
-<h4 id="_the_nature_of_space" class="discrete">The Nature of Space</h4>
-<div class="paragraph">
-<p>At its core, metatron is the infrastructure of a distributed address space used for reading and writing objs, where an address is a key and an obj is the value (<strong>a key/value store</strong>).
-This space is aware of the internal structure of the value and supports uniquely identifying substructures in the value (<strong>a column store</strong>).</p>
-</div>
-<div class="paragraph">
-<p>For metatron, the set of all uniform resource identifiers is the address space as it can reference structures at various nested levels of complexity (<strong>a web server</strong>).
-The particular uri scheme used by metatron offers more than just the ability to denote the location of an obj, it can also refer to an obj&#8217;s type (<strong>a semantic web</strong>), an obj&#8217;s functional signature (<strong>a lambda server</strong>), and any pre/post-processing read/write modulators (<strong>a rest server</strong>).</p>
-</div>
-<div class="paragraph">
-<p>Nested poly objs provide an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (<strong>an ldap server</strong>).
-In this way, polys control not just a point in space, but regions of space (<strong>a document store</strong>) that can overlap, blurring the line between where one poly ends and another begins (<strong>an mqtt broker</strong>).</p>
-</div>
-<div class="paragraph">
-<p>Finally, the objs embedded in space aren&#8217;t just static datum (monos) or diffuse collections (polys), they are also active processes (calls) (<strong>a lisp interpreter</strong>).
-Amongst the set of calls, there is an interesting instruction called an <code>auto</code> which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (<strong>a graph database</strong>).</p>
-</div>
-<div class="paragraph">
-<p>And that&#8217;s just the beginning&#8230;&#8203;</p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>The above description may lead one to conclude that metatron, if functional, is too complex to be of practical value.
-Note that the features articular above are simply epiphenomena of a more fundamental notion of reference.
-In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resource identifier</strong>) and an extreme example of a contrived, fURI is presented below (overly bloated for the sake of coverage).</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">abc://example.com:8777/seg1/+/segN[a,b,c]{*}?dom&lt;=rng&amp;k0=v0&amp;k1=v1
- │           │              │   │     │   │     │         └─────── qprocs (query processors)
- │           │              │   │     │   │     └───────────────── domain/range (signature)
- │           │              │   │     │   └─────────────────────── coefficient (cardinality)
- │           │              │   │     └─────────────────────────── polynomial types (generics)
- │           │              │   └───────────────────────────────── hierachial path (navigation)
- │           │              └───────────────────────────────────── wildcard (branching path)
- │           └──────────────────────────────────────────────────── physical location (authority)
- └──────────────────────────────────────────────────────────────── scheme (means of referent access)</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Up to this point, there are currently 4 spaces maintained by metatron.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;10
-mtron&gt; */sys/space/+.&gt;&gt;pattern
-==&gt;ha:#
-==&gt;loc:#
-==&gt;g:#
-==&gt;farm:#
-==&gt;local:#
-==&gt;/usr/#
-==&gt;fs:#
-==&gt;http://#
-==&gt;/te/cold/#
-==&gt;/te/hot/#
-mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
-==&gt;{3}[=&gt;]
-==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
-==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
-==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,
-           fs:=&gt;/home/killswitch/]]
-==&gt;[http://#=&gt;[/=&gt;local:]]
-==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
-==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]</code></pre>
-</div>
-</div>
-<br><br></main>
+</div></main>
 <footer class="container-fluid fixed-bottom text-light footer">
     <div class="d-flex pt-1 mb-0">
         <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i

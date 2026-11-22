@@ -72,30 +72,76 @@ files (the runner is chosen by extension; only that file is built):
   *.adoc     AsciiDocRunner
   *.java     the whole `instset` stage (no single-file mode)
 
+what a single file builds:
+  docs/articles/<name>.md   evaluates its ```mtron_pre blocks, writes the processed
+                            markdown into docs/website/articles/, THEN renders the html
+                            page for THAT ONE file (--only <name>.md); the other
+                            articles are left untouched.
+  docs/skills/**/SKILL.md   evaluates the blocks and writes the processed markdown
+                            copy; no page (the `markdown` stage renders skill html).
+  docs/asciinema/*.md       evaluates the tagged blocks and emits the .cast only.
+  docs/website/adoc/*.adoc  AsciiDocRunner -> docs/website.
+
 examples:
-  bin/metatron-site markdown instset asciidoc header
-  bin/metatron-site asciinema
-  bin/metatron-site asciinema markdown
-  bin/metatron-site docs/asciinema/mini-tutorials.md
-  bin/metatron-site docs/website/adoc/space.adoc
+  # one theory article: evaluate its mtron_pre blocks AND re-render its own page
+  bin/metatron-site docs/articles/ring-theoretic-distributed-computing.md
+
+  # one skill reference (markdown copy only; no page)
   bin/metatron-site docs/skills/mtron/SKILL.md
+
+  # one adoc page
+  bin/metatron-site docs/website/adoc/space.adoc
+
+  # a cast-only source: evaluate + emit the recording, no page
+  bin/metatron-site docs/asciinema/mini-tutorials.md
+
+  # stages, in dependency order
+  bin/metatron-site markdown instset asciidoc header
+  bin/metatron-site all
+
+  # inspect without running, or run an existing jar without rebuilding it
+  DRY_RUN=1  bin/metatron-site docs/articles/ring-theoretic-distributed-computing.md
+  NO_BUILD=1 bin/metatron-site docs/articles/ring-theoretic-distributed-computing.md
+
+about the jar (why you sometimes see a "full build" first):
+  the runner is this checkout's uber-jar in target/. It is rebuilt with
+  `./mvnw -q -DskipTests package` when it is missing OR older than anything under
+  src/ or pom.xml. So a doc edit never triggers it; a java edit does, once, until
+  the jar is rebuilt. NO_BUILD=1 skips the rebuild and uses the jar as-is.
 EOF
 }
 
 # the jar is the runner's classpath; rebuild it when missing or older than a
 # source file, so a single-document build never evaluates against old code.
 ensure_jar() {
-    local jar
+    local jar newer
     # a dry run must not build anything
     if [[ "${DRY_RUN:-0}" = "1" ]]; then
         echo "target/metatron-<version>-jar-with-dependencies.jar"
         return 0
     fi
     jar="$(ls -1 target/metatron-*-jar-with-dependencies.jar 2>/dev/null | head -1 || true)"
-    if [[ -z "$jar" ]] || [[ -n "$(find src pom.xml -type f -newer "$jar" 2>/dev/null | head -n 1)" ]]; then
-        echo "==> jar stale or missing — mvn package (skip tests)" >&2
+    if [[ -z "$jar" ]]; then
+        echo "==> no uber-jar in target/ — mvn package (skip tests)" >&2
         ./mvnw -q -DskipTests package >&2
         jar="$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)"
+        echo "$jar"
+        return 0
+    fi
+    newer="$(find src pom.xml -type f -newer "$jar" 2>/dev/null | head -n 3 || true)"
+    if [[ -n "$newer" ]]; then
+        if [[ "${NO_BUILD:-0}" = "1" ]]; then
+            # the caller knows the source change cannot affect this doc run
+            { echo "==> source is newer than the jar; using it anyway (NO_BUILD=1):"
+              printf '%s\n' "$newer" | sed 's/^/      /'; } >&2
+        else
+            # say WHY, so a "full build" before a doc run is never a mystery
+            { echo "==> jar is older than source — mvn package (skip tests), because:"
+              printf '%s\n' "$newer" | sed 's/^/      /'
+              echo "      (NO_BUILD=1 runs the existing jar anyway)"; } >&2
+            ./mvnw -q -DskipTests package >&2
+            jar="$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)"
+        fi
     fi
     echo "$jar"
 }
@@ -119,6 +165,9 @@ markdown_out_dir() {
 
 run_file() {
     local f="$1" out jar
+    # set only by the article branch: a second, VM-free pass that turns the processed
+    # .md copies in the articles container into .html siblings
+    local html_cmd=()
     case "$f" in
         docs/asciinema/*.md)
             # a CAST-ONLY source: evaluate the tagged blocks, emit the recordings,
@@ -133,6 +182,22 @@ run_file() {
             jar="$(ensure_jar)"
             echo "==> markdown: $f -> $out"
             local cmd=(java "${JVM_FLAGS[@]}" -cp "$jar" "$MARKDOWN_RUNNER" "$f" -o "$out")
+            # An article is a PAGE as well as a set of code samples: after the mtron_pre
+            # pass writes the processed .md copy into the articles container, render that
+            # container to .html with the same invocation the pom's run-article-runner
+            # uses (MarkdownRunner --html docs/articles -o docs/website/articles; the html
+            # pass collects no skill docs, so it needs no VM -- it just renders the
+            # frontmatter .md files already in the container). Without this, a single-file
+            # article build left the page unrendered and only the site-wide build produced
+            # the .html.
+            case "$f" in
+                docs/articles/*.md)
+                    echo "==> article html: docs/website/articles ($(basename "$f") only)"
+                    html_cmd=(java "${JVM_FLAGS[@]}" -cp "$jar" "$MARKDOWN_RUNNER"
+                              --html docs/articles -o docs/website/articles
+                              --only "$(basename "$f")")
+                    ;;
+            esac
             ;;
         *.adoc)
             jar="$(ensure_jar)"
@@ -149,9 +214,14 @@ run_file() {
     esac
     if [[ "${DRY_RUN:-0}" = "1" ]]; then
         echo "==> run:   ${cmd[*]}"
+        if [[ ${#html_cmd[@]} -gt 0 ]]; then echo "==> run:   ${html_cmd[*]}"; fi
         return 0
     fi
     "${cmd[@]}"
+    # an `[[ ]] && cmd` tail would return 1 when there is no html pass
+    if [[ ${#html_cmd[@]} -gt 0 ]]; then
+        "${html_cmd[@]}"
+    fi
 }
 
 # parse args: stage words, document paths, or mvn pass-through flags
@@ -162,6 +232,7 @@ for a in "$@"; do
     case "$a" in
         all) args+=(markdown instset asciidoc header asciinema) ;;
         markdown|instset|asciidoc|header|asciinema) args+=("$a") ;;
+        -h|--help) usage; exit 0 ;;
         -*) extra+=("$a") ;;
         *.java) args+=(instset) ;;                       # no single-file mode
         *.md|*.adoc) files+=("$a") ;;

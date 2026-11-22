@@ -307,7 +307,7 @@
             if (!anchor) return;
             var href = anchor.getAttribute('href');
             var currentPath = window.location.pathname.split('/').pop() || 'index.html';
-            if (href && (href === 'index.html' || href === 'tractatus.html') && href !== currentPath) {
+            if (href && (href === 'index.html' || href === 'tractatus/index.html') && href !== currentPath) {
                 e.preventDefault();
                 triggerSweep(href);
             }
@@ -315,7 +315,7 @@
 
         // Legacy redirect from the hash-only home page
         if (window.location.hash.substring(1) === "1") {
-            window.location.href = "tractatus.html";
+            window.location.href = "tractatus/index.html";
         }
 
         // FEATURE GRID INTERACTIONS
@@ -347,7 +347,7 @@ function slideShowPage(id) {
     if (id === 0) {
         triggerSweep("index.html");
     } else {
-        triggerSweep("tractatus.html");
+        triggerSweep("tractatus/index.html");
     }
 }
 
