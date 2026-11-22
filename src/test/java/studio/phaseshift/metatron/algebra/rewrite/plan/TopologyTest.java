@@ -59,6 +59,42 @@ public class TopologyTest extends AbstractMetatronTest {
      * each joins the fork and the join on its own main row, the rows between the outer lanes carry a │, and the shorter
      * lane runs out to the join.
      */
+    /**
+     * A REPEAT IS A LOOP (Marko, 2026-11-22): its body is drawn once, as any flow, and a back edge runs from where the
+     * body leaves (┬ on the right, where the main line also goes on) down, back under the body, and up into where it
+     * enters (▲ under the ┬ on the left). Here the body is law_bsp's superstep: the frontier dealt over //0 and //1 and
+     * merged home.
+     */
+    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
+    @Test
+    public void testARepeatIsDrawnWithItsBackEdge() {
+        final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{4}'],"
+                + "[loop=>[[[place=>'//0',stage=>['{2}','{1}']],[place=>'//1',stage=>['{2}','{1}']]],['{2}','{1}']]],"
+                + "['{2}']]").asLst());
+        assertEquals(String.join("\n", "",
+                "       ┌─►//0─{2}─{1}─┐",
+                "{4}─┬──┤              ├─►//local─{2}─{1}─┬─{2}",
+                "    ▲  └─►//1─{2}─{1}─┘                  │",
+                "    └────────────────────────────────────┘", ""), drawing);
+    }
+
+    /**
+     * THE LOOP IS READ OFF THE CHAIN: a repeat whose code deals over two places explains to a flow with a loop segment,
+     * the fan inside it, and draws with its back edge.
+     */
+    @Test
+    public void testARepeatThatDealsExplainsToALoop() {
+        final Obj topology = Topology.explain(ObjmtronSerializer.parse(
+                "{1,2,3}.repeat?<=int{*}(code=>branch?<=A{*}&split=part(<//a> => plus(1), <//b> => plus(1)),until=>loop()?>3)").asCode());
+        LOG.debug("a dealing repeat's topology: %s", topology);
+        org.junit.jupiter.api.Assertions.assertTrue(topology.isRec(), "a dealing repeat has a topology: " + topology);
+        final String drawing = Topology.draw(topology.asRec().at(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(studio.phaseshift.metatron.Tokens.FLOW)).asLst());
+        LOG.debug("drawn:%s", drawing);
+        org.junit.jupiter.api.Assertions.assertTrue(drawing.contains("┬") && drawing.contains("▲") && drawing.contains("┘"),
+                "the repeat is drawn with its back edge:" + drawing);
+        org.junit.jupiter.api.Assertions.assertTrue(drawing.contains("//a") && drawing.contains("//b"), "its lanes are drawn inside the loop:" + drawing);
+    }
+
     @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
     @Test
     public void testAChildsSubtreeIsDrawnInsideItsLane() {
