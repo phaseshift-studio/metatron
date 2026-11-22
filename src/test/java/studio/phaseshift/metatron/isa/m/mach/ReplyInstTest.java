@@ -124,4 +124,23 @@ public class ReplyInstTest extends AbstractMetatronTest {
                 "a zero-coefficient obj is noobj: the writer must not render its vid");
         checkEquality(LOG, noobj(), addressed, true);
     }
+
+    /**
+     * A HEX-TAGGED VID IS NEVER STORED. A client evaluates the reply frames it reads, and an addressed literal stores its
+     * value at its vid; a reply's vid carries its trip's tag as a hex last segment, so storing it wrote a peer's answer
+     * into the client's own spaces, a vertex into the master's graph at {@code V/1/0x…} (Marko, 2026-11-22). The tagged
+     * literal keeps its vid and stores nothing; the same literal without the tag still stores, the contrast.
+     */
+    @Test
+    void testAHexTaggedVidIsNeverStored() {
+        final fURI tagged = f("/sys/anchor/stored/0xe2");
+        final Obj read = ObjmtronSerializer.single().read("5@</sys/anchor/stored/0xe2>");
+        checkEquality(LOG, jnt(5).selfVID(tagged), read, true);
+        checkEquality(LOG, noobj(), Machine.read(tagged), true);
+        // the contrast: an untagged addressed literal stores its value, and reads back addressed
+        final fURI plain = f("/sys/anchor/stored/plain");
+        ObjmtronSerializer.single().read("6@</sys/anchor/stored/plain>");
+        checkEquality(LOG, jnt(6).selfVID(plain), Machine.read(plain), true);
+        Machine.write(plain, noobj());
+    }
 }

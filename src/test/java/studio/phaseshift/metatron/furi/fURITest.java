@@ -37,6 +37,8 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Stream;
 
+import studio.phaseshift.metatron.util.CommonUtil;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -197,6 +199,11 @@ public class fURITest extends AbstractMetatronTest {
             "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
             "/a/b/c/{?}?a=b&c=d          | 2   | /a/{?}?a=b&c=d",
             "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
+            // the round trip's tag is a hex last segment: retracting it recovers the answer's own vid
+            "g:V/1/0x21959454            | 1   | g:V/1",
+            "/sys/trip/own/0x21959454    | 1   | /sys/trip/own",
+            "//0//g:V/1/0x21959454       | 1   | //0//g:V/1",
+            "0x21959454                  | 1   | ''",
     }, delimiter = '|', nullValues = "null")
     public void testRetract(final String furi, final int steps, final String expected) {
         final fURI start = f(furi);
@@ -204,6 +211,27 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(end, start.retract(steps), printComponents(start.retract(steps)) + printComponents(end));
         LOG.debug("testing %s retracted %d steps is %s", start, steps, expected);
         printComponents(start);
+    }
+
+    /**
+     * THE ROUND TRIP'S TAG IS THE VID'S LAST SEGMENT (Marko, 2026-11-22): extend appends it, name() reads it back as a
+     * hex literal, and retract(1) recovers the answer's own vid, for a plain path, a prefixed address, an aliased
+     * global one and a full origin alike.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/sys/trip/own                 | 0x21959454",
+            "g:V/1                         | 0x21959454",
+            "g:E/7                         | 0x00ff00ff",
+            "//0//g:V/1                    | 0xa3f91c2b",
+            "ws://localhost:1111//g:V/1    | 0xa3f91c2b",
+    }, delimiter = '|')
+    public void testAHexTagSegmentRoundTrips(final String vid, final String tag) {
+        final fURI own = f(vid);
+        final fURI tagged = own.extend(tag);
+        assertEquals(tag, tagged.name(), "the last segment reads back as the tag: " + tagged);
+        assertTrue(CommonUtil.isHex(tagged.name()), "the tag is a hex literal: " + tagged.name());
+        assertEquals(own, tagged.retract(1), "retracting the tag recovers the vid: " + tagged);
     }
 
     @ParameterizedTest
