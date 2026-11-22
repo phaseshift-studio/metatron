@@ -752,6 +752,30 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,1,2}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)   % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
     }, delimiter = '%')
     void test_conservation_a_bulked_seed_answers_as_at_home(final String program, final String home) {
+        conserved(program, home);
+    }
+
+    /**
+     * A POINT ON THE CUT IS CONSERVED (the landing review, 2026-11-22): {@code r{d}} answers {@code {d}} copies of
+     * {@code r}'s answer, so no lane carries the point and home's combiner does. A self-combining fold re-applies the
+     * cut as written; a derived combiner ({@code count ↦ sum}) and a lifted one ({@code mean}) take the point onto
+     * their own last instruction. Sharded, {@code count{2}()} answered 4 and {@code mean{2}()} 2.5, where home
+     * answers {@code {2}4} and {@code {2}2.5}. Each row: the program % its home twin.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4}.sum{2}()      % start?hop=0({1,2,3,4}).sum{2}()",
+            "{1,2,3,4}.count{2}()    % start?hop=0({1,2,3,4}).count{2}()",
+            "{1,2,3,4}.mean{2}()     % start?hop=0({1,2,3,4}).mean{2}()",
+    }, delimiter = '%')
+    void test_conservation_a_point_on_the_cut_answers_as_at_home(final String program, final String home) {
+        conserved(program, home);
+    }
+
+    /**
+     * The program distributes, and answers what its home twin does.
+     */
+    private void conserved(final String program, final String home) {
         final Code planned = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(program.trim())).asCode();
         assertTrue(distributes(planned.insts()), "the program must distribute, or the row tests nothing: " + planned);
         checkEquality(LOG, Machine.evaluate(Machine.parse(home.trim()).asCode()),

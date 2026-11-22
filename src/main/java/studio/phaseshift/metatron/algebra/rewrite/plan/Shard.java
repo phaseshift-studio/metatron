@@ -210,9 +210,9 @@ public final class Shard {
         final Call combined = 0 > cut ? null : Law.Helper.combiner(typed.get(cut), chain.laws());
         final Call lifted = 0 > cut || null != combined ? null : Law.Helper.lifted(typed.get(cut));
         final List<Inst> lift = null == lifted ? List.of() : lifted.insts().subList(0, lifted.insts().size() - 1);
-        final List<Inst> combiner = null != lifted ? List.of(raw(lifted.insts().getLast()))
+        final List<Inst> combiner = null != lifted ? pointed(List.of(raw(lifted.insts().getLast())), insts.get(cut))
                 : null == combined ? List.of()
-                : typed.get(cut) == combined ? List.of(insts.get(cut)) : combined.insts();
+                : typed.get(cut) == combined ? List.of(insts.get(cut)) : pointed(combined.insts(), insts.get(cut));
         // THE SEED: a literal at the head is dealt by the plan; anything else is the bag the branch takes when it runs.
         // ONE OBJ HAS NOTHING TO DEAL -- a literal of one member, or what a fold answers (a gather whose rng is one),
         // carried to the run by the instructions that stay home before it: its one multiplicity is a span range in the run.
@@ -240,7 +240,8 @@ public final class Shard {
             return null;
         // a copy has no fold to absorb the duplicates, so with no cut every member would come home once per lane
         final boolean copy = Partition.Kind.COPY == split.kind();
-        if (!runAxis && copy && (0 > cut || !idempotentCombiner(combined, chain.carriers().get(cut))))
+        // a lifted cut has no combiner of its own to declare idempotent (its fold recombines summaries), so it declines
+        if (!runAxis && copy && (0 > cut || null == combined || !idempotentCombiner(combined, chain.carriers().get(cut))))
             return null;
         final long members = runAxis ? range.count() : seed;
         if (2 > members)
@@ -349,6 +350,22 @@ public final class Shard {
             master.addAll(insts.subList(0 > cut ? runEnd : cut + 1, end));
         }
         return master;
+    }
+
+    /**
+     * A POINT ON THE CUT IS A MULTIPLICITY OF ITS ANSWER: {@code r{d}} answers {@code {d}} copies of what {@code r} does,
+     * so {@code (a+b)·r{d} = {d}((a·r + b·r)·C)}. No lane carries it ({@link #raw} builds each lane's cut afresh), and
+     * home's combiner does. A self-combining fold re-applies the cut as written, point and all; a derived or a lifted
+     * combiner is another instruction, so the point moves onto its last: {@code count{2}()} recombines through
+     * {@code sum{2}()}, and {@code mean{2}()} through {@code mean{2}()} over the lanes' summaries.
+     */
+    private static List<Inst> pointed(final List<Inst> combiner, final Inst cut) {
+        final cInt point = cut.tid().d();
+        if (combiner.isEmpty() || null == point || point.isOne())
+            return combiner;
+        final List<Inst> out = new ArrayList<>(combiner);
+        out.set(out.size() - 1, instB(out.getLast().tid().d(point), out.getLast().args()));
+        return out;
     }
 
     /**
