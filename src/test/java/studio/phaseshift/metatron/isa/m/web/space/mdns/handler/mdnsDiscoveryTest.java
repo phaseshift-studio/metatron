@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,6 +73,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       entry, a re-heard address not duplicating, and {@code discover} surviving every machine write</li>
  *   <li><b>only a listener's dialable address leaves the box</b> — a backend's host and its login, a listener's
  *       query and any userinfo reach neither the TXT record nor the roster</li>
+ *   <li><b>only an mtron endpoint is announced</b> — a listener's origin and a route whose handler is an
+ *       {@code mtron::T}, carried through the TXT record to the dial address a hearer files; a route of another
+ *       protocol, a wildcard route and a socket that serves no route stay home</li>
  * </ul>
  * The admission path above {@link mdnsDiscovery#roster} is deliberately NOT exercised here: it needs multicast,
  * a second host and a resolved {@code ServiceInfo}, none of which a unit test can fabricate. {@code
@@ -380,36 +384,101 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     /**
      * A BACKEND'S LOGIN NEVER LEAVES THE BOX. A credentialed space mounted beside a listener — the pair
      * {@code boot/space/tble/mariadb.mtron} and a web server make — reaches neither the announced set, nor a TXT
-     * record, nor the roster, while the listener reaches all three. The listener is the CONTROL: without it, a
-     * handler that announced nothing at all would pass.
+     * record, nor the roster, while the listener's mtron endpoint reaches all three. The endpoint is the CONTROL:
+     * without it, a handler that announced nothing at all would pass.
      */
     @Test
     public void testABackendsLoginIsNeverAnnounced() {
         final fURI listening = f("ws://0.0.0.0:" + generatePort());
+        final fURI endpoint = listening.extend(f("/mtron"));
         final fURI backend = f("/memory/space/mdns-backend");
         // patterned as the boot's are: a <vid>/# pattern would retract onto the vid, and the cache a web space
         // indexes beside itself would evict the listener from the index
         final Listener listener = wsServer.of(rec(mutableMap(
-                uri(ORIGIN), uri(listening.toString()))));
+                uri(ORIGIN), uri(listening.toString()),
+                uri(ROUTE), rec(uri("/mtron"), uri("mtron_ws")))));
         mountBackend(backend);
         final mdnsDiscovery handler = handler();
         try {
             // THE ANNOUNCED SET needs no multicast: it is what every responder registers
-            final List<String> surfaces = handler.surfaces().stream().map(fURI::toString).toList();
-            assertTrue(surfaces.contains(listening.toString()), "the listener is announced: " + surfaces);
+            final List<String> surfaces = mdnsDiscovery.surfaces().stream().map(fURI::toString).toList();
+            assertTrue(surfaces.contains(endpoint.toString()), "the mtron endpoint is announced: " + surfaces);
             surfaces.forEach(surface -> assertFalse(leaks(surface), "a backend is never a surface: " + surfaces));
-            handler.surfaces().forEach(surface -> mdnsDiscovery.txt(surface).values().forEach(entry ->
+            mdnsDiscovery.surfaces().forEach(surface -> mdnsDiscovery.txt(surface).values().forEach(entry ->
                     assertFalse(leaks(entry), "no TXT entry carries the backend: " + entry)));
             // THE ROSTER is written as each responder announces, so it needs one
             assumeTrue(awaitStatus(handler, true, 20000L), "no multicast-capable interface here — mdns is inert");
-            assertTrue(machineRows().contains(listening.toString()),
-                    "the listener's own row is the control: " + roster());
+            assertTrue(machineRows().contains(endpoint.toString()),
+                    "the endpoint's own row is the control: " + roster());
             machineRows().forEach(row -> assertFalse(leaks(row), "no roster row carries the backend: " + roster()));
         } finally {
             handler.close();
             Machine.current().memory().removeSpace(backend);
             listener.close();
         }
+    }
+
+    /**
+     * ONLY AN MTRON ENDPOINT IS ANNOUNCED: a listener's origin extended by a route whose handler is an
+     * {@code mtron::T}. A peer dials an endpoint, never a socket (a ws_server answers its bare origin with a banner of
+     * its routes), and a route of any other protocol is nobody's peer. Each announced endpoint is then carried
+     * through its TXT record to the address a hearer files — the round trip a remote roster row depends on, checked
+     * without multicast. The handler is written as the boot files write it (a bare name) and as a forked node mounts
+     * it (a full tid); the data routes beside it ({@code /usr}, a web root) must resolve to nothing.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws]]                          % /mtron        % the mtron route is the endpoint a peer dials",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]          % /mtron        % an mcp route speaks another protocol",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/agent=>mtron_ws]]         % /agent,/mtron % every mtron route is its own endpoint",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=></m/web/ws/mtron_ws>]]              % /mtron        % a handler named by its full tid, as a forked node mounts it",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mcp=>mcp_mtron,/usr=>/usr]]                % none          % a socket with no mtron route announces nothing",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/a/#=>mtron_ws]]                            % none          % a wildcard route names no address to dial",
+            "ws   % ws_server::[origin=><{{socket}}>]                                                    % none          % nor does a socket that serves no route",
+            "http % http_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_http,/=>fs:docs/website]] % /mtron        % mtron over http is an mtron endpoint too",
+    }, delimiter = '%')
+    public void testOnlyAnMtronRouteIsAnnounced(final String scheme, final String construction, final String expected,
+                                                final String desc) {
+        final int port = generatePort();
+        final fURI socket = f(scheme + "://0.0.0.0:" + port);
+        try {
+            Machine.evaluate(construction.replace("{{socket}}", socket.toString()));
+            assertTrue(Machine.current().network().listener(socket.pathEncoding()).isRec(),
+                    desc + " — the server was constructed: " + Machine.current().network().listeners());
+            final List<fURI> announced = mdnsDiscovery.surfaces().stream()
+                    .filter(surface -> surface.port() == port)
+                    .toList();
+            assertEquals(expected, announced.isEmpty() ? "none" : announced.stream()
+                    .map(surface -> surface.basePath().localize().toString())
+                    .sorted()
+                    .collect(Collectors.joining(",")), desc);
+            announced.forEach(surface -> {
+                final Map<String, String> txt = mdnsDiscovery.txt(surface);
+                assertEquals(scheme + "://" + PEER_HOST + ":" + port + surface.basePath().localize(),
+                        mdnsDiscovery.dialable(peer(), port, txt.get(SCHEME), txt.get(ROUTE)).toString(),
+                        desc + " — a hearer files the endpoint, route and all: " + txt);
+            });
+        } finally {
+            Machine.current().network().unlisten(socket);
+        }
+    }
+
+    /**
+     * ONE DNS-SD INSTANCE PER ENDPOINT, named deterministically from it: a restart re-registers the same name, and
+     * two mtron routes on one socket never collide (JmDNS renames a collision {@code "name (2)"}, which neither a
+     * retirement nor a restart can find again). A route-less address keeps the name it always had.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws://0.0.0.0:8555/mtron   % lighthouse-ws-8555-mtron   % the route is part of the name",
+            "ws://0.0.0.0:8555/agent   % lighthouse-ws-8555-agent   % so a second mtron route on the socket is a second name",
+            "http://0.0.0.0:8777/mtron % lighthouse-http-8777-mtron % scheme and port still tell surfaces apart",
+            "ws://0.0.0.0:8555/a/b     % lighthouse-ws-8555-a-b     % a deeper route stays one valid segment",
+            "ws://0.0.0.0:8555/        % lighthouse-ws-8555         % the root route adds nothing",
+            "ws://0.0.0.0:8555         % lighthouse-ws-8555         % and a route-less address keeps the name it had",
+    }, delimiter = '%')
+    public void testAnEndpointIsOneNamedInstance(final String surface, final String expected, final String desc) {
+        assertEquals(expected, mdnsDiscovery.instanceName("lighthouse", f(surface)), desc);
     }
 
     @Test
