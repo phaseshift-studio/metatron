@@ -141,16 +141,11 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
         assertEquals(12, r.partials().get(0).asInt().intValue(), "slave 1 partial");
         assertEquals(15, r.partials().get(1).asInt().intValue(), "slave 2 partial");
 
-        // provenance: which FutureObj (hex vid) carried each partial, from the shared base frame
+        // THE AIR LOCK STORES NOTHING (Marko, 2026-11-22): each partial used to land in the receiver's base frame
+        // under its minted tag, a write the receiver's evaluating read made. The tag now rides the answer's vid as a
+        // hex last segment and nothing is stored at it, so the base frame holds no partial under any key
         final Rec base = Machine.current().memory().stackBaseFrame();
-        final List<Map.Entry<Obj, Obj>> partials = TransportRewriteHarness.partials(base);
-        assertEquals(2, partials.size(), "two partials, one per peer");
-        assertTrue(partials.stream().anyMatch(e -> FutureObj.resolveFuture(e.getValue()).asInt().intValue() == 12)
-                        && partials.stream().anyMatch(e -> FutureObj.resolveFuture(e.getValue()).asInt().intValue() == 15),
-                "the partials are 12 and 15: " + partials);
-        for (final Map.Entry<Obj, Obj> e : partials)
-            assertTrue(e.getKey().isUri() && e.getKey().uriValue().name().matches("[0-9a-f]{8}"),
-                    "each partial is stamped with a minted 8-hex vid: " + e.getKey());
+        assertEquals(List.of(), TransportRewriteHarness.partials(base), "the receiver stores no partial at a trip's tag");
     }
 
     /**

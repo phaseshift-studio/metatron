@@ -208,10 +208,11 @@ public interface WebSocketObj extends Rec, Closeable {
     /**
      * THE OUTSTANDING ROUND TRIPS — per socket, keyed by REQUEST VID. Correlation is identity, so no tag
      * field, envelope or wrapper obj is added to the wire: an obj already carries its address, and {@code 3@a}
-     * already serializes with it. A request is sent under its own vid when it has one and under a minted
-     * RELATIVE vid when it does not, so the identifier lives on the receiving thread's variableStack and is
-     * space-agnostic — it names nothing anywhere. The peer anchors its answer to the same vid (the answer to a
-     * question belongs where the question was) and {@link #router()} hands the frame to this slot.
+     * already serializes with it. A request is sent under its own vid when it has one and under a minted tag
+     * when it does not: a hex literal ({@code 0xa3f91c2b}) that the peer appends to its answer's vid as the last
+     * segment ({@code g:V/1/0xa3f91c2b}, or the tag alone for an answer with no vid). Nothing is ever stored at a
+     * tagged vid (Obj.Helper.objCheckAndSave), {@link #router()} hands the frame to this slot by its tag, and the
+     * air lock ({@link #untagged}) retracts the tag before the caller sees the answer.
      * <p>
      * The map is keyed by socket first because a relative vid is only unique within a thread: two sockets could
      * mint the same one, and the arrival-order fallback must count THIS socket's outstanding trips, not every
@@ -287,11 +288,9 @@ public interface WebSocketObj extends Rec, Closeable {
         // their replies reach no waiter). Rec equality would collide too, hence identity.
         final String peer = this.peerName();
         // IDENTITY IS THE CORRELATION: an addressed request needs no tag -- it already is one. A request with
-        // no vid is minted one for the trip and the reply is handed back unanchored, so a caller sees the value
-        // it would have seen, never this transport's bookkeeping.
+        // no vid is minted a tag for the trip, and the reply comes back as the far side addressed it with the tag
+        // retracted, so a caller sees the answer it would have seen, never this transport's bookkeeping.
         final boolean minted = !message.hasVID();
-        // a RELATIVE vid: it resolves on the receiving thread's variableStack rather than in anyone's space,
-        // and the collision retry reads this thread's stack -- the only place it could clash
         // a HEX segment, 0x and the minted id, which the air lock recognizes as the trip on the way back (untagged)
         final fURI tag = minted ? CommonUtil.mintShortUUID(null, true, true) : message.vid();
         final Obj payload = minted ? this.tagged(message, tag) : message;

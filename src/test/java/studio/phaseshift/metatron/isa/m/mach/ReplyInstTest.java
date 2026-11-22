@@ -63,6 +63,9 @@ public class ReplyInstTest extends AbstractMetatronTest {
             "reply(4.map(noobj).plus(1), </sys/anchor/row-d>)               % </wire/noobj>@/sys/anchor/row-d",
             // an answer with an address of its own keeps it: the tag rides as its last segment, never replacing it
             "reply(5.vid(</sys/anchor/own>), <0xe1>)                        % 5@</sys/anchor/own/0xe1>",
+            // a tag that is no hex literal comes from a client built before the hex segment (it minted a bare 8-hex
+            // id): it replaces the vid, because that client's router waits on the tag alone
+            "reply(6.vid(</sys/anchor/own2>), <a1f30b7c>)                   % 6@a1f30b7c",
     }, delimiter = '%')
     void testTheAnchorAddressesTheAnswer(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
