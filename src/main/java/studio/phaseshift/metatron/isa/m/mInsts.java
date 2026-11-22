@@ -1457,6 +1457,39 @@ public final class mInsts {
                         .law(Law.pure)
                         .derivation(order_(T(ALL.maybe(), f("b"), null, null)), split_(lst(id_().tryToInst())).kmerge_(T(ALL.maybe(), f("b"), null, null)))
                         .create(),
+                // GROUP (moved from Obj, Marko 2026-11-22). BULK, THEN KEY, as order bulks before it sorts: the objs it
+                // builds meet each distinct member once with its whole mass, so a key that reads mass (cc()) reads all of
+                // it. It once keyed the stream as it flowed, so {1,2,3,4}.mod(2).group([cc()=>count()]) keyed every member
+                // by 1 while {1,1,2}.group([cc()=>count()]) keyed {2}1 by 2: one bag, two answers. A fold reads copies
+                // either way, so only a key that reads mass sees the difference.
+                InstBuilder.build()
+                        .tid(GROUP_INST_TID)
+                        .dom(A.maybeSome(), "any objs")
+                        .rng(REC_TID, "a rec of the grouped results")
+                        .argLst(T(REC_TID), "the grouping key rec, the value inst computing each group")
+                        .desc("a grouping function \\(f(X) \\mapsto x'\\): groups the distinct members of the lhs, each with its whole mass, by the key rec and computes each group (sugar'd %==)")
+                        .example("{1,1,1,2,3,3}.group([mod(2)=>count()])        [-- [1=>5,0=>1] --]")
+                        .example("{1,1,1,2,3,3}.group([mod(2)=>mean()])         [-- [1=>1.8,0=>2.0], each group's mean weighed by its copies --]")
+                        .example("{1,2,3,4}.mod(2).group([cc()=>count()])       [-- [2=>4], each member keyed by its whole mass --]")
+                        .body((lhs, inst) -> {
+                            final Map<Obj, Obj> result = new LinkedHashMap<>();
+                            objs(lhs.stream()).stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
+                                final Obj kk = kv.first().isObjCall() || kv.first().isInst()
+                                        ? kv.first().apply(e)
+                                        : (e.isRec() ? e.asRec().at(kv.first()) : e);
+                                if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
+                                    // a key is an identity, not a multiplicity: a bulked member's coefficient is counted by
+                                    // the group it joins ({2}x keys as x), never carried on the key
+                                    result.compute(kk.c(cInt::one), (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
+                            }));
+                            return result.entrySet().stream()
+                                    .map(kv -> rel(
+                                            kv.getKey(),  // key
+                                            kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
+                                    .collect(new CommonUtil.RecCollector());
+                        })
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
                         .tid(SWAP_INST_TID)
                         .dom(A, "the lhs to swap for the swap arg")

@@ -2138,31 +2138,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .body((lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj()))
                             .create(),
                     InstBuilder.build()
-                            .tid(GROUP_INST_TID)
-                            .dom(A.maybeSome(), "any objs")
-                            .rng(REC_TID, "a rec of the grouped results")
-                            .argLst(T(REC_TID), "the grouping key rec, the value inst computing each group")
-                            .desc("a grouping function \\(f(X) \\mapsto x'\\): groups the objs by the key rec and computes each group (sugar'd %==)")
-                            .body((lhs, inst) -> {
-                                final Map<Obj, Obj> result = new LinkedHashMap<>();
-                                lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
-                                    final Obj kk = kv.first().isObjCall() || kv.first().isInst()
-                                            ? kv.first().apply(e)
-                                            : (e.isRec() ? e.asRec().at(kv.first()) : e);
-                                    if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
-                                        // a key is an identity, not a multiplicity: a bulked member's coefficient is counted by
-                                        // the group it joins ({2}x keys as x), never carried on the key
-                                        result.compute(kk.c(cInt::one), (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
-                                }));
-                                return result.entrySet().stream()
-                                        .map(kv -> rel(
-                                                kv.getKey(),  // key
-                                                kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
-                                        .collect(new CommonUtil.RecCollector());
-                            })
-                            .law(Law.pure)
-                            .create(),
-                    InstBuilder.build()
                             .tid(EVAL_INST_TID)
                             .dom(CODE_TID, "code")
                             .rng(A.maybeSome(), "the value of evaluating the lhs code, optionally at the arg uri")

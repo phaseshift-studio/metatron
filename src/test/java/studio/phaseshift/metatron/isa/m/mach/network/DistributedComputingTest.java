@@ -452,7 +452,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      *       projection, no cut, so the lane ships only its floatable run a level down and lifts what comes back.
      *       {@code checkCodeRewrite} rewrites each lane it recurses into, so the form shows that level too.</li>
      * </ul>
-     * A keyed mean, {@code group([k=>mean()])}, does not shard yet: its lanes would need the lift per key.
+     * A keyed mean, {@code group([k=>mean()])}, lifts per key: see {@link #test_G_J_a_keyed_mean_ships_per_key_books}.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -494,6 +494,27 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{11,21,31,41,12,22,13}.mod(10).order(cc().neg())==[{1}_]    % branch().order().select()   % [{4}1]",
     }, delimiter = '%')
     void test_K_a_sort_by_mass_sorts_at_home(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
+    /**
+     * G AND J COMPOSED: a keyed mean ships each key's books (Law.Helper#pointwiseLift). group's pointwise combiner needs
+     * every value's combiner, and mean has none, so the group lifts per key. Every lane runs {@code group([k=>ℓ])},
+     * answering each key's {@code {n}m}, and home merges the lanes' recs (the deep merge bags colliding books, their
+     * weights intact) and takes each key's weighted mean, {@code sum()==[_=>mean()]}. A nested keyed mean lifts at every
+     * level. A key that reads mass ({@code group([cc()=>count()])}) is no cut, since a lane would key a value by part of
+     * its mass: the run before it ships, and group runs at home, which bulks before it keys, so every mass is whole. The
+     * merged rec keeps its keys in lane order, so each row's data meets home's first-seen order.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.group([mod(2)=>mean()])                       % branch(start().group([mod(2)=>split?<=int{*}([mean(),count()]).cc(_>>1)>>0]),start().group([mod(2)=>split?<=int{*}([mean(),count()]).cc(_>>1)>>0])).sum().select([_=>mean()]) % [1=>3.0,0=>4.0]",
+            "{1,1,1,2,3,3}.group([mod(2)=>mean()])                       % branch(start({{3}1,{2}3}).group(),start(2).group()).sum().select()                   % [1=>1.8,0=>2.0]",
+            "{1,2,3,4,5,6}.plus(1).group([mod(2)=>mean()])               % branch(start().plus().group(),start().plus().group()).sum().select()                 % [0=>4.0,1=>5.0]",
+            "{1,2,3,4,5,6}.group([mod(2)=>group([mod(3)=>mean()])])      % branch(start().group(),start().group()).sum().select()                               % [1=>[1=>1.0,0=>3.0,2=>5.0],0=>[2=>2.0,1=>4.0,0=>6.0]]",
+            "{1,2,3,4}.mod(2).group([cc()=>count()])                     % branch(start().mod(),start().mod()).group()                                          % [2=>4]",
+    }, delimiter = '%')
+    void test_G_J_a_keyed_mean_ships_per_key_books(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
@@ -789,6 +810,8 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "start?hop=2({1,1,2,2,3,3}).plus(1)                              % start?hop=0({1,1,2,2,3,3}).plus(1)",
             "{1,1,2,2,3,3}.plus(1).sum?hop=2()                               % start?hop=0({1,1,2,2,3,3}).plus(1).sum()",
             "{1,1,1,5}.mean()                                                % start?hop=0({1,1,1,5}).mean()",
+            "{1,1,1,2,3,3}.group([mod(2)=>mean()])                           % start?hop=0({1,1,1,2,3,3}).group([mod(2)=>mean()])",
+            "{1,1,2,2,3,3}.mod(2).group([cc()=>count()])                     % start?hop=0({1,1,2,2,3,3}).mod(2).group([cc()=>count()])",
             "{1,1,2,2,3,3}.plus(1).mean?hop=2()                              % start?hop=0({1,1,2,2,3,3}).plus(1).mean()",
             "{1,1,2}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)         % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
             "{1,1,2}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)   % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",

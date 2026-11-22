@@ -557,6 +557,22 @@ Their $\oplus$ is the stream's own sum, which adds the weights of equal means, a
 without writing them again, since $\mathrm{mean} = \ell\,\mathrm{mean}$. So `mean` recombines through itself (*The
 Shard Identity*), and entry J needs no data structure the stream ring does not already have.
 
+**Books per key.** A keyed fold keeps a ledger per key. `group([k ⇒ mean()])` lifts each key's values, so every place
+answers a rec of books, home's merge bags each key's books from every place, and each key reads its weighted mean:
+
+$$
+(s_1 + \cdots + s_p)\,\mathrm{group}([k \Rightarrow \mathrm{mean}])
+= \big(s_1\,\mathrm{group}([k \Rightarrow \ell]) + \cdots + s_p\,\mathrm{group}([k \Rightarrow \ell])\big)\;\mathrm{sum}\;
+\mathrm{select}([\_ \Rightarrow \mathrm{mean}]).
+$$
+
+Entries G and J compose with no rule of their own. A key that reads mass gets no ledger, as a place would key a value
+by part of its mass, so such a group runs at home, which bulks before it keys.
+
+```mtron_pre
+{1,1,1,2,3,3}.group([mod(2)=>mean()])
+```
+
 ## The Menu
 
 Every distribution pattern metatron names is an instance of one of these laws, and the menu lists them all

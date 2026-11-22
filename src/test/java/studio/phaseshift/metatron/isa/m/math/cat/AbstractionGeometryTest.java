@@ -140,8 +140,9 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
 
     /**
      * The shape half of {@code law_shard}'s guard, judged with reach present: a keyed fold's combiner is pointwise,
-     * computed from its spec's folds — count, sum and order recombine, a keyed mean and a bare key do not. A mean alone
-     * recombines through itself after its lift (menu entry J), which a keyed mean's lanes would need per key.
+     * computed from its spec's folds — count, sum and order recombine, and a bare key does not. A mean recombines
+     * through itself after its lift (menu entry J), alone or per key, and a key that reads mass ({@code cc()}) keeps
+     * the group home.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -149,7 +150,8 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
             "start({1,2,3}).group([mod(2)=>count()])                   % true",
             "start({1,2,3}).plus(1).group([mod(2)=>sum()])             % true",
             "start({1,2,3}).group([mod(2)=>group([mod(3)=>sum()])])    % true",
-            "start({1,2,3}).group([mod(2)=>mean()])                    % false",
+            "start({1,2,3}).group([mod(2)=>mean()])                    % true",
+            "start({1,2,3}).group([cc()=>count()])                     % false",
             "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>sum()])       % true",
             "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>count()])     % false",
             "start({1,2,3}).group([mod(2)=>order(_)])                  % true",
