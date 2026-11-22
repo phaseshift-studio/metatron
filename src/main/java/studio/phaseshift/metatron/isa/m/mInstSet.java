@@ -149,6 +149,8 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI CC_INST_TID = M_ISA_INST_TID.extend("cc");
     public static final fURI PROD_INST_TID = M_ISA_INST_TID.extend("prod");
     public static final fURI MEAN_INST_TID = M_ISA_INST_TID.extend("mean");
+    public static final fURI SUP_INST_TID = M_ISA_INST_TID.extend("sup");
+    public static final fURI INF_INST_TID = M_ISA_INST_TID.extend("inf");
     public static final fURI POW_INST_TID = M_ISA_INST_TID.extend("pow");
     public static final fURI MOD_INST_TID = M_ISA_INST_TID.extend("mod");
     public static final fURI REDUCE_INST_TID = M_ISA_INST_TID.extend("reduce");

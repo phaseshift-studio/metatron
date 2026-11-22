@@ -1251,6 +1251,40 @@ public final class mInsts {
                         .body((lhs, _) -> lhs)
                         .law(Law.pure, Law.idempotent, Law.involution, Law.unit, Law.commutative)
                         .create(),
+                // SUP AND INF (menu entry H, redundant shards): the join and meet of the order a stream's members compare
+                // in, the folds that are idempotent as well as a commutative monoid's, x ⊕ x = x. Self-combining, so
+                // law_shard recombines their partials through themselves (A, E); idempotent, so ?split=copy may ship the
+                // whole seed to every lane and fold every reply (H): each copy answers the same bound, and the bound of
+                // copies is itself. A bulked member weighs nothing, as the sup of {3}5 is 5. The empty stream's bound is
+                // noobj, the stream ring's zero and the order's bottom, the identity of both (no seed: nothing reads one),
+                // so the range is A{?} and the reducer form is declared, which the range alone no longer shows. They are
+                // sup and inf, never max and min: an instruction's name shadows an unbound name of the same spelling,
+                // and an optional {?}max read as *max (dsh's read_events) would have read the instruction.
+                InstBuilder.build()
+                        .tid(SUP_INST_TID)
+                        .dom(A.maybeSome(), "maybe some A to compare")
+                        .rng(A.maybe(), "the greatest A, or noobj for none")
+                        .argLst()
+                        .desc("the supremum function \\(f(X) \\mapsto \\sup X\\): the greatest member of the lhs in the order a sort compares it, whatever its mass; noobj for the empty stream. A join: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap")
+                        .example("{3,1,4,1,5}.sup()          [-- 5 --]")
+                        .example("{{3}2,7}.sup()             [-- 7: a member's mass does not weigh in --]")
+                        .example("{'b','a','c'}.sup()        [-- 'c' --]")
+                        .form(Inst.Form.reducer)
+                        .body((lhs, inst) -> lhs.stream().max(CommonUtil.ObjComparator.single()).map(m -> m.c(cInt::one)).orElse(noobj()))
+                        .law(Law.monoidic, Law.commutative, Law.idempotent, Law.semi_right_distributive, Law.pure)
+                        .create(),
+                InstBuilder.build()
+                        .tid(INF_INST_TID)
+                        .dom(A.maybeSome(), "maybe some A to compare")
+                        .rng(A.maybe(), "the least A, or noobj for none")
+                        .argLst()
+                        .desc("the infimum function \\(f(X) \\mapsto \\inf X\\): the least member of the lhs in the order a sort compares it, whatever its mass; noobj for the empty stream. A meet: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap")
+                        .example("{3,1,4,1,5}.inf()          [-- 1 --]")
+                        .example("{'b','a','c'}.inf()        [-- 'a' --]")
+                        .form(Inst.Form.reducer)
+                        .body((lhs, inst) -> lhs.stream().min(CommonUtil.ObjComparator.single()).map(m -> m.c(cInt::one)).orElse(noobj()))
+                        .law(Law.monoidic, Law.commutative, Law.idempotent, Law.semi_right_distributive, Law.pure)
+                        .create(),
                 // THE COEFFICIENT, READ AND SET (moved from Obj, Marko 2026-11-22). The reader answers mass, which no
                 // floatable function sees (Thm 6 carries the coefficient past it), so a key holding cc() compares mass and
                 // law_shard keeps its sort home (Law.Helper#massBlind). Both are reducers by their coefficient shape, so
