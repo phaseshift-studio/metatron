@@ -61,6 +61,8 @@ public class ReplyInstTest extends AbstractMetatronTest {
             "reply({3}34, </sys/anchor/row-b2>)                             % {3}34@</sys/anchor/row-b2>",
             "reply(noobj, </sys/anchor/row-c>)                             % </wire/noobj>@/sys/anchor/row-c",
             "reply(4.map(noobj).plus(1), </sys/anchor/row-d>)               % </wire/noobj>@/sys/anchor/row-d",
+            // an answer with an address of its own keeps it: the tag rides as its last segment, never replacing it
+            "reply(5.vid(</sys/anchor/own>), <0xe1>)                        % 5@</sys/anchor/own/0xe1>",
     }, delimiter = '%')
     void testTheAnchorAddressesTheAnswer(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);

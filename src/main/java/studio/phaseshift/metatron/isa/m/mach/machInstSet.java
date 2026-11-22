@@ -144,6 +144,7 @@ public class machInstSet extends AbstractInstSet {
      */
     public static final fURI NOOBJ_SENTINEL = f("/wire/noobj");
 
+
     /**
      * Whether an inbound obj is the absent-answer mark (see {@link #NOOBJ_SENTINEL}).
      */
@@ -1177,11 +1178,14 @@ public class machInstSet extends AbstractInstSet {
                                         vocabulary, not a user instruction: a round-tripping client wraps the program it ships, so
                                         the frame's root is the reply and the payload is its (blocking) argument. Addressing the
                                         answer is what lets the client match a reply to its request without an envelope on the
-                                        wire — the tag rides the obj it answers. An answer that is NOTHING has no address to ride
-                                        (noobj is the zero-coefficient singleton, which no writer will render with a vid), so it
-                                        travels as the absent-answer mark instead, and the client reads it as noobj.""")
-                                .example("reply(3.plus(1), <a1f30b7c>)       [-- the far side answers 4@a1f30b7c --]")
-                                .example("reply(noobj, <a1f30b7c>)           [-- the far side answers /wire/noobj@a1f30b7c: nothing, addressed --]")
+                                        wire — the tag, a hex literal, rides the answer's vid as its last segment: an answer with no
+                                        vid is addressed by the tag alone (4@0xa1f30b7c), and one with an address of its own keeps it
+                                        (g:V/1/0xa1f30b7c). The client strips a hex last segment, so the tag never leaves the wire. An
+                                        answer that is NOTHING has no address to ride (noobj is the zero-coefficient singleton, which
+                                        no writer will render with a vid), so it travels as the absent-answer mark instead, and the
+                                        client reads it as noobj.""")
+                                .example("reply(3.plus(1), <0xa1f30b7c>)       [-- the far side answers 4@0xa1f30b7c --]")
+                                .example("reply(noobj, <0xa1f30b7c>)           [-- the far side answers /wire/noobj@0xa1f30b7c: nothing, addressed --]")
                                 .body((lhs, inst) -> {
                                     // the payload arrives RAW: the base path is declared in Inst.isBlocking(), so
                                     // applyArgs neither evaluates nor type-binds it before the reply can wrap it.
@@ -1196,16 +1200,17 @@ public class machInstSet extends AbstractInstSet {
                                     }
                                     //final Obj answer = payload.isCall() ? payload.apply(lhs) : payload;
                                     final fURI tag = inst.arg(1).uriValue();
-                                    return payload.isNoObj()
-                                            // NOTHING CANNOT HOLD AN ADDRESS. noobj is the coefficient-zero singleton and
-                                            // the serializer's root writer flattens it, tag and all, so the absent answer
-                                            // travels as the mark instead — a value that says the same thing and can be
-                                            // addressed (see NOOBJ_SENTINEL)
-                                            ? uri(NOOBJ_SENTINEL).selfVID(tag)
-                                            // clone().selfVID, never vid(): vid() clones AND WRITES the tagged obj at the
-                                            // address (Obj.Helper.objClone -> objCheckAndSave -> Machine.write), so on the
-                                            // far side every trip would leave a bookkeeping entry on its variableStack
-                                            : payload.clone().selfVID(tag);
+                                    // NOTHING CANNOT HOLD AN ADDRESS. noobj is the coefficient-zero singleton and the
+                                    // serializer's root writer flattens it, tag and all, so the absent answer travels as
+                                    // the mark instead — a value that says the same thing and can be addressed (see
+                                    // NOOBJ_SENTINEL). clone().selfVID, never vid(): vid() clones AND WRITES the tagged
+                                    // obj at the address (Obj.Helper.objClone -> objCheckAndSave -> Machine.write), so on
+                                    // the far side every trip would leave a bookkeeping entry on its variableStack
+                                    final Obj answer = payload.isNoObj() ? uri(NOOBJ_SENTINEL) : payload.clone();
+                                    // THE TAG IS THE VID'S LAST SEGMENT, never a replacement for the vid: an answer's own
+                                    // vid is its identity (a graph element's g:V/1), and a tag that replaced it detached
+                                    // every addressed answer a lane shipped home. One with no vid is addressed by the tag
+                                    return answer.selfVID(null == answer.vid() ? tag : answer.vid().extend(tag.toString()));
                                 })
                                 .create()
                 ))),

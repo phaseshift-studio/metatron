@@ -58,6 +58,7 @@ public final class CommonUtil {
 
     private static final Pattern INT_PATTERN = Pattern.compile("-?\\d+");
     private static final Pattern REAL_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)");
+    private static final Pattern HEX_PATTERN = Pattern.compile("0x[0-9a-fA-F]+");
 
     // rec key order: int keys ascending; every other key (ring/compound/uri/
     // noobj markers) gets a stable within-run identity slot — this comparator
@@ -257,6 +258,14 @@ public final class CommonUtil {
 
     public static boolean isInt(final String s) {
         return null != s && INT_PATTERN.matcher(s).matches();
+    }
+
+    /**
+     * A hex literal, {@code 0x} and one or more hex digits: {@code 0x23456}. The round trip's tag is spelled so, as the
+     * last segment of the answer's vid, and the client's air lock strips a last segment that is one (Marko, 2026-11-22).
+     */
+    public static boolean isHex(final String s) {
+        return null != s && HEX_PATTERN.matcher(s).matches();
     }
 
     public static boolean isReal(final String s) {
@@ -490,17 +499,26 @@ public final class CommonUtil {
     }
 
     public static fURI mintShortUUID(final fURI baseURI, boolean retryIfCollision) {
+        return mintShortUUID(baseURI, retryIfCollision, false);
+    }
+
+    /**
+     * A short id under {@code baseURI}, optionally spelled as a hex literal: {@code 0xa3f91c2b}, the round trip's tag,
+     * which rides an answer's vid as its last segment and which the client's air lock recognizes by {@link #isHex}
+     * (Marko, 2026-11-22). The collision check reads the id as spelled.
+     */
+    public static fURI mintShortUUID(final fURI baseURI, final boolean retryIfCollision, final boolean prefixHexCode) {
         fURI shortId;
         do {
             final UUID uuid = UUID.randomUUID();
-            final String segment = Long.toHexString(uuid.getMostSignificantBits()).substring(0, 8); // first 8 hex of the MSB
+            final String hex = Long.toHexString(uuid.getMostSignificantBits()).substring(0, 8); // first 8 hex of the MSB
+            final String segment = prefixHexCode ? "0x" + hex : hex;
             // A null base means "no parent", so mint absolutely — exactly as mintUUID does. Without this, extend()
             // NPEs, which is how a machine with no vid surfaced: Machine.push() mints from this.vid().
             shortId = (null == baseURI || baseURI.equals(f("/."))) ? f(segment) : baseURI.extend(segment);
         } while (retryIfCollision && !Machine.read(shortId).isNoObj());
         return shortId;
     }
-
 
     public static String clipString(final String string, final int maxLength, final boolean ellipses) {
         if (string.length() < maxLength)
