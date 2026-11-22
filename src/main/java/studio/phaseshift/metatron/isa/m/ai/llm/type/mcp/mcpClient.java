@@ -40,10 +40,14 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjPlainTextSerializer;
+import studio.phaseshift.metatron.isa.m.ai.llm.type.mTool;
+import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,6 +56,11 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.LLM_TOOL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -172,6 +181,38 @@ public class mcpClient extends MRec implements AutoCloseable {
                     }
                 }
             });
+        // THE PRIMITIVES OF A METATRON NODE (Marko, 2026-11-22: "any peer::T can have custom implementation of common
+        // instructions ... from/to/eval being what is needed for universal computing as a metatron node"). A metatron
+        // server (mcp_mtron) answers all three through its tools, so this client declares them on the native
+        // signatures, as a ws peer declares its own (WebSocketRec):
+        //   code.eval(<uri>) sends its lhs code to eval_mtron -- the program is the lhs, and a tool call carries only
+        //   its args;
+        //   from(<uri>) reads the localized address with read_memory;
+        //   obj.to(<uri>) sends start(obj).to(</path>) to eval_mtron -- write_memory chains a memory under a minted
+        //   vid, so it cannot write at the address a to() names.
+        // A server without these tools declares none of them, and an inst_map entry for the same instruction wins.
+        final Obj evalTool = tools.at(f(mTool.toolName(mcpMetatronBuilder.MCP_MTRON_SERVER_TID.extend("eval_mtron"))))
+                .orElse(rec0()).at(uri(INST));
+        final Obj readTool = tools.at(f(mTool.toolName(mcpMetatronBuilder.MCP_MTRON_SERVER_TID.extend("read_memory"))))
+                .orElse(rec0()).at(uri(INST));
+        if (evalTool.isObjInst()) {
+            final Obj eval = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(EVAL_INST_TID,
+                    (lhs, inst) -> evalMtron(evalTool.asInst(), lhs));
+            final Obj to = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(TO_INST_TID,
+                    (lhs, inst) -> evalMtron(evalTool.asInst(),
+                            start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst()));
+            if (eval.isObjInst())
+                overrides.jvm().putIfAbsent(uri(EVAL_INST_TID), eval);
+            if (to.isObjInst())
+                overrides.jvm().putIfAbsent(uri(TO_INST_TID), to);
+        }
+        if (readTool.isObjInst()) {
+            final Obj from = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(FROM_INST_TID,
+                    (lhs, inst) -> readTool.asInst()
+                            .args(rec(uri("memory_vid"), uri(inst.arg(0).uriValue().localize()))).apply(noobj()));
+            if (from.isObjInst())
+                overrides.jvm().putIfAbsent(uri(FROM_INST_TID), from);
+        }
         if (!overrides.isEmpty())
             this.jvm().put(uri(INST), overrides);
         // indexing is a BACKGROUND behavior upon successful construction: the connected client writes itself into
@@ -197,6 +238,16 @@ public class mcpClient extends MRec implements AutoCloseable {
     @Override
     public int hashCode() {
         return this.client.listTools().hashCode();
+    }
+
+    /**
+     * eval_mtron with {@code code} as its program: the code travels as its mtron text, as a ws peer ships it, and the
+     * server evaluates what it is sent.
+     */
+    private static Obj evalMtron(final Inst tool, final Obj code) {
+        final String source = new String(MIME.MIMEType.APPLICATION_MTRON.serializer().outputBytes(code).array(),
+                StandardCharsets.UTF_8);
+        return tool.args(rec(uri(CODE), str(source))).apply(noobj());
     }
 
     /**

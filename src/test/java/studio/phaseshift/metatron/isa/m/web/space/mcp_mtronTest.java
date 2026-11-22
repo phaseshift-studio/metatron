@@ -22,6 +22,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.EvalMtronCases;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mcp.mcpClient;
@@ -31,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.web.space.http.httpServer;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -56,6 +59,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -497,6 +503,38 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
                 CommonUtil.mutableMap(uri(HOST), uri("ws://" + wsHost + ":" + wsPort + "/mcp-mtron")),
                 MCP_CLIENT_TID, null)) {
             EvalMtronCases.run(LOG, "ws", code -> evalMtron(client, code));
+        }
+    }
+
+    /**
+     * A METATRON SERVER MAKES ITS CLIENT A NODE (Marko, 2026-11-22): from, to and eval are what a peer needs to compute
+     * as a metatron node, and the client declares all three on the native signatures, so the network reaches the
+     * server through them as it reaches any peer:
+     * <ul>
+     *   <li>a read is read_memory at the localized address;</li>
+     *   <li>a write ships {@code start(obj).to(</path>)} through eval_mtron and lands at the address it names;</li>
+     *   <li>an eval ships its lhs code to eval_mtron, which evaluates it there.</li>
+     * </ul>
+     * Server and client share this VM, so what the server reads and writes is this class's test space.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {"http", "ws"}, delimiter = '%')
+    public void testAMetatronServerMakesItsClientANode(final String transport) {
+        final fURI host = "http".equals(transport)
+                ? f(baseUrl()).extend(f("/mcp"))
+                : f("").scheme("ws").host(this.wsHost).port(this.wsPort).extend(f("/mcp-mtron"));
+        final fURI origin = host.origin();
+        try (final mcpClient client = new mcpClient(CommonUtil.mutableMap(uri(HOST), uri(host)), MCP_CLIENT_TID, null)) {
+            final Set<Obj> declared = client.at(uri(INST)).asRec().jvm().keySet();
+            assertTrue(declared.containsAll(Set.of(uri(EVAL_INST_TID), uri(FROM_INST_TID), uri(TO_INST_TID))),
+                    transport + " — the client declares from, to and eval: " + declared);
+            Machine.write(f("/test/node/read"), jnt(7));
+            checkEquality(LOG, jnt(7), Machine.read(origin.extend(f("/test/node/read"))), true);
+            Machine.write(origin.extend(f("/test/node/written")), jnt(9));
+            checkEquality(LOG, jnt(9), Machine.read(f("/test/node/written")), true);
+            checkEquality(LOG, jnt(3), Machine.current().network().submit(origin, mParser.parse("1.plus(2)")), true);
+        } finally {
+            Machine.current().network().drop(origin);
         }
     }
 
