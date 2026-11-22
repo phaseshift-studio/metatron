@@ -144,7 +144,9 @@ def announcement(args, index):
         server = ("%s%d.local." % (stem[:-len(".local")], index + 1)) if stem.endswith(".local") \
             else ("%s%d." % (stem, index + 1))
     port = args.port + index
-    instance = "%s-%s-%d" % (server.replace(".local.", ""), args.scheme, port)
+    # mdnsDiscovery.instanceName: one instance per endpoint, the route as it stands (no query; the root adds nothing)
+    route = args.route.split("?", 1)[0]
+    instance = "%s-%s-%d%s" % (server.replace(".local.", ""), args.scheme, port, "" if route == "/" else route)
     info = ServiceInfo(
         type_=args.service,
         name="%s.%s" % (instance, args.service),

@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -73,9 +72,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       entry, a re-heard address not duplicating, and {@code discover} surviving every machine write</li>
  *   <li><b>only a listener's dialable address leaves the box</b> — a backend's host and its login, a listener's
  *       query and any userinfo reach neither the TXT record nor the roster</li>
- *   <li><b>only an mtron endpoint is announced</b> — a listener's origin and a route whose handler is an
+ *   <li><b>only an mtron endpoint is announced</b> — a listener's origin extended by a route whose handler is an
  *       {@code mtron::T}, carried through the TXT record to the dial address a hearer files; a route of another
- *       protocol, a wildcard route and a socket that serves no route stay home</li>
+ *       protocol, a wildcard route and a socket that serves no route stay home, and a frame's route is the
+ *       frame's</li>
  * </ul>
  * The admission path above {@link mdnsDiscovery#roster} is deliberately NOT exercised here: it needs multicast,
  * a second host and a resolved {@code ServiceInfo}, none of which a unit test can fabricate. {@code
@@ -424,11 +424,13 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
      * its routes), and a route of any other protocol is nobody's peer. Each announced endpoint is then carried
      * through its TXT record to the address a hearer files — the round trip a remote roster row depends on, checked
      * without multicast. The handler is written as the boot files write it (a bare name) and as a forked node mounts
-     * it (a full tid); the data routes beside it ({@code /usr}, a web root) must resolve to nothing.
+     * it (a full tid); the data routes beside it ({@code /usr}, a web root) must resolve to nothing. Every announced
+     * address must also read back as itself: this machine's own row stores its text and deduplicates against it.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws]]                          % /mtron        % the mtron route is the endpoint a peer dials",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/=>mtron_ws]]                               % /             % an mtron handler on the root route is the bare socket",
             "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]          % /mtron        % an mcp route speaks another protocol",
             "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/agent=>mtron_ws]]         % /agent,/mtron % every mtron route is its own endpoint",
             "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=></m/web/ws/mtron_ws>]]              % /mtron        % a handler named by its full tid, as a forked node mounts it",
@@ -440,22 +442,20 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     public void testOnlyAnMtronRouteIsAnnounced(final String scheme, final String construction, final String expected,
                                                 final String desc) {
         final int port = generatePort();
-        final fURI socket = f(scheme + "://0.0.0.0:" + port);
+        final fURI socket = f("").scheme(scheme).host("0.0.0.0").port(port);
         try {
             Machine.evaluate(construction.replace("{{socket}}", socket.toString()));
             assertTrue(Machine.current().network().listener(socket.pathEncoding()).isRec(),
                     desc + " — the server was constructed: " + Machine.current().network().listeners());
-            final List<fURI> announced = mdnsDiscovery.surfaces().stream()
-                    .filter(surface -> surface.port() == port)
-                    .toList();
-            assertEquals(expected, announced.isEmpty() ? "none" : announced.stream()
-                    .map(surface -> surface.basePath().localize().toString())
-                    .sorted()
-                    .collect(Collectors.joining(",")), desc);
-            announced.forEach(surface -> {
+            assertEquals(expected, paths(port).isEmpty() ? "none" : String.join(",", paths(port)), desc);
+            mdnsDiscovery.surfaces().stream().filter(surface -> surface.port() == port).forEach(surface -> {
+                assertEquals(surface.basePath(), f(surface.toString()).basePath(), desc
+                        + " — an announced address reads back as itself, or this machine's row grows on every announcement: "
+                        + surface);
                 final Map<String, String> txt = mdnsDiscovery.txt(surface);
-                assertEquals(scheme + "://" + PEER_HOST + ":" + port + surface.basePath().localize(),
-                        mdnsDiscovery.dialable(peer(), port, txt.get(SCHEME), txt.get(ROUTE)).toString(),
+                final fURI filed = mdnsDiscovery.dialable(peer(), port, txt.get(SCHEME), txt.get(ROUTE));
+                assertEquals(List.of(scheme, PEER_HOST, port, surface.path()),
+                        List.of(filed.scheme(), filed.host(), filed.port(), filed.path()),
                         desc + " — a hearer files the endpoint, route and all: " + txt);
             });
         } finally {
@@ -464,18 +464,51 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
+     * PRESENCE IS INHERITED, AND A FRAME'S ROUTE IS THE FRAME'S. A pushed machine serving through its parent's socket
+     * with a route of its own announces both endpoints, each handler resolved in the level that keeps it. The parent's
+     * walk never descends into the frame, so it announces only its own: a frame is not a peer of the LAN.
+     */
+    @Test
+    public void testAFrameAnnouncesWhatItInherits() {
+        final int port = generatePort();
+        final fURI socket = f("").scheme("ws").host("0.0.0.0").port(port);
+        final Machine root = Machine.current();
+        Machine.evaluate("ws_server::[origin=><" + socket + ">,route=>[/mtron=>mtron_ws]]");
+        try {
+            final Machine frame = root.push(f("mdns_frame"));
+            try {
+                Machine.evaluate("ws_server::[origin=><" + socket + ">,route=>[/agent=>mtron_ws]]");
+                assertEquals(List.of("/agent", "/mtron"), paths(port), "the frame announces its own route and its parent's");
+                Machine.current(root);
+                try {
+                    assertEquals(List.of("/mtron"), paths(port), "the parent's walk never descends into the frame");
+                } finally {
+                    Machine.current(frame);
+                }
+            } finally {
+                frame.pop();
+            }
+            assertEquals(List.of("/mtron"), paths(port), "the frame's route left with the frame");
+        } finally {
+            Machine.current().network().unlisten(socket);
+        }
+    }
+
+    /**
      * ONE DNS-SD INSTANCE PER ENDPOINT, named deterministically from it: a restart re-registers the same name, and
-     * two mtron routes on one socket never collide (JmDNS renames a collision {@code "name (2)"}, which neither a
-     * retirement nor a restart can find again). A route-less address keeps the name it always had.
+     * distinct routes on one socket are distinct names, the route kept as it stands (JmDNS renames a collision
+     * {@code "name (2)"}, which neither a retirement nor a restart can find again). A route-less address keeps the
+     * name it always had.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "ws://0.0.0.0:8555/mtron   % lighthouse-ws-8555-mtron   % the route is part of the name",
-            "ws://0.0.0.0:8555/agent   % lighthouse-ws-8555-agent   % so a second mtron route on the socket is a second name",
-            "http://0.0.0.0:8777/mtron % lighthouse-http-8777-mtron % scheme and port still tell surfaces apart",
-            "ws://0.0.0.0:8555/a/b     % lighthouse-ws-8555-a-b     % a deeper route stays one valid segment",
-            "ws://0.0.0.0:8555/        % lighthouse-ws-8555         % the root route adds nothing",
-            "ws://0.0.0.0:8555         % lighthouse-ws-8555         % and a route-less address keeps the name it had",
+            "ws://0.0.0.0:8555/mtron                         % lighthouse-ws-8555/mtron   % the route is part of the name",
+            "ws://0.0.0.0:8555/agent                         % lighthouse-ws-8555/agent   % so a second mtron route on the socket is a second name",
+            "ws://0.0.0.0:8555/a/b                           % lighthouse-ws-8555/a/b     % a deeper route is kept whole...",
+            "ws://0.0.0.0:8555/a-b                           % lighthouse-ws-8555/a-b     % ...so it never meets the route a slug would fold it into",
+            "http://0.0.0.0:8777/mtron                       % lighthouse-http-8777/mtron % scheme and port still tell surfaces apart",
+            "ws://0.0.0.0:8555/mtron?out=application/x-mtron % lighthouse-ws-8555/mtron   % a listener's query is configuration, never part of the name",
+            "ws://0.0.0.0:8555                               % lighthouse-ws-8555         % a route-less address keeps the name it had",
     }, delimiter = '%')
     public void testAnEndpointIsOneNamedInstance(final String surface, final String expected, final String desc) {
         assertEquals(expected, mdnsDiscovery.instanceName("lighthouse", f(surface)), desc);
@@ -566,6 +599,18 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
                         .forEach(rows::add);
             });
         return rows;
+    }
+
+    /**
+     * the routes announced on one port, the root as {@code /}, in order
+     */
+    private static List<String> paths(final int port) {
+        return mdnsDiscovery.surfaces().stream()
+                .filter(surface -> surface.port() == port)
+                .map(surface -> surface.basePath().localize().toString())
+                .map(path -> path.isEmpty() ? "/" : path)
+                .sorted()
+                .toList();
     }
 
     private static boolean awaitStatus(final mdnsDiscovery handler, final boolean expected) {

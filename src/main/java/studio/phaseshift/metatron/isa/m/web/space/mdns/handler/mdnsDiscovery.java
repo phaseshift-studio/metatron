@@ -52,8 +52,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * DISCOVERY OVER mDNS — announces the MTRON ENDPOINTS this machine answers on to the local network (a listener's
- * origin and each route an {@code mtron::T} handler serves; never a backend it dials out to: see {@link #surfaces()}),
- * and writes what it hears from others into {@link Network#ROOT_ROSTER}.
+ * origin extended by each route whose handler is an {@code mtron::T}; never a backend it dials out to: see
+ * {@link #surfaces()}), and writes what it hears from others into {@link Network#ROOT_ROSTER}.
  * It serves no bytes: a peer list is its whole product, which is why it feeds the roster rather than answering an
  * address.
  * <p>
@@ -399,11 +399,11 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * The DNS-SD instance name for one ENDPOINT: {@code <host name>-<scheme>-<port>-<route>}, as one valid segment
-     * ({@code booger-ws-8555-mtron}). DNS-SD wants one name per registered instance, and an instance is an endpoint:
+     * The DNS-SD instance name for one ENDPOINT: {@code <host name>-<scheme>-<port><route>}, the route as it stands
+     * ({@code booger-ws-8555/mtron}). DNS-SD wants one name per registered instance, and an instance is an endpoint:
      * http and ws on the same port are two services, and so are two mtron routes on one socket. With the route left
-     * out, JmDNS would rename the second ({@code "name (2)"}), a name neither {@link #retire} nor a restart can find
-     * again. A route-less address keeps the name it always had.
+     * out, or slugged so that {@code /a/b} and {@code /a-b} meet, JmDNS would rename the second ({@code "name (2)"}),
+     * a name neither {@link #retire} nor a restart can find again. A route-less address keeps the name it always had.
      * <p>
      * DETERMINISTIC IN THE THING THAT OWNS IT, deliberately: a restart re-registers the SAME name, so its roster
      * entry is reclaimed in place. A minted id would be unique but never reclaimable — after a hard kill (no
@@ -413,8 +413,8 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * why {@link #admit} keys the roster on the service uri rather than on this name.
      */
     static String instanceName(final String hostName, final fURI surface) {
-        return segment("%s-%s-%d%s".formatted(hostName, scheme(surface.scheme()), surface.port(),
-                surface.basePath().localize()));
+        return "%s-%s-%d%s".formatted(hostName, scheme(surface.scheme()), surface.port(),
+                surface.basePath().localize());
     }
 
     /**
@@ -455,12 +455,17 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * <p>
      * PRESENCE IS INHERITED, walked as {@link Network.Helper#authorities()} walks it: the sockets of this machine and
      * of every ancestor, each with the routes its level keeps on it, the handler resolved in that level's instruction
-     * set as the server resolves it. Read on every tick: a boot may mount its listeners after constructing this
-     * handler, and a frame may add a route at any time.
+     * set. A frame below the walk's start is not visited: its routes on a shared socket are the frame's, and a frame
+     * is not a peer. Read on every tick: a boot may mount its listeners after constructing this handler, and a frame
+     * may add a route at any time.
      * <p>
-     * THE HANDLER IS READ FROM INSTRUCTION MEMORY ALONE ({@code readDeclared}). A route's target may be a data address
-     * ({@code /usr}, {@code docker:}, {@code mfs:docs/website/}), and a {@link Machine#read} of it would list that
-     * space on every tick.
+     * THE HANDLER IS READ FROM INSTRUCTION MEMORY ALONE ({@code readDeclared}), not through {@link Machine#read} as
+     * the server resolves it: a route's target may be a data address ({@code /usr}, {@code docker:},
+     * {@code mfs:docs/website/}), and a read of it would list that space on every tick. So a handler type kept in
+     * data memory, or a route written as an instruction, is served but not announced.
+     * <p>
+     * THE ROOT ROUTE EXTENDS NOTHING, as in {@link #dialable}: {@code extend("/")} is a path of one empty segment that
+     * prints as no path, so this machine's own row would read back unequal to it and grow on every announcement.
      * <p>
      * VISIBLE FOR TESTING, like {@link #roster}: this set is everything that leaves the box, so it is the surface a
      * leak would show on, and it is checkable without multicast.
@@ -472,7 +477,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
                 final fURI origin = Network.Helper.originOf(entry);
                 if (null == origin)
                     return;
-                entry.asRec().at(uri(ROUTE)).orElse(rec()).elements()
+                entry.asRec().at(uri(ROUTE)).orElse(rec0()).elements()
                         .filter(route -> {
                             if (!route.first().isUri() || route.first().uriValue().hasPattern())
                                 return false;
@@ -482,7 +487,9 @@ public class mdnsDiscovery extends MRec implements Closeable {
                                     : route.second();
                             return handler.isType() && handler.asType().test(webInstSet.MTRON_TYPE);
                         })
-                        .forEach(route -> endpoints.add(origin.extend(route.first().uriValue())));
+                        .forEach(route -> endpoints.add("/".equals(route.first().uriValue().toString())
+                                ? origin
+                                : origin.extend(route.first().uriValue())));
             });
         return endpoints.stream()
                 .map(mdnsDiscovery::announceable)
@@ -526,8 +533,8 @@ public class mdnsDiscovery extends MRec implements Closeable {
      */
     private void announce(final JmDNS mdns, final fURI service, final fURI surface) {
         try {
-            mdns.registerService(ServiceInfo.create(service.toString(), instanceName(this.hostName, surface), surface.port(),
-                    0, 0, txt(surface)));
+            mdns.registerService(ServiceInfo.create(service.toString(), instanceName(this.hostName, surface),
+                    surface.port(), 0, 0, txt(surface)));
             this.roster(this.machineOf(surface), surface);
         } catch (final IOException e) {
             this.LOG.warn("mdns: cannot announce %s (%s)", surface, e.getMessage());
