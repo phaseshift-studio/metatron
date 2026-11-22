@@ -87,6 +87,10 @@ public class RealTest extends AbstractAlgebraTest {
     @CsvSource(value = {
             "{1.0,2.0,3.0}.mean()                                             % 2.0",
             "{1.0,0.0}.mean()                                                 % 0.5",
+            // A BULKED MEMBER COUNTS AS ITS COPIES (Marko, 2026-11-22): {1,1,4} is {{2}1,4}, mean 2.0, never 2.5
+            "{1.0,1.0,4.0}.mean()                                             % 2.0",
+            "{1,1,4}.mean()                                                   % 2.0",
+            "{2,2,2,6}.mean()                                                 % 3.0",
             "{1.1,2.2,3.3}.mean().?>2.1.lt(2.3)                               % true", // java double too wiggly
             "{1.1,2.2,3.3}.mean().and(gt(2.1),lt(2.3))                        % true", // java double too wiggly
             "{1.1,2.2,3.3}.mean().and(gt(22.1),lt(42.3))                      % false", // java double too wiggly
