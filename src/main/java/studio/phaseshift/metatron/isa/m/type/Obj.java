@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
@@ -962,56 +961,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return obj.isType() && obj.hasVID() ? obj.vid() : obj.tid();
         }
 
-        /**
-         * REPEAT OVER THE WHOLE FRONTIER ({@code repeat?<=A{*}}, Marko 2026-11-22), the BSP form. The swarm's barrier
-         * hands repeat everything that reached it, once, as one stream, and each pass applies the code to the whole
-         * frontier at once, so a pass is a superstep: a dealing branch in the code
-         * ({@code branch?<=A{*}&split=part(...)}) parts the frontier over the peers and returns only when every lane
-         * has, and the next pass starts after it. The barrier fires once and is not re-armed, so the passes loop here
-         * rather than back through the processor the way the per-monad form's loopback monads do.
-         * <p>
-         * {@code loop()} counts the passes and is the same for every member. esc, emit and until are judged per member
-         * against it, each on a monad sitting at repeat with the pass on its loop stack, as the per-monad form judges
-         * them: emit keeps a copy and the member goes on, until (or esc) lets it leave. The members that stay are the
-         * next frontier, bulked by the code's own stream, so the traversers at one vertex merge between passes.
-         */
-        public static Obj repeatFrontier(final Obj frontier, final Inst inst) {
-            final java.util.function.UnaryOperator<Obj> lens = p -> p.isCall() ? p.<Call>as().asCode() : p;
-            final Obj esc = lens.apply(inst.arg(f(ESC), 0));
-            // the code runs over the frontier as a batching branch's member runs over its bag: start(bag).code, so the
-            // start streams the bag and a map meets one obj at a time while a gather (a dealing branch) meets it whole
-            final Obj codeArg = inst.arg(f(CODE), 1);
-            final List<Inst> code = codeArg.isCall() ? codeArg.asCall().insts()
-                    : List.of((Inst) studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_(codeArg).tryToInst());
-            final Obj until = lens.apply(inst.arg(f(UNTIL), 2));
-            final Obj emit = lens.apply(inst.arg(f(EMIT), 3));
-            final List<Obj> left = new ArrayList<>();
-            List<Obj> members = frontier.stream().filter(m -> !m.isNoObj()).toList();
-            for (int pass = 0; !members.isEmpty(); pass++) {
-                final List<Obj> next = new ArrayList<>();
-                for (final Obj member : members) {
-                    final StatefulMonad at = studio.phaseshift.metatron.isa.m.mach.type.processor.monad.BasicStatefulMonad
-                            .statefulMonad(member, inst, rec(), studio.phaseshift.metatron.isa.m.type.impl.MCode.code(List.of(noobj())))
-                            .pushLoop().incrLoop(pass);
-                    if (esc.apply(at).booleanCheck()) {
-                        left.add(member);
-                        continue;
-                    }
-                    final boolean emitted = emit.apply(at).booleanCheck();
-                    if (emitted)
-                        left.add(member);
-                    if (until.apply(at).booleanCheck()) {
-                        if (!emitted)
-                            left.add(member);
-                    } else
-                        next.add(member);
-                }
-                members = next.isEmpty() ? List.of()
-                        : studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_(objs(next)).addInsts(code).apply(noobj())
-                        .stream().filter(m -> !m.isNoObj()).toList();
-            }
-            return objs(left);
-        }
 
         public static Type specificType(final Obj obj) {
             return obj.isType() ? obj.asType() : obj.type();
@@ -1728,92 +1677,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .argLst()
                             .desc("a path state function \\(f(x) \\mapsto x\\): the path frame marker over the monad")
                             .body((lhs, inst) -> lhs)
-                            .create(),
-                    InstBuilder.build()
-                            .tid(REPEAT_INST_TID.q(MONAD_IN, "+").q(MONAD_OUT, "+"))
-                            .dom(A, "any obj")
-                            .rng(A.maybeSome(), "the repeated application results")
-                            .args(rec(
-                                    uri(ESC).maybe().asUri(), T(A.maybeSome()),
-                                    uri(CODE), T(A.maybeSome()),
-                                    uri(UNTIL).maybe(), BOOL_TYPE,
-                                    uri(EMIT).maybe(), BOOL_TYPE))
-                            .argDocs(Map.of(
-                                    uri(ESC).maybe(), "the escape predicate",
-                                    uri(CODE), "the code to repeat",
-                                    uri(UNTIL).maybe(), "the exit predicate (true stops the loop)",
-                                    uri(EMIT).maybe(), "the emit predicate"))
-                            .desc("a repetition function: loopback application of the code with escape/exit/emit predicates")
-                            .body((lhs, inst) -> {
-                                // REPEAT?<=A{*} IS THE BSP FORM: the barrier hands repeat the whole frontier, a bare stream
-                                // rather than a monad, once (Helper.repeatFrontier loops the passes itself)
-                                if (inst.isGather())
-                                    return Helper.repeatFrontier(lhs, inst);
-                                // a PROFILED run measures the loop's phases: the escape/emit/until predicate applies,
-                                // the repeated code's apply, and the loop-frame bookkeeping (the monad state churn) --
-                                // repeat/esc, emit, until, code and state -- and counts each pass (repeat/loop)
-                                final Analyzer profile = Analyzer.PROFILE.get();
-                                if (null != profile)
-                                    profile.incr(f(REPEAT), f(LOOP), 1L);
-                                final long book0 = null == profile ? 0L : System.nanoTime();
-                                final Obj escPredicate = inst.arg(f(ESC), 0);
-                                final Obj repeatedApply = inst.arg(f(CODE), 1);
-                                final Obj untilPredicate = inst.arg(f(UNTIL), 2);
-                                final Obj emitPredicate = inst.arg(f(EMIT), 3);
-                                final List<Obj> toEmit = new ArrayList<>();
-                                final StatefulMonad monad = StatefulMonad.of(lhs);
-                                if (null != profile)
-                                    profile.record(f(REPEAT), f(STATE), System.nanoTime() - book0);
-                                final long esc0 = null == profile ? 0L : System.nanoTime();
-                                final boolean esc = escPredicate.apply(monad).booleanCheck();
-                                if (null != profile)
-                                    profile.record(f(REPEAT), f(ESC), System.nanoTime() - esc0);
-                                if (esc) {
-                                    toEmit.add(monad.loopback(false).nextInst());
-                                } else {
-                                    if (monad.isNoObj() || monad.obj().isNoObj()) {
-                                        toEmit.add(monad.loopback(false).nextInst());
-                                    } else {
-                                        // fresh entry pushes a loop frame; a loopback continuation does not
-                                        final long book1 = null == profile ? 0L : System.nanoTime();
-                                        final boolean loopback = monad.isLoopback();
-                                        final StatefulMonad m = monad.loopback(false);
-                                        final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
-                                        if (null != profile)
-                                            profile.record(f(REPEAT), f(STATE), System.nanoTime() - book1);
-                                        final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().asCode() : emitPredicate;
-                                        final long emit0 = null == profile ? 0L : System.nanoTime();
-                                        final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
-                                        if (null != profile)
-                                            profile.record(f(REPEAT), f(EMIT), System.nanoTime() - emit0);
-                                        if (emit)
-                                            toEmit.add(repeatMonad.popLoop().nextInst());
-                                        // wrap the predicate in code so a single-inst until (is(gt(10))) goes
-                                        // through the monad lens like the multi-inst form (loop().is(gt(3))) —
-                                        // applied bare, is(gt(10)) receives the whole monad and never terminates.
-                                        final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().asCode() : untilPredicate;
-                                        final long until0 = null == profile ? 0L : System.nanoTime();
-                                        final boolean until = untilCode.apply(repeatMonad).booleanCheck();
-                                        if (null != profile)
-                                            profile.record(f(REPEAT), f(UNTIL), System.nanoTime() - until0);
-                                        if (until) {
-                                            if (!emit)
-                                                toEmit.add(repeatMonad.popLoop().nextInst());
-                                        } else {
-                                            final long code0 = null == profile ? 0L : System.nanoTime();
-                                            final Obj codeResult = repeatedApply.apply(repeatMonad.obj());
-                                            if (null != profile)
-                                                profile.record(f(REPEAT), f(CODE), System.nanoTime() - code0);
-                                            final long book2 = null == profile ? 0L : System.nanoTime();
-                                            final StatefulMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
-                                            if (null != profile)
-                                                profile.record(f(REPEAT), f(STATE), System.nanoTime() - book2);
-                                            toEmit.add(monadX);
-                                        }
-                                    }
-                                }
-                                return objs(toEmit);
-                            })
                             .create(),
                     InstBuilder.build()
                             .tid(AUTO_INST_TID)

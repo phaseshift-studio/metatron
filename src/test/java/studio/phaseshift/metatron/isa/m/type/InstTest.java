@@ -921,6 +921,11 @@ public class InstTest extends AbstractObjTest {
             "{1,2,3}  % is(to(x).gt(1))        % false",   // the same filter handed an effect
             "1        % plus(plus(mult(0)))    % true",    // pure all the way down two arguments
             "1        % plus(plus(print(_).mult(0)))   % false",   // an effect two arguments deep still spoils it
+            // REPEAT IS PURE (Marko, 2026-11-22): declared in mInsts, and as pure as the code and predicates it runs
+            "1        % repeat(code=>plus(1),until=>is(gt(10)))              % true",
+            "1        % repeat(code=>plus(1).print(_),until=>is(gt(10)))     % false",
+            // loop() has no declared law yet (still an Obj interface inst): when it moves to mInsts with Law.pure, true
+            "1        % repeat(code=>plus(1),until=>loop().is(gt(3)))        % false",
     }, delimiter = '%')
     public void testAnInstructionIsPureWhenDeclaredOrComposedOfPureInstructions(final String lhs, final String code, final boolean pure) {
         final Call parsed = ObjmtronSerializer.parse(code.trim()).as();
