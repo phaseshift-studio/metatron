@@ -500,8 +500,10 @@ superstep: `{1,2,3}.repeat(code=>sum(),until=>loop()?>0)` is `{1,2,3}`, the `?<=
 
 ```mtron
 x.repeat?<=A{*}(code=>f, until=>p)
-  ⇝  x.repeat?<=A{*}(code=>branch?<=A{*}&split=part(<p_1> => f?hop=0, …, <p_k> => f?hop=0), until=>p)
+  ⇝  x.repeat?<=A{*}(code=>branch?<=A{*}&split=part(<p_1> => f?hop=h-1, …, <p_k> => f?hop=h-1), until=>p)
 ```
+
+where `h` is the superstep's height, one when unstated, so a lane is `f?hop=0` unless a tree is asked for.
 
 - **`repeat` and `branch` split the work.** The `repeat` owns the loop: it stays home, holds the frontier, counts the
   passes and judges the predicates. The `branch` owns the place: inside the code, it gathers each pass's frontier
@@ -509,10 +511,24 @@ x.repeat?<=A{*}(code=>f, until=>p)
   merge, the ring's `+`, is the superstep boundary, since no pass starts before every lane of the last has answered.
 - **What is dealt.** `f` must be pure and floatable instruction by instruction, each retyped at the carrier flowing
   into it (law_shard's own `floatable` pattern): such an `f` distributes over the stream sum. A fold, a gather or an
-  effect in `f` leaves the repeat as written. So do a per-monad repeat, a repeat that states `?hop=0`, a code a keyed
-  branch already deals, and a machine with no dialed peer.
+  effect in `f` leaves the repeat as written. So do a per-monad repeat, a superstep whose budget is the point
+  (`?hop=0`, or an arity of zero, on the repeat or its code), a code a keyed branch already deals, and a machine with
+  no dialed peer.
 - **Where.** The **dialed** peers that serve `eval`, never the roster: the roster counts every interface of a machine
-  as a place. Each lane states `?hop=0`, so a peer runs `f` and plans nothing further.
+  as a place.
+- **How deep: a tree of supersteps (E ∘ N, Marko 2026-11-22: "tree bsp would unite two different distributed
+  computing patterns").** The superstep's budget is read as `law_shard` reads a fold's: the earliest `?hop` on the
+  repeat or its code (`Shard.hopAxis`), else one level. The arity caps the lanes (`?hop={2}2` takes two peers,
+  `?hop=[2,1]` one), and each lane states the height one level down on its head. A peer handed
+  `start(part).f?hop=1` plans its part over its own dialed peers through `law_shard`'s cutless run (W), so every pass
+  deals the frontier down the tree and merges it back up; the root's merge is still the one barrier. The tree and the
+  loop are two orthogonal recursions in one term: with `π_j` the deal's shares (`π_1 + … + π_k = 1`),
+  $x\,f^{n} = x\,\big(\sum_{j_1}\pi_{j_1}(\cdots(\sum_{j_h}\pi_{j_h}\,f)\cdots)\big)^{n}$. A peer re-deals
+  only where it has dialed peers of its own; `boot/space/grph/peer.boot.mtron` gives every peer a `harvest`, so
+  `branch(<//0> => {2,3}.harvest(<boot/space/grph/peer.boot.mtron>), …)` grows the tree. The topology draws only the
+  root's level, since a peer plans a frontier's part only when it arrives. Pinned by `BspRuleTest` (heights, arity,
+  the code's own budget) and `TreeShardTransportTest#testATreeOfSuperstepsOverTransport` (root, peer 1, peers 2 and
+  3; the answer is the flat deal's).
 - **Graph walks.** A space read is untyped (`#`), and the traversal steps declare `pure` (out, in, both, outE, inE,
   bothE, inV, outV, bothV), so `*g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4)` deals `both()` over the peers.
   On peers that boot the same graph at the same route (`boot/space/grph/peer.boot.mtron`), a dealt vertex binds to the
