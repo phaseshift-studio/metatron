@@ -31,6 +31,9 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
+import studio.phaseshift.metatron.isa.m.web.type.MIME;
 
 import java.util.Map;
 
@@ -41,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -137,20 +141,38 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     }
 
     /**
-     * A SPAWNED PEER IS FILED AS THE RING FILES IT: a non-loopback authority forks nothing and is declared, its origin
-     * keying an mtron/ws row that the scheme-keyed view lists once, however often it is asked for.
+     * A SPAWNED PEER IS FILED AS THE RING FILES IT, AND TAKEN BACK WITH ITS FRAME: a non-loopback authority forks
+     * nothing and is declared, its origin keying an mtron/ws row the scheme-keyed view lists once however often it is
+     * asked for; the frame that holds a connection to it reaps it on pop, the row taken back, and the origin can be
+     * declared again. The connection is a dial nothing answers (TEST-NET-3): an offline, supervised link, which the
+     * constructor waits out (CONNECT_TIMEOUT_MS) before indexing it.
      */
     @Test
-    public void testASpawnedPeerIsAnMtronRow() {
+    public void testASpawnedPeerIsAnMtronRowItsFrameTakesBack() {
         final Obj declared = Machine.read(Network.ROOT_ROSTER);
-        final String origin = "ws://203.0.113.9:" + generatePort();
+        final fURI origin = f("").scheme(WS).host("203.0.113.9").port(generatePort());
+        final fURI address = PeerSpawn.address(origin);
+        final java.util.function.Supplier<Obj> listed = () -> Machine.current().network().machines().jvm().entrySet().stream()
+                .filter(entry -> entry.getKey().isUri() && origin.toString().equals(entry.getKey().uriValue().toString()))
+                .map(Map.Entry::getValue).findFirst().orElse(noobj());
         try {
-            checkEquality(LOG, uri(origin + "/mtron"), uri(PeerSpawn.spawn(f(origin + "/spawned"))), true);
-            PeerSpawn.spawn(f(origin + "/spawned"));
-            final Obj listed = Machine.current().network().machines().jvm().entrySet().stream()
-                    .filter(entry -> entry.getKey().isUri() && origin.equals(entry.getKey().uriValue().toString()))
-                    .map(Map.Entry::getValue).findFirst().orElse(noobj());
-            checkEquality(LOG, uri(origin + "/mtron"), listed, true);
+            final Machine child = Machine.current().push(f("spawn_reaper"));
+            try {
+                checkEquality(LOG, uri(address), uri(PeerSpawn.spawn(origin.extend(f("/spawned")))), true);
+                PeerSpawn.spawn(origin.extend(f("/spawned")));
+                checkEquality(LOG, uri(address), listed.get(), true);
+                // the construction PeerCluster dials with: the constructor waits the dial out, and indexing mints the
+                // peer the pop reaps, offline and supervised
+                Network.Helper.index(new WebSocketRecClient(new WebSocketRec(mutableMap(
+                        uri(HOST), uri(address),
+                        uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                        uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null)));
+            } finally {
+                child.pop();
+            }
+            checkEquality(LOG, noobj(), listed.get(), true);
+            PeerSpawn.spawn(origin.extend(f("/spawned")));
+            checkEquality(LOG, uri(address), listed.get(), true);
         } finally {
             Machine.write(Network.ROOT_ROSTER, declared);
         }

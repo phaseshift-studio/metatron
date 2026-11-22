@@ -18,8 +18,11 @@
 
 package studio.phaseshift.metatron.isa.m.web.space.mdns.handler;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
@@ -104,16 +107,6 @@ public class mdnsDiscovery extends MRec implements Closeable {
     // surfaces, so the schema a user reads and the schema the instruction set publishes are the same text.
     // What is left here is the identity it is registered under.
 
-    /**
-     * THE ROSTER IS READ, MERGED AND WRITTEN BACK — a row added with {@code Rec.plus} or taken back with
-     * {@code Rec.minus}, the discover bag amended around it — and this handler GUARANTEES concurrency against itself: {@link #listen()} creates one JmDNS and one {@link PeerListener} PER LOCAL ADDRESS, so on a
-     * multi-homed host two listeners hear the same peer on two threads, both read the same list, and the later write
-     * drops the earlier one's address. Admission is serialized here.
-     * <p>
-     * A lock in this class is a stopgap and not the fix: it cannot cover a second discovery protocol writing the
-     * same rec.
-     */
-    private static final Object ROSTER = new Object();
 
     /**
      * the machine the handler was started in — a callback must re-establish it, never assume it
@@ -145,10 +138,21 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * THE ROWS EACH INSTANCE FILED, by its key: a heard service's ({@link ServiceInfo#getKey()}) or one of this
      * machine's surfaces (its address). A removal names only the instance — JmDNS builds the {@code serviceRemoved}
      * event from the PTR record alone, with no server, addresses or TXT, for a goodbye and a cache expiry alike
-     * (3.6.4, {@code DNSRecord.Pointer.getServiceEvent}) — so what an instance takes out of the roster is what it put
-     * in, never what a removal could re-derive. Guarded by {@link #ROSTER}.
+     * (jmdns 3.6.4/3.6.5, {@code DNSRecord.Pointer.getServiceEvent}) — so what an instance takes out of the roster is what it put
+     * in, never what a removal could re-derive.
+     * <p>
+     * GUARDED BY THE ROSTER'S OWN ADDRESS ({@link Network#ROOT_ROSTER}), the one monitor every writer holds that reads,
+     * merges and writes the roster back: this handler, whose JmDNS per local address hear one peer on several threads,
+     * and PeerSpawn. So no write drops a row another wrote between its read and its write.
      */
     private final Map<String, List<Obj>> filed = new HashMap<>();
+    /**
+     * WHAT EACH RESPONDER LAST RESOLVED FOR AN INSTANCE: {@code <instance key> => <responder> => rows}. Each JmDNS
+     * resolves from its own cache, and where a socket hears only its own link (macOS, BSD) two responders can see one
+     * instance at different addresses: the instance files the union, and one responder's removal takes back only what
+     * no other responder still resolves. Guarded like {@link #filed}.
+     */
+    private final Map<String, Map<String, List<Obj>>> heard = new HashMap<>();
 
     public mdnsDiscovery(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MDNS_DISCOVERY_TID, vid);
@@ -188,7 +192,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * DELETION is the container's business, and the container closes what it evicts.
      */
     private void register() {
-        synchronized (ROSTER) {
+        synchronized (Network.ROOT_ROSTER) {
             final Obj roster = Machine.read(Network.ROOT_ROSTER);
             final Map<Obj, Obj> fields = new LinkedHashMap<>(roster.isRec() ? roster.asRec().jvm() : Map.of());
             final Obj current = roster.isRec() ? roster.asRec().at(uri(DISCOVER)) : noobj();
@@ -233,6 +237,19 @@ public class mdnsDiscovery extends MRec implements Closeable {
             mdns.unregisterAllServices();
             CommonUtil.close(mdns);
         });
+        // A CLOSED HANDLER TAKES BACK WHAT IT FILED: JmDNS's close sends no removal, so nothing else ever would, and a
+        // handler mounted again would file every row over this one's. Its responders are closed above, so nothing
+        // files behind it. Run as the owner, as every roster write of this handler is.
+        final Machine current = Machine.current();
+        Machine.current(this.owner);
+        try {
+            synchronized (Network.ROOT_ROSTER) {
+                List.copyOf(this.filed.keySet()).forEach(instance -> this.roster(instance, List.of()));
+                this.heard.clear();
+            }
+        } finally {
+            Machine.current(current);
+        }
     }
 
     // ========================================================================
@@ -262,9 +279,8 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * has no scheme and no port, so nothing can be dialed at it and no peer can be made from it. They are
      * visible where they belong, in the {@code listening} log line, and nowhere else.
      * <p>
-     * Written through {@link #roster}, so an endpoint deduplicates exactly as a heard address does — which is
-     * what stops the announce loop, registering every authority on every responder, from writing one endpoint
-     * once per interface.
+     * Filed through {@link #roster} once per surface (by {@link #listen}'s baseline and {@link #reconcile}), never
+     * once per responder that announces it.
      */
     private fURI exposed() {
         // NO TRAILING DOT. DNS writes a fully-qualified name with the root dot and JmDNS hands back
@@ -331,8 +347,8 @@ public class mdnsDiscovery extends MRec implements Closeable {
             try {
                 final JmDNS mdns = JmDNS.create(address, this.hostName);
                 surfaces().forEach((surface, transport) -> this.announce(mdns, service, surface, transport));
-                mdns.addServiceListener(service.toString(), new PeerListener(mdns));
-                mdns.addServiceListener(service.toString(), new PeerListener(mdns));
+                mdns.addServiceListener(service.toString(), new PeerListener(mdns, address.getHostAddress()));
+                mdns.addServiceListener(service.toString(), new PeerListener(mdns, address.getHostAddress()));
                 synchronized (this.lifecycle) {
                     // CLOSED WHILE WE WERE DIALING -- own this responder here and stop, or it outlives the
                     // handler and status() reads true again after close
@@ -431,7 +447,8 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * goodbye) that entry could only age out, a 4500s PTR TTL, while still looking dialable.
      * <p>
      * The HOST is absent from it: the same name on two hosts is legal (the SRV target separates them), which is
-     * why {@link #admit} keys the roster on the service uri rather than on this name.
+     * why a heard instance is tracked by its {@code ServiceInfo.getKey()} and filed under its SRV target, never by
+     * this name alone.
      */
     static String instanceName(final String hostName, final fURI surface) {
         return "%s-%s-%d%s".formatted(hostName, scheme(surface.scheme()), surface.port(),
@@ -593,8 +610,11 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * <p>
      * THE WHOLE BODY RUNS AS {@link #owner}: {@link #ours} reads this machine's authorities and the write lands
      * in this machine's roster, and the JmDNS callback thread stands in neither.
+     * <p>
+     * VISIBLE FOR TESTING, its addresses handed in beside the info: a resolved {@code ServiceInfo} cannot be built with
+     * addresses, and the listener hands in {@code info.getInet4Addresses()}.
      */
-    private void admit(final ServiceInfo info) {
+    void admit(final String responder, final ServiceInfo info, final InetAddress[] addresses) {
         final Machine current = Machine.current();
         Machine.current(this.owner);
         try {
@@ -604,7 +624,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
             }
             // A RESOLUTION WITHOUT ADDRESSES IS NOT ONE THAT HAS NONE: the A records arrive on their own, and filing
             // what this one names would take back everything the instance filed before
-            if (0 == info.getInet4Addresses().length) {
+            if (0 == addresses.length) {
                 this.LOG.debug("mdns: %s resolved without an address — waiting for a complete one", info.getName());
                 return;
             }
@@ -614,7 +634,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
             final fURI protocol = protocol(info);
             final fURI transport = transport(info);
             final List<Obj> rows = new ArrayList<>();
-            for (final InetAddress address : info.getInet4Addresses()) {
+            for (final InetAddress address : addresses) {
                 if (this.ours(address, info.getPort())) {
                     this.LOG.debug("mdns: heard our own %s", address.getHostAddress());
                     continue;
@@ -622,8 +642,12 @@ public class mdnsDiscovery extends MRec implements Closeable {
                 rows.add(rec(uri(MACHINE), rec(uri(machine), rec(uri(protocol), rec(uri(transport),
                         uri(dialable(address, info.getPort(), scheme, route).basePath().toString()))))));
             }
-            if (this.roster(info.getKey(), rows) > 0)
-                this.LOG.info("mdns: discovered %s: %s", machine, rows);
+            synchronized (Network.ROOT_ROSTER) {
+                final Map<String, List<Obj>> responders = this.heard.computeIfAbsent(info.getKey(), key -> new HashMap<>());
+                responders.put(responder, rows);
+                if (this.roster(info.getKey(), responders.values().stream().flatMap(List::stream).toList()) > 0)
+                    this.LOG.info("mdns: discovered %s: %s", machine, rows);
+            }
         } finally {
             Machine.current(current);
         }
@@ -667,8 +691,9 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * written back. The roster keeps the count, so an address two instances file stays until both take it back, and
      * a read nets the terms ({@link Network#machines()}).
      * <p>
-     * AN INSTANCE TAKES BACK ONLY WHAT IT FILED: a row taken back twice leaves a negative count that the next filing
-     * cancels, and the address would be filed and absent at once.
+     * AN INSTANCE TAKES BACK ONLY WHAT IT FILED, and only while it is still listed: a row taken back twice — or after
+     * the table was wiped — leaves a negative count that the next filing cancels, and the address would be filed and
+     * absent at once. Every row it takes back and files lands in ONE write.
      * <p>
      * The levels a host's last address leaves stay, an empty rec: its addresses net to nothing, and
      * {@link Network#machines()} lists no machine without one.
@@ -681,14 +706,39 @@ public class mdnsDiscovery extends MRec implements Closeable {
      */
     int roster(final String instance, final List<Obj> rows) {
         final List<Obj> now = rows.stream().distinct().toList();
-        synchronized (ROSTER) {
+        synchronized (Network.ROOT_ROSTER) {
             final List<Obj> before = this.filed.getOrDefault(instance, List.of());
-            for (final Obj row : before)
-                if (!now.contains(row))
-                    Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec().minus(row.asRec()));
             final List<Obj> added = now.stream().filter(row -> !before.contains(row)).toList();
+            Rec merged = Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec();
+            boolean changed = !added.isEmpty();
+            for (final Obj row : before) {
+                if (now.contains(row))
+                    continue;
+                // TAKE BACK ONLY WHAT IS STILL LISTED. A level wiped since (the machine table written noobj), or a row
+                // someone else took back, holds no count of this address: a take-back there would leave a negative
+                // count -- or, into an absent level, a sign on the level's rec -- that the next filing cancels. A row
+                // has one key per level, walked down the roster beside it.
+                Obj filedAt = row;
+                Obj listedAt = merged;
+                while (filedAt.isRec()) {
+                    final Rel step = filedAt.asRec().<Rel>elements().findFirst().orElseThrow();
+                    filedAt = step.second();
+                    listedAt = !listedAt.isRec() ? noobj() : listedAt.asRec().<Rel>elements()
+                            .filter(rel -> rel.first().isUri() && step.first().uriValue().toString().equals(rel.first().uriValue().toString()))
+                            .map(Rel::second).findFirst().orElse(noobj());
+                }
+                final String address = filedAt.uriValue().toString();
+                if (objs(listedAt.stream().toList()).stream()
+                        .anyMatch(known -> known.isUri() && address.equals(known.uriValue().toString()) && known.c().gt(cInt.ZERO()))) {
+                    merged = merged.minus(row.asRec());
+                    changed = true;
+                }
+            }
             for (final Obj row : added)
-                Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec().plus(row.asRec()));
+                merged = merged.plus(row.asRec());
+            // ONE WRITE for every row the instance takes back and files: a reader never sees the instance between them
+            if (changed)
+                Machine.write(Network.ROOT_ROSTER, merged);
             if (now.isEmpty())
                 this.filed.remove(instance);
             else
@@ -756,13 +806,23 @@ public class mdnsDiscovery extends MRec implements Closeable {
 
     /**
      * a withdrawn instance takes back what it filed. The removal names only the instance ({@link #filed}), so nothing
-     * is re-derived from it: what goes is exactly what the instance's resolution put in.
+     * is re-derived from it: what goes is what this responder's resolution put in and no other responder still
+     * resolves.
+     * <p>
+     * VISIBLE FOR TESTING, like {@link #admit}: {@code ServiceInfo.create} builds exactly the address-less info a
+     * removal carries.
      */
-    private void retract(final ServiceInfo info) {
+    void retract(final String responder, final ServiceInfo info) {
         final Machine current = Machine.current();
         Machine.current(this.owner);
         try {
-            this.roster(info.getKey(), List.of());
+            synchronized (Network.ROOT_ROSTER) {
+                final Map<String, List<Obj>> responders = this.heard.getOrDefault(info.getKey(), new HashMap<>());
+                responders.remove(responder);
+                if (responders.isEmpty())
+                    this.heard.remove(info.getKey());
+                this.roster(info.getKey(), responders.values().stream().flatMap(List::stream).toList());
+            }
         } finally {
             Machine.current(current);
         }
@@ -771,9 +831,15 @@ public class mdnsDiscovery extends MRec implements Closeable {
     private final class PeerListener implements ServiceListener {
 
         private final JmDNS mdns;
+        /**
+         * the local address this listener's responder is bound to: what tells one responder's resolution of an
+         * instance from another's
+         */
+        private final String responder;
 
-        private PeerListener(final JmDNS mdns) {
+        private PeerListener(final JmDNS mdns, final String responder) {
             this.mdns = mdns;
+            this.responder = responder;
         }
 
         @Override
@@ -784,12 +850,12 @@ public class mdnsDiscovery extends MRec implements Closeable {
 
         @Override
         public void serviceResolved(final ServiceEvent event) {
-            mdnsDiscovery.this.admit(event.getInfo());
+            mdnsDiscovery.this.admit(this.responder, event.getInfo(), event.getInfo().getInet4Addresses());
         }
 
         @Override
         public void serviceRemoved(final ServiceEvent event) {
-            mdnsDiscovery.this.retract(event.getInfo());
+            mdnsDiscovery.this.retract(this.responder, event.getInfo());
         }
     }
 }
