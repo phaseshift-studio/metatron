@@ -207,6 +207,11 @@ public final class Shard {
         // the fold its definition names; a keyed fold through the chain its pointwise combiner computes. A FOLD THAT
         // RECOMBINES THROUGH ITSELF AFTER A LIFT (J, mean ↦ ℓ·mean) has every lane run the lift in its place, so a lane
         // answers a summary of its part, and home runs the fold as its equation states it, over the summaries
+        // A POINT ON A KEYED FOLD'S VALUE (group([k=>mean{2}()])) multiplies each key's answer, and neither a lane nor the
+        // per-key combiner carries it, as keying the spec writes each value's declared n-tid over its point: such a group
+        // stays home
+        if (0 <= cut && pointedValues(insts.get(cut)))
+            return null;
         final Call combined = 0 > cut ? null : Law.Helper.combiner(typed.get(cut), chain.laws());
         final Law.Helper.Lift lifted = 0 > cut || null != combined ? null : Law.Helper.lifted(typed.get(cut));
         final List<Inst> combiner = null != lifted ? pointed(lifted.home(), insts.get(cut))
@@ -366,6 +371,19 @@ public final class Shard {
         final List<Inst> out = new ArrayList<>(combiner);
         out.set(out.size() - 1, instB(out.getLast().tid().d(point), out.getLast().args()));
         return out;
+    }
+
+    /**
+     * Whether a keyed fold's spec holds a value with a point ({@code group([k=>count{2}()])}), at any depth of nested
+     * groups.
+     */
+    private static boolean pointedValues(final Inst cut) {
+        return GROUP_INST_TID.equals(cut.tid().basePath()) && 1 == cut.args().count() && cut.arg(0).isRec()
+                && cut.arg(0).asRec().elements().anyMatch(kv -> {
+            final Obj value = kv.secondDirect();
+            final List<Inst> folds = value.isObjInst() ? List.of(value.asInst()) : value.isCode() ? value.asCode().insts() : List.of();
+            return folds.stream().anyMatch(fold -> (null != fold.tid().d() && !fold.tid().d().isOne()) || pointedValues(fold));
+        });
     }
 
     /**
@@ -568,22 +586,15 @@ public final class Shard {
     }
 
     /**
-     * THE INSTRUCTION AS ITS EQUATION STATES IT: a lift read off a declared derivation (J) keeps every domain the
-     * equation states, at any depth, which is part of what it means and nothing this machine bound:
-     * {@code split?<=int{*}} gathers the lane's whole part, where a bare {@code split} would take one member at a time,
-     * and a keyed lift holds it in each key's value ({@code group([k⇒split?<=int{*}(…)…])}). All else is {@link #raw}.
+     * THE INSTRUCTION AS ITS EQUATION STATES IT: a lift read off a declared derivation (J) keeps the domain the equation
+     * states, which is part of what it means and nothing this machine bound: {@code split?<=int{*}} gathers the lane's
+     * whole part, where a bare {@code split} would take one member at a time. All else is {@link #raw}. A keyed lift's
+     * group holds the lift inside its rec, which raw leaves as it is, so {@code split?<=int{*}} rides inside each key's
+     * value untouched.
      */
     static Inst stated(final Inst inst) {
-        final Poly args = inst.args().isRec()
-                ? rec(inst.args().asRec().elements().map(kv -> rel(kv.first(), statedArg(kv.second()))))
-                : lst(inst.args().elements().map(Shard::statedArg).toList());
-        return instB(inst.tid().removeQ(RNG).removeQ(ARGS), args);
-    }
-
-    private static Obj statedArg(final Obj arg) {
-        return arg.isObjInst() ? stated(arg.asInst())
-                : arg.isCode() ? code(arg.asCode().insts().stream().map(Shard::stated).toList())
-                : arg;
+        final Inst raw = raw(inst);
+        return inst.tid().hasDom() ? instB(raw.tid().dom(inst.tid().dom()), raw.args()) : raw;
     }
 
     private static Obj rawArg(final Obj arg) {

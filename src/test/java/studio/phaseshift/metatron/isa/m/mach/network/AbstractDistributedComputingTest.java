@@ -530,6 +530,15 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,2,3,4,5,6}.plus(1).group([mod(2)=>mean()])               % branch(start().plus().group(),start().plus().group()).sum().select()                 % [0=>4.0,1=>5.0]",
             "{1,2,3,4,5,6}.group([mod(2)=>group([mod(3)=>mean()])])      % branch(start().group(),start().group()).sum().select()                               % [1=>[1=>1.0,0=>3.0,2=>5.0],0=>[2=>2.0,1=>4.0,0=>6.0]]",
             "{1,2,3,4}.mod(2).group([cc()=>count()])                     % branch(start().mod(),start().mod()).group()                                          % [2=>4]",
+            // each key's books come from both lanes ({1,2,4} and {3,5,6}), so only a weighted merge answers 3.0 and 4.0
+            // (an unweighted one would answer 2.5 and 4.5); nested, {3}17.0 and {2}10.0 merge to 14.2, not 13.5
+            "{1,3,2,5,4,6}.group([mod(2)=>mean()])                       % branch(start().group(),start().group()).sum().select()                               % [1=>3.0,0=>4.0]",
+            "{1,7,19,13,31}.group([mod(2)=>group([mod(3)=>mean()])])     % branch(start().group(),start().group()).sum().select()                               % [1=>[1=>14.2]]",
+            // a key that reads mass keeps even a keyed mean home: in the lanes {1,2,3,5}.mod(2) would key {2}1 by 2
+            "{1,2,3,5}.mod(2).group([cc()=>mean()])                      % branch(start().mod(),start().mod()).group()                                          % [3=>1.0,1=>0.0]",
+            // a point on a value multiplies each key's answer, which no lane or per-key combiner carries, so it stays home
+            "{1,2,3,4}.group([mod(2)=>mean{2}()])                        % start().group()                                                                      % [1=>{2}2.0,0=>{2}3.0]",
+            "{1,2,3,4}.group([mod(2)=>count{2}()])                       % start().group()                                                                      % [1=>{2}2,0=>{2}2]",
     }, delimiter = '%')
     void test_G_J_a_keyed_mean_ships_per_key_books(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);

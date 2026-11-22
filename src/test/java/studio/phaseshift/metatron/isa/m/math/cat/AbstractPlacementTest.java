@@ -141,6 +141,8 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
             "start({1,2,3}).group([mod(2)=>group([mod(3)=>sum()])])    % true",
             "start({1,2,3}).group([mod(2)=>mean()])                    % true",
             "start({1,2,3}).group([cc()=>count()])                     % false",
+            "start({1,2,3}).group([cc()=>mean()])                      % false",
+            "start({1,2,3}).group([mod(2)=>mean(),mod(3)=>count()])    % false",
             "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>sum()])       % true",
             "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>count()])     % false",
             "start({1,2,3}).group([mod(2)=>order(_)])                  % true",
