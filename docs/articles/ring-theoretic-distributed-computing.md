@@ -191,8 +191,8 @@ lane carries it one level down, on its head, so a leaf states `?hop=0` and plans
 peer harvests two peers of its own, with the `harvest` its boot file defines:
 
 ```mtron_pre
-branch(<//0> => {2,3}.harvest(<boot/space/grph/peer.boot.mtron>), /
-       <//1> => {4,5}.harvest(<boot/space/grph/peer.boot.mtron>))
+branch(<//0> => start({2,3}).harvest(<boot/space/grph/peer.boot.mtron>), /
+       <//1> => start({4,5}).harvest(<boot/space/grph/peer.boot.mtron>))
 ```
 
 Now `//0` holds `//2` and `//3`, and `//1` holds `//4` and `//5`. Each level is the shard identity again: a place deals
@@ -413,8 +413,8 @@ sum of independent terms, $a^{[m,n]} = \sum_{k=m}^{n} a^k$, so a run over one ob
 place takes the whole object and a contiguous share of the unrolls.
 
 ```mtron_pre
-start(0).{0,3}plus(1).sum()
-start(0).{0,3}plus(1).sum().explain()>>format
+0.{0,3}plus(1).sum()
+0.{0,3}plus(1).sum().explain()>>format
 ```
 
 Both lanes start from the same `0`. The first takes the unrolls $0$ to $2$ and the second the unroll $3$, written `{3}`:
@@ -422,7 +422,7 @@ the shares are cut by the work each costs, not by how many unrolls each holds. A
 that ran, a `branch` and a `sum`, and the time spent at the `branch` waiting on the two partials:
 
 ```mtron_pre
-start(0).{0,3}plus(1).sum().profile()>>format
+0.{0,3}plus(1).sum().profile()>>format
 ```
 
 A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and points add across a branch,
