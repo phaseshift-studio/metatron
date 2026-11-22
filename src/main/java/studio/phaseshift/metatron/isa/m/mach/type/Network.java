@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -60,9 +61,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -365,7 +365,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // is a protocol CLIENT, whose claim mints a {@code peer::T}. One Addressable verb, two indexes.
         // NOMINAL, not structural: the fields are maybe(), so a structural test would admit any rec that happens to
         // carry an origin; nominal membership follows the type's descendants, so a REFINEMENT of listener::T mounts.
-        if (handle.isRec() && handle.testNominally(studio.phaseshift.metatron.isa.m.mach.machInstSet.LISTENER_TYPE))
+        if (handle.isRec() && handle.testNominally(LISTENER_TYPE))
             return Helper.mountListener(this, handle.asRec());
         final Obj client = handle;
         // THE CLAIM IS THE CLIENT'S OWN: pattern (retracted) first, host second — the same precedence mcpClient dials
@@ -379,8 +379,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         final Obj peer = Helper.mintPeer(this, key, client, Helper.serviceOf(claim), claim, true);
         // A LINK IS SUPERVISED FROM THE MOMENT IT IS INDEXED: what the index granted, the index keeps true -- a
         // failed connection is redialed, an owner's hang-up is retracted. Idempotent per level.
-        if (client instanceof Link)
-            studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor.watch(this);
+        if (client instanceof Link) NetworkSupervisor.watch(this);
         return peer;
     }
 
@@ -1401,7 +1400,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
          * the root had dialed the peer, the frame had not, and reach belongs to the machine that dialed it.
          */
         public static MTronException unreachable(final Machine asking, final fURI target, final fURI origin) {
-            final Machine elsewhere = dialledAbove(asking, origin);
+            final Machine elsewhere = dialedAbove(asking, origin);
             final String where = null == elsewhere ? ""
                     : " (dialed at " + elsewhere.vidOrTid() + ", but reach belongs to the machine that dialed it)";
             return MTronException.of("%s is not reachable from %s: no peer is dialed at %s%s",
@@ -1411,7 +1410,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         /**
          * The nearest ANCIENT holding a dial at {@code origin}, or null — the hint, never a promise of reach.
          */
-        private static Machine dialledAbove(final Machine asking, final fURI origin) {
+        private static Machine dialedAbove(final Machine asking, final fURI origin) {
             for (Obj at = null == asking ? null : asking.parent(); at instanceof Machine above; at = above.parent())
                 if (reachable(above, origin))
                     return above;
