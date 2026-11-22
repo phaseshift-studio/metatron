@@ -111,6 +111,27 @@ public class RepeatInstTest extends AbstractMetatronTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * REPEAT OVER THE WHOLE FRONTIER ({@code repeat?<=A{*}}, Marko 2026-11-22), the BSP form: the barrier hands repeat
+     * everything that reached it, and each pass applies the code to the whole frontier at once (a superstep).
+     * {@code loop()} counts passes and is shared by every member, while until and emit are still judged per member,
+     * so it answers what the per-monad form answers. The first row is the live per-monad result of the same walk
+     * ({@code {4,{4}3,{6}2,{4}1,0}}): the binomial counts of four passes of "add one, or don't". The gathering
+     * branch row runs a barrier inside a barrier: the code itself gathers each pass's frontier.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "0.repeat?<=int{*}(code=>branch(plus(1),id()),until=>loop()?>3)                 % {4,{4}3,{6}2,{4}1,0}",
+            "0.repeat?<=int{*}(code=>branch?<=int{*}(plus(1),id()),until=>loop()?>3)        % {4,{4}3,{6}2,{4}1,0}",
+            "1.repeat?<=int{*}(code=>plus(1),until=>loop().is(eq(10)))                      % 11",
+            "{1,2,3}.repeat?<=int{*}(code=>mult(2),until=>loop().is(eq(2)))                 % {4,8,12}",
+            "{1,5}.repeat?<=int{*}(code=>plus(1),until=>is(gt(4)))                          % {2}5",
+            "1.repeat?<=int{*}(code=>plus(1),until=>loop().is(eq(5)),emit=>true)            % {1,2,3,4,5,6}",
+    }, delimiter = '%')
+    public void testRepeatOverTheWholeFrontier(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @Test
     public void testRepeatBehaviorProbe() {
         // sanity: the probe captures real per-phase numbers, not zeros, for a short loop
