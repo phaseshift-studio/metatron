@@ -32,10 +32,10 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.mThread;
@@ -78,7 +78,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_COMPILER_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
@@ -582,9 +583,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 typerCheck = typerCheck.at(stage.getKey(), stage.getValue());
             final Typer typer = BasicTyper.of(typerCheck);
             LOG.info("{{c}}typer{{X}} registered: %s", typer);
-            /// /// SET REWRITER FILTER /// ///
-            final Rec rewriter = args.at("rewriter").orElse(rec(uri("allow"), lst(uri(ALL)), uri("disallow"), lst())).vid(f("/sys/rewriter"));
-            LOG.info("{{c}}rewriter{{X}}: %s", rewriter);
             /// /// START OF BOOTING PROCESS /// ///
             String hostname = null;
             try {
@@ -632,7 +630,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
             ROOT_MACHINE.compiler(new BasicCompiler(stages, MACH_COMPILER_TID, null));
             // the tracer is the processor's, so its state lives at /processor/tracer, as the typer's at /compiler/typer
             ROOT_MACHINE.processor().at(uri(TRACER), tracer, MUTABLE);
-            Machine.write(f("/sys/rewriter"), rewriter);
             Machine.write(f("/sys/tmp"), str("""
                     
                     use /sys/tmp as a temporary location for objs.
