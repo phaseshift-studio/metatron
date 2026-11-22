@@ -304,4 +304,35 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         checkCodeRewrite(LOG, source, "start().repeat(branch(plus(),plus(),plus()),loop().is())",
                 "{5,6,7,8,9,10,11,12}", true);
     }
+
+    /**
+     * COEFFICIENTS ARE CONSERVED DOWN THE TREE (Marko, 2026-11-22): every tree answers what the same program answers at
+     * home, coefficients included. Each seed repeats members, so the frontier bulks, and peer 1, which re-plans its part
+     * over peers 2 and 3, hands counted members on a level further and reads them back. The program runs as written,
+     * which must distribute, and its home twin states ?hop=0 where the program's budget is read. Each row: the program %
+     * its home twin.
+     */
+    @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the conservation is the subject")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start?hop=2({1,1,2,2,3,3,4,4}).plus(1)                          % start?hop=0({1,1,2,2,3,3,4,4}).plus(1)",
+            "{1,1,2,2,3,3,4,4}.plus(1).sum?hop=2()                           % start?hop=0({1,1,2,2,3,3,4,4}).plus(1).sum()",
+            "{1,1,2,2,3}.group?hop=2([mod(2)=>count()])                      % start?hop=0({1,1,2,2,3}).group([mod(2)=>count()])",
+            "{1,1,2,2}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3) % {1,1,2,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
+    }, delimiter = '%')
+    void testCoefficientsAreConservedDownTheTree(final String program, final String home) {
+        final Code planned = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(program.trim())).asCode();
+        assertTrue(distributes(planned.insts()), "the program must distribute, or the row tests nothing: " + planned);
+        checkEquality(LOG, Machine.evaluate(Machine.parse(home.trim()).asCode()),
+                Machine.evaluate(Machine.parse(program.trim()).asCode()), true);
+    }
+
+    /**
+     * Whether a chain fans out: a branch, or a branch inside a repeat's code (law_bsp's superstep).
+     */
+    private static boolean distributes(final List<Inst> insts) {
+        return insts.stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath())
+                || (REPEAT_INST_TID.equals(inst.tid().basePath()) && inst.arg(f(CODE), 1).isCall()
+                && distributes(inst.arg(f(CODE), 1).asCall().insts())));
+    }
 }

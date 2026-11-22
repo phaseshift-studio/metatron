@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REPEAT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PROFILING_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
@@ -712,6 +713,42 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         final String peer = Machine.current().network().peers().elements()
                 .map(rel -> rel.second().asRec().at(uri(HOST)).uriValue().toString()).findFirst().orElseThrow();
         checkCodeParseApply(LOG, "{1,1,2}.branch?<=int{*}(<" + peer + "> => plus(1))", "{{2}2,3}");
+    }
+
+    /**
+     * COEFFICIENTS ARE CONSERVED (Marko, 2026-11-22: "coefficients are powerful and yet another thing that can go
+     * wrong"): every distribution answers what the same program answers at home, coefficients included. Each seed
+     * repeats members, so the frontier bulks and a lane carries counted members across the wire, a lone one too
+     * ({@code {1,1,2,2,3}} deals {@code {2}2} to a lane by itself): a lost count shows as a different bag, a lost member
+     * as a smaller one. The program runs as written, which must distribute (a row that runs at home tests nothing), and
+     * its home twin states ?hop=0 where the program's budget is read. The tree rows re-plan at peers 1 and 2, which dial
+     * each other and peer 3. Each row: the program % its home twin.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,1,2,2,3}.plus(1)                                             % start?hop=0({1,1,2,2,3}).plus(1)",
+            "{1,1,2,2,3}.plus(1).sum()                                       % start?hop=0({1,1,2,2,3}).plus(1).sum()",
+            "{1,1,1,2}.count()                                               % start?hop=0({1,1,1,2}).count()",
+            "{1,1,2,2,3}.group([mod(2)=>count()])                            % start?hop=0({1,1,2,2,3}).group([mod(2)=>count()])",
+            "start?hop=2({1,1,2,2,3,3}).plus(1)                              % start?hop=0({1,1,2,2,3,3}).plus(1)",
+            "{1,1,2,2,3,3}.plus(1).sum?hop=2()                               % start?hop=0({1,1,2,2,3,3}).plus(1).sum()",
+            "{1,1,2}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)         % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
+            "{1,1,2}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)   % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
+    }, delimiter = '%')
+    void test_conservation_a_bulked_seed_answers_as_at_home(final String program, final String home) {
+        final Code planned = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(program.trim())).asCode();
+        assertTrue(distributes(planned.insts()), "the program must distribute, or the row tests nothing: " + planned);
+        checkEquality(LOG, Machine.evaluate(Machine.parse(home.trim()).asCode()),
+                Machine.evaluate(Machine.parse(program.trim()).asCode()), true);
+    }
+
+    /**
+     * Whether a chain fans out: a branch, or a branch inside a repeat's code (law_bsp's superstep).
+     */
+    private static boolean distributes(final List<Inst> insts) {
+        return insts.stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath())
+                || (REPEAT_INST_TID.equals(inst.tid().basePath()) && inst.arg(f(CODE), 1).isCall()
+                && distributes(inst.arg(f(CODE), 1).asCall().insts())));
     }
 
     /**
