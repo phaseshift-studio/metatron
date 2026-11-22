@@ -650,7 +650,7 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 | field         | what it is                                                                                                                                 |
 |---------------|--------------------------------------------------------------------------------------------------------------------------------------------|
 | `obj`         | the machine address `//host[/path]` — `host()` is the roster key, `path()` the frame vid (empty = the host's root machine). Who evaluates. |
-| `authority`   | the transports that reach it (`scheme://host:port`); two aliases of one machine are values, never two places                               |
+| `authority`   | the transports that reach it (`scheme://host:port[/route]`); two aliases of one machine are values, never two places                       |
 | `instset`     | (reserved — the ISAs resolvable here, the vocabulary coordinate; joined when `/m/math/cat/signature` lands)                                |
 | `source`      | (optional) who declared it (`mdns`, boot profile, a dial)                                                                                  |
 | `linked_to`   | **derived** — the peers this machine dialed to this place (outbound edges)                                                                 |

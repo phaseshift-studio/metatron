@@ -535,7 +535,7 @@ public class webInstSet extends AbstractInstSet {
                                 .create(),
                         MDNS_DISCOVERY_TYPE = TypeBuilder.build()
                                 .tid(MDNS_TID)
-                                .vid(MDNS_DISCOVERY_TID, "the mdns discovery handler — announces the mtron endpoints this machine answers on (a listener's origin and each route an mtron::T handler serves) and writes every machine it knows, this one included, into the one roster/machine table. a source is live once it exists: construction starts the responders and close() stops them, so there is no start or scan to drive. a passive background object that publishes only its liveness — many discovery protocols run at once and collaborate on the one index")
+                                .vid(MDNS_DISCOVERY_TID, "the mdns discovery handler — announces the mtron endpoints this machine answers on (a listener's origin extended by each route whose handler is an mtron::T) and writes every machine it knows, this one included, into the one roster/machine table. a source is live once it exists: construction starts the responders and close() stops them, so there is no start or scan to drive. a passive background object that publishes only its liveness — many discovery protocols run at once and collaborate on the one index")
                                 // STATUS IS OPTIONAL HERE AND REQUIRED BY discovery::T, deliberately: the
                                 // constructor installs it, so a predicate that demanded it would reject every
                                 // rec a user could actually write. What satisfies the obligation is the

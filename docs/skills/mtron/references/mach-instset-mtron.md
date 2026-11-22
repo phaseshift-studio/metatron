@@ -382,8 +382,8 @@ Dialing a surface already held closes the old connection, and the new one takes 
 ### presence
 
 A machine's authorities are its listening surfaces (`ws_server::T`, `http_server::T`). What mDNS announces, and a
-roster files, is each mtron endpoint on them: a listener's origin and a route whose handler is an `mtron::T`
-(`ws://host:8555/mtron`). A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
+roster files, is each mtron endpoint on them: a listener's origin extended by a route whose handler is an
+`mtron::T` (`ws://host:8555/mtron`). A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
 identity: its host and credentials never leave the machine, and an address carrying userinfo is refused.
 
 | `listener::T` field | value                                                           |
