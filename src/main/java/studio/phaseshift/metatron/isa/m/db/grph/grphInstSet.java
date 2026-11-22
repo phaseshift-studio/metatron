@@ -56,6 +56,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -158,14 +159,24 @@ public class grphInstSet extends AbstractInstSet {
     }
 
     /**
-     * The edge labels an adjacency inst carries: a concrete uri for a labelled call ({@code out(knows)}),
-     * nothing when the slot is empty OR still holds the DECLARED arg type ({@code uri{*}::T}) of an
-     * unbound inst — a type is not a label. Nothing, too, for a pattern ({@code out(+)}): it takes every label,
-     * as the pushed-down {@code out()} does ({@link #quotedArguments}), never an edge labeled {@code +}.
+     * The edge labels an adjacency inst carries, EVERY ONE THE CALL NAMES (Marko, 2026-11-22: mtron has varargs, so
+     * the one declared slot {@code uri{*}::T} binds them all): {@code out(knows,created)} filters by both, as the
+     * pushed-down {@code out('knows','created')} does ({@link #quotedArguments}). Nothing when the slot is empty OR
+     * still holds the DECLARED arg type of an unbound inst — a type is not a label. Nothing, too, when a pattern is
+     * among them ({@code out(+)}): it takes every label, as the pushed-down {@code out()} does, never an edge labeled
+     * {@code +}.
      */
     private static String[] edgeLabels(final Inst inst) {
-        final Obj arg = inst.arg(0);
-        return arg.isUri() && !arg.uriValue().hasPattern() ? new String[]{arg.uriValue().name()} : new String[0];
+        final List<String> labels = new ArrayList<>();
+        for (final Obj arg : inst.args().orElse(lst()).values().flatMap(Obj::stream).toList()) {
+            if (arg.isType())
+                continue;
+            if (arg.isUri() && arg.uriValue().hasPattern())
+                return new String[0];
+            if (arg.isUri())
+                labels.add(arg.uriValue().name());
+        }
+        return labels.toArray(String[]::new);
     }
 
     /**
@@ -173,8 +184,17 @@ public class grphInstSet extends AbstractInstSet {
      * ({@code grphSpace.traverseVertex}), not by Gremlin: such a hop keeps the address walk and declines fusion.
      */
     private static boolean isExternalLabel(final Inst inst) {
-        final Obj arg = inst.arg(0);
-        return arg.isUri() && arg.uriValue().toString().indexOf(':') > 0;
+        return inst.args().orElse(lst()).values().flatMap(Obj::stream)
+                .anyMatch(arg -> !arg.isType() && arg.isUri() && arg.uriValue().toString().indexOf(':') > 0);
+    }
+
+    /**
+     * An address names one label, so a call naming several reads one address per label and sums what they hold.
+     */
+    private static Obj readPerLabel(final String[] labels, final Function<String, fURI> address) {
+        return 1 == labels.length
+                ? Machine.read(address.apply(labels[0]))
+                : objs(Arrays.stream(labels).flatMap(label -> Machine.read(address.apply(label)).stream()));
     }
 
     /**
@@ -243,9 +263,11 @@ public class grphInstSet extends AbstractInstSet {
      * edge's endpoint only when the edge's own label is among L, and every edge passes when no label is given. So each
      * endpoint step is the converse of its edge step with the labels carried through, outE(L)⁻¹(e) = outV(L)(e): the
      * edge's tail if its label is in L, else nothing. A live edge reads its label off the graph; a value that crossed
-     * the wire carries it as its type's name.
+     * the wire carries it as its type's name. L is every label the call names ({@link #edgeLabels}), the same labels
+     * the pushdown hands Gremlin ({@link #quotedArguments}). Package-private: TinkerGrphSpaceTest reads a crossed
+     * edge's label through it, since a value edge carries no address to walk its endpoints by.
      */
-    private static boolean labelled(final Obj edge, final Inst inst) {
+    static boolean labeled(final Obj edge, final Inst inst) {
         final String[] labels = edgeLabels(inst);
         return 0 == labels.length
                 || List.of(labels).contains(edge instanceof EdgeRec live ? live.edge().label() : edge.tid().name());
@@ -282,22 +304,19 @@ public class grphInstSet extends AbstractInstSet {
     private static Obj routeEdgeTraversal(final Obj lhs, final Inst inst, final Direction direction) {
         final fURI base = resolveVid(lhs);
         if (base == null) return noobj();
-        fURI path = base.extend(direction.name());
+        final fURI hop = base.extend(direction.name());
         final String[] labels = edgeLabels(inst);
-        if (labels.length > 0)
-            path = path.extend(labels[0]);
-        return Machine.read(path);
+        return 0 == labels.length ? Machine.read(hop) : readPerLabel(labels, hop::extend);
     }
 
     private static Obj routeVertexTraversal(final Obj lhs, final Inst inst, final Direction direction) {
         final fURI base = resolveVid(lhs);
         if (base == null) return noobj();
-        fURI path = base.extend(direction.name());
+        final fURI hop = base.extend(direction.name());
+        final String back = direction.opposite().name();
         final String[] labels = edgeLabels(inst);
-        if (labels.length > 0)
-            path = path.extend(labels[0]);
-        path = path.extend(direction.opposite().name());
-        return Machine.read(path);
+        return 0 == labels.length ? Machine.read(hop.extend(back))
+                : readPerLabel(labels, label -> hop.extend(label).extend(back));
     }
 
     private static Obj routeBothTraversal(final Obj lhs, final Inst inst) {
@@ -305,20 +324,20 @@ public class grphInstSet extends AbstractInstSet {
         if (base == null) return noobj();
         final String[] labels = edgeLabels(inst);
         // a vertex's OUT/IN segment is its EDGES, so the OPPOSITE hop is what lands on vertices
-        final String label = labels.length > 0 ? labels[0] : "+";
+        final String[] each = labels.length > 0 ? labels : new String[]{"+"};
         return objs(Stream.concat(
-                Machine.read(base.extend("OUT").extend(label).extend(Tokens.IN)).stream(),
-                Machine.read(base.extend("IN").extend(label).extend(Tokens.OUT)).stream()));
+                readPerLabel(each, label -> base.extend("OUT").extend(label).extend(Tokens.IN)).stream(),
+                readPerLabel(each, label -> base.extend("IN").extend(label).extend(Tokens.OUT)).stream()));
     }
 
     private static Obj routeBothETraversal(final Obj lhs, final Inst inst) {
         final fURI base = resolveVid(lhs);
         if (base == null) return noobj();
         final String[] labels = edgeLabels(inst);
-        final Obj outResult = Machine.read(labels.length > 0
-                ? base.extend("OUT").extend(labels[0]) : base.extend("OUT"));
-        final Obj inResult = Machine.read(labels.length > 0
-                ? base.extend("IN").extend(labels[0]) : base.extend("IN"));
+        final Obj outResult = labels.length > 0
+                ? readPerLabel(labels, label -> base.extend("OUT").extend(label)) : Machine.read(base.extend("OUT"));
+        final Obj inResult = labels.length > 0
+                ? readPerLabel(labels, label -> base.extend("IN").extend(label)) : Machine.read(base.extend("IN"));
         if (outResult.isFail()) return outResult;
         if (inResult.isFail()) return inResult;
         return objs(Stream.concat(outResult.stream(), inResult.stream()));
@@ -774,7 +793,7 @@ public class grphInstSet extends AbstractInstSet {
                                 .rng(REC_TID.maybe(), "the incoming vertex, or nothing when the edge's label is not among the arg labels")
                                 .argLst(T(URI_TID.maybeSome()), "zero or more edge labels: the endpoint only of an edge whose label is among them")
                                 .desc("returns the lhs edge head vertex, if the edge's label is among the arg labels")
-                                .body((lhs, inst) -> labelled(lhs, inst) ? edgeVertex(lhs, Direction.IN) : noobj())
+                                .body((lhs, inst) -> labeled(lhs, inst) ? edgeVertex(lhs, Direction.IN) : noobj())
                                 .converse(INE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
@@ -784,7 +803,7 @@ public class grphInstSet extends AbstractInstSet {
                                 .rng(REC_TID.maybe(), "the outgoing vertex, or nothing when the edge's label is not among the arg labels")
                                 .argLst(T(URI_TID.maybeSome()), "zero or more edge labels: the endpoint only of an edge whose label is among them")
                                 .desc("returns the lhs edge tail vertex, if the edge's label is among the arg labels")
-                                .body((lhs, inst) -> labelled(lhs, inst) ? edgeVertex(lhs, Direction.OUT) : noobj())
+                                .body((lhs, inst) -> labeled(lhs, inst) ? edgeVertex(lhs, Direction.OUT) : noobj())
                                 .converse(OUTE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
@@ -796,7 +815,7 @@ public class grphInstSet extends AbstractInstSet {
                                 .rng(REC_TID.maybeSome(), "both vertices: the edge's head and tail")
                                 .argLst(T(URI_TID.maybeSome()), "zero or more edge labels: the endpoint only of an edge whose label is among them")
                                 .desc("returns the lhs edge's head and tail vertices, if the edge's label is among the arg labels")
-                                .body((lhs, inst) -> labelled(lhs, inst) ? edgeVertices(lhs) : noobj())
+                                .body((lhs, inst) -> labeled(lhs, inst) ? edgeVertices(lhs) : noobj())
                                 .converse(BOTHE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),

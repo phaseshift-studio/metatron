@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.FLOW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -224,7 +225,7 @@ public class TopologyTest extends AbstractMetatronTest {
      */
     @Test
     public void testARepeatThatDealsNothingHasNoTopology() {
-        assertTrue(Topology.explain(ObjmtronSerializer.parse(
-                "{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)").asCode()).isNoObj());
+        checkEquality(LOG, noobj(), Topology.explain(ObjmtronSerializer.parse(
+                "{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)").asCode()), true);
     }
 }
