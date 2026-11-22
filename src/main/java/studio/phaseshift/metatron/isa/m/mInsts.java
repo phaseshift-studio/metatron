@@ -1085,7 +1085,14 @@ public final class mInsts {
                         .rng(REC_TID, "the deep merge of the two opposing sign recs")
                         .argLst(REC_TYPE, "the rec whose matching entries are inverted and merged")
                         .body((lhs, inst) -> lhs.asRec().minus(inst.arg(0).asRec()))
-                        .law(Law.pure)
+                        .law(Law.pure, Law.monoidic)
+                        .create(),
+                InstBuilder.build().tid(NEG_INST_TID, "a negation function \\(f(x) \\mapsto 1/x\\): the additive inverse of the lhs rec")
+                        .dom(REC_TID, "a rec")
+                        .rng(REC_TID, "the additive inverse")
+                        .argLst()
+                        .body((lhs, _) -> lhs.asRec().neg())
+                        .law(Law.involution, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MPLUS_INST_TID, "set the lhs rec's entries from the argument rec, one rel at a time")
                         .dom(REC_TID, "the lhs rec").rng(REC_TID, "the lhs rec with the argument's entries written over it")
