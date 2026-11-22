@@ -60,6 +60,7 @@ public class BspRuleTest extends AbstractMetatronTest {
 
     private static final fURI ALPHA = f("loop://alpha:8555");
     private static final fURI BETA = f("loop://beta:8555");
+    private static final fURI GAMMA = f("loop://gamma:8555");
     private static final fURI MINE = f("loop://mantis:8555");
 
     @BeforeAll
@@ -144,6 +145,9 @@ public class BspRuleTest extends AbstractMetatronTest {
             "{1,2,3}.repeat?<=int{*}(code=>sum(),until=>loop()?>0)",
             "{1,2,3}.repeat?<=int{*}(code=>plus(1).print(_),until=>loop()?>3)",
             "{1,2,3}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
+            // the code's own budget is the pass's when the repeat states none, and an arity of zero deals to no one
+            "{1,2,3}.repeat?<=int{*}(code=>plus?hop=0(1),until=>loop()?>3)",
+            "{1,2,3}.repeat?<=int{*}&hop={0}2(code=>plus(1),until=>loop()?>3)",
             // a gathering repeat inside the code needs the whole frontier, like a fold: dealt, each lane's inner superstep
             // would sum only its share (4 and 2), never pass gt(5), and never return, where home answers 6
             "{1,2,3}.repeat?<=int{*}(code=>repeat?<=int{*}(code=>sum(),until=>is(gt(5))),until=>loop()?>0)",
@@ -151,6 +155,41 @@ public class BspRuleTest extends AbstractMetatronTest {
     public void testWhatIsNotDealtIsLeftAsWritten(final String mtron) {
         final Code before = program(mtron);
         assertSame(before, Bsp.apply(before, dialed(ALPHA, BETA)), "left as written: " + mtron);
+    }
+
+    /**
+     * A TREE OF SUPERSTEPS (Marko, 2026-11-22: tree BSP unites E and N): the superstep's budget is read as law_shard
+     * reads a run's, the earliest {@code ?hop} on the repeat or its code, else one level. Each lane states the height
+     * one level down on its head, where the peer it lands on reads it and plans its part over its own peers, and the
+     * arity caps the lanes: a binary tree ({2}) over three dialed peers takes two of them, and a chain ([n,1]) one. Each
+     * row: the program % the lanes % the budget each lane's head states.
+     */
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource(value = {
+            "{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)                 % 3 % 0",
+            "{1,2,3}.repeat?<=int{*}&hop=1(code=>plus(1),until=>loop()?>3)           % 3 % 0",
+            "{1,2,3}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)           % 3 % 1",
+            "{1,2,3}.repeat?<=int{*}&hop=3(code=>plus(1),until=>loop()?>3)           % 3 % 2",
+            "{1,2,3}.repeat?<=int{*}&hop={2}2(code=>plus(1),until=>loop()?>3)        % 2 % {2}1",
+            "{1,2,3}.repeat?<=int{*}&hop=[2,1](code=>plus(1),until=>loop()?>3)       % 1 % [1,1]",
+            // the code may state the budget itself, and the repeat's, written first, wins over it
+            "{1,2,3}.repeat?<=int{*}(code=>plus?hop=2(1),until=>loop()?>3)           % 3 % 1",
+            "{1,2,3}.repeat?<=int{*}&hop=2(code=>plus?hop=3(1),until=>loop()?>3)     % 3 % 1",
+            "*g:V/+.repeat?<=A{*}&hop=2(code=>both(),until=>loop()?>4)               % 3 % 1",
+    }, delimiter = '%')
+    public void testTheSuperstepsBudgetShapesTheTree(final String mtron, final int lanes, final String budget) {
+        final Code before = program(mtron.trim());
+        final Code after = Bsp.apply(before, dialed(ALPHA, BETA, GAMMA));
+        LOG.debug("law_bsp: %s  |->  %s", before, after);
+        final Inst branch = repeatOf(after).arg(f(CODE), 1).asCall().insts().getFirst();
+        assertEquals(BRANCH_INST_TID, branch.tid().basePath(), "the code is a branch: " + branch);
+        final List<Rel> routes = branch.args().asRec().elements().toList();
+        assertEquals(lanes, routes.size(), "the arity caps the lanes: " + routes);
+        for (final Rel route : routes) {
+            final List<Inst> lane = route.second().asCall().insts();
+            assertEquals(budget.trim(), lane.getFirst().tid().q(HOP), "the lane's head states its budget: " + route);
+            assertTrue(lane.stream().skip(1).noneMatch(inst -> inst.tid().hasQ(HOP)), "only the head states one: " + route);
+        }
     }
 
     /**

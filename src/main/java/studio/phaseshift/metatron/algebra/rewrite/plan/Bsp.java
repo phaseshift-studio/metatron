@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
@@ -41,8 +42,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * law_bsp, THE SUPERSTEP RULE (Marko, 2026-11-22): a whole-frontier repeat whose code distributes over the stream sum
  * deals its frontier over the dialed peers every pass.
  * <pre>
- *   x.repeat?&lt;=A{*}(code=&gt;f, …)  |-&gt;  x.repeat?&lt;=A{*}(code=&gt;branch?&lt;=A{*}&amp;split=part(&lt;//p&gt; =&gt; f?hop=0, …), …)
+ *   x.repeat?&lt;=A{*}(code=&gt;f, …)  |-&gt;  x.repeat?&lt;=A{*}(code=&gt;branch?&lt;=A{*}&amp;split=part(&lt;//p&gt; =&gt; f?hop=h-1, …), …)
  * </pre>
+ * where h is the superstep's height, one when unstated, so a lane is {@code f?hop=0} unless a tree is asked for.
  * The loop stays home. Each pass gathers the frontier (the repeat's own barrier), and the branch deals it by its own
  * rule ({@code BranchInst#deal}: member j to lane j mod W, a bulked member whole), runs f where each lane points, and
  * merges the lanes' answers before the next pass begins: lock-step BSP. Its own rule beside law_shard, not a cut in
@@ -52,11 +54,18 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * or flatmapper, declared pure), each typed at the carrier flowing into it. Such an f distributes over the stream sum,
  * so dealing the frontier changes nothing but where f runs. A fold or a gather in f ({@code sum()}) would answer a
  * partial per lane, and an effect must not move, so either keeps the repeat as written. So does a per-monad repeat
- * (nothing to deal), a repeat that states {@code ?hop=0}, and a code a keyed branch already deals.
+ * (nothing to deal), a superstep whose budget is the point ({@code ?hop=0}), and a code a keyed branch already deals.
  * <p>
  * WHERE: the DIALED peers that serve {@code eval}, never the roster. A frontier goes only where a connection already
- * stands (the roster counts every interface of a machine as a place). Each lane states {@code ?hop=0}, so a peer
- * runs f and plans nothing further.
+ * stands (the roster counts every interface of a machine as a place).
+ * <p>
+ * HOW DEEP, A TREE OF SUPERSTEPS (Marko, 2026-11-22: tree BSP unites two patterns, E and N): the superstep's budget
+ * is read as law_shard reads a run's, the earliest {@code ?hop} on the repeat or its code, else one level. Its arity
+ * caps the lanes, and each lane states the budget one level down on its head ({@code f?hop=0} at a leaf), where the
+ * peer reads it: handed {@code start(part).f?hop=h}, a peer whose budget is left plans its part over its own dialed
+ * peers (law_shard's cutless run), and so on down. Every pass then partitions the frontier recursively down the tree
+ * and merges it back up, and the root's merge is still the one barrier per pass: f distributes over the stream sum at
+ * every level, so the tree answers what the flat deal answers.
  */
 public final class Bsp {
 
@@ -88,10 +97,10 @@ public final class Bsp {
     }
 
     /**
-     * A repeat that gathers its whole frontier and has not opted out with {@code ?hop=0}.
+     * A repeat that gathers its whole frontier.
      */
     private static boolean wholeFrontier(final Inst inst) {
-        return REPEAT_INST_TID.equals(inst.tid().basePath()) && inst.isGather() && !"0".equals(inst.tid().q(HOP));
+        return REPEAT_INST_TID.equals(inst.tid().basePath()) && inst.isGather();
     }
 
     /**
@@ -104,10 +113,17 @@ public final class Bsp {
         final List<Inst> f = codeArg.asCall().insts();
         if (f.isEmpty() || !floats(f, carrier))
             return null;
+        // THE SUPERSTEP'S BUDGET: the earliest ?hop on the repeat or its code, else one level; the point, or an arity of
+        // zero, keeps the pass home. A lane states the height one level down (0 at a leaf), the arity as stated.
+        final Hop hop = Shard.hopAxis(Stream.concat(Stream.of(repeat), f.stream()).toList(), Hop.tree(1));
+        if (hop.isPoint() || hop.arity().isZero())
+            return null;
+        final Obj budget = 1 == hop.height() ? jnt(0) : Hop.of(hop.height() - 1, hop.arity()).toObj();
+        final long arity = null == hop.arity().max() ? Long.MAX_VALUE : hop.arity().max();
         final Map<Obj, Obj> routes = new LinkedHashMap<>();
-        for (final fURI peer : peers) {
+        for (final fURI peer : peers.subList(0, (int) Math.min(peers.size(), arity))) {
             final List<Inst> lane = new ArrayList<>(f.stream().map(Shard::raw).toList());
-            Shard.stampHop(lane, jnt(0));
+            Shard.stampHop(lane, budget);
             routes.put(uri(peer), code(lane));
         }
         final Inst branch = instB(BRANCH_INST_TID.dom(InstSet.A.maybeSome()).q(SPLIT, PART), rec(routes));

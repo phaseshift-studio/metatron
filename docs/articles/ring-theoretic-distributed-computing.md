@@ -41,8 +41,9 @@ This article develops the relationship between the distributivity laws of `+` an
 distributed computing.
 The first section recalls the distributive laws of the stream ring and its function subrings. The second states the
 *shard identity*, the one rewrite every distribution pattern below lowers to,
-and proves it from Theorems 18 and 19. The third extends it to programs with many cuts. The fourth closes a program into
-a loop, the superstep of bulk synchronous computation, run again and again. The fifth shows that a coefficient is
+proves it from Theorems 18 and 19, and plans it at every level of a tree. The third extends it to programs with many
+cuts. The fourth closes a program into a loop, the superstep of bulk synchronous computation, run again and again,
+and couples the loop with the tree. The fifth shows that a coefficient is
 itself an index set, so a single value can be distributed by splitting its unrolls instead of its members. The sixth
 reads the menu of distribution patterns as a taxonomy of laws.
 
@@ -184,6 +185,34 @@ Each place sorts its share and keeps two, and home merges the runs and keeps two
 members. The law is causality, not monotonicity in the prefix order, which a sorted merge lacks: `[1]` is a prefix of
 `[1,2]`, yet merging each with `[3]` gives `[1,3]` and `[1,2,3]`.
 
+**A cut is planned at every level of a tree.** A place handed a lane may plan it again, over places of its own. The
+budget `?hop` states how many levels a plan may take (the menu's entry E): `law_shard` reads it off the fold, and every
+lane carries it one level down, on its head, so a leaf states `?hop=0` and plans nothing further. To grow a tree, each
+peer harvests two peers of its own, with the `harvest` its boot file defines:
+
+```mtron_pre
+branch(<//0> => {2,3}.harvest(<boot/space/grph/peer.boot.mtron>), /
+       <//1> => {4,5}.harvest(<boot/space/grph/peer.boot.mtron>))
+```
+
+Now `//0` holds `//2` and `//3`, and `//1` holds `//4` and `//5`. Each level is the shard identity again: a place deals
+what it is handed over its children and recombines their partials through the same combiner, so with
+$s_j = s_{j,1} + \cdots + s_{j,k}$ the part the $j$-th place is handed,
+
+$$
+s\,f\,r = \Big(\sum_{j=1}^{k}\Big(\sum_{l=1}^{k} s_{j,l}\,f\,r\Big)\,C(r)\Big)\,C(r).
+$$
+
+```mtron_pre
+{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2()
+{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>format
+{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>ext/topology/format
+```
+
+The root's two lanes state `?hop=1`, a level left, so each peer plans its share over its own two peers. The topology is
+drawn by the nodes that planned it: each peer explains its own lane, and its fan is drawn inside the lane, a tree within
+the tree.
+
 # Chains of Cuts
 
 A program with several cuts is planned cut by cut. Each cut plans the floatable run before it, never reaching back past
@@ -318,10 +347,59 @@ itself pure, so `law_bsp` deals `both()` like any floatable run:
 *g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4).explain()>>ext/topology/format
 ```
 
+**A tree of supersteps.** The superstep's budget is read as `law_shard` reads a fold's: a `?hop` on the `repeat`, or on
+its code, states how many levels each pass may take, and the lanes `law_bsp` writes carry it one level down. A peer
+handed its share as `start(part).f?hop=1` plans it as it plans any cutless run, over its own peers, so every pass deals
+the frontier down the tree and merges it back up (figure 6). The root's merge is still the one barrier per pass.
+
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-07.tex (the PDF surface typesets it; the svg is its render) -->
+![figure 6](images/ring-theoretic-distributed-computing/fig-07.svg)
+
+Write $\pi_j$ for the deal's $j$-th share, the function that hands a place its part of what it receives. A deal
+partitions what it receives, every member to exactly one child, so its shares sum to the identity,
+$\pi_1 + \cdots + \pi_k = 1$. A pass over a tree of height $h$, repeated $n$ times, is then one term, and its two
+recursions are orthogonal: the nesting is the tree, a recursion in space whose parentheses are the merges, and the power
+is the loop, a recursion in time whose factors meet at the barrier.
+
+$$
+x\,f^{n} \;=\; x\,\overbrace{\Bigg(\underbrace{\sum_{j_1=1}^{k}\pi_{j_1}\bigg(\sum_{j_2=1}^{k}\pi_{j_2}\cdots\Big(\sum_{j_h=1}^{k}\pi_{j_h}\,f\Big)\cdots\bigg)}_{\text{space: a tree of height } h}\Bigg)^{n}}^{\text{time: } n \text{ supersteps}}
+$$
+
+**Proposition (the tree of supersteps).** Let $f$ be a floatable run, and let every deal partition what it receives.
+Then the term above is $x\,f^{n}$, for every height $h$ and every number of passes $n$.
+
+*Proof sketch.* The innermost sum is $\pi_{1}f + \cdots + \pi_{k}f = (\pi_1 + \cdots + \pi_k)\,f = f$, by right
+distributivity, since $f$ is a product of map, filter, and flatmap functions. Each enclosing level then has the same
+form, so a pass collapses to $f$ by induction on $h$, and its $n$-th power is $f^{n}$. ◻
+
+At $h = 0$ the term is the serial loop, at $h = 1$ the flat superstep above, and at $n = 1$ one pass dealt over a tree.
+Tree reduction (E) and the superstep (N), two entries of the menu, are one program at two settings of one query
+parameter, and the answer does not change between them.
+
+```mtron_pre
+{1,2,3,4,5,6,7,8}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)
+{1,2,3,4,5,6,7,8}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3).explain()>>format
+*g:V/+.repeat?<=A{*}&hop=2(code=>both(),until=>loop()?>4)>>name
+```
+
+Each lane of the root's `branch` states `?hop=1`, a level left, and the walk answers what the flat walk answers. The
+topology draws only the root's level: a peer plans its part of a frontier only when the part arrives, and `explain()`
+runs nothing.
+
 **The domain coefficient is the schedule.** How much of the frontier a pass waits for is `repeat`'s domain
 coefficient, not a flag: $\{1\}$ walks each monad on its own and $\{*\}$ waits for the whole frontier. One knob
 moves a program between the asynchronous and the bulk synchronous models, and for a floatable pass the answer is the
-same at either setting.
+same at either setting. The budget is the shape: `?hop` moves a pass from home to a star to a tree, and again the
+answer is the same.
+
+**Patterns are points, and metatron interpolates between them.** The menu lists its patterns as if each were a design
+of its own, but here they are settings of a few parameters on one term, and every setting between two named patterns is
+a program too. The budget's height runs from home ($h = 0$) through a star ($h = 1$) to a tree; its arity from a chain
+(`?hop=[h,1]`) through a $k$-ary tree (`?hop={k}h`) to whatever each place holds; the domain coefficient from one monad
+at a time ($\{1\}$) to the whole frontier ($\{*\}$), with pages of $n$ between them still to be written. A program
+moves along these axes by its query parameters alone, never by being rewritten, and for a floatable pass the
+propositions above keep its answer where it is: only the cost moves. Distribution becomes a gradient rather than a
+catalog, and a planner could descend it by cost.
 
 [To be written: a bounded $\{n\}$ as a page, supersteps over pages of $n$ objects that the processor runs and dumps as
 a lazy barrier; the frontier kept on the peers between passes, fusing one pass's branch with the next so that only the
@@ -351,7 +429,7 @@ A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and p
 $a\{p\} = a\{p_1\} + a\{p_2\}$ with $p = p_1 + p_2$, so the places take even shares of the copies.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-05.tex -->
-![figure 6](images/ring-theoretic-distributed-computing/fig-05.svg)
+![figure 7](images/ring-theoretic-distributed-computing/fig-05.svg)
 
 [To be written: the point's live example. Over places today a shipped lane loses its point, so the example waits on
 that fix.]
@@ -408,7 +486,7 @@ or compose the others (N, R, M, I).
 | **B** |              | data-local shard          | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                     | the code moves to the data: each authority folds what it holds                                                                         |
 | **C** |              | authority push-down       | $\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}$                                                                | B with one owner: the fold runs where the data lives, natively (Theorem 5 and a pure chain)                                            |
 | **D** | $\checkmark$ | parallel fan-out          | $\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b$                                                                  | the transport, not a new fold: every lane is submitted before any is awaited, so the master pays the longest round trip, not their sum |
-| **E** | $\checkmark$ | tree reduction            | $(a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C$                                          | each interior node re-plans its part and recombines a level                                                                            |
+| **E** | $\checkmark$ | tree reduction            | $(a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C$                                          | each interior node re-plans its part and recombines a level; under a whole-frontier `repeat`, every pass does (N)                      |
 | **F** |              | ordered fold              | $a \cdot (b \cdot c) = (a \cdot b) \cdot c$                                                                                        | associativity alone: a list-partitioned fold carries the running total (streams never shard)                                           |
 | **G** | $\checkmark$ | keyed reduce              | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$ | partials merge by key; the combiner is pointwise, computed from the inner fold's                                                       |
 | **H** |              | redundant / hedged shards | $x \oplus x = x$                                                                                                                   | an idempotent fold lets a part ship to several peers and every reply fold; otherwise hedge, first wins                                 |
@@ -417,7 +495,7 @@ or compose the others (N, R, M, I).
 | **K** | $\checkmark$ | limit / top-k push-down   | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                                                       |
 | **L** |              | mergeable sketches        | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                                                                    |
 | **M** |              | matrix multiplication     | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)                                             |
-| **N** | $\checkmark$ | iterative / BSP           | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a superstep, repeated: `law_bsp` deals each pass of a whole-frontier `repeat`; the merge is the superstep boundary                     |
+| **N** | $\checkmark$ | iterative / BSP           | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a superstep, repeated: `law_bsp` deals each pass of a whole-frontier `repeat`, down a tree under `?hop` (E); the merge is the barrier  |
 | **O** | $\checkmark$ | broadcast constants       | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                                                                                               | a constant rides as an argument of the floatable run: no fan-out change (Theorem 6)                                                    |
 | **P** |              | computed seeds            | $[0, n) = \uplus_i \mathrm{index}_i$                                                                                               | the index space is split, not the data: one constant-size message per peer                                                             |
 | **Q** |              | monad migration           | $\mathrm{authority}(m)$                                                                                                            | ship the monad, not the value: the continuation travels, one shard per step                                                            |
@@ -437,13 +515,18 @@ or compose the others (N, R, M, I).
 - Distribution is a reading of the ring, not a feature: $+$ is placement-free by Theorem 5, and the only question is
   where a stream must contract.
 - The shard identity, $s\,f\,r = (s_1 f r + \cdots + s_k f r)\,C(r)$, is the one rewrite: floatable runs distribute
-  because their subrings are right distributive, and a fold distributes when Theorem 19 holds for it.
+  because their subrings are right distributive, and a fold distributes when Theorem 19 holds for it. Applied again
+  at every place a lane lands, it is tree reduction.
 - A cut absorbs the prefix its combiner respects: when the combiner is causal, the select keeping the first $k$ ships
   with the fold, $C(r\,t_k) = C(r)\,t_k$, which is top-k.
 - A program expands and contracts once per cut; one object survives the home instructions between cuts.
 - A loop of cuts is a superstep, repeated: `repeat?<=A{*}` waits for its whole frontier each pass, `law_bsp` deals a
   floatable pass over the peers, and the merge is the barrier. The domain coefficient is the schedule: one object at
-  a time or the whole frontier, and a bounded one is to page it.
+  a time or the whole frontier, and a bounded one is to page it. The hop budget is the shape, and the tree and the loop
+  couple into one term, $x\,\big(\sum_{j_1}\pi_{j_1}(\cdots(\sum_{j_h}\pi_{j_h}\,f)\cdots)\big)^{n} = x\,f^{n}$.
+- The menu's patterns are points on a few axes, the hop budget's height and arity and the domain coefficient, and
+  metatron interpolates between them: a program moves along the axes by its query parameters, and for a floatable pass
+  its answer does not move with it.
 - A coefficient is an index set: a span splits by its exponent, a point by its copies.
 - [To be written: what is open — the shuffle and pipeline shapes, and the laws a fold would declare to reach them.]
 

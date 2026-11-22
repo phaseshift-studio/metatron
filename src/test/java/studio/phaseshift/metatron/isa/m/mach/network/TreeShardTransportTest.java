@@ -276,4 +276,32 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         assertTrue(explain.contains(":" + cluster.port(2)) && explain.contains(":" + cluster.port(3)),
                 "keyed by peers 2 and 3: " + explain);
     }
+
+    /**
+     * A TREE OF SUPERSTEPS (Marko, 2026-11-22: tree BSP unites two patterns, E and N). A whole-frontier repeat whose
+     * budget is two deals each pass over the three peers this machine holds, each lane the code with a level left
+     * ({@code plus?hop=1(1)}). The repeat stays home and judges until; peer 1, handed {@code start(part).plus?hop=1(1)},
+     * plans its part over peers 2 and 3 (law_shard's cutless run), so every pass partitions the frontier down the tree
+     * and merges it back up before the next. The answer is the flat deal's: four passes of plus(1) over 1..8.
+     */
+    @Training.SkipTraining(reason = "the program runs over a tree of forked peers; its layout is the subject")
+    @Test
+    void testATreeOfSuperstepsOverTransport() {
+        final String source = "{1,2,3,4,5,6,7,8}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)";
+        final Code master = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode();
+        final Inst repeat = master.insts().stream()
+                .filter(inst -> REPEAT_INST_TID.equals(inst.tid().basePath())).findFirst().orElseThrow();
+        final Inst branch = repeat.arg(f(CODE), 1).asCall().insts().getFirst();
+        assertEquals(BRANCH_INST_TID, branch.tid().basePath(), "the pass is a branch: " + master);
+        final List<Rel> lanes = branch.args().asRec().<Rel>elements().toList();
+        assertEquals(cluster.size(), lanes.size(), "one lane per peer this machine holds: " + master);
+        lanes.forEach(lane -> assertEquals("1", lane.second().asCall().insts().getFirst().tid().q(HOP),
+                "each lane carries a level left: " + lane));
+        // what a lane does at peer 1: handed its part with a level left, it plans the part over peers 2 and 3 (an
+        // even fan of two, its four members dealt two and two)
+        checkCodeParseApply(LOG, "branch?<={0}(<" + endpoint(1) + "> => start({1,2,3,4}).plus?hop=1(1))"
+                + ".explain()>>ext/topology/format.has('[{]4[}]──┤').count()", "1");
+        checkCodeRewrite(LOG, source, "start().repeat(branch(plus(),plus(),plus()),loop().is())",
+                "{5,6,7,8,9,10,11,12}", true);
+    }
 }
