@@ -222,7 +222,7 @@ public abstract class AbstractObjBuilder<B extends AbstractObjBuilder<B, O>, O e
      * matched, and the side written reads those names back, so a hole bound to an omitted argument is noobj again
      * ({@code kmerge(noobj)}, which reads its absent selector as {@code kmerge()} does).
      *
-     * <p>THE READERS. Three facts are read off the equation, and the rhs's shape decides which of them follow:
+     * <p>THE READERS. Four facts are read off the equation, and the rhs's shape decides which of them follow:
      * <ul>
      *   <li>CONTRACTION ({@code derivation_contraction}) runs it backward, rewriting every contiguous run of a chain
      *       that matches the rhs to the lhs: {@code mult(map(3).inv()) ↦ div(3)}, {@code map(1).sum() ↦ count()}. It
@@ -234,6 +234,11 @@ public abstract class AbstractObjBuilder<B extends AbstractObjBuilder<B, O>, O e
      *       those laws: {@code count ↦ map(1)·sum} recombines through {@code sum},
      *       {@code order(#{?}::T@b) ↦ split([_])·kmerge(#{?}::T@b)} through {@code kmerge}. This is how a sharded
      *       {@code count} or {@code order}, or a {@code group} over them, recombines;</li>
+     *   <li>THE LIFT ({@link Law.Helper#lifted}): an rhs that ENDS IN THE LHS'S OWN FOLD, {@code r ↦ ℓ·r}, claims that
+     *       {@code ℓ} is a sufficient statistic of {@code r}, a self-combining fold every lane can run in {@code r}'s
+     *       place, home running the rhs's last instruction over the summaries. {@code mean} is the witness:
+     *       {@code mean?<=int{*}() ↦ split?<=int{*}([mean(),count()])·cc(_>>1)·>>0·mean()}, a part's mean weighted by
+     *       its count. The equation alone does not license a shard (the median satisfies its own), the form does;</li>
      *   <li>THE INVERSE ({@code Law.Helper.derivedInverse}): an rhs that applies a group's operation to an argument
      *       holding the group's inverse defines the other half of that group. {@code minus(#::T@b) ≡ plus(map(#::T@b).neg())}
      *       makes {@code minus} the inverse of {@code plus}, and {@code plus} the inverse of {@code minus}, over an

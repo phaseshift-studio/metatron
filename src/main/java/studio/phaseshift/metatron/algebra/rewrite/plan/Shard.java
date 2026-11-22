@@ -204,9 +204,14 @@ public final class Shard {
             runIndex--;
         runIndex = expanded(chain, from, cut, runIndex);
         // a self-combining fold re-applies the chain's own instruction; a fold defined by derivation recombines through
-        // the fold its definition names; a keyed fold through the chain its pointwise combiner computes
+        // the fold its definition names; a keyed fold through the chain its pointwise combiner computes. A FOLD THAT
+        // RECOMBINES THROUGH ITSELF AFTER A LIFT (J, mean ↦ ℓ·mean) has every lane run the lift in its place, so a lane
+        // answers a summary of its part, and home runs the fold as its equation states it, over the summaries
         final Call combined = 0 > cut ? null : Law.Helper.combiner(typed.get(cut), chain.laws());
-        final List<Inst> combiner = null == combined ? List.of()
+        final Call lifted = 0 > cut || null != combined ? null : Law.Helper.lifted(typed.get(cut));
+        final List<Inst> lift = null == lifted ? List.of() : lifted.insts().subList(0, lifted.insts().size() - 1);
+        final List<Inst> combiner = null != lifted ? List.of(raw(lifted.insts().getLast()))
+                : null == combined ? List.of()
                 : typed.get(cut) == combined ? List.of(insts.get(cut)) : combined.insts();
         // THE SEED: a literal at the head is dealt by the plan; anything else is the bag the branch takes when it runs.
         // ONE OBJ HAS NOTHING TO DEAL -- a literal of one member, or what a fold answers (a gather whose rng is one),
@@ -298,7 +303,7 @@ public final class Shard {
                         : inst);
             }
             if (0 <= cut)
-                lane.add(raw(insts.get(cut)));
+                lane.addAll(null == lifted ? List.of(raw(insts.get(cut))) : lift.stream().map(Shard::stated).toList());
             if (absorbs)
                 lane.add(raw(insts.get(cut + 1)));
             if (profiling)
@@ -535,6 +540,16 @@ public final class Shard {
                 ? rec(inst.args().asRec().elements().map(kv -> rel(kv.first(), rawArg(kv.second()))))
                 : lst(inst.args().elements().map(Shard::rawArg).toList());
         return instB(inst.tid().removeQ(DOM).removeQ(RNG).removeQ(ARGS), args);
+    }
+
+    /**
+     * THE INSTRUCTION AS ITS EQUATION STATES IT: a lift read off a declared derivation (J) keeps the domain the equation
+     * states, which is part of what it means and nothing this machine bound: {@code split?<=int{*}} gathers the lane's
+     * whole part, where a bare {@code split} would take one member at a time. All else is {@link #raw}.
+     */
+    static Inst stated(final Inst inst) {
+        final Inst raw = raw(inst);
+        return inst.tid().hasDom() ? instB(raw.tid().dom(inst.tid().dom()), raw.args()) : raw;
     }
 
     private static Obj rawArg(final Obj arg) {

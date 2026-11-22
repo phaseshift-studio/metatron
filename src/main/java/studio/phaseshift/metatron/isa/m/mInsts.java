@@ -140,6 +140,7 @@ public final class mInsts {
                         .body((lhs, inst) -> mean(lhs, member -> member.intValue()))
                         .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
+                        .derivation(mean_(INT_TID), liftedMean(INT_TID))
                         .create(),
                 InstBuilder.build().tid(GT_INST_TID, "check whether the lhs int is greater than the argument int")
                         .dom(INT_TID, "the lhs int").rng(BOOL_TID, "whether the lhs is greater than the rhs")
@@ -317,6 +318,7 @@ public final class mInsts {
                         .body((lhs, inst) -> mean(lhs, Obj::realValue))
                         .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
+                        .derivation(mean_(REAL_TID), liftedMean(REAL_TID))
                         .create(),
                 InstBuilder.build().tid(POW_INST_TID, "a power function \\(f(x, n) \\mapsto x^n\\): the lhs real raised to the arg real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the lhs real raised to the arg real")
@@ -1575,5 +1577,28 @@ public final class mInsts {
             copies += weight;
         }
         return real(0L == copies ? 0.0 : sum / copies);
+    }
+
+    /**
+     * The mean of a carrier's stream as a chain, {@code mean?<=carrier{*}()}: the lhs of that overload's equation. It
+     * states its domain because a keyed mean binds an equation's lhs as a value tests a type, and a bare {@code mean()}
+     * declares the domain {@code #}, which a stream does not fit.
+     */
+    private static Code mean_(final fURI carrier) {
+        return inst_(MInst.instB(MEAN_INST_TID.dom(carrier.maybeSome()), lst()));
+    }
+
+    /**
+     * MEAN, LIFTED (menu entry J, algebraic aggregates): {@code ℓ·mean}, where the lift {@code ℓ} summarizes a part as
+     * its mean weighted by its count, {@code {n}m}. The split gathers the whole part ({@code ?<=carrier{*}}), the count
+     * becomes the coefficient, and the mean is what the projection keeps. The weighted mean of the summaries is the mean
+     * of the whole, and the lift is itself a self-combining fold (two summaries lift to the summary of their union), so
+     * mean declares {@code mean ↦ ℓ·mean} and a sharded mean ships the summaries home (Law.Helper#lifted).
+     */
+    private static Code liftedMean(final fURI carrier) {
+        return inst_(MInst.instB(SPLIT_INST_TID.dom(carrier.maybeSome()), lst(lst(MInst.instB(MEAN_INST_TID, lst()), count_().tryToInst()))))
+                .cc_(id_().rshift_(jnt(1)))
+                .rshift_(jnt(0))
+                .addInst(MInst.instB(MEAN_INST_TID, lst()));
     }
 }

@@ -129,11 +129,12 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
 
     /**
      * The shape half of {@code law_shard}'s guard, judged with reach present: a keyed fold's combiner is pointwise,
-     * computed from its spec's folds — count, sum and order recombine, mean and a bare key do not.
+     * computed from its spec's folds — count, sum and order recombine, a keyed mean and a bare key do not. A mean alone
+     * recombines through itself after its lift (menu entry J), which a keyed mean's lanes would need per key.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "start({1,2,3}).mean()  % false",
+            "start({1,2,3}).mean()  % true",
             "start({1,2,3}).group([mod(2)=>count()])                   % true",
             "start({1,2,3}).plus(1).group([mod(2)=>sum()])             % true",
             "start({1,2,3}).group([mod(2)=>group([mod(3)=>sum()])])    % true",

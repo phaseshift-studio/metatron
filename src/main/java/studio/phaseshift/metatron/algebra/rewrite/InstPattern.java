@@ -76,8 +76,10 @@ public final class InstPattern {
 
     /**
      * Require the instruction's partials to recombine through a fold declaring {@code laws} — its COMPUTED combiner
-     * ({@link Law.Helper#combiner}), which is the instruction itself only when it is self-combining. The slot of a
-     * distribution's cut: the plan re-applies the combiner at home, so the cut's laws are the combiner's to declare.
+     * ({@link Law.Helper#combiner}), which is the instruction itself only when it is self-combining — or through the
+     * instruction itself after the lift its derivation declares ({@link Law.Helper#lifted}, {@code mean}), the lift
+     * carrying the monoid. The slot of a distribution's cut: the plan re-applies the combiner at home, so the cut's
+     * laws are the combiner's to declare.
      */
     public InstPattern combinedBy(final Law... laws) {
         this.combiner = List.of(laws);
@@ -126,7 +128,8 @@ public final class InstPattern {
         for (final Law required : this.laws)
             if (!satisfies(inst, required))
                 return false;
-        return null == this.combiner || null != Law.Helper.combiner(inst, this.combiner.toArray(Law[]::new));
+        return null == this.combiner || null != Law.Helper.combiner(inst, this.combiner.toArray(Law[]::new))
+                || null != Law.Helper.lifted(inst);
     }
 
     private static boolean satisfies(final Inst inst, final Law law) {

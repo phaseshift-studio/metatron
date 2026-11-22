@@ -109,7 +109,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <tr><td>G</td><td>keyed reduce</td><td>combiner(group([k⇒h])) = sum·select([_⇒combiner(h)])</td><td>{@code {1,2,3,4,5,6}.group([mod(3)=>sum()])}</td><td>✅</td></tr>
  *   <tr><td>H</td><td>redundant / hedged shards</td><td>x ⊕ x = x</td><td>a partition shipped to r peers</td><td>✅ ({@code ?split=copy})</td></tr>
  *   <tr><td>I</td><td>span/route interpreter</td><td>plan ↦ layout (infrastructure)</td><td>{@code [c]==[as(cat:path::T)]==[>>law_shard>>result]}</td><td></td></tr>
- *   <tr><td>J</td><td>algebraic aggregates</td><td>mean ≡ (sum, count)·div</td><td>{@code {...}.mean()}</td><td></td></tr>
+ *   <tr><td>J</td><td>algebraic aggregates</td><td>mean ↦ ℓ·mean, aℓ = {|a|}mean(a)</td><td>{@code {1,1,1,5}.mean()}</td><td>✅</td></tr>
  *   <tr><td>K</td><td>limit / top-k push-down</td><td>take(k)·⊕ = take(k)·⊕·take(k)</td><td>{@code {...}.order(s)==[{k}_]}</td><td>✅</td></tr>
  *   <tr><td>L</td><td>mergeable sketches</td><td>ĥ(a ⊎ b) = ĥ(a) ⊕ ĥ(b)</td><td>{@code {...}.hll()}</td><td></td></tr>
  *   <tr><td>M</td><td>matrix multiplication</td><td>A·(B+C) = A·B + A·C</td><td>{@code mtrx::[…]}</td><td></td></tr>
@@ -254,8 +254,8 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     // ================================================================================================
     // A — homomorphism shard. The combiner is COMPUTED, never declared: sum/prod are self-combining,
-    // count recombines through sum (count ≡ map(1)·sum), and a fold that declares only monoidic (mean)
-    // or is not commutative (str sum) correctly does NOT shard.
+    // count recombines through sum (count ≡ map(1)·sum), and a fold that is not commutative (str sum)
+    // correctly does NOT shard. mean recombines through itself after a lift (J).
     // ================================================================================================
 
     @ParameterizedTest
@@ -429,6 +429,29 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,2,3,4}.sum?split=copy()   % branch().sum() % 10",
     }, delimiter = '%')
     void test_H_redundant_shards(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
+    /**
+     * J -- algebraic aggregates: a fold a fixed-size summary of each part computes (Gray et al.), the mean the witness.
+     * The summary rides the stream ring's coefficient: {@code mean ↦ ℓ·mean}, where the lift {@code ℓ} answers a part's
+     * mean weighted by its count, {@code {n}m} ({@code split?<=int{*}([mean(),count()]).cc(_>>1)>>0}). Every lane runs
+     * {@code ℓ} in the mean's place, the branch's merge adds the weights of equal summaries, and home runs the weighted
+     * mean, the equation's own last fold (Law.Helper#lifted), so Σnᵢmᵢ/Σnᵢ is the mean of the whole. A bulked member
+     * weighs its copies on both sides: {@code {1,1,1,5}} deals {@code {3}1} to one lane whole, the lanes answer
+     * {@code {3}1.0} and {@code 5.0}, and their weighted mean is 2.0 (their plain mean, 3.0, is the answer the row
+     * refuses). A keyed mean, {@code group([k=>mean()])}, does not shard yet: its lanes would need the lift per key.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6,7,8}.mean()              % branch().mean() % 4.5",
+            "{1,2,3,4,5,6}.plus(1).mean()          % branch().mean() % 4.5",
+            "{1.5,2.5,3.5,4.5}.mean()              % branch().mean() % 3.0",
+            "{1,1,1,5}.mean()                      % branch().mean() % 2.0",
+            // home runs the fold as its equation states it, over the lanes' reals, never the cut as written (int{*})
+            "{1,2,3,4,5,6,7,8}.mean?<=int{*}()     % branch().mean() % 4.5",
+    }, delimiter = '%')
+    void test_J_algebraic_aggregates(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
@@ -639,7 +662,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     }
 
     // ================================================================================================
-    // THE UNWRITTEN ROWS (B, C, F, I, J, L, M, P, Q, R). Each is SOUND -- the law holds -- and each
+    // THE UNWRITTEN ROWS (B, C, F, I, L, M, P, Q, R). Each is SOUND -- the law holds -- and each
     // needs a premise the emitter does not hold yet, which is why the interpreter DECLINES it to the identity
     // rather than approximating a layout. These stubs WARN rather than fail: "not implemented" is a logged
     // target, not a silent absence, and a red suite is reserved for behaviour that regressed. When a row's
@@ -652,15 +675,6 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @Test
     void test_I_span_route_interpreter() {
         LOG.warn("menu row I (span/route interpreter) currently not implemented");
-    }
-
-    /**
-     * J -- algebraic aggregates: mean ≡ (sum, count)·div. Needs tuple partials plus a FINALIZER that runs once
-     * at the master (Thm 21 keeps the finalizer a reducer, so it never ships).
-     */
-    @Test
-    void test_J_algebraic_aggregates() {
-        LOG.warn("menu row J (algebraic aggregates) currently not implemented");
     }
 
     /**
@@ -732,6 +746,8 @@ public class DistributedComputingTest extends AbstractMetatronTest {
             "{1,1,2,2,3}.group([mod(2)=>count()])                            % start?hop=0({1,1,2,2,3}).group([mod(2)=>count()])",
             "start?hop=2({1,1,2,2,3,3}).plus(1)                              % start?hop=0({1,1,2,2,3,3}).plus(1)",
             "{1,1,2,2,3,3}.plus(1).sum?hop=2()                               % start?hop=0({1,1,2,2,3,3}).plus(1).sum()",
+            "{1,1,1,5}.mean()                                                % start?hop=0({1,1,1,5}).mean()",
+            "{1,1,2,2,3,3}.plus(1).mean?hop=2()                              % start?hop=0({1,1,2,2,3,3}).plus(1).mean()",
             "{1,1,2}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)         % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
             "{1,1,2}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)   % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
     }, delimiter = '%')
