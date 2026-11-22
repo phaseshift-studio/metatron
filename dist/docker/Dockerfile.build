@@ -37,3 +37,12 @@ RUN set -eu; \
       -o /usr/local/lib/docker/cli-plugins/docker-compose; \
     chmod +x /usr/local/lib/docker/cli-plugins/docker-compose; \
     docker compose version
+
+# Build stamp. ensure_build_image() passes this file's sha256 as DOCKERFILE_SHA and
+# rebuilds whenever the stamp differs, so a stale image can no longer hide a missing
+# tool. That is exactly how the js-test step died on "node: not found" while this file
+# already installed Node 22: a four-week-old image predated the node layer, and the old
+# check (image exists -> do nothing) never rebuilt it. Because the ARG feeds a RUN, a
+# changed hash invalidates only this final layer; the apt/maven layers stay cached.
+ARG DOCKERFILE_SHA=unknown
+RUN printf '%s\n' "$DOCKERFILE_SHA" > /etc/metatron-build-image.sha

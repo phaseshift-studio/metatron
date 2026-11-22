@@ -162,9 +162,20 @@ build_run() {
 
 # the build image auto-builds on first use (maven + JDK 25 + patchelf + python3)
 ensure_build_image() {
-    if ! docker image inspect "$BUILD_IMAGE" >/dev/null 2>&1; then
-        echo "==> building $BUILD_IMAGE (maven + JDK 25 + patchelf + python3)"
-        D docker build -q -f dist/docker/Dockerfile.build -t "$BUILD_IMAGE" .
+    # Rebuild when the Dockerfile CHANGED, not only when the image is missing. A stale
+    # image is how the js-test step died with "node: not found" while Dockerfile.build
+    # already installed Node 22: a four-week-old image predated that layer, and the old
+    # check (image exists -> do nothing) could never notice. The image carries the
+    # Dockerfile hash it was built from (/etc/metatron-build-image.sha), so comparing the
+    # two decides; passing it back as a build arg invalidates the stamp layer and forces
+    # a real rebuild, while the apt/maven layers stay cached.
+    local want have
+    want="$(sha256sum dist/docker/Dockerfile.build | cut -d' ' -f1)"
+    have="$(docker run --rm --entrypoint cat "$BUILD_IMAGE" /etc/metatron-build-image.sha 2>/dev/null || true)"
+    if [ "$want" != "$have" ]; then
+        echo "==> building $BUILD_IMAGE (maven + JDK 25 + patchelf + python3 + node)"
+        D docker build -q -f dist/docker/Dockerfile.build \
+            --build-arg "DOCKERFILE_SHA=$want" -t "$BUILD_IMAGE" .
     fi
 }
 
@@ -394,10 +405,21 @@ usage() {
 # artifacts that live in THIS tree, and metatron-remote only syncs back .docker-target and
 # target/ -- a delegated docs build would render into the remote checkout and hand back
 # nothing. console drives an interactive pty, which belongs on the machine you are typing at.
-# optional local configuration (gitignored), shared with bin/metatron-remote
+# optional local configuration (gitignored), shared with bin/metatron-remote.
+# An EXPLICIT environment value WINS over the file, so
+#   METATRON_BUILD_REMOTE=0 bin/metatron-docker build ...
+# means "build here" -- which is what AGENTS.md and the usage block tell people. Sourcing
+# the file last otherwise let its METATRON_BUILD_REMOTE=1 silently override the caller.
+# (POSIX only, no arrays: this script runs under /bin/sh.)
+_env_snapshot="$(env)"
 for _cfg in "${METATRON_REMOTE_ENV:-$REPO/bin/test/metatron-remote.env}" \
             "$REPO/metatron-remote.env"; do
     if [ -r "$_cfg" ]; then set -a; . "$_cfg"; set +a; fi
+done
+for _v in METATRON_BUILD_REMOTE METATRON_BUILD_HOSTS METATRON_MAX_REMOTE_BUILDS \
+          METATRON_MIN_FREE_GB METATRON_BUILD_FALLBACK METATRON_FORCE_REMOTE; do
+    _line="$(printf '%s\n' "$_env_snapshot" | grep -E "^${_v}=" | head -n 1)"
+    [ -n "$_line" ] && export "$_line"
 done
 
 # METATRON_REMOTE_ACTIVE marks "already inside the balancer": the config FILE sets the flag
