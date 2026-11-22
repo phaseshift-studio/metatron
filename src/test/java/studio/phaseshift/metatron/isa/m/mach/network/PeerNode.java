@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,11 +108,13 @@ public final class PeerNode {
         } else {
             trace("peer %d: no provisioning script", index);
         }
-        // the ws server that makes this peer addressable, exposing the mtron endpoint at /mtron
+        // the ws server that makes this peer addressable: the mtron endpoint at /mtron, and this machine's mcp server at
+        // /mcp on the same socket, so a suite can dial the peer over either protocol (AbstractDistributedComputingTest)
         wsServer.of(rec(mutableMap(
                 uri(ORIGIN), uri("ws://0.0.0.0:" + port),
-                uri(ROUTE), rec(uri("/mtron"), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString())))));
-        trace("peer %d: serving ws://0.0.0.0:%d/mtron", index, port);
+                uri(ROUTE), rec(uri("/mtron"), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString()),
+                        uri("/mcp"), uri(mcpMetatronBuilder.MCP_MTRON_SERVER_TID.toString())))));
+        trace("peer %d: serving ws://0.0.0.0:%d/mtron and /mcp", index, port);
         System.out.println(READY + " " + index + " " + port);
         System.out.flush();
         Thread.currentThread().join();
