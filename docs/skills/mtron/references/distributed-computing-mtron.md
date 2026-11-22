@@ -304,7 +304,8 @@ cut absorbs it because `kmerge` declares `causal`; see *K* below. Since 2026-11-
 sorts at home, where every mass is whole.
 `J` done 2026-11-22 — `mean ↦ ℓ·mean`: each lane runs the lift `ℓ`, its mean weighted by its count (`{n}m`, the
 count riding the coefficient), and home runs the weighted mean; see *J* below.
-`H` done 2026-11-22 for idempotent folds — `sup` and `inf`, a join and a meet, are self-combining and idempotent, so
+`H` done 2026-11-22 for idempotent folds — `sup` and `inf`, a join and a meet (each takes `order`'s projection, "what
+are you taking the sup on?": `sup(_>>age)`, `sup(as(str::T))` over a mixed stream), are self-combining and idempotent, so
 `?split=copy` ships the whole seed to every lane and folds every reply; hedging a fold that is not idempotent (the
 first reply wins) is not written yet.
 `N` done 2026-11-22 — `law_bsp`, its own rule beside `law_shard` (Marko): a whole-frontier `repeat?<=A{*}` whose code

@@ -97,6 +97,11 @@ public class RealTest extends AbstractAlgebraTest {
             "{{3}0.5,2.5}.sup()                                               % 2.5",
             "{{3}0.5,2.5}.inf()                                               % 0.5",
             "{}.sup()                                                         % noobj",
+            // the argument is the comparator, as order's: a projection keys the members, so a mixed stream answers too
+            "{[a=>3],[a=>1],[a=>2]}.sup(_>>a)                                 % [a=>3]",
+            "{[a=>3],[a=>1],[a=>2]}.inf(_>>a)                                 % [a=>1]",
+            "{10,2.5,'1'}.sup(as(str::T))                                     % 2.5",
+            "{1,'a',2.5}.inf(as(str::T))                                      % 1",
             "{1.1,2.2,3.3}.mean().?>2.1.lt(2.3)                               % true", // java double too wiggly
             "{1.1,2.2,3.3}.mean().and(gt(2.1),lt(2.3))                        % true", // java double too wiggly
             "{1.1,2.2,3.3}.mean().and(gt(22.1),lt(42.3))                      % false", // java double too wiggly
