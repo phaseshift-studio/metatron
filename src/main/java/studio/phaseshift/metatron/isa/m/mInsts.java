@@ -1494,8 +1494,9 @@ public final class mInsts {
                 // GROUP (moved from Obj, Marko 2026-11-22). BULK, THEN KEY, as order bulks before it sorts: the objs it
                 // builds meet each distinct member once with its whole mass, so a key that reads mass (cc()) reads all of
                 // it. It once keyed the stream as it flowed, so {1,2,3,4}.mod(2).group([cc()=>count()]) keyed every member
-                // by 1 while {1,1,2}.group([cc()=>count()]) keyed {2}1 by 2: one bag, two answers. A fold reads copies
-                // either way, so only a key that reads mass sees the difference.
+                // by 1 while {1,1,2}.group([cc()=>count()]) keyed {2}1 by 2: one bag, two answers. A fold that reads
+                // copies (count, sum, mean) answers as before; a key that reads mass now reads all of it, and a value fold
+                // that reads order (take, reduce) meets each group as the bag it is, a bulked member arriving whole.
                 InstBuilder.build()
                         .tid(GROUP_INST_TID)
                         .dom(A.maybeSome(), "any objs")
