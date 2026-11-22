@@ -472,6 +472,9 @@ public class catInstSetTest extends AbstractInstSetTest {
             "undeclared_op()     % false",
             // a gather that drops copies reads mass: a lane holding {2}1 of a value's {4}1 would skip all of it
             "skip(1)             % false",
+            // judged at the call's arity: cc(2)'s setter takes one copy, and a bare >> declares a slot no call fills
+            "cc(2)               % true",
+            "rshift()            % false",
     }, delimiter = '%')
     void testACodeIsBlindToMassWhenTheCoefficientFloatsThroughIt(final String code, final boolean blind) {
         checkEquality(LOG, bool(blind), bool(Law.Helper.massBlind(ObjmtronSerializer.parse(code.trim()))), true);
@@ -493,6 +496,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             // a group's keys are per-member functions too: a lane would key a value by part of its mass
             "group([mod(2)=>count()])   % true",
             "group([cc()=>count()])     % false",
+            "group([skip(2)=>count()])  % false",
     }, delimiter = '%')
     void testAKeyThatReadsMassHasNoCombiner(final String call, final boolean combines) {
         final Inst keyed = Law.Helper.keyed(ObjmtronSerializer.<Call>parse(call.trim()).tryToInst().asInst(), T(INT_TID));

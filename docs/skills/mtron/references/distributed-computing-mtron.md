@@ -54,7 +54,8 @@ leaves out, a fold that recombines through itself after a lift:
   `sum()==[_=>r]`. `Law.Helper.lifted` answers both as a `Lift(lane, home)`.
 
 A point on the cut is a multiplicity of its answer, `(a+b)·r{d} = {d}((a·r + b·r)·C)`: no lane carries it, and
-home's combiner does, so `count{2}()` recombines through `sum{2}()` and `mean{2}()` through `mean{2}()`.
+home's combiner does, so `count{2}()` recombines through `sum{2}()` and `mean{2}()` through `mean{2}()`. A span on
+the cut (`{2}count()`, the cut run again over its own answer) and a point or span on a group's value stay home.
 
 `Shard` extends a cut over a select that keeps a prefix (`==[{k}_]`) when the combiner declares `causal`, so the
 combiner of `order(s)==[{k}_]` is `kmerge(s)==[{k}_]` (entry K).
@@ -178,7 +179,7 @@ one axis per run — the seed first, the run when the seed is one obj; the produ
 level, never a new grid. The run partition is **not a `?split` kind**: `{w}part` weights the seed, while a run share is
 a range — one per place, since a branch has one lane per key.
 
-**After a cut, the seed is one obj.** A fold answers one obj (a gather whose rng is one), so the run after a cut has
+**After a cut, the seed is one obj.** A fold answers one obj (a gather whose rng is one, or a declared reducer whose rng admits none, as `sup` and `inf` do), so the run after a cut has
 nothing to deal; its multiplicity is a span range in the run. The branch takes that obj whole and copies it to every
 lane (`?split=copy`), and each lane walks its own share of the range and folds it through the cut. The copy needs no
 idempotence: the shares are disjoint, so no term is counted twice. The obj stays one across the instructions that stay
