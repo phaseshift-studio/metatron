@@ -18,9 +18,13 @@
 
 package studio.phaseshift.metatron.isa.m.web.space.ws;
 
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -28,10 +32,16 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PRINT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
@@ -89,5 +99,65 @@ public class WsClientProtocolTest extends AbstractMetatronTest {
         final Obj onMessage = client.asRec().jvm().get(uri(ON_MESSAGE));
         assertEquals(PRINT_INST_TID, onMessage.tid().basePath(),
                 "a protocol-less ws_client must keep the print default on_message");
+    }
+
+    /**
+     * A PROTOCOL CLIENT KEEPS WHAT A REQUEST WRITES. The far side asks the client to evaluate {@code 5.vid(</sys/hat/x>)},
+     * framed the way a session's {@code send_recv} frames it ({@code reply(…, <tag>)}). The client evaluates a request
+     * as it reads the frame, and it read every frame with {@code Obj.Helper.SELF_VID} bound, which stores nothing: it
+     * answered {@code 5@</sys/hat/x/0x…>} and kept nothing at {@code /sys/hat/x}. The far side here is a bare socket
+     * that evaluates nothing, so whatever is stored at {@code /sys/hat/x} the client stored.
+     */
+    @Test
+    void testAProtocolClientKeepsWhatARequestWrites() throws Exception {
+        InstSet.importInstSet(WEB_ISA_TID);
+        final int farPort = generatePort();
+        final String tag = "0x5e1f0001";
+        final CompletableFuture<Void> started = new CompletableFuture<>();
+        final CompletableFuture<WebSocket> session = new CompletableFuture<>();
+        final CompletableFuture<String> answer = new CompletableFuture<>();
+        final WebSocketServer far = new WebSocketServer(new InetSocketAddress("localhost", farPort)) {
+            @Override
+            public void onStart() {
+                started.complete(null);
+            }
+
+            @Override
+            public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
+                session.complete(conn);
+            }
+
+            @Override
+            public void onMessage(final WebSocket conn, final String message) {
+                if (message.contains(tag))
+                    answer.complete(message);
+            }
+
+            @Override
+            public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
+                // the test hangs up
+            }
+
+            @Override
+            public void onError(final WebSocket conn, final Exception ex) {
+                started.completeExceptionally(ex);
+            }
+        };
+        far.setReuseAddr(true);
+        far.start();
+        final fURI x = f("/sys/hat/x");
+        try {
+            started.get(5, TimeUnit.SECONDS);
+            ObjmtronSerializer.parse("ws_client::[host=><ws://localhost:" + farPort + "/mtron>,protocol=>mtron_ws]@self").apply();
+            session.get(10, TimeUnit.SECONDS).send("reply(5.vid(</sys/hat/x>),<" + tag + ">)");
+            final String reply = answer.get(10, TimeUnit.SECONDS);
+            LOG.debug("the protocol client answered the request: %s", reply);
+            assertTrue(reply.contains("/sys/hat/x"), "the request must be answered, or this test proves nothing: " + reply);
+            checkEquality(LOG, jnt(5).selfVID(x), Machine.read(x), true);
+        } finally {
+            Machine.current().network().drop(f("ws://localhost:" + farPort));
+            Machine.write(x, noobj());
+            far.stop(1000);
+        }
     }
 }
