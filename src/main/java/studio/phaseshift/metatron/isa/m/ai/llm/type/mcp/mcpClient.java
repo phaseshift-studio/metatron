@@ -42,12 +42,12 @@ import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjPlainTextSerializer;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,6 +76,10 @@ public class mcpClient extends MRec implements AutoCloseable {
     protected static final GraphittyLogger LOG = Graphitty.log(mcpClient.class);
 
     protected final McpClient client;
+    /**
+     * whether the owner closed this client — the retraction runs once
+     */
+    private volatile boolean closed = false;
 
     public mcpClient(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -191,15 +195,14 @@ public class mcpClient extends MRec implements AutoCloseable {
         //   obj.to(<uri>) sends start(obj).to(</path>) to eval_mtron -- write_memory chains a memory under a minted
         //   vid, so it cannot write at the address a to() names.
         // A server without these tools declares none of them, and an inst_map entry for the same instruction wins.
-        final Obj evalTool = tools.at(f(mTool.toolName(mcpMetatronBuilder.MCP_MTRON_SERVER_TID.extend("eval_mtron"))))
-                .orElse(rec0()).at(uri(INST));
-        final Obj readTool = tools.at(f(mTool.toolName(mcpMetatronBuilder.MCP_MTRON_SERVER_TID.extend("read_memory"))))
-                .orElse(rec0()).at(uri(INST));
+        final String evalName = mTool.toolName(mcpMetatronBuilder.EVAL_MTRON_TID);
+        final Obj evalTool = tools.at(f(evalName)).orElse(rec0()).at(uri(INST));
+        final Obj readTool = tools.at(f(mTool.toolName(mcpMetatronBuilder.READ_MEMORY_TID))).orElse(rec0()).at(uri(INST));
         if (evalTool.isObjInst()) {
             final Obj eval = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(EVAL_INST_TID,
-                    (lhs, inst) -> evalMtron(evalTool.asInst(), lhs));
+                    (lhs, inst) -> this.evalMtron(evalName, lhs));
             final Obj to = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(TO_INST_TID,
-                    (lhs, inst) -> evalMtron(evalTool.asInst(),
+                    (lhs, inst) -> this.evalMtron(evalName,
                             start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst()));
             if (eval.isObjInst())
                 overrides.jvm().putIfAbsent(uri(EVAL_INST_TID), eval);
@@ -241,27 +244,51 @@ public class mcpClient extends MRec implements AutoCloseable {
     }
 
     /**
-     * eval_mtron with {@code code} as its program: the code travels as its mtron text, as a ws peer ships it, and the
-     * server evaluates what it is sent.
+     * eval_mtron with {@code code} as its program and {@code mime=>application/x-mtron}, exchanged as a ws peer exchanges
+     * a frame: the code travels as its mtron text, the server evaluates what it is sent, and the answer is read as an
+     * ANSWER, not a write, with {@link Obj.Helper#SELF_VID} bound, as {@code WebSocketRecClient} reads its replies.
+     * <p>
+     * THE ANSWER HAS TWO LAYERS: eval_mtron renders its result in the requested mime as a str, and the mcp layer writes
+     * every tool result as transparent JSON (mcpServer), so the str arrives as a JSON string. The JSON string is unwrapped
+     * and the rendering inside it read as mtron. Read as the tool's own JSON would read it, a rec, a stream or a
+     * coefficient comes back as text.
      */
-    private static Obj evalMtron(final Inst tool, final Obj code) {
-        final String source = new String(MIME.MIMEType.APPLICATION_MTRON.serializer().outputBytes(code).array(),
-                StandardCharsets.UTF_8);
-        return tool.args(rec(uri(CODE), str(source))).apply(noobj());
+    private Obj evalMtron(final String tool, final Obj code) {
+        final ToolExecutionResult result = this.client.executeTool(ToolExecutionRequest.builder()
+                .name(tool)
+                .arguments(new String(ObjJSONSerializer.simple().outputBytes(rec(
+                        uri(CODE), str(ObjmtronSerializer.single().write(code)),
+                        uri(mcpMetatronBuilder.MIME_ARG), uri(MIME.MIMEType.APPLICATION_MTRON.value))).array()))
+                .build());
+        if (result.isError())
+            return fail(result.resultText());
+        final JsonElement answer = JsonParser.parseString(result.resultText());
+        final String rendering = answer.isJsonPrimitive() && answer.getAsJsonPrimitive().isString()
+                ? answer.getAsString()
+                : result.resultText();
+        return ScopedValue.where(Obj.Helper.SELF_VID, true).call(() -> ObjmtronSerializer.single().read(rendering));
     }
 
     /**
      * Close the underlying MCP transport. The client opens its connection eagerly (on
      * construction, via {@code listTools()}), so a caller that never closes it leaks a live
      * connection and a server-side session — tests over real transports must close the client.
+     * <p>
+     * DESTRUCTION ON DELETION, as a ws client's: the owner's close takes the peer out of every level that indexed it,
+     * once (retracting disconnects, and disconnecting closes this client again). A closed client left indexed would keep
+     * answering from, to and eval for its origin over a closed transport.
      */
     @Override
     public void close() {
+        final boolean first = !this.closed;
+        this.closed = true;
         try {
             this.client.close();
         } catch (final Exception e) {
             LOG.warn("error closing mcp client: %s", e.getMessage() == null ? e.getClass().getName() : e.getMessage());
         }
+        if (first)
+            studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.retract(this);
     }
 
     protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host, final List<Obj> command) {

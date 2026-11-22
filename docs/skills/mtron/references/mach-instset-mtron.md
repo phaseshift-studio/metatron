@@ -410,7 +410,9 @@ ws_client::[pattern=><ws://localhost:8555/mtron>]
 ```
 
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
-its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client`
+its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three, and so does an
+`mcp_client` of a metatron server (`mcp_mtron`), through its tools: `eval` and `to` through `eval_mtron`, `from` through
+`read_memory`. An `http_client`
 declares `from` (GET) and `to` (POST, which stores and evaluates nothing). A shard target serves `to` and `eval`.
 `send_recv` is a `ws_client`'s raw wire instruction: `1.plus(2).send_recv(|plus(45))` evaluates `plus(45)` remotely
 against the shipped monad. Instructions are total, $P(\mathrm{Obj}) \to P(\mathrm{Obj})$: a reach answers a smaller set

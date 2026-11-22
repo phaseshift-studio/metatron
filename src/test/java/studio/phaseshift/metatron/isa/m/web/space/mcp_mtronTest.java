@@ -32,8 +32,10 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.web.space.ws.handler.mcp_emulator_wsHandler;
 import studio.phaseshift.metatron.isa.m.web.space.http.httpServer;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -54,6 +56,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -515,7 +518,8 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
      *   <li>a write ships {@code start(obj).to(</path>)} through eval_mtron and lands at the address it names;</li>
      *   <li>an eval ships its lhs code to eval_mtron, which evaluates it there.</li>
      * </ul>
-     * Server and client share this VM, so what the server reads and writes is this class's test space.
+     * Server and client share this VM, so what the server reads and writes is this class's test space. Closing the
+     * client retracts its peer, or a closed client would keep answering for its origin.
      */
     @ParameterizedTest
     @CsvSource(value = {"http", "ws"}, delimiter = '%')
@@ -525,16 +529,55 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
                 : f("").scheme("ws").host(this.wsHost).port(this.wsPort).extend(f("/mcp-mtron"));
         final fURI origin = host.origin();
         try (final mcpClient client = new mcpClient(CommonUtil.mutableMap(uri(HOST), uri(host)), MCP_CLIENT_TID, null)) {
-            final Set<Obj> declared = client.at(uri(INST)).asRec().jvm().keySet();
-            assertTrue(declared.containsAll(Set.of(uri(EVAL_INST_TID), uri(FROM_INST_TID), uri(TO_INST_TID))),
-                    transport + " — the client declares from, to and eval: " + declared);
+            // through the network's own lookup, which also checks the signature it accepts
+            Stream.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID).forEach(primitive ->
+                    assertTrue(Network.Helper.overrideIn(client, primitive).isObjInst(),
+                            transport + " — the client declares " + primitive + ": " + client.at(uri(INST))));
             Machine.write(f("/test/node/read"), jnt(7));
             checkEquality(LOG, jnt(7), Machine.read(origin.extend(f("/test/node/read"))), true);
             Machine.write(origin.extend(f("/test/node/written")), jnt(9));
             checkEquality(LOG, jnt(9), Machine.read(f("/test/node/written")), true);
             checkEquality(LOG, jnt(3), Machine.current().network().submit(origin, mParser.parse("1.plus(2)")), true);
+        }
+        assertTrue(Machine.current().network().peerOf(origin).isNoObj(),
+                transport + " — closing the client retracts its peer: " + Machine.current().network().peers());
+    }
+
+    /**
+     * A SERVER WITHOUT METATRON'S TOOLS MAKES NO NODE: from, to and eval are declared from eval_mtron and read_memory
+     * alone, so a client of another mcp server (the emulator) declares none of them, and the network finds nothing to
+     * dispatch to.
+     */
+    @Test
+    public void testAServerWithoutMetatronsToolsMakesNoNode() {
+        final fURI origin = f("").scheme("ws").host("localhost").port(generatePort());
+        final Listener emulator = wsServer.of(rec(
+                uri(ORIGIN), uri(origin),
+                uri(ROUTE), rec(uri("/emulator"), uri(mcp_emulator_wsHandler.WS_MCP_EMULATOR_TID.toString()))));
+        try (final mcpClient client = new mcpClient(CommonUtil.mutableMap(uri(HOST), uri(origin.extend(f("/emulator")))),
+                MCP_CLIENT_TID, null)) {
+            assertFalse(client.at(uri(TOOL)).isNoObj(), "the emulator answers with tools of its own");
+            Stream.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID).forEach(primitive ->
+                    assertTrue(Network.Helper.overrideIn(client, primitive).isNoObj(),
+                            primitive + " is not declared: " + client.at(uri(INST))));
         } finally {
-            Machine.current().network().drop(origin);
+            emulator.close();
+        }
+    }
+
+    /**
+     * AN inst_map ENTRY WINS: a caller that names the tool standing in for an instruction keeps it, and the derived
+     * declaration does not replace it. Here eval is list_space, so eval answers the space index, not 3.
+     */
+    @Test
+    public void testAnInstMapEntryWins() {
+        final fURI host = f(baseUrl()).extend(f("/mcp"));
+        try (final mcpClient client = new mcpClient(CommonUtil.mutableMap(
+                uri(HOST), uri(host),
+                uri("inst_map"), rec(uri(EVAL_INST_TID), str("m_web_mcp_mcp_mtron_list_space"))), MCP_CLIENT_TID, null)) {
+            final Obj answer = Network.Helper.evaluate(Network.Helper.overrideIn(client, EVAL_INST_TID), host.origin(),
+                    mParser.parse("1.plus(2)"));
+            assertTrue(answer.isRec(), "eval is the inst_map's list_space, not eval_mtron: " + answer);
         }
     }
 

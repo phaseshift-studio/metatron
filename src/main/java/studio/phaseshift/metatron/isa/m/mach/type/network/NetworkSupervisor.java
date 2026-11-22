@@ -212,13 +212,20 @@ public final class NetworkSupervisor extends MRec implements Closeable {
 
     /**
      * A client its OWNER closed leaves every supervised level that holds it. Only a supervised level can hold a
-     * link (indexing one is what starts the supervision), so these are all the places to look.
+     * link (indexing one is what starts the supervision), so for a link these are all the places to look.
+     * <p>
+     * A CLIENT THAT IS NOT A LINK WAS NEVER SUPERVISED (an mcp_client: a tool server or a metatron node), so no
+     * supervised level need hold it: the level standing here, where {@link Network.Helper#index} put it, is asked too.
+     * A level asked twice finds nothing the second time.
      */
     public static void retract(final Object client) {
         final List<Network> levels;
         synchronized (SUPERVISORS) {
             levels = new ArrayList<>(SUPERVISORS.keySet());
         }
+        final Machine machine = Machine.current();
+        if (null != machine && null != machine.network())
+            levels.add(machine.network());
         levels.forEach(level -> retract(level, client));
     }
 
