@@ -450,10 +450,10 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A CODE IS BLIND TO MASS WHEN NO CONTRACT OF ITS OPS GATHERS COPIES INTO ONE ANSWER (Law.Helper#massBlind): a
-     * reducer-shaped contract reads mass, read off each contract's own coefficients, and every code an instruction is
-     * handed must be blind too. {@code cc()} answers mass and {@code count()} reads copies, so neither is blind, nor is
-     * anything handed one; a typer's domain is one copy, so it is. Each row: the code % blind.
+     * A CODE IS BLIND TO MASS WHEN EACH CONTRACT AT ITS ARITY TAKES ONE COPY, IS A TYPER, OR HANDS EVERY COPY BACK
+     * (Law.Helper#massBlind), read off each contract's own coefficients, and every code it is handed is blind too. A
+     * gather that reads copies is refused: {@code cc()} answers mass, {@code count()} counts copies, {@code skip(1)}
+     * drops them. Each row: the code % blind.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -470,6 +470,8 @@ public class catInstSetTest extends AbstractInstSetTest {
             "vid()               % true",
             // an instruction nothing declares: fail closed
             "undeclared_op()     % false",
+            // a gather that drops copies reads mass: a lane holding {2}1 of a value's {4}1 would skip all of it
+            "skip(1)             % false",
     }, delimiter = '%')
     void testACodeIsBlindToMassWhenTheCoefficientFloatsThroughIt(final String code, final boolean blind) {
         checkEquality(LOG, bool(blind), bool(Law.Helper.massBlind(ObjmtronSerializer.parse(code.trim()))), true);

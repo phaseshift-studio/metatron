@@ -1256,8 +1256,10 @@ public final class mInsts {
                 // law_shard recombines their partials through themselves (A, E); idempotent, so ?split=copy may ship the
                 // whole seed to every lane and fold every reply (H): each copy answers the same bound, and the bound of
                 // copies is itself. A bulked member weighs nothing, as the sup of {3}5 is 5. The empty stream's bound is
-                // noobj, the stream ring's zero and the order's bottom, the identity of both (no seed: nothing reads one),
-                // so the range is A{?} and the reducer form is declared, which the range alone no longer shows. They are
+                // noobj: not the order's bottom (sup ∅) or top (inf ∅), but the stream ring's zero, which an empty lane adds
+                // to the merge as nothing, (noobj + x)·sup = x·sup (no seed: nothing reads one). So the range is A{?}, and
+                // the reducer form is declared, which the range alone no longer shows. Members must be mutually comparable,
+                // as order() requires: {1,2.5}.sup() fails, as {1,2.5}.order() does. They are
                 // sup and inf, never max and min: an instruction's name shadows an unbound name of the same spelling,
                 // and an optional {?}max read as *max (dsh's read_events) would have read the instruction.
                 InstBuilder.build()
