@@ -1549,6 +1549,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.plus(2).explain()>>per_inst>>0>>args              % [1]          % start's literal, its own obj",
             "1.plus(2).explain()>>per_inst>>1>>c_rng             % 1            % per-inst range coefficient",
             "5.cc(3).explain()>>per_inst>>1>>op                  % cc           % a range unbounded below (cc's A.any()) is reported, not refused",
+            "5.cc(3).explain()>>per_inst>>1>>c_rng               % noobj        % ... and has no least count, so its c_rng is omitted",
             // a branch reports its own rule: c_dom is its grain ({?} → {1}), c_rng the sum of its branches' rngs
             "1.branch(+1,+2).explain()>>per_inst>>1>>c_dom        % 1            % a branch's c_dom is its grain, one obj",
             "1.branch(+1,+2).explain()>>per_inst>>1>>c_rng        % 2            % ... and its c_rng the sum of its branches' rngs",

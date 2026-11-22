@@ -593,8 +593,9 @@ public class mInstSet extends AbstractInstSet {
                             uri(ARGS), union_(LST_TYPE, REC_TYPE).tryToInst(),
                             uri(Tokens.F).maybe().asUri(), ALL_TYPE,
                             uri(FORM), URI_TYPE,
-                            uri(C_DOM), INT_TYPE,
-                            uri(C_RNG), INT_TYPE)),
+                            // omitted when the coefficient is unbounded below (cc's A.any()): such a range has no least count
+                            uri(C_DOM).maybe().asUri(), INT_TYPE,
+                            uri(C_RNG).maybe().asUri(), INT_TYPE)),
                     uri(EXT).maybe().asUri(), REC_TYPE), Map.of(
                     uri(FORMAT), "lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively",
                     uri(DESC), "expression-level metadata of the COMPILED chain: whole-expression dom/rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)",
@@ -1740,18 +1741,18 @@ public class mInstSet extends AbstractInstSet {
      * otherwise the type's vid as a uri. (a noobj{c} uri and a noobj literal parse to different
      * classes — noobj-vs-noobj is the one equivalence test literals can express)
      */
+    private static Obj domRngValue(final Type t) {
+        // a range unbounded below has no min (cc's A.any(): a coefficient may be set negative), and is no zero
+        if (Long.valueOf(0L).equals(t.c().min())) return noobj();
+        return uri(f(t.vid().small().pathString()));
+    }
+
     /**
      * The least count a coefficient admits, or noobj (the slot omitted) when it is unbounded below, as a range is
      * whose coefficient may be set negative (cc's A.any()).
      */
     private static Obj least(final cInt c) {
         return null == c.min() ? noobj() : jnt(c.min());
-    }
-
-    private static Obj domRngValue(final Type t) {
-        // a range unbounded below has no min (cc's A.any(): a coefficient may be set negative), and is no zero
-        if (Long.valueOf(0L).equals(t.c().min())) return noobj();
-        return uri(f(t.vid().small().pathString()));
     }
 
     /**

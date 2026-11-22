@@ -1068,8 +1068,10 @@ public enum Law {
             final Rec entry = lawsOf(keyed.tid());
             if (entry.isNoObj() || Inst.Form.reducer != Inst.Form.of(keyed))
                 return null;
+            // a self-combining fold re-applies its own arguments at home, so a key among them must be blind to mass:
+            // kmerge(cc()) would merge each lane's runs by partial masses and home's by whole ones
             if (Arrays.stream(laws).allMatch(law -> declares(entry, law)))
-                return keyed;
+                return keyed.args().elements().allMatch(Helper::massBlind) ? keyed : null;
             if (GROUP_INST_TID.equals(keyed.tid().basePath()))
                 return pointwise(keyed, laws);
             final Rec derivation = declaredDerivation(entry);
@@ -1170,12 +1172,14 @@ public enum Law {
          * {@code order(s) ↦ split([_])·kmerge(s)} re-applies the sort's key at home. A shard parts a value's mass across
          * its lanes, since equal members from two parts meet only in the branch's merge, so a lane holds part of a
          * coefficient. A key whose answer reads the coefficient compares partial masses in the lanes and whole ones at
-         * home: {@code cc()} answers mass, and a fold such as {@code count()} reads copies. A floatable code is blind,
-         * since the coefficient floats through it (Thm 6), {@code {n}v·f = {n}(v·f)}, and a comparison reads the value.
-         * So each instruction the code holds must, among the contracts its op declares, have one that floats and none
-         * that reduces (an identity's barrier contract gathers, and leaves every mass as it found it), and every code it is
-         * handed must be blind too: {@code is(gt(2))} compares the member, {@code is(cc().gt(1))} its mass. A literal is
-         * blind, and so is noobj, the absent key. An instruction nothing declares is not: fail closed.
+         * home: {@code cc()} answers mass, and a fold such as {@code count()} reads copies. What reads mass is a contract
+         * SHAPED AS A REDUCER, one that gathers any number of copies into one answer ({@link Inst#isReducing}), read off
+         * each contract's own coefficients rather than the op's declared form, which is one form per op. A contract
+         * whose domain is one copy cannot read mass (the processor hands it a single copy, and the coefficient floats
+         * past it, Thm 6), and neither can one that hands every copy back (an identity's barrier). So a typer
+         * ({@code as(str::T)}) is blind, and {@code cc()} is not, whichever of its overloads was built first. Every code
+         * an instruction is handed must be blind too: {@code is(gt(2))} compares the member, {@code is(cc().gt(1))} its
+         * mass. A literal is blind, and so is noobj, the absent key. An instruction nothing declares is not: fail closed.
          */
         public static boolean massBlind(final Obj code) {
             final List<Inst> insts = code.isObjInst() ? List.of(code.asInst()) : code.isCode() ? code.asCode().insts() : List.of();
@@ -1186,8 +1190,7 @@ public enum Law {
                 final List<Inst> contracts = read.entrySet().stream()
                         .filter(claim -> inst.tid().basePath().equals(claim.getKey().basePath()))
                         .map(claim -> claim.getValue().inst()).toList();
-                return contracts.stream().anyMatch(contract -> Inst.Form.of(contract).isFloatable())
-                        && contracts.stream().noneMatch(contract -> Inst.Form.reducer == Inst.Form.of(contract))
+                return !contracts.isEmpty() && contracts.stream().noneMatch(Inst::isReducing)
                         && inst.args().elements().allMatch(arg -> arg.isRel()
                         ? massBlind(arg.asRel().first()) && massBlind(arg.asRel().secondDirect())
                         : massBlind(arg));

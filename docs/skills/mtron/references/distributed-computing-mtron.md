@@ -545,8 +545,10 @@ stays home (`[[-5,-4,-3,-2]]`).
 member's value, never its mass (Thm 6: `{n}v·f = {n}(v·f)`). `cc()` reads the mass, and a shard parts a value's mass
 across its lanes, `{n₁}v` in one and `{n₂}v` in another, so each lane would sort by a mass the branch's merge then
 changes (`{[{2}2,{3}1],[{2}2,{3}3]}.kmerge(cc())` is `[{4}2,{3}3,{3}1]`, out of order). So `order(s)`'s derivation
-recombines only a key blind to mass (`Law.Helper.massBlind`: each instruction has a contract that floats and none that
-reduces, and so does every code it is handed). For `order(cc())` the cut is gone: the run before it ships (W), the
+recombines only a key blind to mass (`Law.Helper.massBlind`: no contract of the key's ops is shaped as a reducer, one
+that gathers copies into one answer, read off each contract's own coefficients, and every code it is handed is blind
+too; a typer, whose domain is one copy, is blind). A self-combining fold re-applies its own key at home, so
+`kmerge(cc())` is no cut either. For `order(cc())` the cut is gone: the run before it ships (W), the
 merge adds equal members' masses, and home sorts by whole masses.
 `{11,21,31,41,12,22,13}.mod(10).order(cc())==[{1}_]` ships `mod(10)` and answers `[3]`, as at home. The books for
 top-k by mass are the bulked part, bounded by the distinct members. Shipping fewer is a threshold algorithm's job
