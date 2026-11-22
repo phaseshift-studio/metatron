@@ -37,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.function.UnaryOperator;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
@@ -1314,7 +1315,11 @@ public final class mInsts {
                                 uri(CODE), "the code to repeat",
                                 uri(UNTIL).maybe(), "the exit predicate (true stops the loop)",
                                 uri(EMIT).maybe(), "the emit predicate"))
-                        .desc("a repetition function: loopback application of the code with escape/exit/emit predicates")
+                        .desc("a repetition function: loopback application of the code with escape/exit/emit predicates. "
+                                + "With an unbounded dom (repeat?<=A{*}) it is the BSP form: the barrier hands over the whole frontier "
+                                + "and each pass applies the code to all of it at once (a dealing branch in the code parts it over the "
+                                + "peers), loop() counts passes and is shared by every member, esc/emit/until are judged per member, "
+                                + "and a member that becomes a fail leaves the loop as its answer")
                         .body((lhs, inst) -> {
                             // REPEAT?<=A{*} IS THE BSP FORM: the barrier hands repeat the whole frontier, a bare stream
                             // rather than a monad, once (repeatFrontier loops the passes itself)
@@ -1336,7 +1341,10 @@ public final class mInsts {
                             if (null != profile)
                                 profile.record(f(REPEAT), f(STATE), System.nanoTime() - book0);
                             final long esc0 = null == profile ? 0L : System.nanoTime();
-                            final boolean esc = escPredicate.apply(monad).booleanCheck();
+                            // esc through the same lens as until and emit: applied bare, a one-instruction predicate
+                            // (esc=>is(gt(3))) received the whole monad and never fired (Marko, 2026-11-22)
+                            final Obj escCode = escPredicate.isCall() ? escPredicate.<Call>as().asCode() : escPredicate;
+                            final boolean esc = escCode.apply(monad).booleanCheck();
                             if (null != profile)
                                 profile.record(f(REPEAT), f(ESC), System.nanoTime() - esc0);
                             if (esc) {
@@ -1491,27 +1499,39 @@ public final class mInsts {
      * rather than back through the processor the way the per-monad form's loopback monads do.
      * <p>
      * {@code loop()} counts the passes and is the same for every member. esc, emit and until are judged per member
-     * against it, each on a monad sitting at repeat with the pass on its loop stack, as the per-monad form judges
-     * them: emit keeps a copy and the member goes on, until (or esc) lets it leave. The members that stay are the
-     * next frontier, bulked by the code's own stream, so the traversers at one vertex merge between passes.
+     * against it, each on a monad sitting at repeat with the pass on its loop stack, through the same code lens the
+     * per-monad form uses: emit keeps a copy and the member goes on, until (or esc) lets it leave. A member that
+     * becomes a fail leaves too, as its answer. The members that stay are the next frontier, bulked by the code's own
+     * stream, so the traversers at one vertex merge between passes. The loop ends when the frontier is empty, or when
+     * its thread is interrupted.
      */
     private static Obj repeatFrontier(final Obj frontier, final Inst inst) {
-        final java.util.function.UnaryOperator<Obj> lens = p -> p.isCall() ? p.<Call>as().asCode() : p;
+        final UnaryOperator<Obj> lens = p -> p.isCall() ? p.<Call>as().asCode() : p;
         final Obj esc = lens.apply(inst.arg(f(ESC), 0));
         // the code runs over the frontier as a batching branch's member runs over its bag: start(bag).code, so the
         // start streams the bag and a map meets one obj at a time while a gather (a dealing branch) meets it whole
         final Obj codeArg = inst.arg(f(CODE), 1);
         final List<Inst> code = codeArg.isCall() ? codeArg.asCall().insts()
-                : List.of((Inst) studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_(codeArg).tryToInst());
+                : List.of((Inst) map_(codeArg).tryToInst());
         final Obj until = lens.apply(inst.arg(f(UNTIL), 2));
         final Obj emit = lens.apply(inst.arg(f(EMIT), 3));
         final List<Obj> left = new ArrayList<>();
         List<Obj> members = frontier.stream().filter(m -> !m.isNoObj()).toList();
         for (int pass = 0; !members.isEmpty(); pass++) {
+            // the swarm checks its STATE between steps, and this loop is one step: an interrupt (a stopped threaded
+            // computer, a caller's timeout) ends it here, the flag left set for whoever waits on the thread
+            if (Thread.currentThread().isInterrupted())
+                throw MTronException.of("repeat?<=A{*} interrupted after %s passes", pass);
             final List<Obj> next = new ArrayList<>();
             for (final Obj member : members) {
+                // A FAIL LEAVES AS ITS MEMBER'S ANSWER: it passes through every predicate (booleanCheck() is false on
+                // a fail), so kept in the frontier it came back every pass and the loop never ended
+                if (member.isFail() || member.isCaughtFail()) {
+                    left.add(member);
+                    continue;
+                }
                 final StatefulMonad at = BasicStatefulMonad
-                        .statefulMonad(member, inst, rec(), studio.phaseshift.metatron.isa.m.type.impl.MCode.code(List.of(noobj())))
+                        .statefulMonad(member, inst, rec(), MCode.code(List.of(noobj())))
                         .pushLoop().incrLoop(pass);
                 if (esc.apply(at).booleanCheck()) {
                     left.add(member);
@@ -1527,7 +1547,7 @@ public final class mInsts {
                     next.add(member);
             }
             members = next.isEmpty() ? List.of()
-                    : studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_(objs(next)).addInsts(code).apply(noobj())
+                    : start_(objs(next)).addInsts(code).apply(noobj())
                     .stream().filter(m -> !m.isNoObj()).toList();
         }
         return objs(left);
