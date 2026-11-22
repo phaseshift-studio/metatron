@@ -1060,8 +1060,9 @@ public enum Law {
          *   <li>a fold whose argument holds folds recombines POINTWISE through theirs — {@code group([k⇒h])}, see
          *       {@link #pointwise} — and its combiner is a chain rather than one instruction.</li>
          * </ul>
-         * {@code keyed} carries its declared n-tid ({@link #keyed}). Null when the fold has none: {@code mean}
-         * (magmadic), {@code str} {@code sum} (not commutative), an undeclared or non-reducing instruction.
+         * {@code keyed} carries its declared n-tid ({@link #keyed}). Null when the fold has none: {@code str} {@code sum}
+         * (not commutative), an undeclared or non-reducing instruction, and {@code mean}, whose partials are no means at
+         * all but a lift of each part ({@link #lifted}), so a lane does not run the fold as written.
          */
         public static Call combiner(final Inst keyed, final Law... laws) {
             final Rec entry = lawsOf(keyed.tid());
@@ -1086,6 +1087,34 @@ public enum Law {
             final Rec declared = declared(fold.tid().basePath(), keyed.rng());
             return !declared.isNoObj() && Inst.Form.reducer == Inst.Form.of(fold.tid(declared.atDirect(OBJ).tid()))
                     && Arrays.stream(laws).allMatch(law -> declares(declared, law)) ? fold : null;
+        }
+
+        /**
+         * THE FOLD, LIFTED, when it recombines through ITSELF (menu entry J, algebraic aggregates): the rhs of a declared
+         * derivation {@code r ↦ ℓ·r} whose last instruction is the lhs's own fold, its holes filled from {@code keyed}'s
+         * arguments. Every lane runs the lift {@code ℓ} in the fold's place, and home runs the last instruction, the fold
+         * as the equation states it, over the lanes' summaries, whose type need not be the carrier's (an int's mean lifts
+         * to reals). The equation alone is true of folds that do not distribute
+         * ({@code median ↦ split([median()])>>0·median}), so declared in this form it states more: {@code ℓ} is a
+         * SUFFICIENT STATISTIC of {@code r}, itself a self-combining fold, {@code (a+b)ℓ = (aℓ+bℓ)ℓ}. Then
+         * {@code (a+b)r = (a+b)ℓr = (aℓ+bℓ)ℓr = (aℓ+bℓ)r}, Thm 19 with every lane running {@code ℓ} and home re-applying
+         * {@code r}: {@code mean?<=int{*}() ↦ split?<=int{*}([mean(),count()])·cc(_>>1)·>>0·mean()}. A lane answers its
+         * mean weighted by its count, {@code {n}m}; the stream's sum adds the weights of equal means; and the weighted
+         * mean of the partials is the mean of the whole. Null when the fold declares no such derivation, as every fold
+         * {@link #combiner} recombines does: a lane runs that fold as written.
+         */
+        public static Call lifted(final Inst keyed) {
+            final Rec entry = lawsOf(keyed.tid());
+            if (entry.isNoObj() || Inst.Form.reducer != Inst.Form.of(keyed))
+                return null;
+            final Rec derivation = declaredDerivation(entry);
+            if (derivation.isNoObj())
+                return null;
+            final Inst derived = derivation.atDirect(uri(LHS)).asCode().insts().getLast();
+            final List<Inst> rhs = derivation.atDirect(uri(RHS)).asCode().insts();
+            if (2 > rhs.size() || !Inst.Helper.sameOp(derived, rhs.getLast()) || null == Code.Helper.bind(List.of(keyed), List.of(derived)))
+                return null;
+            return code(Call.Helper.update(List.of(keyed), rec(code(List.of(derived)), code(rhs))));
         }
 
         /**

@@ -185,6 +185,39 @@ Each place sorts its share and keeps two, and home merges the runs and keeps two
 members. The law is causality, not monotonicity in the prefix order, which a sorted merge lacks: `[1]` is a prefix of
 `[1,2]`, yet merging each with `[3]` gives `[1,3]` and `[1,2,3]`.
 
+**A cut may recombine through itself, after a lift.** `mean` is no monoid: the mean of two means is not the mean of
+their union. What recombines is a summary of each part, its mean weighted by its count, and the stream ring carries the
+weight as a coefficient. Write $\ell$ for the lift $a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$, so `{1,1,2}` lifts to
+`{3}1.333…`. A weighted mean averages to itself, $\mathrm{mean} = \ell\,\mathrm{mean}$, and the lift is itself
+self-combining, $(a+b)\,\ell = (a\,\ell + b\,\ell)\,\ell$, as the stream's sum adds the weights of equal means. So
+
+$$
+s\,f\,\mathrm{mean} = (s_1\,f\,\ell + \cdots + s_k\,f\,\ell)\;\mathrm{mean},
+\qquad
+\mathrm{mean}\Big(\sum_{i} \{n_i\}\,m_i\Big) = \frac{\sum_i n_i\,m_i}{\sum_i n_i}.
+$$
+
+*Proof sketch.* With $x = s_1 f + \cdots + s_k f$, the equation gives $x\,\mathrm{mean} = x\,\ell\,\mathrm{mean}$; the
+lift's own combining law, by induction on $k$, gives
+$x\,\ell = (s_1 f \ell + \cdots + s_k f \ell)\,\ell$; and the equation again drops the outer $\ell$. ◻
+
+Each place ships its summary, and home takes the weighted mean. `mean` declares the equation beside itself,
+$\mathrm{mean} \mapsto \ell\,\mathrm{mean}$, with $\ell$ written `split?<=int{*}([mean(),count()]).cc(_>>1)>>0`: the
+split gathers the part, `cc` makes its count the coefficient, and the projection keeps the mean, the weight floating
+through it (Theorem 6). In this form the declaration states more than the equation: that $\ell$ is a sufficient
+statistic, itself a cut. The
+equation alone holds of the median too, $\mathrm{median}(\{\mathrm{median}(a)\}) = \mathrm{median}(a)$, and the median
+does not distribute. This is the menu's entry J, an *algebraic* aggregate in the sense of Gray et
+al. [[4]](#references): a summary of fixed size per part, and a finalizer at home.
+
+```mtron_pre
+{1,1,1,5}.mean()
+{1,1,1,5}.mean().explain()>>format
+```
+
+The bulked `{3}1` travels whole to one place, which answers `{3}1.0`; the other answers `5.0`; and home weighs them,
+$(3 \cdot 1 + 5)/4 = 2$, where the plain mean of the two answers would be 3.
+
 **A cut is planned at every level of a tree.** A place handed a lane may plan it again, over places of its own. The
 budget `?hop` states how many levels a plan may take (the menu's entry E): `law_shard` reads it off the fold, and every
 lane carries it one level down, on its head, so a leaf states `?hop=0` and plans nothing further. To grow a tree, each
@@ -487,7 +520,7 @@ or compose the others (N, R, M, I).
 | **G** | $\checkmark$ | keyed reduce              | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$ | partials merge by key; the combiner is pointwise, computed from the inner fold's                                                       |
 | **H** |              | redundant / hedged shards | $x \oplus x = x$                                                                                                                   | an idempotent fold lets a part ship to several peers and every reply fold; otherwise hedge, first wins                                 |
 | **I** |              | span/route interpreter    | $\mathrm{plan} \mapsto \mathrm{layout}$                                                                                            | the infrastructure: a plan's axes lowered to a layout                                                                                  |
-| **J** |              | algebraic aggregates      | $\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}$                                                           | pointwise tuple partials; the finalizer runs once at the master                                                                        |
+| **J** | $\checkmark$ | algebraic aggregates      | $\mathrm{mean} = \ell\,\mathrm{mean},\ a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$                                             | each place ships its mean weighted by its count, `{n}m`; home takes the weighted mean (an algebraic aggregate)                         |
 | **K** | $\checkmark$ | limit / top-k push-down   | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                                                       |
 | **L** |              | mergeable sketches        | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                                                                    |
 | **M** |              | matrix multiplication     | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)                                             |
@@ -534,3 +567,6 @@ or compose the others (N, R, M, I).
    "[A Span and Point Coefficient Algebra for Stream Rings](./span-and-point-coefficient-algebra.md)."
 3. "[distributed computing — the pattern menu](../skills/mtron/references/distributed-computing-mtron.html)," the mtron
    skill reference.
+4. Gray, J., Chaudhuri, S., Bosworth, A., Layman, A., Reichart, D., Venkatrao, M., Pellow, F., Pirahesh, H., "Data
+   Cube: A Relational Aggregation Operator Generalizing Group-By, Cross-Tab, and Sub-Totals," Data Mining and Knowledge
+   Discovery 1(1), pages 29–53, 1997.
