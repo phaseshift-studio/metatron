@@ -270,6 +270,9 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             // sup and inf are a join and a meet, self-combining too: each lane folds its share and home folds the partials
             "{3,1,4,1,5,9,2,6}.sup()           % branch(start().sup(),start().sup()).sup()               % 9",
             "{3,1,4,1,5,9,2,6}.plus(1).inf()   % branch(start().plus().inf(),start().plus().inf()).inf() % 2",
+            // a projection blind to mass ships with the fold; one that reads mass keeps it home, past the run that ships
+            "{3,1,4,1,5,9,2,6}.sup(neg())      % branch(start().sup(),start().sup()).sup()               % 1",
+            "{11,21,31,12}.mod(10).sup(cc())   % branch(start().mod(),start().mod()).sup()               % 1",
             // a filter handed an effect does not float, so it stays home and only the fold ships over its bag
             "{1,2,3,4,5,6}.is(print(_).gt(2)).sum()  % start().is().branch().sum() % 18",
     }, delimiter = '%')

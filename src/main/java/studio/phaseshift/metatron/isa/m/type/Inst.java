@@ -352,6 +352,9 @@ public interface Inst extends Call {
                 // base.equals(THREAD_INST_TID) ||
                 base.equals(ORDER_INST_TID) ||
                 base.equals(KMERGE_INST_TID) ||
+                // sup and inf take order's projection: "what are you taking the sup on?" (Marko, 2026-11-22)
+                base.equals(SUP_INST_TID) ||
+                base.equals(INF_INST_TID) ||
                 base.equals(AS_INST_TID) ||
                 base.equals(WITHIN_INST_TID) ||
                 base.equals(ISA_INST_TID) ||

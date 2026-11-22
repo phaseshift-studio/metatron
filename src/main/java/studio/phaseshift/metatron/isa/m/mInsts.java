@@ -1253,33 +1253,37 @@ public final class mInsts {
                 // copies is itself. A bulked member weighs nothing, as the sup of {3}5 is 5. The empty stream's bound is
                 // noobj: not the order's bottom (sup ∅) or top (inf ∅), but the stream ring's zero, which an empty lane adds
                 // to the merge as nothing, (noobj + x)·sup = x·sup (no seed: nothing reads one). So the range is A{?}, and
-                // the reducer form is declared, which the range alone no longer shows. Members must be mutually comparable,
-                // as order() requires: {1,2.5}.sup() fails, as {1,2.5}.order() does. They are
+                // the reducer form is declared, which the range alone no longer shows. The argument is the comparator, as
+                // order()'s is: a projection of each member compares the members, so a mixed stream answers by a key
+                // ({1,'a',2.5}.sup(tid().name())), and the bare form compares the members themselves. They are
                 // sup and inf, never max and min: an instruction's name shadows an unbound name of the same spelling,
                 // and an optional {?}max read as *max (dsh's read_events) would have read the instruction.
                 InstBuilder.build()
                         .tid(SUP_INST_TID)
                         .dom(A.maybeSome(), "maybe some A to compare")
                         .rng(A.maybe(), "the greatest A, or noobj for none")
-                        .argLst()
-                        .desc("the supremum function \\(f(X) \\mapsto \\sup X\\): the greatest member of the lhs in the order a sort compares it, whatever its mass; noobj for the empty stream. A join: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap")
+                        .argLst(T(ALL.maybe()), "a projection of A to compare, as order's")
+                        .desc("the supremum function \\(f(X) \\mapsto \\sup X\\): the greatest member of the lhs in the order a sort compares it (by the arg's projection, when given, as order's), whatever its mass; noobj for the empty stream. A join: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap")
                         .example("{3,1,4,1,5}.sup()          [-- 5 --]")
                         .example("{{3}2,7}.sup()             [-- 7: a member's mass does not weigh in --]")
                         .example("{'b','a','c'}.sup()        [-- 'c' --]")
+                        .example("{[a=>3],[a=>1]}.sup(_>>a)  [-- [a=>3]: the argument is the comparator, as order's --]")
                         .form(Inst.Form.reducer)
-                        .body((lhs, inst) -> lhs.stream().max(CommonUtil.ObjComparator.single()).map(m -> m.c(cInt::one)).orElse(noobj()))
+                        .body((lhs, inst) -> lhs.stream().max(inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0)))
+                                .map(m -> m.c(cInt::one)).orElse(noobj()))
                         .law(Law.monoidic, Law.commutative, Law.idempotent, Law.semi_right_distributive, Law.pure)
                         .create(),
                 InstBuilder.build()
                         .tid(INF_INST_TID)
                         .dom(A.maybeSome(), "maybe some A to compare")
                         .rng(A.maybe(), "the least A, or noobj for none")
-                        .argLst()
-                        .desc("the infimum function \\(f(X) \\mapsto \\inf X\\): the least member of the lhs in the order a sort compares it, whatever its mass; noobj for the empty stream. A meet: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap")
+                        .argLst(T(ALL.maybe()), "a projection of A to compare, as order's")
+                        .desc("the infimum function \\(f(X) \\mapsto \\inf X\\): the least member of the lhs in the order a sort compares it (by the arg's projection, when given, as order's), whatever its mass; noobj for the empty stream. A meet: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap")
                         .example("{3,1,4,1,5}.inf()          [-- 1 --]")
                         .example("{'b','a','c'}.inf()        [-- 'a' --]")
                         .form(Inst.Form.reducer)
-                        .body((lhs, inst) -> lhs.stream().min(CommonUtil.ObjComparator.single()).map(m -> m.c(cInt::one)).orElse(noobj()))
+                        .body((lhs, inst) -> lhs.stream().min(inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0)))
+                                .map(m -> m.c(cInt::one)).orElse(noobj()))
                         .law(Law.monoidic, Law.commutative, Law.idempotent, Law.semi_right_distributive, Law.pure)
                         .create(),
                 // THE COEFFICIENT, READ AND SET (moved from Obj, Marko 2026-11-22). The reader answers mass, which no
