@@ -60,6 +60,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * {15}──┼─►//1─{2}──{1}─┼─►//local─{3}─{1}
  *       └─►//2─{3}──{1}─┘
  * </pre>
+ * A REPEAT IS DRAWN AS A LOOP (Marko, 2026-11-22): its body once, as any flow, with a back edge from where it leaves
+ * to where it enters, so law_bsp's superstep reads as what it is, a fan run again and again:
+ * <pre>
+ *        ┌─►//0─{2}─{1}─┐
+ * {4}─┬──┤              ├─►//local─{2}─{1}─┬─{2}
+ *     ▲  └─►//1─{2}─{1}─┘                  │
+ *     └────────────────────────────────────┘
+ * </pre>
  * A COEFFICIENT IS A PRODUCT, READ LEFT TO RIGHT (Marko): each instruction's contract states the coefficient it takes
  * and the one it answers. One that takes at most one obj applies once per obj, so its range multiplies the stream's
  * ({@code {3}} through {@code plus}, {@code int{1} => int{1}}, stays {@code {3}}); one that takes the stream whole
@@ -91,16 +99,36 @@ public final class Topology {
      */
     public static Obj explain(final Code code) {
         final List<Inst> insts = code.insts();
-        if (insts.stream().noneMatch(Topology::fans))
+        if (insts.stream().noneMatch(Topology::fansAnywhere))
             return noobj();
-        final List<Inst> contracts = Rewriter.Helper.contracts(code);
-        // THE FLOW: runs and fans in chain order. A run is the coefficients one place's instructions leave; a fan is
-        // the lst of its lanes, each naming its place (two lanes may share a name, as two home lanes do), its stage
-        // (what the lane's instructions leave) and, when the lane re-plans where it runs, that machine's own topology
         final List<Obj> flow = new ArrayList<>();
+        walk(insts, Rewriter.Helper.contracts(code), null, flow); // nothing flows before the head
+        return topology(lst(flow));
+    }
+
+    /**
+     * THE FLOW of a run of instructions, appended to {@code flow} from the coefficient {@code c} flowing into it, and
+     * what its last instruction leaves: runs and fans in chain order. A run is the coefficients one place's
+     * instructions leave; a fan is the lst of its lanes, each naming its place (two lanes may share a name, as two
+     * home lanes do), its stage (what the lane's instructions leave) and, when the lane re-plans where it runs, that
+     * machine's own topology. A REPEAT IS A LOOP (Marko, 2026-11-22): its body is walked as a flow of its own, from
+     * the frontier flowing into it, into the segment {@code [loop => <the body's flow>]}, drawn once with a back edge;
+     * the run after it starts from what the repeat leaves.
+     */
+    private static cInt walk(final List<Inst> insts, final List<Inst> contracts, cInt c, final List<Obj> flow) {
         List<Obj> run = new ArrayList<>();
-        cInt c = null; // nothing flows before the head
         for (int i = 0; i < insts.size(); i++) {
+            if (loops(insts.get(i))) {
+                if (!run.isEmpty())
+                    flow.add(lst(run));
+                final List<Inst> body = body(insts.get(i));
+                final List<Obj> inner = new ArrayList<>();
+                walk(body, Rewriter.Helper.contracts(code(body)), c, inner);
+                flow.add(rec(uri(LOOP), lst(inner)));
+                run = new ArrayList<>();
+                run.add(label(c = leaves(c, insts.get(i), contracts.get(i))));
+                continue;
+            }
             if (!fans(insts.get(i))) {
                 run.add(label(c = leaves(c, insts.get(i), contracts.get(i))));
                 continue;
@@ -110,7 +138,7 @@ public final class Topology {
             cInt firsts = cInt.ZERO();
             cInt lasts = cInt.ZERO();
             cInt first = null;
-            for (final Rel route : ((BranchInst) insts.get(i)).routes().<Rel>elements().toList()) {
+            for (final Rel route : BranchInst.routes(insts.get(i)).<Rel>elements().toList()) {
                 final List<Inst> program = route.second().isCall()
                         ? route.second().asCall().insts()
                         : List.of((Inst) map_(route.second()).tryToInst());
@@ -149,7 +177,7 @@ public final class Topology {
             run.add(label(c = lasts));
         }
         flow.add(lst(run));
-        return topology(lst(flow));
+        return c;
     }
 
     /**
@@ -192,7 +220,26 @@ public final class Topology {
     }
 
     private static boolean fans(final Inst inst) {
-        return inst instanceof BranchInst && inst.args().isRec();
+        // by its address, not its class: a branch inside a repeat's (blocked) code is never bound to a BranchInst
+        return (inst instanceof BranchInst || BRANCH_INST_TID.equals(inst.tid().basePath())) && inst.args().isRec();
+    }
+
+    /**
+     * A repeat with a code to walk: drawn as a loop.
+     */
+    private static boolean loops(final Inst inst) {
+        return REPEAT_INST_TID.equals(inst.tid().basePath()) && inst.arg(f(CODE), 1).isCall();
+    }
+
+    private static List<Inst> body(final Inst repeat) {
+        return repeat.arg(f(CODE), 1).asCall().insts();
+    }
+
+    /**
+     * A chain has a topology when something in it fans out: a branch, or a branch inside a repeat's body.
+     */
+    private static boolean fansAnywhere(final Inst inst) {
+        return fans(inst) || (loops(inst) && body(inst).stream().anyMatch(Topology::fansAnywhere));
     }
 
     /**
@@ -284,15 +331,24 @@ public final class Topology {
     private static Block block(final Lst flow, final String home, final String host) {
         final List<Block> blocks = new ArrayList<>();
         boolean merged = false;
+        boolean looped = false;
         for (final Obj segment : flow.<Obj>elements().toList()) {
+            if (segment.isRec() && segment.asRec().at(uri(LOOP)).isLst()) {
+                blocks.add(loop(segment.asRec().at(uri(LOOP)).asLst(), home, host));
+                merged = false;
+                looped = true;
+                continue;
+            }
             final List<Obj> parts = segment.asLst().<Obj>elements().toList();
             if (parts.isEmpty() || parts.getFirst().isRec()) {
                 blocks.add(fan(parts, home, host));
                 merged = true;
+                looped = false;
             } else {
-                blocks.add(new Block(List.of((merged ? "─►" + home + "─" : "")
+                blocks.add(new Block(List.of((merged ? "─►" + home + "─" : looped ? "─" : "")
                         + parts.stream().map(Obj::strValue).collect(Collectors.joining("─"))), 0));
                 merged = false;
+                looped = false;
             }
         }
         final int above = blocks.stream().mapToInt(Block::main).max().orElse(0);
@@ -386,6 +442,27 @@ public final class Topology {
                     + rows.get(r) + side(r, first, last, main, lane, "┐┤┼┘├"));
         }
         return new Block(drawn, main);
+    }
+
+    /**
+     * A LOOP (Marko, 2026-11-22): its body drawn as any flow, between two gutters. The main line enters the body through
+     * a ┬ and leaves it through another, where it also goes on to whatever follows the repeat. From the right ┬ the back
+     * edge runs down (│), back under the body along the bottom rail, and up the left gutter into the entry, the ▲ just
+     * under it marking which way it runs: the frontier a pass leaves is the next pass's.
+     */
+    private static Block loop(final Lst inner, final String home, final String host) {
+        final Block body = block(inner, home, host);
+        final int width = body.rows().stream().mapToInt(String::length).max().orElse(0);
+        final List<String> rows = new ArrayList<>();
+        for (int r = 0; r < body.rows().size(); r++) {
+            final String row = body.rows().get(r);
+            final String padded = row + (r == body.main() ? "─" : " ").repeat(width - row.length());
+            final String left = r < body.main() ? "  " : r == body.main() ? "─┬" : r == body.main() + 1 ? " ▲" : " │";
+            final String right = r < body.main() ? "  " : r == body.main() ? "─┬" : " │";
+            rows.add(left + padded + right);
+        }
+        rows.add(" └" + "─".repeat(width + 1) + "┘");
+        return new Block(rows, body.main());
     }
 
     /**

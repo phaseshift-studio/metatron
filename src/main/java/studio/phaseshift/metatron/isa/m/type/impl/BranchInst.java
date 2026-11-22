@@ -87,8 +87,16 @@ public class BranchInst extends MInst {
      * key's own query overrides the branch's (Marko, 2026-11-05). An ordered call has none.
      */
     public Rec routes() {
-        final Map<String, String> defaults = this.tid().qMap();
-        return !this.args().isRec() ? rec_noobj() : this.args().asRec().elements()
+        return routes(this);
+    }
+
+    /**
+     * The routes of any keyed branch, bound or as written (a branch inside a repeat's blocked code is never bound):
+     * each key under the branch's own query, the key's own on top.
+     */
+    public static Rec routes(final Inst branch) {
+        final Map<String, String> defaults = branch.tid().qMap();
+        return !branch.args().isRec() ? rec_noobj() : branch.args().asRec().elements()
                 .filter(kv -> !uri(LHS).equals(kv.first()))
                 // the branch's query first, then the key's own on top (addQ puts its map over what is there)
                 .map(kv -> rel(uri(kv.first().uriValue().q(defaults).addQ(kv.first().uriValue().qMap())), kv.second()))
