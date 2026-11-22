@@ -519,19 +519,21 @@ x.repeat?<=A{*}(code=>f, until=>p)
   peer's copy by its id. The walk counts the walks of length five ending at each vertex, $(A^{5}\mathbf{1})_v$: `{99}`
   for marko, lop and josh, `{41}` for vadas, ripple and peter, six bulked members carrying 420 walks.
 - **The topology draws the loop.** `explain()>>ext/topology/format` draws a repeat as its body once with a back edge
-  from the exit to the entry:
+  from the exit to the entry. Here `{1,2,3}.repeat?<=int{*}(code=>plus(1),…)` is dealt over two peers: each member
+  reaches a lane at most once (`{0,3}`), the lanes add where they merge (`{0,6}`), and the repeat answers any number
+  (`{*}`):
 
 ```
-       ┌─►//0─{2}─{1}─┐
-{4}─┬──┤              ├─►//local─{2}─{1}─┬─{2}
-    ▲  └─►//1─{2}─{1}─┘                  │
-    └────────────────────────────────────┘
+       ┌─►//0─{0,3}─{0,3}─┐
+{3}─┬──┤                  ├─►//local─{0,6}─┬─{*}
+    ▲  └─►//1─{0,3}─{0,3}─┘                │
+    └──────────────────────────────────────┘
 ```
 
 - **The dom coefficient is the schedule.** `{1}` walks each monad on its own (asynchronous), `{*}` waits for the whole
-  frontier (lock step), and a bounded `{n}` will page it: the processor runs and dumps pages of n as a lazy barrier
-  (Marko: the coroutine belongs to the processor, not to the instruction), and repeat's gate widens from `isGather()`
-  to `isBatching()`.
+  frontier (lock step). Not yet written: a bounded `{n}` will page it, the processor running and dumping pages of n as
+  a lazy barrier (Marko: the coroutine belongs to the processor, not to the instruction), once repeat's gate widens
+  from `isGather()` to `isBatching()`.
 
 Open: the frontier kept on the peers between passes (fusing one pass's branch with the next); a deal weighted by
 coefficient instead of by member; a pass that holds a cut, whose combiner would run at every superstep boundary; and a

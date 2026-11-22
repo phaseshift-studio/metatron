@@ -84,15 +84,8 @@ public class BranchInst extends MInst {
      * The keyed routes, {@code place => program}, as each lane sees them: the args of a keyed call without the reserved
      * {@code lhs} key the args frame carries (Processor), each key carrying the branch's own query as its default.
      * {@code branch?timeout=24(...)} times every lane and {@code branch?split=part(...)} parts the lhs equally, while a
-     * key's own query overrides the branch's (Marko, 2026-11-05). An ordered call has none.
-     */
-    public Rec routes() {
-        return routes(this);
-    }
-
-    /**
-     * The routes of any keyed branch, bound or as written (a branch inside a repeat's blocked code is never bound):
-     * each key under the branch's own query, the key's own on top.
+     * key's own query overrides the branch's (Marko, 2026-11-05). An ordered call has none. Any keyed branch has them,
+     * bound or as written: a branch inside a repeat's blocked code is never bound.
      */
     public static Rec routes(final Inst branch) {
         final Map<String, String> defaults = branch.tid().qMap();
@@ -120,7 +113,7 @@ public class BranchInst extends MInst {
             return objs(this.args().elements().map(o -> this.isBatching()
                     ? start_(lhs).addInsts(o.isCall() ? o.asCall().insts() : List.of((Inst) map_(o).tryToInst())).apply(noobj())
                     : o.apply(lhs).c(c -> lhs.c().mult(c))));
-        final List<Rel> routes = this.routes().elements().toList();
+        final List<Rel> routes = routes(this).elements().toList();
         final long[] weights = routes.stream()
                 .mapToLong(route -> seeded(route) ? 0L : this.weight(route.first().uriValue()))
                 .toArray();

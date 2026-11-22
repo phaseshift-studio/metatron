@@ -319,12 +319,12 @@ itself pure, so `law_bsp` deals `both()` like any floatable run:
 ```
 
 **The domain coefficient is the schedule.** How much of the frontier a pass waits for is `repeat`'s domain
-coefficient, not a flag: $\{1\}$ walks each monad on its own, $\{*\}$ waits for the whole frontier, and a bounded
-$\{n\}$ is a page, supersteps over pages of $n$ objects that the processor runs and dumps as a lazy barrier. One knob
-moves a program between the asynchronous and the bulk synchronous models, and the answer is the same at every setting
-for a floatable pass.
+coefficient, not a flag: $\{1\}$ walks each monad on its own and $\{*\}$ waits for the whole frontier. One knob
+moves a program between the asynchronous and the bulk synchronous models, and for a floatable pass the answer is the
+same at either setting.
 
-[To be written: the frontier kept on the peers between passes, fusing one pass's branch with the next so that only the
+[To be written: a bounded $\{n\}$ as a page, supersteps over pages of $n$ objects that the processor runs and dumps as
+a lazy barrier; the frontier kept on the peers between passes, fusing one pass's branch with the next so that only the
 merge's coefficients travel; a deal weighted by coefficient rather than by member; and a pass that holds a cut, whose
 combiner then runs at the boundary of every superstep.]
 
@@ -443,7 +443,7 @@ or compose the others (N, R, M, I).
 - A program expands and contracts once per cut; one object survives the home instructions between cuts.
 - A loop of cuts is a superstep, repeated: `repeat?<=A{*}` waits for its whole frontier each pass, `law_bsp` deals a
   floatable pass over the peers, and the merge is the barrier. The domain coefficient is the schedule: one object at
-  a time, a page, or the whole frontier.
+  a time or the whole frontier, and a bounded one is to page it.
 - A coefficient is an index set: a span splits by its exponent, a point by its copies.
 - [To be written: what is open — the shuffle and pipeline shapes, and the laws a fold would declare to reach them.]
 

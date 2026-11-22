@@ -30,7 +30,10 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.FLOW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * THE TOPOLOGY DRAWING, pinned against the one Marko sketched (2026-11-20): fifteen objs dealt to three peers as ten,
@@ -59,42 +62,6 @@ public class TopologyTest extends AbstractMetatronTest {
      * each joins the fork and the join on its own main row, the rows between the outer lanes carry a │, and the shorter
      * lane runs out to the join.
      */
-    /**
-     * A REPEAT IS A LOOP (Marko, 2026-11-22): its body is drawn once, as any flow, and a back edge runs from where the
-     * body leaves (┬ on the right, where the main line also goes on) down, back under the body, and up into where it
-     * enters (▲ under the ┬ on the left). Here the body is law_bsp's superstep: the frontier dealt over //0 and //1 and
-     * merged home.
-     */
-    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
-    @Test
-    public void testARepeatIsDrawnWithItsBackEdge() {
-        final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{4}'],"
-                + "[loop=>[[[place=>'//0',stage=>['{2}','{1}']],[place=>'//1',stage=>['{2}','{1}']]],['{2}','{1}']]],"
-                + "['{2}']]").asLst());
-        assertEquals(String.join("\n", "",
-                "       ┌─►//0─{2}─{1}─┐",
-                "{4}─┬──┤              ├─►//local─{2}─{1}─┬─{2}",
-                "    ▲  └─►//1─{2}─{1}─┘                  │",
-                "    └────────────────────────────────────┘", ""), drawing);
-    }
-
-    /**
-     * THE LOOP IS READ OFF THE CHAIN: a repeat whose code deals over two places explains to a flow with a loop segment,
-     * the fan inside it, and draws with its back edge.
-     */
-    @Test
-    public void testARepeatThatDealsExplainsToALoop() {
-        final Obj topology = Topology.explain(ObjmtronSerializer.parse(
-                "{1,2,3}.repeat?<=int{*}(code=>branch?<=A{*}&split=part(<//a> => plus(1), <//b> => plus(1)),until=>loop()?>3)").asCode());
-        LOG.debug("a dealing repeat's topology: %s", topology);
-        org.junit.jupiter.api.Assertions.assertTrue(topology.isRec(), "a dealing repeat has a topology: " + topology);
-        final String drawing = Topology.draw(topology.asRec().at(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(studio.phaseshift.metatron.Tokens.FLOW)).asLst());
-        LOG.debug("drawn:%s", drawing);
-        org.junit.jupiter.api.Assertions.assertTrue(drawing.contains("┬") && drawing.contains("▲") && drawing.contains("┘"),
-                "the repeat is drawn with its back edge:" + drawing);
-        org.junit.jupiter.api.Assertions.assertTrue(drawing.contains("//a") && drawing.contains("//b"), "its lanes are drawn inside the loop:" + drawing);
-    }
-
     @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
     @Test
     public void testAChildsSubtreeIsDrawnInsideItsLane() {
@@ -177,5 +144,87 @@ public class TopologyTest extends AbstractMetatronTest {
     public void testAFanOfNoLanes() {
         assertEquals(String.join("\n", "", "{8}───►//local─{0}", ""),
                 Topology.draw(ObjmtronSerializer.parse("[['{8}'],[,],['{0}']]").asLst()));
+    }
+
+    /**
+     * A REPEAT IS A LOOP (Marko, 2026-11-22): its body is drawn once, as any flow, and a back edge runs from where the
+     * body leaves (┬ on the right, where the main line also goes on) down, back under the body, and up into where it
+     * enters (▲ under the ┬ on the left). This body is a pass that holds a cut: the frontier dealt over //0 and //1,
+     * merged home and folded there ({1}) before the next pass. law_bsp never writes one (its pass is the fan alone,
+     * below), but a hand-written branch with a tail at home draws like this.
+     */
+    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
+    @Test
+    public void testARepeatIsDrawnWithItsBackEdge() {
+        final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{4}'],"
+                + "[loop=>[[[place=>'//0',stage=>['{2}','{1}']],[place=>'//1',stage=>['{2}','{1}']]],['{2}','{1}']]],"
+                + "['{2}']]").asLst());
+        assertEquals(String.join("\n", "",
+                "       ┌─►//0─{2}─{1}─┐",
+                "{4}─┬──┤              ├─►//local─{2}─{1}─┬─{2}",
+                "    ▲  └─►//1─{2}─{1}─┘                  │",
+                "    └────────────────────────────────────┘", ""), drawing);
+    }
+
+    /**
+     * A ONE-ROW BODY STILL SHOWS WHICH WAY IT RUNS: a body of one lane is a single row, so the loop gives it a row
+     * under its main line, where the ▲ stands.
+     */
+    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
+    @Test
+    public void testAOneRowBodyShowsWhichWayItRuns() {
+        final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{4}'],"
+                + "[loop=>[[[place=>'//0',stage=>['{4}','{4}']]],['{4}']]],"
+                + "['{4}']]").asLst());
+        assertEquals(String.join("\n", "",
+                "{4}─┬────►//0─{4}─{4}───►//local─{4}─┬─{4}",
+                "    ▲" + " ".repeat(32) + "│",
+                "    └" + "─".repeat(32) + "┘", ""), drawing);
+    }
+
+    /**
+     * A BODY THAT STARTS AT HOME joins the loop's entry through a dash, as a fan's own ── joins its fork: here the pass
+     * runs one instruction at home ({3}) before it deals.
+     */
+    @Training.SkipTraining(reason = "a Java-side drawing of a hand-built flow, not an mtron expression")
+    @Test
+    public void testABodyThatStartsAtHomeJoinsTheEntryThroughADash() {
+        final String drawing = Topology.draw(ObjmtronSerializer.parse("[['{3}'],"
+                + "[loop=>[['{3}'],[[place=>'//0',stage=>['{3}','{3}']],[place=>'//1',stage=>['{3}','{3}']]],['{6}']]],"
+                + "['{6}']]").asLst());
+        assertEquals(String.join("\n", "",
+                "           ┌─►//0─{3}─{3}─┐",
+                "{3}─┬─{3}──┤              ├─►//local─{6}─┬─{6}",
+                "    ▲      └─►//1─{3}─{3}─┘" + " ".repeat(14) + "│",
+                "    └" + "─".repeat(36) + "┘", ""), drawing);
+    }
+
+    /**
+     * THE LOOP IS READ OFF THE CHAIN, its pass as law_bsp writes it: a repeat whose code is a branch dealing the
+     * frontier over two places, each lane running f where it points, explains to a flow with a loop segment around the
+     * fan. Each member reaches a lane at most once ({3} times {?}), the lanes add where they merge, and the repeat
+     * answers any number ({*}).
+     */
+    @Test
+    public void testARepeatThatDealsExplainsToALoop() {
+        final Obj topology = Topology.explain(ObjmtronSerializer.parse("{1,2,3}.repeat?<=int{*}(code=>"
+                + "branch?<=A{*}&split=part(<//a> => plus?hop=0(1), <//b> => plus?hop=0(1)),"
+                + "until=>loop()?>3)").asCode());
+        assertTrue(topology.isRec(), "a dealing repeat has a topology: " + topology);
+        assertEquals(String.join("\n", "",
+                "       ┌─►//a─{0,3}─{0,3}─┐",
+                "{3}─┬──┤                  ├─►//local─{0,6}─┬─{*}",
+                "    ▲  └─►//b─{0,3}─{0,3}─┘                │",
+                "    └──────────────────────────────────────┘", ""),
+                Topology.draw(topology.asRec().at(uri(FLOW)).asLst()));
+    }
+
+    /**
+     * A REPEAT THAT DEALS NOTHING RUNS IN ONE PLACE, so its chain has no topology: a loop alone is not a fan.
+     */
+    @Test
+    public void testARepeatThatDealsNothingHasNoTopology() {
+        assertTrue(Topology.explain(ObjmtronSerializer.parse(
+                "{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)").asCode()).isNoObj());
     }
 }
