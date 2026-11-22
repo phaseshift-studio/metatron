@@ -39,13 +39,13 @@ database, a tag in an HTML page, a vertex in a graph, a value in memory on an Io
 device — all of it lives in one address space and is read and written through a
 single referential model.
 
-This page takes you from nothing to a running REPL, then points at the parts of the
+This page goes from nothing to a running REPL, then points at the parts of the
 documentation worth reading next.
 
 [discrete]
 === Install
 
-Pick one. A POSIX shell is all that is required.
+A POSIX shell is all that is required.
 
 [source,bash]
 ----
@@ -69,7 +69,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d
 ----
 
 [discrete]
-=== Your first expression
+=== First expression
 
 metatron evaluates mtron. A one-off expression runs with `-e`.
 
@@ -86,16 +86,16 @@ into two results — hence `[3,4]`. Everything in mtron is built from two operat
 [discrete]
 === The console
 
-For interactive use, open the console — a REPL with syntax highlighting,
+For interactive use, the console is a REPL with syntax highlighting,
 step-through compilation, and type checking.
 
 [source,bash]
 ----
-$ bin/metatron -e "console::[=>]"
+$ bin/metatron
 mtron>
 ----
 
-Try a few expressions.
+A few expressions to try:
 
 [source,mtron]
 ----
