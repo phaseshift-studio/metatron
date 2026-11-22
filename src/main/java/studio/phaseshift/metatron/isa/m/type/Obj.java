@@ -1367,6 +1367,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         if (!protoObj.baseTypeID().test(type.baseTypeID()))
                             throw MTronException.of("%s is not a %s".formatted(protoObj, type));
                         if (type.asType().hasConstructor()) {
+                            // A REPLY READ TAKES THE VALUE AS THE FAR SIDE BUILT IT (SELF_VID bound): the far side
+                            // already ran the constructor and the predicate, and wnat::3 is its answer, not an input.
+                            // Rebuilt here it read wnat::4, and a rebuild that left the predicate (?<10: 9 builds 10)
+                            // threw, losing the literal that carries the trip's tag. The type and the vid are attached
+                            // as selfVID attaches a vid, and nothing is stored (Marko, 2026-11-22).
+                            if (SELF_VID.isBound())
+                                return protoObj.self(protoObj.jvm(), bigTID, vid);
                             final O constructedObj = type.asType().constructor().apply(protoObj).as();
                             if (constructedObj.isFail())
                                 // a failed constructor must not slip past the generic return
@@ -1376,8 +1383,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
                             objTypeCheck(constructedObj);
-                            // the constructor's own store, outside objCheckAndSave: a reply read stores nothing here either
-                            if (null != vid && !SELF_VID.isBound())
+                            // the constructor's own store, outside objCheckAndSave (a reply read returned above)
+                            if (null != vid)
                                 Machine.write(vid, constructedObj);
                             return constructedObj;
                         }
