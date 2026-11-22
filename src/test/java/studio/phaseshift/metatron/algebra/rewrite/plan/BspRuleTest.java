@@ -144,6 +144,9 @@ public class BspRuleTest extends AbstractMetatronTest {
             "{1,2,3}.repeat?<=int{*}(code=>sum(),until=>loop()?>0)",
             "{1,2,3}.repeat?<=int{*}(code=>plus(1).print(_),until=>loop()?>3)",
             "{1,2,3}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
+            // a gathering repeat inside the code needs the whole frontier, like a fold: dealt, each lane's inner superstep
+            // would sum only its share (4 and 2), never pass gt(5), and never return, where home answers 6
+            "{1,2,3}.repeat?<=int{*}(code=>repeat?<=int{*}(code=>sum(),until=>is(gt(5))),until=>loop()?>0)",
     })
     public void testWhatIsNotDealtIsLeftAsWritten(final String mtron) {
         final Code before = program(mtron);

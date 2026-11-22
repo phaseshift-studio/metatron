@@ -125,7 +125,8 @@ public final class Bsp {
     private static boolean floats(final List<Inst> f, final Type carrier) {
         Type at = carrier;
         for (final Inst inst : f) {
-            if (BRANCH_INST_TID.equals(inst.tid().basePath()))
+            // a branch, or anything that gathers as written (a nested repeat?<=A{*}, whose declared form reads as a step)
+            if (BRANCH_INST_TID.equals(inst.tid().basePath()) || inst.isGather())
                 return false;
             final Inst typed = Law.Helper.keyed(inst, at);
             if (!FLOATS.matches(typed))
