@@ -444,10 +444,12 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{{3}5,1,4}.sup?split=copy()                 % branch(start({{3}5,1,4}).sup(),start({{3}5,1,4}).sup()).sup() % 5",
             // sup answers one obj at most, so what follows it stays home rather than shipping its one answer out again
             "{1,2,3,4,5,6}.is(gt(2)).sup().mult(2)       % branch(start().is().sup(),start().is().sup()).sup().mult()    % 12",
-            // a span on the cut runs it again over its own answer, which no lane can run on a part, and a span on a value is
-            // written over when the spec is keyed: both stay home and answer as written
+            // a span on the cut runs it again over its own answer, which no lane can run on a part; a span on a group value
+            // is written over when the spec is keyed, and home's group drops it too, applying the value once: both stay home
             "{1,2,3,4}.{2}count()                        % start().count()                                               % 1",
             "{1,3,2,5,4,6}.group([mod(2)=>{2}count()])   % start().group()                                               % [1=>3,0=>3]",
+            // a span range on a cut after a V run: each lane would run {0,2}sum() on its part and home again over theirs
+            "5.{0,3}plus(1).{0,2}sum()                   % start().plus().sum()                                          % {5,6,7,8,26,26}",
     }, delimiter = '%')
     void test_H_redundant_shards(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -849,6 +851,8 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,1,2,2,3,3}.mod(2).group([cc()=>count()])                     % start?hop=0({1,1,2,2,3,3}).mod(2).group([cc()=>count()])",
             "{1,1,2,2,3}.sup()                                               % start?hop=0({1,1,2,2,3}).sup()",
             "{5,5,1,3}.plus(1).inf?split=copy()                              % start?hop=0({5,5,1,3}).plus(1).inf()",
+            // a gather that drops copies keeps the group home: a lane holding {2}1 of {4}1 would skip all of it
+            "{1,3,5,7}.mod(2).group([skip(2)=>count()])                      % start?hop=0({1,3,5,7}).mod(2).group([skip(2)=>count()])",
             "{1,1,2,2,3,3}.plus(1).mean?hop=2()                              % start?hop=0({1,1,2,2,3,3}).plus(1).mean()",
             "{1,1,2}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)         % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",
             "{1,1,2}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3)   % {1,1,2}.repeat?<=int{*}&hop=0(code=>plus(1),until=>loop()?>3)",

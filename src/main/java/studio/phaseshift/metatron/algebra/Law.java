@@ -1191,20 +1191,15 @@ public enum Law {
                         .filter(claim -> inst.tid().basePath().equals(claim.getKey().basePath())
                                 && claim.getValue().inst().args().count() == inst.args().count())
                         .map(Map.Entry::getValue).toList();
-                return !contracts.isEmpty() && contracts.stream().allMatch(claim -> oneCopy(claim.inst())
+                // each contract takes one copy by its own shape (Thm 6's floatable set, read off its coefficients, never
+                // the op's declared form), or is a typer, or is an identity that hands every copy back
+                return !contracts.isEmpty() && contracts.stream().allMatch(claim -> (!claim.inst().isGather()
+                        && (claim.inst().isFilter() || claim.inst().isMap() || claim.inst().isFlatMap() || claim.inst().isScatter()))
                         || Inst.Form.typer == Inst.Form.of(claim.inst()) || claim.claimed().containsKey(Law.unit))
                         && inst.args().elements().allMatch(arg -> arg.isRel()
                         ? massBlind(arg.asRel().first()) && massBlind(arg.asRel().secondDirect())
                         : massBlind(arg));
             });
-        }
-
-        /**
-         * Whether a contract takes one copy at a time, by its own shape: a mapper, filter, flatmapper or scatter, never a
-         * gather.
-         */
-        private static boolean oneCopy(final Inst contract) {
-            return !contract.isGather() && (contract.isFilter() || contract.isMap() || contract.isFlatMap() || contract.isScatter());
         }
 
         /**

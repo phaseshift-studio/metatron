@@ -102,6 +102,9 @@ public class RealTest extends AbstractAlgebraTest {
             "{[a=>3],[a=>1],[a=>2]}.inf(_>>a)                                 % [a=>1]",
             "{10,2.5,'1'}.sup(as(str::T))                                     % 2.5",
             "{1,'a',2.5}.inf(as(str::T))                                      % 1",
+            // a tie falls to the members' written form, never to whichever came first: a bag has no first
+            "{[a=>1,b=>1],[a=>1,b=>2]}.sup(_>>a)                              % [a=>1,b=>2]",
+            "{[a=>1,b=>2],[a=>1,b=>1]}.sup(_>>a)                              % [a=>1,b=>2]",
             "{1.1,2.2,3.3}.mean().?>2.1.lt(2.3)                               % true", // java double too wiggly
             "{1.1,2.2,3.3}.mean().and(gt(2.1),lt(2.3))                        % true", // java double too wiggly
             "{1.1,2.2,3.3}.mean().and(gt(22.1),lt(42.3))                      % false", // java double too wiggly

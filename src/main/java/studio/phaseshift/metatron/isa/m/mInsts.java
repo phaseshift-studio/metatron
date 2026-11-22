@@ -1276,8 +1276,7 @@ public final class mInsts {
                         .example("{'b','a','c'}.sup()        [-- 'c' --]")
                         .example("{[a=>3],[a=>1]}.sup(_>>a)  [-- [a=>3]: the argument is the comparator, as order's --]")
                         .form(Inst.Form.reducer)
-                        .body((lhs, inst) -> lhs.stream().max(inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0)))
-                                .map(m -> m.c(cInt::one)).orElse(noobj()))
+                        .body((lhs, inst) -> lhs.stream().max(bound(inst)).map(m -> m.c(cInt::one)).orElse(noobj()))
                         .law(Law.monoidic, Law.commutative, Law.idempotent, Law.semi_right_distributive, Law.pure)
                         .create(),
                 InstBuilder.build()
@@ -1289,8 +1288,7 @@ public final class mInsts {
                         .example("{3,1,4,1,5}.inf()          [-- 1 --]")
                         .example("{'b','a','c'}.inf()        [-- 'a' --]")
                         .form(Inst.Form.reducer)
-                        .body((lhs, inst) -> lhs.stream().min(inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0)))
-                                .map(m -> m.c(cInt::one)).orElse(noobj()))
+                        .body((lhs, inst) -> lhs.stream().min(bound(inst)).map(m -> m.c(cInt::one)).orElse(noobj()))
                         .law(Law.monoidic, Law.commutative, Law.idempotent, Law.semi_right_distributive, Law.pure)
                         .create(),
                 // THE COEFFICIENT, READ AND SET (moved from Obj, Marko 2026-11-22). The reader answers mass, which no
@@ -1685,6 +1683,17 @@ public final class mInsts {
             copies += weight;
         }
         return real(0L == copies ? 0.0 : sum / copies);
+    }
+
+    /**
+     * THE ORDER SUP AND INF BOUND IN: the arg's projection when given, as order's, else the members themselves, with
+     * ties broken by each member's written form. A tie must not fall to whichever member came first, as a bag has no
+     * first and both folds declare commutative: {@code {[a=>1,b=>1],[a=>1,b=>2]}.sup(_>>a)} answers the same member
+     * written either way round.
+     */
+    private static Comparator<Obj> bound(final Inst inst) {
+        final Comparator<Obj> cmp = inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0));
+        return cmp.thenComparing(Obj::toString);
     }
 
     /**
