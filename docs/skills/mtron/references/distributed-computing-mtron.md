@@ -552,9 +552,9 @@ where `h` is the superstep's height, one when unstated, so a lane is `f?hop=0` u
   from `isGather()` to `isBatching()`.
 
 Open: the frontier kept on the peers between passes (fusing one pass's branch with the next); a deal weighted by
-coefficient instead of by member; a pass that holds a cut, whose combiner would run at every superstep boundary; and a
-bulked member's count across a remote lane, pinned by `DistributedComputingTest`'s disabled
-`test_N_a_bulked_member_keeps_its_count_on_a_remote_lane`.
+coefficient instead of by member; and a pass that holds a cut, whose combiner would run at every superstep boundary. A
+bulked member keeps its count across a remote lane (`test_N_a_bulked_member_keeps_its_count_on_a_remote_lane`, fixed
+2026-11-22: the client's reply router was declared `#{?}`, so a single bulked answer lost its coefficient on arrival).
 
 ### T — migrating a frame of reference
 
