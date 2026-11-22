@@ -91,6 +91,9 @@ public class mathInstSetTest extends AbstractInstSetTest {
     @CsvSource(value = {
             // addition / subtraction / multiplication / division
             "cmplx::[1.0,2.0] + cmplx::[-1.0,3.0]                  % cmplx::[0.0,5.0]",
+            // the complex sum folds from the complex zero: the sum of none is [0.0,0.0], never the empty lst
+            "{cmplx::[1.0,2.0],cmplx::[3.0,4.0]}.sum()             % cmplx::[4.0,6.0]",
+            "{1,2}.?>5.sum?<=cmplx{*}()                            % [0.0,0.0]",
             "cmplx::[1.0,2.0] - cmplx::[3.0,4.0]                   % cmplx::[-2.0,-2.0]",
             "cmplx::[1.0,2.0] * cmplx::[3.0,4.0]                   % cmplx::[-5.0,10.0]",
             "cmplx::[1.0,2.0].div(cmplx::[1.0,1.0])                % cmplx::[1.5,0.5]",
