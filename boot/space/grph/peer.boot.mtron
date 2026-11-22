@@ -1,0 +1,27 @@
+[== a peer's boot with the modern graph: boot/peer.mtron plus the grph instset and g:, a TinkerGraph loaded with the
+     MODERN dataset under the modern schema, the graph the live server (drstynx.boot.mtron) mounts at g:. Every peer
+     loads the same ids, so a vertex address such as g:V/4 names the same vertex on every machine, and a lane that walks
+     the graph (out(), in(), both()) finds its types (person::T, software::T), its instructions and its data where it
+     lands.
+       {3,4}.harvest(<boot/space/grph/peer.boot.mtron>) ==]
+import(/m/sys);
+import(/m/math,math);
+import(/m/math/cat,cat);
+import(/m/web,web);
+import(/m/db/grph);
+[== peers discover peers ==]
+mdns_discovery::[=>];
+fsspace::[pattern=>fs:#,
+          route  => [fs: => <~>]]@~/memory/space/fs;
+[== the modern graph at g: ==]
+grphspace::[pattern => g:#,
+            q       => [incrq::[=>],subq::[=>]],
+            schema  => !*/m/db/grph/schema/modern,
+            config  => [
+              dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
+              <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
+            route   => [g: => <>]]@<~/memory/space/grph/g>;
+[== a peer may harvest peers of its own (a tree) ==]
+harvest?rec<=int{*}(uri{?}::T){
+  spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0).
+    -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest;
