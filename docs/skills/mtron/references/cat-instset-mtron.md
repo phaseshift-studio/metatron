@@ -269,11 +269,12 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `branch_inline` (/m)     | the additive op of the code ring's theory, with a single member                             | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
 | `map_float` (/m)         | a value or a type argument whose point is exact                                             | $\mathrm{map}(x\{c\}) \leadsto \mathrm{map}\{c\}(x)$ — the point floats off the argument, so `branch(int::T,int::T)` compiles to `map{2}(int::T)`                                                                        |
 | `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
+| `law_bsp`                | a whole-frontier `repeat?<=A{*}` whose code is pure and floatable, + a dialed peer          | each pass deals the frontier over the dialed peers and merges home (entry N's superstep)                                                                                                                                                            |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
 distribution plan may anchor (its spans). `pure` constrains every rule that moves, drops or replicates code: only a
-declared-pure instruction is swallowed by `law_absorbing` or replicated into `law_shard`'s floatable run, and an
+declared-pure instruction is swallowed by `law_absorbing`, replicated into `law_shard`'s floatable run, or dealt by `law_bsp`, and an
 instruction that does not declare it is effectful (`to`, `print`, `side` stay where they are). The remaining labels
 are classification predicates, recorded for the
 rewriter's guards and for reasoning, with no rewrite of their own: `commutative`, `unit`, `magmadic`, `nilpotent`,

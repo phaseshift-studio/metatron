@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 /**
- * The category's {@code /rewrite} registrations: law_shard, the distribution rule, and the design note for the
+ * The category's {@code /rewrite} registrations: law_bsp and law_shard, the distribution rules, and the design note for the
  * graph-driven family the category may own next. Every law rewrite is /m's.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -92,7 +92,7 @@ public class catRewrite {
                 // EVERY LAW REWRITE THE CATEGORY ONCE REGISTERED IS /m's (2026-11-12): the unit, involution, idempotent,
                 // monoidic, absorbing, poset, inverse and derivation laws, the map unwrap, and the code ring's normal forms
                 // (branch_factor, branch_collapse, branch_inline). The theories are /m's, so the rules run on the base path,
-                // the category imported or not; their bodies are Law.Helper's. The category registers only law_shard.
+                // the category imported or not; their bodies are Law.Helper's. The category registers law_bsp and law_shard.
 
                 // the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
                 // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a

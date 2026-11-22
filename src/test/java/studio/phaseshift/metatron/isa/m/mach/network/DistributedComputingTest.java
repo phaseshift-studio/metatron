@@ -112,7 +112,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <tr><td>K</td><td>limit / top-k push-down</td><td>take(k)·⊕ = take(k)·⊕·take(k)</td><td>{@code {...}.order(s)==[{k}_]}</td><td>✅</td></tr>
  *   <tr><td>L</td><td>mergeable sketches</td><td>ĥ(a ⊎ b) = ĥ(a) ⊕ ĥ(b)</td><td>{@code {...}.hll()}</td><td></td></tr>
  *   <tr><td>M</td><td>matrix multiplication</td><td>A·(B+C) = A·B + A·C</td><td>{@code mtrx::[…]}</td><td></td></tr>
- *   <tr><td>N</td><td>iterative / BSP</td><td>x* = x ∨ f(x) ∨ f²(x) ∨ ⋯</td><td>a sharded superstep repeated</td><td></td></tr>
+ *   <tr><td>N</td><td>iterative / BSP</td><td>x* = x ∨ f(x) ∨ f²(x) ∨ ⋯</td><td>{@code x.repeat?<=A{*}(code=>f)} (law_bsp)</td><td>✅</td></tr>
  *   <tr><td>O</td><td>broadcast constants</td><td>ca·1b = 1a·1b·c1 (Thm 6)</td><td>{@code {...}.plus(B).sum()}</td><td>✅</td></tr>
  *   <tr><td>P</td><td>computed seeds</td><td>[0,n) = ⊎_i index_i</td><td>Monte Carlo — a count + an RNG seed per peer</td><td></td></tr>
  *   <tr><td>Q</td><td>monad migration</td><td>authority(m) — ship the monad, not the value</td><td>a remote read mid-chain</td><td></td></tr>
@@ -638,7 +638,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     }
 
     // ================================================================================================
-    // THE UNWRITTEN ROWS (B, C, F, I, J, L, M, N, P, Q, R). Each is SOUND -- the law holds -- and each
+    // THE UNWRITTEN ROWS (B, C, F, I, J, L, M, P, Q, R). Each is SOUND -- the law holds -- and each
     // needs a premise the emitter does not hold yet, which is why the interpreter DECLINES it to the identity
     // rather than approximating a layout. These stubs WARN rather than fail: "not implemented" is a logged
     // target, not a silent absence, and a red suite is reserved for behaviour that regressed. When a row's

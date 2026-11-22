@@ -6,8 +6,8 @@ author: |
   Dr. Stynx
 ---
 
-**DRAFT**: This article is currently being developed. As of November 20, 2026, the distribution rewrite it describes,
-`law_shard`, is implemented in metatron for the patterns marked done in the distributed-computing
+**DRAFT**: This article is currently being developed. As of November 22, 2026, the distribution rewrites it describes,
+`law_shard` and `law_bsp`, are implemented in metatron for the patterns marked done in the distributed-computing
 reference [[3]](../skills/mtron/references/distributed-computing-mtron.html);
 the remaining sections are outlined.
 
@@ -46,9 +46,10 @@ again from the one value the fold left at home.
 
 This article develops that reading. The first section recalls the distributive laws of the stream ring and its
 function subrings. The second states the *shard identity*, the one rewrite every distribution pattern below lowers to,
-and proves it from Theorems 18 and 19. The third extends it to programs with many cuts. The fourth shows that a
-coefficient is itself an index set, so a single value can be distributed by splitting its unrolls instead of its
-members. The fifth reads the menu of distribution patterns as a taxonomy of laws.
+and proves it from Theorems 18 and 19. The third extends it to programs with many cuts. The fourth closes a program into
+a loop, the superstep of bulk synchronous computation, run again and again. The fifth shows that a coefficient is
+itself an index set, so a single value can be distributed by splitting its unrolls instead of its members. The sixth
+reads the menu of distribution patterns as a taxonomy of laws.
 
 # The Distributive Laws of the Stream Ring
 
@@ -118,16 +119,23 @@ Read right to left, the identity is a program for $k$ machines: each place $p_i$
 place travels home, and the home machine computes $C(r)$ over the partials. In mtron the right side is a `branch` keyed
 by place. The examples in this article run over two places. `harvest`, an instruction from Dr. Stynx's boot file
 [`drstynx.boot.mtron`](../skills/drstynx/assets/drstynx.boot.mtron), spawns a sibling JVM on this machine for each
-integer it is given and dials each one as a `ws_client` peer; the category instset, which holds `law_shard`, is
-imported out of view.
+integer it is given, boots it from the file it is handed, and dials each one as a `ws_client` peer. Here every peer
+boots `boot/space/grph/peer.boot.mtron`, which mounts the modern graph at `g:`, so the graph walk of *Loops of Cuts*
+has the same graph on every machine. The category instset, which holds `law_shard` and `law_bsp`, and this machine's
+own copy of the graph are imported out of view.
 
 ```mtron_pre
 [HIDDEN]import(/m/math,math)
 [HIDDEN]import(/m/math/cat,cat)
+[HIDDEN]import(/m/db/grph)
+[HIDDEN]grphspace::[pattern => g:#, q => [incrq::[=>],subq::[=>]], schema => !*/m/db/grph/schema/modern, /
+  config => [dataset => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>, /
+             <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>], /
+  route => [g: => <>]]@<~/memory/space/grph/g>
 [NO_OUTPUT] harvest?rec<=int{*}(uri{?}::T){ /
   spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0). /
     -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest
-{0,1}.harvest()
+{0,1}.harvest(<boot/space/grph/peer.boot.mtron>)
 ```
 
 The serial program
@@ -197,6 +205,9 @@ coefficients, which the next section treats. The instructions that stay home bet
 long as each hands on at most one object for the one it takes: an effect like `print` stays home, and the run after it
 still ships.
 
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
+![figure 2](images/ring-theoretic-distributed-computing/fig-02.svg)
+
 ```mtron_pre
 {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum()
 {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().explain()>>format
@@ -225,6 +236,102 @@ hands on one object for one before it, and the rest of the run deals its members
 the sorted partials. The `merge` that unrolls the sorted lst stays home, and the run after it deals the members to the
 places again.
 
+# Loops of Cuts
+
+A cut contracts a stream once. A loop contracts it again and again: the frontier one pass leaves is the next pass's
+input (figure 5). The menu's entry N names the pattern, iterative computation,
+$x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$, and in mtron the loop is `repeat`. Bounded at $n$ passes, the loop is the
+$n$-fold product $x\,f^{n}$.
+
+<!-- figure source: images/ring-theoretic-distributed-computing/fig-06.tex (the PDF surface typesets it; the svg is its render) -->
+![figure 5](images/ring-theoretic-distributed-computing/fig-06.svg)
+
+`repeat` has two readings, and its domain coefficient chooses between them. With the default domain of one object,
+`repeat` takes one monad at a time and loops it on its own, the way a traverser walks: each monad runs $f^{n}$ in
+isolation, and the passes of different monads interleave as the processor schedules them. With a domain of every
+object, `repeat?<=A{*}`, the processor's barrier hands it the whole frontier at once, and each pass applies $f$ to all
+of it before the next pass begins. That is a *superstep*, the lock step of bulk synchronous parallel (BSP) computation.
+For a floatable $f$ the two readings agree, by right distributivity,
+
+$$
+\sum_{m} m\,f^{n} = \Big(\sum_{m} m\Big)\,f^{n},
+$$
+
+so the barrier changes nothing in the answer. They part when a pass holds a cut: one monad at a time, a fold meets each
+member alone; over the whole frontier, it meets them all.
+
+```mtron_pre
+{1,2,3}.repeat(code=>sum(),until=>loop()?>0)
+{1,2,3}.repeat?<=int{*}(code=>sum(),until=>loop()?>0)
+```
+
+**Proposition (the superstep).** Let $f$ be a floatable run, and let each pass deal its frontier
+$x_i = x_{i,1} + \cdots + x_{i,k}$ across $k$ places. Then every pass is the cutless shard identity, and the loop is its
+repetition:
+
+$$
+x_{i+1} = x_i\,f = x_{i,1}\,f + \cdots + x_{i,k}\,f, \qquad x\,f^{n} = x_{n}.
+$$
+
+*Proof sketch.* $f$ is a product of map, filter, and flatmap functions, each right distributive, so each pass
+distributes over its own partition. The next pass deals the merged frontier afresh, so no partition need survive a pass,
+and induction on $n$ gives $x\,f^{n}$. ◻
+
+The merge, the ring's $+$, is the superstep boundary: no pass begins before every lane of the last has answered,
+because a `repeat?<=A{*}` waits for its whole frontier and the `branch` inside it gathers before it deals. The rewrite
+`law_bsp` writes that `branch`. A whole-frontier `repeat` whose code is pure and floatable has its code dealt over the
+dialed peers on every pass:
+
+```mtron
+x.repeat?<=A{*}(code=>f, until=>p)
+  ⇝  x.repeat?<=A{*}(code=>branch?<=A{*}&split=part(<p_1> => f?hop=0, …, <p_k> => f?hop=0), until=>p)
+```
+
+The loop and its predicates stay home, and only $f$ travels. `?hop=0` keeps a peer from planning its lane again, and
+the frontier is dealt by the branch's own rule, member $j$ to lane $j \bmod k$, a bulked member whole. A code that holds
+a fold stays home, as the shard identity requires: dealt, the `sum()` above would answer a partial per place, not $6$.
+
+```mtron_pre
+{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3)
+{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3).explain()>>format
+```
+
+The topology draws the loop as it runs: the pass's fan once, and a back edge from the merge to where the frontier
+enters.
+
+```mtron_pre
+{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3).explain()>>ext/topology/format
+```
+
+**A walk over a graph.** The peers were booted with the modern graph, the same six vertices with the same ids on every
+machine, so a vertex dealt to any peer binds to that peer's copy of itself. Walking `both()` five times from every
+vertex counts, at each vertex, the walks of length five that end there. With $A$ the graph's adjacency matrix, edges
+read in both directions, the coefficient a vertex carries is $(A^{5}\mathbf{1})_v$:
+
+$$
+A^{5}\,\mathbf{1} = (99,\; 99,\; 99,\; 41,\; 41,\; 41)
+$$
+
+for marko, lop and josh, then vadas, ripple and peter. The walks number $3 \cdot 99 + 3 \cdot 41 = 420$, yet the
+frontier never holds more than six members: the traversers that reach one vertex merge between passes, their count
+riding as that vertex's coefficient, so a pass ships six objects, not hundreds of paths. Each traversal step declares
+itself pure, so `law_bsp` deals `both()` like any floatable run:
+
+```mtron_pre
+*g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4)>>name
+*g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4).explain()>>ext/topology/format
+```
+
+**The domain coefficient is the schedule.** How much of the frontier a pass waits for is `repeat`'s domain
+coefficient, not a flag: $\{1\}$ walks each monad on its own, $\{*\}$ waits for the whole frontier, and a bounded
+$\{n\}$ is a page, supersteps over pages of $n$ objects that the processor runs and dumps as a lazy barrier. One knob
+moves a program between the asynchronous and the bulk synchronous models, and the answer is the same at every setting
+for a floatable pass.
+
+[To be written: the frontier kept on the peers between passes, fusing one pass's branch with the next so that only the
+merge's coefficients travel; a deal weighted by coefficient rather than by member; and a pass that holds a cut, whose
+combiner then runs at the boundary of every superstep.]
+
 # Coefficients as Index Sets
 
 A coefficient is a second place to find parallelism [[2]](./span-and-point-coefficient-algebra.md). A span range is a
@@ -248,7 +355,7 @@ A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and p
 $a\{p\} = a\{p_1\} + a\{p_2\}$ with $p = p_1 + p_2$, so the places take even shares of the copies.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-05.tex -->
-![figure 5](images/ring-theoretic-distributed-computing/fig-05.svg)
+![figure 6](images/ring-theoretic-distributed-computing/fig-05.svg)
 
 [To be written: the point's live example. Over places today a shipped lane loses its point, so the example waits on
 that fix.]
@@ -292,8 +399,8 @@ again on a branch of its own.
 ## The Menu
 
 Every distribution pattern metatron names is an instance of one of these laws, and the menu lists them all
-[[3]](../skills/mtron/references/distributed-computing-mtron.html). A $\checkmark$ marks a pattern `law_shard`
-implements today; an empty status means the law holds and the lowering is not yet written. Two are free, the
+[[3]](../skills/mtron/references/distributed-computing-mtron.html). A $\checkmark$ marks a pattern `law_shard` or
+`law_bsp` implements today; an empty status means the law holds and the lowering is not yet written. Two are free, the
 floatable law alone: O carries a constant along, and W, embarrassingly parallel, has no cut at all. Most entries are
 stars, refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out,
 through the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T)
@@ -314,7 +421,7 @@ or compose the others (N, R, M, I).
 | **K** | $\checkmark$ | limit / top-k push-down   | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                                                       |
 | **L** |              | mergeable sketches        | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                                                                    |
 | **M** |              | matrix multiplication     | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)                                             |
-| **N** |              | iterative / BSP           | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a sharded superstep, repeated: the combiner is the superstep boundary                                                                  |
+| **N** | $\checkmark$ | iterative / BSP           | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a superstep, repeated: `law_bsp` deals each pass of a whole-frontier `repeat`; the merge is the superstep boundary |
 | **O** | $\checkmark$ | broadcast constants       | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                                                                                               | a constant rides as an argument of the floatable run: no fan-out change (Theorem 6)                                                    |
 | **P** |              | computed seeds            | $[0, n) = \uplus_i \mathrm{index}_i$                                                                                               | the index space is split, not the data: one constant-size message per peer                                                             |
 | **Q** |              | monad migration           | $\mathrm{authority}(m)$                                                                                                            | ship the monad, not the value: the continuation travels, one shard per step                                                            |
@@ -338,6 +445,9 @@ or compose the others (N, R, M, I).
 - A cut absorbs the prefix its combiner respects: when the combiner is causal, the select keeping the first $k$ ships
   with the fold, $C(r\,t_k) = C(r)\,t_k$, which is top-k.
 - A program expands and contracts once per cut; one object survives the home instructions between cuts.
+- A loop of cuts is a superstep, repeated: `repeat?<=A{*}` waits for its whole frontier each pass, `law_bsp` deals a
+  floatable pass over the peers, and the merge is the barrier. The domain coefficient is the schedule: one object at
+  a time, a page, or the whole frontier.
 - A coefficient is an index set: a span splits by its exponent, a point by its copies.
 - [To be written: what is open — the shuffle and pipeline shapes, and the laws a fold would declare to reach them.]
 
