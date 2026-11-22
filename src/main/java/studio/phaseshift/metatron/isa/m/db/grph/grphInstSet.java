@@ -239,6 +239,19 @@ public class grphInstSet extends AbstractInstSet {
     }
 
     /**
+     * WHETHER AN EDGE PASSES AN ENDPOINT STEP'S LABELS (Marko, 2026-11-22): outV(L), inV(L) and bothV(L) answer an
+     * edge's endpoint only when the edge's own label is among L, and every edge passes when no label is given. So each
+     * endpoint step is the converse of its edge step with the labels carried through, outE(L)⁻¹(e) = outV(L)(e): the
+     * edge's tail if its label is in L, else nothing. A live edge reads its label off the graph; a value that crossed
+     * the wire carries it as its type's name.
+     */
+    private static boolean labelled(final Obj edge, final Inst inst) {
+        final String[] labels = edgeLabels(inst);
+        return 0 == labels.length
+                || List.of(labels).contains(edge instanceof EdgeRec live ? live.edge().label() : edge.tid().name());
+    }
+
+    /**
      * The endpoint vertex of an edge (inV/outV) on the LIVE element.
      */
     private static Obj edgeVertex(final Obj lhs, final Direction direction) {
@@ -354,9 +367,11 @@ public class grphInstSet extends AbstractInstSet {
                             uri("outE"), str("outE(%s)"),
                             uri("inE"), str("inE(%s)"),
                             uri("bothE"), str("bothE(%s)"),
-                            uri("inV"), str("inV()"),
-                            uri("outV"), str("outV()"),
-                            uri("bothV"), str("bothV()"),
+                            // an endpoint step filters its edge by label first: outV(L) is the edge's tail if its label is
+                            // in L (Marko, 2026-11-22), and with no label the filter is dropped (gremlinSuffix)
+                            uri("inV"), str("hasLabel(%s).inV()"),
+                            uri("outV"), str("hasLabel(%s).outV()"),
+                            uri("bothV"), str("hasLabel(%s).bothV()"),
                             // a field read ON AN ELEMENT is a values() step: (person::[name=>'marko']).>>name ⇒ values('name')
                             uri("rshift"), str("values(%s)"),
                             uri(COUNT), str("count()"))))
@@ -402,9 +417,12 @@ public class grphInstSet extends AbstractInstSet {
      * The Gremlin step a table row spells, e.g. {@code values} for {@code values(%s)}.
      */
     private static String gremlinStep(final Inst inst) {
+        // THE STEP A TEMPLATE ENDS IN types it: hasLabel(%s).inV() filters an edge and hands on a vertex, so it is inV
         final String template = getGremlinRewrite(inst.tid().name()).strValue();
-        final int paren = template.indexOf('(');
-        return paren < 0 ? template : template.substring(0, paren);
+        final int dot = template.lastIndexOf(").");
+        final String last = dot < 0 ? template : template.substring(dot + 2);
+        final int paren = last.indexOf('(');
+        return paren < 0 ? last : last.substring(0, paren);
     }
 
     /**
@@ -588,7 +606,9 @@ public class grphInstSet extends AbstractInstSet {
         final List<String> steps = new ArrayList<>(run.size());
         for (final Inst inst : run) {
             final String template = getGremlinRewrite(inst.tid().name()).strValue();
-            final String step = template.contains("%s") ? template.formatted(quotedArguments(inst)) : template;
+            // an endpoint step with no label filters nothing, and Gremlin's hasLabel() takes at least one label
+            final String step = (template.contains("%s") ? template.formatted(quotedArguments(inst)) : template)
+                    .replace("hasLabel().", "");
             final cInt span = inst.tid().b();
             steps.add(span.isOne() ? step : (0L == span.min() ? "emit()." : "") + "repeat(" + step + ")"
                     + (1L == span.min() ? ".emit()" : 1L < span.min() ? ".emit(loops().is(gte(" + span.min() + ")))" : "")
@@ -751,20 +771,20 @@ public class grphInstSet extends AbstractInstSet {
                         InstBuilder.build()
                                 .tid(INV_INST_TID)
                                 .dom(REC_TID, "an edge")
-                                .rng(REC_TID, "the incoming vertex")
-                                .argLst()
-                                .desc("returns the lhs edge head vertex")
-                                .body((lhs, inst) -> edgeVertex(lhs, Direction.IN))
+                                .rng(REC_TID.maybe(), "the incoming vertex, or nothing when the edge's label is not among the arg labels")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels: the endpoint only of an edge whose label is among them")
+                                .desc("returns the lhs edge head vertex, if the edge's label is among the arg labels")
+                                .body((lhs, inst) -> labelled(lhs, inst) ? edgeVertex(lhs, Direction.IN) : noobj())
                                 .converse(INE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
                         InstBuilder.build()
                                 .tid(OUTV_INST_TID)
                                 .dom(REC_TID, "an edge")
-                                .rng(REC_TID, "the outgoing vertex")
-                                .argLst()
-                                .desc("returns the lhs edge tail vertex")
-                                .body((lhs, inst) -> edgeVertex(lhs, Direction.OUT))
+                                .rng(REC_TID.maybe(), "the outgoing vertex, or nothing when the edge's label is not among the arg labels")
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels: the endpoint only of an edge whose label is among them")
+                                .desc("returns the lhs edge tail vertex, if the edge's label is among the arg labels")
+                                .body((lhs, inst) -> labelled(lhs, inst) ? edgeVertex(lhs, Direction.OUT) : noobj())
                                 .converse(OUTE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
@@ -774,9 +794,9 @@ public class grphInstSet extends AbstractInstSet {
                                 // rec{*}, as out/in/both state theirs: a declared rec{2} failed the range check on the first
                                 // answer (a stream of two distinct recs), order-dependently (2026-11-22)
                                 .rng(REC_TID.maybeSome(), "both vertices: the edge's head and tail")
-                                .argLst()
-                                .desc("returns the lhs edge's head and tail vertices")
-                                .body((lhs, inst) -> edgeVertices(lhs))
+                                .argLst(T(URI_TID.maybeSome()), "zero or more edge labels: the endpoint only of an edge whose label is among them")
+                                .desc("returns the lhs edge's head and tail vertices, if the edge's label is among the arg labels")
+                                .body((lhs, inst) -> labelled(lhs, inst) ? edgeVertices(lhs) : noobj())
                                 .converse(BOTHE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
@@ -821,7 +841,7 @@ public class grphInstSet extends AbstractInstSet {
                                 .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
                                 .desc("returns the lhs vertex arg-adjacent outgoing edges")
                                 .body(V_E_FUNCTION(Direction.OUT))
-                                .converse(OUTV_INST_TID.dom(REC_TID).rng(REC_TID))
+                                .converse(OUTV_INST_TID.dom(REC_TID).rng(REC_TID.maybe()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
                         InstBuilder.build()
@@ -831,7 +851,7 @@ public class grphInstSet extends AbstractInstSet {
                                 .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
                                 .desc("returns the lhs vertex arg-adjacent incoming edges")
                                 .body(V_E_FUNCTION(Direction.IN))
-                                .converse(INV_INST_TID.dom(REC_TID).rng(REC_TID))
+                                .converse(INV_INST_TID.dom(REC_TID).rng(REC_TID.maybe()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
                         InstBuilder.build()
@@ -841,7 +861,7 @@ public class grphInstSet extends AbstractInstSet {
                                 .argLst(T(URI_TID.maybeSome()), "zero or more edge labels")
                                 .desc("returns the lhs vertex arg-adjacent incoming and outgoing edges")
                                 .body(V_E_FUNCTION(Direction.BOTH))
-                                .converse(BOTHV_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()))
+                                .converse(BOTHV_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()).args(URI_TID.maybeSome()))
                                 .law(Law.pure)
                                 .create(),
                         instC(ADDE_INST_TID.dom(REC_TID).rng(REC_TID), lst(URI_TYPE, T(REC_TID.some()), T(REC_TID.maybe())), (lhs, inst) -> {

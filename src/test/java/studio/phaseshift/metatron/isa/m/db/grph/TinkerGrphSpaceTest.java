@@ -253,9 +253,20 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/E/7.{-1}inE()>>name                               % \"vadas\"",
             "*/g/E/7.bothV()>>name                                 % {'marko','vadas'}",
             "*/g/E/7.{-1}bothE()>>name                             % {'marko','vadas'}",
-            "*/g/V/1.{-1}outV().count()                            % 3",
-            "*/g/V/3.{-1}inV().count()                             % 3",
-            "*/g/V/4.{-1}bothV().count()                           % 3",
+            // josh has edges both ways (in: e8; out: e10, e11), so a wrong converse would answer other edges
+            "*/g/V/4.{-1}outV()>>weight                            % {1.0,0.4}",
+            "*/g/V/4.{-1}inV()>>weight                             % 1.0",
+            "*/g/V/4.{-1}bothV()>>weight                           % {{2}1.0,0.4}",
+            // THE LABEL CARRIES THROUGH (Marko, 2026-11-22): outE(L) inverts to outV(L), the edge's tail only if its
+            // label is in L: e7 is a knows edge, so nothing reaches it by outE(created); e9 is marko created lop
+            "*/g/E/7.{-1}outE(created)                             % noobj",
+            "*/g/E/9.{-1}outE(created)>>name                       % \"marko\"",
+            "*/g/E/7.{-1}inE(knows)>>name                          % \"vadas\"",
+            "*/g/E/7.outV(knows)>>name                             % \"marko\"",
+            "*/g/E/7.outV(created)                                 % noobj",
+            "*/g/E/7.bothV(created)                                % noobj",
+            // a labelled endpoint ends a fused run as Gremlin's hasLabel(...).inV(): marko's knows edges, not his created one
+            "*/g/V/1.outE().inV(knows)>>name                       % {'vadas','josh'}",
             "*/g/V/4.{-1}out().{0,1}out()>>name                    % {'marko','vadas','josh','lop'}",
             // the escape hatch, in the same suffix form a fused run compiles to
             "*/g/V/1.gremlin('out(\"knows\").values(\"name\")')    % {'vadas','josh'}",
