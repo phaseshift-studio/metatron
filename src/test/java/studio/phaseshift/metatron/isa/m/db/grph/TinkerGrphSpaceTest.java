@@ -35,6 +35,8 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.db.grph.space.EdgeRec;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +51,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.db.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -262,10 +265,20 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/E/7.{-1}outE(created)                             % noobj",
             "*/g/E/9.{-1}outE(created)>>name                       % \"marko\"",
             "*/g/E/7.{-1}inE(knows)>>name                          % \"vadas\"",
+            "*/g/E/7.{-1}inE(created)                              % noobj",
+            "*/g/E/7.{-1}bothE(knows)>>name                        % {'marko','vadas'}",
+            "*/g/E/7.{-1}bothE(created)                            % noobj",
+            // VARARGS (Marko, 2026-11-22): the one uri{*} slot binds every label the call names, and each one filters
+            "*/g/E/9.{-1}outE(knows,created)>>name                 % \"marko\"",
+            "*/g/E/7.{-1}bothE(created,knows)>>name                % {'marko','vadas'}",
+            "*/g/V/4.{-1}outV(knows,created)>>weight               % {1.0,0.4}",
+            "*/g/V/4.{-1}outV(knows)                               % noobj",
+            "*/g/V/1.out(knows,created)>>name                      % {'vadas','josh','lop'}",
             "*/g/E/7.outV(knows)>>name                             % \"marko\"",
             "*/g/E/7.outV(created)                                 % noobj",
             "*/g/E/7.bothV(created)                                % noobj",
-            // a labelled endpoint ends a fused run as Gremlin's hasLabel(...).inV(): marko's knows edges, not his created one
+            // a labeled endpoint ends a fused run as Gremlin's hasLabel(...).inV() (testAnExactSpanFusesAsItsRun pins
+            // the script): marko's knows edges, not his created one
             "*/g/V/1.outE().inV(knows)>>name                       % {'vadas','josh'}",
             "*/g/V/4.{-1}out().{0,1}out()>>name                    % {'marko','vadas','josh','lop'}",
             // the escape hatch, in the same suffix form a fused run compiles to
@@ -283,6 +296,34 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
     @org.junit.jupiter.params.provider.ValueSource(strings = {"out()", "in()", "both()", "outE()", "inE()", "bothE()", "inV()", "outV()", "bothV()"})
     public void testTheTraversalStepsArePure(final String step) {
         org.junit.jupiter.api.Assertions.assertTrue(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(step).asCall().isPure(), step + " is declared pure");
+    }
+
+    /**
+     * AN EDGE THAT CROSSED THE WIRE KEEPS ITS LABEL (the 2026-11-22 landing review): a lane that walks edges hands
+     * them on as values, not live elements, and an endpoint step reads such an edge's label off its type's name. The
+     * live e7 (marko knows vadas) is written as a frame and read back as a client reads a reply (SELF_VID bound, so
+     * nothing is stored): what comes back is no EdgeRec, and its type still names its label, so the endpoint steps'
+     * filter passes it for knows, and for knows among others, never for created alone. It carries no address and no
+     * endpoints (an edge read is not addressed), so no endpoint step can walk it: the filter is read directly.
+     */
+    @Test
+    public void testAnEdgeThatCrossedTheWireKeepsItsLabel() {
+        final Obj live = ObjmtronSerializer.eval("*/g/E/7");
+        assertTrue(live instanceof EdgeRec, "an edge read from the graph is live: " + live);
+        final String frame = ObjmtronSerializer.single().write(live);
+        final Obj crossed = ScopedValue.where(Obj.Helper.SELF_VID, true).call(() -> ObjmtronSerializer.single().read(frame));
+        assertFalse(crossed instanceof EdgeRec, "an edge read off a frame is a value: " + frame);
+        assertEquals("knows", crossed.tid().name(), "the label rides as the type's name: " + frame);
+        assertTrue(grphInstSet.labeled(crossed, step("outV(knows)")), "outV(knows) passes a knows edge: " + frame);
+        assertFalse(grphInstSet.labeled(crossed, step("outV(created)")), "outV(created) does not: " + frame);
+        assertTrue(grphInstSet.labeled(crossed, step("outV(created,knows)")), "knows among the labels passes: " + frame);
+        assertTrue(grphInstSet.labeled(crossed, step("outV()")), "no label passes every edge: " + frame);
+        checkEquality(LOG, noobj(),
+                start_(crossed).addInsts(ObjmtronSerializer.parse("{-1}outE(knows)").asCode().insts()).apply(noobj()), true);
+    }
+
+    private static Inst step(final String mtron) {
+        return ObjmtronSerializer.parse(mtron).asCode().insts().getFirst();
     }
 
     /**
@@ -342,6 +383,8 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.out(knows).{0,1}out(created).out()>>name  % g.V(1).out('knows').emit().repeat(out('created')).times(1).out().values('name')",
             "*/g/V/1.{0,1}out().{1,2}in()>>name                % g.V(1).emit().repeat(out()).times(1).repeat(in()).emit().times(2).values('name')",
             "*/g/V/4.{-1}out().{0,1}out()>>name                % emit().repeat(out()).times(1).values('name')",
+            "*/g/V/1.outE().inV(knows)>>name                   % g.V(1).outE().hasLabel('knows').inV().values('name')",
+            "*/g/V/1.out(knows,created)>>name                  % g.V(1).out('knows','created').values('name')",
     }, delimiter = '%')
     void testARangedSpanFusesAsARepeat(final String code, final String expected) {
         assertEquals(expected, script(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(code).asCode().rewrite()));
@@ -588,6 +631,37 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             Machine.evaluate("*~/instset/rewrite/gremlin_pushdown.inactive().to(~/instset/rewrite/gremlin_pushdown)");
             Machine.evaluate("~/instset/rewrite/gremlin_pushdown -> noobj");
             assertEquals(pushdown, Machine.evaluate("*~/instset/rewrite/gremlin_pushdown"), "and so does noobj");
+        } finally {
+            child.pop();
+        }
+    }
+
+    /**
+     * A LABEL FILTERS THE SAME PUSHED DOWN OR WALKED (the 2026-11-22 landing review; Marko: "just vadas.inE()"): each
+     * row runs with the pushdown on, one gremlin call, and switched off through the instset door, mtron's own walk,
+     * and answers the same. A label is a uri, every label a call names binds the one uri{*} slot (varargs), and an
+     * edge passes when its label is among them. Each row: the chain % its answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/2.inE()>>weight                       % 0.5",
+            "*/g/V/2.inE(knows)>>weight                  % 0.5",
+            "*/g/V/2.inE(created)                        % noobj",
+            "*/g/V/2.inE(created,knows)>>weight          % 0.5",
+            "*/g/V/1.outE(created)>>weight               % 0.4",
+            "*/g/V/1.out(knows,created)>>name            % {'vadas','josh','lop'}",
+            "*/g/V/1.outE().inV(knows)>>name             % {'vadas','josh'}",
+            "*/g/V/1.outE().inV(knows,created)>>name     % {'vadas','josh','lop'}",
+            "*/g/V/3.inE().outV(knows)                   % noobj",
+            "*/g/V/4.bothE().bothV(knows)>>name          % {'marko','josh'}",
+    }, delimiter = '%')
+    public void testALabelFiltersTheSamePushedDownOrWalked(final String chain, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, chain.trim(), expected.trim());
+        final Machine child = Machine.current().push(f("labels_walked"));
+        try {
+            final Obj off = Machine.evaluate("*~/instset/rewrite/gremlin_pushdown.inactive().to(~/instset/rewrite/gremlin_pushdown)");
+            assertFalse(off.isFail(), () -> "the door takes the shadow: " + off);
+            AbstractMetatronTest.checkCodeParseApply(LOG, chain.trim(), expected.trim());
         } finally {
             child.pop();
         }
