@@ -333,6 +333,26 @@ dom/rng types) is a data read, so instruction memory is not re-entered.
 The **roster** — what the system knows — is one listing at the root, shared by every frame. A `pop` retracts its level's
 reach and presence and restores a shadowed name.
 
+### knowledge
+
+| `roster` field | value                                                                                                                    |
+|----------------|--------------------------------------------------------------------------------------------------------------------------|
+| `discover`     | where the discovery protocols are mounted (`mdns_discovery::T`, a `discovery::T`); `discover/+.?[status=>false]` is what is down, deleting one stops it |
+| `machine`      | `<host> => [<protocol> => [<transport> => uri{+}]]`: the dialect a machine answers in, the client that carries it there |
+
+A protocol is the wire dialect (`mtron`) and a transport the client that carries it (`ws`, `http`, `mcp`), so one box's
+mtron over websockets and over its mcp server are two lists of one row. An address is written at its own path, and the
+space builds the levels above it:
+
+```mtron
+</network/roster/machine/lab/mtron/ws> -> <ws://192.168.1.42:8555/mtron>   [-- file one address --]
+</network/roster/machine/lab/mtron/mcp> -> <ws://192.168.1.42:8555/mcp>    [-- the same box, carried by mcp --]
+</network/roster/machine/lab> -> noobj                                     [-- forget the box --]
+```
+
+A row dials nothing. Reaching a machine is dialing one of its addresses with the client its transport names, and
+`*~/network/status` reports an address never dialed `known`.
+
 ### reach
 
 A peer is keyed by its dial address written as a path — the scheme, each host label, the port and the route as
@@ -382,8 +402,9 @@ Dialing a surface already held closes the old connection, and the new one takes 
 ### presence
 
 A machine's authorities are its listening surfaces (`ws_server::T`, `http_server::T`). What mDNS announces, and a
-roster files, is each mtron endpoint on them: a listener's origin extended by a route whose handler is an
-`mtron::T` (`ws://host:8555/mtron`). A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
+roster files, is each mtron endpoint on them: a listener's origin extended by a route whose handler speaks mtron — an
+`mtron::T`, filed under the socket's scheme (`ws://host:8555/mtron` at `mtron/ws`), or metatron's mcp server, filed under
+`mcp` (`ws://host:8555/mcp` at `mtron/mcp`). The TXT record carries the route, `protocol` and `transport`. A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
 identity: its host and credentials never leave the machine, and an address carrying userinfo is refused.
 
 | `listener::T` field | value                                                           |

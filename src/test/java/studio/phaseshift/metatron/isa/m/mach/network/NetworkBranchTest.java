@@ -99,11 +99,13 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     public void testTheRootRosterIsTheRootNetworksOwnField() {
         final Obj declared = Machine.read(Network.ROOT_ROSTER);
         try {
-            Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(uri("lab"), uri("ws://10.0.0.9:8555/"))))));
+            // a row is <host> => [<protocol> => [<transport> => uri{+}]]
+            final Obj lab = rec(uri("lab"), rec(uri(MTRON), rec(uri(WS), uri("ws://10.0.0.9:8555/"))));
+            Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), lab)));
             final Obj field = Machine.root().network().read(f(ROSTER));
             assertTrue(field.isRec(), "the roster is the root network's own, not an entry beside it: " + field);
-            checkEquality(LOG, field.asRec().at(uri(MACHINE)), rec(uri("lab"), uri("ws://10.0.0.9:8555/")), true);
-            this.script("[STATE] </network/roster/machine/lab> -> <ws://10.0.0.9:8777/>");
+            checkEquality(LOG, field.asRec().at(uri(MACHINE)), lab, true);
+            this.script("[STATE] </network/roster/machine/lab/mtron/ws> -> <ws://10.0.0.9:8777/>");
             checkEquality(LOG, Machine.current().network().machines().at(uri("lab")), uri("ws://10.0.0.9:8777/"), true);
         } finally {
             Machine.write(Network.ROOT_ROSTER, declared);

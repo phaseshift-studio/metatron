@@ -793,51 +793,41 @@ public class machInstSet extends AbstractInstSet {
                                 // map-only predicate is a different test, and on a slot that still holds
                                 // its default it fails machine construction outright. Measured.
                                 //
-                                // THREE FIELDS, THREE QUESTIONS, deliberately not one map: `roster` is
-                                // what the system KNOWS (connectionless — a name and where it is, at
-                                // the ROOT so every machine reads the one listing), `peer` is what the
-                                // CURRENT MACHINE has DIALED (at ~, so a child's reach is its own and a
-                                // pop retracts exactly what that machine dialed), and `source` is HOW
-                                // the roster is produced. Knowledge is inherited and reach is not, which
-                                // is why the two are addressed at different scopes rather than told apart
-                                // by the Java-side set (PeerSpawn.DECLARED) this replaces.
+                                // THE QUESTIONS, deliberately not one map: `roster` is what the system
+                                // KNOWS (connectionless — a name and where it answers, at the ROOT so
+                                // every machine reads the one listing), `peer` is what the CURRENT
+                                // MACHINE has DIALED (at ~, so a child's reach is its own and a pop
+                                // retracts exactly what that machine dialed), `listener` what it serves
+                                // on and `prefix` what it calls a peer. Knowledge is inherited and reach
+                                // is not, which is why the two are addressed at different scopes.
                                 //
-                                // A roster is a map, which a fixed-key rec cannot describe, so the map
-                                // idiom is the positional (keyType, valueType) pair — the same one a
-                                // space's `route` uses. Both fields are reached through Network: the
-                                // roster at /network/roster (an address, so an entry may be written one
-                                // at a time), the connections at the machine's own ~/network/peer.
+                                // A map is not a fixed-key rec, so the map idiom is the positional
+                                // (keyType, valueType) pair — the same one a space's `route` uses. Every
+                                // field is reached through Network at its own address: the roster at
+                                // /network/roster, so a row — or one transport's addresses — is written at
+                                // its own path and the space builds the levels above it; the connections
+                                // at the machine's own ~/network/peer.
                                 //
-                                // `source` names an implementation and stops there. Values are handler
-                                // tids AS URIS (`</m/web/mdns>`), never web types: this instruction set
-                                // sits below /m/web and does not import it, which is also why peer::T's
-                                // `handler` is a uri. The key is a free mechanism label rather than the
-                                // protocol's own tid, because discovering several segments independently
-                                // is a real deployment — this host carries a physical LAN and a dozen
-                                // docker bridges — so two mDNS sources with different interfaces and
-                                // different trust must be able to sit side by side.
-                                //
-                                // CONFIGURATION IS NOT CARRIED HERE, because it is already carried
-                                // elsewhere: a handler type's predicate supplies its defaults and boot
-                                // args supply the deployment's values, exactly as every boot profile
-                                // binds a `host` and lets `.else()` fill the rest. If a source ever does
-                                // need an instance configured inline, take the route table's shape (a
-                                // uri, a type reference, or an instruction) rather than widening this
-                                // value to a bare rec — which reads stricter than ALL_TYPE while
-                                // admitting any rec at all.
+                                // THE ROSTER'S TWO FIELDS. `discover` is where the discovery protocols
+                                // are mounted (mdns_discovery::T, each a discovery::T publishing its status), so
+                                // discover/+.?[status=>false] answers what is down, and deleting one turns
+                                // it off. `machine` is what they and every declaration file:
+                                // <host> => [<protocol> => [<transport> => uri{+}]] — the wire dialect a
+                                // machine answers in (mtron), the client that carries it there (ws, http,
+                                // mcp), and every address it answers at by that pair. Reaching a machine
+                                // is dialing one of them with the client its transport names, which brings
+                                // its own instructions (its `inst`).
                                 .isaPredicate(rec(
                                         // the component is its own address space: the branch it answers
                                         // for, <vid>/network/# once its machine mounts it (~/network/# until)
                                         uri(PATTERN).maybe().asUri(), URI_TYPE,
                                         uri(HOST).maybe().asUri(), URI_TYPE,
+                                        // discover => discovery::T{*}; machine => <host> => [<protocol> =>
+                                        // [<transport> => uri{+}]], e.g. lab => [mtron => [ws =>
+                                        // <ws://lab:8555/mtron>, mcp => <ws://lab:8555/mcp>]]
                                         uri(ROSTER).maybe().asUri(), rec(
                                                 uri(DISCOVER).maybe().asUri(), T(MACH_DISCOVERY_TID.maybeSome()),
-                                                // THE ADDRESSES PER HOST — knowledge, never reach: discovery
-                                                // and a declaration both write where the machine answers
-                                                // (scheme://host:port, a route where the dial needs one), and
-                                                // reaching it is dialing one of them -- the client the dial
-                                                // constructs brings its own instructions (its `inst`).
-                                                uri(MACHINE).maybe(), rec(URI_TYPE, T(URI_TID.some()))),
+                                                uri(MACHINE).maybe().asUri(), rec(URI_TYPE, rec(URI_TYPE, rec(URI_TYPE, T(URI_TID.some()))))),
                                         uri(PEER).maybe().asUri(), rec(PATH_ENCODING_TYPE, T(PEER_TID)),
                                         // PRESENCE, the third question: the sockets THIS machine serves
                                         // through, at ~ like peer -- its own and the inherited ones it keeps
@@ -858,12 +848,12 @@ public class machInstSet extends AbstractInstSet {
                                         // them per frame, and the machine's space answers ~/network/analyzer
                                         uri(ANALYZER).maybe().asUri(), T(MACH_ANALYZER_TID)), Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
                                         uri(ANALYZER).maybe(), "the network's statistics (analyzer::T): wire/sent and wire/recv count the frames each way on its sockets",
-                                        uri(ROSTER).maybe(), "known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme://host:port); knowledge, not reach — a machine is reached by dialing one of them",
+                                        uri(ROSTER).maybe(), "what the system knows, connectionless, one listing at the root: discover => where the discovery protocols that fill it are mounted (mdns_discovery::T, each a discovery::T with its status); machine => <host> => [<protocol> => [<transport> => uri{+}]], every address a machine answers at by the dialect it speaks (mtron) and the client that carries it (ws, http, mcp). knowledge, not reach — a machine is reached by dialing one of its addresses with the client its transport names",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"))
                                 .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
-                                .example("network::[roster=>[b=><ws://192.168.1.42:8555>]] [-- a network that knows a peer before dialing it --]", "network::[peer=>[<ws/localhost/39111/worker>=>[origin=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]")
+                                .example("network::[roster=>[machine=>[lab=>[mtron=>[ws=><ws://192.168.1.42:8555/mtron>]]]]] [-- a network that knows a machine before dialing it --]", "network::[peer=>[<ws/localhost/39111/worker>=>[origin=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]")
                                 .create(),
                         MACH_MACHINE_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)

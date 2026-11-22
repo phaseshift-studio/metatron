@@ -234,7 +234,7 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
     @Test
     public void testRosterMachineEnablesDistribution() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                uri("ginger.local"), uri("ws://ginger.local:8555"))))));
+                uri("ginger.local"), rec(uri(MTRON), rec(uri(WS), uri("ws://ginger.local:8555"))))))));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
         final Obj abstraction = catInstSet.ABSTRACTION_TYPE.constructor().apply(code);
         final Obj word = abstraction.asRec().at(uri(WHERE));
@@ -285,7 +285,7 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
     @Test
     public void testPlaceAdmissibility() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                uri("ginger.local"), uri("ws://ginger.local:8555"))))));
+                uri("ginger.local"), rec(uri(MTRON), rec(uri(WS), uri("ws://ginger.local:8555"))))))));
         final Obj place = Places.place(uri("//ginger.local"));
         assertTrue(Places.admissible(place), "a ws place is admissible: " + place);
     }

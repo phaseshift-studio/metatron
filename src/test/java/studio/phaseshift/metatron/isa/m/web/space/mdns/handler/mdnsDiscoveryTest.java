@@ -33,8 +33,10 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import javax.jmdns.ServiceInfo;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -68,18 +71,22 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       rather than onto itself, so a consumer reads ONE consolidated index and never searches per-protocol</li>
  *   <li><b>no row ever duplicates</b> — {@code listen()} announces every authority on every responder, so
  *       anything written inside that loop arrives once per interface</li>
- *   <li><b>a heard machine lands under its own key</b> as {@code <machine> => uri{+}}, several addresses in ONE
- *       entry, a re-heard address not duplicating, and {@code discover} surviving every machine write</li>
+ *   <li><b>a heard machine lands under its own key</b> as {@code <machine> => [<protocol> => [<transport> =>
+ *       uri{+}]]}, several addresses in ONE list, each filed under what carries it, a re-heard address not
+ *       duplicating, a retraction taking back one address and the last one its levels, and {@code discover}
+ *       surviving every machine write</li>
  *   <li><b>only a listener's dialable address leaves the box</b> — a backend's host and its login, a listener's
  *       query and any userinfo reach neither the TXT record nor the roster</li>
- *   <li><b>only an mtron endpoint is announced</b> — a listener's origin extended by a route whose handler is an
- *       {@code mtron::T}, carried through the TXT record to the dial address a hearer files; a route of another
- *       protocol, a wildcard route and a socket that serves no route stay home, and a frame's route is the
- *       frame's</li>
+ *   <li><b>only an mtron endpoint is announced</b> — a listener's origin extended by a route whose handler speaks
+ *       mtron (an {@code mtron::T} over the socket's scheme, metatron's mcp server over {@code mcp}), carried
+ *       through the TXT record — protocol and transport included — to the dial address a hearer files and the
+ *       keys it files it under; a route of another protocol, a wildcard route and a socket that serves no route
+ *       stay home, and a frame's route is the frame's</li>
  * </ul>
  * The admission path above {@link mdnsDiscovery#roster} is deliberately NOT exercised here: it needs multicast,
- * a second host and a resolved {@code ServiceInfo}, none of which a unit test can fabricate. {@code
- * bin/test/mdns_analyzer.py} is the vehicle for that, end to end.
+ * a second host and a {@code ServiceInfo} resolved to addresses, none of which a unit test can fabricate — a TXT
+ * record alone it can, so what a hearer reads off one is pinned. {@code bin/test/mdns_analyzer.py} is the vehicle
+ * for the rest, end to end.
  */
 public class mdnsDiscoveryTest extends AbstractMetatronTest {
 
@@ -105,6 +112,10 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
     private static final fURI FIRST = f("ws://203.0.113.7:9999/mtron");
     private static final fURI SECOND = f("ws://198.51.100.4:9999/mtron");
+    /** the same box's metatron mcp server: mtron again, carried by mcp rather than by its socket's scheme */
+    private static final fURI THIRD = f("ws://203.0.113.7:9999/mcp");
+    /** a second machine, which no write to the first may touch */
+    private static final fURI OTHER = f("otherbox.local");
 
     /**
      * A BACKEND'S HOST as {@code boot/space/tble/mariadb.mtron} writes one: the database login rides the query
@@ -254,11 +265,15 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             // a VM with no authorities declared and nothing heard yet has no table to check, and that is not a
             // failure -- only a populated table can be wrong
             assumeTrue(machines.isRec(), "nothing in the machine table yet");
-            machines.asRec().jvm().forEach((machine, endpoints) -> {
-                final long total = endpoints.stream().count();
-                final long distinct = endpoints.stream().map(Obj::toString).distinct().count();
-                assertEquals(distinct, total, "every endpoint of " + machine + " appears once: " + endpoints);
-            });
+            // ONCE PER LIST: an address is a duplicate where it is filed twice under one protocol and transport
+            machines.asRec().jvm().forEach((machine, protocols) ->
+                    protocols.orElse(rec0()).asRec().jvm().forEach((protocol, transports) ->
+                            transports.orElse(rec0()).asRec().jvm().forEach((transport, endpoints) -> {
+                                final long total = endpoints.stream().count();
+                                final long distinct = endpoints.stream().map(mdnsDiscoveryTest::text).distinct().count();
+                                assertEquals(distinct, total, "every endpoint of " + machine + " under " + protocol
+                                        + "/" + transport + " appears once: " + endpoints);
+                            })));
         } finally {
             handler.close();
         }
@@ -375,7 +390,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             return;
         }
         assertEquals(expected, surface.toString(), desc);
-        mdnsDiscovery.txt(surface).values().forEach(entry -> {
+        mdnsDiscovery.txt(surface, f(surface.scheme())).values().forEach(entry -> {
             assertFalse(entry.contains("?"), desc + " — no query reaches the TXT record: " + entry);
             assertFalse(entry.contains("@"), desc + " — nor any userinfo: " + entry);
         });
@@ -401,11 +416,11 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
         final mdnsDiscovery handler = handler();
         try {
             // THE ANNOUNCED SET needs no multicast: it is what every responder registers
-            final List<String> surfaces = mdnsDiscovery.surfaces().stream().map(fURI::toString).toList();
+            final List<String> surfaces = mdnsDiscovery.surfaces().keySet().stream().map(fURI::toString).toList();
             assertTrue(surfaces.contains(endpoint.toString()), "the mtron endpoint is announced: " + surfaces);
             surfaces.forEach(surface -> assertFalse(leaks(surface), "a backend is never a surface: " + surfaces));
-            mdnsDiscovery.surfaces().forEach(surface -> mdnsDiscovery.txt(surface).values().forEach(entry ->
-                    assertFalse(leaks(entry), "no TXT entry carries the backend: " + entry)));
+            mdnsDiscovery.surfaces().forEach((surface, transport) -> mdnsDiscovery.txt(surface, transport).values()
+                    .forEach(entry -> assertFalse(leaks(entry), "no TXT entry carries the backend: " + entry)));
             // THE ROSTER is written as each responder announces, so it needs one
             assumeTrue(awaitStatus(handler, true, 20000L), "no multicast-capable interface here — mdns is inert");
             assertTrue(machineRows().contains(endpoint.toString()),
@@ -419,25 +434,28 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
-     * ONLY AN MTRON ENDPOINT IS ANNOUNCED: a listener's origin extended by a route whose handler is an
-     * {@code mtron::T}. A peer dials an endpoint, never a socket (a ws_server answers its bare origin with a banner of
-     * its routes), and a route of any other protocol is nobody's peer. Each announced endpoint is then carried
-     * through its TXT record to the address a hearer files — the round trip a remote roster row depends on, checked
-     * without multicast. The handler is written as the boot files write it (a bare name) and as a forked node mounts
+     * ONLY AN MTRON ENDPOINT IS ANNOUNCED: a listener's origin extended by a route whose handler speaks mtron — an
+     * {@code mtron::T}, carried by the socket's scheme, or metatron's mcp server, carried by {@code mcp} (each row
+     * reads {@code <route>:<transport>}). A peer dials an endpoint, never a socket (a ws_server answers its bare
+     * origin with a banner of its routes), and a route of any other protocol is nobody's peer. Each announced
+     * endpoint is then carried through its TXT record to the address a hearer files and the protocol and transport it
+     * files it under — the round trip a remote roster row depends on, checked without multicast. The handler is written as the boot files write it (a bare name) and as a forked node mounts
      * it (a full tid); the data routes beside it ({@code /usr}, a web root) must resolve to nothing. Every announced
      * address must also read back as itself: this machine's own row stores its text and deduplicates against it.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws]]                          % /mtron        % the mtron route is the endpoint a peer dials",
-            "ws   % ws_server::[origin=><{{socket}}>,route=>[/=>mtron_ws]]                               % /             % an mtron handler on the root route is the bare socket",
-            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]          % /mtron        % an mcp route speaks another protocol",
-            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/agent=>mtron_ws]]         % /agent,/mtron % every mtron route is its own endpoint",
-            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=></m/web/ws/mtron_ws>]]              % /mtron        % a handler named by its full tid, as a forked node mounts it",
-            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mcp=>mcp_mtron,/usr=>/usr]]                % none          % a socket with no mtron route announces nothing",
-            "ws   % ws_server::[origin=><{{socket}}>,route=>[/a/#=>mtron_ws]]                            % none          % a wildcard route names no address to dial",
-            "ws   % ws_server::[origin=><{{socket}}>]                                                    % none          % nor does a socket that serves no route",
-            "http % http_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_http,/=>fs:docs/website]] % /mtron        % mtron over http is an mtron endpoint too",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws]]                          % /mtron:ws           % the mtron route is the endpoint a peer dials",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/=>mtron_ws]]                               % /:ws                % an mtron handler on the root route is the bare socket",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]          % /mcp:mcp,/mtron:ws  % metatron's mcp server speaks mtron too, carried by mcp",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_ws,/agent=>mtron_ws]]         % /agent:ws,/mtron:ws % every mtron route is its own endpoint",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mtron=></m/web/ws/mtron_ws>]]              % /mtron:ws           % a handler named by its full tid, as a forked node mounts it",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mcp=>mcp_mtron,/usr=>/usr]]                % /mcp:mcp            % a socket whose only mtron rides mcp announces that, and its data route nothing",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/mcp=>mcp_emulator_ws]]                     % none                % an mcp server that is not metatron's speaks no mtron",
+            "ws   % ws_server::[origin=><{{socket}}>,route=>[/a/#=>mtron_ws]]                            % none                % a wildcard route names no address to dial",
+            "ws   % ws_server::[origin=><{{socket}}>]                                                    % none                % nor does a socket that serves no route",
+            "http % http_server::[origin=><{{socket}}>,route=>[/mtron=>mtron_http,/=>fs:docs/website]] % /mtron:http         % mtron over http is an mtron endpoint too",
+            "http % http_server::[origin=><{{socket}}>,route=>[/mcp=>mcp_mtron]]                       % /mcp:mcp            % and metatron's mcp server on an http socket is carried by mcp",
     }, delimiter = '%')
     public void testOnlyAnMtronRouteIsAnnounced(final String scheme, final String construction, final String expected,
                                                 final String desc) {
@@ -447,16 +465,22 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             Machine.evaluate(construction.replace("{{socket}}", socket.toString()));
             assertTrue(Machine.current().network().listener(socket.pathEncoding()).isRec(),
                     desc + " — the server was constructed: " + Machine.current().network().listeners());
-            assertEquals(expected, paths(port).isEmpty() ? "none" : String.join(",", paths(port)), desc);
-            mdnsDiscovery.surfaces().stream().filter(surface -> surface.port() == port).forEach(surface -> {
+            assertEquals(expected, announced(port).isEmpty() ? "none" : String.join(",", announced(port)), desc);
+            mdnsDiscovery.surfaces().forEach((surface, transport) -> {
+                if (surface.port() != port)
+                    return;
                 assertEquals(surface.basePath(), f(surface.toString()).basePath(), desc
                         + " — an announced address reads back as itself, or this machine's row grows on every announcement: "
                         + surface);
-                final Map<String, String> txt = mdnsDiscovery.txt(surface);
+                final Map<String, String> txt = mdnsDiscovery.txt(surface, transport);
                 final fURI filed = mdnsDiscovery.dialable(peer(), port, txt.get(SCHEME), txt.get(ROUTE));
                 assertEquals(List.of(scheme, PEER_HOST, port, surface.path()),
                         List.of(filed.scheme(), filed.host(), filed.port(), filed.path()),
                         desc + " — a hearer files the endpoint, route and all: " + txt);
+                final ServiceInfo heard = ServiceInfo.create(TEST_SERVICE.toString(), "probe", port, 0, 0, txt);
+                assertEquals(List.of(MTRON, transport.toString()),
+                        List.of(mdnsDiscovery.protocol(heard).toString(), mdnsDiscovery.transport(heard).toString()),
+                        desc + " — under the protocol and transport it was announced with: " + txt);
             });
         } finally {
             Machine.current().network().unlisten(socket);
@@ -478,17 +502,17 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             final Machine frame = root.push(f("mdns_frame"));
             try {
                 Machine.evaluate("ws_server::[origin=><" + socket + ">,route=>[/agent=>mtron_ws]]");
-                assertEquals(List.of("/agent", "/mtron"), paths(port), "the frame announces its own route and its parent's");
+                assertEquals(List.of("/agent:ws", "/mtron:ws"), announced(port), "the frame announces its own route and its parent's");
                 Machine.current(root);
                 try {
-                    assertEquals(List.of("/mtron"), paths(port), "the parent's walk never descends into the frame");
+                    assertEquals(List.of("/mtron:ws"), announced(port), "the parent's walk never descends into the frame");
                 } finally {
                     Machine.current(frame);
                 }
             } finally {
                 frame.pop();
             }
-            assertEquals(List.of("/mtron"), paths(port), "the frame's route left with the frame");
+            assertEquals(List.of("/mtron:ws"), announced(port), "the frame's route left with the frame");
         } finally {
             Machine.current().network().unlisten(socket);
         }
@@ -518,16 +542,16 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     public void testADiscoveredMachineLandsInRosterMachine() {
         final mdnsDiscovery handler = handler();
         try {
-            handler.roster(PEER, FIRST);
-            assertTrue(holds(PEER, FIRST), "a heard address lands under its machine: " + roster());
+            handler.roster(PEER, f(MTRON), f(WS), FIRST);
+            assertTrue(holds(PEER, f(WS), FIRST), "a heard address lands under its machine, protocol and transport: " + roster());
 
-            handler.roster(PEER, SECOND);
-            assertTrue(holds(PEER, FIRST) && holds(PEER, SECOND),
-                    "one machine on two interfaces is ONE entry with two addresses: " + roster());
-            assertEquals(2L, addresses(PEER).stream().count(), roster().toString());
+            handler.roster(PEER, f(MTRON), f(WS), SECOND);
+            assertTrue(holds(PEER, f(WS), FIRST) && holds(PEER, f(WS), SECOND),
+                    "one machine on two interfaces is ONE list with two addresses: " + roster());
+            assertEquals(2L, addresses(PEER, f(MTRON), f(WS)).stream().count(), roster().toString());
 
-            handler.roster(PEER, FIRST);
-            assertEquals(2L, addresses(PEER).stream().count(),
+            assertFalse(handler.roster(PEER, f(MTRON), f(WS), FIRST), "re-hearing an address is no write: " + roster());
+            assertEquals(2L, addresses(PEER, f(MTRON), f(WS)).stream().count(),
                     "re-hearing an address does not duplicate it: " + roster());
         } finally {
             handler.close();
@@ -542,16 +566,97 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             Machine.write(Network.ROOT_ROSTER, rec(uri(DISCOVER), handler));
             assertFalse(discover().isNoObj(), "the seed itself landed: " + roster());
 
-            handler.roster(PEER, FIRST);
-            assertTrue(holds(PEER, FIRST), "the address landed: " + roster());
+            handler.roster(PEER, f(MTRON), f(WS), FIRST);
+            assertTrue(holds(PEER, f(WS), FIRST), "the address landed: " + roster());
             assertFalse(discover().isNoObj(), "writing machine must not erase discover: " + roster());
 
-            handler.roster(PEER, SECOND);
+            handler.roster(PEER, f(MTRON), f(WS), SECOND);
             assertFalse(discover().isNoObj(),
                     "discover survives every machine write, not just the first: " + roster());
         } finally {
             handler.close();
         }
+    }
+
+    /**
+     * ONE MACHINE, EACH ADDRESS UNDER WHAT CARRIES IT. Metatron's mcp server on a box is filed beside its ws endpoint,
+     * never merged into it, and the scheme-keyed view ({@link Network#machines()}) holds only what a scheme's own
+     * client speaks: an mcp endpoint on a ws socket is no address a ws_client can dial. The explicit view
+     * ({@link Network#machines(fURI, fURI)}) is where it is read.
+     */
+    @Test
+    public void testEachAddressIsFiledUnderItsTransport() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.roster(PEER, f(MTRON), f(WS), FIRST);
+            handler.roster(PEER, f(MTRON), f(MCP), THIRD);
+            assertTrue(holds(PEER, f(WS), FIRST) && holds(PEER, f(MCP), THIRD), "each under its transport: " + roster());
+            assertFalse(holds(PEER, f(WS), THIRD), "an mcp endpoint is never filed as ws: " + roster());
+            final Network network = Machine.current().network();
+            assertEquals(List.of(FIRST.toString()), texts(network.machines().at(uri(PEER))),
+                    "the scheme-keyed view holds what a ws_client dials, and no mcp endpoint: " + network.machines());
+            assertEquals(List.of(THIRD.toString()), texts(network.machines(f(MTRON), f(MCP)).at(uri(PEER))),
+                    "the mcp endpoint is read through the explicit view: " + roster());
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * A RETRACTION TAKES BACK ONE ADDRESS, and the last takes with it the levels it alone held — its transport, its
+     * protocol, the host's row — while the host's other transports, another host and {@code discover} are never
+     * touched: each write lands at the one list it names, and the space keeps the rest.
+     */
+    @Test
+    public void testARetractionTakesItsLevelsWithIt() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.roster(PEER, f(MTRON), f(WS), FIRST);
+            handler.roster(PEER, f(MTRON), f(WS), SECOND);
+            handler.roster(PEER, f(MTRON), f(MCP), THIRD);
+            handler.roster(OTHER, f(MTRON), f(WS), FIRST);
+            assertTrue(handler.retract(PEER, f(MTRON), f(WS), SECOND), "a held address is taken back: " + roster());
+            assertFalse(handler.retract(PEER, f(MTRON), f(WS), SECOND), "taking it back twice is no write: " + roster());
+            assertEquals(List.of(FIRST.toString()), texts(addresses(PEER, f(MTRON), f(WS))),
+                    "the transport keeps its other address: " + roster());
+            handler.retract(PEER, f(MTRON), f(WS), FIRST);
+            checkEquality(LOG, noobj(), addresses(PEER, f(MTRON), f(WS)), true);
+            assertTrue(holds(PEER, f(MCP), THIRD), "the host's other transport is untouched: " + roster());
+            handler.retract(PEER, f(MTRON), f(MCP), THIRD);
+            checkEquality(LOG, noobj(), Machine.read(Network.ROOT_ROSTER.extend(MACHINE).extend(PEER)), true);
+            assertTrue(holds(OTHER, f(WS), FIRST), "another host is never touched: " + roster());
+            assertFalse(discover().isNoObj(), "nor is discover: " + roster());
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * WHAT A HEARER FILES AN ADDRESS UNDER comes from the TXT, which is untrusted text: the protocol and transport an
+     * announcer names, else mtron carried by its scheme — what every build announced before the keys existed — and a
+     * value that is no label is refused the same way, so a foreign responder cannot shape a key of the machine table.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "mtron % mcp  % ws   % mtron % mcp  % an announcer that names both is taken at its word",
+            "null  % null % ws   % mtron % ws   % a build before the keys: mtron, carried by its scheme",
+            "null  % null % http % mtron % http % ...whatever that scheme is",
+            "null  % null % null % mtron % ws   % and with no scheme either, a peer answers over ws",
+            "MTRON % a/b  % http % mtron % http % text that is no label is refused, never filed",
+    }, delimiter = '%', nullValues = "null")
+    public void testAHearerFilesWhatTheTxtNames(final String protocol, final String transport, final String scheme,
+                                                final String filedProtocol, final String filedTransport,
+                                                final String desc) {
+        final Map<String, String> txt = new HashMap<>(Map.of(ROUTE, "/mtron"));
+        if (null != protocol)
+            txt.put(PROTOCOL, protocol);
+        if (null != transport)
+            txt.put(TRANSPORT, transport);
+        if (null != scheme)
+            txt.put(SCHEME, scheme);
+        final ServiceInfo heard = ServiceInfo.create(TEST_SERVICE.toString(), "probe", PEER_PORT, 0, 0, txt);
+        assertEquals(List.of(filedProtocol, filedTransport),
+                List.of(mdnsDiscovery.protocol(heard).toString(), mdnsDiscovery.transport(heard).toString()), desc);
     }
 
     // ========================================================================
@@ -586,29 +691,29 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
-     * every key and every address in {@code roster/machine}, as uri TEXT — an Obj's own rendering would carry its
-     * vid, and a roster write can hand one out
+     * every machine key and every address in {@code roster/machine}, as uri TEXT
      */
     private static List<String> machineRows() {
-        final Obj machines = machines();
         final List<String> rows = new ArrayList<>();
-        if (machines.isRec())
-            machines.asRec().jvm().forEach((machine, addresses) -> {
-                rows.add(machine.isUri() ? machine.uriValue().toString() : machine.toString());
-                addresses.stream().map(address -> address.isUri() ? address.uriValue().toString() : address.toString())
-                        .forEach(rows::add);
-            });
+        machines().orElse(rec0()).asRec().jvm().forEach((machine, protocols) -> {
+            rows.add(text(machine));
+            protocols.orElse(rec0()).asRec().jvm().values().forEach(transports ->
+                    transports.orElse(rec0()).asRec().jvm().values().forEach(addresses ->
+                            addresses.stream().map(mdnsDiscoveryTest::text).forEach(rows::add)));
+        });
         return rows;
     }
 
     /**
-     * the routes announced on one port, the root as {@code /}, in order
+     * the endpoints announced on one port as {@code <route>:<transport>}, the root route as {@code /}, in order
      */
-    private static List<String> paths(final int port) {
-        return mdnsDiscovery.surfaces().stream()
-                .filter(surface -> surface.port() == port)
-                .map(surface -> surface.basePath().localize().toString())
-                .map(path -> path.isEmpty() ? "/" : path)
+    private static List<String> announced(final int port) {
+        return mdnsDiscovery.surfaces().entrySet().stream()
+                .filter(entry -> entry.getKey().port() == port)
+                .map(entry -> {
+                    final String path = entry.getKey().basePath().localize().toString();
+                    return (path.isEmpty() ? "/" : path) + ":" + entry.getValue();
+                })
                 .sorted()
                 .toList();
     }
@@ -636,35 +741,38 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     private static Obj discover() {
-        final Obj roster = roster();
-        return roster.isRec() ? roster.asRec().at(uri(DISCOVER)) : noobj();
+        return Machine.read(Network.ROOT_ROSTER.extend(DISCOVER));
+    }
+
+    private static Obj machines() {
+        return Machine.read(Network.ROOT_ROSTER.extend(MACHINE));
     }
 
     /**
-     * BY TEXT, never by Obj equality — a uri that has round-tripped through the roster does not equal a freshly
-     * minted one even when the two print the same address
+     * the list at {@code /network/roster/machine/<machine>/<protocol>/<transport>}, read at its own address
      */
-    private static Obj machines() {
-        final Obj roster = roster();
-        return roster.isRec() ? roster.asRec().at(uri(MACHINE)) : noobj();
-    }
-
-    private static Obj addresses(final fURI machine) {
-        final Obj machines = machines();
-        if (!machines.isRec())
-            return noobj();
-        final String key = machine.toString();
-        return machines.asRec().jvm().entrySet().stream()
-                .filter(entry -> entry.getKey().isUri() && key.equals(entry.getKey().uriValue().toString()))
-                .map(Map.Entry::getValue).findFirst().orElse(noobj());
+    private static Obj addresses(final fURI machine, final fURI protocol, final fURI transport) {
+        return Machine.read(Network.ROOT_ROSTER.extend(MACHINE).extend(machine).extend(protocol).extend(transport));
     }
 
     /**
      * BY BASE PATH — the roster stores an address canonically, so the stored form and a freshly built one agree
      * only once both are reduced to scheme, host, port and path
      */
-    private static boolean holds(final fURI machine, final fURI address) {
-        return addresses(machine).stream()
+    private static boolean holds(final fURI machine, final fURI transport, final fURI address) {
+        return addresses(machine, f(MTRON), transport).stream()
                 .anyMatch(known -> known.isUri() && known.uriValue().basePath().equals(address.basePath()));
+    }
+
+    /**
+     * a list's addresses as uri TEXT, in order — an Obj's own rendering would carry its vid, and a roster write can
+     * hand one out
+     */
+    private static List<String> texts(final Obj addresses) {
+        return addresses.stream().map(mdnsDiscoveryTest::text).sorted().toList();
+    }
+
+    private static String text(final Obj obj) {
+        return obj.isUri() ? obj.uriValue().toString() : obj.toString();
     }
 }

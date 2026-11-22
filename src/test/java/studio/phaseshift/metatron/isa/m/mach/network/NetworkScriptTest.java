@@ -133,9 +133,10 @@ public abstract class NetworkScriptTest extends AbstractMetatronTest {
         });
         all.put("CLUSTER_CLOSE", args -> this.closeCluster());
         // KNOWLEDGE: an address row, INTO roster/machine — the roster is a container ([discover, machine]) and a
-        // row declared at its root lands where no reader looks
+        // row declared at its root lands where no reader looks. The row is <host> => [mtron => [<scheme> => address]]:
+        // the address is mtron, carried by its own scheme
         all.put("DECLARE", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
-                uri(MACHINE), rec(mutableMap(uri(args[0]), uri(args[0])))))));
+                uri(MACHINE), rec(mutableMap(uri(args[0]), rec(uri(MTRON), rec(uri(f(args[0]).scheme()), uri(args[0])))))))));
         // REACH THAT IS DOWN: a client that declares what a peer is talked to with, and whose status says it is not
         // live — the client a dead link leaves. Indexed as a constructor indexes itself; hung up after the script.
         all.put("DIAL_SILENT", args -> {
