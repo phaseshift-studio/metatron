@@ -38,14 +38,11 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -216,7 +213,7 @@ public class wsServerTest extends AbstractMetatronTest {
      */
     @Test
     void testAHangUpEndsTheEvaluationOfItsMessage() throws Exception {
-        wsServer.serve(this.socket, rec(uri("/mcp"), uri(MCP_MTRON_SERVER_TID.toString())));
+        final wsServer server = (wsServer) wsServer.serve(this.socket, rec(uri("/mcp"), uri(MCP_MTRON_SERVER_TID.toString())));
         final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
         final WebSocketClient client = this.client("/mcp", replies);
         assertTrue(client.connectBlocking(2, TimeUnit.SECONDS), "the client dials the route");
@@ -227,29 +224,24 @@ public class wsServerTest extends AbstractMetatronTest {
         assertNotNull(replies.poll(5, TimeUnit.SECONDS), "the server answers initialize");
         client.send("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"m_web_mcp_mcp_mtron_eval_mtron\","
                 + "\"arguments\":{\"code\":\"1.{*}plus(0)\"}}}");
-        // the thread evaluating the request is the one with wsServer.evaluate on its stack
-        final Predicate<StackTraceElement> evaluating = frame ->
-                wsServer.class.getName().equals(frame.getClassName()) && "evaluate".equals(frame.getMethodName());
+        // the thread evaluating the request is this socket's own: the tool call's frame is the only one in flight, so
+        // the socket's evaluating set is scoped to this connection and names the request's thread alone
         final long found = System.currentTimeMillis() + 5000;
         Thread worker = null;
         while (null == worker && System.currentTimeMillis() < found) {
             Thread.sleep(50);
-            worker = Thread.getAllStackTraces().entrySet().stream()
-                    .filter(entry -> Arrays.stream(entry.getValue()).anyMatch(evaluating))
-                    .map(Map.Entry::getKey).findFirst().orElse(null);
+            worker = server.evaluating().stream().findFirst().orElse(null);
         }
         assertNotNull(worker, "the server evaluates the tool call");
         Thread.sleep(250);
-        assertTrue(Arrays.stream(worker.getStackTrace()).anyMatch(evaluating), "the walk is still walking before the hang-up");
+        assertTrue(server.evaluating().contains(worker), "the walk is still walking before the hang-up");
         client.closeConnection(CloseFrame.ABNORMAL_CLOSE, "hung up");
         // the thread leaves the evaluation and goes back to its pool
         final long ended = System.currentTimeMillis() + 5000;
-        while (System.currentTimeMillis() < ended && worker.isAlive()
-                && Arrays.stream(worker.getStackTrace()).anyMatch(evaluating))
+        while (System.currentTimeMillis() < ended && worker.isAlive() && server.evaluating().contains(worker))
             Thread.sleep(50);
-        final StackTraceElement[] stack = worker.getStackTrace();
-        assertFalse(Arrays.stream(stack).anyMatch(evaluating),
-                "the hang-up ends the evaluation within five seconds, not at " + Arrays.toString(stack));
+        assertFalse(server.evaluating().contains(worker),
+                "the hang-up ends the evaluation within five seconds, not on " + worker);
         assertTrue(worker.isAlive(), "the thread outlives the interrupt: it goes back to the pool");
     }
 

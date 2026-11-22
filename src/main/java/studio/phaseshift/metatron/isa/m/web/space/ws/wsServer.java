@@ -278,6 +278,20 @@ public final class wsServer extends Listener {
      */
     private final Map<WebSocket, Session> sessions = Collections.synchronizedMap(new IdentityHashMap<>());
 
+    /**
+     * The threads currently evaluating one of this socket's frames, across its sessions — the set a hang-up
+     * interrupts. Each session evaluates its frames on threads of its own (a program runs on the system executor's
+     * pooled platform thread), so a session in flight contributes exactly its own.
+     */
+    Set<Thread> evaluating() {
+        final Set<Thread> threads = new LinkedHashSet<>();
+        synchronized (this.sessions) {
+            for (final Session session : this.sessions.values())
+                threads.addAll(session.evaluating());
+        }
+        return threads;
+    }
+
     private wsServer(final Map<Obj, Obj> jvm, final Network owner) {
         super(jvm, WS_SERVER_TID, owner);
         this.socket = new Socket(this.at(ORIGIN).uriValue());
