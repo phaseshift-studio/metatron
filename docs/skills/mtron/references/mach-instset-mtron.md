@@ -352,7 +352,8 @@ stays until both take it back, and a read nets the terms.
 ```
 
 mDNS files each announcing instance's rows this way and takes them back by the instance's name, which is all a removal
-carries. A row dials nothing. Reaching a machine is dialing one of its addresses with the client its transport names, and
+carries. A filer takes back only what it filed, and only while it is still listed, so a row taken back by hand stays gone
+until it is filed again. A row dials nothing. Reaching a machine is dialing one of its addresses with the client its transport names, and
 `*~/network/status` reports a ws or http address never dialed `known` (an mcp-carried one is read at its own address).
 
 ### reach

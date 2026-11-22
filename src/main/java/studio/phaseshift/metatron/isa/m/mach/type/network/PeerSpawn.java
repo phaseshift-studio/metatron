@@ -205,15 +205,24 @@ public final class PeerSpawn {
     private static void declare(final fURI key, final fURI address) {
         // ADDED AS THE RING ADDS IT, and taken back the same way (undeclare): the roster keeps a count beside every
         // other filer. The key is the peer's origin (ws://localhost:PORT), a rec key and no path segment. A forked node
-        // is an mtron node reached over ws: [mtron => [ws => …]].
-        Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
-                .plus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address)))))));
+        // is an mtron node reached over ws: [mtron => [ws => …]]. Under the roster's own address, the monitor every
+        // roster writer holds (mdnsDiscovery too), so neither drops the other's row between its read and its write.
+        synchronized (Network.ROOT_ROSTER) {
+            Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
+                    .plus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address)))))));
+        }
         DECLARED.add(key);
     }
 
     private static void undeclare(final fURI key) {
-        Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
-                .minus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address(key))))))));
+        synchronized (Network.ROOT_ROSTER) {
+            // TAKE BACK ONLY WHAT IS STILL LISTED: a table wiped since holds no count of it, and a take-back there would
+            // leave a sign that the next declaration of the origin cancels
+            if (Machine.current().network().machines().jvm().keySet().stream()
+                    .anyMatch(listed -> listed.isUri() && key.toString().equals(listed.uriValue().toString())))
+                Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
+                        .minus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address(key))))))));
+        }
     }
 
     // ========================================================================

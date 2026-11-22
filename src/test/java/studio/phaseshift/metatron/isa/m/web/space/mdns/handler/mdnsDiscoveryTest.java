@@ -419,8 +419,12 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             surfaces.forEach(surface -> assertFalse(leaks(surface), "a backend is never a surface: " + surfaces));
             mdnsDiscovery.surfaces().forEach((surface, transport) -> mdnsDiscovery.txt(surface, transport).values()
                     .forEach(entry -> assertFalse(leaks(entry), "no TXT entry carries the backend: " + entry)));
-            // THE ROSTER is written as each responder announces, so it needs one
+            // THE ROSTER is filed after the initial sweep, and status turns true at the first responder: the own row
+            // is awaited, never assumed to be there the moment the handler is live
             assumeTrue(awaitStatus(handler, true, 20000L), "no multicast-capable interface here — mdns is inert");
+            for (final long until = System.currentTimeMillis() + 5000L;
+                 !machineRows().contains(endpoint.toString()) && System.currentTimeMillis() < until; )
+                CommonUtil.sleepThread(25);
             assertTrue(machineRows().contains(endpoint.toString()),
                     "the endpoint's own row is the control: " + roster());
             machineRows().forEach(row -> assertFalse(leaks(row), "no roster row carries the backend: " + roster()));
@@ -663,6 +667,103 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
+     * A REMOVAL AS JMDNS HANDS IT: built from the PTR record alone, it names the instance and nothing else, and takes
+     * back exactly what the instance's resolution filed. {@code ServiceInfo.create} builds that address-less info.
+     */
+    @Test
+    public void testARemovalByNameTakesBackWhatTheResolutionFiled() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{peer()});
+            assertTrue(holds(f("peer"), f(WS), heardAt(peer())), "the resolution files its address: " + roster());
+            handler.retract("r1", ServiceInfo.create(TEST_SERVICE.toString(), "peerbox-ws-8555/mtron", 0, 0, 0, Map.of()));
+            checkEquality(LOG, noobj(), addresses(f("peer"), f(MTRON), f(WS)), true);
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * A RESOLUTION THAT IS NOT YET WHOLE FILES NOTHING AND TAKES NOTHING BACK: one without addresses (the A records
+     * arrive on their own) or without a TXT record leaves what the instance filed as it was.
+     */
+    @Test
+    public void testAnIncompleteResolutionFilesNothing() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{peer()});
+            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[0]);
+            assertTrue(holds(f("peer"), f(WS), heardAt(peer())), "an address-less resolution takes nothing back: " + roster());
+            handler.admit("r1", ServiceInfo.create(TEST_SERVICE.toString(), "silent", PEER_PORT, 0, 0, Map.of()), new InetAddress[]{other()});
+            assertFalse(holds(f("peer"), f(WS), heardAt(other())), "nor does one without a TXT record file: " + roster());
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * EACH RESPONDER RESOLVES FROM ITS OWN CACHE, and where a socket hears only its own link two of them can see one
+     * instance at different addresses: the instance files the union, and one responder's removal takes back only what
+     * no other responder still resolves.
+     */
+    @Test
+    public void testOneRespondersRemovalKeepsWhatAnotherResolves() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{peer()});
+            handler.admit("r2", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{other()});
+            assertEquals(sorted(heardAt(peer()), heardAt(other())), texts(addresses(f("peer"), f(MTRON), f(WS))),
+                    "the instance files what both responders resolve: " + roster());
+            handler.retract("r1", ServiceInfo.create(TEST_SERVICE.toString(), "peerbox-ws-8555/mtron", 0, 0, 0, Map.of()));
+            assertEquals(List.of(heardAt(other()).toString()), texts(addresses(f("peer"), f(MTRON), f(WS))),
+                    "one responder's removal keeps what the other resolves: " + roster());
+            handler.retract("r2", ServiceInfo.create(TEST_SERVICE.toString(), "peerbox-ws-8555/mtron", 0, 0, 0, Map.of()));
+            checkEquality(LOG, noobj(), addresses(f("peer"), f(MTRON), f(WS)), true);
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * A CLOSED HANDLER TAKES BACK WHAT IT FILED: JmDNS's close sends no removal, and a handler mounted again would
+     * otherwise file every row over the first's, a count of two that one later take-back leaves listed.
+     */
+    @Test
+    public void testAClosedHandlerTakesBackWhatItFiled() {
+        final mdnsDiscovery first = handler();
+        first.roster("a", List.of(row(PEER, f(WS), FIRST)));
+        first.close();
+        checkEquality(LOG, noobj(), addresses(PEER, f(MTRON), f(WS)), true);
+        final mdnsDiscovery second = handler();
+        try {
+            second.roster("a", List.of(row(PEER, f(WS), FIRST)));
+            assertTrue(once(addresses(PEER, f(MTRON), f(WS))), "a handler mounted again files over nothing: " + roster());
+        } finally {
+            second.close();
+        }
+    }
+
+    /**
+     * A TAKE-BACK INTO A WIPED TABLE LEAVES NO SIGN: the machine table written noobj holds no count of the address,
+     * so the instance's later take-back is skipped rather than stored as a negative that the next filing cancels.
+     */
+    @Test
+    public void testATakeBackIntoAWipedTableLeavesNoSign() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.roster("a", List.of(row(PEER, f(WS), FIRST)));
+            Machine.write(Network.ROOT_ROSTER.extend(MACHINE), noobj());
+            handler.roster("a", List.of());
+            checkEquality(LOG, noobj(), Machine.current().network().machines().at(uri(PEER)), true);
+            handler.roster("b", List.of(row(PEER, f(WS), FIRST)));
+            assertEquals(List.of(FIRST.toString()), texts(addresses(PEER, f(MTRON), f(WS))),
+                    "the next filing is whole, no sign left behind: " + roster());
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
      * WHAT A HEARER FILES AN ADDRESS UNDER comes from the TXT, which is untrusted text: the protocol and transport an
      * announcer names, else mtron carried by its scheme — what every build announced before the keys existed — and a
      * value that is no label is refused the same way, so a foreign responder cannot shape a key of the machine table.
@@ -800,6 +901,28 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
      */
     private static boolean once(final Obj net) {
         return net.stream().allMatch(address -> 1L == address.c().max());
+    }
+
+    /**
+     * a resolution as JmDNS hands one, with its TXT record — its addresses are handed in beside it, since
+     * {@code ServiceInfo.create} cannot carry any (and leaves the SRV target empty: the host files as {@code peer})
+     */
+    private static ServiceInfo resolved(final String name) {
+        return ServiceInfo.create(TEST_SERVICE.toString(), name, PEER_PORT, 0, 0,
+                Map.of(ROUTE, "/mtron", SCHEME, WS, PROTOCOL, MTRON, TRANSPORT, WS));
+    }
+
+    /** where a hearer files a resolution's address */
+    private static fURI heardAt(final InetAddress address) {
+        return mdnsDiscovery.dialable(address, PEER_PORT, WS, "/mtron");
+    }
+
+    private static InetAddress other() {
+        try {
+            return InetAddress.getByAddress(new byte[]{10, 0, 0, 2});
+        } catch (final Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static List<String> sorted(final fURI... addresses) {
