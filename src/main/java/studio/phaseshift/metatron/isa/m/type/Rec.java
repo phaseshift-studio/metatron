@@ -19,8 +19,10 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 
+import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
@@ -161,6 +163,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
 
     default Rec plus(final Rec rhs) {
         return Poly.Helper.mergeObjRecursion(this, rhs).asRec();
+    }
+
+    default Rec minus(final Rec rhs) {
+        return Poly.Helper.mergeObjRecursion(this, rhs.elements().map(rkv -> rel(rkv.first(), rkv.second().c(C::inv))).collect(new CommonUtil.RecCollector(rhs.tid(), null))).asRec();
     }
 
     @Override

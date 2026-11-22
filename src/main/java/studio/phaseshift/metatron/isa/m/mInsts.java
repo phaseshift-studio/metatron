@@ -35,9 +35,9 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.function.UnaryOperator;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
@@ -1074,22 +1074,17 @@ public final class mInsts {
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "deep merge the argument rec into the lhs rec")
-                        .dom(REC_TID, "the lhs rec").rng(REC_TID, "the deep merge of the two recs")
+                        .dom(REC_TID, "the lhs rec")
+                        .rng(REC_TID, "the deep merge of the two recs")
                         .argLst(T(REC_TID.maybeMaybe()), "the rec to merge into the lhs")
                         .body((lhs, inst) -> lhs.asRec().plus(inst.arg(0).asRec()))
                         .law(Law.monoidic, Law.pure)
                         .create(),
-                InstBuilder.build().tid(MINUS_INST_TID, "remove the argument rec's matching entries from the lhs rec")
-                        .dom(REC_TID, "the lhs rec").rng(REC_TID, "the lhs rec without the removed entries")
-                        .argLst(REC_TYPE, "the rec whose matching entries are removed")
-                        .body((lhs, inst) -> {
-                            final Map<Obj, Obj> values = lhs.recValue();
-                            inst.arg(0).asRec().elements().forEach(rkv -> {
-                                final Set<Obj> keys = lhs.asRec().elements().filter(lkv -> lkv.first().test(rkv.first()) && lkv.second().test(rkv.second())).map(Rel::first).collect(Collectors.toSet());
-                                keys.forEach(values::remove);
-                            });
-                            return lhs.jvm(values);
-                        })
+                InstBuilder.build().tid(MINUS_INST_TID, "deep merge the inverted argument rec into the lhs rec")
+                        .dom(REC_TID, "the lhs rec")
+                        .rng(REC_TID, "the deep merge of the two opposing sign recs")
+                        .argLst(REC_TYPE, "the rec whose matching entries are inverted and merged")
+                        .body((lhs, inst) -> lhs.asRec().minus(inst.arg(0).asRec()))
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(MPLUS_INST_TID, "set the lhs rec's entries from the argument rec, one rel at a time")
