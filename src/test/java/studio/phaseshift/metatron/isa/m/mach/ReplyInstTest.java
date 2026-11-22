@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -176,17 +177,37 @@ public class ReplyInstTest extends AbstractMetatronTest {
     }
 
     /**
-     * A CONSTRUCTED ANSWER IS READ WITHOUT A WRITE. A literal whose type has a constructor ({@code int::T[?>0][plus(1)]}:
-     * the first bracket the predicate, the second the constructor) is stored by {@code Obj.Helper.construct}, not by
-     * {@code objCheckAndSave}, so a guard in the save step alone never saw it.
+     * A CONSTRUCTED ANSWER IS READ AS BUILT, WITHOUT A WRITE. A literal whose type has a constructor
+     * ({@code int::T[?>0][plus(1)]}: the first bracket the predicate, the second the constructor) travels as type plus
+     * value: the far side built {@code wnat::3} from 2 and answers it as it stands. Read through
+     * {@code Obj.Helper.construct}, the constructor ran again and the client saw {@code wnat::4}. That path also stores
+     * outside {@code objCheckAndSave}, so a guard in the save step alone never saw it.
      */
     @Test
     void testAConstructedAnswerIsReadWithoutAWrite() {
         Machine.evaluate("int::T[?>0][plus(1)]@wnat");
         final fURI tagged = f("/sys/anchor/ctor/0xe3");
-        final Obj read = replyRead("wnat::2@</sys/anchor/ctor/0xe3>");
+        final Obj read = replyRead("wnat::3@</sys/anchor/ctor/0xe3>");
         LOG.debug("a constructed answer read back: %s", read);
-        assertEquals(3, read.asInt().intValue(), "the constructor ran, so the read took the construct path: " + read);
+        assertEquals(3, read.asInt().intValue(), "the far side built wnat::3, and a reply read must not build it again: " + read);
+        assertEquals("wnat", read.tid().name(), "the answer keeps its type: " + read);
+        assertEquals(tagged, read.vid(), "the answer keeps its vid: " + read);
+        checkEquality(LOG, noobj(), Machine.read(tagged), true);
+    }
+
+    /**
+     * A CONSTRUCTED ANSWER AT THE PREDICATE'S EDGE IS READ, NOT REFUSED. With {@code int::T[?<10][plus(1)]} the far side
+     * builds 9 from 8 and answers {@code enat::9}. Rebuilt on read, 9 built 10, which the predicate refuses: the read
+     * threw, and the literal carrying the trip's tag was lost, so the trip waited out its deadline.
+     */
+    @Test
+    void testAConstructedAnswerAtThePredicatesEdgeIsReadAsBuilt() {
+        Machine.evaluate("int::T[?<10][plus(1)]@enat");
+        final fURI tagged = f("/sys/anchor/ctor/0xe5");
+        final Obj read = replyRead("enat::9@</sys/anchor/ctor/0xe5>");
+        LOG.debug("a constructed answer at the predicate's edge read back: %s", read);
+        assertFalse(read.isFail() || read.isCaughtFail(), "the read rebuilt 9 into 10, which ?<10 refuses: " + read);
+        assertEquals(9, read.asInt().intValue(), "the far side built enat::9: " + read);
         checkEquality(LOG, noobj(), Machine.read(tagged), true);
     }
 
