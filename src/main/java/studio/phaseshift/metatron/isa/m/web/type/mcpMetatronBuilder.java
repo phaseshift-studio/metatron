@@ -83,12 +83,11 @@ public final class mcpMetatronBuilder {
      */
     public static final fURI MCP_MTRON_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_mtron");
     /**
-     * the tools a client of this server declares as a metatron node's primitives (mcpClient): eval_mtron is its eval and
-     * carries its to, read_memory is its from. One spelling for both sides, so a rename here cannot silently leave a
-     * client without them.
+     * the tool a client of this server declares a metatron node's primitives through (mcpClient): eval_mtron is its
+     * eval, and carries its from and to as programs. One spelling for both sides, so a rename here cannot silently leave
+     * a client without them.
      */
     public static final fURI EVAL_MTRON_TID = MCP_MTRON_SERVER_TID.extend("eval_mtron");
-    public static final fURI READ_MEMORY_TID = MCP_MTRON_SERVER_TID.extend("read_memory");
     /**
      * eval_mtron's second argument, {@code mime=>application/x-mtron}: the mime type its answer is rendered in
      */
@@ -152,7 +151,7 @@ public final class mcpMetatronBuilder {
                     Map.of(uri("current_memory"), "the memory to remember -- e.g. a str::T, a markdown::T, etc.",
                             uri("previous_memory"), "a previous memory vid to chain current memory to"),
                     "(experimental) returns a memory relation of the form (current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
-            tools.at(uri(mTool.toolName(READ_MEMORY_TID)), docWrap(instC(READ_MEMORY_TID.dom(ALL.maybe()).rng(ALL.maybeSome()),
+            tools.at(uri(mTool.toolName(toolTid("read_memory"))), docWrap(instC(toolTid("read_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj memId = inst.arg(f("memory_vid"), 0);
                                 if (!memId.isNoObj())

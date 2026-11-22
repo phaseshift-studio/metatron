@@ -59,8 +59,8 @@ import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -187,34 +187,31 @@ public class mcpClient extends MRec implements AutoCloseable {
             });
         // THE PRIMITIVES OF A METATRON NODE (Marko, 2026-11-22: "any peer::T can have custom implementation of common
         // instructions ... from/to/eval being what is needed for universal computing as a metatron node"). A metatron
-        // server (mcp_mtron) answers all three through its tools, so this client declares them on the native
-        // signatures, as a ws peer declares its own (WebSocketRec):
-        //   code.eval(<uri>) sends its lhs code to eval_mtron -- the program is the lhs, and a tool call carries only
-        //   its args;
-        //   from(<uri>) reads the localized address with read_memory;
-        //   obj.to(<uri>) sends start(obj).to(</path>) to eval_mtron -- write_memory chains a memory under a minted
-        //   vid, so it cannot write at the address a to() names.
-        // A server without these tools declares none of them, and an inst_map entry for the same instruction wins.
+        // server (mcp_mtron) answers all three through eval_mtron, so this client declares them on the native
+        // signatures exactly as a ws peer declares its own (WebSocketRec), each a program the server evaluates:
+        //   code.eval(<uri>) sends its lhs code -- the program is the lhs, and a tool call carries only its args;
+        //   from(<uri>) sends the localized read, from(</path>);
+        //   obj.to(<uri>) sends the localized write, start(obj).to(</path>).
+        // All three go through eval_mtron and read its answer as mtron (Marko, 2026-11-22: "Keep eval_mtron" for to,
+        // "Yes, use eval_mtron" for from): write_memory takes no target address, and read_memory answers through the
+        // mcp layer's JSON, which turns a str into a uri and drops a type. A server without eval_mtron declares none of
+        // them, and an inst_map entry for the same instruction wins.
         final String evalName = mTool.toolName(mcpMetatronBuilder.EVAL_MTRON_TID);
-        final Obj evalTool = tools.at(f(evalName)).orElse(rec0()).at(uri(INST));
-        final Obj readTool = tools.at(f(mTool.toolName(mcpMetatronBuilder.READ_MEMORY_TID))).orElse(rec0()).at(uri(INST));
-        if (evalTool.isObjInst()) {
+        if (tools.at(f(evalName)).orElse(rec0()).at(uri(INST)).isObjInst()) {
             final Obj eval = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(EVAL_INST_TID,
                     (lhs, inst) -> this.evalMtron(evalName, lhs));
+            final Obj from = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(FROM_INST_TID,
+                    (lhs, inst) -> this.evalMtron(evalName,
+                            from_(inst.arg(0).uriValue().localize().toUri()).tryToInst()));
             final Obj to = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(TO_INST_TID,
                     (lhs, inst) -> this.evalMtron(evalName,
                             start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst()));
             if (eval.isObjInst())
                 overrides.jvm().putIfAbsent(uri(EVAL_INST_TID), eval);
-            if (to.isObjInst())
-                overrides.jvm().putIfAbsent(uri(TO_INST_TID), to);
-        }
-        if (readTool.isObjInst()) {
-            final Obj from = studio.phaseshift.metatron.isa.m.mach.type.Network.Helper.override(FROM_INST_TID,
-                    (lhs, inst) -> readTool.asInst()
-                            .args(rec(uri("memory_vid"), uri(inst.arg(0).uriValue().localize()))).apply(noobj()));
             if (from.isObjInst())
                 overrides.jvm().putIfAbsent(uri(FROM_INST_TID), from);
+            if (to.isObjInst())
+                overrides.jvm().putIfAbsent(uri(TO_INST_TID), to);
         }
         if (!overrides.isEmpty())
             this.jvm().put(uri(INST), overrides);
