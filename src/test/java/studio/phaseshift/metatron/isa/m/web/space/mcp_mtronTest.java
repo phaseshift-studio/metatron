@@ -514,7 +514,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
      * as a metatron node, and the client declares all three on the native signatures, so the network reaches the
      * server through them as it reaches any peer:
      * <ul>
-     *   <li>a read is read_memory at the localized address;</li>
+     *   <li>a read ships {@code from(</path>)} through eval_mtron and answers what it read, its type kept;</li>
      *   <li>a write ships {@code start(obj).to(</path>)} through eval_mtron and lands at the address it names;</li>
      *   <li>an eval ships its lhs code to eval_mtron, which evaluates it there.</li>
      * </ul>
@@ -535,6 +535,13 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
                             transport + " — the client declares " + primitive + ": " + client.at(uri(INST))));
             Machine.write(f("/test/node/read"), jnt(7));
             checkEquality(LOG, jnt(7), Machine.read(origin.extend(f("/test/node/read"))), true);
+            // A READ KEEPS WHAT IT READS: a str stays a str (through the mcp layer's JSON it came back the uri
+            // zarathustra), and a rec keeps its keys and values
+            Machine.write(f("/test/node/str"), str("zarathustra"));
+            checkEquality(LOG, str("zarathustra"), Machine.read(origin.extend(f("/test/node/str"))), true);
+            Machine.write(f("/test/node/rec"), rec(uri("name"), str("zarathustra"), uri("age"), jnt(33)));
+            checkEquality(LOG, rec(uri("name"), str("zarathustra"), uri("age"), jnt(33)),
+                    Machine.read(origin.extend(f("/test/node/rec"))), true);
             Machine.write(origin.extend(f("/test/node/written")), jnt(9));
             checkEquality(LOG, jnt(9), Machine.read(f("/test/node/written")), true);
             checkEquality(LOG, jnt(3), Machine.current().network().submit(origin, mParser.parse("1.plus(2)")), true);
