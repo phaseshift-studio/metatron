@@ -208,15 +208,85 @@ Each place sorts its share and keeps two, and home merges the runs and keeps two
 members. The law is causality, not monotonicity in the prefix order, which a sorted merge lacks: `[1]` is a prefix of
 `[1,2]`, yet merging each with `[3]` gives `[1,3]` and `[1,2,3]`.
 
+**A key that reads mass ships no sort.** A sort compares each member by its key, and a floatable key reads the
+member's value, not its mass: $\{n\}v\,f = \{n\}(v\,f)$ (Theorem 6). A key that reads the coefficient does not, as
+$\{n\}v\,\mathrm{cc} = n$. A shard parts a value's mass across places, $\{n_1\}v$ in one and $\{n_2\}v$ in another,
+and only the merge makes it whole, $\{n_1\}v + \{n_2\}v = \{n_1 + n_2\}v$, so each place would sort by a mass the
+merge then changes. For such a key `order` has no combiner: its run still ships, the branch's merge adds the masses of
+equal members, and home sorts by whole masses.
+
+```mtron
+mtron> {11,21,31,41,12,22,13}.mod(10).order(cc())
+==>[3,{2}2,{4}1]
+mtron> {11,21,31,41,12,22,13}.mod(10).order(cc()).explain()>>format
+==>"""
+    op      dom          rng                args                                                       f    desc      c_dom  c_rng  c_out 
+    branch  noobj{0}::T  int{*}::T          [ws://localhost:1111=>start?hop=0({11,31,12,13}).mod(10),  <j>  standard  {0}    {*}    {*}   
+                                             ws://localhost:1112=>start?hop=0({21,41,22}).mod(10)]                                        
+    order   int{*}::T    lst[{*}int{*}]::T  [cc()]                                                     <j>  reducer   {*}    {1}    {1}   
+   
+        ┌─►//0─{4}─{4}─┐
+   {7}──┤              ├─►//local─{7}─{1}
+        └─►//1─{3}─{3}─┘
+   """
+```
+Each place maps its share, and home receives `{4}1`, `{2}2` and `3` with every mass whole.
+
+**A cut may recombine through itself, after a lift.** `mean` is no monoid: the mean of two means is not the mean of
+their union. What recombines is a summary of each part, its mean weighted by its count, and the stream ring carries the
+weight as a coefficient. Write $\ell$ for the lift $a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$, so `{1,1,2}` lifts to
+`{3}1.333…`. A weighted mean averages to itself, $\mathrm{mean} = \ell\,\mathrm{mean}$, and the lift is itself
+self-combining, $(a+b)\,\ell = (a\,\ell + b\,\ell)\,\ell$, as the stream's sum adds the weights of equal means. So
+
+$$
+s\,f\,\mathrm{mean} = (s_1\,f\,\ell + \cdots + s_k\,f\,\ell)\;\mathrm{mean},
+\qquad
+\mathrm{mean}\Big(\sum_{i} \{n_i\}\,m_i\Big) = \frac{\sum_i n_i\,m_i}{\sum_i n_i}.
+$$
+
+*Proof sketch.* With $x = s_1 f + \cdots + s_k f$, the equation gives $x\,\mathrm{mean} = x\,\ell\,\mathrm{mean}$; the
+lift's own combining law, by induction on $k$, gives
+$x\,\ell = (s_1 f \ell + \cdots + s_k f \ell)\,\ell$; and the equation again drops the outer $\ell$. ◻
+
+Each place ships its summary, and home takes the weighted mean. `mean` declares the equation beside itself,
+$\mathrm{mean} \mapsto \ell\,\mathrm{mean}$, with $\ell$ written `split?<=int{*}([mean(),count()]).cc(_>>1)>>0`: the
+split gathers the part, `cc` makes its count the coefficient, and the projection keeps the mean, the weight floating
+through it (Theorem 6). In this form the declaration states more than the equation: that $\ell$ is a sufficient
+statistic, itself a cut. The equation alone holds of the median too,
+$\mathrm{median}(\{\mathrm{median}(a)\}) = \mathrm{median}(a)$, and the median does not distribute: its books are its
+whole part (*Bookkeeping Data Structures*). This is the menu's entry J.
+
+```mtron
+mtron> {1,1,1,5}.mean()
+==>2.0
+mtron> {1,1,1,5}.mean().explain()>>format
+==>"""
+    op      dom          rng         args                                                                                                    f    desc      c_dom  c_rng  c_out 
+    branch  noobj{0}::T  real{*}::T  [ws://localhost:1111=>start?hop=0({3}1).split?<=int{*}([mean(),count()]).cc(id().rshift(1)).rshift(0),  <j>  standard  {0}    {*}    {*}   
+                                      ws://localhost:1112=>start?hop=0(5).split?<=int{*}([mean(),count()]).cc(id().rshift(1)).rshift(0)]                                        
+    mean    real{*}::T   real::T                                                                                                             <j>  reducer   {*}    {1}    {1}   
+   
+        ┌─►//0─{3}─{1}─{**}─{**}─┐
+   {4}──┤                        ├─►//local─{**}─{1}
+        └─►//1─{1}─{1}─{**}─{**}─┘
+   """
+```
+The bulked `{3}1` travels whole to one place, which answers `{3}1.0`; the other answers `5.0`; and home weighs them,
+$(3 \cdot 1 + 5)/4 = 2$, where the plain mean of the two answers would be 3.
+
 **A cut is planned at every level of a tree.** A place handed a lane may plan it again, over places of its own. The
 budget `?hop` states how many levels a plan may take (the menu's entry E): `law_shard` reads it off the fold, and every
 lane carries it one level down, on its head, so a leaf states `?hop=0` and plans nothing further. To grow a tree, each
-peer harvests two peers of its own, with the `harvest` its boot file defines:
+peer harvests two peers of its own, with the `harvest` its boot file defines. A peer booting two more takes longer than
+a lane's default wait of five seconds, so the branch states its own `?timeout`, in seconds:
 
 ```mtron
-mtron> branch(<//0> => start({2,3}).harvest(<boot/space/grph/peer.boot.mtron>),
-              <//1> => start({4,5}).harvest(<boot/space/grph/peer.boot.mtron>))
-==>fail{2}::[inst apply failure: future get timed out after 5000 ms [FutureObj<245>] (at λawait) [FutureObj<245>]]
+mtron> branch?timeout=60(<//0> => start({2,3}).harvest(<boot/space/grph/peer.boot.mtron>),
+                         <//1> => start({4,5}).harvest(<boot/space/grph/peer.boot.mtron>))
+==>[0=>ws://localhost:1113/mtron,
+    1=>ws://localhost:1114/mtron]
+==>[0=>ws://localhost:1115/mtron,
+    1=>ws://localhost:1116/mtron]
 ```
 Now `//0` holds `//2` and `//3`, and `//1` holds `//4` and `//5`. Each level is the shard identity again: a place deals
 what it is handed over its children and recombines their partials through the same combiner, so with
@@ -228,7 +298,7 @@ $$
 
 ```mtron
 mtron> {1,2,3,4,5,6,7,8}.plus(1).sum?hop=2()
-==>fail::[lhs range does not match inst domain: fail::T => int{*}::T [/m/inst/sum?/m/int<=/m/int{*}&hop=2()@<1>]]
+==>44
 mtron> {1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>format
 ==>"""
     op      dom          rng        args                                                         f    desc      c_dom  c_rng  c_out 
@@ -236,31 +306,13 @@ mtron> {1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>format
                                      ws://localhost:1112=>start?hop=1({2,4,6,8}).plus(1).sum()]                                     
     sum     int{*}::T    int::T                                                                  <j>  reducer   {*}    {1}    {1}   
    
-                    ┌─►//192.168.1.37:8777──{1}─{1}─{1}─┐
-                    ├─►//192.168.1.37:8555──{1}─{1}─{1}─┤
-        ┌─►//0─{4}──┤                                   ├─►//0─{4}─{1}─┐
-        │           ├─►//192.168.1.250:8777─{1}─{1}─{1}─┤              │
-        │           └─►//192.168.1.72:8777──{1}─{1}─{1}─┘              │
-   {8}──┤                                                              ├─►//local─{2}─{1}
-        │           ┌─►//192.168.1.37:8777──{1}─{1}─{1}─┐              │
-        │           ├─►//192.168.1.37:8555──{1}─{1}─{1}─┤              │
-        └─►//1─{4}──┤                                   ├─►//1─{4}─{1}─┘
-                    ├─►//192.168.1.250:8777─{1}─{1}─{1}─┤
-                    └─►//192.168.1.72:8777──{1}─{1}─{1}─┘
-   """
-mtron> {1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>ext/topology/format
-==>"""
-                    ┌─►//192.168.1.37:8777──{1}─{1}─{1}─┐
-                    ├─►//192.168.1.37:8555──{1}─{1}─{1}─┤
-        ┌─►//0─{4}──┤                                   ├─►//0─{4}─{1}─┐
-        │           ├─►//192.168.1.250:8777─{1}─{1}─{1}─┤              │
-        │           └─►//192.168.1.72:8777──{1}─{1}─{1}─┘              │
-   {8}──┤                                                              ├─►//local─{2}─{1}
-        │           ┌─►//192.168.1.37:8777──{1}─{1}─{1}─┐              │
-        │           ├─►//192.168.1.37:8555──{1}─{1}─{1}─┤              │
-        └─►//1─{4}──┤                                   ├─►//1─{4}─{1}─┘
-                    ├─►//192.168.1.250:8777─{1}─{1}─{1}─┤
-                    └─►//192.168.1.72:8777──{1}─{1}─{1}─┘
+                    ┌─►//localhost:1113─{2}─{2}─{1}─┐
+        ┌─►//0─{4}──┤                               ├─►//0─{2}─{1}─┐
+        │           └─►//localhost:1114─{2}─{2}─{1}─┘              │
+   {8}──┤                                                          ├─►//local─{2}─{1}
+        │           ┌─►//localhost:1115─{2}─{2}─{1}─┐              │
+        └─►//1─{4}──┤                               ├─►//1─{2}─{1}─┘
+                    └─►//localhost:1116─{2}─{2}─{1}─┘
    """
 ```
 The root's two lanes state `?hop=1`, a level left, so each peer plans its share over its own two peers. The topology is
@@ -313,103 +365,103 @@ expansion and contraction of each cut in figure 2, and lists `law_shard` among t
 ```mtron
 mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master booger//633589   apply 664.090 ms, 2 places
-       places      2, gathered in 664.090 ms (the master's apply, its gather wait included)
-       place               objs  apply (ms)   share
-       booger//633710         3      27.806   51.0%  straggler
-       booger//634006         1      26.671   49.0%
-       apply       min 26.671   max 27.806   mean 27.238 (ms)
+     master //local   apply 626.174 ms, 2 places
+       places      2, gathered in 626.174 ms (the master's apply, its gather wait included)
+       place      objs  apply (ms)   share
+       //0           3      27.840   50.9%  straggler
+       //1           1      26.819   49.1%
+       apply       min 26.819   max 27.840   mean 27.330 (ms)
        imbalance   1.02 (max ÷ mean apply)
-       efficiency  0.041 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 54.477 ms
+       efficiency  0.044 (Σ lane apply ÷ (k × gather wait))
+       tree        depth 1   leaves 2   objs 4   lane time 54.660 ms
        level 1     2 places, imbalance 1.02
-       critical    booger//633710 27.806 ms
+       critical    //0 27.840 ms
        stage     min (ms)   max (ms)
-       rewrite      6.439     16.768
-       resolve      9.244     24.615
-       apply      664.090   1085.178
+       rewrite      6.390      8.058
+       resolve      9.096     11.158
+       apply      626.174    712.802
        insts     3
        resolve sub-stages (avg ms):
-         inst-resolve         5.748   55.3%
-         generic-binding      4.104   39.5%
-         inst-composition     0.539    5.2%
+         inst-resolve         3.606   52.3%
+         generic-binding      2.937   42.6%
+         inst-composition     0.348    5.0%
        rewrite rules:
-                     branch_factor       law_poset           law_monoidic        theory_unit_removal derivation_contractionlaw_bsp             
+                     branch_factor       law_poset           law_monoidic        derivation_contractiontheory_unit_removal law_bsp             
            insts.in  60                  60                  60                  60                  60                  60                  
            insts.out 60                  60                  60                  60                  60                  60                  
-           time(ms)  23.915              13.781              5.166               3.033               3.017               2.926               
-           TOTAL     inst.in 3   inst.out 3   time(ms) 76.001
+           time(ms)  16.199              9.385               3.644               2.721               2.180               1.896               
+           TOTAL     inst.in 3   inst.out 3   time(ms) 51.965
        apply sub-stages (avg ms):
-         split        0.010    0.0%
-         apply       67.719  100.0%
-         next         0.006    0.0%
+         split        0.008    0.0%
+         apply       52.586  100.0%
+         next         0.010    0.0%
        per-instruction (per iteration):
                      branch    sum       branch    
            in.monad  0         1         0         
            in.coeff  0         2         0         
            out.monad 1         1         1         
            out.coeff 2         1         2         
-           time(ms)  67.719    0.000     0.000     
+           time(ms)  52.586    0.000     0.000     
        flow       monads=25 coeff-sum=25 compression=1.00 processors=10
-       cache     hits=388224 misses=9 hit=100.0%
-       booger//633710   apply 27.806 ms, a leaf, objs 3, straggler
+       cache     hits=378351 misses=6 hit=100.0%
+       //0   apply 27.840 ms, a leaf, objs 3, straggler
          stage     min (ms)   max (ms)
-         rewrite     24.692     33.687
-         resolve     24.839     33.838
-         apply       27.806     29.494
+         rewrite     24.611     26.175
+         resolve     24.760     26.379
+         apply       27.840     30.078
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         2.906   30.6%
-           generic-binding      5.967   62.8%
-           inst-composition     0.624    6.6%
+           inst-resolve         2.821   30.5%
+           generic-binding      5.839   63.2%
+           inst-composition     0.577    6.2%
          rewrite rules:
                        law_shard           derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  141.679             74.863              10.767              8.240               4.136               3.749               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 258.981
+             time(ms)  133.277             74.313              9.156               7.633               4.104               3.579               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 247.375
          apply sub-stages (avg ms):
-           split        0.009    4.8%
-           apply        0.182   91.5%
-           next         0.007    3.7%
+           split        0.009    4.9%
+           apply        0.175   91.5%
+           next         0.007    3.6%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.017     0.165     0.000     
+             time(ms)  0.017     0.159     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
-         cache     hits=156458 misses=8 hit=100.0%
-       booger//634006   apply 26.671 ms, a leaf, objs 1
+         cache     hits=157160 misses=8 hit=100.0%
+       //1   apply 26.819 ms, a leaf, objs 1
          stage     min (ms)   max (ms)
-         rewrite     23.766     27.388
-         resolve     23.910     27.579
-         apply       26.671     28.453
+         rewrite     24.029     25.731
+         resolve     24.178     25.934
+         apply       26.819     29.629
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         2.954   30.6%
-           generic-binding      6.034   62.5%
-           inst-composition     0.669    6.9%
+           inst-resolve         2.942   30.7%
+           generic-binding      5.952   62.0%
+           inst-composition     0.702    7.3%
          rewrite rules:
-                       law_shard           derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal 
+                       law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  126.935             76.083              9.272               9.083               4.087               3.625               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 244.466
+             time(ms)  121.876             75.675              9.422               9.060               4.087               3.690               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 239.301
          apply sub-stages (avg ms):
-           split        0.009    4.5%
-           apply        0.179   91.9%
-           next         0.007    3.7%
+           split        0.009    4.7%
+           apply        0.184   91.2%
+           next         0.008    4.2%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.015     0.164     0.000     
+             time(ms)  0.016     0.168     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
-         cache     hits=157418 misses=8 hit=100.0%
+         cache     hits=158120 misses=8 hit=100.0%
    """
 ```
 [To be written: the home instructions in general (what a contract must state for one object to survive them), and the
@@ -509,8 +561,7 @@ mtron> {1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3).explain()>>format
     start   noobj{0}::T  int{3}::T  [{1,2,3}]                                                                    <j>  initial  {0}    {3}    {3}   
     repeat  int{*}::T    #{*}::T    [code=>branch?<=A{*}&split=part(ws://localhost:1111=>/m/inst/plus?hop=0(1),  <j>  scatter  {*}    {*}    {*}   
                                                              ws://localhost:1112=>/m/inst/plus?hop=0(1)),                                          
-                                     until=>loop().is(gt(3)),                                                                                      
-                                     {?}until=>loop().is(gt(3))]                                                                                   
+                                     until=>loop().is(gt(3))]                                                                                      
    
           ┌─►//0─{0,3}─{0,3}─┐
    {3}─┬──┤                  ├─►//local─{0,6}─┬─{*}
@@ -518,18 +569,9 @@ mtron> {1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3).explain()>>format
        └──────────────────────────────────────┘
    """
 ```
-The topology draws the loop as it runs: the pass's fan once, and a back edge from the merge to where the frontier
-enters.
+The topology under the plan draws the loop as it runs: the pass's fan once, and a back edge from the merge to where the
+frontier enters.
 
-```mtron
-mtron> {1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3).explain()>>ext/topology/format
-==>"""
-          ┌─►//0─{0,3}─{0,3}─┐
-   {3}─┬──┤                  ├─►//local─{0,6}─┬─{*}
-       ▲  └─►//1─{0,3}─{0,3}─┘                │
-       └──────────────────────────────────────┘
-   """
-```
 **A walk over a graph.** The peers were booted with the modern graph, the same six vertices with the same ids on every
 machine, so a vertex dealt to any peer binds to that peer's copy of itself. Walking `both()` five times from every
 vertex counts, at each vertex, the walks of length five that end there. With $A$ the graph's adjacency matrix, edges
@@ -552,8 +594,14 @@ mtron> *g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4)>>name
 ==>{99}'marko'
 ==>{41}'peter'
 ==>{41}'ripple'
-mtron> *g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4).explain()>>ext/topology/format
+mtron> *g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4).explain()>>format
 ==>"""
+    op      dom      rng      args                                                                                f    desc      c_dom  c_rng  c_out 
+    from    #{?}::T  #{*}::T  [g:V/+]                                                                             <j>  standard  {?}    {*}    {*}   
+    repeat  #{*}::T  #{*}::T  [code=>branch?<=A{*}&split=part(ws://localhost:1111=>/m/db/grph/inst/both?hop=0(),  <j>  scatter   {*}    {*}    {*}   
+                                                       ws://localhost:1112=>/m/db/grph/inst/both?hop=0()),                                           
+                               until=>loop().is(gt(4))]                                                                                              
+   
           ┌─►//0─{*}─{*}─┐
    {*}─┬──┤              ├─►//local─{*}─┬─{*}
        ▲  └─►//1─{*}─{*}─┘              │
@@ -605,8 +653,7 @@ mtron> {1,2,3,4,5,6,7,8}.repeat?<=int{*}&hop=2(code=>plus(1),until=>loop()?>3).e
     start   noobj{0}::T  int{8}::T  [{1,2,3,4,5,6,7,8}]                                                          <j>  initial  {0}    {8}    {8}   
     repeat  int{*}::T    #{*}::T    [code=>branch?<=A{*}&split=part(ws://localhost:1111=>/m/inst/plus?hop=1(1),  <j>  scatter  {*}    {*}    {*}   
                                                              ws://localhost:1112=>/m/inst/plus?hop=1(1)),                                          
-                                     until=>loop().is(gt(3)),                                                                                      
-                                     {?}until=>loop().is(gt(3))]                                                                                   
+                                     until=>loop().is(gt(3))]                                                                                      
    
           ┌─►//0─{0,8}─{0,8}─┐
    {8}─┬──┤                  ├─►//local─{0,16}─┬─{*}
@@ -673,32 +720,32 @@ that ran, a `branch` and a `sum`, and the time spent at the `branch` waiting on 
 ```mtron
 mtron> 0.{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master booger//633589   apply 565.894 ms, 2 places
-       places      2, gathered in 565.894 ms (the master's apply, its gather wait included)
-       place               objs  apply (ms)   share
-       booger//633710         3      26.748   49.9%
-       booger//634006         1      26.873   50.1%  straggler
-       apply       min 26.748   max 26.873   mean 26.810 (ms)
-       imbalance   1.00 (max ÷ mean apply)
+     master //local   apply 572.109 ms, 2 places
+       places      2, gathered in 572.109 ms (the master's apply, its gather wait included)
+       place      objs  apply (ms)   share
+       //0           3      26.099   49.0%
+       //1           1      27.136   51.0%  straggler
+       apply       min 26.099   max 27.136   mean 26.617 (ms)
+       imbalance   1.02 (max ÷ mean apply)
        efficiency  0.047 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 53.621 ms
-       level 1     2 places, imbalance 1.00
-       critical    booger//634006 26.873 ms
+       tree        depth 1   leaves 2   objs 4   lane time 53.235 ms
+       level 1     2 places, imbalance 1.02
+       critical    //1 27.136 ms
        stage     min (ms)   max (ms)
-       rewrite      4.519      5.512
-       resolve      5.548      6.559
-       apply      565.894    649.365
+       rewrite      4.795      5.454
+       resolve      6.003      6.633
+       apply      572.109    878.985
        insts     1
        resolve sub-stages (avg ms):
-         inst-resolve         1.095   35.3%
-         generic-binding      1.881   60.6%
-         inst-composition     0.130    4.2%
+         inst-resolve         1.162   35.7%
+         generic-binding      1.952   59.9%
+         inst-composition     0.145    4.5%
        rewrite rules:
-                     branch_factor       law_poset           law_monoidic        theory_unit_removal law_involution      derivation_contraction
+                     branch_factor       law_poset           theory_unit_removal law_monoidic        derivation_contractionlaw_involution      
            insts.in  10                  10                  10                  10                  10                  10                  
            insts.out 10                  10                  10                  10                  10                  10                  
-           time(ms)  5.849               4.456               1.440               1.434               0.967               0.966               
-           TOTAL     inst.in 1   inst.out 1   time(ms) 22.082
+           time(ms)  6.449               4.504               1.377               1.355               1.312               0.999               
+           TOTAL     inst.in 1   inst.out 1   time(ms) 23.414
        apply sub-stages (avg ms):
          split        0.000    0.0%
          apply        0.000    0.0%
@@ -711,65 +758,65 @@ mtron> 0.{0,3}plus(1).sum().profile()>>format
            out.coeff 0         
            time(ms)  0.000     
        flow       monads=0 coeff-sum=0 compression=0.00 processors=0
-       cache     hits=236254 misses=6 hit=100.0%
-       booger//633710   apply 26.748 ms, a leaf, objs 3
+       cache     hits=235993 misses=6 hit=100.0%
+       //0   apply 26.099 ms, a leaf, objs 3
          stage     min (ms)   max (ms)
-         rewrite     23.310     25.094
-         resolve     23.452     25.311
-         apply       26.748     28.864
+         rewrite     23.856     46.190
+         resolve     23.997     46.408
+         apply       26.099     32.508
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         2.838   30.1%
-           generic-binding      6.027   64.0%
-           inst-composition     0.552    5.9%
+           inst-resolve         3.306   30.1%
+           generic-binding      6.859   62.4%
+           inst-composition     0.829    7.5%
          rewrite rules:
-                       law_shard           derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal 
+                       law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  124.110             73.370              9.066               8.449               5.028               3.758               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 238.669
+             time(ms)  138.285             83.551              11.357              9.912               4.291               3.969               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 268.125
          apply sub-stages (avg ms):
-           split        0.007    3.7%
-           apply        0.168   93.5%
-           next         0.005    2.8%
+           split        0.009    3.4%
+           apply        0.241   94.2%
+           next         0.006    2.4%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.016     0.152     0.000     
+             time(ms)  0.022     0.219     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
-         cache     hits=157002 misses=8 hit=100.0%
-       booger//634006   apply 26.873 ms, a leaf, objs 1, straggler
+         cache     hits=157776 misses=8 hit=100.0%
+       //1   apply 27.136 ms, a leaf, objs 1, straggler
          stage     min (ms)   max (ms)
-         rewrite     23.979     26.411
-         resolve     24.125     26.602
-         apply       26.873     29.887
+         rewrite     23.651     31.538
+         resolve     23.796     31.768
+         apply       27.136     31.350
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         3.042   30.5%
-           generic-binding      6.300   63.1%
-           inst-composition     0.639    6.4%
+           inst-resolve         3.360   31.0%
+           generic-binding      6.753   62.2%
+           inst-composition     0.739    6.8%
          rewrite rules:
                        law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  125.889             76.902              9.791               9.091               4.252               3.597               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 244.851
+             time(ms)  129.111             82.456              10.816              9.219               4.187               3.828               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 255.665
          apply sub-stages (avg ms):
-           split        0.007    4.0%
-           apply        0.174   93.8%
-           next         0.004    2.3%
+           split        0.008    3.7%
+           apply        0.191   94.2%
+           next         0.004    2.1%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.016     0.158     0.000     
+             time(ms)  0.018     0.173     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
-         cache     hits=157808 misses=8 hit=100.0%
+         cache     hits=158384 misses=8 hit=100.0%
    """
 ```
 A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and points add across a branch,
@@ -833,6 +880,51 @@ every instruction in it is pure, and so is every code it is handed, so a filter 
 between two runs brings the members home, where it runs once over the merged bag, and the run after it goes out
 again on a branch of its own.
 
+## Bookkeeping Data Structures
+
+A fold need not be a monoid to distribute. It is enough that it *keeps books*: a summary of each part that combines as
+a commutative monoid does, from which the answer is read once at the end. Write $\ell$ for writing the books and
+$\varphi$ for reading them:
+
+$$
+r = \ell\,\varphi, \quad (a + b)\,\ell = a\,\ell \oplus b\,\ell
+\quad\Longrightarrow\quad
+(s_1 + \cdots + s_k)\,r = (s_1\,\ell \oplus \cdots \oplus s_k\,\ell)\,\varphi.
+$$
+
+Each place writes the books of its part, the books travel home and combine, and home reads the answer. The shape is
+still the star; only what travels changes.
+
+| fold                    | books $a\,\ell$                        | $\oplus$                      | $\varphi$                                 |
+|-------------------------|----------------------------------------|-------------------------------|-------------------------------------------|
+| `sum`                   | $\sum a$                               | $+$                           | $\mathrm{id}$                             |
+| `mean`                  | $\{\lvert a\rvert\}\,\mathrm{mean}(a)$ | the stream's sum, then $\ell$ | `mean`                                    |
+| variance                | $(\lvert a\rvert, \sum a, \sum a^2)$   | componentwise $+$             | $(n, s_1, s_2) \mapsto s_2/n - (s_1/n)^2$ |
+| top-$k$                 | the $k$ least of $a$, sorted           | merge and keep $k$            | $\mathrm{id}$                             |
+| top-$k$ by mass         | $a$ bulked, each member with its mass  | the stream's sum              | `order(cc())==[{k}_]`                     |
+| distinct count, approx. | a sketch of $a$                        | the sketch's union            | its estimate                              |
+| median                  | $a$ itself                             | the stream's sum              | the middle member                         |
+
+Gray et al. sort aggregates by the size of their books [[4]](#references): *distributive* when the books are the
+answer (`sum`, `count`, `max`), *algebraic* when they are a bounded tuple of distributive books (`mean`, variance,
+top-$k$), and *holistic* when no bound holds (the median, the mode, an exact distinct count). A holistic fold's books
+are its whole part, so a star would ship every member and save nothing: it stays home, unless a sketch trades
+exactness for bounded books (L). Top-$k$ by mass sits between: a place's heaviest $k$ need not hold the whole's, as a
+value of middling mass everywhere outweighs one heavy in a single place, so its books are the bulked part, bounded by
+the distinct members rather than the members, and a threshold algorithm ships fewer [[5]](#references).
+
+**The coefficient is a ledger.** A conventional engine keeps `mean`'s books as a pair, a sum and a count, with a
+combiner of its own. The stream ring needs neither, since every obj already carries a count, its coefficient. So
+`mean`'s books are a single obj, $\{n\}m$, the mean weighted by its count:
+
+```mtron
+mtron> {1,1,2}.split?<=int{*}([mean(),count()]).cc(_>>1)>>0
+==>{3}1.3333
+```
+Their $\oplus$ is the stream's own sum, which adds the weights of equal means, and `mean` reads the merged books
+without writing them again, since $\mathrm{mean} = \ell\,\mathrm{mean}$. So `mean` recombines through itself (*The
+Shard Identity*), and entry J needs no data structure the stream ring does not already have.
+
 ## The Menu
 
 Every distribution pattern metatron names is an instance of one of these laws, and the menu lists them all
@@ -854,7 +946,7 @@ or compose the others (N, R, M, I).
 | **G** | $\checkmark$ | keyed reduce              | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$ | partials merge by key; the combiner is pointwise, computed from the inner fold's                                                       |
 | **H** |              | redundant / hedged shards | $x \oplus x = x$                                                                                                                   | an idempotent fold lets a part ship to several peers and every reply fold; otherwise hedge, first wins                                 |
 | **I** |              | span/route interpreter    | $\mathrm{plan} \mapsto \mathrm{layout}$                                                                                            | the infrastructure: a plan's axes lowered to a layout                                                                                  |
-| **J** |              | algebraic aggregates      | $\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}$                                                           | pointwise tuple partials; the finalizer runs once at the master                                                                        |
+| **J** | $\checkmark$ | algebraic aggregates      | $\mathrm{mean} = \ell\,\mathrm{mean},\ a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$                                             | each place ships its mean weighted by its count, `{n}m`; home takes the weighted mean (an algebraic aggregate)                         |
 | **K** | $\checkmark$ | limit / top-k push-down   | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                                                       |
 | **L** |              | mergeable sketches        | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                                                                    |
 | **M** |              | matrix multiplication     | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)                                             |
@@ -901,3 +993,8 @@ or compose the others (N, R, M, I).
    "[A Span and Point Coefficient Algebra for Stream Rings](./span-and-point-coefficient-algebra.md)."
 3. "[distributed computing — the pattern menu](../skills/mtron/references/distributed-computing-mtron.html)," the mtron
    skill reference.
+4. Gray, J., Chaudhuri, S., Bosworth, A., Layman, A., Reichart, D., Venkatrao, M., Pellow, F., Pirahesh, H., "Data
+   Cube: A Relational Aggregation Operator Generalizing Group-By, Cross-Tab, and Sub-Totals," Data Mining and Knowledge
+   Discovery 1(1), pages 29–53, 1997.
+5. Cao, P., Wang, Z., "Efficient Top-K Query Calculation in Distributed Networks," Proceedings of the Twenty-Third
+   Annual ACM Symposium on Principles of Distributed Computing (PODC), 2004.

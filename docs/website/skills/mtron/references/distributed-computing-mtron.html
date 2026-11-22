@@ -532,14 +532,19 @@ menu, fix the five pieces a row names:</p>
 <tr><td><code>law::T</code>, <code>plan::T</code>, <code>path::T</code></td><td>—</td><td>the engine. A <code>plan::T</code> assembles <code>[name, cut, where]</code> (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the <code>law::T</code> declarations — never named, always computed.</td></tr>
 </tbody>
 </table>
-<p><code>Law.Helper.combiner(keyed, laws)</code> is the one function that decides a fold's recombination:</p>
+<p><code>Law.Helper.combiner(keyed, laws)</code> decides a fold's recombination, and <code>Law.Helper.lifted(keyed)</code> the one case it
+leaves out, a fold that recombines through itself after a lift:</p>
 <ul>
 <li>a fold that declares <code>monoidic</code> + <code>commutative</code> is <strong>its own</strong> combiner (<code>sum</code>, <code>prod</code>);</li>
 <li>a fold defined by its <code>derivation</code> recombines through the fold that defines it (<code>count ↦ sum</code>,
 <code>order(s) ↦ kmerge(s)</code>, and a bare <code>order()</code> ↦ <code>kmerge()</code>: an omitted argument is noobj, which the derivation's
-<code>s{?}</code> admits);</li>
-<li>a keyed fold <code>group([k ⇒ h])</code> recombines <strong>pointwise</strong> — <code>sum()==[_=&gt;combiner(h)]</code> — which no single edge names.</li>
+<code>s{?}</code> admits), when every hole it re-applies is blind to mass (<code>Law.Helper.massBlind</code>): <code>order(cc())</code> has none;</li>
+<li>a keyed fold <code>group([k ⇒ h])</code> recombines <strong>pointwise</strong> — <code>sum()==[_=&gt;combiner(h)]</code> — which no single edge names;</li>
+<li>a fold whose derivation ends in itself, <code>r ↦ ℓ·r</code>, recombines through <strong>itself after the lift</strong>: every lane runs
+<code>ℓ</code> in its place, and home runs <code>r</code> over the summaries (<code>mean</code>, entry J; <code>combiner</code> stays null for it).</li>
 </ul>
+<p>A point on the cut is a multiplicity of its answer, <code>(a+b)·r{d} = {d}((a·r + b·r)·C)</code>: no lane carries it, and
+home's combiner does, so <code>count{2}()</code> recombines through <code>sum{2}()</code> and <code>mean{2}()</code> through <code>mean{2}()</code>.</p>
 <p><code>Shard</code> extends a cut over a select that keeps a prefix (<code>==[{k}_]</code>) when the combiner declares <code>causal</code>, so the
 combiner of <code>order(s)==[{k}_]</code> is <code>kmerge(s)==[{k}_]</code> (entry K).</p>
 <h3>the theorem bindings</h3>
@@ -719,7 +724,7 @@ A ▶ play button = implemented today (it plays the pattern's cast); no play but
 <tr><td><strong>G</strong></td><td><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-dist-keyed" aria-label="watch G"><i class="bi bi-play-fill" aria-hidden="true"></i><span>G</span></button></div></td><td>keyed reduce</td><td>\(\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])\)</td><td>partials merge by key; the combiner is pointwise, computed from <code>h</code>'s</td></tr>
 <tr><td><strong>H</strong></td><td> </td><td>redundant / hedged shards</td><td>\(x \oplus x = x\)</td><td>an idempotent fold lets a part ship to r peers and every reply fold; otherwise hedge, first wins</td></tr>
 <tr><td><strong>I</strong></td><td> </td><td>span/route interpreter</td><td>\(\mathrm{plan} \mapsto \mathrm{layout}\)</td><td>the infrastructure: <code>PlanInterpreter</code> (via <code>Shard</code>) lowers a plan's axes to a layout</td></tr>
-<tr><td><strong>J</strong></td><td> </td><td>algebraic aggregates</td><td>\(\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}\)</td><td>pointwise tuple partials; the finalizer runs once at the master</td></tr>
+<tr><td><strong>J</strong></td><td> </td><td>algebraic aggregates</td><td>\(\mathrm{mean} = \ell\,\mathrm{mean},\ a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)\)</td><td>each place ships its mean weighted by its count, <code>{n}m</code>; home takes the weighted mean</td></tr>
 <tr><td><strong>K</strong></td><td> </td><td>limit / top-k push-down</td><td>\(\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)\)</td><td>each lane keeps its own top k, and the master merges and keeps k</td></tr>
 <tr><td><strong>L</strong></td><td> </td><td>mergeable sketches</td><td>\(\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)\)</td><td>a sketch fold that declares its monoid theory plugs into A, E and H</td></tr>
 <tr><td><strong>M</strong></td><td> </td><td>matrix multiplication</td><td>\(A \cdot (B + C) = A \cdot B + A \cdot C\)</td><td>O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)</td></tr>
@@ -754,7 +759,7 @@ single expression shows.</p>
 <tr><td><strong>G</strong></td><td><code>{1,2,3,4,5,6}.group([mod(3)=&gt;sum()])</code></td><td><code>branch?&lt;={0}(&lt;p_i&gt; =&gt; start?hop=0(part_i).group([mod(3)=&gt;sum()]), …).sum()==[_=&gt;sum()]</code></td></tr>
 <tr><td><strong>H</strong></td><td>a part shipped to r peers</td><td>every reply folds (at least once); non-idempotent: hedge, the first reply wins</td></tr>
 <tr><td><strong>I</strong></td><td><code>[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]</code></td><td>the plan's axes lowered over a real span <code>[(lo, hi, role)]</code></td></tr>
-<tr><td><strong>J</strong></td><td><code>{...}.mean()</code></td><td>tuple partials; the finalizer once at the master</td></tr>
+<tr><td><strong>J</strong></td><td><code>{1,1,1,5}.mean()</code></td><td><code>branch?&lt;={0}(&lt;p_i&gt; =&gt; start?hop=0(part_i).split?&lt;=int{*}([mean(),count()]).cc(_&gt;&gt;1)&gt;&gt;0, …).mean()</code></td></tr>
 <tr><td><strong>K</strong></td><td><code>{...}.order(s)==[{k}_]</code></td><td>lanes <code>order(s)==[{k}_]</code>; the master <code>kmerge(s)==[{k}_]</code>, as <code>kmerge</code> is <code>causal</code></td></tr>
 <tr><td><strong>L</strong></td><td><code>{...}.hll()</code></td><td>A, E or H once the sketch declares its monoid theory</td></tr>
 <tr><td><strong>M</strong></td><td><code>mtrx::[...].mult(mtrx::[...])</code></td><td>O + an addressed union (rows); A with the matrix sum (inner k); G over block keys (2-D)</td></tr>
@@ -778,7 +783,10 @@ is the data-index-space sibling of <code>V</code>: same &quot;nothing ships&quot
 dealt seed ships its floatable run and only the branch's merge recombines (an index set was already the cutless run
 partition). Floating is <code>Inst.isPure</code>, so an instruction handed an effect keeps the run home.
 <code>K</code> done 2026-11-20 — top-k is <code>order(s)==[{k}_]</code>, the select of <code>id()</code> slots that keeps the first k positions, and the
-cut absorbs it because <code>kmerge</code> declares <code>causal</code>; see <em>K</em> below.
+cut absorbs it because <code>kmerge</code> declares <code>causal</code>; see <em>K</em> below. Since 2026-11-22 a key that reads mass (<code>cc()</code>)
+sorts at home, where every mass is whole.
+<code>J</code> done 2026-11-22 — <code>mean ↦ ℓ·mean</code>: each lane runs the lift <code>ℓ</code>, its mean weighted by its count (<code>{n}m</code>, the
+count riding the coefficient), and home runs the weighted mean; see <em>J</em> below.
 <code>N</code> done 2026-11-22 — <code>law_bsp</code>, its own rule beside <code>law_shard</code> (Marko): a whole-frontier <code>repeat?&lt;=A{*}</code> whose code
 is pure and floatable has its code dealt over the dialed peers on every pass, the loop and its predicates home; see <em>N</em>
 below.
@@ -802,7 +810,7 @@ multiply any fan-out and <strong>composites</strong> that build on the rest. The
 <pre><code>distribution — the menu (A–W)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
 │  ├─ free · floatable (Thm 6)        → O:✅  W:✅
-│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  K:✅  J  L  H
+│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J:✅  K:✅  L  H
 │  ├─ pipeline · associative          → F
 │  └─ shuffle · keyed                 → (G's hash-route; M(3))
 ├─ by the location                (native · delegation — where the work lives)
@@ -887,7 +895,8 @@ by that machine's compiler for a machine path).</p>
 </tbody>
 </table>
 <p>The cat graph answers lazily: <code>|count?int&lt;=A{*}().as(morphism::T)&gt;&gt;analysis&gt;&gt;combiner</code> is
-<code>/m/inst/sum?rng=/m/int&amp;dom=/m/int{*}</code>. <code>mean</code> (magmadic) and <code>str</code> <code>sum</code> (not commutative) correctly do not shard.</p>
+<code>/m/inst/sum?rng=/m/int&amp;dom=/m/int{*}</code>. <code>str</code> <code>sum</code> (not commutative) correctly does not shard, and <code>mean</code>, which has
+no combiner, recombines through itself after its lift (entry J), so its morphism names none.</p>
 <p><strong><code>order</code> is the distributed sort.</strong> The lane sorts its shard and the master k-way-merges the runs — the same shard,
 with <code>kmerge</code> as the combiner instead of <code>sum</code>:</p>
 <pre><code class="language-mtron">lane_i:   start?hop=0(&lt;part_i&gt;).order(&gt;&gt;)                       [-- each shard sorts by its key --]
@@ -924,6 +933,27 @@ master:   branch?&lt;={0}&amp;split=part(&lt;p_1&gt; =&gt; start?hop=0(&lt;part_
 partials append into a bag, and a bulked partial reads as its copies (the lanes' bag bulks equal ones). <code>==[_=&gt;C]</code> is
 <code>select</code>, the per-key fold. A <code>lst</code> is an atom of the merge, so an <code>order</code>'s sorted partials bag whole per key and
 <code>kmerge</code> merges the runs.</p>
+<h4>J — algebraic aggregates (<code>mean</code>)</h4>
+<pre><code class="language-mtron">lane_i:   start?hop=0(&lt;part_i&gt;).split?&lt;=int{*}([mean(),count()]).cc(_&gt;&gt;1)&gt;&gt;0     [-- {n}m: the part's mean, weighed by its count --]
+master:   branch?&lt;={0}&amp;split=part(&lt;p_1&gt; =&gt; start?hop=0(&lt;part_1&gt;)…, &lt;p_2&gt; =&gt; …).mean()
+</code></pre>
+<p><code>mean</code> is no monoid (the mean of two means is not the mean of their union), so it has no combiner, and it recombines
+through <strong>itself after a lift</strong>. The lift <code>ℓ</code> summarizes a part as its mean weighted by its count: the split gathers
+the part (<code>?&lt;=int{*}</code>, which <code>Shard</code> keeps on the lane, where every other instruction is shipped raw), <code>cc(_&gt;&gt;1)</code> makes
+the count the coefficient, and <code>&gt;&gt;0</code> keeps the mean, the weight floating through the projection. A weighted mean
+averages to itself, so <code>mean</code> declares <code>mean ↦ ℓ·mean</code> beside itself (both overloads, int and real), and the lift is
+a self-combining fold, <code>(a+b)ℓ = (aℓ+bℓ)ℓ</code>, because the branch's merge adds the weights of equal summaries. Then
+<code>(a+b)·mean = (aℓ+bℓ)·mean</code> (<code>Law.Helper#lifted</code>): each lane runs <code>ℓ</code> in the mean's place and home runs the weighted
+mean, <code>Σnᵢmᵢ / Σnᵢ</code>. <code>{1,1,1,5}.mean()</code> deals the bulked <code>{3}1</code> to one lane whole, the lanes answer <code>{3}1.0</code> and
+<code>5.0</code>, and home answers 2.0 (a plain mean of the two answers would be 3.0).</p>
+<p>The form of the equation carries the soundness: an rhs that ends in the lhs's own fold claims the lift is a sufficient
+statistic, which the equation alone does not (the median satisfies <code>median ↦ split([median()])&gt;&gt;0·median</code> and does not
+distribute). Home runs the equation's own last fold, never the cut as written, since the summaries' type need not be
+the carrier's: an int's mean lifts to reals, which <code>mean?&lt;=int{*}()</code> would refuse. A keyed mean,
+<code>group([k=&gt;mean()])</code>, stays home for now: its lanes would need the lift per key, and <code>Law.Helper#combiner</code> (which the
+pointwise merge reads) stays null for <code>mean</code>. A tree (<code>mean?hop=2()</code>) answers as at home, but a peer re-plans only
+the floatable run before the lift: the lift is a split and a projection, no cut, so each peer gathers its children's
+members and lifts them itself rather than recombining their summaries.</p>
 <h4>K — top-k push-down (<code>order(s)==[{k}_]</code>)</h4>
 <pre><code class="language-mtron">lane_i:   start?hop=0(&lt;part_i&gt;).order(s)==[{k}_]                       [-- each lane keeps its own first k --]
 master:   branch?&lt;={0}&amp;split=part(&lt;p_1&gt; =&gt; start?hop=0(&lt;part_1&gt;)…, &lt;p_2&gt; =&gt; …).kmerge(s)==[{k}_]
@@ -952,6 +982,16 @@ bag the second cut deals. <code>{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]&
 and is <code>[-2,-3]</code>: the map over the lst and the <code>&gt;-</code> stay home, since one obj has nothing to deal, and a map written
 after the <code>&gt;-</code> (<code>&gt;-.mult(-1)</code>) ships with the second sort. Without the <code>&gt;-</code>, the second sort meets the lst alone and
 stays home (<code>[[-5,-4,-3,-2]]</code>).</p>
+<p><strong>A key that reads mass sorts at home.</strong> A sort compares each member by its key, and a floatable key reads the
+member's value, never its mass (Thm 6: <code>{n}v·f = {n}(v·f)</code>). <code>cc()</code> reads the mass, and a shard parts a value's mass
+across its lanes, <code>{n₁}v</code> in one and <code>{n₂}v</code> in another, so each lane would sort by a mass the branch's merge then
+changes (<code>{[{2}2,{3}1],[{2}2,{3}3]}.kmerge(cc())</code> is <code>[{4}2,{3}3,{3}1]</code>, out of order). So <code>order(s)</code>'s derivation
+recombines only a key blind to mass (<code>Law.Helper.massBlind</code>: each instruction has a contract that floats and none that
+reduces, and so does every code it is handed). For <code>order(cc())</code> the cut is gone: the run before it ships (W), the
+merge adds equal members' masses, and home sorts by whole masses.
+<code>{11,21,31,41,12,22,13}.mod(10).order(cc())==[{1}_]</code> ships <code>mod(10)</code> and answers <code>[3]</code>, as at home. The books for
+top-k by mass are the bulked part, bounded by the distinct members. Shipping fewer is a threshold algorithm's job
+(TPUT, Cao and Wang), a multi-round exchange the branch does not have yet.</p>
 <h4>N — iterative / BSP (<code>repeat?&lt;=A{*}</code>, <code>law_bsp</code>)</h4>
 <p><code>repeat</code> has two readings, and its <strong>dom coefficient</strong> picks one (Marko, 2026-11-22). With the default dom of one,
 <code>repeat</code> loops one monad at a time, the way a traverser walks: each monad runs its passes alone and the processor
@@ -996,7 +1036,8 @@ bothE, inV, outV, bothV), so <code>*g:V/+.repeat?&lt;=A{*}(code=&gt;both(),until
 On peers that boot the same graph at the same route (<code>boot/space/grph/peer.boot.mtron</code>), a dealt vertex binds to the
 peer's copy by its id. The walk counts the walks of length five ending at each vertex, \((A^{5}\mathbf{1})_v\): <code>{99}</code>
 for marko, lop and josh, <code>{41}</code> for vadas, ripple and peter, six bulked members carrying 420 walks.</li>
-<li><strong>The topology draws the loop.</strong> <code>explain()&gt;&gt;ext/topology/format</code> draws a repeat as its body once with a back edge
+<li><strong>The topology draws the loop.</strong> <code>explain()&gt;&gt;format</code> draws it under the plan (the extension alone is
+<code>explain()&gt;&gt;ext/topology/format</code>): a repeat is its body once, with a back edge
 from the exit to the entry. Here <code>{1,2,3}.repeat?&lt;=int{*}(code=&gt;plus(1),…)</code> is dealt over two peers: each member
 reaches a lane at most once (<code>{0,3}</code>), the lanes add where they merge (<code>{0,6}</code>), and the repeat answers any number
 (<code>{*}</code>):</li>

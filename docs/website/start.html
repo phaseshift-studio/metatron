@@ -563,6 +563,17 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 into two results — hence <code>[3,4]</code>. Everything in mtron is built from two operators:
 <code>*</code> composes instructions and <code>+</code> branches them.</p>
 </div>
+<div class="paragraph">
+<p>The same two operators describe a running program: the code is a graph of
+instructions, and a <strong>monad</strong> walks it, carrying the current value — forking wherever
+the code branches.</p>
+</div>
+<div class="text-center my-4">
+  <img src="images/code-structure.svg" alt="code structure: start, plus(1), split([plus(3), plus(2)]) branching into plus(3) and plus(2)" class="img-fluid" style="max-width: 520px;" />
+  <div class="small text-light opacity-75 mt-2">the code — `*` composes, `+` branches</div>
+  <img src="images/monad-propagation.svg" alt="a monad carrying int::5 through plus(1) to int::6, forking at split into int::9 and int::8" class="img-fluid mt-4" style="max-width: 520px;" />
+  <div class="small text-light opacity-75 mt-2">a monad propagates — and forks where the code branches</div>
+</div>
 <h3 id="sec-the-console" class="discrete">The console</h3>
 <div class="paragraph">
 <p>For interactive use, the console is a REPL with syntax highlighting,

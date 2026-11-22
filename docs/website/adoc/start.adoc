@@ -83,6 +83,19 @@ $ bin/metatron -e "1-<[+2,+3]"
 into two results — hence `[3,4]`. Everything in mtron is built from two operators:
 `*` composes instructions and `+` branches them.
 
+The same two operators describe a running program: the code is a graph of
+instructions, and a **monad** walks it, carrying the current value — forking wherever
+the code branches.
+
+++++
+<div class="text-center my-4">
+  <img src="images/code-structure.svg" alt="code structure: start, plus(1), split([plus(3), plus(2)]) branching into plus(3) and plus(2)" class="img-fluid" style="max-width: 520px;" />
+  <div class="small text-light opacity-75 mt-2">the code — `*` composes, `+` branches</div>
+  <img src="images/monad-propagation.svg" alt="a monad carrying int::5 through plus(1) to int::6, forking at split into int::9 and int::8" class="img-fluid mt-4" style="max-width: 520px;" />
+  <div class="small text-light opacity-75 mt-2">a monad propagates — and forks where the code branches</div>
+</div>
+++++
+
 [discrete]
 === The console
 

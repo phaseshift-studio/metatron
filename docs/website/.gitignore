@@ -3,6 +3,9 @@
 # ...except these pages
 !/index.html
 !/start.html
+# ...the site's own image assets (character, icons, diagrams): source, committed —
+# the article figures live under articles/, everything else lives here.
+!/images/
 # ...the tractatus: a static redirect to the landing grid below (the old single
 # super-page is gone), plus one page per section rendered by AsciiDocRunner from
 # docs/website/adoc/tractatus.adoc + the section .adoc files
