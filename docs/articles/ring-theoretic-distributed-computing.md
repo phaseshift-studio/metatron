@@ -205,10 +205,9 @@ Each place ships its summary, and home takes the weighted mean. `mean` declares 
 $\mathrm{mean} \mapsto \ell\,\mathrm{mean}$, with $\ell$ written `split?<=int{*}([mean(),count()]).cc(_>>1)>>0`: the
 split gathers the part, `cc` makes its count the coefficient, and the projection keeps the mean, the weight floating
 through it (Theorem 6). In this form the declaration states more than the equation: that $\ell$ is a sufficient
-statistic, itself a cut. The
-equation alone holds of the median too, $\mathrm{median}(\{\mathrm{median}(a)\}) = \mathrm{median}(a)$, and the median
-does not distribute. This is the menu's entry J, an *algebraic* aggregate in the sense of Gray et
-al. [[4]](#references): a summary of fixed size per part, and a finalizer at home.
+statistic, itself a cut. The equation alone holds of the median too,
+$\mathrm{median}(\{\mathrm{median}(a)\}) = \mathrm{median}(a)$, and the median does not distribute: its books are its
+whole part (*Bookkeeping Data Structures*). This is the menu's entry J.
 
 ```mtron_pre
 {1,1,1,5}.mean()
@@ -498,6 +497,48 @@ This is the embarrassingly parallel pattern: the program is the `branch` and not
 every instruction in it is pure, and so is every code it is handed, so a filter handed a `print` stays home. An effect
 between two runs brings the members home, where it runs once over the merged bag, and the run after it goes out
 again on a branch of its own.
+
+## Bookkeeping Data Structures
+
+A fold need not be a monoid to distribute. It is enough that it *keeps books*: a summary of each part that combines as
+a commutative monoid does, from which the answer is read once at the end. Write $\ell$ for writing the books and
+$\varphi$ for reading them:
+
+$$
+r = \ell\,\varphi, \quad (a + b)\,\ell = a\,\ell \oplus b\,\ell
+\quad\Longrightarrow\quad
+(s_1 + \cdots + s_k)\,r = (s_1\,\ell \oplus \cdots \oplus s_k\,\ell)\,\varphi.
+$$
+
+Each place writes the books of its part, the books travel home and combine, and home reads the answer. The shape is
+still the star; only what travels changes.
+
+| fold                    | books $a\,\ell$                        | $\oplus$                      | $\varphi$                                 |
+|-------------------------|----------------------------------------|-------------------------------|-------------------------------------------|
+| `sum`                   | $\sum a$                               | $+$                           | $\mathrm{id}$                             |
+| `mean`                  | $\{\lvert a\rvert\}\,\mathrm{mean}(a)$ | the stream's sum, then $\ell$ | `mean`                                    |
+| variance                | $(\lvert a\rvert, \sum a, \sum a^2)$   | componentwise $+$             | $(n, s_1, s_2) \mapsto s_2/n - (s_1/n)^2$ |
+| top-$k$                 | the $k$ least of $a$, sorted           | merge and keep $k$            | $\mathrm{id}$                             |
+| distinct count, approx. | a sketch of $a$                        | the sketch's union            | its estimate                              |
+| median                  | $a$ itself                             | the stream's sum              | the middle member                         |
+
+Gray et al. sort aggregates by the size of their books [[4]](#references): *distributive* when the books are the
+answer (`sum`, `count`, `max`), *algebraic* when they are a bounded tuple of distributive books (`mean`, variance,
+top-$k$), and *holistic* when no bound holds (the median, the mode, an exact distinct count). A holistic fold's books
+are its whole part, so a star would ship every member and save nothing: it stays home, unless a sketch trades
+exactness for bounded books (L).
+
+**The coefficient is a ledger.** A conventional engine keeps `mean`'s books as a pair, a sum and a count, with a
+combiner of its own. The stream ring needs neither, since every obj already carries a count, its coefficient. So
+`mean`'s books are a single obj, $\{n\}m$, the mean weighted by its count:
+
+```mtron_pre
+{1,1,2}.split?<=int{*}([mean(),count()]).cc(_>>1)>>0
+```
+
+Their $\oplus$ is the stream's own sum, which adds the weights of equal means, and `mean` reads the merged books
+without writing them again, since $\mathrm{mean} = \ell\,\mathrm{mean}$. So `mean` recombines through itself (*The
+Shard Identity*), and entry J needs no data structure the stream ring does not already have.
 
 ## The Menu
 
