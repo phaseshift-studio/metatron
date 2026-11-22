@@ -252,6 +252,30 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
     }
 
     /**
+     * AN ANSWER KEEPS ITS OWN VID. The trip's tag rides the answer's vid as its last segment, a hex literal
+     * ({@code /sys/trip/own/0xa3f91c2b}), and the client's air lock retracts it, so an answer the far side addressed
+     * arrives addressed. A lane that answered one graph element ({@code @g:V/1}) used to arrive detached, because the
+     * tag REPLACED its vid and the client then stripped the tag (Marko, 2026-11-22). An answer with no address arrives
+     * with none.
+     */
+    @Training.SkipTraining(reason = "the scenario is a Java client's round trip")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.vid(</sys/trip/own>)                     % 5@</sys/trip/own>",
+            "34                                         % 34",
+            "plus(1)                                    % noobj",
+    }, delimiter = '%')
+    void testAnAnswerKeepsItsOwnVid(final String code, final String expected) {
+        try (final RoundTripClient client = this.roundTripClient()) {
+            final Obj reply = FutureObj.resolveFuture(client.wsRec.sendRecv(ObjmtronSerializer.parse(code), 15_000L));
+            final Obj expect = ObjmtronSerializer.parse(expected);
+            checkEquality(LOG, expect, reply, true);
+            // the address is the point: the answer's own vid, or none at all, never the trip's placeholder
+            checkEquality(LOG, uri(String.valueOf(expect.vid())), uri(String.valueOf(reply.vid())), true);
+        }
+    }
+
+    /**
      * A FAIL COMES BACK AS THE PEER'S FAIL. The far side catches a fail before answering (an uncaught fail would skip
      * the handler's function — no reply at all), and catching used to DROP THE ADDRESS ({@code MCaughtFail}
      * forced a null vid), so the frame could not be matched to its trip and the caller saw a deadline instead of the

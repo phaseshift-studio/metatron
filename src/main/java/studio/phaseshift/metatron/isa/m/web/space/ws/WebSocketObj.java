@@ -292,7 +292,8 @@ public interface WebSocketObj extends Rec, Closeable {
         final boolean minted = !message.hasVID();
         // a RELATIVE vid: it resolves on the receiving thread's variableStack rather than in anyone's space,
         // and the collision retry reads this thread's stack -- the only place it could clash
-        final fURI tag = minted ? CommonUtil.mintShortUUID(null, true) : message.vid();
+        // a HEX segment, 0x and the minted id, which the air lock recognizes as the trip on the way back (untagged)
+        final fURI tag = minted ? CommonUtil.mintShortUUID(null, true, true) : message.vid();
         final Obj payload = minted ? this.tagged(message, tag) : message;
         this.router();
         final Waiter waiter = Waiter.of();
@@ -336,7 +337,7 @@ public interface WebSocketObj extends Rec, Closeable {
                     final Obj reply = waiter.obj().get();
                     // a fail keeps the address its stack gave it: stripping the vid is for a VALUE whose vid is
                     // only the trip's minted tag, and a fail's address is never that (see router())
-                    return minted && !reply.isFail() && !reply.isCaughtFail() ? reply.clone().selfVID(null) : reply;
+                    return minted && !reply.isFail() && !reply.isCaughtFail() ? untagged(reply) : reply;
                 }), payload)
                 // the future gives up AFTER the inner wait, so the deadline is reported as the fail the round
                 // trip raised rather than as a bare inspection timeout
@@ -344,16 +345,39 @@ public interface WebSocketObj extends Rec, Closeable {
     }
 
     /**
-     * THE TAG RIDES THE QUESTION — a request is not labelled, it is asked to label its own answer. Appending
-     * {@code vid(<tag>)} (an endo {@code A → A}) to the shipped chain means the peer anchors its result by
-     * simply evaluating the code it was handed: {@code … .sum().vid(<a3f91c2b>)} answers {@code 14@a3f91c2b}.
-     * So correlation needs no envelope, no wire field and no cooperation from the far side — a peer that knows
-     * nothing about round-trip matching tags correctly by accident, because tagging IS the computation.
+     * THE TAG RIDES THE QUESTION — a request is not labelled, it is asked to label its own answer. The shipped
+     * program is wrapped as {@code reply(<program>, <tag>)}, so the peer addresses its result by simply evaluating the
+     * code it was handed: {@code reply(….sum(), <0xa3f91c2b>)} answers {@code 14@0xa3f91c2b}, and an answer with an
+     * address of its own keeps it, the tag riding as its last segment: {@code g:V/1/0xa3f91c2b}. So correlation needs
+     * no envelope and no wire field, and the tag never replaces an answer's vid ({@link #untagged} strips it).
      * <p>
-     * A message that is not code has no chain to append to, so it carries the vid on itself instead.
+     * A message that is not code has no chain to wrap, so it carries the tag as its vid instead.
      */
     default Obj tagged(final Obj message, final fURI tag) {
         return message.isCall() ? instB(REPLY_INST_TID, lst(message, uri(tag))) : message.clone().selfVID(tag);
+    }
+
+    /**
+     * THE TRIP THAT AN INBOUND FRAME ANSWERS: its vid's last segment when that is a hex literal ({@code g:V/1/0xa3f91c2b},
+     * or the bare {@code 0xa3f91c2b} of an answer with no vid), else the vid itself (an addressed request is correlated
+     * by its own address, which the far side answers under). Null for a frame with no vid.
+     */
+    static fURI tripOf(final fURI vid) {
+        return null == vid ? null : CommonUtil.isHex(vid.name()) ? f(vid.name()) : vid;
+    }
+
+    /**
+     * THE AIR LOCK: the trip's tag comes off and the answer's own vid stays. A minted trip's reply carries its tag as
+     * the vid's last segment, a hex literal (Marko, 2026-11-22); retracting it hands the caller the answer as the far
+     * side addressed it, {@code g:V/1} for a graph element and no vid for an answer that had none. A frame whose vid
+     * has no hex segment carries only the trip, and leaves with no vid.
+     */
+    static Obj untagged(final Obj reply) {
+        final fURI vid = reply.vid();
+        if (null == vid || !CommonUtil.isHex(vid.name()))
+            return reply.clone().selfVID(null);
+        final fURI own = vid.retract(1);
+        return reply.clone().selfVID(own.isEmpty() ? null : own);
     }
 
     /**
@@ -432,7 +456,11 @@ public interface WebSocketObj extends Rec, Closeable {
             this.at(uri(ON_MESSAGE), instLambda((lhs, inst) -> {
                 final Map<fURI, Waiter> waiters = WAITERS.computeIfAbsent(this, k -> new ConcurrentHashMap<>());
                 final fURI vid = lhs.vid();
-                Waiter waiter = null == vid ? null : waiters.remove(vid);
+                final fURI trip = tripOf(vid);
+                Waiter waiter = null == trip ? null : waiters.remove(trip);
+                // an addressed request whose own address happens to end in a hex segment is correlated by the whole vid
+                if (null == waiter && null != vid && !vid.equals(trip))
+                    waiter = waiters.remove(vid);
                 final boolean byVid = null != waiter;
                 if (null == waiter && null == vid && 1 == waiters.size())
                     waiter = waiters.remove(waiters.keySet().iterator().next());
