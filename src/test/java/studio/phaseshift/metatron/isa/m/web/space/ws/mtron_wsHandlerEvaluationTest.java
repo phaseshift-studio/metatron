@@ -53,6 +53,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
@@ -272,6 +275,26 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
             checkEquality(LOG, expect, reply, true);
             // the address is the point: the answer's own vid, or none at all, never the trip's placeholder
             checkEquality(LOG, uri(String.valueOf(expect.vid())), uri(String.valueOf(reply.vid())), true);
+        }
+    }
+
+    /**
+     * THE CLIENT READS A REPLY WITHOUT A WRITE. The far side keeps its answer where it stores it ({@code 5.vid(...)}
+     * writes 5 at {@code /sys/trip/unstored}) and answers it tagged, {@code 5@/sys/trip/unstored/0x…}. The tagged
+     * address exists only in the frame, so anything stored under it was stored by the client's read. The client
+     * binds {@code Obj.Helper.SELF_VID} around each frame it reads ({@code WebSocketRecClient.onMessage}), so nothing
+     * is, and no rule about the tag is needed (Marko, 2026-11-22).
+     */
+    @Training.SkipTraining(reason = "the scenario is a Java client's round trip")
+    @Test
+    void testTheClientReadsAReplyWithoutAWrite() {
+        try (final RoundTripClient client = this.roundTripClient()) {
+            final Obj reply = FutureObj.resolveFuture(client.wsRec.sendRecv(ObjmtronSerializer.parse("5.vid(</sys/trip/unstored>)"), 15_000L));
+            checkEquality(LOG, jnt(5).selfVID(f("/sys/trip/unstored")), reply, true);
+            final Obj underTheTag = Machine.read(f("/sys/trip/unstored/+"));
+            assertTrue(underTheTag.isNoObj(), "the client's read stored the tagged answer: " + underTheTag);
+        } finally {
+            Machine.write(f("/sys/trip/unstored"), noobj());
         }
     }
 

@@ -129,21 +129,81 @@ public class ReplyInstTest extends AbstractMetatronTest {
     }
 
     /**
-     * A HEX-TAGGED VID IS NEVER STORED. A client evaluates the reply frames it reads, and an addressed literal stores its
-     * value at its vid; a reply's vid carries its trip's tag as a hex last segment, so storing it wrote a peer's answer
-     * into the client's own spaces, a vertex into the master's graph at {@code V/1/0x…} (Marko, 2026-11-22). The tagged
-     * literal keeps its vid and stores nothing; the same literal without the tag still stores, the contrast.
+     * The client's reply read: the frame evaluated with {@link Obj.Helper#SELF_VID} bound, as
+     * {@code WebSocketRecClient.onMessage} reads it ({@code mtron_wsHandlerEvaluationTest} pins that the client binds it).
+     */
+    private static Obj replyRead(final String frame) {
+        return ScopedValue.where(Obj.Helper.SELF_VID, true).call(() -> ObjmtronSerializer.single().read(frame));
+    }
+
+    /**
+     * A REPLY READ STORES NOTHING, starting with the trip's tag. A client evaluates the reply frames it reads, and an
+     * addressed literal stores its value at its vid: a reply carries its trip's tag as the vid's hex last segment, and
+     * storing it wrote a peer's answer into the client's own spaces, a vertex into the master's graph at
+     * {@code V/1/0x…} (Marko, 2026-11-22). Read as a reply, the literal keeps its vid and stores nothing.
      */
     @Test
-    void testAHexTaggedVidIsNeverStored() {
+    void testATaggedAnswerIsReadWithoutAWrite() {
         final fURI tagged = f("/sys/anchor/stored/0xe2");
-        final Obj read = ObjmtronSerializer.single().read("5@</sys/anchor/stored/0xe2>");
-        checkEquality(LOG, jnt(5).selfVID(tagged), read, true);
+        checkEquality(LOG, jnt(5).selfVID(tagged), replyRead("5@</sys/anchor/stored/0xe2>"), true);
         checkEquality(LOG, noobj(), Machine.read(tagged), true);
-        // the contrast: an untagged addressed literal stores its value, and reads back addressed
+    }
+
+    /**
+     * AN ANSWER'S MEMBERS ARE READ WITHOUT A WRITE. A lane that answers several objs ({@code //1 => @g:V/+}) comes back
+     * as one answer whose root carries the tag while each member keeps its own vid, so a rule about the tag never saw
+     * them: each member was written into the client's spaces (the master's graph at {@code V/1}, {@code V/2}, ...).
+     * The far side's copies are deleted before the read, so only the read could put them back.
+     */
+    @Test
+    void testAnAnswersMembersAreReadWithoutAWrite() {
+        final fURI a = f("/sys/anchor/members/a");
+        final fURI b = f("/sys/anchor/members/b");
+        Machine.write(a, jnt(5));
+        Machine.write(b, jnt(6));
+        final String frame = ObjmtronSerializer.single().write(Machine.evaluate("reply(@</sys/anchor/members/+>, <0xe4>)"));
+        LOG.debug("an answer of two addressed members on the wire: %s", frame);
+        assertTrue(frame.contains("/sys/anchor/members/a") && frame.contains("/sys/anchor/members/b"),
+                "the members must travel addressed, or this test proves nothing: " + frame);
+        Machine.write(a, noobj());
+        Machine.write(b, noobj());
+        final Obj read = replyRead(frame);
+        LOG.debug("the members read back: %s", read);
+        assertTrue(read.toString().contains("/sys/anchor/members/a") && read.toString().contains("/sys/anchor/members/b"),
+                "the members keep their own vids: " + read);
+        checkEquality(LOG, noobj(), Machine.read(a), true);
+        checkEquality(LOG, noobj(), Machine.read(b), true);
+    }
+
+    /**
+     * A CONSTRUCTED ANSWER IS READ WITHOUT A WRITE. A literal whose type has a constructor ({@code int::T[?>0][plus(1)]}:
+     * the first bracket the predicate, the second the constructor) is stored by {@code Obj.Helper.construct}, not by
+     * {@code objCheckAndSave}, so a guard in the save step alone never saw it.
+     */
+    @Test
+    void testAConstructedAnswerIsReadWithoutAWrite() {
+        Machine.evaluate("int::T[?>0][plus(1)]@wnat");
+        final fURI tagged = f("/sys/anchor/ctor/0xe3");
+        final Obj read = replyRead("wnat::2@</sys/anchor/ctor/0xe3>");
+        LOG.debug("a constructed answer read back: %s", read);
+        assertEquals(3, read.asInt().intValue(), "the constructor ran, so the read took the construct path: " + read);
+        checkEquality(LOG, noobj(), Machine.read(tagged), true);
+    }
+
+    /**
+     * THE CONTRAST: outside a reply read, {@code @} stores, as the language says. That holds for an address whose last
+     * segment is a hex literal too (an i2c register, {@code </i2c/0x48>}): the tag is recognized by the client's air
+     * lock, never by the save step, so no real address is silently left unstored.
+     */
+    @Test
+    void testOutsideAReplyReadAnAddressedLiteralStores() {
         final fURI plain = f("/sys/anchor/stored/plain");
         ObjmtronSerializer.single().read("6@</sys/anchor/stored/plain>");
         checkEquality(LOG, jnt(6).selfVID(plain), Machine.read(plain), true);
         Machine.write(plain, noobj());
+        final fURI register = f("/sys/anchor/i2c/0x48");
+        ObjmtronSerializer.single().read("7@</sys/anchor/i2c/0x48>");
+        checkEquality(LOG, jnt(7).selfVID(register), Machine.read(register), true);
+        Machine.write(register, noobj());
     }
 }
