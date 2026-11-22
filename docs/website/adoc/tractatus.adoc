@@ -128,11 +128,11 @@ include::grid-button.adoc[]
 :card-state-attrs:
 include::grid-button.adoc[]
 
-// --- chapter 12: fs --------------------------------------------------
+// --- chapter 12: fs (draft) ------------------------------------------
 :card-title: fs
 :card-file: fs
-:card-state:
-:card-state-attrs:
+:card-state: tractatus-draft
+:card-state-attrs: aria-disabled="true" tabindex="-1" title="in progress"
 include::grid-button.adoc[]
 
 // --- chapter 13: math ------------------------------------------------

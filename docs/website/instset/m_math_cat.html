@@ -220,12 +220,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
                             alt="grph"/>/m/db/grph</a></li>
-                    <li class="article-row">
-                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
-                                src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
-                                alt="tble"/>/m/db/tble</a>
-                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
-                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/db/tble</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
@@ -269,24 +266,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 alt="geo"/>/m/math/geo</a>
                         <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
                     </li>
-                    <li class="article-row">
-                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
-                                src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
-                                alt="sys"/>/m/sys</a>
-                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
-                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
                                 src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
                                 alt="ui"/>/m/sys/ui</a>
                         <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
                     </li>
-                    <li class="article-row">
-                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
-                                src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                                alt="web"/>/m/web</a>
-                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">doc</a></span>
-                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                            src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
                 </ul>
             </li>
             <!-- INSTSET-MENU:END -->
@@ -356,12 +347,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -548,8 +534,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/math/cat::[pattern=&gt;/m/math/cat/#,
-              q=&gt;[
+                        <pre><code>/m/math/cat::[q=&gt;[
                docq::[
                 pattern=&gt;docq,
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -561,9 +546,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                 obj=&gt;/m/instset::[q=&gt;[,]]]],
-              rewrite=&gt;[
-               /m/math/cat/inst/rewrite/law_bsp?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}],
+              pattern=&gt;/m/math/cat/#,
               inst=&gt;[
                lower?path&lt;=path(plan::T){&lt;j&gt;},
                bind?path&lt;=path(plan::T){&lt;j&gt;},
@@ -572,6 +555,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                as?path&lt;=#(path::T){&lt;j&gt;},
                as?abstraction&lt;=#(abstraction::T){&lt;j&gt;},
                as?place&lt;=#(place::T){&lt;j&gt;}],
+              rewrite=&gt;[
+               /m/math/cat/inst/rewrite/law_bsp?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}],
               type=&gt;[
                rec[obj]::T[?[
                 obj=&gt;&lt;#&gt;::T,
@@ -819,8 +805,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#theory" class="text-light">theory</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
-  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
+  <a href="#theory" class="text-light">theory</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
   <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
 </pre>
 </div>
@@ -858,13 +844,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> code as a categorical path incident to iso-semantic rewritten forms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#uri{?}::T" class="text-light">uri{?}::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\) of the machine's rewrite pool, keyed by the rule's name and holding its \(\mathrm{name}\) and its \(\mathrm{result}\), the vertex \(r(p)\); a rule is live on \(p\) iff \(r(p) 
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
+  <a href="#uri{?}::T" class="text-light">uri{?}::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\) of the machine's rewrite pool, keyed by the rule's name and holding its \(\mathrm{name}\) and its \(\mathrm{result}\), the vertex \(r(p)\); a rule is live on \(p\) iff \(r(p) 
 eq p\), so a normal form has no edge"" class="text-info">&quot;one out-edge per live rewrite \(r\) of the machine&#39;s rewrite pool, keyed by the rule&#39;s name and holding its \(\mathrm{name}\) and its \(\mathrm{result}\), the vertex \(r(p)\); a rule is live on \(p\) iff \(r(p) 
 eq p\), so a normal form has no edge&quot;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
-  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
-  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
   <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
+  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__place">
