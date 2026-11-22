@@ -1112,7 +1112,10 @@ public enum Law {
                 return null;
             final Inst derived = derivation.atDirect(uri(LHS)).asCode().insts().getLast();
             final List<Inst> rhs = derivation.atDirect(uri(RHS)).asCode().insts();
-            if (2 > rhs.size() || !Inst.Helper.sameOp(derived, rhs.getLast()) || null == Code.Helper.bind(List.of(keyed), List.of(derived)))
+            // a lift that already ends in the fold (r ↦ …·r·r) ships the fold's plain partials, which is self-combining
+            // and is declared by laws, never by this form: the median and an unweighted mean would pass as sound
+            if (2 > rhs.size() || !Inst.Helper.sameOp(derived, rhs.getLast()) || Inst.Helper.sameOp(derived, rhs.get(rhs.size() - 2))
+                    || null == Code.Helper.bind(List.of(keyed), List.of(derived)))
                 return null;
             return code(Call.Helper.update(List.of(keyed), rec(code(List.of(derived)), code(rhs))));
         }

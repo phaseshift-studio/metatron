@@ -167,12 +167,15 @@ public class SplitLegalityTest extends AbstractMetatronTest {
 
     /**
      * COPY ON A NON-IDEMPOTENT FOLD DECLINES — {@code sum}'s partials would double count if the seed were replicated,
-     * so the decision is the IDENTITY: the chain that already stands here, byte for byte, and nothing ships.
+     * so the decision is the IDENTITY: the chain that already stands here, byte for byte, and nothing ships. A lifted
+     * cut ({@code mean}, which recombines its lanes' summaries through itself) has no combiner to declare idempotent and
+     * declines too; it once reached the idempotence test with none and threw, failing the whole chain's plan.
      */
     @Test
     void testCopyOnSumDeclines() {
         declines("start?split=copy({1,2,3,4,5,6}).plus(1).sum()");
         declines("start?split=copy({1,2,3,4,5,6}).count()");
+        declines("start?split=copy({1,2,3,4,5,6}).mean()");
     }
 
     /**

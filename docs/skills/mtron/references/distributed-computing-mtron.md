@@ -39,13 +39,19 @@ menu, fix the five pieces a row names:
 | `instset::T`                   | `/m/math/cat`         | the declaration surface. `object::T` holds a type's structural theories; `morphism::T` holds an inst's process laws, `form`, `class`, and `analysis`; `path::T` lifts *code* to a vertex whose out-edges are the live rewrite rules, each a `plan::T`. `lower(plan::T)` and `bind(plan::T)` are the two applications.                                                                               |
 | `law::T`, `plan::T`, `path::T` | —                     | the engine. A `plan::T` assembles `[name, cut, where]` (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the `law::T` declarations — never named, always computed.                                                                                                                                        |
 
-`Law.Helper.combiner(keyed, laws)` is the one function that decides a fold's recombination:
+`Law.Helper.combiner(keyed, laws)` decides a fold's recombination, and `Law.Helper.lifted(keyed)` the one case it
+leaves out, a fold that recombines through itself after a lift:
 
 - a fold that declares `monoidic` + `commutative` is **its own** combiner (`sum`, `prod`);
 - a fold defined by its `derivation` recombines through the fold that defines it (`count ↦ sum`,
   `order(s) ↦ kmerge(s)`, and a bare `order()` ↦ `kmerge()`: an omitted argument is noobj, which the derivation's
   `s{?}` admits);
-- a keyed fold `group([k ⇒ h])` recombines **pointwise** — `sum()==[_=>combiner(h)]` — which no single edge names.
+- a keyed fold `group([k ⇒ h])` recombines **pointwise** — `sum()==[_=>combiner(h)]` — which no single edge names;
+- a fold whose derivation ends in itself, `r ↦ ℓ·r`, recombines through **itself after the lift**: every lane runs
+  `ℓ` in its place, and home runs `r` over the summaries (`mean`, entry J; `combiner` stays null for it).
+
+A point on the cut is a multiplicity of its answer, `(a+b)·r{d} = {d}((a·r + b·r)·C)`: no lane carries it, and
+home's combiner does, so `count{2}()` recombines through `sum{2}()` and `mean{2}()` through `mean{2}()`.
 
 `Shard` extends a cut over a select that keeps a prefix (`==[{k}_]`) when the combiner declares `causal`, so the
 combiner of `order(s)==[{k}_]` is `kmerge(s)==[{k}_]` (entry K).
@@ -401,7 +407,8 @@ The combiner is computed, never declared — see `Law.Helper.combiner` above:
 | rec `sum`     | itself      | the deep merge's fold declares `monoidic` + `commutative` — a `lst` is its atom, so colliding values bag in any order                    |
 
 The cat graph answers lazily: `|count?int<=A{*}().as(morphism::T)>>analysis>>combiner` is
-`/m/inst/sum?rng=/m/int&dom=/m/int{*}`. `mean` (magmadic) and `str` `sum` (not commutative) correctly do not shard.
+`/m/inst/sum?rng=/m/int&dom=/m/int{*}`. `str` `sum` (not commutative) correctly does not shard, and `mean`, which has
+no combiner, recombines through itself after its lift (entry J), so its morphism names none.
 
 **`order` is the distributed sort.** The lane sorts its shard and the master k-way-merges the runs — the same shard,
 with `kmerge` as the combiner instead of `sum`:
