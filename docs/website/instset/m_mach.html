@@ -294,7 +294,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="../tractatus.html">the
+                <a class="nav-link" href="../tractatus/index.html">the
                     tractatus</a>
             </li>
             <!-- SKILLS-MENU:START -->
@@ -328,7 +328,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
@@ -528,7 +527,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">41</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">10</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 18, 2026</span>
+            <span class="instset-built">built November 22, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -617,7 +616,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}result=&gt;&lt;#&gt;::T,
                {?}cut=&gt;[
                 {?}form=&gt;uri::T,
-                {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+                {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
                 {?}role=&gt;uri::T],
                {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                               {?}target=&gt;&lt;#&gt;::T,
@@ -991,10 +990,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> the compiler contract of machine::T — a machine&#39;s lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=&gt;] is the default compiler.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
+  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
   <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
   <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#"the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine's {@code __compiler__typer__check}, not a global registry"" class="text-info">check}, not a global registry&quot;</a>
-  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1045,7 +1044,7 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
- {?}runtime=&gt;real::T@/m/math/time,
+ {?}runtime=&gt;&lt;#&gt;::T,
  {?}yield=&gt;/m/mach/thread::T,
  {?}loop=&gt;real::T@/m/math/time,
  {?}timeout=&gt;real::T@/m/math/time,
@@ -1278,9 +1277,9 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#"this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket"" class="text-info">&quot;this machine&#39;s routing table on the socket, &lt;path&gt; =&gt; target; a connection is answered by the most specific route across every machine sharing the socket&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#server" class="text-light">server</a> <span class="text-light">=&gt;</span> <a href="#"the protocol server holding the socket — held so the owner's pop can release the port"" class="text-info">&quot;the protocol server holding the socket — held so the owner&#39;s pop can release the port&quot;</a>
+  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#"this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket"" class="text-info">&quot;this machine&#39;s routing table on the socket, &lt;path&gt; =&gt; target; a connection is answered by the most specific route across every machine sharing the socket&quot;</a>
   <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the socket's service uri as spelled, scheme:____host:port — the map key is its path encoding (`ws__localhost__8555`): one socket per authority on a physical machine"" class="text-info">8555`): one socket per authority on a physical machine&quot;</a>
-  <a href="#server" class="text-light">server</a> <span class="text-light">=&gt;</span> <a href="#"the protocol server holding the socket — held so the owner's pop can release the port"" class="text-info">&quot;the protocol server holding the socket — held so the owner&#39;s pop can release the port&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1400,11 +1399,11 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
                    free_groupoid=&gt;group_theory::[
                     objects=&gt;/m/mach/machine,
                     morphisms=&gt;/m/uri,
-                    op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
+                    op=&gt;!*/m/inst/mult?rng=/m/uri&amp;dom=/m/uri,
                     id=&gt;&lt;.&gt;,
                     inv=&gt;&lt;..&gt;],
                    mul_monoid=&gt;monoid_theory::[
-                    op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
+                    op=&gt;!*/m/inst/mult?rng=/m/uri&amp;dom=/m/uri,
                     id=&gt;&lt;.&gt;]],
                   morphed_to=&gt;!λ(){&lt;j&gt;},
                   morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -1566,9 +1565,9 @@ reference that crossed a wire, known here and not reachable from here.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the service this peer reaches, scheme:____host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without"" class="text-info">host:port — the map key is the dial&#39;s path encoding, this is the service, and the one field a peer cannot do without&quot;</a>
-  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
+  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the service this peer reaches, scheme:____host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without"" class="text-info">host:port — the map key is the dial&#39;s path encoding, this is the service, and the one field a peer cannot do without&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1587,7 +1586,7 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
          {?}result=&gt;&lt;#&gt;::T,
          {?}cut=&gt;[
           {?}form=&gt;uri::T,
-          {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+          {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
           {?}role=&gt;uri::T],
          {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                         {?}target=&gt;&lt;#&gt;::T,
@@ -1602,10 +1601,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
   <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
@@ -1767,10 +1766,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a distribution of durations, in nanoseconds: how many were observed and their total, least and greatest</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#count" class="text-light">count</a> <span class="text-light">=&gt;</span> <a href="#'how many durations were observed'" class="text-info">&#39;how many durations were observed&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#total" class="text-light">total</a> <span class="text-light">=&gt;</span> <a href="#'their sum, in nanoseconds (total__count is the mean)'" class="text-info">count is the mean)&#39;</a>
+  <a href="#count" class="text-light">count</a> <span class="text-light">=&gt;</span> <a href="#'how many durations were observed'" class="text-info">&#39;how many durations were observed&#39;</a>
   <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the shortest, in nanoseconds'" class="text-info">&#39;the shortest, in nanoseconds&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the longest, in nanoseconds'" class="text-info">&#39;the longest, in nanoseconds&#39;</a>
-  <a href="#total" class="text-light">total</a> <span class="text-light">=&gt;</span> <a href="#'their sum, in nanoseconds (total__count is the mean)'" class="text-info">count is the mean)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__tracer">
@@ -1831,7 +1830,7 @@ remove stages accordingly for increased performance.
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
- {?}runtime=&gt;real::T@/m/math/time,
+ {?}runtime=&gt;&lt;#&gt;::T,
  {?}yield=&gt;/m/mach/thread::T,
  {?}loop=&gt;real::T@/m/math/time,
  {?}timeout=&gt;real::T@/m/math/time,
@@ -2027,15 +2026,18 @@ move(//remote).push(a/b)               [-- create a machine at a remote location
 vocabulary, not a user instruction: a round-tripping client wraps the program it ships, so
 the frame&#39;s root is the reply and the payload is its (blocking) argument. Addressing the
 answer is what lets the client match a reply to its request without an envelope on the
-wire — the tag rides the obj it answers. An answer that is NOTHING has no address to ride
-(noobj is the zero-coefficient singleton, which no writer will render with a vid), so it
-travels as the absent-answer mark instead, and the client reads it as noobj.</p>
+wire — the tag, a hex literal, rides the answer&#39;s vid as its last segment: an answer with no
+vid is addressed by the tag alone (4@0xa1f30b7c), and one with an address of its own keeps it
+(g:V/1/0xa1f30b7c). The client strips a hex last segment, so the tag never leaves the wire. An
+answer that is NOTHING has no address to ride (noobj is the zero-coefficient singleton, which
+no writer will render with a vid), so it travels as the absent-answer mark instead, and the
+client reads it as noobj.</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the frame the payload is evaluated against — a shipped program starts at noobj" class="text-info">the frame the payload is evaluated against — a shipped program starts at noobj</a> <span class="text-light">=&gt;</span> <a href="#the payload's answer, addressed by the trip's tag; the absent-answer mark when the payload answers nothing" class="text-success">the payload&#39;s answer, addressed by the trip&#39;s tag; the absent-answer mark when the payload answers nothing</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">reply(3.plus(1), &lt;a1f30b7c&gt;)       [-- the far side answers 4@a1f30b7c --]
-reply(noobj, &lt;a1f30b7c&gt;)           [-- the far side answers /wire/noobj@a1f30b7c: nothing, addressed --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">reply(3.plus(1), &lt;0xa1f30b7c&gt;)       [-- the far side answers 4@0xa1f30b7c --]
+reply(noobj, &lt;0xa1f30b7c&gt;)           [-- the far side answers /wire/noobj@0xa1f30b7c: nothing, addressed --]</code></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__resume">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2140,7 +2142,10 @@ stay() = move(&lt;~&gt;)  [-- the identity move: ~ is the current machine --]</c
 interrupted and any waiter is woken: a stopped thread runs no further cycle, and
 `resume` refuses it — a stop ends a thread&#39;s life, where a pause holds it. The rec
 stays where it was, so `result` and `runtime` remain readable from the address that
-held it.</p>
+held it. A stop ends what the thread does for its owner too: a console&#39;s render loop
+shuts its surface down (its widgets stop, and a console that paints its screen shows
+output at its next prompt), an mqtt session&#39;s reader closes the session, and a
+timeout&#39;s alarm runs the time out at once.</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the thread rec to halt: the lhs is the thread itself, never a value it carries" class="text-info">the thread rec to halt: the lhs is the thread itself, never a value it carries</a> <span class="text-light">=&gt;</span> <a href="#the same thread, now stopped — its state is `stop` and its carrier interrupted" class="text-success">the same thread, now stopped — its state is `stop` and its carrier interrupted</a></pre>
 </div><div class="card-body border-top py-2">

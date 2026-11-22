@@ -1,0 +1,7 @@
+[== two peers, spawned and dialed by harvest ==];
+harvest?rec<=int{*}(uri{?}::T){ spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0). -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest;
+{0,1}.harvest();
+[== no fold: every member comes home ==];
+{1,2,3,4,5,6,7,8}.plus(1).mult(2);
+[== each place runs the run on its share, and the branch is the whole program ==];
+{1,2,3,4,5,6,7,8}.plus(1).mult(2).explain()>>format;

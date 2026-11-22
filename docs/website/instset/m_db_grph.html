@@ -294,7 +294,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="../tractatus.html">the
+                <a class="nav-link" href="../tractatus/index.html">the
                     tractatus</a>
             </li>
             <!-- SKILLS-MENU:START -->
@@ -328,7 +328,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
@@ -528,7 +527,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">5</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">13</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">11</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             
-            <span class="instset-built">built November 18, 2026</span>
+            <span class="instset-built">built November 22, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -581,7 +580,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              type=&gt;[
               theory::T[?[
                mul_monoid=&gt;monoid_theory::[
-                op=&gt;out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                op=&gt;!*/m/db/grph/inst/out?rng=/m/rec&amp;dom=/m/rec,
                 id=&gt;id()],
                rewrite=&gt;[
                 out=&gt;&#39;out(%s)&#39;,
@@ -590,9 +589,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 outE=&gt;&#39;outE(%s)&#39;,
                 inE=&gt;&#39;inE(%s)&#39;,
                 bothE=&gt;&#39;bothE(%s)&#39;,
-                inV=&gt;&#39;inV()&#39;,
-                outV=&gt;&#39;outV()&#39;,
-                bothV=&gt;&#39;bothV()&#39;,
+                inV=&gt;&#39;hasLabel(%s).inV()&#39;,
+                outV=&gt;&#39;hasLabel(%s).outV()&#39;,
+                bothV=&gt;&#39;hasLabel(%s).bothV()&#39;,
                 rshift=&gt;&#39;values(%s)&#39;,
                 count=&gt;&#39;count()&#39;]]]@/m/db/grph/theory/gremlin_theory,
               /m/space::T[?[
@@ -610,9 +609,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               gremlin?&lt;=rec(str::T){&lt;j&gt;},
               label?uri&lt;=rec(){&lt;j&gt;},
               values?&lt;=rec(uri{*}::T){&lt;j&gt;},
-              inV?rec&lt;=rec(){&lt;j&gt;},
-              outV?rec&lt;=rec(){&lt;j&gt;},
-              bothV?rec{2}&lt;=rec(){&lt;j&gt;},
+              inV?rec{?}&lt;=rec(uri{*}::T){&lt;j&gt;},
+              outV?rec{?}&lt;=rec(uri{*}::T){&lt;j&gt;},
+              bothV?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
               out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
               in?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
               both?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
@@ -767,7 +766,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <small class="text-muted code">/m/db/grph/theory/gremlin_theory</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[mul_monoid=&gt;monoid_theory::[
-             op=&gt;out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+             op=&gt;!*/m/db/grph/inst/out?rng=/m/rec&amp;dom=/m/rec,
              id=&gt;id()],
             rewrite=&gt;[
              out=&gt;&#39;out(%s)&#39;,
@@ -776,9 +775,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              outE=&gt;&#39;outE(%s)&#39;,
              inE=&gt;&#39;inE(%s)&#39;,
              bothE=&gt;&#39;bothE(%s)&#39;,
-             inV=&gt;&#39;inV()&#39;,
-             outV=&gt;&#39;outV()&#39;,
-             bothV=&gt;&#39;bothV()&#39;,
+             inV=&gt;&#39;hasLabel(%s).inV()&#39;,
+             outV=&gt;&#39;hasLabel(%s).outV()&#39;,
+             bothV=&gt;&#39;hasLabel(%s).bothV()&#39;,
              rshift=&gt;&#39;values(%s)&#39;,
              count=&gt;&#39;count()&#39;]]]@/m/db/grph/theory/gremlin_theory</code></pre></div>
     
@@ -894,18 +893,14 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__both-doc-0-tab').click();document.getElementById('__m__db__grph__inst__both-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming and outgoing vertices
-maps an obj to objs (rng_c = {0,})</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming and outgoing vertices</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent vertices" class="text-success">both adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent vertices" class="text-success">both adjacent vertices</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__bothE">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -917,38 +912,33 @@ maps an obj to objs (rng_c = {0,})</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__bothE-doc-0-tab').click();document.getElementById('__m__db__grph__inst__bothE-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming and outgoing edges
-maps an obj to objs (rng_c = {0,})</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming and outgoing edges</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent edges" class="text-success">both adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent edges" class="text-success">both adjacent edges</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__bothV">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">bothV</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{2}" data-bs-toggle="tooltip" title="range" class="code text-success">rec{2}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
         </span>
         <small class="text-muted code">/m/db/grph/inst/bothV</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__bothV-doc-0-tab').click();document.getElementById('__m__db__grph__inst__bothV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothV?rec{2}&lt;=rec(){&lt;j&gt;}</code></pre>
-
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__bothV-doc-0-tab').click();document.getElementById('__m__db__grph__inst__bothV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothV?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-flatmapper">flatmapper</span> returns the lhs edge&#39;s head and tail vertices
-one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
+    <p class="mb-0 text-light"> returns the lhs edge&#39;s head and tail vertices, if the edge&#39;s label is among the arg labels</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#both vertices" class="text-success">both vertices</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#both vertices: the edge's head and tail" class="text-success">both vertices: the edge&#39;s head and tail</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__gremlin">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -980,18 +970,14 @@ maps an obj to objs (rng_c = {0,})</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__in-doc-0-tab').click();document.getElementById('__m__db__grph__inst__in-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming vertices
-maps an obj to objs (rng_c = {0,})</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming vertices</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent vertices" class="text-success">in adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent vertices" class="text-success">in adjacent vertices</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__inE">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1003,38 +989,33 @@ maps an obj to objs (rng_c = {0,})</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__inE-doc-0-tab').click();document.getElementById('__m__db__grph__inst__inE-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming edges
-maps an obj to objs (rng_c = {0,})</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming edges</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent edges" class="text-success">in adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent edges" class="text-success">in adjacent edges</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__inV">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">inV</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">rec{?}</a></span></span>
         </span>
         <small class="text-muted code">/m/db/grph/inst/inV</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__inV-doc-0-tab').click();document.getElementById('__m__db__grph__inst__inV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inV?rec&lt;=rec(){&lt;j&gt;}</code></pre>
-
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__inV-doc-0-tab').click();document.getElementById('__m__db__grph__inst__inV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inV?rec{?}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> returns the lhs edge head vertex
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> returns the lhs edge head vertex, if the edge&#39;s label is among the arg labels</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the incoming vertex" class="text-success">the incoming vertex</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the incoming vertex, or nothing when the edge's label is not among the arg labels" class="text-success">the incoming vertex, or nothing when the edge&#39;s label is not among the arg labels</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__label">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1066,18 +1047,14 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__out-doc-0-tab').click();document.getElementById('__m__db__grph__inst__out-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent outgoing vertices
-maps an obj to objs (rng_c = {0,})</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent outgoing vertices</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent vertices" class="text-success">out adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent vertices" class="text-success">out adjacent vertices</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__outE">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1089,38 +1066,33 @@ maps an obj to objs (rng_c = {0,})</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__outE-doc-0-tab').click();document.getElementById('__m__db__grph__inst__outE-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent outgoing edges
-maps an obj to objs (rng_c = {0,})</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent outgoing edges</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent edges" class="text-success">out adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent edges" class="text-success">out adjacent edges</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__outV">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">outV</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">rec{?}</a></span></span>
         </span>
         <small class="text-muted code">/m/db/grph/inst/outV</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__outV-doc-0-tab').click();document.getElementById('__m__db__grph__inst__outV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outV?rec&lt;=rec(){&lt;j&gt;}</code></pre>
-
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__outV-doc-0-tab').click();document.getElementById('__m__db__grph__inst__outV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outV?rec{?}&lt;=rec(uri{*}::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> returns the lhs edge tail vertex
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> returns the lhs edge tail vertex, if the edge&#39;s label is among the arg labels</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the outgoing vertex" class="text-success">the outgoing vertex</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the outgoing vertex, or nothing when the edge's label is not among the arg labels" class="text-success">the outgoing vertex, or nothing when the edge&#39;s label is not among the arg labels</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__values">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">

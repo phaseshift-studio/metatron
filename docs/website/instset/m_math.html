@@ -294,7 +294,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="../tractatus.html">the
+                <a class="nav-link" href="../tractatus/index.html">the
                     tractatus</a>
             </li>
             <!-- SKILLS-MENU:START -->
@@ -328,7 +328,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
@@ -528,7 +527,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">33</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">22</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">consts</span></div><div class="instset-stat"><span class="instset-stat-n">24</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/math-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 18, 2026</span>
+            <span class="instset-built">built November 22, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -936,7 +935,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                   mul=&gt;!*/m/inst/mult?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
                   zero=&gt;[0.0,0.0],
                   one=&gt;[1.0,0.0],
-                  inv=&gt;inv?cmplx&lt;=cmplx(){&lt;j&gt;}],
+                  inv=&gt;!*/m/inst/inv?rng=/m/math/cmplx&amp;dom=/m/math/cmplx],
                  ring=&gt;ring_theory::[
                   add=&gt;!*/m/inst/plus?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
                   mul=&gt;!*/m/inst/mult?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
@@ -945,11 +944,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                  add_group=&gt;group_theory::[
                   op=&gt;!*/m/inst/plus?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
                   id=&gt;[0.0,0.0],
-                  inv=&gt;neg?cmplx&lt;=cmplx(){&lt;j&gt;}],
+                  inv=&gt;!*/m/inst/neg?rng=/m/math/cmplx&amp;dom=/m/math/cmplx],
                  mul_group=&gt;group_theory::[
                   op=&gt;!*/m/inst/mult?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
                   id=&gt;[1.0,0.0],
-                  inv=&gt;inv?cmplx&lt;=cmplx(){&lt;j&gt;}],
+                  inv=&gt;!*/m/inst/inv?rng=/m/math/cmplx&amp;dom=/m/math/cmplx],
                  add_monoid=&gt;monoid_theory::[
                   op=&gt;!*/m/inst/plus?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
                   id=&gt;[0.0,0.0]],
@@ -1300,15 +1299,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="tab-pane fade" id="algebra-__m__math__nat-mtron" role="tabpanel" aria-labelledby="algebra-__m__math__nat-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[nat]::[obj=&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
               theory=&gt;[
                rig=&gt;rig_theory::[
-                add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
-                mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                add=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                 zero=&gt;0,
                 one=&gt;1],
                add_monoid=&gt;monoid_theory::[
-                op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
                 id=&gt;0],
                mul_monoid=&gt;monoid_theory::[
-                op=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                 id=&gt;1]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
               morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -1989,7 +1988,8 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <p class="mb-0 text-light"> a time-bounded function \(f(x) \mapsto \mathrm{code}(x)\): the code&#39;s answer if it gives one
 within the time, and a catchable fail::T otherwise. The time runs out by interrupting the
 evaluating thread, so the code stops where it next looks: a span walk once a run, a sleep or
-a wait at once.</p>
+a wait at once. The alarm that keeps the time is a thread listed under
+/sys/thread/executor, and a stop on it runs the time out at once.</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs obj" class="text-info">the lhs obj</a> <span class="text-light">=&gt;</span> <a href="#the rhs obj: the code's answer, or a fail::T once the time runs out" class="text-success">the rhs obj: the code&#39;s answer, or a fail::T once the time runs out</a></pre>
 </div><div class="card-body border-top py-2">
