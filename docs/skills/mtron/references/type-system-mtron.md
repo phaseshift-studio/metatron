@@ -201,6 +201,17 @@ intabs::-2                       [-- intabs::2  (the constructor ran on the way 
 intabs::2                        [-- intabs::2 --]
 ```
 
+**The built value must meet the predicate.** Construction checks the predicate against what the constructor built,
+never against the input, so a constructor cannot build a value out of its own type. Under `?>10` with a successor
+constructor, 10 is kept (it builds 11) and 2 is refused (it builds 3):
+
+```mtron_pre
+[HEADER] construction: the predicate judges the value the constructor built
+int::T[?>10][plus(1)]@cnat
+cnat::10                         [-- cnat::11  (10 is not ?>10, but the 11 it builds is) --]
+[ERROR] cnat::2                  [-- refused: 2 builds 3, which is not ?>10 --]
+```
+
 **Casting tests first.** `.as(type)` checks the predicate before the constructor gets a turn, so a value that cannot
 fit is refused rather than coerced; a value that does fit still goes through the constructor:
 
