@@ -1251,6 +1251,34 @@ public final class mInsts {
                         .body((lhs, _) -> lhs)
                         .law(Law.pure, Law.idempotent, Law.involution, Law.unit, Law.commutative)
                         .create(),
+                // THE COEFFICIENT, READ AND SET (moved from Obj, Marko 2026-11-22). The reader answers mass, which no
+                // floatable function sees (Thm 6 carries the coefficient past it), so a key holding cc() compares mass and
+                // law_shard keeps its sort home (Law.Helper#massBlind). Both are reducers by their coefficient shape, so
+                // neither floats in a shipped run.
+                InstBuilder.build()
+                        .tid(CC_INST_TID)
+                        .dom(A.maybeSome(), "an obj, or a stream read as one obj")
+                        .rng(INT_TID, "the mass of the lhs")
+                        .argLst()
+                        .desc("the coefficient function \\(f(\\{c\\}x) \\mapsto c\\): the mass of the lhs as an int, and of a stream, the sum of its members' masses. It reads what a floatable function carries untouched (Theorem 6), so a sort keyed by it compares mass, and law_shard keeps such a sort home, where every value's mass is whole")
+                        .example("{3}5.cc()                    [-- 3 --]")
+                        .example("{1,1,2}.cc()                 [-- 3, the mass of the stream --]")
+                        .example("{1,1,1,2,3,3}.order(cc())    [-- [2,{2}3,{3}1], sorted by mass --]")
+                        .body((lhs, inst) -> jnt(lhs.c().max()))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build()
+                        .tid(CC_INST_TID)
+                        .dom(A, "an obj, one copy at a time")
+                        .rng(A.any(), "the lhs with the coefficient the arg states")
+                        .argLst(T(INT_TID), "the coefficient of one copy")
+                        .desc("the coefficient-setting function \\(f(x, c) \\mapsto \\{c\\}x\\): one copy of the lhs takes the coefficient c, so each copy of a bulked obj takes it, \\(\\{n\\}x \\mapsto \\{nc\\}x\\)")
+                        .example("5.cc(3)                                                [-- {3}5 --]")
+                        .example("{2}5.cc(3)                                             [-- {6}5: each of the two copies takes three --]")
+                        .example("{1,1,2}.split?<=int{*}([mean(),count()]).cc(_>>1)>>0   [-- {3}1.333…: a part's mean weighted by its count --]")
+                        .body((lhs, inst) -> lhs.c(inst.arg(0).intValue()))
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build()
                         .tid(MAP_INST_TID)
                         .dom(A.maybe(), "maybe some obj")
@@ -1408,7 +1436,7 @@ public final class mInsts {
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build()
-                        .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\)")
+                        .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\): the distinct members of the lhs, each once with its whole mass, sorted by the arg's projection of them. A projection that reads mass (cc()) sorts by it; such a sort ships no lane, since a shard parts each value's mass across its lanes, so the members come home and sort where every mass is whole")
                         .dom(A.maybeSome(), "maybe some A to sort")
                         // equal objs sort to one index as a point ({1.1,1.1}.order() is [{2}1.1]), so its indices take
                         // any mass: lst[{*}A{*}], the left coefficient a bracket entry's mass (Marko, 2026-11-18)
@@ -1422,6 +1450,10 @@ public final class mInsts {
                             final Comparator<Obj> cmp = inst.arg(0).isNoObj() ? CommonUtil.ObjComparator.single() : CommonUtil.ObjProjectionComparator.of(inst.arg(0));
                             return lst(objs(lhs.stream()).stream().sorted(cmp).toList());
                         })
+                        .example("{3,1,2}.order()                            [-- [1,2,3] --]")
+                        .example("{3,1,2}.order(neg())                       [-- [3,2,1] --]")
+                        .example("{1,1,1,2,3,3}.order(cc())                  [-- [2,{2}3,{3}1]: by mass, each value's whole mass --]")
+                        .example("{1,1,1,2,3,3}.order(cc().neg())==[{2}_]    [-- [{3}1,{2}3]: the two heaviest --]")
                         .law(Law.pure)
                         .derivation(order_(T(ALL.maybe(), f("b"), null, null)), split_(lst(id_().tryToInst())).kmerge_(T(ALL.maybe(), f("b"), null, null)))
                         .create(),

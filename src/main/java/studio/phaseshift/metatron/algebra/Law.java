@@ -1078,7 +1078,10 @@ public enum Law {
             // the equation run forward: keyed binds the lhs's last instruction as update() binds a run (every name bound),
             // and the names its holes matched fill the rhs's last instruction -- the fold the partials recombine through
             final Inst derived = derivation.atDirect(uri(LHS)).asCode().insts().getLast();
-            if (null == Code.Helper.bind(List.of(keyed), List.of(derived)))
+            // A KEY THE COMBINER RE-APPLIES TO EACH MEMBER MUST BE BLIND TO MASS (massBlind): order(cc()) would sort each
+            // lane by its partial masses and kmerge(cc()) would merge the runs by the whole ones, so nothing recombines it
+            final Map<fURI, Obj> holes = Code.Helper.bind(List.of(keyed), List.of(derived));
+            if (null == holes || !holes.values().stream().allMatch(Helper::massBlind))
                 return null;
             final Inst fold = Call.Helper.update(List.of(keyed),
                     rec(code(List.of(derived)), code(List.of(derivation.atDirect(uri(RHS)).asCode().insts().getLast())))).getFirst();
@@ -1114,10 +1117,42 @@ public enum Law {
             final List<Inst> rhs = derivation.atDirect(uri(RHS)).asCode().insts();
             // a lift that already ends in the fold (r ↦ …·r·r) ships the fold's plain partials, which is self-combining
             // and is declared by laws, never by this form: the median and an unweighted mean would pass as sound
-            if (2 > rhs.size() || !Inst.Helper.sameOp(derived, rhs.getLast()) || Inst.Helper.sameOp(derived, rhs.get(rhs.size() - 2))
-                    || null == Code.Helper.bind(List.of(keyed), List.of(derived)))
+            if (2 > rhs.size() || !Inst.Helper.sameOp(derived, rhs.getLast()) || Inst.Helper.sameOp(derived, rhs.get(rhs.size() - 2)))
+                return null;
+            // its lanes re-apply the holes to parts whose masses are partial, so each must be blind to mass (massBlind)
+            final Map<fURI, Obj> holes = Code.Helper.bind(List.of(keyed), List.of(derived));
+            if (null == holes || !holes.values().stream().allMatch(Helper::massBlind))
                 return null;
             return code(Call.Helper.update(List.of(keyed), rec(code(List.of(derived)), code(rhs))));
+        }
+
+        /**
+         * WHETHER A CODE IS BLIND TO MASS: the test a key passes before a combiner may re-apply it to each member, as
+         * {@code order(s) ↦ split([_])·kmerge(s)} re-applies the sort's key at home. A shard parts a value's mass across
+         * its lanes, since equal members from two parts meet only in the branch's merge, so a lane holds part of a
+         * coefficient. A key whose answer reads the coefficient compares partial masses in the lanes and whole ones at
+         * home: {@code cc()} answers mass, and a fold such as {@code count()} reads copies. A floatable code is blind,
+         * since the coefficient floats through it (Thm 6), {@code {n}v·f = {n}(v·f)}, and a comparison reads the value.
+         * So each instruction the code holds must, among the contracts its op declares, have one that floats and none
+         * that reduces (an identity's barrier contract gathers, and leaves every mass as it found it), and every code it is
+         * handed must be blind too: {@code is(gt(2))} compares the member, {@code is(cc().gt(1))} its mass. A literal is
+         * blind, and so is noobj, the absent key. An instruction nothing declares is not: fail closed.
+         */
+        public static boolean massBlind(final Obj code) {
+            final List<Inst> insts = code.isObjInst() ? List.of(code.asInst()) : code.isCode() ? code.asCode().insts() : List.of();
+            if (insts.isEmpty())
+                return true;
+            final Map<fURI, Claim> read = claims().read();
+            return insts.stream().allMatch(inst -> {
+                final List<Inst> contracts = read.entrySet().stream()
+                        .filter(claim -> inst.tid().basePath().equals(claim.getKey().basePath()))
+                        .map(claim -> claim.getValue().inst()).toList();
+                return contracts.stream().anyMatch(contract -> Inst.Form.of(contract).isFloatable())
+                        && contracts.stream().noneMatch(contract -> Inst.Form.reducer == Inst.Form.of(contract))
+                        && inst.args().elements().allMatch(arg -> arg.isRel()
+                        ? massBlind(arg.asRel().first()) && massBlind(arg.asRel().secondDirect())
+                        : massBlind(arg));
+            });
         }
 
         /**
