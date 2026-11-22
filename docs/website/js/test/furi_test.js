@@ -16,28 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {cInt, f} from '../furi.js';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {cInt, f} from '../sdk/furi.js';
 
-let pass = 0, fail = 0;
+function eq(actual, expected, label) { assert.equal(actual, expected, label); }
+function t(cond, label) { assert.ok(cond, label); }
 
-function eq(actual, expected, label) {
-    const ok = actual === expected;
-    if (ok) pass++;
-    else {
-        fail++;
-        console.log('FAIL', label, '\n  expected:', JSON.stringify(expected), '\n  actual:  ', JSON.stringify(actual));
-    }
-}
-
-function t(cond, label) {
-    if (cond) pass++;
-    else {
-        fail++;
-        console.log('FAIL', label);
-    }
-}
-
-/* ---- builder ---- */
+test('furi', () => {
+    /* ---- builder ---- */
 eq(f().scheme('http').host('localhost').port(8555).path(['a', 'b']).toString(),
     'http://localhost:8555/a/b', 'builder scheme/host/port/path');
 eq(f('').scheme('http').host('localhost').port(8555).toString(), 'http://localhost:8555', 'builder authority only');
@@ -123,5 +110,4 @@ eq(f('@a/b').stripAnchor().toString(), 'a/b', 'stripAnchor');
 t(f('127.0.0.1').isLoopbackHost() === false && f('//localhost/a').isLoopbackHost(), 'loopback');
 eq(f('').isEmpty(), true, 'empty isEmpty');
 
-console.log('\n' + pass + ' passed, ' + fail + ' failed');
-process.exit(fail === 0 ? 0 : 1);
+});

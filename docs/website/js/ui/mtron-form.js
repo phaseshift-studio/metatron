@@ -14,7 +14,7 @@
  *
  * ES module, no DOM at import time (DOM is used inside renderForm).
  */
-import { write } from './mtron-io.js';
+import { write } from '../sdk/mtron-io.js';
 
 /* split on a top-level separator, respecting brackets + quoted strings */
 function splitTop(str, sep) {

@@ -1,0 +1,10 @@
+#!/bin/bash
+# bin/js-test — run the metatron JS SDK test suite (docs/website/js/test).
+#
+# Zero-dependency ES modules run under node's built-in test runner (node:test),
+# so no package.json or build step is required. Exits non-zero on any failure.
+set -uo pipefail
+
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+exec node --test docs/website/js/test/*_test.js

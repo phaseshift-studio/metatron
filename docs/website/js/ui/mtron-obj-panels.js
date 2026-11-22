@@ -12,11 +12,12 @@
  *
  * UMD: `window.MtronObjPanels` in a page, `module.exports` under node (for tests).
  */
-import { read } from './mtron-io.js';
+import { read } from '../sdk/mtron-io.js';
 import { parseSchema, renderForm, collectForm } from './mtron-form.js';
-import { parse, write, quote, real, int } from './obj_mtron_serializer.js';
-import { f } from './furi.js';
-import { parse as envelope } from './mtron-envelope.js';
+import { parse, write, quote, real, int } from '../sdk/obj_mtron_serializer.js';
+import { f } from '../sdk/furi.js';
+import { parse as envelope } from '../sdk/mtron-envelope.js';
+import { toElement } from './mtron-dom.js';
 
 "use strict";
 
@@ -1143,7 +1144,7 @@ import { parse as envelope } from './mtron-envelope.js';
             const target = routes[path];
             const text = target == null ? "" : String(target);
             if (text) {
-                const button = f(text).toElement(openTarget, "route-target");
+                const button = toElement(f(text), openTarget, "route-target");
                 button.textContent = brief(target);
                 v.appendChild(button);
             } else {
@@ -1785,13 +1786,13 @@ import { parse as envelope } from './mtron-envelope.js';
                 const row = node("div", "decs-row");
                 row.style.paddingLeft = (depth * 14) + "px";
                 /* toElement makes the button but not its text — set it, like
-                   mtron-obj.js's clickable() does */
-                const keyEl = k.toElement((uri) => browse(String(uri)), "obj-link decs-key");
+                   mtron-dom.js's clickable() does */
+                const keyEl = toElement(k, (uri) => browse(String(uri)), "obj-link decs-key");
                 keyEl.textContent = k.toString();
                 row.appendChild(keyEl);
                 if (v.isRec() || v.isLst()) {
                     if (v.isRec() && v.tid && !v.isBaseTid()) {
-                        const tidEl = v.tid.toElement((uri) => browse(String(uri)), "obj-link decs-tid");
+                        const tidEl = toElement(v.tid, (uri) => browse(String(uri)), "obj-link decs-tid");
                         tidEl.textContent = v.tid.toString();
                         row.appendChild(tidEl);
                     }

@@ -1443,22 +1443,6 @@ class fURI {
     doc() {
         return this.q('docq', '');
     }
-
-    /* the clickable element. the text is set by the caller (a highlighted slice,
-       a short label, …); this only adds the click behavior + pointer cursor.
-       normal click opens the uri, shift-click opens its ?docq. */
-    toElement(open, cls) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = cls || 'obj-link';
-        b.title = this.toString() + ' · shift-click for ?docq';
-        b.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            if (open) open(ev.shiftKey ? this.doc() : this);
-        });
-        return b;
-    }
 }
 
 const _templatesEqual = (a, b) =>

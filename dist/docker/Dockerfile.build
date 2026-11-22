@@ -9,6 +9,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends patchelf python3 \
     && rm -rf /var/lib/apt/lists/*
 
+# Node.js — the JS SDK test suite (bin/js-test) runs during the Maven test phase.
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
 # docker CLI for dckrSpace: it shells out to the binary, unlike the TestContainers
 # classes which speak HTTP to the mounted socket. Static build, version-pinned to
 # match the deployment's /opt/dsh-tools/bin/docker so both agree with the daemon.

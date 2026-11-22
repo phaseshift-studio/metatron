@@ -15,16 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { parse, write, real, int, quote } from '../obj_mtron_serializer.js';
-import { f } from '../furi.js';
-import { Int, Real, Str, Uri, Lst, Rec, Rel, Type, Inst, noobj } from '../mtron-obj.js';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { parse, write, real, int, quote } from '../sdk/obj_mtron_serializer.js';
+import { f } from '../sdk/furi.js';
+import { Int, Real, Str, Uri, Lst, Rec, Rel, Type, Inst, noobj } from '../sdk/mtron-obj.js';
 
-let pass = 0, fail = 0;
-function eq(actual, expected, label) {
-    if (actual === expected) pass++;
-    else { fail++; console.log('FAIL', label, '\n  expected:', JSON.stringify(expected), '\n  actual:  ', JSON.stringify(actual)); }
-}
-function t(cond, label) { if (cond) pass++; else { fail++; console.log('FAIL', label); } }
+function eq(actual, expected, label) { assert.equal(actual, expected, label); }
+function t(cond, label) { assert.ok(cond, label); }
 
 /* structural equality — parse(write(o)) must answer the same tree */
 function same(a, b) {
@@ -59,19 +57,18 @@ function same(a, b) {
     return true;
 }
 function rt(text, label) {
-    let a, w, b;
-    try { a = parse(text); } catch (e) { fail++; console.log('FAIL parse', label, e.message); return; }
-    try { w = write(a); b = parse(w); } catch (e) { fail++; console.log('FAIL write/reparse', label, e.message); return; }
-    if (same(a, b)) pass++;
-    else { fail++; console.log('FAIL round-trip', label, '\n  in:  ', text, '\n  out: ', w); }
+    const a = parse(text);
+    const w = write(a);
+    const b = parse(w);
+    assert.ok(same(a, b), 'round-trip ' + label + '\n  in:  ' + text + '\n  out: ' + w);
 }
 /* write(text) is the exact Java spelling */
 function exact(text, label) {
-    try { eq(write(parse(text)), text, label); }
-    catch (e) { fail++; console.log('FAIL exact', label, e.message); }
+    assert.equal(write(parse(text)), text, label);
 }
 
-/* ---- every mono type + noobj + fail ---- */
+test('obj_mtron_serializer', () => {
+    /* ---- every mono type + noobj + fail ---- */
 exact('29', 'int');
 exact('-100', 'negative int');
 exact('12.345', 'real');
@@ -277,5 +274,4 @@ eq(write(new Rec(new Map(), f('rec'), null)), '[=>]', 'write empty Rec');
     t(parse(write(rec)).isRec(), 'built rec round-trips');
 }
 
-console.log('\n' + pass + ' passed, ' + fail + ' failed');
-process.exit(fail === 0 ? 0 : 1);
+});

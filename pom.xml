@@ -57,6 +57,7 @@
         <skipAsciidoc>false</skipAsciidoc>
         <skipInstSet>false</skipInstSet>
         <skipHljs>false</skipHljs>
+        <skipJsTest>false</skipJsTest>
         <skipMarkdown>false</skipMarkdown>
         <!-- cast-only sources (docs/asciinema): evaluate + emit recordings, no page -->
         <skipCasts>false</skipCasts>
@@ -683,6 +684,17 @@
                         <goals>
                             <goal>java</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>js-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipJsTest}</skip>
+                            <executable>${project.basedir}/bin/js-test</executable>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>generate-mtron-hljs</id>

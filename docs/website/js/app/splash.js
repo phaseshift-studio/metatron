@@ -1,0 +1,1819 @@
+import * as MtronEnvelope from '../sdk/mtron-envelope.js';
+import * as MtronIO from '../sdk/mtron-io.js';
+import * as MtronObjPanels from '../ui/mtron-obj-panels.js';
+
+"use strict";
+
+/* ── configuration ─────────────────────────────────────────────────────── */
+const params = new URLSearchParams(location.search);
+const metaContent = (name) => {
+    const el = document.querySelector('meta[name="' + name + '"]');
+    return el ? el.content || "" : "";
+};
+const host = location.hostname || "localhost";
+const secure = location.protocol === "https:";
+const offline = location.protocol === "file:";
+const httpBase = params.get("http") ||
+    (offline ? "http://" + host + ":8777" : location.origin);
+
+/* bin/wsplus appends the codecs it speaks to the endpoint; so does the console, so the uri in the
+   page is the uri you would hand the CLI. a ?ws= that already names codecs keeps its own. */
+function codecUrl(base) {
+    try {
+        const url = new URL(base, location.href);
+        /* a MIME type is a query value with a slash. the websocket server matches the codec
+           string LITERALLY, and wsplus writes it unescaped (python's quote() leaves '/'),
+           so this writes it unescaped too — URLSearchParams would spell %2F and miss. */
+        const add = (key, value) => {
+            if (url.searchParams.has(key)) return;
+            const pair = key + "=" + encodeURIComponent(value).replace(/%2F/gi, "/");
+            url.search += (url.search ? "&" : "?") + pair;
+        };
+        add("in", "application/x-mtron");
+        add("out", "application/x-mtron-ui");   // human form: pretty, indented, readable
+        return url.toString();
+    } catch (ignored) {
+        return base;
+    }
+}
+
+/* the page object is the APP's, never the instance's: a deployment names it in
+   metatron:page, else it sits beside the app (the served directory), else the
+   shipped path. an instance only ever supplies the machine's objects. */
+function defaultPage() {
+    const declared = metaContent("metatron:page");
+    if (declared) return declared;
+    const at = location.pathname || "/";
+    const mfs = at.match(/^\/mfs\/(.*)$/);
+    if (mfs) return "mfs:" + mfs[1] + "default.mtron";
+    return "mfs:boot/space/web/default.mtron";
+}
+
+const wsBase = params.get("ws") || metaContent("metatron:ws") ||
+    (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
+const wsUrl = codecUrl(wsBase);
+/* the app's own machine: the page object (layout) and the save live here, never
+   on the instance the ?ws names -- the shell and the data are separate things */
+const localBase = (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
+const localUrl = codecUrl(localBase);
+const onInstance = (() => {
+    try {
+        return new URL(wsBase, location.href).host !== new URL(localBase, location.href).host;
+    } catch (ignored) {
+        return false;
+    }
+})();
+
+/* the instance switch is URL state: the app is the shell, ?ws is the data */
+function viewPeer(url) {
+    const at = new URL(location.href);
+    if (url) at.searchParams.set("ws", url);
+    else at.searchParams.delete("ws");
+    location.href = at.pathname + at.search + at.hash;
+}
+
+const rootAddr = metaContent("metatron:root");
+
+const $ = (sel, root) => (root || document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+/* ── small utilities ───────────────────────────────────────────────────── */
+function withTimeout(ms) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), ms);
+    return {signal: ctrl.signal, done: () => clearTimeout(timer)};
+}
+
+function setDot(el, state) {
+    if (!el) return;
+    el.classList.remove("busy", "up", "warn", "bad");
+    if (state) el.classList.add(state);
+}
+
+const ms = (n) => n + " ms";
+
+function wsFor(path) {
+    try {
+        const url = new URL(wsUrl);
+        url.pathname = path;
+        url.search = "";   // a probe names a protocol, not mtron's codecs
+        return url.toString();
+    } catch (ignored) {
+        return wsUrl;
+    }
+}
+
+/* ── card span ──────────────────────────────────────────────────────────
+   a splash_card's span is [col=>n,row=>n]; a field the page leaves out is
+   the UI's choice (1). the grid is 4 columns, so col is clamped to it. */
+/* a PlatonicObj collapsed to a plain JS value (uris -> strings, recs -> objects).
+   the page config (splash_page/card) is consumed through this; the browsed objs
+   stay PlatonicObj. */
+function plain(obj) {
+    if (obj == null) return undefined;
+    if (typeof obj !== "object") return obj;
+    if (obj.isNoObj()) return null;
+    if (obj.isUri()) return obj.js.toString();
+    if (obj.isStr() || obj.isInt() || obj.isReal() || obj.isBool() || obj.isBytes() || obj.isFail()) return obj.js;
+    if (obj.isLst()) return obj.js.map(plain);
+    if (obj.isRel()) return [plain(obj.js[0]), plain(obj.js[1])];
+    if (obj.isRec()) {
+        const o = {};
+        for (const [k, v] of obj.js) o[k.toString()] = plain(v);
+        return o;
+    }
+    return obj.js;
+}
+
+function spanOf(value) {
+    const rec = value && value.isRec ? plain(value) : (value && typeof value === "object" ? value : {});
+    return {
+        col: Math.max(1, Math.min(4, Number(rec.col) || 1)),
+        row: Math.max(1, Number(rec.row) || 1)
+    };
+}
+
+function wordOf(value) {
+    if (value == null) return null;
+    const p = plain(value);
+    return p == null ? null : String(p);
+}
+
+/* one place that turns a col/row pair into the grid placement */
+function applySpan(el, col, row) {
+    const span = spanOf({col: col, row: row});
+    el.dataset.col = String(span.col);
+    el.dataset.row = String(span.row);
+    el.style.gridColumn = span.col > 1 ? "span " + span.col : "";
+    el.style.gridRow = span.row > 1 ? "span " + span.row : "";
+    el.style.alignSelf = span.row > 1 ? "stretch" : "";
+}
+
+/* ── card move + resize ─────────────────────────────────────────────────
+   a card is moved by dragging its header grip to reorder it in its grid (the
+   grid is auto-flow, so position IS dom order — the order savePage() keeps);
+   a card is resized by dragging its corner grip to change the col/row span.
+   both touch only the card's dataset and dom order, which pageCards() already
+   reads back, so drag + resize persist through the existing save path. */
+function nearestObjCard(grid, root, x, y) {
+    let best = null, bestD = Infinity, bestBefore = false;
+    Array.from(grid.children).forEach((objCard) => {
+        if (objCard === root || !(objCard.dataset && objCard.dataset.tid)) return;
+        const r = objCard.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const d = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+        if (d < bestD) {
+            bestD = d;
+            best = objCard;
+            bestBefore = y < r.top ? true : (y > r.bottom ? false : (x < cx));
+        }
+    });
+    return best ? {objCard: best, before: bestBefore} : null;
+}
+
+function makeDraggable(root) {
+    const grip = root.querySelector(".obj-card-grip");
+    if (!grip) return;
+    grip.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const grid = root.parentElement;
+        let target = null;
+        let before = false;
+        root.classList.add("dragging");
+        grip.setPointerCapture(ev.pointerId);
+        const move = (e) => {
+            const found = nearestObjCard(grid, root, e.clientX, e.clientY);
+            if (found) {
+                before = found.before;
+                if (found.objCard !== target) {
+                    if (target) target.classList.remove("drop-target");
+                    target = found.objCard;
+                    target.classList.add("drop-target");
+                }
+            } else if (target) {
+                target.classList.remove("drop-target");
+                target = null;
+            }
+        };
+        const up = () => {
+            if (target) {
+                target.classList.remove("drop-target");
+                if (before) grid.insertBefore(root, target);
+                else target.insertAdjacentElement("afterend", root);
+            }
+            root.classList.remove("dragging");
+            grip.removeEventListener("pointermove", move);
+            grip.removeEventListener("pointerup", up);
+            grip.removeEventListener("pointercancel", up);
+        };
+        grip.addEventListener("pointermove", move);
+        grip.addEventListener("pointerup", up);
+        grip.addEventListener("pointercancel", up);
+    });
+}
+
+function makeResizable(root) {
+    const grip = root.querySelector(".obj-card-resize");
+    if (!grip) return;
+    grip.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const grid = root.parentElement;
+        const rect = root.getBoundingClientRect();
+        const startX = ev.clientX;
+        const startY = ev.clientY;
+        const startW = rect.width;
+        const startH = rect.height;
+        const startCol = Number(root.dataset.col) || 1;
+        const startRow = Number(root.dataset.row) || 1;
+        const gs = getComputedStyle(grid);
+        const gap = parseFloat(gs.columnGap) || parseFloat(gs.rowGap) || 14;
+        /* columns are uniform (4 per row); rows are auto and uneven, so a row
+           is the card's own current height. each stride also adds one gap. */
+        const colStride = (grid.clientWidth - gap * 3) / 4 + gap;
+        const rowStride = startH / startRow + gap;
+        const MAX_ROW = 6;
+        root.classList.add("resizing");
+        grip.setPointerCapture(ev.pointerId);
+        const move = (e) => {
+            const col = Math.max(1, Math.min(4, Math.round((startW + (e.clientX - startX)) / colStride)));
+            const row = Math.max(1, Math.min(MAX_ROW, Math.round((startH + (e.clientY - startY)) / rowStride)));
+            if (col !== Number(root.dataset.col) || row !== Number(root.dataset.row)) {
+                applySpan(root, col, row);
+            }
+        };
+        const up = () => {
+            root.classList.remove("resizing");
+            grip.removeEventListener("pointermove", move);
+            grip.removeEventListener("pointerup", up);
+            grip.removeEventListener("pointercancel", up);
+        };
+        grip.addEventListener("pointermove", move);
+        grip.addEventListener("pointerup", up);
+        grip.addEventListener("pointercancel", up);
+    });
+}
+
+/* ── http probes ───────────────────────────────────────────────────────── */
+async function probe(path, msTimeout) {
+    const t = performance.now();
+    const guard = withTimeout(msTimeout || 3000);
+    try {
+        const r = await fetch(new URL(path, httpBase), {
+            method: "GET",
+            cache: "no-store",
+            redirect: "follow",
+            headers: {"Accept": "application/json, text/plain;q=0.9, */*;q=0.8"},
+            signal: guard.signal
+        });
+        const body = await r.text();
+        return {reachable: true, status: r.status, body: body, ms: Math.round(performance.now() - t)};
+    } catch (e) {
+        return {reachable: false, status: 0, body: "", ms: Math.round(performance.now() - t), error: e.name};
+    } finally {
+        guard.done();
+    }
+}
+
+/* ── websocket probe ───────────────────────────────────────────────────── */
+function probeWs(url, msTimeout) {
+    return new Promise((resolve) => {
+        const t = performance.now();
+        let settled = false;
+        let socket = null;
+        const finish = (ok, why) => {
+            if (settled) return;
+            settled = true;
+            try {
+                if (socket) socket.close();
+            } catch (ignored) {
+            }
+            resolve({ok: ok, ms: Math.round(performance.now() - t), why: why});
+        };
+        const timer = setTimeout(() => finish(false, "timeout"), msTimeout || 2200);
+        try {
+            socket = new WebSocket(url);
+        } catch (e) {
+            clearTimeout(timer);
+            finish(false, "unsupported");
+            return;
+        }
+        socket.onopen = () => {
+            clearTimeout(timer);
+            finish(true);
+        };
+        socket.onerror = () => {
+            clearTimeout(timer);
+            finish(false, "error");
+        };
+        socket.onclose = (e) => {
+            clearTimeout(timer);
+            finish(false, "closed " + e.code);
+        };
+    });
+}
+
+/* ── mtron syntax ────────────────────────────────────────────────────────
+   The docs' highlighter is a standard highlight.js core plus a grammar
+   GENERATED from conf/nanorc/mtron.nanorc (NanorcToHljs) — the nanorc is
+   the standard of truth. It is loaded from a mount the boot provides
+   (`metatron:highlight`, default /highlight/); if it is not there the
+   console stays plain text, never broken. */
+const hlBase = params.get("hl") || metaContent("metatron:highlight") || "/highlight/";
+let HL = null;
+
+const CONTROLS = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;   // CSI: SGR colour, cursor moves, erase
+
+function paint(el, text, kind) {
+    text = String(text == null ? "" : text).replace(CONTROLS, "");
+    el._text = text;
+    el._kind = kind;
+    if (HL && kind !== "sys" && text.length < 500000) {
+        const language = kind === "json" ? "json" : "mtron";
+        if (language !== "json" || (HL.getLanguage && HL.getLanguage("json"))) {
+            try {
+                el.innerHTML = HL.highlight(text, {language: language, ignoreIllegals: true}).value;
+                return;
+            } catch (ignored) {
+                // a grammar that cannot read a fragment is not a reason to lose the fragment
+            }
+        }
+    }
+    el.textContent = text;
+}
+
+function retint(el) {
+    if (undefined !== el._text)
+        paint(el, el._text, el._kind);
+}
+
+function highlighterReady() {
+    HL = window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron") ? window.hljs : null;
+    const note = $("#hl-note");
+    if (note) note.textContent = HL ? "syntax: mtron" : "syntax: plain";
+    if (HL) {
+        $$("#out .line").forEach(retint);
+        if (modalObjCard.views.mtron) renderObjCard(modalObjCard, modalHost);
+    }
+}
+
+function loadScript(src) {
+    return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+    });
+}
+
+async function loadHighlighter() {
+    if (!hlBase) return;
+    try {
+        if (!(await loadScript(hlBase + "highlight.min.js"))) return;
+        if (!(await loadScript(hlBase + "languages/mtron.min.js"))) return;
+        await loadScript(hlBase + "languages/json.min.js");   // the JSON views, when present
+    } finally {
+        highlighterReady();
+    }
+}
+
+/* ── console: one socket, one answer per frame, evaluated in order ─────── */
+const out = $("#out");
+
+function line(kind, text) {
+    const el = document.createElement("span");
+    el.className = "line " + kind;
+    paint(el, text, kind);
+    if (kind === "res")
+        annotateObjects(el, text, (obj) => openNested(obj));
+    out.appendChild(el);
+    while (out.childElementCount > 500) out.removeChild(out.firstElementChild);
+    out.scrollTop = out.scrollHeight;
+}
+
+function welcome() {
+    out.textContent = "";
+    line("sys", "metatron console — one message is one expression, evaluated on this machine");
+    line("sys", "same endpoint as bin/wsplus:  " + wsBase);
+    line("sys", "in application/x-mtron  ·  out application/x-mtron-ui (pretty)  ·  one frame in, one frame out");
+    line("sys", "try  *</memory/space>   or   !*boot/args");
+}
+
+welcome();
+
+let socket = null;
+let chain = Promise.resolve();
+
+function connect() {
+    if (socket && socket.readyState === WebSocket.OPEN) return Promise.resolve(socket);
+    if (socket && socket.readyState === WebSocket.CONNECTING) {
+        return new Promise((resolve, reject) => {
+            socket.addEventListener("open", () => resolve(socket), {once: true});
+            socket.addEventListener("error", () => reject(new Error("cannot reach " + wsUrl)), {once: true});
+        });
+    }
+    return new Promise((resolve, reject) => {
+        const ws = new WebSocket(wsUrl);
+        const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
+        ws.onopen = () => {
+            clearTimeout(timer);
+            socket = ws;
+            setDot($("#d-console"), "up");
+            $("#m-console").textContent = "connected";
+            resolve(ws);
+        };
+        ws.onerror = () => {
+            clearTimeout(timer);
+            setDot($("#d-console"), "bad");
+            $("#m-console").textContent = "not connected";
+            reject(new Error("cannot reach " + wsUrl));
+        };
+        ws.onclose = () => {
+            socket = null;
+            setDot($("#d-console"), "down");
+            $("#m-console").textContent = "closed";
+        };
+    });
+}
+
+/* a reply frame is text OR bytes: application/x-mtron comes back as a text frame, the UI
+   (and other binary serializations) as a binary frame — bin/wsplus decodes bytes before it
+   prints, so the browser does the same rather than reporting a frame it cannot read. */
+async function frameText(data) {
+    if (typeof data === "string") return data;
+    if (data instanceof Blob) return await data.text();
+    if (data instanceof ArrayBuffer) return new TextDecoder().decode(data);
+    return String(data);
+}
+
+/* the machine frame the page is standing in; null means the root. every
+   evaluation is framed so the console and the panels act in the same machine. */
+let pageFrame = null;
+
+function framePrefix() {
+    return pageFrame ? "move(<" + pageFrame + ">)." : "";
+}
+
+function evaluate(expr) {
+    const framed = framePrefix() + String(expr == null ? "" : expr);
+    return connect().then((ws) => new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            ws.removeEventListener("message", answer);
+            reject(new Error("no answer in 30 s"));
+        }, 30000);
+        const answer = async (ev) => {
+            clearTimeout(timer);
+            ws.removeEventListener("message", answer);
+            try {
+                resolve(await frameText(ev.data));
+            } catch (error) {
+                reject(error);
+            }
+        };
+        ws.addEventListener("message", answer);
+        ws.send(framed);
+    }));
+}
+
+function evaluateThen(expr) {
+    const pending = chain.then(() => evaluate(expr));
+    chain = pending.catch(() => {
+    });
+    return pending;
+}
+
+let localSocket = null;
+
+function connectLocal() {
+    if (localSocket && localSocket.readyState === WebSocket.OPEN) return Promise.resolve(localSocket);
+    return new Promise((resolve, reject) => {
+        const ws = new WebSocket(localUrl);
+        const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
+        ws.onopen = () => {
+            clearTimeout(timer);
+            localSocket = ws;
+            resolve(ws);
+        };
+        ws.onerror = () => {
+            clearTimeout(timer);
+            reject(new Error("cannot reach " + localUrl));
+        };
+        ws.onclose = () => {
+            localSocket = null;
+        };
+    });
+}
+
+function localEval(expr) {
+    return connectLocal().then((ws) => new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            ws.removeEventListener("message", answer);
+            reject(new Error("no local answer in 30 s"));
+        }, 30000);
+        const answer = async (ev) => {
+            clearTimeout(timer);
+            ws.removeEventListener("message", answer);
+            try {
+                resolve(await frameText(ev.data));
+            } catch (error) {
+                reject(error);
+            }
+        };
+        ws.addEventListener("message", answer);
+        ws.send(String(expr == null ? "" : expr));
+    }));
+}
+
+function run(expr, echo) {
+    expr = String(expr || "").trim();
+    if (!expr) return Promise.resolve();
+    if (echo !== false) line("cmd", expr);
+    return evaluateThen(expr).then((result) => {
+        line("res", result);
+        reference(result, expr);
+        return result;
+    }).catch((error) => {
+        line("err", error && error.message ? error.message : String(error));
+    });
+}
+
+/* ── references: what the console just named ─────────────────────────────
+   a result's envelope carries its type (tid) and location (vid); the pill row
+   becomes those references, and clicking one reads the object's JSON form.
+   x-mtron is complete (the ui form clips), so this is the machine protocol. */
+const REFERENCES = [];
+
+function shortVid(vid) {
+    if (!vid) return "(no vid)";
+    return vid.length > 30 ? "…" + vid.slice(-27) : vid;
+}
+
+function reference(text, expr) {
+    const env = MtronEnvelope ? MtronEnvelope.parse(text) : null;
+    if (!env) return;
+    env.expr = expr ? String(expr).trim() : null;
+    if (!REFERENCES.some((r) => r.tid === env.tid && r.vid === env.vid)) {
+        REFERENCES.unshift(env);
+        if (REFERENCES.length > 8) REFERENCES.pop();
+    }
+    renderReferences();
+}
+
+function renderReferences() {
+    const row = $(".chips");
+    row.textContent = "";
+    REFERENCES.forEach((env) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip ref";
+        const tid = document.createElement("span");
+        tid.className = "tid";
+        tid.textContent = env.shortTid || "value";
+        const vid = document.createElement("span");
+        vid.className = "vid";
+        vid.textContent = " · " + shortVid(env.vid);
+        chip.appendChild(tid);
+        chip.appendChild(vid);
+        chip.title = [env.tid, env.vid].filter(Boolean).join(" @ ");
+        chip.addEventListener("click", () => inspectReference(env));
+        row.appendChild(chip);
+    });
+}
+
+/* readers: one socket per output codec. x-mtron is the machine form, x-mtron-ui the
+   human form (clipped), json the structure. each keeps its own queue and cache. */
+const readers = new Map();
+const localReaders = new Map();
+
+function readerUrlFor(base, mime) {
+    const url = new URL(base, location.href);
+    const query = url.search.replace(/^\?/, "").split("&")
+        .filter((part) => part && !/^in=/.test(part) && !/^out=/.test(part));
+    query.push("in=application/x-mtron");
+    query.push("out=" + mime);
+    url.search = "?" + query.join("&");
+    return url.toString();
+}
+
+function readerFor(mime, pool) {
+    let reader = pool.get(mime);
+    if (!reader) {
+        reader = {socket: null, chain: Promise.resolve(), cache: new Map()};
+        pool.set(mime, reader);
+    }
+    return reader;
+}
+
+function connectReader(mime, base, pool) {
+    const reader = readerFor(mime, pool);
+    if (reader.socket && reader.socket.readyState === WebSocket.OPEN) return Promise.resolve(reader.socket);
+    return new Promise((resolve, reject) => {
+        const socket = new WebSocket(readerUrlFor(base, mime));
+        const timer = setTimeout(() => reject(new Error(mime + " reader timeout")), 5000);
+        socket.onopen = () => {
+            clearTimeout(timer);
+            reader.socket = socket;
+            resolve(socket);
+        };
+        socket.onerror = () => {
+            clearTimeout(timer);
+            reject(new Error("cannot open the " + mime + " reader"));
+        };
+        socket.onclose = () => {
+            if (reader.socket === socket) reader.socket = null;
+        };
+    });
+}
+
+function readVia(mime, vid, base, pool) {
+    const reader = readerFor(mime, pool);
+    if (reader.cache.has(vid)) return Promise.resolve(reader.cache.get(vid));
+    const run = reader.chain.then(() => connectReader(mime, base, pool)).then((socket) => new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            socket.removeEventListener("message", answer);
+            reject(new Error("no " + mime + " answer in 15 s"));
+        }, 15000);
+        const answer = async (ev) => {
+            clearTimeout(timer);
+            socket.removeEventListener("message", answer);
+            const text = await frameText(ev.data);
+            let value;
+            try {
+                value = JSON.parse(text);
+            } catch (ignored) {
+                value = text;
+            }
+            reader.cache.set(vid, value);
+            resolve(value);
+        };
+        socket.addEventListener("message", answer);
+        socket.send(vid.charAt(0) === "<" ? "*" + vid : "*<" + vid + ">");
+    }));
+    reader.chain = run.catch(() => {
+    });
+    return run;
+}
+
+/* the instance's data */
+function readAs(mime, vid) {
+    return readVia(mime, vid, wsBase, readers);
+}
+
+/* the app's own page object */
+function localRead(mime, vid) {
+    return readVia(mime, vid, localBase, localReaders);
+}
+
+function readJson(vid) {
+    return readAs("application/json", vid);
+}
+
+function readPretty(vid) {
+    return readAs("application/x-mtron-ui", vid)
+        .then((value) => typeof value === "string" ? value : String(value));
+}
+
+/* evaluate an arbitrary expression on the JSON socket — a panel that needs a
+   projection (a tree, a count) instead of one object's value. */
+function evalJson(expr) {
+    const mime = "application/json";
+    const reader = readerFor(mime, readers);
+    const run = reader.chain.then(() => connectReader(mime, wsBase, readers)).then((socket) => new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            socket.removeEventListener("message", answer);
+            reject(new Error("no json answer in 15 s"));
+        }, 15000);
+        const answer = async (ev) => {
+            clearTimeout(timer);
+            socket.removeEventListener("message", answer);
+            const text = await frameText(ev.data);
+            try {
+                resolve(JSON.parse(text));
+            } catch (ignored) {
+                resolve(text);
+            }
+        };
+        socket.addEventListener("message", answer);
+        socket.send(String(expr));
+    }));
+    reader.chain = run.catch(() => {
+    });
+    return run;
+}
+
+/* ── the object card ──────────────────────────────────────────────────────
+   one algorithm, two hosts: the dialog (expression line, copy, close) and a
+   pinned card (title left, vid right, unpin). the card owns its views and
+   reads; the codecs are shared. */
+function emptyObjCard() {
+    return {
+        views: {},
+        tab: "mtron",
+        env: null,
+        prettyLoaded: false,
+        jsonLoaded: false,
+        objPanel: null,
+        history: []
+    };
+}
+
+function objCardButton(host, tab) {
+    return host.tabs.querySelector('[data-tab="' + tab + '"]');
+}
+
+function objCardDot(host, state) {
+    if (host.dot) setDot(host.dot, state);
+}
+
+function resetObjCard(objCard, host, keepHistory) {
+    objCard.views = {};
+    objCard.tab = "mtron";
+    objCard.env = null;
+    objCard.prettyLoaded = false;
+    objCard.jsonLoaded = false;
+    objCard.objPanel = null;
+    if (!keepHistory) objCard.history = [];
+    host.tabs.querySelectorAll(".popup-tab").forEach((button) => {
+        button.disabled = button.dataset.tab === "json" || button.dataset.tab === "panel";
+        button.setAttribute("aria-selected", String(button.dataset.tab === "mtron"));
+    });
+    const panelTab = objCardButton(host, "panel");
+    if (panelTab) panelTab.hidden = true;
+    host.out.textContent = "";
+    if (host.expr) host.expr.textContent = "";
+}
+
+function renderObjCard(objCard, host) {
+    const view = objCard.views[objCard.tab];
+    host.tabs.querySelectorAll(".popup-tab").forEach((button) => {
+        button.setAttribute("aria-selected", String(button.dataset.tab === objCard.tab));
+    });
+    if (!view) {
+        host.out.textContent = "";
+        host.out.classList.remove("panel-view");
+        return;
+    }
+    host.out.classList.toggle("panel-view", view.kind === "dom");
+    if (view.kind === "dom") {
+        host.out.replaceChildren(view.node);
+        return;
+    }
+    paint(host.out, view.text, view.kind);
+    if (objCard.tab === "mtron")
+        annotateObjects(host.out, view.text, host.openObject);
+}
+
+function setObjCardView(objCard, host, tab, value, kind) {
+    if (kind === "dom") objCard.views[tab] = {node: value, kind: "dom"};
+    else objCard.views[tab] = {text: value, kind: kind || "sys"};
+    const button = objCardButton(host, tab);
+    if (button) {
+        button.disabled = false;
+        button.hidden = false;
+    }
+    if (objCard.tab === tab) renderObjCard(objCard, host);
+}
+
+function enableJson(host) {
+    const button = objCardButton(host, "json");
+    if (button) button.disabled = false;
+}
+
+function ensurePretty(objCard, host) {
+    const env = objCard.env;
+    if (!env) return;
+    if (!env.vid) {
+        if (!objCard.views.mtron) setObjCardView(objCard, host, "mtron", env.raw, "res");
+        return;
+    }
+    if (objCard.prettyLoaded) return;
+    objCard.prettyLoaded = true;
+    setObjCardView(objCard, host, "mtron", "pretty-printing…", "sys");
+    objCardDot(host, "busy");
+    readPretty(env.vid).then((text) => {
+        objCardDot(host, "up");
+        setObjCardView(objCard, host, "mtron", text, "res");
+    }).catch(() => {
+        objCardDot(host, "bad");
+        setObjCardView(objCard, host, "mtron", env.raw, "res");
+    });
+}
+
+function ensureJson(objCard, host) {
+    const env = objCard.env;
+    if (!env || !env.vid) return;
+    if (objCard.jsonLoaded) return;
+    objCard.jsonLoaded = true;
+    setObjCardView(objCard, host, "json", "reading " + env.vid + " as json…", "sys");
+    objCardDot(host, "busy");
+    readJson(env.vid).then((value) => {
+        objCardDot(host, "up");
+        if (value === null) setObjCardView(objCard, host, "json", "noobj", "sys");
+        else if (typeof value === "string") setObjCardView(objCard, host, "json", value, "res");
+        else setObjCardView(objCard, host, "json", JSON.stringify(value, null, 2), "json");
+    }).catch((error) => {
+        objCardDot(host, "bad");
+        setObjCardView(objCard, host, "json", String(error && error.message ? error.message : error), "err");
+    });
+}
+
+function objCardTabTo(objCard, host, tab) {
+    if (tab === "mtron") ensurePretty(objCard, host);
+    else if (tab === "json") ensureJson(objCard, host);
+    if (!objCard.views[tab]) return;
+    objCard.tab = tab;
+    renderObjCard(objCard, host);
+}
+
+function resolveObjPanel(tid) {
+    return MtronObjPanels && MtronObjPanels.resolve ? MtronObjPanels.resolve(tid) : null;
+}
+
+function mountObjPanel(objCard, host, env) {
+    const factory = objCard.objPanel;
+    if (!factory) return;
+    setObjCardView(objCard, host, "panel", "panel…", "sys");
+    const api = {
+        json: () => env.vid ? readJson(env.vid) : Promise.resolve(null),
+        pretty: () => env.vid ? readPretty(env.vid) : Promise.resolve(env.raw),
+        /* a panel that acts on the machine does it over this page's mtron socket */
+        eval: (expr) => evaluateThen(expr),
+        evalJson: (expr) => evalJson(expr),
+        read: (vid) => vid ? readJson(vid) : Promise.resolve(null),
+        view: (url) => viewPeer(url),
+        instance: wsBase,
+        mtron: (expr) => evalMtron(expr),
+        open: (env) => inspectReference(env || {}),
+        at: (text) => {
+            if (host.at) host.at.textContent = text;
+        },
+        frame: (vid) => {
+            pageFrame = (!vid || vid === "/.") ? null : String(vid);
+        },
+        paint: (el, text, kind) => paint(el, text, kind),
+        announce: (tools) => announceMcpTools(tools)
+    };
+    Promise.resolve().then(() => factory(env, api)).then((node) => {
+        if (node) setObjCardView(objCard, host, "panel", node, "dom");
+    }).catch((error) => {
+        setObjCardView(objCard, host, "panel", String(error && error.message ? error.message : error), "err");
+    });
+}
+
+/* a dot under every nested object in the mtron view; `open` names the host */
+/* make every address in the mtron view clickable: each object (a typed rec/lst,
+   a type reference, or a bare <uri>) is wrapped in a transparent button — the
+   text keeps its look, only the cursor changes. shift-click opens its ?docq. */
+function annotateObjects(root, text, open) {
+    const clean = root && root._text ? root._text : String(text == null ? "" : text);
+    const objects = MtronEnvelope && MtronEnvelope.objects
+        ? MtronEnvelope.objects(clean) : [];
+    if (!objects.length) return;
+    const filtered = objects.filter((o) => !(o.start === 0 && o.end === clean.length));
+    if (!filtered.length) return;
+    const sorted = filtered.slice().sort((a, b) => a.start - b.start || b.end - a.end);
+
+    /* a containment tree: the stack's top is the smallest object still open */
+    const roots = [];
+    const stack = [];
+    sorted.forEach((obj) => {
+        while (stack.length && stack[stack.length - 1].end <= obj.start) stack.pop();
+        if (stack.length) (stack[stack.length - 1].kids = stack[stack.length - 1].kids || []).push(obj);
+        else roots.push(obj);
+        stack.push(obj);
+    });
+
+    function highlightInto(el, seg) {
+        if (!seg) return;
+        if (window.hljs) {
+            try {
+                el.innerHTML = window.hljs.highlight(seg, {language: "mtron", ignoreIllegals: true}).value;
+                return;
+            } catch (ignored) {
+            }
+        }
+        el.textContent = seg;
+    }
+
+    function render(parent, start, end, objs) {
+        let cursor = start;
+        objs.forEach((obj) => {
+            if (obj.start > cursor) {
+                const seg = document.createElement("span");
+                highlightInto(seg, clean.slice(cursor, obj.start));
+                parent.appendChild(seg);
+            }
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "obj-link";
+            btn.title = (obj.vid ? obj.vid : obj.raw) + (obj.vid ? " · shift-click for ?docq" : "");
+            btn.addEventListener("click", (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                if (ev.shiftKey && obj.vid) {
+                    open({tid: null, vid: obj.vid + "?docq", raw: "!*<" + obj.vid + "?docq>", shortTid: "docs"});
+                } else {
+                    open(obj);
+                }
+            });
+            render(btn, obj.start, obj.end, obj.kids || []);
+            parent.appendChild(btn);
+            cursor = obj.end;
+        });
+        if (cursor < end) {
+            const seg = document.createElement("span");
+            highlightInto(seg, clean.slice(cursor, end));
+            parent.appendChild(seg);
+        }
+    }
+
+    root.textContent = "";
+    render(root, 0, clean.length, roots);
+}
+
+function updateBack(objCard, host) {
+    if (host.back) host.back.hidden = objCard.history.length === 0;
+}
+
+function inspectObjCard(objCard, host, env, options) {
+    resetObjCard(objCard, host, options && options.keepHistory);
+    objCard.env = env;
+    /* a type obj serializes as tid::T[…]@vid — route it to the type panel
+       regardless of which tid (base type) it refines */
+    objCard.objPanel = resolveObjPanel(env.isType ? "type" : env.tid);
+    if (objCard.objPanel) {
+        const button = objCardButton(host, "panel");
+        button.hidden = false;
+        button.disabled = false;
+    }
+    /* a type's label is its vid's last segment (its name), not its tid */
+    if (host.title) {
+        const label = (env.isType && env.vid)
+            ? String(env.vid).split("/").pop()
+            : (env.shortTid || "value");
+        host.title.textContent = label;
+    }
+    if (host.at) host.at.textContent = env.vid || "no vid";
+    if (host.expr) {
+        if (options && options.expr) host.expr.textContent = options.expr;
+        else host.expr.textContent = env.expr ? "mtron> " + env.expr : "";
+    }
+    setObjCardView(objCard, host, "mtron", env.vid ? "pretty-printing…" : env.raw, env.vid ? "sys" : "res");
+    if (env.vid) enableJson(host);
+    objCard.tab = objCard.objPanel ? "panel" : "mtron";
+    if (objCard.objPanel) mountObjPanel(objCard, host, env);
+    renderObjCard(objCard, host);
+    if (!objCard.objPanel && env.vid) ensurePretty(objCard, host);
+    updateBack(objCard, host);
+    if (options && options.open && host.dialog && !host.dialog.open) host.dialog.showModal();
+}
+
+function nestedObjCard(objCard, host, obj) {
+    objCard.history.push({
+        title: host.title ? host.title.textContent : "",
+        at: host.at ? host.at.textContent : "",
+        expr: host.expr ? host.expr.textContent : "",
+        views: objCard.views,
+        tab: objCard.tab,
+        env: objCard.env,
+        prettyLoaded: objCard.prettyLoaded,
+        jsonLoaded: objCard.jsonLoaded,
+        objPanel: objCard.objPanel
+    });
+    inspectObjCard(objCard, host, {
+            tid: obj.tid,
+            vid: obj.vid,
+            raw: obj.raw,
+            shortTid: obj.shortTid,
+            isType: obj.isType
+        },
+        {open: true, keepHistory: true, expr: "nested " + obj.tid});
+}
+
+function backObjCard(objCard, host) {
+    const state = objCard.history.pop();
+    if (!state) return;
+    objCard.views = state.views;
+    objCard.tab = state.tab;
+    objCard.env = state.env;
+    objCard.prettyLoaded = state.prettyLoaded;
+    objCard.jsonLoaded = state.jsonLoaded;
+    objCard.objPanel = state.objPanel;
+    if (host.title) host.title.textContent = state.title;
+    if (host.at) host.at.textContent = state.at;
+    if (host.expr) host.expr.textContent = state.expr;
+    renderObjCard(objCard, host);
+    updateBack(objCard, host);
+}
+
+const modalHost = {
+    dialog: $("#popup"),
+    title: $("#popup-title"),
+    at: $("#popup-at"),
+    expr: $("#popup-expr"),
+    tabs: $("#popup .popup-tabs"),
+    out: $("#popup-out"),
+    dot: $("#popup-dot"),
+    back: $("#popup-back"),
+    openObject: (obj) => openNested(obj)
+};
+const modalObjCard = emptyObjCard();
+
+function inspectReference(env) {
+    inspectObjCard(modalObjCard, modalHost, env, {open: true});
+}
+
+function openNested(obj) {
+    nestedObjCard(modalObjCard, modalHost, obj);
+}
+
+function popupBack() {
+    backObjCard(modalObjCard, modalHost);
+}
+
+/* one pinned card factory: the dialog's pin and a loaded page's cards both use it */
+function mountPinnedObjCard(env, options) {
+    const opts = options || {};
+    const root = document.createElement("article");
+    root.className = "obj-card";
+    root.dataset.tid = env.tid || "";
+    root.dataset.vid = env.vid || "";
+    root.dataset.label = opts.label || env.shortTid || "value";
+    root.dataset.view = opts.view || "panel";
+    applySpan(root, opts.col, opts.row);
+    root.innerHTML = '<header class="obj-card-head">' +
+        '<button type="button" class="obj-card-grip" title="drag to move" aria-label="move">⠿</button>' +
+        '<span class="obj-card-title"></span>' +
+        '<div class="popup-tabs" role="tablist">' +
+        '<button type="button" class="popup-tab" data-tab="panel" hidden>panel</button>' +
+        '<button type="button" class="popup-tab" data-tab="mtron">mtron</button>' +
+        '<button type="button" class="popup-tab" data-tab="json" disabled>json</button></div>' +
+        '<span class="obj-card-vid"></span>' +
+        '<button type="button" class="obj-card-unpin" title="unpin">×</button></header>' +
+        '<div class="popup-out"></div>' +
+        '<button type="button" class="obj-card-resize" title="drag to resize" aria-label="resize">◢</button>';
+    const host = {
+        dialog: null,
+        title: root.querySelector(".obj-card-title"),
+        at: root.querySelector(".obj-card-vid"),
+        expr: null,
+        tabs: root.querySelector(".popup-tabs"),
+        out: root.querySelector(".popup-out"),
+        dot: null,
+        back: null,
+        openObject: (obj) => inspectReference({
+            tid: obj.tid,
+            vid: obj.vid,
+            raw: obj.raw,
+            shortTid: obj.shortTid,
+            isType: obj.isType
+        })
+    };
+    const objCard = emptyObjCard();
+    root.querySelector(".obj-card-unpin").addEventListener("click", () => {
+        const parent = root.parentElement;
+        root.remove();
+        if (parent && parent.id === "pinned" && parent.childElementCount === 0) parent.hidden = true;
+    });
+    root.querySelectorAll(".popup-tab").forEach((button) => {
+        button.addEventListener("click", () => {
+            objCardTabTo(objCard, host, button.dataset.tab);
+            root.dataset.view = button.dataset.tab;
+        });
+    });
+    makeDraggable(root);
+    makeResizable(root);
+    inspectObjCard(objCard, host, env, {open: false});
+    if (host.title) host.title.textContent = root.dataset.label;
+    if (opts.view) objCardTabTo(objCard, host, opts.view);
+    const parent = opts.parent || $("#pinned");
+    parent.appendChild(root);
+    if (parent.id === "pinned") parent.hidden = false;
+    if (opts.close && modalHost.dialog.open) modalHost.dialog.close();
+    return root;
+}
+
+function pinObjCard() {
+    const env = modalObjCard.env;
+    if (!env) return;
+    const loaded = $("#page-loaded");
+    const target = loaded && !loaded.hidden ? loaded : $("#pinned");
+    mountPinnedObjCard(env, {
+        label: env.shortTid,
+        view: modalObjCard.tab || "panel",
+        span: 1,
+        parent: target,
+        close: true
+    });
+}
+
+const exprInput = $("#expr");
+
+$("#repl").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const value = exprInput.value;
+    exprInput.value = "";
+    remember(value);
+    run(value);
+});
+
+$("#clear").addEventListener("click", () => {
+    welcome();
+    exprInput.focus();
+});
+
+/* history — persisted so a reload keeps the last few expressions */
+const HISTORY_KEY = "metatron.console.history";
+/* named `commands`, not `history`: a top-level let would shadow window.history,
+   and cleanActionParams() needs the real one */
+let commands = [];
+try {
+    commands = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+} catch (ignored) {
+    commands = [];
+}
+let cursor = commands.length;
+
+function remember(expr) {
+    expr = String(expr || "").trim();
+    if (!expr || commands[commands.length - 1] === expr) return;
+    commands.push(expr);
+    if (commands.length > 100) commands = commands.slice(-100);
+    cursor = commands.length;
+    try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(commands));
+    } catch (ignored) {
+    }
+}
+
+exprInput.addEventListener("keydown", (ev) => {
+    if (ev.key === "ArrowUp") {
+        if (!commands.length) return;
+        ev.preventDefault();
+        cursor = Math.max(0, cursor - 1);
+        exprInput.value = commands[cursor];
+        exprInput.setSelectionRange(exprInput.value.length, exprInput.value.length);
+    } else if (ev.key === "ArrowDown") {
+        if (!commands.length) return;
+        ev.preventDefault();
+        cursor = Math.min(commands.length, cursor + 1);
+        exprInput.value = cursor === commands.length ? "" : commands[cursor];
+    } else if (ev.key === "l" && (ev.ctrlKey || ev.metaKey)) {
+        ev.preventDefault();
+        welcome();
+    }
+});
+
+document.addEventListener("keydown", (ev) => {
+    const tag = (document.activeElement || {}).tagName || "";
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
+    if (ev.key === "/" && !typing) {
+        ev.preventDefault();
+        exprInput.focus();
+    }
+});
+
+/* the mcp tools card is the first card rendered through the panel mapping */
+/* the mcp_server card is the surface readout of an mcp_client's tool catalog */
+function announceMcpTools(tools) {
+    const count = tools.length;
+    const set = (sel, text) => {
+        const el = $(sel);
+        if (el) el.textContent = text;
+    };
+    set("#m-tools", count + (count === 1 ? " tool" : " tools"));
+    set("#m-mcp", count + " tools");
+    set("#note-tools", count + " exposed");
+    set("#r-tools", "ok");
+    const evalTool = tools.some((tool) => /eval_mtron/.test(tool.name || ""));
+    const evalCell = $("#r-eval");
+    if (evalCell) {
+        evalCell.textContent = evalTool ? "available" : "—";
+        evalCell.style.color = evalTool ? "var(--ok)" : "";
+    }
+    setDot($("#d-toolpanel"), "up");
+    setDot($("#d-mcp"), "up");
+}
+
+/* the static mcp_client card (the fallback page and the pre-load paint) has no vid,
+   so it asks for one; a page card with a vid gets the real runner through mountObjPanel */
+(function mountStaticMcpPanel() {
+    const factory = MtronObjPanels && MtronObjPanels.resolve
+        ? MtronObjPanels.resolve("mcp_client") : null;
+    const host = $("#mcp-panel-host");
+    if (!factory || !host) return;
+    host.appendChild(factory(
+        {tid: "mcp_client", vid: null, raw: ""},
+        {
+            eval: (expr) => evaluateThen(expr),
+            paint: (el, text, kind) => paint(el, text, kind),
+            announce: (tools) => announceMcpTools(tools)
+        }
+    ));
+})();
+
+/* ── actions: an expression and the surface it lands on ──────────────────
+   the console's url protocol, carried on any page: ?mtron=<expr>&at=<surface>.
+   every clickable action renders as a real anchor, so copy-link works. */
+const SURFACES = {
+    "web/console": (action) => run(action.expr),
+    "popup": (action) => showPopup(action)
+};
+
+function act(expr, at) {
+    expr = String(expr || "").trim();
+    if (!expr) return;
+    const surface = at && SURFACES[at] ? at : "web/console";
+    if (at && !SURFACES[at]) line("sys", "unknown at=" + at + " — using web/console");
+    SURFACES[surface]({expr: expr, at: surface});
+    if (surface === "web/console")
+        $("#console-card").scrollIntoView({behavior: "smooth", block: "center"});
+}
+
+function actionHref(expr, at) {
+    const url = new URL(location.href);
+    url.searchParams.delete("mtron");
+    url.searchParams.delete("at");
+    url.searchParams.set("mtron", expr);
+    if (at && at !== "web/console") url.searchParams.set("at", at);
+    return url.pathname + url.search + url.hash;
+}
+
+function actionLink(label, expr, at, cls) {
+    const anchor = document.createElement("a");
+    anchor.className = "act" + (cls ? " " + cls : "");
+    anchor.href = actionHref(expr, at);
+    anchor.dataset.act = "1";
+    anchor.dataset.expr = expr;
+    anchor.dataset.at = at || "web/console";
+    anchor.textContent = label;
+    anchor.title = "mtron: " + expr + "   →   at=" + (at || "web/console");
+    return anchor;
+}
+
+function showPopup(action) {
+    const host = modalHost;
+    resetObjCard(modalObjCard, host, false);
+    if (host.title) host.title.textContent = "result";
+    if (host.at) host.at.textContent = "at=" + action.at;
+    if (host.expr) host.expr.textContent = "mtron> " + action.expr;
+    setObjCardView(modalObjCard, host, "mtron", "evaluating…", "sys");
+    objCardDot(host, "busy");
+    if (!host.dialog.open) host.dialog.showModal();
+    evaluateThen(action.expr).then((result) => {
+        const env = MtronEnvelope ? MtronEnvelope.parse(result) : null;
+        objCardDot(host, "up");
+        inspectObjCard(modalObjCard, host, env || {raw: result}, {open: true, expr: "mtron> " + action.expr});
+    }).catch((error) => {
+        objCardDot(host, "bad");
+        setObjCardView(modalObjCard, host, "mtron", "!!! " + (error && error.message ? error.message : String(error)), "err");
+    });
+}
+
+document.addEventListener("click", (ev) => {
+    const anchor = ev.target && ev.target.closest ? ev.target.closest("a[data-act]") : null;
+    if (!anchor) return;
+    if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    ev.preventDefault();
+    act(anchor.dataset.expr, anchor.dataset.at);
+});
+
+function cleanActionParams() {
+    const url = new URL(location.href);
+    url.searchParams.delete("mtron");
+    url.searchParams.delete("at");
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+}
+
+function showPending(expr, at) {
+    const bar = $("#pending");
+    bar.hidden = false;
+    $("#pending-expr").textContent = expr;
+    $("#pending-at").textContent = "→ at=" + (at || "web/console");
+    $("#pending-run").onclick = () => {
+        bar.hidden = true;
+        cleanActionParams();
+        act(expr, at);
+    };
+    $("#pending-dismiss").onclick = () => {
+        bar.hidden = true;
+        cleanActionParams();
+    };
+}
+
+/* ── boot ──────────────────────────────────────────────────────────────── */
+/* ── physical machine stats ─────────────────────────────────────────────
+   evaluate sys_stat() on the x-mtron socket, so the byte values keep their
+   unit — the json codec drops it. */
+const BYTE_UNITS = {bB: 1, kB: 1024, mB: 1048576, gB: 1073741824, tB: 1099511627776, pB: 1125899906842624};
+
+function statVal(v) {
+    return v && typeof v === "object" && "js" in v ? v.js : v;
+}
+
+function statBytes(v) {
+    if (!v || typeof v !== "object" || !("js" in v) || !v.tid) return NaN;
+    const unit = String(v.tid.toString()).split("/").pop();
+    return (v.js || 0) * (BYTE_UNITS[unit] || 1);
+}
+
+function humanBytes(n) {
+    if (!Number.isFinite(n)) return "—";
+    if (n >= 1099511627776) return (n / 1099511627776).toFixed(1) + "tB";
+    if (n >= 1073741824) return (n / 1073741824).toFixed(1) + "gB";
+    if (n >= 1048576) return (n / 1048576).toFixed(1) + "mB";
+    if (n >= 1024) return (n / 1024).toFixed(1) + "kB";
+    return n + "B";
+}
+
+function statChip(k, v) {
+    const chip = document.createElement("span");
+    chip.className = "stat";
+    const key = document.createElement("span");
+    key.className = "k";
+    key.textContent = k;
+    const val = document.createElement("span");
+    val.className = "v";
+    val.textContent = v;
+    chip.appendChild(key);
+    chip.appendChild(val);
+    return chip;
+}
+
+function renderStats(s) {
+    const el = $("#topbar-stats");
+    if (!el || !s || !s.isRec || !s.isRec()) return;
+    const g = (key) => {
+        for (const [k, v] of s.js) if (k.toString() === key) return v;
+        return undefined;
+    };
+    const chips = [];
+    if (location.host) chips.push(statChip("at", location.host));
+    const memFree = statBytes(g("free_mem_phys"));
+    const memTotal = statBytes(g("total_mem_phys"));
+    const diskFree = statBytes(g("disk_free"));
+    const diskTotal = statBytes(g("disk_total"));
+    const cpu = statVal(g("cpu_load"));
+    const model = statVal(g("cpu_model"));
+    const cores = statVal(g("processor"));
+    if (Number.isFinite(memFree) && Number.isFinite(memTotal))
+        chips.push(statChip("mem", humanBytes(memFree) + " / " + humanBytes(memTotal)));
+    if (Number.isFinite(diskFree) && Number.isFinite(diskTotal))
+        chips.push(statChip("disk", humanBytes(diskFree) + " / " + humanBytes(diskTotal)));
+    if (cpu != null && cpu !== "")
+        chips.push(statChip("load", (typeof cpu === "number" ? Math.round(cpu) : cpu) + "%"));
+    if (model)
+        chips.push(statChip("cpu", (cores ? cores + " cores · " : "") + String(model).split(" w/ ")[0]));
+    el.replaceChildren(...chips);
+}
+
+/* evaluate one expression on the x-mtron (structural) socket — unit- and
+   vid-preserving; the json codec drops tids/vids, so the stats strip and
+   the panels that need the raw machine form read through here. */
+function evalMtron(expr) {
+    const mime = "application/x-mtron";
+    const reader = readerFor(mime, readers);
+    const run = reader.chain.then(() => connectReader(mime, wsBase, readers)).then((socket) => new Promise((resolve) => {
+        const timer = setTimeout(() => {
+            socket.removeEventListener("message", answer);
+            resolve("");
+        }, 8000);
+        const answer = (ev) => {
+            clearTimeout(timer);
+            socket.removeEventListener("message", answer);
+            frameText(ev.data).then((text) => resolve(text)).catch(() => resolve(""));
+        };
+        socket.addEventListener("message", answer);
+        socket.send(String(expr));
+    }));
+    reader.chain = run.catch(() => {
+    });
+    return run;
+}
+
+async function loadStats() {
+    try {
+        const raw = await evalMtron("sys_stat()");
+        if (!raw) return;
+        const parsed = MtronIO.read(String(raw));
+        renderStats(parsed);
+    } catch (ignored) {
+        /* stats are decorative — a failed read leaves the strip empty, never broken */
+    }
+}
+
+function renderIdentity() {
+    $("#ws-ep").textContent = wsBase;
+    $("#ws-ep").title = wsUrl;
+    const instanceEl = $("#instance");
+    if (instanceEl) {
+        try {
+            instanceEl.textContent = new URL(wsBase, location.href).host;
+        } catch (ignored) {
+            instanceEl.textContent = "this machine";
+        }
+        instanceEl.title = wsUrl;
+    }
+    const localEl = $("#instance-local");
+    if (localEl) {
+        localEl.hidden = !onInstance;
+        localEl.onclick = (ev) => {
+            ev.preventDefault();
+            viewPeer("");
+        };
+    }
+    const boot = metaContent("metatron:boot");
+    const bootEl = $("#boot-file");
+    if (boot && bootEl) bootEl.textContent = boot;
+}
+
+let refreshing = false;
+
+async function refresh() {
+    if (refreshing) return;
+    refreshing = true;
+    try {
+        renderIdentity();
+        loadStats();
+    } finally {
+        refreshing = false;
+    }
+}
+
+loadHighlighter();
+/* the static cards carry their span in data-col/data-row; a loaded page
+   overwrites it per card from the splash_card's span rec. */
+$$("#page-panel [data-col]").forEach((el) => applySpan(el, el.dataset.col, el.dataset.row));
+
+/* the example chips become real links — copy-link yields a working action */
+$$(".chips .chip").forEach((chip) => {
+    const expr = chip.dataset.expr || chip.textContent;
+    chip.replaceWith(actionLink(chip.textContent, expr, "web/console", "chip"));
+});
+
+modalHost.tabs.querySelectorAll(".popup-tab").forEach((button) => {
+    button.addEventListener("click", () => objCardTabTo(modalObjCard, modalHost, button.dataset.tab));
+});
+$("#popup-back").addEventListener("click", popupBack);
+$("#popup-pin").addEventListener("click", pinObjCard);
+$("#popup-close").addEventListener("click", () => $("#popup").close());
+/* clicking the backdrop — outside the dialog's box — also closes it */
+$("#popup").addEventListener("click", (ev) => {
+    const rect = ev.currentTarget.getBoundingClientRect();
+    if (ev.clientX < rect.left || ev.clientX > rect.right ||
+        ev.clientY < rect.top || ev.clientY > rect.bottom) {
+        ev.currentTarget.close();
+    }
+});
+$("#popup").addEventListener("close", () => {
+    setDot($("#popup-dot"), "");
+    modalObjCard.history = [];
+    updateBack(modalObjCard, modalHost);
+});
+$("#popup-copy").addEventListener("click", async () => {
+    const button = $("#popup-copy");
+    try {
+        await navigator.clipboard.writeText($("#popup-out").textContent);
+        button.textContent = "copied";
+    } catch (ignored) {
+        line("err", "clipboard unavailable");
+    }
+    setTimeout(() => {
+        button.textContent = "copy";
+    }, 1200);
+});
+
+/* an action carried on this page's own url waits for one click */
+const actionExpr = params.get("mtron");
+const actionAt = params.get("at") || "web/console";
+if (actionExpr) showPending(actionExpr, actionAt);
+
+refresh();
+setInterval(() => {
+    if (!document.hidden) refresh();
+}, 15000);
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refresh();
+});
+
+/* the page itself is the splash_page card: [panel][mtron][json].
+   ?vid=<vid> or ?page=<url with ?vid=> loads that splash_page; save writes it back. */
+(function pageCard() {
+    const tabs = $$(".page-tabs .popup-tab");
+    if (!tabs.length) return;
+    const pagePanel = $("#page-panel");
+    const encoding = $("#page-encoding");
+    const out = $("#page-encoding-out");
+    const pageSave = $("#page-save");
+    const loadedGrid = $("#page-loaded");
+    let PAGE = defaultPage();
+    let pageOrigin = "local";
+    const cache = new Map();
+    let currentView = "panel";
+    let pageTitle = "metatron";
+    const saveDialog = $("#save-as");
+    const saveForm = $("#save-as-form");
+    const saveVid = $("#save-as-vid");
+    const saveError = $("#save-as-error");
+
+    /* the page object lives on the app's own machine, so the layout and its
+       save never depend on what a peer happens to expose */
+    function pageRead(mime, vid) {
+        return localRead(mime, vid);
+    }
+
+    function pageEval(expr) {
+        return localEval(expr);
+    }
+
+    const BEFORE = [
+        {tid: "/m/web/http/http_server", label: "http server", col: 1, row: 1, vid: "/memory/space/web/http"},
+        {tid: "/m/web/ws/ws_server", label: "ws server", col: 1, row: 1, vid: "/memory/space/web/ws"},
+        {tid: "/m/sys/ui/console", label: "console", col: 4, row: 2, vid: "/usr/marko/console"}
+    ];
+    const KNOWN = {
+        http_server: ["/m/web/http/http_server", "/memory/space/web/http"],
+        ws_server: ["/m/web/ws/ws_server", "/memory/space/web/ws"],
+        console: ["/m/sys/ui/console", "/usr/marko/console"]
+    };
+    const AFTER = [
+        {tid: "mcp_client", label: "mcp tools", col: 2, row: 1}
+    ];
+
+    /* the shipped page is read-only: saving it asks where the copy should live */
+    function isDefaultPage(vid) {
+        const value = String(vid == null ? "" : vid).trim().replace(/^</, "").replace(/>$/, "");
+        return value === "mfs:boot/space/web/default.mtron" ||
+            value === "/mfs/boot/space/web/default.mtron";
+    }
+
+    function saveLabel() {
+        return isDefaultPage(PAGE) ? "save as…" : "save";
+    }
+
+    function updateSaveButton() {
+        if (!pageSave) return;
+        pageSave.textContent = saveLabel();
+        pageSave.title = isDefaultPage(PAGE)
+            ? "the default page is read-only — save this page somewhere else"
+            : "write this page to " + PAGE;
+    }
+
+    function suggestPage() {
+        const value = String(PAGE == null ? "" : PAGE).replace(/^</, "").replace(/>$/, "");
+        const cut = value.lastIndexOf("/");
+        return (cut > 0 ? value.slice(0, cut + 1) : "mfs:boot/") + "my_splash_page.mtron";
+    }
+
+    function saveFail(message) {
+        if (!saveError) return;
+        saveError.textContent = message || "";
+        saveError.hidden = !message;
+    }
+
+    function openSaveAs() {
+        if (!saveDialog) return;
+        saveVid.value = suggestPage();
+        saveFail("");
+        if (!saveDialog.open) saveDialog.showModal();
+        saveVid.focus();
+        saveVid.select();
+    }
+
+    function paintPage(text, view) {
+        if (view === "json") {
+            paint(out, text, "json");
+            return;
+        }
+        paint(out, text, "res");
+        annotateObjects(out, text, (obj) => openNested(obj));
+    }
+
+    function show(view) {
+        currentView = view;
+        tabs.forEach((button) => button.setAttribute("aria-selected", String(button.dataset.pageView === view)));
+        const isPanel = view === "panel";
+        pagePanel.hidden = !isPanel;
+        encoding.hidden = isPanel;
+        if (isPanel) return;
+        if (cache.has(view)) {
+            paintPage(cache.get(view), view);
+            return;
+        }
+        out.textContent = "reading " + PAGE + "…";
+        const read = view === "json"
+            ? pageRead("application/json", PAGE).then((value) => typeof value === "string" ? value : JSON.stringify(value, null, 2))
+            : pageRead("application/x-mtron-ui", PAGE).then((value) => typeof value === "string" ? value : String(value));
+        read.then((text) => {
+            cache.set(view, text);
+            paintPage(text, view);
+        }).catch((error) => {
+            out.textContent = String(error && error.message ? error.message : error);
+        });
+    }
+
+    function pageCards() {
+        if (loadedGrid && !loadedGrid.hidden) {
+            return Array.from(loadedGrid.children)
+                .filter((el) => el.dataset && el.dataset.tid)
+                .map((el) => ({
+                    tid: el.dataset.tid,
+                    vid: el.dataset.vid || null,
+                    label: el.dataset.label || null,
+                    view: el.dataset.view || "panel",
+                    col: Number(el.dataset.col) || 1,
+                    row: Number(el.dataset.row) || 1
+                }));
+        }
+        const cards = BEFORE.map((entry) => ({...entry}));
+        $$("#pinned .obj-card").forEach((root) => {
+            if (!root.dataset.tid) return;
+            cards.push({
+                tid: root.dataset.tid,
+                vid: root.dataset.vid || null,
+                label: root.dataset.label || null,
+                view: root.dataset.view || "panel",
+                col: Number(root.dataset.col) || 1,
+                row: Number(root.dataset.row) || 1
+            });
+        });
+        AFTER.forEach((entry) => cards.push({...entry}));
+        return cards;
+    }
+
+    async function loadPage(source) {
+        let vid = String(source == null ? "" : source).trim();
+        if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
+        try {
+            const url = new URL(source, location.href);
+            const named = url.searchParams.get("vid");
+            if (named) vid = named;
+            if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
+        } catch (ignored) {
+        }
+        if (!MtronIO) throw new Error("mtron-io.js is not loaded");
+        /* the vid is used exactly as given: mfs:boot/... is the mfs scheme, not the /mfs space path.
+           only the app's own machine is asked for the page object; an older app build names
+           its source tree fs: where the current one says mfs:, so both spellings are tried.
+           when neither answers, the app's built-in layout (the static page) carries the page. */
+        const swapped = /^mfs:/.test(vid) ? "fs:" + vid.slice(4)
+            : /^fs:/.test(vid) ? "mfs:" + vid.slice(3) : null;
+        const attempts = [{origin: "local", vid}];
+        if (swapped) attempts.push({origin: "local", vid: swapped});
+        let last = null;
+        let page = null;
+        let loaded = null;
+        for (const attempt of attempts) {
+            try {
+                const raw = await localRead("application/x-mtron", attempt.vid);
+                const sourceText = String(raw == null ? "" : raw).trim();
+                if (!sourceText || sourceText === "noobj" || /^fail::/.test(sourceText))
+                    throw new Error(sourceText || "noobj");
+                const value = plain(MtronIO.read(sourceText));
+                if (!value || !value.layout) throw new Error("no splash_page object at " + attempt.vid);
+                page = value;
+                loaded = attempt;
+                break;
+            } catch (error) {
+                last = error;
+            }
+        }
+        if (!page) throw last || new Error("no page at " + vid);
+        const layout = Array.isArray(page.layout) ? page.layout : [];
+        loadedGrid.textContent = "";
+        layout.forEach((rec) => {
+            if (!rec) return;
+            const tid = rec.tid ? String(rec.tid) : null;
+            const cvid = rec.vid ? String(rec.vid) : null;
+            if (!tid) return;
+            const known = KNOWN[tid];
+            const cardTid = known ? known[0] : tid;
+            const cardVid = cvid || (known ? known[1] : null);
+            const span = spanOf(rec.span);
+            const view = wordOf(rec.view) || "panel";
+            if (cardVid) {
+                mountPinnedObjCard({tid: cardTid, vid: cardVid, raw: ""}, {
+                    label: rec.label ? String(rec.label) : tid,
+                    view: view,
+                    col: span.col,
+                    row: span.row,
+                    parent: loadedGrid
+                });
+            } else {
+                const objCard = $$("#page-panel [data-tid]").find((el) => el.dataset.tid === cardTid);
+                if (!card) return;
+                const label = rec.label ? String(rec.label) : (objCard.dataset.label || tid);
+                const heading = card.querySelector("header h2");
+                if (heading) heading.textContent = label;
+                objCard.dataset.label = label;
+                applySpan(objCard, span.col, span.row);
+                loadedGrid.appendChild(card);
+            }
+        });
+        $$("#page-panel main > *").forEach((el) => {
+            if (el !== loadedGrid) el.hidden = true;
+        });
+        loadedGrid.hidden = false;
+        PAGE = loaded.vid;
+        pageOrigin = loaded.origin;
+        const barVid = $(".page-vid");
+        if (barVid) barVid.textContent = loaded.vid;
+        updateSaveButton();
+        if (page.title) {
+            pageTitle = String(page.title);
+            document.title = pageTitle;
+        }
+        cache.clear();
+        if (!encoding.hidden) show(currentView);
+    }
+
+    async function savePage(destination) {
+        const vid = String(destination == null ? PAGE : destination);
+        if (pageSave) {
+            pageSave.disabled = true;
+            pageSave.textContent = "saving…";
+        }
+        try {
+            const layout = pageCards().map((card) => {
+                const parts = ["tid=><" + card.tid + ">"];
+                if (card.vid) parts.push("vid=><" + card.vid + ">");
+                if (card.label) parts.push("label=>'" + String(card.label).replace(/'/g, "\\'") + "'");
+                if (card.view && card.view !== "panel") parts.push("view=>" + card.view);
+                if (card.col > 1 || card.row > 1) {
+                    const sp = [];
+                    if (card.col > 1) sp.push("col=>" + card.col);
+                    if (card.row > 1) sp.push("row=>" + card.row);
+                    parts.push("span=>[" + sp.join(",") + "]");
+                }
+                return "splash_card::[" + parts.join(",") + "]";
+            });
+            const value = "[title=>'" + String(pageTitle).replace(/'/g, "\\'") + "',layout=>[" + layout.join(",") + "]]";
+            const target = String(vid).charAt(0) === "<" ? String(vid) : "<" + vid + ">";
+            const expr = target + " -> splash_page::" + value;
+            const result = await pageEval(expr);
+            const text = String(result == null ? "" : result);
+            if (/^fail::/.test(text)) throw new Error(text);
+            cache.clear();
+            if (pageSave) pageSave.textContent = "saved";
+            if (!encoding.hidden) show(currentView);
+            return true;
+        } catch (error) {
+            if (pageSave) pageSave.textContent = "save failed";
+            line("err", "page save: " + (error && error.message ? error.message : error));
+            return false;
+        } finally {
+            if (pageSave) {
+                pageSave.disabled = false;
+                setTimeout(updateSaveButton, 1500);
+            }
+        }
+    }
+
+    tabs.forEach((button) => button.addEventListener("click", () => show(button.dataset.pageView)));
+    if (pageSave) pageSave.addEventListener("click", () => {
+        if (isDefaultPage(PAGE)) openSaveAs();
+        else savePage(PAGE);
+    });
+    if (saveForm) saveForm.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        const vid = String(saveVid.value || "").trim().replace(/^</, "").replace(/>$/, "");
+        if (!vid) {
+            saveFail("a save location is required");
+            return;
+        }
+        if (isDefaultPage(vid)) {
+            saveFail("that is the default page — choose another location");
+            return;
+        }
+        saveFail("");
+        savePage(vid).then((ok) => {
+            if (!ok) return;
+            PAGE = vid;
+            const barVid = $(".page-vid");
+            if (barVid) barVid.textContent = vid;
+            if (!encoding.hidden) show(currentView);
+            saveDialog.close();
+        });
+    });
+    if (saveDialog) {
+        const cancel = $("#save-as-cancel");
+        if (cancel) cancel.addEventListener("click", () => saveDialog.close());
+    }
+    updateSaveButton();
+
+    const source = params.get("page") || params.get("vid");
+    if (source) {
+        loadPage(source).catch((error) => {
+            line("err", "page load: " + (error && error.message ? error.message : error));
+        });
+    } else {
+        /* no source in the url: load the saved default page, falling back to the static page */
+        loadPage(PAGE).catch(() => {
+        });
+    }
+})();

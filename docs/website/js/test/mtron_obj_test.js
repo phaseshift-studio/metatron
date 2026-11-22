@@ -15,17 +15,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { f } from '../furi.js';
-import { PlatonicObj, NoObj, Bool, Bytes, Int, Real, Str, Uri, Lst, Rec, Rel, Fail, noobj, of } from '../mtron-obj.js';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { f } from '../sdk/furi.js';
+import { PlatonicObj, NoObj, Bool, Bytes, Int, Real, Str, Uri, Lst, Rec, Rel, Fail, noobj, of } from '../sdk/mtron-obj.js';
 
-let pass = 0, fail = 0;
-function eq(actual, expected, label) {
-    if (actual === expected) pass++;
-    else { fail++; console.log('FAIL', label, '\n  expected:', JSON.stringify(expected), '\n  actual:  ', JSON.stringify(actual)); }
-}
-function t(cond, label) { if (cond) pass++; else { fail++; console.log('FAIL', label); } }
+function eq(actual, expected, label) { assert.equal(actual, expected, label); }
+function t(cond, label) { assert.ok(cond, label); }
 
-/* ---- the triple (js, tid, vid) ---- */
+test('mtron-obj', () => {
+    /* ---- the triple (js, tid, vid) ---- */
 const age = new Int(29, f('int'), f('/usr/marko/age'));
 t(age.isInt(), 'Int isInt');
 t(!age.isReal() && !age.isStr(), 'Int is only Int');
@@ -87,5 +86,4 @@ eq(age.toString(), '29', 'render Int');
 eq(name.toString(), 'code', 'render Str');
 eq(noobj.toString(), 'noobj', 'render noobj');
 
-console.log('\n' + pass + ' passed, ' + fail + ' failed');
-process.exit(fail === 0 ? 0 : 1);
+});
