@@ -166,7 +166,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
     }
 
     default Rec minus(final Rec rhs) {
-        return Poly.Helper.mergeObjRecursion(this, rhs.elements().map(rkv -> rel(rkv.first(), rkv.second().c(C::inv))).collect(new CommonUtil.RecCollector(rhs.tid(), null))).asRec();
+        return this.plus(rhs.neg());
+    }
+
+    default Rec neg() {
+        return this.elements().map(rkv -> rel(rkv.first(), rkv.second().c(C::inv))).collect(new CommonUtil.RecCollector(this.tid(), this.vid()));
     }
 
     @Override
