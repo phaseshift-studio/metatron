@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -452,7 +453,13 @@ public interface WebSocketObj extends Rec, Closeable {
             final Obj previous = this.atDirect(uri(ON_MESSAGE));
             ROUTED.put(this, previous);
             this.logger().debug("WIRE router installed on %s (previous=%s)", this.peerName(), previous.isNoObj() ? "none" : previous.tid());
-            this.at(uri(ON_MESSAGE), instLambda((lhs, inst) -> {
+            // THE ROUTER TAKES ANY MULTIPLICITY (#{*}), as mtron_on_message does. Declared #{?}, instLambda's default,
+            // a reply with a coefficient did not match it, so while inst_dom is checked the processor compressed the
+            // coefficient away before the body ran: {2}2@<0x…> filled its waiter as 2@<0x…>, and only the lambda's own
+            // return regained the {2}, which no caller reads. A bulked member lost its count on every remote lane that
+            // answered it alone (2026-11-22: a peer re-planning {{2}1,2} dealt {2}1 to one leaf, and {{2}2,3} came home
+            // as {2,3}).
+            this.at(uri(ON_MESSAGE), instLambda(ALL.maybeSome(), ALL.maybeSome(), (lhs, inst) -> {
                 final Map<fURI, Waiter> waiters = WAITERS.computeIfAbsent(this, k -> new ConcurrentHashMap<>());
                 final fURI vid = lhs.vid();
                 final fURI trip = tripOf(vid);

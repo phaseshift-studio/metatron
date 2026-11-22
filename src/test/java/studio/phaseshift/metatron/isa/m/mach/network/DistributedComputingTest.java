@@ -700,16 +700,14 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     /**
      * A BULKED MEMBER KEEPS ITS COUNT ON A REMOTE LANE: {@code {1,1,2}} is {@code {{2}1,2}}, so one lane of plus(1) answers
-     * {@code {{2}2,3}}. Over these forked peers a remote lane answers {@code {2,3}}: the count is dropped whether the
-     * branch deals (split=part), copies, or holds one lane, so law_bsp's lanes inherit it, and a bulked BSP frontier loses
-     * its traversers' counts between passes. It is not the transport: Marko's live checks drop the count locally too
-     * ({{2}1,2}.plus(1) answers {2,3}, as do {{2}1,2}.branch(id()) and {1,1,2}.branch?<=int{*}(plus(1))), so a bulked
-     * member's count is lost before any lane ships.
+     * {@code {{2}2,3}}. The peer the lane lands on has dialed peers of its own, so it re-plans the lane and deals
+     * {@code {2}1} to one leaf, which answers {@code {2}2} alone, addressed by the trip's tag. The client's router took
+     * that reply through a {@code #{?}} lambda, and while inst_dom is checked the processor compressed the coefficient
+     * away before the router filled its waiter, so the answer came home as {@code {2,3}} (traced 2026-11-22: the peer
+     * sent {@code {2}2@<0x…>}, the root's waiter held {@code 2@<0x…>}). The router now takes any multiplicity, as
+     * mtron_on_message does (WebSocketObj#router).
      */
     @Test
-    @Disabled("a remote branch lane drops a bulked member's count over the forked peers: {1,1,2}.branch?<=int{*}(<peer> => plus(1)) "
-            + "answers {2,3}, not {{2}2,3}; dealt and copied branches drop it the same way, so law_bsp's lanes inherit it "
-            + "(probe 2026-11-22). Not the transport: live, {{2}1,2}.plus(1) answers {2,3} on one machine (Marko); unresolved")
     void test_N_a_bulked_member_keeps_its_count_on_a_remote_lane() {
         final String peer = Machine.current().network().peers().elements()
                 .map(rel -> rel.second().asRec().at(uri(HOST)).uriValue().toString()).findFirst().orElseThrow();
