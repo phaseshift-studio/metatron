@@ -904,6 +904,11 @@ public interface Inst extends Call {
                 return arg.asLst().lstValue().stream().allMatch(Helper::isPure);
             if (arg.isRec())
                 return arg.asRec().jvm().entrySet().stream().allMatch(entry -> isPure(entry.getKey()) && isPure(entry.getValue()));
+            // A KEYED ARGUMENT IS A REL: a rec's elements() are its key=>value pairs, so an instruction with keyed args
+            // (repeat's code=>, a branch's //0=>) hands each pair here. Read as a plain value, the code a pair holds was
+            // never checked, and repeat(code=>plus(1).print(_)) answered pure (Marko, 2026-11-22: repeat is pure)
+            if (arg.isRel())
+                return isPure(arg.asRel().first()) && isPure(arg.asRel().second());
             return true;
         }
 
