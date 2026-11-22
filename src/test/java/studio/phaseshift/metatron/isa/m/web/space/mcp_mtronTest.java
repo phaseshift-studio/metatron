@@ -24,6 +24,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.m.ai.llm.type.mTool;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.EvalMtronCases;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mcp.mcpClient;
@@ -72,6 +73,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder.EVAL_MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TID;
 import static studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.m.web.webInstSet.*;
@@ -546,14 +548,13 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
             checkEquality(LOG, jnt(9), Machine.read(f("/test/node/written")), true);
             checkEquality(LOG, jnt(3), Machine.current().network().submit(origin, mParser.parse("1.plus(2)")), true);
         }
-        assertTrue(Machine.current().network().peerOf(origin).isNoObj(),
-                transport + " — closing the client retracts its peer: " + Machine.current().network().peers());
+        // closing the client retracts its peer
+        checkEquality(LOG, noobj(), Machine.current().network().peerOf(origin), true);
     }
 
     /**
-     * A SERVER WITHOUT METATRON'S TOOLS MAKES NO NODE: from, to and eval are declared from eval_mtron and read_memory
-     * alone, so a client of another mcp server (the emulator) declares none of them, and the network finds nothing to
-     * dispatch to.
+     * A SERVER WITHOUT METATRON'S TOOLS MAKES NO NODE: from, to and eval are each a program sent to eval_mtron, so a
+     * client of another mcp server (the emulator) declares none of them, and the network finds nothing to dispatch to.
      */
     @Test
     public void testAServerWithoutMetatronsToolsMakesNoNode() {
@@ -564,9 +565,9 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         try (final mcpClient client = new mcpClient(CommonUtil.mutableMap(uri(HOST), uri(origin.extend(f("/emulator")))),
                 MCP_CLIENT_TID, null)) {
             assertFalse(client.at(uri(TOOL)).isNoObj(), "the emulator answers with tools of its own");
+            // none is declared
             Stream.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID).forEach(primitive ->
-                    assertTrue(Network.Helper.overrideIn(client, primitive).isNoObj(),
-                            primitive + " is not declared: " + client.at(uri(INST))));
+                    checkEquality(LOG, noobj(), Network.Helper.overrideIn(client, primitive), true));
         } finally {
             emulator.close();
         }
@@ -581,7 +582,8 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         final fURI host = f(baseUrl()).extend(f("/mcp"));
         try (final mcpClient client = new mcpClient(CommonUtil.mutableMap(
                 uri(HOST), uri(host),
-                uri("inst_map"), rec(uri(EVAL_INST_TID), str("m_web_mcp_mcp_mtron_list_space"))), MCP_CLIENT_TID, null)) {
+                uri("inst_map"), rec(uri(EVAL_INST_TID), str(mTool.toolName(MCP_MTRON_SERVER_TID.extend("list_space"))))),
+                MCP_CLIENT_TID, null)) {
             final Obj answer = Network.Helper.evaluate(Network.Helper.overrideIn(client, EVAL_INST_TID), host.origin(),
                     mParser.parse("1.plus(2)"));
             assertTrue(answer.isRec(), "eval is the inst_map's list_space, not eval_mtron: " + answer);
@@ -593,7 +595,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
      */
     private static Obj evalMtron(final mcpClient client, final String code) {
         final Rec tools = client.at(uri(TOOL)).asRec();
-        final Inst evalInst = tools.at(uri("m_web_mcp_mcp_mtron_eval_mtron")).asRec().at(uri(INST)).asInst();
+        final Inst evalInst = tools.at(uri(mTool.toolName(EVAL_MTRON_TID))).asRec().at(uri(INST)).asInst();
         return evalInst.args(rec(uri(CODE), str(code))).apply(noobj());
     }
 }

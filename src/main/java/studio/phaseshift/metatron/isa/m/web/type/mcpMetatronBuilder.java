@@ -173,7 +173,9 @@ public final class mcpMetatronBuilder {
                                     // report an MCP error) rather than flattening them to text
                                     if (result.isFail())
                                         return result;
-                                    // mimeq picks the rendering: application/x-mtron → native, anything else → JSON
+                                    // the mime argument picks the rendering: a JSON mime answers the value itself, which the
+                                    // mcp layer writes as JSON, and any other renders through its own serializer as a str
+                                    // (application/x-mtron, the default, as mtron)
                                     final MIME.MIMEType mime = MIME.MIMEType.of(inst.arg(MIME_ARG, 1).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)).uriValue().toString(), MIME.MIMEType.APPLICATION_MTRON);
                                     return !mime.isJson() ? str(new String(mime.serializer().outputBytes(result).array(), StandardCharsets.UTF_8)) : result;
                                 } catch (final Exception e) {

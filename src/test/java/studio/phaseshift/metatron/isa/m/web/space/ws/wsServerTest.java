@@ -207,27 +207,29 @@ public class wsServerTest extends AbstractMetatronTest {
     }
 
     /**
-     * A HANG-UP ENDS THE EVALUATION OF ITS MESSAGE (2026-11-16), ON THE SOCKET'S WORKER. A session whose frames are not
-     * programs keeps them in order on the worker, and an MCP tool call is one: eval_mtron's {@code 1.{*}plus(0)} never
-     * leaves plus's domain, so its walk loops on, as the expression says. The client hangs up without a closing handshake
-     * (a handshake would wait in the worker's queue behind the evaluation): the socket's close interrupts the worker, and
-     * the walk, which asks its thread once a run, answers a fail. The connection is the server's only one, so the selector
-     * reads the hang-up with the spare buffer its connection brought (the frame under evaluation holds the other). The
-     * worker serves the server's other connections too, so it must outlive the interrupt: a flag left set would end its
-     * loop.
+     * A HANG-UP ENDS THE EVALUATION OF ITS MESSAGE (2026-11-16), ON THE THREAD THAT RUNS IT. An MCP tool call is a
+     * program (2026-11-22), so it runs on a pooled thread of the system's executor rather than on the socket's worker:
+     * eval_mtron's {@code 1.{*}plus(0)} never leaves plus's domain, so its walk loops on, as the expression says. The
+     * client hangs up without a closing handshake: the session's close interrupts every thread still evaluating one of
+     * its frames, and the walk, which asks its thread once a run, answers a fail to no one. The thread goes back to the
+     * pool, so it must outlive the interrupt: a flag left set would end the next task it takes.
      */
     @Test
     void testAHangUpEndsTheEvaluationOfItsMessage() throws Exception {
         wsServer.serve(this.socket, rec(uri("/mcp"), uri(MCP_MTRON_SERVER_TID.toString())));
-        final WebSocketClient client = this.client("/mcp", new LinkedBlockingQueue<>());
+        final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
+        final WebSocketClient client = this.client("/mcp", replies);
         assertTrue(client.connectBlocking(2, TimeUnit.SECONDS), "the client dials the route");
         client.send("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\","
                 + "\"clientInfo\":{\"name\":\"wsServerTest\",\"version\":\"0\"}}}");
+        // each request runs on a thread of its own, so the tool call waits for initialize's answer: the one thread left
+        // evaluating is then the tool call's
+        assertNotNull(replies.poll(5, TimeUnit.SECONDS), "the server answers initialize");
         client.send("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"m_web_mcp_mcp_mtron_eval_mtron\","
                 + "\"arguments\":{\"code\":\"1.{*}plus(0)\"}}}");
-        // the worker evaluating the frame is the thread with wsServer.message on its stack
+        // the thread evaluating the request is the one with wsServer.evaluate on its stack
         final Predicate<StackTraceElement> evaluating = frame ->
-                wsServer.class.getName().equals(frame.getClassName()) && "message".equals(frame.getMethodName());
+                wsServer.class.getName().equals(frame.getClassName()) && "evaluate".equals(frame.getMethodName());
         final long found = System.currentTimeMillis() + 5000;
         Thread worker = null;
         while (null == worker && System.currentTimeMillis() < found) {
@@ -236,19 +238,19 @@ public class wsServerTest extends AbstractMetatronTest {
                     .filter(entry -> Arrays.stream(entry.getValue()).anyMatch(evaluating))
                     .map(Map.Entry::getKey).findFirst().orElse(null);
         }
-        assertNotNull(worker, "the server evaluates the tool call on its worker");
+        assertNotNull(worker, "the server evaluates the tool call");
         Thread.sleep(250);
         assertTrue(Arrays.stream(worker.getStackTrace()).anyMatch(evaluating), "the walk is still walking before the hang-up");
         client.closeConnection(CloseFrame.ABNORMAL_CLOSE, "hung up");
-        // the worker leaves the evaluation and parks in its queue again, or dies if the interrupt outlived the evaluation
+        // the thread leaves the evaluation and goes back to its pool
         final long ended = System.currentTimeMillis() + 5000;
         while (System.currentTimeMillis() < ended && worker.isAlive()
-                && (Thread.State.WAITING != worker.getState() || Arrays.stream(worker.getStackTrace()).anyMatch(evaluating)))
+                && Arrays.stream(worker.getStackTrace()).anyMatch(evaluating))
             Thread.sleep(50);
         final StackTraceElement[] stack = worker.getStackTrace();
         assertFalse(Arrays.stream(stack).anyMatch(evaluating),
                 "the hang-up ends the evaluation within five seconds, not at " + Arrays.toString(stack));
-        assertTrue(worker.isAlive(), "the worker outlives the interrupt: it serves the server's other connections");
+        assertTrue(worker.isAlive(), "the thread outlives the interrupt: it goes back to the pool");
     }
 
     /**

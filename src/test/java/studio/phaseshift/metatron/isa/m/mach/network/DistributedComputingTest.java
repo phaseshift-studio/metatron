@@ -67,7 +67,7 @@ public class DistributedComputingTest extends AbstractDistributedComputingTest {
             public AutoCloseable dial(final int oneBased) {
                 final WebSocketRecClient client = new WebSocketRecClient((WebSocketRec) this.clientRec(oneBased));
                 Network.Helper.index(client);
-                return client::close;
+                return client;
             }
         });
     }
