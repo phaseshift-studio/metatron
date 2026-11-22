@@ -137,7 +137,7 @@ public final class mInsts {
                 InstBuilder.build().tid(MEAN_INST_TID, "the mean of an int stream")
                         .dom(INT_TID.maybeSome(), "a stream of int")
                         .rng(REAL_TID, "the mean of the lhs int stream").argLst()
-                        .body((lhs, inst) -> real(lhs.stream().mapToLong(Obj::intValue).average().orElse(0L)))
+                        .body((lhs, inst) -> mean(lhs, member -> member.intValue()))
                         .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
                         .create(),
@@ -314,7 +314,7 @@ public final class mInsts {
                 InstBuilder.build().tid(MEAN_INST_TID, "the mean of a stream of reals")
                         .dom(REAL_TID.maybeSome(), "a stream of reals").rng(REAL_TID, "the mean of the lhs real stream")
                         .argLst()
-                        .body((lhs, inst) -> real(lhs.stream().mapToDouble(Obj::realValue).average().orElse(0.0)))
+                        .body((lhs, inst) -> mean(lhs, Obj::realValue))
                         .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
                         .create(),
@@ -1559,5 +1559,21 @@ public final class mInsts {
                     .stream().filter(m -> !m.isNoObj()).toList();
         }
         return objs(left);
+    }
+
+    /**
+     * THE MEAN OF A BAG: each member weighs its coefficient, as count() counts it (Marko, 2026-11-22: "that's bad").
+     * {1,1,2} is {{2}1,2}, whose mean is 4/3, never the 1.5 of its two distinct members. An empty bag's mean is 0.
+     */
+    private static Obj mean(final Obj lhs, final java.util.function.ToDoubleFunction<Obj> value) {
+        double sum = 0.0;
+        long copies = 0L;
+        for (final Obj member : lhs.stream().toList()) {
+            final Long c = member.c().max();
+            final long weight = null == c ? 1L : c;
+            sum += weight * value.applyAsDouble(member);
+            copies += weight;
+        }
+        return real(0L == copies ? 0.0 : sum / copies);
     }
 }
