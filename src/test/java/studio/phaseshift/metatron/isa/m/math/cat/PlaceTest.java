@@ -28,8 +28,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.HTTP;
 import static studio.phaseshift.metatron.Tokens.MACHINE;
+import static studio.phaseshift.metatron.Tokens.MTRON;
 import static studio.phaseshift.metatron.Tokens.PEER;
+import static studio.phaseshift.metatron.Tokens.WS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -65,7 +68,7 @@ public class PlaceTest extends AbstractInstSetTest {
     @Test
     public void testRosterHostLiftsToPlace() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                uri("ginger.local"), objs(uri("http://192.168.1.250:8777"), uri("http://192.168.1.72:8777")))))));
+                uri("ginger.local"), rec(uri(MTRON), rec(uri(HTTP), objs(uri("http://192.168.1.250:8777"), uri("http://192.168.1.72:8777")))))))));
 
         final Place place = (Place) Places.place(uri("//ginger.local"));
         assertEquals(f("//ginger.local"), place.obj());
@@ -82,7 +85,7 @@ public class PlaceTest extends AbstractInstSetTest {
     @Test
     public void testDialedPeerLinksAndReadsUp() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                uri("ginger.local"), uri("ws://localhost:8555"))))));
+                uri("ginger.local"), rec(uri(MTRON), rec(uri(WS), uri("ws://localhost:8555"))))))));
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
 
         final Place place = (Place) Places.place(uri("//ginger.local"));
@@ -97,7 +100,7 @@ public class PlaceTest extends AbstractInstSetTest {
     @Test
     public void testLoopbackAliasesAreOnePlace() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                uri("ginger.local"), uri("ws://localhost:8555"))))));
+                uri("ginger.local"), rec(uri(MTRON), rec(uri(WS), uri("ws://localhost:8555"))))))));
         Network.Helper.connect(Machine.current().network(), f("loop://127.0.0.1:8555"));
 
         final Place place = (Place) Places.place(uri("//ginger.local"));
@@ -136,7 +139,7 @@ public class PlaceTest extends AbstractInstSetTest {
     @Test
     public void testAsLiftIsRegistered() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                uri("ginger.local"), uri("ws://localhost:8555"))))));
+                uri("ginger.local"), rec(uri(MTRON), rec(uri(WS), uri("ws://localhost:8555"))))))));
         checkCodeParseApply(LOG, "<//ginger.local>.as(place::T)>>obj", "<//ginger.local>");
         checkCodeParseApply(LOG, "<//ginger.local>.as(place::T)>>authority", "[<ws://localhost:8555>]");
         checkCodeParseApply(LOG, "<//ginger.local>.as(place::T)>>status", "known");

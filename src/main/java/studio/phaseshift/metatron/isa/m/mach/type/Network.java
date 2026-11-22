@@ -61,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -178,18 +179,46 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
     }
 
     /**
-     * THE MACHINES the roster knows: {@code <host> => uri{+}}, one row per machine and the addresses it answers at
-     * (scheme://host:port, a route where the dial needs one). KNOWLEDGE, NEVER REACH: a row is not a way to talk to the
-     * machine — reaching it is dialing it and the client that dial constructs brings the
-     * instructions it is talked to with ({@code inst}).
+     * THE MACHINES the roster knows, as a scheme-keyed dial reaches them: {@code <host> => uri{+}}, every {@code mtron}
+     * address whose TRANSPORT IS ITS OWN SCHEME ({@code ws} at {@code ws://…}, {@code http} at {@code http://…}), the
+     * addresses whose client the scheme names. mtron carried by {@code mcp} rides {@code ws://} and {@code http://}
+     * too, and a scheme's client cannot speak it, so it is in {@link #machines(fURI, fURI)} and not here. KNOWLEDGE,
+     * NEVER REACH: a row is not a way to talk to the machine — reaching it is dialing it and the client that dial
+     * constructs brings the instructions it is talked to with ({@code inst}).
      * <p>
      * The roster is a CONTAINER, not the listing: it carries {@code discover} beside {@code machine}, so a
      * consumer that wants machines has to say so. Reading {@code roster()} as the listing walks
      * {@code {discover, machine}} and probes a discovery handler as though it were a peer.
      */
     default Rec machines() {
-        final Obj field = this.roster().at(uri(MACHINE));
-        return field.isRec() ? field.asRec() : rec();
+        final Map<Obj, Obj> view = new LinkedHashMap<>();
+        this.roster().at(uri(MACHINE)).orElse(rec0()).elements().forEach(row -> {
+            final List<Obj> addresses = row.second().orElse(rec0()).at(uri(MTRON)).orElse(rec0()).elements()
+                    .flatMap(transport -> transport.second().stream()
+                            .filter(address -> address.isUri() && transport.first().isUri()
+                                    && transport.first().uriValue().toString().equals(address.uriValue().scheme())))
+                    .toList();
+            if (!addresses.isEmpty())
+                view.put(row.first(), objs(addresses.toArray(Obj[]::new)));
+        });
+        return rec(view);
+    }
+
+    /**
+     * THE MACHINES ONE PROTOCOL OVER ONE TRANSPORT reaches: {@code <host> => uri{+}}, read off the machine table
+     * {@code <host> => [<protocol> => [<transport> => uri{+}]]} (Marko, 2026-11-22: "[ mtron => [ mcp => { }, http =>
+     * {}, ws => {} ]"). The PROTOCOL is what an address does ({@code mtron}: a node, from/to/eval); the TRANSPORT is the
+     * client that carries it ({@code ws}, {@code mcp}, {@code http}), which a scheme cannot say: {@code ws://} carries
+     * mtron frames and mcp alike. A machine with no address there is not in the view.
+     */
+    default Rec machines(final fURI protocol, final fURI transport) {
+        final Map<Obj, Obj> view = new LinkedHashMap<>();
+        this.roster().at(uri(MACHINE)).orElse(rec0()).elements().forEach(row -> {
+            final Obj addresses = row.second().orElse(rec0()).at(uri(protocol)).orElse(rec0()).at(uri(transport));
+            if (!addresses.isNoObj())
+                view.put(row.first(), addresses);
+        });
+        return rec(view);
     }
 
     /**

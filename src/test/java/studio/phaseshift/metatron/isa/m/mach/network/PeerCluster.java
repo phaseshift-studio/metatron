@@ -78,7 +78,7 @@ public final class PeerCluster implements AutoCloseable {
     public static final String DEFAULT_SEED_MATRIX =
             "$index.to($root/a); $index.mult(10).to($root/b); $index.mult(100).to($root/c); 'peer-$index-store-probe'.to($root/probe)";
 
-    private static final MIME.MIMEType MTRON = MIME.MIMEType.APPLICATION_MTRON;
+    private static final MIME.MIMEType MTRON_MIME = MIME.MIMEType.APPLICATION_MTRON;
     private static final long REPLY_TIMEOUT_MS = 15_000L;
     private static final long READY_TIMEOUT_MS = 180_000L;
 
@@ -285,14 +285,15 @@ public final class PeerCluster implements AutoCloseable {
     // ========================================================================
 
     /**
-     * Install the declared peer roster: one entry per peer, keyed by its authority, whose value is the ADDRESS it
-     * answers at — its mtron endpoint, route included. Knowledge only: the roster says the machines exist, and
+     * Install the declared peer roster: one entry per peer, keyed by its authority, whose value names the ADDRESS
+     * it answers at — its mtron endpoint, route included, under {@code mtron/ws}: the protocol it speaks and the
+     * transport that carries it. Knowledge only: the roster says the machines exist, and
      * {@link #dial()} is what makes them peers this VM talks to.
      */
     public PeerCluster connect() {
         final Map<Obj, Obj> roster = new LinkedHashMap<>();
         for (int i = 1; i <= this.size(); i++)
-            roster.put(uri("ws://localhost:" + this.port(i)), uri(this.dialURI(i)));
+            roster.put(uri("ws://localhost:" + this.port(i)), rec(uri(MTRON), rec(uri(WS), uri(this.dialURI(i)))));
         // INTO roster/machine: the roster is a container, and a flat write at its root lands where no reader
         // looks and takes the discovery registrations with it
         Machine.write(f("~/network/roster"), rec(mutableMap(uri(MACHINE), rec(roster))));
@@ -321,8 +322,8 @@ public final class PeerCluster implements AutoCloseable {
             // web types imported: the constructor dials, and indexing mints the peer
             final WebSocketRec wsRec = new WebSocketRec(mutableMap(
                     uri(HOST), uri(this.dialURI(i)),
-                    uri(IN), uri(MTRON.value),
-                    uri(OUT), uri(MTRON.value)), WS_CLIENT_TID, null);
+                    uri(IN), uri(MTRON_MIME.value),
+                    uri(OUT), uri(MTRON_MIME.value)), WS_CLIENT_TID, null);
             Network.Helper.index(new WebSocketRecClient(wsRec));
         }
         this.dialed = true;
@@ -350,8 +351,8 @@ public final class PeerCluster implements AutoCloseable {
             // the 2-arg (timeout) sendRecv lives on the WebSocketObj the client drives, so build the rec first
             final WebSocketRec wsRec = new WebSocketRec(mutableMap(
                     uri(HOST), uri(f().scheme("ws").host("localhost").port(port).extend(MTRON_ROUTE)),
-                    uri(IN), uri(MTRON.value),
-                    uri(OUT), uri(MTRON.value)), WS_CLIENT_TID, null);
+                    uri(IN), uri(MTRON_MIME.value),
+                    uri(OUT), uri(MTRON_MIME.value)), WS_CLIENT_TID, null);
             client = new WebSocketRecClient(wsRec);
             // FORCE THE REPLY BEFORE THE finally HANGS UP. sendRecv answers a FutureObj -- the send runs on a
             // virtual thread -- so returning it unforced lets `finally` close the socket out from under the

@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
+import studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import javax.jmdns.JmDNS;
@@ -52,13 +53,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * DISCOVERY OVER mDNS — announces the MTRON ENDPOINTS this machine answers on to the local network (a listener's
- * origin extended by each route whose handler is an {@code mtron::T}; never a backend it dials out to: see
- * {@link #surfaces()}), and writes what it hears from others into {@link Network#ROOT_ROSTER}.
+ * origin extended by each route whose handler speaks mtron — an {@code mtron::T} carried by the socket's scheme, or
+ * metatron's mcp server carried by {@code mcp}; never a backend it dials out to: see {@link #surfaces()}), and writes
+ * what it hears, and what it announces, into the roster's machine table:
+ * {@code /network/roster/machine/<host>/<protocol>/<transport>}.
  * It serves no bytes: a peer list is its whole product, which is why it feeds the roster rather than answering an
  * address.
  * <p>
  * ITS WHOLE INTERFACE IS ITS EXISTENCE. Construction starts it, {@code close()} stops it, and deleting it from
- * the roster's {@code discovery} bag is how it is turned off — there is no {@code start()} to remember and no
+ * the roster's {@code discover} bag is how it is turned off — there is no {@code start()} to remember and no
  * {@code scan()} to drive.
  * <p>
  * A PASSIVE BACKGROUND OBJECT. It publishes ONE field, {@code status} → {@link #status()}: the health bit, the
@@ -102,10 +105,10 @@ public class mdnsDiscovery extends MRec implements Closeable {
     // What is left here is the identity it is registered under.
 
     /**
-     * ROOT_ROSTER is read, amended and written back, and this handler GUARANTEES concurrency against itself:
-     * {@link #listen()} creates one JmDNS and one {@link PeerListener} PER LOCAL ADDRESS, so on a multi-homed
-     * host two listeners hear the same peer on two threads, both read the same rec, and the later write drops the
-     * earlier one's address. Admission is serialized here.
+     * THE ROSTER IS READ, AMENDED AND WRITTEN BACK — an address list at its own path, the discover bag with the roster
+     * around it — and this handler GUARANTEES concurrency against itself: {@link #listen()} creates one JmDNS and one {@link PeerListener} PER LOCAL ADDRESS, so on a
+     * multi-homed host two listeners hear the same peer on two threads, both read the same list, and the later write
+     * drops the earlier one's address. Admission is serialized here.
      * <p>
      * A lock in this class is a stopgap and not the fix: it cannot cover a second discovery protocol writing the
      * same rec. That wants the roster to own an {@code admit(uri)} of its own, with the self-test, the
@@ -138,7 +141,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
     /**
      * the surfaces already announced — reconciliation announces what is new and retires what is gone
      */
-    private final Set<String> announced = Collections.synchronizedSet(new HashSet<>());
+    private final Map<String, fURI> announced = Collections.synchronizedMap(new HashMap<>());
 
     public mdnsDiscovery(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MDNS_DISCOVERY_TID, vid);
@@ -167,8 +170,9 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * is not on in any useful sense: {@code ~/network/roster/discover} is where a user looks for what is
      * discovering and where the status query reads from.
      * <p>
-     * Keeps every sibling for the same reason {@link #commit} does, and is idempotent in THIS instance so a
-     * re-registration is not a second entry. Two distinct handlers on the same service are left alone: closing
+     * The handler is MOUNTED at {@code /network/roster/discover}, a live member of the bag rather than data laid out
+     * there, so the roster is read, the bag amended and the roster written back around it — every sibling kept —
+     * idempotent in THIS instance, so mounting again is not a second entry. Two distinct handlers on the same service are left alone: closing
      * someone else's responders on a name collision is a policy, not a mechanism.
      * <p>
      * {@link #close()} deliberately does NOT undo this. A closed handler that stayed in the bag reads
@@ -319,7 +323,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
         for (final InetAddress address : this.localAddresses()) {
             try {
                 final JmDNS mdns = JmDNS.create(address, this.hostName);
-                surfaces().forEach(surface -> this.announce(mdns, service, surface));
+                surfaces().forEach((surface, transport) -> this.announce(mdns, service, surface, transport));
                 mdns.addServiceListener(service.toString(), new PeerListener(mdns));
                 mdns.addServiceListener(service.toString(), new PeerListener(mdns));
                 synchronized (this.lifecycle) {
@@ -343,7 +347,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
         }
         // what the initial sweep just announced is the baseline; the reconciliation loop below keeps it true as
         // spaces and services come and go for the VM's whole life
-        surfaces().forEach(surface -> this.announced.add(surface.toString()));
+        surfaces().forEach((surface, transport) -> this.announced.put(surface.toString(), transport));
         while (!this.closed) {
             try {
                 this.reconcile(service);
@@ -367,17 +371,17 @@ public class mdnsDiscovery extends MRec implements Closeable {
         final Machine current = Machine.current();
         Machine.current(this.owner);
         try {
-            final List<fURI> surfaces = surfaces();
             final Set<String> now = new HashSet<>();
-            for (final fURI surface : surfaces) {
+            surfaces().forEach((surface, transport) -> {
                 now.add(surface.toString());
-                if (this.announced.add(surface.toString()))
-                    this.responders.forEach(mdns -> this.announce(mdns, service, surface));
-            }
-            final List<String> gone = this.announced.stream().filter(s -> !now.contains(s)).toList();
-            for (final String surface : gone) {
-                this.announced.remove(surface);
-                this.responders.forEach(mdns -> this.retire(mdns, service, f(surface)));
+                if (null == this.announced.putIfAbsent(surface.toString(), transport))
+                    this.responders.forEach(mdns -> this.announce(mdns, service, surface, transport));
+            });
+            final List<Map.Entry<String, fURI>> gone = List.copyOf(this.announced.entrySet()).stream()
+                    .filter(was -> !now.contains(was.getKey())).toList();
+            for (final Map.Entry<String, fURI> was : gone) {
+                this.announced.remove(was.getKey());
+                this.responders.forEach(mdns -> this.retire(mdns, service, f(was.getKey()), was.getValue()));
             }
         } finally {
             Machine.current(current);
@@ -386,11 +390,13 @@ public class mdnsDiscovery extends MRec implements Closeable {
 
     /**
      * Stop announcing a surface that is gone — mDNS is soft state, so un-registering lets the remote rosters age it
-     * out rather than shipping a dead address to a peer.
+     * out rather than shipping a dead address to a peer — and take it out of this machine's own row, which
+     * {@link #announce} wrote it into.
      */
-    private void retire(final JmDNS mdns, final fURI service, final fURI surface) {
+    private void retire(final JmDNS mdns, final fURI service, final fURI surface, final fURI transport) {
         mdns.unregisterService(ServiceInfo.create(service.toString(), instanceName(this.hostName, surface),
-                surface.port(), 0, 0, txt(surface)));
+                surface.port(), 0, 0, txt(surface, transport)));
+        this.retract(this.machineOf(surface), f(MTRON), transport, surface);
     }
 
     private fURI service() {
@@ -446,12 +452,17 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * WHAT THIS MACHINE ANNOUNCES: every MTRON ENDPOINT it answers on, each reduced to the address a peer dials. An
-     * endpoint is a listener's origin extended by a route whose handler is an {@code mtron::T} ({@code mtron_ws},
-     * {@code mtron_http}). A peer dials an endpoint, never a socket: a ws_server answers its bare origin with a banner
-     * of its routes, so a roster row of {@code ws://host:8555} reaches nothing that speaks mtron. A route of any other
-     * protocol (mcp, a web root, a data address) is not announced, and neither is a wildcard route, which names no
-     * address to dial.
+     * WHAT THIS MACHINE ANNOUNCES: every MTRON ENDPOINT it answers on, each reduced to the address a peer dials and
+     * paired with its TRANSPORT, the client that carries mtron there (Marko, 2026-11-22: "[ mtron => [ mcp => { }, http
+     * => {}, ws => {} ]"). An endpoint is a listener's origin extended by a route whose handler serves mtron:
+     * <ul>
+     *   <li>an {@code mtron::T} handler ({@code mtron_ws}, {@code mtron_http}) carries it over its own scheme;</li>
+     *   <li>metatron's mcp server ({@code mcp_mtron}) carries it over {@code mcp}: its eval_mtron makes an mcp_client of
+     *       it a node, from, to and eval.</li>
+     * </ul>
+     * A peer dials an endpoint, never a socket: a ws_server answers its bare origin with a banner of its routes, so a
+     * roster row of {@code ws://host:8555} reaches nothing that speaks mtron. Any other route (another mcp server, a web
+     * root, a data address) is not announced, and neither is a wildcard route, which names no address to dial.
      * <p>
      * PRESENCE IS INHERITED, walked as {@link Network.Helper#authorities()} walks it: the sockets of this machine and
      * of every ancestor, each with the routes its level keeps on it, the handler resolved in that level's instruction
@@ -470,32 +481,31 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * VISIBLE FOR TESTING, like {@link #roster}: this set is everything that leaves the box, so it is the surface a
      * leak would show on, and it is checkable without multicast.
      */
-    static List<fURI> surfaces() {
-        final List<fURI> endpoints = new ArrayList<>();
+    static Map<fURI, fURI> surfaces() {
+        final Map<fURI, fURI> endpoints = new LinkedHashMap<>();
         for (Obj at = Machine.current(); at instanceof Machine level; at = level.parent())
             level.network().listeners().values().forEach(entry -> {
                 final fURI origin = Network.Helper.originOf(entry);
                 if (null == origin)
                     return;
-                entry.asRec().at(uri(ROUTE)).orElse(rec0()).elements()
-                        .filter(route -> {
-                            if (!route.first().isUri() || route.first().uriValue().hasPattern())
-                                return false;
-                            final Obj handler = route.second().isUri()
-                                    ? level.instset().readDeclared(
-                                    Machine.Helper.align(level, route.second().uriValue()))
-                                    : route.second();
-                            return handler.isType() && handler.asType().test(webInstSet.MTRON_TYPE);
-                        })
-                        .forEach(route -> endpoints.add("/".equals(route.first().uriValue().toString())
-                                ? origin
-                                : origin.extend(route.first().uriValue())));
+                entry.asRec().at(uri(ROUTE)).orElse(rec0()).elements().forEach(route -> {
+                    if (!route.first().isUri() || route.first().uriValue().hasPattern())
+                        return;
+                    final Obj handler = route.second().isUri()
+                            ? level.instset().readDeclared(Machine.Helper.align(level, route.second().uriValue()))
+                            : route.second();
+                    final fURI endpoint = announceable("/".equals(route.first().uriValue().toString())
+                            ? origin
+                            : origin.extend(route.first().uriValue()));
+                    if (!handler.isType() || null == endpoint)
+                        return;
+                    if (handler.asType().test(webInstSet.MTRON_TYPE))
+                        endpoints.putIfAbsent(endpoint, f(scheme(endpoint.scheme())));
+                    else if (handler.asType().test(mcpMetatronBuilder.MCP_MTRON_SERVER_TYPE))
+                        endpoints.putIfAbsent(endpoint, f(MCP));
+                });
             });
-        return endpoints.stream()
-                .map(mdnsDiscovery::announceable)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+        return endpoints;
     }
 
     /**
@@ -522,20 +532,23 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * <p>
      * SEPARATE TXT ENTRIES, never one comma-joined string: getPropertyString returns everything after the FIRST
      * '=', so "route=/,version=0.1" comes back as route=[/,version=0.1] — measured.
+     * <p>
+     * WHAT IT IS AND WHAT CARRIES IT: {@code protocol=mtron} and the transport, so a hearer files the address under
+     * {@code machine/<host>/<protocol>/<transport>} without guessing from a scheme that carries several.
      */
-    static Map<String, String> txt(final fURI surface) {
+    static Map<String, String> txt(final fURI surface, final fURI transport) {
         return Map.of(ROUTE, surface.basePath().localize().toString(), SCHEME, scheme(surface.scheme()),
-                VERSION, METATRON_VERSION);
+                PROTOCOL, MTRON, TRANSPORT, transport.toString(), VERSION, METATRON_VERSION);
     }
 
     /**
-     * register one surface as a service instance, its route in the TXT so a browser can dial it
+     * register one surface as a service instance, its route, protocol and transport in the TXT so a browser can dial it
      */
-    private void announce(final JmDNS mdns, final fURI service, final fURI surface) {
+    private void announce(final JmDNS mdns, final fURI service, final fURI surface, final fURI transport) {
         try {
             mdns.registerService(ServiceInfo.create(service.toString(), instanceName(this.hostName, surface),
-                    surface.port(), 0, 0, txt(surface)));
-            this.roster(this.machineOf(surface), surface);
+                    surface.port(), 0, 0, txt(surface, transport)));
+            this.roster(this.machineOf(surface), f(MTRON), transport, surface);
         } catch (final IOException e) {
             this.LOG.warn("mdns: cannot announce %s (%s)", surface, e.getMessage());
         }
@@ -555,9 +568,10 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * one MACHINE, written into the roster as {@code <machine> => uri{+}}. The key is the SRV TARGET — the
-     * machine identity mDNS already carries — and the values are every address it answers at, so a machine
-     * reachable over http and ws, or on three interfaces, is ONE entry rather than three that overwrite.
+     * one MACHINE, written into the roster as {@code <machine> => [<protocol> => [<transport> => uri{+}]]}. The key
+     * is the SRV TARGET — the machine identity mDNS already carries — and below it are every address it answers at,
+     * each under the protocol it speaks and the transport that carries it, so a machine reachable over http and ws,
+     * or on three interfaces, is ONE row rather than three that overwrite.
      * <p>
      * The per-surface instance NAME is deliberately not the key: DNS-SD permits the same name on two hosts, so a
      * name-keyed roster silently collapses every responder onto a single entry (measured, and the bug that
@@ -577,13 +591,15 @@ public class mdnsDiscovery extends MRec implements Closeable {
             final String scheme = info.getPropertyString(SCHEME);
             final String route = info.getPropertyString(ROUTE);
             final fURI machine = machine(info);
+            final fURI protocol = protocol(info);
+            final fURI transport = transport(info);
             for (final InetAddress address : info.getInet4Addresses()) {
                 if (this.ours(address, info.getPort())) {
                     this.LOG.debug("mdns: heard our own %s", address.getHostAddress());
                     continue;
                 }
                 final fURI dialable = dialable(address, info.getPort(), scheme, route);
-                if (this.roster(machine, dialable))
+                if (this.roster(machine, protocol, transport, dialable))
                     this.LOG.info("mdns: discovered %s at %s", machine, dialable);
                 else
                     this.LOG.debug("mdns: %s at %s again", machine, dialable);
@@ -617,61 +633,89 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * the roster's {@code machine} map as a mutable map. A rec cannot be ADDRESSED by a uri key, so it is read,
-     * amended, written back.
+     * WHAT AN ADDRESS DOES, from the TXT: {@code mtron} when the announcer says nothing, which is what every build
+     * before the key announced (an mtron endpoint), and the default for text that is no label, since a responder's TXT is
+     * untrusted.
+     */
+    static fURI protocol(final ServiceInfo info) {
+        return f(label(info.getPropertyString(PROTOCOL), MTRON));
+    }
+
+    /**
+     * WHAT CARRIES IT, from the TXT: the transport an announcer names, else its scheme, which carried mtron for every
+     * build before the key.
+     */
+    static fURI transport(final ServiceInfo info) {
+        return f(label(info.getPropertyString(TRANSPORT), scheme(info.getPropertyString(SCHEME))));
+    }
+
+    /**
+     * add ONE address to a machine's row, keeping any it already had there. The row is
+     * {@code <host> => [<protocol> => [<transport> => uri{+}]]}, and only the list at
+     * {@code /network/roster/machine/<host>/<protocol>/<transport>} is written: the space builds the levels above it,
+     * so the host's other transports, the other hosts and {@code discover} are never rewritten.
      * <p>
-     * THE MACHINE FIELD, NOT THE ROSTER. {@code roster} carries {@code discover} beside {@code machine} now, and
-     * writing a flat machine map at {@link Network#ROOT_ROSTER} would erase the registered discovery handlers on
-     * the first peer heard — the roster is read down to its machine field here and rebuilt around it in
-     * {@link #commit}.
-     */
-    private Map<Obj, Obj> entries() {
-        final Obj roster = Machine.read(Network.ROOT_ROSTER);
-        final Obj machines = roster.isRec() ? roster.asRec().at(uri(MACHINE)) : noobj();
-        return new LinkedHashMap<>(machines.isRec() ? machines.asRec().jvm() : Map.of());
-    }
-
-    /**
-     * write the machine map back, KEEPING EVERY SIBLING the roster carries. The whole roster is rewritten rather
-     * than its machine field addressed directly, so a roster that does not exist yet is created rather than
-     * failing on a missing parent.
-     */
-    private void commit(final Map<Obj, Obj> entries) {
-        final Obj roster = Machine.read(Network.ROOT_ROSTER);
-        final Map<Obj, Obj> fields = new LinkedHashMap<>(roster.isRec() ? roster.asRec().jvm() : Map.of());
-        fields.put(uri(MACHINE), rec(entries));
-        Machine.write(Network.ROOT_ROSTER, rec(fields));
-    }
-
-    /**
-     * add ONE address to a machine's entry, keeping any it already had. Matching is by TEXT, never by Obj
-     * identity: a uri that has round-tripped through the roster does not equal a freshly minted one, even when
-     * the two print the same address.
+     * ONE WRITE, BY THE STORE'S OWN RULE: a value written at a key that holds a stream is appended to it, and at a key
+     * that holds one value replaces it ({@code Rec.at}). So an address is written alone onto a list of several, and as
+     * {@code {old, new}} over a single one — the whole list written back onto a stream would hold every address
+     * twice. A re-heard address is
+     * matched by its base path, never by Obj identity: a uri that has round-tripped through the roster does not equal
+     * a freshly minted one, even when the two print the same address.
      * <p>
      * VISIBLE FOR TESTING: this is the whole roster contribution of a discovery protocol, and it is testable
      * without multicast, a second host or a resolved {@code ServiceInfo} — which none of the admission path
      * above can be.
      */
-    boolean roster(final fURI machine, final fURI address) {
+    boolean roster(final fURI machine, final fURI protocol, final fURI transport, final fURI address) {
         final fURI canonical = address.basePath();
-        // A MACHINE KEY IS A HOST, and the callers hand one over: machine(ServiceInfo) names the SRV target
-        // through segment(), and machineOf(authority) reads host() off the endpoint. Keys are matched by TEXT, so
-        // a producer that passed a scheme, a port or a DNS root dot would split one machine into rows -- which is
-        // the producers' job to get right, not this method's to launder.
-        final String key = machine.toString();
+        // A MACHINE KEY IS A HOST, a path segment of the row's address, and the callers hand one over:
+        // machine(ServiceInfo) names the SRV target through segment(), and machineOf(authority) reads host() off the
+        // endpoint. A producer that passed a scheme, a port or a DNS root dot would split one machine into rows --
+        // which is the producers' job to get right, not this method's to launder.
+        final fURI at = Network.ROOT_ROSTER.extend(MACHINE).extend(machine).extend(protocol).extend(transport);
         synchronized (ROSTER) {
-            final Map<Obj, Obj> entries = this.entries();
-            final List<Obj> addresses = new ArrayList<>();
-            entries.entrySet().stream()
-                    .filter(entry -> entry.getKey().isUri() && key.equals(entry.getKey().uriValue().toString()))
-                    .map(Map.Entry::getValue).findFirst().ifPresent(known -> known.stream().forEach(addresses::add));
+            final Obj held = Machine.read(at);
             // ALREADY THERE: a re-heard address is not news, and not a write either
-            if (addresses.stream().anyMatch(known -> known.isUri() && sameAddress(known.uriValue(), canonical)))
+            if (held.stream().anyMatch(known -> known.isUri() && sameAddress(known.uriValue(), canonical)))
                 return false;
-            addresses.add(uri(canonical.toString()));
-            entries.entrySet().removeIf(entry -> entry.getKey().isUri() && key.equals(entry.getKey().uriValue().toString()));
-            entries.put(uri(key), objs(addresses.toArray(Obj[]::new)));
-            this.commit(entries);
+            final Obj heard = uri(canonical.toString());
+            Machine.write(at, held.isObjs() ? heard : held.append(heard));
+            return true;
+        }
+    }
+
+    /**
+     * take ONE address back out of a machine's row, the inverse of {@link #roster}: the list at
+     * {@code /network/roster/machine/<host>/<protocol>/<transport>} keeps every other address, and the last one takes
+     * with it the levels it alone held — its transport, its protocol, the host's row.
+     * <p>
+     * A write cannot shrink a stream (a value written onto one is appended), so the list is deleted and what is left
+     * written into the emptied key. And the space keeps a level its last entry left, as an empty rec
+     * ({@code [mtron=>[=>]]}), so an emptied protocol and host are deleted in turn.
+     * <p>
+     * VISIBLE FOR TESTING, like {@link #roster}.
+     */
+    boolean retract(final fURI machine, final fURI protocol, final fURI transport, final fURI address) {
+        final fURI at = Network.ROOT_ROSTER.extend(MACHINE).extend(machine).extend(protocol).extend(transport);
+        synchronized (ROSTER) {
+            final List<Obj> addresses = Machine.read(at).stream().toList();
+            final List<Obj> kept = addresses.stream()
+                    .filter(known -> known.isUri() && !sameAddress(known.uriValue(), address))
+                    .toList();
+            if (kept.size() == addresses.size())
+                return false;
+            Machine.write(at, noobj());
+            if (!kept.isEmpty())
+                Machine.write(at, objs(kept.toArray(Obj[]::new)));
+            else {
+                final fURI protocolAt = at.retract(1);
+                if (Machine.read(protocolAt).elements().findAny().isEmpty()) {
+                    Machine.write(protocolAt, noobj());
+                    final fURI hostAt = protocolAt.retract(1);
+                    if (Machine.read(hostAt).elements().findAny().isEmpty())
+                        Machine.write(hostAt, noobj());
+                }
+            }
             return true;
         }
     }
@@ -696,7 +740,15 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * the advertised scheme, or ws — a metatron peer answers over websockets
      */
     static String scheme(final String advertised) {
-        return null != advertised && advertised.matches("[a-z][a-z0-9+.-]*") ? advertised : "ws";
+        return label(advertised, WS);
+    }
+
+    /**
+     * an advertised label that can stand as a key — a scheme, a protocol, a transport — or {@code otherwise}: a
+     * responder's TXT is untrusted text, and a key it shaped would split or corrupt the machine table
+     */
+    static String label(final String advertised, final String otherwise) {
+        return null != advertised && advertised.matches("[a-z][a-z0-9+.-]*") ? advertised : otherwise;
     }
 
     /**
@@ -726,35 +778,20 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * a withdrawn responder takes back only the addresses it advertised. The machine keeps its entry while any
-     * other surface or interface still answers for it, and is dropped when the last one goes.
+     * a withdrawn responder takes back only the addresses it advertised, under the protocol and transport it
+     * advertised them ({@link #retract(fURI, fURI, fURI, fURI)})
      */
     private void retract(final ServiceInfo info) {
         final String scheme = info.getPropertyString(SCHEME);
         final String route = info.getPropertyString(ROUTE);
-        final String key = machine(info).toString();
-        final List<fURI> gone = new ArrayList<>();
-        for (final InetAddress address : info.getInet4Addresses())
-            gone.add(dialable(address, info.getPort(), scheme, route));
+        final fURI machine = machine(info);
+        final fURI protocol = protocol(info);
+        final fURI transport = transport(info);
         final Machine current = Machine.current();
         Machine.current(this.owner);
         try {
-            synchronized (ROSTER) {
-                final Map<Obj, Obj> entries = this.entries();
-                entries.entrySet().stream()
-                        .filter(entry -> entry.getKey().isUri() && key.equals(entry.getKey().uriValue().toString()))
-                        .findFirst().ifPresent(entry -> {
-                            final List<Obj> kept = new ArrayList<>();
-                            entry.getValue().stream()
-                                    .filter(known -> known.isUri()
-                                            && gone.stream().noneMatch(was -> sameAddress(was, known.uriValue())))
-                                    .forEach(kept::add);
-                            entries.remove(entry.getKey());
-                            if (!kept.isEmpty())
-                                entries.put(entry.getKey(), objs(kept.toArray(Obj[]::new)));
-                        });
-                this.commit(entries);
-            }
+            for (final InetAddress address : info.getInet4Addresses())
+                this.retract(machine, protocol, transport, dialable(address, info.getPort(), scheme, route));
         } finally {
             Machine.current(current);
         }

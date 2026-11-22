@@ -37,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.KIND;
 import static studio.phaseshift.metatron.Tokens.MACHINE;
+import static studio.phaseshift.metatron.Tokens.MTRON;
+import static studio.phaseshift.metatron.Tokens.WS;
 import static studio.phaseshift.metatron.Tokens.STATUS;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -103,7 +105,7 @@ public class NetworkTest extends AbstractMetatronTest {
         final Obj declared = Machine.read(Network.ROOT_ROSTER);   // this class's own peer cluster lives here
         try {
             Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                    uri("ws://metatron.local."), uri("ws://10.0.0.1:8777/"))))));
+                    uri("ws://metatron.local."), rec(uri(MTRON), rec(uri(WS), uri("ws://10.0.0.1:8777/"))))))));
             final Obj report = Machine.current().network().status(noobj());
             final Rec entry = report.stream().map(Obj::asRec)
                     .filter(one -> "ws://metatron.local.".equals(one.at(uri(ORIGIN)).uriValue().toString()))

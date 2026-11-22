@@ -39,8 +39,8 @@ import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -203,31 +203,21 @@ public final class PeerSpawn {
     // ========================================================================
 
     private static void declare(final fURI key, final fURI address) {
-        // INTO roster/machine, and the roster rebuilt around it. The roster is a container now -- it carries
-        // `discover` beside `machine` -- so a flat write at its root both loses the discovery registrations and
-        // puts the entry where no reader looks.
-        final Obj roster = Machine.read(Network.ROOT_ROSTER);
-        final Map<Obj, Obj> fields = new LinkedHashMap<>(roster.isRec() ? roster.asRec().jvm() : Map.of());
-        final Obj known = roster.isRec() ? roster.asRec().at(uri(MACHINE)) : noobj();
-        final Map<Obj, Obj> machines = new LinkedHashMap<>(known.isRec() ? known.asRec().jvm() : Map.of());
-        machines.put(uri(key), uri(address));
-        fields.put(uri(MACHINE), rec(machines));
-        Machine.write(Network.ROOT_ROSTER, rec(fields));
+        // INTO roster/machine, and nothing else: the space keeps `discover` beside it. The key is the peer's origin
+        // (ws://localhost:PORT), which is no path segment, so the row goes in through the table it belongs to rather
+        // than at an address of its own. A forked node is an mtron node reached over ws: [mtron => [ws => …]].
+        final fURI at = Network.ROOT_ROSTER.extend(MACHINE);
+        final Map<Obj, Obj> machines = new LinkedHashMap<>(Machine.read(at).orElse(rec0()).asRec().jvm());
+        machines.put(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address))));
+        Machine.write(at, rec(machines));
         DECLARED.add(key);
     }
 
     private static void undeclare(final fURI key) {
-        final Obj roster = Machine.read(Network.ROOT_ROSTER);
-        if (!roster.isRec())
-            return;
-        final Obj known = roster.asRec().at(uri(MACHINE));
-        if (!known.isRec())
-            return;
-        final Map<Obj, Obj> machines = new LinkedHashMap<>(known.asRec().jvm());
-        machines.keySet().removeIf(k -> k.isUri() && key.equals(k.uriValue()));
-        final Map<Obj, Obj> fields = new LinkedHashMap<>(roster.asRec().jvm());
-        fields.put(uri(MACHINE), rec(machines));
-        Machine.write(Network.ROOT_ROSTER, rec(fields));
+        final fURI at = Network.ROOT_ROSTER.extend(MACHINE);
+        final Map<Obj, Obj> machines = new LinkedHashMap<>(Machine.read(at).orElse(rec0()).asRec().jvm());
+        if (machines.keySet().removeIf(k -> k.isUri() && key.equals(k.uriValue())))
+            Machine.write(at, rec(machines));
     }
 
     // ========================================================================
