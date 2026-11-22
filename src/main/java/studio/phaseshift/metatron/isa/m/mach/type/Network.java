@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.mach.type;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.QProc;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
@@ -182,9 +183,14 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      * THE MACHINES the roster knows, as a scheme-keyed dial reaches them: {@code <host> => uri{+}}, every {@code mtron}
      * address whose TRANSPORT IS ITS OWN SCHEME ({@code ws} at {@code ws://…}, {@code http} at {@code http://…}), the
      * addresses whose client the scheme names. mtron carried by {@code mcp} rides {@code ws://} and {@code http://}
-     * too, and a scheme's client cannot speak it, so it is in {@link #machines(fURI, fURI)} and not here. KNOWLEDGE,
-     * NEVER REACH: a row is not a way to talk to the machine — reaching it is dialing it and the client that dial
-     * constructs brings the instructions it is talked to with ({@code inst}).
+     * too, and a scheme's client cannot speak it, so it is read at its own address
+     * ({@code /network/roster/machine/<host>/mtron/mcp}) and not here. KNOWLEDGE, NEVER REACH: a row is not a way to
+     * talk to the machine — reaching it is dialing it and the client that dial constructs brings the instructions it
+     * is talked to with ({@code inst}).
+     * <p>
+     * EACH LIST'S NET: a filer adds its row and takes it back as the ring does ({@code Rec.plus}, {@code Rec.minus}),
+     * so a list holds every signed term written to it; an address is listed once while its count is positive. A row
+     * in another shape (the flat {@code <host> => uri{+}} of old) names no protocol, and is skipped, never thrown on.
      * <p>
      * The roster is a CONTAINER, not the listing: it carries {@code discover} beside {@code machine}, so a
      * consumer that wants machines has to say so. Reading {@code roster()} as the listing walks
@@ -192,32 +198,27 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      */
     default Rec machines() {
         final Map<Obj, Obj> view = new LinkedHashMap<>();
-        this.roster().at(uri(MACHINE)).orElse(rec0()).elements().forEach(row -> {
-            final List<Obj> addresses = row.second().orElse(rec0()).at(uri(MTRON)).orElse(rec0()).elements()
-                    .flatMap(transport -> transport.second().stream()
-                            .filter(address -> address.isUri() && transport.first().isUri()
-                                    && transport.first().uriValue().toString().equals(address.uriValue().scheme())))
-                    .toList();
-            if (!addresses.isEmpty())
-                view.put(row.first(), objs(addresses.toArray(Obj[]::new)));
-        });
-        return rec(view);
-    }
-
-    /**
-     * THE MACHINES ONE PROTOCOL OVER ONE TRANSPORT reaches: {@code <host> => uri{+}}, read off the machine table
-     * {@code <host> => [<protocol> => [<transport> => uri{+}]]} (Marko, 2026-11-22: "[ mtron => [ mcp => { }, http =>
-     * {}, ws => {} ]"). The PROTOCOL is what an address does ({@code mtron}: a node, from/to/eval); the TRANSPORT is the
-     * client that carries it ({@code ws}, {@code mcp}, {@code http}), which a scheme cannot say: {@code ws://} carries
-     * mtron frames and mcp alike. A machine with no address there is not in the view.
-     */
-    default Rec machines(final fURI protocol, final fURI transport) {
-        final Map<Obj, Obj> view = new LinkedHashMap<>();
-        this.roster().at(uri(MACHINE)).orElse(rec0()).elements().forEach(row -> {
-            final Obj addresses = row.second().orElse(rec0()).at(uri(protocol)).orElse(rec0()).at(uri(transport));
-            if (!addresses.isNoObj())
-                view.put(row.first(), addresses);
-        });
+        // READ INTO Obj, TESTED BEFORE IT IS A Rec: orElse(rec0()) answers a Rec, and the cast it carries throws on a
+        // uri -- which is what a row in another shape holds
+        final Obj table = this.roster().at(uri(MACHINE));
+        if (!table.isRec())
+            return rec(view);
+        table.asRec().elements()
+                .filter(row -> row.second().isRec())
+                .forEach(row -> {
+                    final Obj protocol = row.second().asRec().at(uri(MTRON));
+                    if (!protocol.isRec())
+                        return;
+                    final List<Obj> addresses = protocol.asRec().elements()
+                            .filter(transport -> transport.first().isUri())
+                            .flatMap(transport -> objs(transport.second().stream().toList()).stream()
+                                    .filter(address -> address.isUri() && address.c().gt(cInt.ZERO())
+                                            && transport.first().uriValue().toString().equals(address.uriValue().scheme()))
+                                    .map(address -> (Obj) uri(address.uriValue())))
+                            .toList();
+                    if (!addresses.isEmpty())
+                        view.put(row.first(), objs(addresses.toArray(Obj[]::new)));
+                });
         return rec(view);
     }
 

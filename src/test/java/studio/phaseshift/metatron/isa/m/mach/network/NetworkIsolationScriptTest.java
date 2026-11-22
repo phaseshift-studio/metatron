@@ -164,7 +164,11 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
             // shape                                                                        % accepted % why
             "[=>]                                                                            % true  % the empty rec a deferred slot holds",
             "[pattern => </branch_child/network/#>]                                          % true  % the branch alone",
-            "[roster => [b => <ws://192.168.1.42:8555>]]                                     % true  % known endpoints alone",
+            "[roster => [b => <ws://192.168.1.42:8555>]]                                     % true  % the roster rec is open: a key beside discover and machine",
+            "[roster => [machine => [lab => [mtron => [ws => <ws://192.168.1.42:8555/mtron>]]]]] % true % a machine row: host, protocol, transport, address",
+            "[roster => [machine => [lab => [mtron => [ws => {<ws://a:8555/mtron>,<ws://b:8555/mtron>}]]]]] % true % several addresses under one transport",
+            "[roster => [machine => [lab => <ws://192.168.1.42:8555>]]]                      % false % the flat row of old names no protocol or transport",
+            "[roster => [machine => [lab => [mtron => [ws => 5]]]]]                          % false % an address is a uri",
             "[peer => [<ws/192/168/1/42/8555> => [origin => <ws://192.168.1.42:8555>]]] % true  % a connection alone, keyed by the dial's path encoding",
             "[roster => 5]                                                                   % false % a roster names a rec of addresses, not a value",
     }, delimiter = '%')

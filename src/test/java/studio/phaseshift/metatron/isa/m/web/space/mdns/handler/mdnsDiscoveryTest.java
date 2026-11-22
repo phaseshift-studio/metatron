@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -72,9 +73,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <li><b>no row ever duplicates</b> — {@code listen()} announces every authority on every responder, so
  *       anything written inside that loop arrives once per interface</li>
  *   <li><b>a heard machine lands under its own key</b> as {@code <machine> => [<protocol> => [<transport> =>
- *       uri{+}]]}, several addresses in ONE list, each filed under what carries it, a re-heard address not
- *       duplicating, a retraction taking back one address and the last one its levels, and {@code discover}
- *       surviving every machine write</li>
+ *       uri{+}]]}, several addresses in ONE list, each filed under what carries it, a re-heard instance filing
+ *       nothing, its removal taking back exactly what it filed (an address another instance files stays), and
+ *       {@code discover} surviving every machine write</li>
  *   <li><b>only a listener's dialable address leaves the box</b> — a backend's host and its login, a listener's
  *       query and any userinfo reach neither the TXT record nor the roster</li>
  *   <li><b>only an mtron endpoint is announced</b> — a listener's origin extended by a route whose handler speaks
@@ -268,12 +269,9 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             // ONCE PER LIST: an address is a duplicate where it is filed twice under one protocol and transport
             machines.asRec().jvm().forEach((machine, protocols) ->
                     protocols.orElse(rec0()).asRec().jvm().forEach((protocol, transports) ->
-                            transports.orElse(rec0()).asRec().jvm().forEach((transport, endpoints) -> {
-                                final long total = endpoints.stream().count();
-                                final long distinct = endpoints.stream().map(mdnsDiscoveryTest::text).distinct().count();
-                                assertEquals(distinct, total, "every endpoint of " + machine + " under " + protocol
-                                        + "/" + transport + " appears once: " + endpoints);
-                            })));
+                            transports.orElse(rec0()).asRec().jvm().forEach((transport, endpoints) ->
+                                    assertTrue(once(objs(endpoints.stream().toList())), "every endpoint of " + machine
+                                            + " under " + protocol + "/" + transport + " is counted once: " + endpoints))));
         } finally {
             handler.close();
         }
@@ -542,17 +540,16 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     public void testADiscoveredMachineLandsInRosterMachine() {
         final mdnsDiscovery handler = handler();
         try {
-            handler.roster(PEER, f(MTRON), f(WS), FIRST);
+            assertEquals(1, handler.roster("peer-ws", List.of(row(PEER, f(WS), FIRST))), "one row newly filed: " + roster());
             assertTrue(holds(PEER, f(WS), FIRST), "a heard address lands under its machine, protocol and transport: " + roster());
 
-            handler.roster(PEER, f(MTRON), f(WS), SECOND);
-            assertTrue(holds(PEER, f(WS), FIRST) && holds(PEER, f(WS), SECOND),
+            handler.roster("peer-ws", List.of(row(PEER, f(WS), FIRST), row(PEER, f(WS), SECOND)));
+            assertEquals(sorted(FIRST, SECOND), texts(addresses(PEER, f(MTRON), f(WS))),
                     "one machine on two interfaces is ONE list with two addresses: " + roster());
-            assertEquals(2L, addresses(PEER, f(MTRON), f(WS)).stream().count(), roster().toString());
 
-            assertFalse(handler.roster(PEER, f(MTRON), f(WS), FIRST), "re-hearing an address is no write: " + roster());
-            assertEquals(2L, addresses(PEER, f(MTRON), f(WS)).stream().count(),
-                    "re-hearing an address does not duplicate it: " + roster());
+            assertEquals(0, handler.roster("peer-ws", List.of(row(PEER, f(WS), FIRST), row(PEER, f(WS), SECOND))),
+                    "re-hearing an instance files nothing: " + roster());
+            assertTrue(once(addresses(PEER, f(MTRON), f(WS))), "each address is counted once: " + roster());
         } finally {
             handler.close();
         }
@@ -566,13 +563,14 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             Machine.write(Network.ROOT_ROSTER, rec(uri(DISCOVER), handler));
             assertFalse(discover().isNoObj(), "the seed itself landed: " + roster());
 
-            handler.roster(PEER, f(MTRON), f(WS), FIRST);
+            handler.roster("peer-ws", List.of(row(PEER, f(WS), FIRST)));
             assertTrue(holds(PEER, f(WS), FIRST), "the address landed: " + roster());
-            assertFalse(discover().isNoObj(), "writing machine must not erase discover: " + roster());
+            assertTrue(discover().stream().anyMatch(known -> known == handler),
+                    "a machine write keeps discover, the handler itself: " + roster());
 
-            handler.roster(PEER, f(MTRON), f(WS), SECOND);
-            assertFalse(discover().isNoObj(),
-                    "discover survives every machine write, not just the first: " + roster());
+            handler.roster("peer-ws", List.of());
+            assertTrue(discover().stream().anyMatch(known -> known == handler),
+                    "and so does taking a row back: " + roster());
         } finally {
             handler.close();
         }
@@ -581,51 +579,84 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     /**
      * ONE MACHINE, EACH ADDRESS UNDER WHAT CARRIES IT. Metatron's mcp server on a box is filed beside its ws endpoint,
      * never merged into it, and the scheme-keyed view ({@link Network#machines()}) holds only what a scheme's own
-     * client speaks: an mcp endpoint on a ws socket is no address a ws_client can dial. The explicit view
-     * ({@link Network#machines(fURI, fURI)}) is where it is read.
+     * client speaks: an mcp endpoint on a ws socket is no address a ws_client can dial, so it is read at its own
+     * address.
      */
     @Test
     public void testEachAddressIsFiledUnderItsTransport() {
         final mdnsDiscovery handler = handler();
         try {
-            handler.roster(PEER, f(MTRON), f(WS), FIRST);
-            handler.roster(PEER, f(MTRON), f(MCP), THIRD);
+            handler.roster("peer", List.of(row(PEER, f(WS), FIRST), row(PEER, f(MCP), THIRD)));
             assertTrue(holds(PEER, f(WS), FIRST) && holds(PEER, f(MCP), THIRD), "each under its transport: " + roster());
             assertFalse(holds(PEER, f(WS), THIRD), "an mcp endpoint is never filed as ws: " + roster());
             final Network network = Machine.current().network();
             assertEquals(List.of(FIRST.toString()), texts(network.machines().at(uri(PEER))),
                     "the scheme-keyed view holds what a ws_client dials, and no mcp endpoint: " + network.machines());
-            assertEquals(List.of(THIRD.toString()), texts(network.machines(f(MTRON), f(MCP)).at(uri(PEER))),
-                    "the mcp endpoint is read through the explicit view: " + roster());
+            assertEquals(List.of(THIRD.toString()), texts(addresses(PEER, f(MTRON), f(MCP))),
+                    "the mcp endpoint is read at its own address: " + roster());
         } finally {
             handler.close();
         }
     }
 
     /**
-     * A RETRACTION TAKES BACK ONE ADDRESS, and the last takes with it the levels it alone held — its transport, its
-     * protocol, the host's row — while the host's other transports, another host and {@code discover} are never
-     * touched: each write lands at the one list it names, and the space keeps the rest.
+     * A REMOVAL NAMES ONLY ITS INSTANCE, and takes back exactly what that instance filed: JmDNS builds the removal
+     * from the PTR record alone, so nothing can be re-derived from it. The roster keeps a count, so an address a
+     * second instance files stays until that one goes too, and another host and {@code discover} are never touched.
      */
     @Test
-    public void testARetractionTakesItsLevelsWithIt() {
+    public void testARemovalTakesBackWhatItsInstanceFiled() {
         final mdnsDiscovery handler = handler();
         try {
-            handler.roster(PEER, f(MTRON), f(WS), FIRST);
-            handler.roster(PEER, f(MTRON), f(WS), SECOND);
-            handler.roster(PEER, f(MTRON), f(MCP), THIRD);
-            handler.roster(OTHER, f(MTRON), f(WS), FIRST);
-            assertTrue(handler.retract(PEER, f(MTRON), f(WS), SECOND), "a held address is taken back: " + roster());
-            assertFalse(handler.retract(PEER, f(MTRON), f(WS), SECOND), "taking it back twice is no write: " + roster());
+            handler.roster("a", List.of(row(PEER, f(WS), FIRST), row(PEER, f(WS), SECOND)));
+            handler.roster("b", List.of(row(PEER, f(WS), FIRST)));
+            handler.roster("c", List.of(row(OTHER, f(WS), FIRST)));
+            handler.roster("a", List.of());
             assertEquals(List.of(FIRST.toString()), texts(addresses(PEER, f(MTRON), f(WS))),
-                    "the transport keeps its other address: " + roster());
-            handler.retract(PEER, f(MTRON), f(WS), FIRST);
+                    "the address another instance files stays, the other goes: " + roster());
+            handler.roster("b", List.of());
             checkEquality(LOG, noobj(), addresses(PEER, f(MTRON), f(WS)), true);
-            assertTrue(holds(PEER, f(MCP), THIRD), "the host's other transport is untouched: " + roster());
-            handler.retract(PEER, f(MTRON), f(MCP), THIRD);
-            checkEquality(LOG, noobj(), Machine.read(Network.ROOT_ROSTER.extend(MACHINE).extend(PEER)), true);
+            checkEquality(LOG, noobj(), Machine.current().network().machines().at(uri(PEER)), true);
             assertTrue(holds(OTHER, f(WS), FIRST), "another host is never touched: " + roster());
             assertFalse(discover().isNoObj(), "nor is discover: " + roster());
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * A RE-RESOLUTION REPLACES WHAT ITS INSTANCE FILED: an address it no longer names is taken back (a DHCP lease that
+     * moved), and the one it names now is filed.
+     */
+    @Test
+    public void testAReResolutionReplacesWhatItsInstanceFiled() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.roster("a", List.of(row(PEER, f(WS), FIRST)));
+            handler.roster("a", List.of(row(PEER, f(WS), SECOND)));
+            assertEquals(List.of(SECOND.toString()), texts(addresses(PEER, f(MTRON), f(WS))),
+                    "the moved address replaces the old one: " + roster());
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * AN INSTANCE TAKES BACK ONLY WHAT IT FILED, however often it is removed: a row taken back twice would leave a
+     * negative count, and the next instance's filing would cancel against it instead of listing the address.
+     */
+    @Test
+    public void testAnInstanceTakesBackOnlyWhatItFiled() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.roster("a", List.of());
+            handler.roster("a", List.of(row(PEER, f(WS), FIRST)));
+            handler.roster("a", List.of());
+            handler.roster("a", List.of());
+            handler.roster("b", List.of(row(PEER, f(WS), FIRST)));
+            assertEquals(List.of(FIRST.toString()), texts(addresses(PEER, f(MTRON), f(WS))),
+                    "a filing after removals is whole, no negative count behind it: " + roster());
+            assertTrue(once(addresses(PEER, f(MTRON), f(WS))), "and counted once: " + roster());
         } finally {
             handler.close();
         }
@@ -699,7 +730,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             rows.add(text(machine));
             protocols.orElse(rec0()).asRec().jvm().values().forEach(transports ->
                     transports.orElse(rec0()).asRec().jvm().values().forEach(addresses ->
-                            addresses.stream().map(mdnsDiscoveryTest::text).forEach(rows::add)));
+                            objs(addresses.stream().toList()).stream().map(mdnsDiscoveryTest::text).forEach(rows::add)));
         });
         return rows;
     }
@@ -749,10 +780,30 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
-     * the list at {@code /network/roster/machine/<machine>/<protocol>/<transport>}, read at its own address
+     * the NET of the list at {@code /network/roster/machine/<machine>/<protocol>/<transport>}, read at its own
+     * address: a filer adds its row and takes it back as the ring does, so the list holds every signed term
      */
     private static Obj addresses(final fURI machine, final fURI protocol, final fURI transport) {
-        return Machine.read(Network.ROOT_ROSTER.extend(MACHINE).extend(machine).extend(protocol).extend(transport));
+        return objs(Machine.read(Network.ROOT_ROSTER.extend(MACHINE).extend(machine).extend(protocol).extend(transport))
+                .stream().toList());
+    }
+
+    /**
+     * one row as a discovery protocol files it: {@code [machine=>[<machine>=>[mtron=>[<transport>=><address>]]]]}
+     */
+    private static Obj row(final fURI machine, final fURI transport, final fURI address) {
+        return rec(uri(MACHINE), rec(uri(machine), rec(uri(MTRON), rec(uri(transport), uri(address.toString())))));
+    }
+
+    /**
+     * every address in a net list counted exactly once
+     */
+    private static boolean once(final Obj net) {
+        return net.stream().allMatch(address -> 1L == address.c().max());
+    }
+
+    private static List<String> sorted(final fURI... addresses) {
+        return Stream.of(addresses).map(fURI::toString).sorted().toList();
     }
 
     /**

@@ -30,7 +30,9 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
 
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -107,6 +109,48 @@ public class NetworkBranchTest extends AbstractMetatronTest {
             checkEquality(LOG, field.asRec().at(uri(MACHINE)), lab, true);
             this.script("[STATE] </network/roster/machine/lab/mtron/ws> -> <ws://10.0.0.9:8777/>");
             checkEquality(LOG, Machine.current().network().machines().at(uri("lab")), uri("ws://10.0.0.9:8777/"), true);
+        } finally {
+            Machine.write(Network.ROOT_ROSTER, declared);
+        }
+    }
+
+    /**
+     * A ROW IN ANOTHER SHAPE IS SKIPPED, NEVER THROWN ON. Roster writes reach the store unchecked, so a row in the flat
+     * {@code <host> => uri{+}} of old, or one a level short, must leave machines() — and the status report, placement
+     * and plan snapshots that read it — answering for every row that is in shape.
+     */
+    @Test
+    public void testARowInAnotherShapeIsSkipped() {
+        final Obj declared = Machine.read(Network.ROOT_ROSTER);
+        try {
+            Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
+                    uri("flat"), uri("ws://10.0.0.7:8555/mtron"),
+                    uri("short"), rec(uri(MTRON), uri("ws://10.0.0.8:8555/mtron")),
+                    uri("lab"), rec(uri(MTRON), rec(uri(WS), uri("ws://10.0.0.9:8555/mtron"))))))));
+            final Obj machines = Machine.current().network().machines();
+            checkEquality(LOG, uri("ws://10.0.0.9:8555/mtron"), machines.asRec().at(uri("lab")), true);
+            assertEquals(1, machines.asRec().jvm().size(), "only the row in shape is a machine: " + machines);
+            assertFalse(Machine.current().network().status(noobj()).isFail(), "the status report reads past the others");
+        } finally {
+            Machine.write(Network.ROOT_ROSTER, declared);
+        }
+    }
+
+    /**
+     * A SPAWNED PEER IS FILED AS THE RING FILES IT: a non-loopback authority forks nothing and is declared, its origin
+     * keying an mtron/ws row that the scheme-keyed view lists once, however often it is asked for.
+     */
+    @Test
+    public void testASpawnedPeerIsAnMtronRow() {
+        final Obj declared = Machine.read(Network.ROOT_ROSTER);
+        final String origin = "ws://203.0.113.9:" + generatePort();
+        try {
+            checkEquality(LOG, uri(origin + "/mtron"), uri(PeerSpawn.spawn(f(origin + "/spawned"))), true);
+            PeerSpawn.spawn(f(origin + "/spawned"));
+            final Obj listed = Machine.current().network().machines().jvm().entrySet().stream()
+                    .filter(entry -> entry.getKey().isUri() && origin.equals(entry.getKey().uriValue().toString()))
+                    .map(Map.Entry::getValue).findFirst().orElse(noobj());
+            checkEquality(LOG, uri(origin + "/mtron"), listed, true);
         } finally {
             Machine.write(Network.ROOT_ROSTER, declared);
         }

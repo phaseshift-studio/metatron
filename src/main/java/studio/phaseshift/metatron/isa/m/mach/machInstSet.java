@@ -804,9 +804,10 @@ public class machInstSet extends AbstractInstSet {
                                 // A map is not a fixed-key rec, so the map idiom is the positional
                                 // (keyType, valueType) pair — the same one a space's `route` uses. Every
                                 // field is reached through Network at its own address: the roster at
-                                // /network/roster, so a row — or one transport's addresses — is written at
-                                // its own path and the space builds the levels above it; the connections
-                                // at the machine's own ~/network/peer.
+                                // /network/roster, where a filer adds its row with Rec.plus and takes it
+                                // back with Rec.minus (rec plus with the coefficients inverted), so the
+                                // roster keeps a count and a read nets the terms; the connections at the
+                                // machine's own ~/network/peer.
                                 //
                                 // THE ROSTER'S TWO FIELDS. `discover` is where the discovery protocols
                                 // are mounted (mdns_discovery::T, each a discovery::T publishing its status), so

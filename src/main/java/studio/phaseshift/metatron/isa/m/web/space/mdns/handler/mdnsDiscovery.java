@@ -105,14 +105,13 @@ public class mdnsDiscovery extends MRec implements Closeable {
     // What is left here is the identity it is registered under.
 
     /**
-     * THE ROSTER IS READ, AMENDED AND WRITTEN BACK — an address list at its own path, the discover bag with the roster
-     * around it — and this handler GUARANTEES concurrency against itself: {@link #listen()} creates one JmDNS and one {@link PeerListener} PER LOCAL ADDRESS, so on a
+     * THE ROSTER IS READ, MERGED AND WRITTEN BACK — a row added with {@code Rec.plus} or taken back with
+     * {@code Rec.minus}, the discover bag amended around it — and this handler GUARANTEES concurrency against itself: {@link #listen()} creates one JmDNS and one {@link PeerListener} PER LOCAL ADDRESS, so on a
      * multi-homed host two listeners hear the same peer on two threads, both read the same list, and the later write
      * drops the earlier one's address. Admission is serialized here.
      * <p>
      * A lock in this class is a stopgap and not the fix: it cannot cover a second discovery protocol writing the
-     * same rec. That wants the roster to own an {@code admit(uri)} of its own, with the self-test, the
-     * canonicalization and this serialization behind it, and the handlers merely proposing.
+     * same rec.
      */
     private static final Object ROSTER = new Object();
 
@@ -142,6 +141,14 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * the surfaces already announced — reconciliation announces what is new and retires what is gone
      */
     private final Map<String, fURI> announced = Collections.synchronizedMap(new HashMap<>());
+    /**
+     * THE ROWS EACH INSTANCE FILED, by its key: a heard service's ({@link ServiceInfo#getKey()}) or one of this
+     * machine's surfaces (its address). A removal names only the instance — JmDNS builds the {@code serviceRemoved}
+     * event from the PTR record alone, with no server, addresses or TXT, for a goodbye and a cache expiry alike
+     * (3.6.4, {@code DNSRecord.Pointer.getServiceEvent}) — so what an instance takes out of the roster is what it put
+     * in, never what a removal could re-derive. Guarded by {@link #ROSTER}.
+     */
+    private final Map<String, List<Obj>> filed = new HashMap<>();
 
     public mdnsDiscovery(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MDNS_DISCOVERY_TID, vid);
@@ -345,9 +352,13 @@ public class mdnsDiscovery extends MRec implements Closeable {
             this.LOG.warn("mdns: no multicast-capable interface — discovery is inert here");
             return;
         }
-        // what the initial sweep just announced is the baseline; the reconciliation loop below keeps it true as
-        // spaces and services come and go for the VM's whole life
-        surfaces().forEach((surface, transport) -> this.announced.put(surface.toString(), transport));
+        // what the initial sweep just announced is the baseline, and this machine's own row files it once; the
+        // reconciliation loop below keeps both true as spaces and services come and go for the VM's whole life
+        surfaces().forEach((surface, transport) -> {
+            this.announced.put(surface.toString(), transport);
+            this.roster(surface.toString(), List.of(rec(uri(MACHINE), rec(uri(this.machineOf(surface)),
+                    rec(uri(MTRON), rec(uri(transport), uri(surface.toString())))))));
+        });
         while (!this.closed) {
             try {
                 this.reconcile(service);
@@ -374,14 +385,19 @@ public class mdnsDiscovery extends MRec implements Closeable {
             final Set<String> now = new HashSet<>();
             surfaces().forEach((surface, transport) -> {
                 now.add(surface.toString());
-                if (null == this.announced.putIfAbsent(surface.toString(), transport))
+                if (null == this.announced.putIfAbsent(surface.toString(), transport)) {
                     this.responders.forEach(mdns -> this.announce(mdns, service, surface, transport));
+                    // THIS MACHINE'S OWN ROW, filed once per surface — never once per responder that announces it
+                    this.roster(surface.toString(), List.of(rec(uri(MACHINE), rec(uri(this.machineOf(surface)),
+                            rec(uri(MTRON), rec(uri(transport), uri(surface.toString())))))));
+                }
             });
             final List<Map.Entry<String, fURI>> gone = List.copyOf(this.announced.entrySet()).stream()
                     .filter(was -> !now.contains(was.getKey())).toList();
             for (final Map.Entry<String, fURI> was : gone) {
                 this.announced.remove(was.getKey());
                 this.responders.forEach(mdns -> this.retire(mdns, service, f(was.getKey()), was.getValue()));
+                this.roster(was.getKey(), List.of());
             }
         } finally {
             Machine.current(current);
@@ -390,13 +406,12 @@ public class mdnsDiscovery extends MRec implements Closeable {
 
     /**
      * Stop announcing a surface that is gone — mDNS is soft state, so un-registering lets the remote rosters age it
-     * out rather than shipping a dead address to a peer — and take it out of this machine's own row, which
-     * {@link #announce} wrote it into.
+     * out rather than shipping a dead address to a peer. This machine's own row is taken back once, by
+     * {@link #reconcile}, not once per responder.
      */
     private void retire(final JmDNS mdns, final fURI service, final fURI surface, final fURI transport) {
         mdns.unregisterService(ServiceInfo.create(service.toString(), instanceName(this.hostName, surface),
                 surface.port(), 0, 0, txt(surface, transport)));
-        this.retract(this.machineOf(surface), f(MTRON), transport, surface);
     }
 
     private fURI service() {
@@ -548,7 +563,6 @@ public class mdnsDiscovery extends MRec implements Closeable {
         try {
             mdns.registerService(ServiceInfo.create(service.toString(), instanceName(this.hostName, surface),
                     surface.port(), 0, 0, txt(surface, transport)));
-            this.roster(this.machineOf(surface), f(MTRON), transport, surface);
         } catch (final IOException e) {
             this.LOG.warn("mdns: cannot announce %s (%s)", surface, e.getMessage());
         }
@@ -588,35 +602,31 @@ public class mdnsDiscovery extends MRec implements Closeable {
                 this.LOG.debug("mdns: %s resolved without a TXT record — waiting for a complete one", info.getName());
                 return;
             }
+            // A RESOLUTION WITHOUT ADDRESSES IS NOT ONE THAT HAS NONE: the A records arrive on their own, and filing
+            // what this one names would take back everything the instance filed before
+            if (0 == info.getInet4Addresses().length) {
+                this.LOG.debug("mdns: %s resolved without an address — waiting for a complete one", info.getName());
+                return;
+            }
             final String scheme = info.getPropertyString(SCHEME);
             final String route = info.getPropertyString(ROUTE);
             final fURI machine = machine(info);
             final fURI protocol = protocol(info);
             final fURI transport = transport(info);
+            final List<Obj> rows = new ArrayList<>();
             for (final InetAddress address : info.getInet4Addresses()) {
                 if (this.ours(address, info.getPort())) {
                     this.LOG.debug("mdns: heard our own %s", address.getHostAddress());
                     continue;
                 }
-                final fURI dialable = dialable(address, info.getPort(), scheme, route);
-                if (this.roster(machine, protocol, transport, dialable))
-                    this.LOG.info("mdns: discovered %s at %s", machine, dialable);
-                else
-                    this.LOG.debug("mdns: %s at %s again", machine, dialable);
+                rows.add(rec(uri(MACHINE), rec(uri(machine), rec(uri(protocol), rec(uri(transport),
+                        uri(dialable(address, info.getPort(), scheme, route).basePath().toString()))))));
             }
+            if (this.roster(info.getKey(), rows) > 0)
+                this.LOG.info("mdns: discovered %s: %s", machine, rows);
         } finally {
             Machine.current(current);
         }
-    }
-
-    /**
-     * Two uris are the same ADDRESS when their BASE PATHS agree. {@link fURI#basePath()} keeps scheme, host, port
-     * and path and resets the coefficient to one, empties the poly and drops the {@code ?query} — so it is the
-     * address itself, canonical, and {@code equals} can be trusted on it. Comparing the rendered form instead is
-     * how one address once got stored twice (a path of {@code []} and {@code [""]} print the same).
-     */
-    private static boolean sameAddress(final fURI one, final fURI other) {
-        return one.basePath().equals(other.basePath());
     }
 
     /**
@@ -650,73 +660,40 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * add ONE address to a machine's row, keeping any it already had there. The row is
-     * {@code <host> => [<protocol> => [<transport> => uri{+}]]}, and only the list at
-     * {@code /network/roster/machine/<host>/<protocol>/<transport>} is written: the space builds the levels above it,
-     * so the host's other transports, the other hosts and {@code discover} are never rewritten.
+     * THE ROWS ONE INSTANCE FILES IN THE ROSTER, made so: each row it newly files is added, each it filed before and
+     * files no more is taken back, and an instance that files nothing has left. A row is
+     * {@code [machine=>[<host>=>[<protocol>=>[<transport>=><address>]]]]}, merged as the ring merges it: the roster is
+     * read, {@code Rec.plus(row)} or {@code Rec.minus(row)} (a deep merge with the row's coefficients inverted), and
+     * written back. The roster keeps the count, so an address two instances file stays until both take it back, and
+     * a read nets the terms ({@link Network#machines()}).
      * <p>
-     * ONE WRITE, BY THE STORE'S OWN RULE: a value written at a key that holds a stream is appended to it, and at a key
-     * that holds one value replaces it ({@code Rec.at}). So an address is written alone onto a list of several, and as
-     * {@code {old, new}} over a single one — the whole list written back onto a stream would hold every address
-     * twice. A re-heard address is
-     * matched by its base path, never by Obj identity: a uri that has round-tripped through the roster does not equal
-     * a freshly minted one, even when the two print the same address.
+     * AN INSTANCE TAKES BACK ONLY WHAT IT FILED: a row taken back twice leaves a negative count that the next filing
+     * cancels, and the address would be filed and absent at once.
+     * <p>
+     * The levels a host's last address leaves stay, an empty rec: its addresses net to nothing, and
+     * {@link Network#machines()} lists no machine without one.
      * <p>
      * VISIBLE FOR TESTING: this is the whole roster contribution of a discovery protocol, and it is testable
-     * without multicast, a second host or a resolved {@code ServiceInfo} — which none of the admission path
-     * above can be.
+     * without multicast, a second host or a resolved {@code ServiceInfo} — which none of the admission path above
+     * can be.
+     *
+     * @return how many rows were newly filed
      */
-    boolean roster(final fURI machine, final fURI protocol, final fURI transport, final fURI address) {
-        final fURI canonical = address.basePath();
-        // A MACHINE KEY IS A HOST, a path segment of the row's address, and the callers hand one over:
-        // machine(ServiceInfo) names the SRV target through segment(), and machineOf(authority) reads host() off the
-        // endpoint. A producer that passed a scheme, a port or a DNS root dot would split one machine into rows --
-        // which is the producers' job to get right, not this method's to launder.
-        final fURI at = Network.ROOT_ROSTER.extend(MACHINE).extend(machine).extend(protocol).extend(transport);
+    int roster(final String instance, final List<Obj> rows) {
+        final List<Obj> now = rows.stream().distinct().toList();
         synchronized (ROSTER) {
-            final Obj held = Machine.read(at);
-            // ALREADY THERE: a re-heard address is not news, and not a write either
-            if (held.stream().anyMatch(known -> known.isUri() && sameAddress(known.uriValue(), canonical)))
-                return false;
-            final Obj heard = uri(canonical.toString());
-            Machine.write(at, held.isObjs() ? heard : held.append(heard));
-            return true;
-        }
-    }
-
-    /**
-     * take ONE address back out of a machine's row, the inverse of {@link #roster}: the list at
-     * {@code /network/roster/machine/<host>/<protocol>/<transport>} keeps every other address, and the last one takes
-     * with it the levels it alone held — its transport, its protocol, the host's row.
-     * <p>
-     * A write cannot shrink a stream (a value written onto one is appended), so the list is deleted and what is left
-     * written into the emptied key. And the space keeps a level its last entry left, as an empty rec
-     * ({@code [mtron=>[=>]]}), so an emptied protocol and host are deleted in turn.
-     * <p>
-     * VISIBLE FOR TESTING, like {@link #roster}.
-     */
-    boolean retract(final fURI machine, final fURI protocol, final fURI transport, final fURI address) {
-        final fURI at = Network.ROOT_ROSTER.extend(MACHINE).extend(machine).extend(protocol).extend(transport);
-        synchronized (ROSTER) {
-            final List<Obj> addresses = Machine.read(at).stream().toList();
-            final List<Obj> kept = addresses.stream()
-                    .filter(known -> known.isUri() && !sameAddress(known.uriValue(), address))
-                    .toList();
-            if (kept.size() == addresses.size())
-                return false;
-            Machine.write(at, noobj());
-            if (!kept.isEmpty())
-                Machine.write(at, objs(kept.toArray(Obj[]::new)));
-            else {
-                final fURI protocolAt = at.retract(1);
-                if (Machine.read(protocolAt).elements().findAny().isEmpty()) {
-                    Machine.write(protocolAt, noobj());
-                    final fURI hostAt = protocolAt.retract(1);
-                    if (Machine.read(hostAt).elements().findAny().isEmpty())
-                        Machine.write(hostAt, noobj());
-                }
-            }
-            return true;
+            final List<Obj> before = this.filed.getOrDefault(instance, List.of());
+            for (final Obj row : before)
+                if (!now.contains(row))
+                    Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec().minus(row.asRec()));
+            final List<Obj> added = now.stream().filter(row -> !before.contains(row)).toList();
+            for (final Obj row : added)
+                Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec().plus(row.asRec()));
+            if (now.isEmpty())
+                this.filed.remove(instance);
+            else
+                this.filed.put(instance, now);
+            return added.size();
         }
     }
 
@@ -778,20 +755,14 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * a withdrawn responder takes back only the addresses it advertised, under the protocol and transport it
-     * advertised them ({@link #retract(fURI, fURI, fURI, fURI)})
+     * a withdrawn instance takes back what it filed. The removal names only the instance ({@link #filed}), so nothing
+     * is re-derived from it: what goes is exactly what the instance's resolution put in.
      */
     private void retract(final ServiceInfo info) {
-        final String scheme = info.getPropertyString(SCHEME);
-        final String route = info.getPropertyString(ROUTE);
-        final fURI machine = machine(info);
-        final fURI protocol = protocol(info);
-        final fURI transport = transport(info);
         final Machine current = Machine.current();
         Machine.current(this.owner);
         try {
-            for (final InetAddress address : info.getInet4Addresses())
-                this.retract(machine, protocol, transport, dialable(address, info.getPort(), scheme, route));
+            this.roster(info.getKey(), List.of());
         } finally {
             Machine.current(current);
         }
