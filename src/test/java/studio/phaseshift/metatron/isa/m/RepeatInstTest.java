@@ -106,6 +106,10 @@ public class RepeatInstTest extends AbstractMetatronTest {
             "1.repeat(code=>plus(1),until=>is(gt(10)))                            % 11",
             "5.repeat(code=>minus(1),until=>is(eq(0)))                            % 0",
             "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>true)           % {1,2,3,4,5,6}",
+            // per monad, a fold in the code meets one member: the contrast to the whole-frontier row that answers 6
+            "{1,2,3}.repeat(code=>sum(),until=>loop()?>0)                          % {1,2,3}",
+            // esc through the code lens (5 leaves at once, 1 leaves at 4); applied bare it never fired: {4,8}
+            "{1,5}.repeat(code=>plus(1),esc=>is(gt(3)),until=>loop()?>2)           % {4,5}",
     }, delimiter = '%')
     public void testRepeatCorrectness(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -127,9 +131,32 @@ public class RepeatInstTest extends AbstractMetatronTest {
             "{1,2,3}.repeat?<=int{*}(code=>mult(2),until=>loop().is(eq(2)))                 % {4,8,12}",
             "{1,5}.repeat?<=int{*}(code=>plus(1),until=>is(gt(4)))                          % {2}5",
             "1.repeat?<=int{*}(code=>plus(1),until=>loop().is(eq(5)),emit=>true)            % {1,2,3,4,5,6}",
+            // THE SUPERSTEP: a fold in the code meets the whole frontier, 1+2+3, where per monad it meets one member
+            "{1,2,3}.repeat?<=int{*}(code=>sum(),until=>loop()?>0)                          % 6",
+            // no until: the loop ends when the frontier empties (5 leaves the filter at once, 1 walks to 3)
+            "{1,5}.repeat?<=int{*}(code=>plus(1).is(lt(4)),emit=>true)                     % {1,2,3,5}",
+            "{1,5}.repeat?<=int{*}(code=>plus(1),esc=>is(gt(3)),until=>loop()?>2)          % {4,5}",
     }, delimiter = '%')
     public void testRepeatOverTheWholeFrontier(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A FAILING MEMBER LEAVES THE FRONTIER: a fail passes through every predicate ({@code booleanCheck()} is false on a
+     * fail), so a member that became one stayed in the frontier and the loop never ended. It leaves as its answer, and
+     * the evaluation returns. Preemptive, so a regression fails here instead of hanging the run.
+     */
+    @Test
+    public void testAFailingMemberLeavesTheFrontier() {
+        final Obj answer = org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(60), () -> {
+            try {
+                return Machine.evaluate("1.repeat?<=int{*}(code=>plus(a),until=>is(gt(4)))");
+            } catch (final RuntimeException e) {
+                return studio.phaseshift.metatron.isa.m.type.impl.MFail.fail(e); // a thrown fail ends it too
+            }
+        });
+        org.junit.jupiter.api.Assertions.assertTrue(answer.isFail() || answer.isCaughtFail()
+                || answer.stream().anyMatch(o -> o.isFail() || o.isCaughtFail()), "the member's fail is its answer: " + answer);
     }
 
     @Test
