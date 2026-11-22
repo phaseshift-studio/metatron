@@ -945,6 +945,17 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             // do nothing
         }
 
+        /**
+         * WHILE BOUND, A VID ADDRESSES AND STORES NOTHING: an obj built in scope takes its vid the way
+         * {@code selfVID()} does, never the way {@code vid()} does. A client binds it around each frame it reads
+         * ({@code WebSocketRecClient.onMessage}): a reply is the far side's answer, addressed where the far side keeps
+         * it ({@code g:V/1}, its members, a constructed value, the trip's tag), and reading it must not write it into
+         * this machine's spaces. A mutation made later, outside the read, writes as any mutation does, and once the vid
+         * is global that write goes back to the source (Marko, 2026-11-22). Declared FIRST among Helper's statics:
+         * initializing {@code SERIALIZER} builds objs, every build reads this, and a later declaration is still null then.
+         */
+        public static final ScopedValue<Boolean> SELF_VID = ScopedValue.newInstance();
+
         private static final ObjSerializer<String> SERIALIZER = ObjmtronSerializer.single();
 
         public static fURI specificTypeId(final Obj obj) {
@@ -1268,11 +1279,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             // RO_TEST (read-only type-test mode): check only, skip the incidental space write
             // A Space (and an InstSet, which is a Space) is a container registered via addSpace/import, not a value
             // to be written at its own vid — writing it back into itself is what a catch-all used to swallow.
-            // A VID WHOSE LAST SEGMENT IS A HEX LITERAL CARRIES A ROUND TRIP'S TAG (g:V/1/0x4a6752e0, WebSocketObj):
-            // wire bookkeeping that never leaves the ws air lock, so nothing is stored at it. A client evaluates the
-            // reply frames it reads, and an addressed answer stored at its tagged vid was a write into the client's own
-            // spaces (a peer's vertex written into the master's graph at V/1/0x..., which threw) (Marko, 2026-11-22).
-            if (!BootLoader.RO_TEST && null != obj.vid() && !isHex(obj.vid().name()) && !obj.isType() && !obj.isSpace())
+            // SELF_VID bound (a client reading a reply): the vid is the far side's address, never a write here
+            if (!BootLoader.RO_TEST && !SELF_VID.isBound() && null != obj.vid() && !obj.isType() && !obj.isSpace())
                 Machine.write(obj.vid(), obj);
         }
 
@@ -1316,7 +1324,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 // objClone sibling does exactly this)
                                 throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
-                            if (null != vid)
+                            // the constructor's own store, outside objCheckAndSave: a reply read stores nothing here either
+                            if (null != vid && !SELF_VID.isBound())
                                 Machine.write(vid, constructedObj);
                             return constructedObj;
                         }

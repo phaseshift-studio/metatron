@@ -210,9 +210,9 @@ public interface WebSocketObj extends Rec, Closeable {
      * field, envelope or wrapper obj is added to the wire: an obj already carries its address, and {@code 3@a}
      * already serializes with it. A request is sent under its own vid when it has one and under a minted tag
      * when it does not: a hex literal ({@code 0xa3f91c2b}) that the peer appends to its answer's vid as the last
-     * segment ({@code g:V/1/0xa3f91c2b}, or the tag alone for an answer with no vid). Nothing is ever stored at a
-     * tagged vid (Obj.Helper.objCheckAndSave), {@link #router()} hands the frame to this slot by its tag, and the
-     * air lock ({@link #untagged}) retracts the tag before the caller sees the answer.
+     * segment ({@code g:V/1/0xa3f91c2b}, or the tag alone for an answer with no vid). A client reads every frame with
+     * {@code Obj.Helper.SELF_VID} bound, so nothing in a reply is stored, {@link #router()} hands the frame to this
+     * slot by its tag, and the air lock ({@link #untagged}) retracts the tag before the caller sees the answer.
      * <p>
      * The map is keyed by socket first because a relative vid is only unique within a thread: two sockets could
      * mint the same one, and the arrival-order fallback must count THIS socket's outstanding trips, not every

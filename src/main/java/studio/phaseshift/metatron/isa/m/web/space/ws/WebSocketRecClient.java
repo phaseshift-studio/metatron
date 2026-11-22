@@ -209,14 +209,20 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
         this.wsclient.onOpen(this, handshake);
     }
 
+    // A CLIENT READS A FRAME AS AN ANSWER, NOT AS A WRITE: the parse runs with Obj.Helper.SELF_VID bound, so every vid
+    // in the frame addresses the obj where the far side keeps it (g:V/1, each member of a stream, a constructed value,
+    // the trip's tag) and nothing is stored here. The handler runs after the read, outside the binding, and writes
+    // whatever it writes (Marko, 2026-11-22)
     @Override
     public void onMessage(final String message) {
-        this.wsclient.onMessage(this, this.getIO().input().serializer().inputBytes(ByteBuffer.wrap(message.getBytes())));
+        this.wsclient.onMessage(this, ScopedValue.where(Obj.Helper.SELF_VID, true)
+                .call(() -> this.getIO().input().serializer().inputBytes(ByteBuffer.wrap(message.getBytes()))));
     }
 
     @Override
     public void onMessage(final ByteBuffer message) {
-        this.wsclient.onMessage(this, this.getIO().input().serializer().inputBytes(message));
+        this.wsclient.onMessage(this, ScopedValue.where(Obj.Helper.SELF_VID, true)
+                .call(() -> this.getIO().input().serializer().inputBytes(message)));
     }
 
     public boolean state() {
