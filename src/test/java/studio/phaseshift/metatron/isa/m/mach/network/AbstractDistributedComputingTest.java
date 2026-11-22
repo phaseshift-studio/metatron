@@ -493,6 +493,11 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{11,21,31,41,12,22,13}.mod(10).order(cc())                  % branch().order()            % [3,{2}2,{4}1]",
             "{11,21,31,41,12,22,13}.mod(10).order(cc())==[{1}_]          % branch().order().select()   % [3]",
             "{11,21,31,41,12,22,13}.mod(10).order(cc().neg())==[{1}_]    % branch().order().select()   % [{4}1]",
+            // a self-combining fold re-applies its key at home, so kmerge(cc()) is no cut either: sharded, the lanes
+            // merged {[{2}9],[1,{2}9]} and {[{3}2]} by partial masses and answered [1,{3}2,{4}9]
+            "{[{2}9],[{3}2],[1,{2}9]}.kmerge(cc())                       % start().kmerge()            % [1,{4}9,{3}2]",
+            // a typer key cannot read mass (its domain is one copy), so the sort still ships
+            "{3,1,2,4}.plus(1).order(as(str::T))                         % branch(start().plus().order(),start().plus().order()).kmerge() % [2,3,4,5]",
     }, delimiter = '%')
     void test_K_a_sort_by_mass_sorts_at_home(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -833,6 +838,11 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,2,3,4}.sum{2}()      % start?hop=0({1,2,3,4}).sum{2}()",
             "{1,2,3,4}.count{2}()    % start?hop=0({1,2,3,4}).count{2}()",
             "{1,2,3,4}.mean{2}()     % start?hop=0({1,2,3,4}).mean{2}()",
+            // the pointwise chain carries the point on its select; the K absorb on kmerge, the select after it
+            "{1,2,3,4}.group{2}([mod(2)=>sum()])             % start?hop=0({1,2,3,4}).group{2}([mod(2)=>sum()])",
+            "{4,1,3,2}.order{2}(neg())==[{1}_]               % start?hop=0({4,1,3,2}).order{2}(neg())==[{1}_]",
+            // a home lane runs in this JVM, where nothing drops the point but the lane's own unpointed cut
+            "start?place=[local,peer]({1,2,3,4,5,6}).plus(1).sum{2}()   % start?hop=0({1,2,3,4,5,6}).plus(1).sum{2}()",
     }, delimiter = '%')
     void test_conservation_a_point_on_the_cut_answers_as_at_home(final String program, final String home) {
         conserved(program, home);

@@ -450,9 +450,10 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A CODE IS BLIND TO MASS WHEN THE COEFFICIENT FLOATS THROUGH IT (Thm 6, Law.Helper#massBlind): each instruction has
-     * a contract that floats and none that reduces, and so does every code it is handed. {@code cc()} answers mass and
-     * {@code count()} reads copies, so neither is blind, nor is anything handed one. Each row: the code % blind.
+     * A CODE IS BLIND TO MASS WHEN NO CONTRACT OF ITS OPS GATHERS COPIES INTO ONE ANSWER (Law.Helper#massBlind): a
+     * reducer-shaped contract reads mass, read off each contract's own coefficients, and every code an instruction is
+     * handed must be blind too. {@code cc()} answers mass and {@code count()} reads copies, so neither is blind, nor is
+     * anything handed one; a typer's domain is one copy, so it is. Each row: the code % blind.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -464,6 +465,11 @@ public class catInstSetTest extends AbstractInstSetTest {
             "cc().neg()          % false",
             "count()             % false",
             "is(cc().gt(1))      % false",
+            // a typer's domain is one copy, so it cannot read mass, whatever form its op declares
+            "as(str::T)          % true",
+            "vid()               % true",
+            // an instruction nothing declares: fail closed
+            "undeclared_op()     % false",
     }, delimiter = '%')
     void testACodeIsBlindToMassWhenTheCoefficientFloatsThroughIt(final String code, final boolean blind) {
         checkEquality(LOG, bool(blind), bool(Law.Helper.massBlind(ObjmtronSerializer.parse(code.trim()))), true);
@@ -489,6 +495,40 @@ public class catInstSetTest extends AbstractInstSetTest {
     void testAKeyThatReadsMassHasNoCombiner(final String call, final boolean combines) {
         final Inst keyed = Law.Helper.keyed(ObjmtronSerializer.<Call>parse(call.trim()).tryToInst().asInst(), T(INT_TID));
         checkEquality(LOG, bool(combines), bool(null != Law.Helper.combiner(keyed)), true);
+    }
+
+    /**
+     * A LIFT IS A SUMMARY, NOT THE FOLD AGAIN (Law.Helper#lifted): {@code r ↦ ℓ·r} declares {@code ℓ} a sufficient
+     * statistic, but an rhs whose lift already ends in the fold ({@code r ↦ r·r}) would ship the fold's plain partials,
+     * which the median or an unweighted mean would pass off as sound, so it answers no lift where {@code r ↦ id()·r}
+     * answers one. A hole the lanes re-apply must be blind to mass: bound to {@code cc()} the lift refuses, bound to
+     * {@code neg()} it lifts.
+     */
+    @Test
+    void testALiftIsASummaryNotTheFoldAgain() {
+        // each side is built from the full tid: an equation parsed before its instruction exists reads a relative name
+        final fURI again = f("/m/inst/built_lift_again");
+        final Inst againBuilt = InstBuilder.build().tid(again).dom(INT_TID.maybeSome()).rng(INT_TID).argLst()
+                .body((lhsObj, inst) -> lhsObj)
+                .derivation(code(List.of(instB(again.dom(INT_TID.maybeSome()), lst()))), code(List.of(instB(again, lst()), instB(again, lst()))))
+                .create();
+        assertNull(Law.Helper.lifted(againBuilt), "a lift that ends in the fold is no summary");
+        final fURI summary = f("/m/inst/built_lift_summary");
+        final Inst summaryBuilt = InstBuilder.build().tid(summary).dom(INT_TID.maybeSome()).rng(INT_TID).argLst()
+                .body((lhsObj, inst) -> lhsObj)
+                .derivation(code(List.of(instB(summary.dom(INT_TID.maybeSome()), lst()))), code(List.of(instB(ID_INST_TID, lst()), instB(summary, lst()))))
+                .create();
+        final Law.Helper.Lift lift = Law.Helper.lifted(summaryBuilt);
+        assertNotNull(lift, "the same shape with a lift before the fold lifts");
+        assertEquals(List.of(ID_INST_TID), lift.lane().stream().map(i -> i.tid().basePath()).toList(), "the lane runs the lift");
+        final fURI hole = f("/m/inst/built_lift_hole");
+        final Obj b = T(studio.phaseshift.metatron.furi.fURI.Singleton.ALL.maybe(), f("b"), null, null);
+        final Inst holeBuilt = InstBuilder.build().tid(hole).dom(INT_TID.maybeSome()).rng(INT_TID).argLst()
+                .body((lhsObj, inst) -> lhsObj)
+                .derivation(code(List.of(instB(hole.dom(INT_TID.maybeSome()), lst(b)))), code(List.of(instB(ID_INST_TID, lst()), instB(hole, lst(b)))))
+                .create();
+        assertNull(Law.Helper.lifted(instB(holeBuilt.tid(), lst(ObjmtronSerializer.<Call>parse("cc()").tryToInst()))), "a hole bound to cc() reads mass");
+        assertNotNull(Law.Helper.lifted(instB(holeBuilt.tid(), lst(ObjmtronSerializer.<Call>parse("neg()").tryToInst()))), "a hole bound to neg() is blind");
     }
 
     /**

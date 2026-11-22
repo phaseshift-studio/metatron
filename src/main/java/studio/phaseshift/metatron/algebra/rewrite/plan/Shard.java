@@ -303,7 +303,7 @@ public final class Shard {
                         : inst);
             }
             if (0 <= cut)
-                lane.addAll(null == lifted ? List.of(raw(insts.get(cut))) : lifted.lane().stream().map(Shard::stated).toList());
+                lane.addAll(null == lifted ? List.of(unpointed(raw(insts.get(cut)))) : lifted.lane().stream().map(Shard::stated).toList());
             if (absorbs)
                 lane.add(raw(insts.get(cut + 1)));
             if (profiling)
@@ -353,10 +353,11 @@ public final class Shard {
 
     /**
      * A POINT ON THE CUT IS A MULTIPLICITY OF ITS ANSWER: {@code r{d}} answers {@code {d}} copies of what {@code r} does,
-     * so {@code (a+b)·r{d} = {d}((a·r + b·r)·C)}. No lane carries it ({@link #raw} builds each lane's cut afresh), and
-     * home's combiner does. A self-combining fold re-applies the cut as written, point and all; a derived or a lifted
-     * combiner is another instruction, so the point moves onto its last: {@code count{2}()} recombines through
-     * {@code sum{2}()}, and {@code mean{2}()} through {@code mean{2}()} over the lanes' summaries.
+     * so {@code (a+b)·r{d} = {d}((a·r + b·r)·C)}. No lane carries it ({@link #unpointed}; {@link #raw} keeps it, and only
+     * a remote lane's text once dropped it, so a home lane folded with it twice), and home's combiner does. A
+     * self-combining fold re-applies the cut as written, point and all; a derived or a lifted combiner is another
+     * instruction, so the point moves onto its last: {@code count{2}()} recombines through {@code sum{2}()}, and
+     * {@code mean{2}()} through {@code mean{2}()} over the lanes' summaries.
      */
     private static List<Inst> pointed(final List<Inst> combiner, final Inst cut) {
         final cInt point = cut.tid().d();
@@ -365,6 +366,14 @@ public final class Shard {
         final List<Inst> out = new ArrayList<>(combiner);
         out.set(out.size() - 1, instB(out.getLast().tid().d(point), out.getLast().args()));
         return out;
+    }
+
+    /**
+     * THE CUT A LANE RUNS: its point dropped, as the point multiplies the whole answer and home's combiner carries it
+     * ({@link #pointed}).
+     */
+    private static Inst unpointed(final Inst cut) {
+        return null == cut.tid().d() || cut.tid().d().isOne() ? cut : instB(cut.tid().d(cInt.ONE()), cut.args());
     }
 
     /**
