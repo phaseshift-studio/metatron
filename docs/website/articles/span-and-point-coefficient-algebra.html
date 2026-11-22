@@ -294,7 +294,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="../tractatus.html">the
+                <a class="nav-link" href="../tractatus/index.html">the
                     tractatus</a>
             </li>
             <!-- SKILLS-MENU:START -->
@@ -546,7 +546,7 @@ Theorem 6: \((ca)^n = c^n a^n\). A run of the pointed term exponentiates its poi
 <p><strong>Live proof.</strong> Two steps of <code>plus{3}(34)</code> from <code>1</code>: the value climbs to <code>69</code>,
 and the point squares to <code>9</code>. Thus, \((3a)^2\) and</p>
 <pre><code class="language-mtron">mtron&gt; 1.plus{3}(34).plus{3}(34)
-==&gt;{2}69
+==&gt;{9}69
 </code></pre>
 <p>In <em>branch normal form</em>, the point expanded, \(3a = a + a + a\), so \((3a)^2 = (a + a + a)^2\):</p>
 <pre><code class="language-mtron">mtron&gt; 1.{2}{plus(34),plus(34),plus(34)}
@@ -562,14 +562,14 @@ and the point squares to <code>9</code>. Thus, \((3a)^2\) and</p>
           plus(34).plus(34),
           plus(34).plus(34),
           plus(34).plus(34)}
-==&gt;{2}69
+==&gt;{9}69
 </code></pre>
 <p>Written on one instruction, the two coefficients are its two extents: <code>{2}plus{3}(34)</code> is three lanes of the run
 <code>plus(34).plus(34)</code>, \(3a^2\), its point taken once, as <code>map{3}</code> takes it once for the run it maps:</p>
 <pre><code class="language-mtron">mtron&gt; 1.{2}plus{3}(34)
-==&gt;{2}69
+==&gt;{3}69
 mtron&gt; 1.plus(34).plus{3}(34)
-==&gt;{2}69
+==&gt;{3}69
 mtron&gt; 1.map{3}(plus(34).plus(34))
 ==&gt;{3}69
 </code></pre>
@@ -719,17 +719,17 @@ float past it (Theorem 17 of [1]). ◻
 :::</p>
 <p><strong>Live proof.</strong></p>
 <pre><code class="language-mtron">mtron&gt; 5.branch(id{2}(),id{3}())
-==&gt;{2}5
+==&gt;{5}5
 mtron&gt; 5.id{2}().id{3}()
-==&gt;{2}5
+==&gt;{6}5
 mtron&gt; 5.id{3}().id{2}()
-==&gt;{2}5
+==&gt;{6}5
 mtron&gt; 5.id{3}().plus(1)
-==&gt;{2}6
+==&gt;{3}6
 mtron&gt; 5.plus{3}(1)
-==&gt;{2}6
+==&gt;{3}6
 mtron&gt; 5.plus(1).id{3}()
-==&gt;{2}6
+==&gt;{3}6
 </code></pre>
 <p>::: <strong>Theorem 4</strong> (A zero point annihilates). If \(a \in \mathcal{F}\),
 then \(0a = 0\).
@@ -916,17 +916,17 @@ alone.</p>
 <p><strong>Live proof.</strong> The run of the pointed step exponentiates its point (Corollary 4), the point on the run does not
 (Corollary 3), and a zero point annihilates whatever its span.</p>
 <pre><code class="language-mtron">mtron&gt; 5.id{3}().id{3}()
-==&gt;{2}5
+==&gt;{9}5
 mtron&gt; 5.{2}id{3}()
-==&gt;{2}5
+==&gt;{3}5
 mtron&gt; 5.{2}id().id{3}()
-==&gt;{2}5
+==&gt;{3}5
 mtron&gt; 5.id{2}().id{2}().id{2}()
-==&gt;{2}5
+==&gt;{8}5
 mtron&gt; 5.{3}id{2}()
 ==&gt;{2}5
 mtron&gt; 5.{0}id{3}()
-==&gt;{2}5
+==&gt;{3}5
 mtron&gt; 5.{0}id{0}()
 mtron&gt; 5.plus{0}(1)
 mtron&gt; 5.branch({0}plus(1),plus(2))
@@ -1102,11 +1102,11 @@ mtron&gt; 1.{2,3}{plus(1),plus(1),plus(1)}
 ==&gt;{9}3
 ==&gt;{27}4
 mtron&gt; 1.{2,3}plus{3}(1)
-==&gt;3
-==&gt;4
+==&gt;{3}3
+==&gt;{3}4
 mtron&gt; {2}1.{2,3}plus{3}(1)
-==&gt;3
-==&gt;4
+==&gt;{6}3
+==&gt;{6}4
 </code></pre>
 <p>A range on a point is a range of multiplicities: if \(b (x) = x + 2\), then
 \(\langle 1 \rangle\, [0,1]\, b = \langle ([0,1])3 \rangle\), a three held zero
@@ -1142,13 +1142,13 @@ weighted \(1, 2, 4, \ldots, 64\), which is \(2^7 - 1 = 127\) objects.</p>
 ==&gt;5
 ==&gt;6
 mtron&gt; 0.{0,6}plus{2}(1)
-==&gt;0
-==&gt;1
-==&gt;2
-==&gt;3
-==&gt;4
-==&gt;5
-==&gt;6
+==&gt;{2}0
+==&gt;{2}1
+==&gt;{2}2
+==&gt;{2}3
+==&gt;{2}4
+==&gt;{2}5
+==&gt;{2}6
 </code></pre>
 <p>An open range is the Kleene star [3],
 \(a^{[0,\infty)} = a^* = 1 + a + a^2 + \cdots\). If \(a (x) = x + 1\), then
@@ -1228,16 +1228,16 @@ walks object by
 object: \(\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \rangle + \langle 3, 4 \rangle\).</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.{0,1}sum()
 ==&gt;1
-==&gt;3
-==&gt;4
 ==&gt;2
-==&gt;10
+==&gt;3
+==&gt;6
 mtron&gt; {1,2,3}.branch(id(),sum())
 ==&gt;{2}1
 ==&gt;{2}2
 ==&gt;{2}3
 mtron&gt; {1,2,3}.{1,2}count()
-==&gt;4
+==&gt;3
+==&gt;1
 mtron&gt; {1,2}.{0,2}plus(1)
 ==&gt;1
 ==&gt;{2}2
@@ -1258,7 +1258,8 @@ mtron&gt; [a=&gt;[a=&gt;[b=&gt;5]]].{*}&gt;&gt;(a)
 ==&gt;[a=&gt;[b=&gt;5]]
 ==&gt;[b=&gt;5]
 mtron&gt; {1,2,3}.is(gt(5)).{1,2}count()
-==&gt;2
+==&gt;0
+==&gt;1
 </code></pre>
 <p>In mtron, <code>{n}a</code> and <code>{m,n}a</code> are each one instruction, and the processor walks it: the input, then each run one step
 past the last, the runs from \(m\) on kept, until the run \(n\) or a run that leaves the domain of <code>a</code>. How much of a run a
@@ -1503,13 +1504,13 @@ mtron&gt; 5.{-1}plus(1)
 so <code>5.{-1}plus{3}(1)</code> is <code>{3}4</code> and <code>5.{-2}plus{3}(1)</code> is <code>{3}3</code>, as <code>5.{2}plus{3}(1)</code> is <code>{3}7</code>. The run of the
 pointed term backward, Theorem 13's \((ca)^{-n} = c^n a^{-n}\), is the converse step pointed at each step.</p>
 <pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1)
-==&gt;{2}7
+==&gt;{3}7
 mtron&gt; 5.{-1}plus{3}(1)
-==&gt;{2}4
+==&gt;{3}4
 mtron&gt; 5.{-2}plus{3}(1)
-==&gt;{2}3
+==&gt;{3}3
 mtron&gt; 5.minus{3}(1).minus{3}(1)
-==&gt;{2}3
+==&gt;{9}3
 </code></pre>
 <p>In mtron, an instruction declares its converse in its <code>?decq</code> claim, as the contract it runs backward:
 <code>plus?int&lt;=int(int)</code> names <code>minus?int&lt;=int(int)</code>, and <code>neg</code> names itself. The walk of Theorem 10 splits a span at zero
@@ -1541,11 +1542,11 @@ off its run, and <code>cc()</code> reads the coefficient of that type. In the co
 <code>int{3}::T</code>. The compiler types a span by its runs, never by its span times its point, which is the count of a
 value's copies (<code>{3}5{3}</code> counts nine): <code>0.{10}plus(4)</code> is typed one <code>int</code>, not ten.</p>
 <pre><code class="language-mtron">mtron&gt; 5.{2}plus{3}(1).type().cc()
-==&gt;2
+==&gt;3
 mtron&gt; 5.plus{3}(1).plus{3}(1).type().cc()
-==&gt;2
+==&gt;9
 mtron&gt; 5.plus(1).id{3}().type().cc()
-==&gt;2
+==&gt;3
 </code></pre>
 <p>A type is an object that performs a computation as well as one that is used in one, and which it is depends on where
 it stands. With no axis, as a step or as a term of a branch, a type is a filter:

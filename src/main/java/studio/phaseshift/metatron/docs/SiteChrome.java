@@ -115,14 +115,14 @@ public final class SiteChrome {
         final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
         return DOC_LINK_PAT.matcher(content).replaceAll("$1=\"" + pre + "$2/")
                 .replace("href=\"index.html\"", "href=\"" + pre + "index.html\"")
-                .replace("href=\"tractatus.html\"", "href=\"" + pre + "tractatus.html\"")
+                .replace("href=\"tractatus/index.html\"", "href=\"" + pre + "tractatus/index.html\"")
                 .replace("href=\"start.html\"", "href=\"" + pre + "start.html\"")
                 .replace("href=\"./instset/", "href=\"" + pre + "instset/")
                 .replace("href=\"./skills/", "href=\"" + pre + "skills/")
                 .replace("href=\"./articles/", "href=\"" + pre + "articles/")
                 .replace("href=\"./console/", "href=\"" + pre + "console/")
                 .replace("location.href='./articles/", "location.href='" + pre + "articles/")
-                .replace("location.href='tractatus.html'", "location.href='" + pre + "tractatus.html'")
+                .replace("location.href='tractatus/index.html'", "location.href='" + pre + "tractatus/index.html'")
                 .replace("location.href='index.html'", "location.href='" + pre + "index.html'")
                 .replace("location.href='./instset/", "location.href='" + pre + "instset/")
                 .replace("location.href='./skills/", "location.href='" + pre + "skills/");

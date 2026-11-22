@@ -106,6 +106,10 @@ public class MarkdownRunner {
         // a document. --cast-out names the served directory directly.
         Path castOutDir = null;
         boolean pages = true;
+        // --only <name>: restrict the article-html pass to one .md, named by file name
+        // or by its path relative to the articles container. null renders every article,
+        // which is what the pom's site-wide article runner wants.
+        String onlyArticle = null;
 
         int i = 0;
         while (i < args.length) {
@@ -113,6 +117,7 @@ public class MarkdownRunner {
                 case "-b", "--boot" -> boot = args[++i];
                 case "-o", "--out" -> outDir = Path.of(args[++i]);
                 case "--cast-out" -> castOutDir = Path.of(args[++i]);
+                case "--only" -> onlyArticle = args[++i];
                 case "--no-page" -> pages = false;
                 case "--single-boot" -> singleBoot = true;
                 case "--reverse" -> reverse = true;
@@ -155,7 +160,7 @@ public class MarkdownRunner {
             // the container the output resolves into. That pass needs no VM, so
             // returning here skips boot *and* teardown.
             if (html && pages) {
-                renderHtmlPass(out);
+                renderHtmlPass(out, onlyArticle);
             }
             return;
         }
@@ -214,7 +219,7 @@ public class MarkdownRunner {
         // ── Optional site-html pass over the skills container (was SkillHtmlRenderer) ──
         // cast-only sources have no page to render
         if (html && pages) {
-            renderHtmlPass(out);
+            renderHtmlPass(out, onlyArticle);
         }
 
         LOG.info("done — " + files.size() + " files, " + DocsUtil.elapsedMs(buildStart) + "ms total (singleBoot="
@@ -265,7 +270,7 @@ public class MarkdownRunner {
      * pages into that container (symlinks followed), so {@code -o docs/website/articles}
      * renders next to the article markdown.
      */
-    private static void renderHtmlPass(final Path out) throws IOException {
+    private static void renderHtmlPass(final Path out, final String onlyArticle) throws IOException {
         final long t1 = System.nanoTime();
         final Path skillsDir = skillsContainer(out);
         final Path articlesDir = articlesContainer(out);
@@ -273,7 +278,10 @@ public class MarkdownRunner {
             renderSiteHtml(skillsDir);
             LOG.info("html rendered into " + skillsDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
         } else if (articlesDir != null) {
-            renderArticleHtml(articlesDir);
+            if (onlyArticle != null) {
+                LOG.info("article html restricted to " + onlyArticle);
+            }
+            renderArticleHtml(articlesDir, onlyArticle);
             LOG.info("html rendered into " + articlesDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
         } else {
             LOG.info("--html skipped: output " + out + " is not under a website skills or articles tree");
@@ -446,12 +454,24 @@ public class MarkdownRunner {
     }
 
     public static int renderArticleHtml(final Path articlesDir) throws IOException {
+        return renderArticleHtml(articlesDir, null);
+    }
+
+    /**
+     * Render the articles in {@code articlesDir} to sibling {@code .html} files. When
+     * {@code onlyArticle} is non-null, only the file whose name (or path relative to the
+     * container) matches is rendered -- a single-document build then leaves every other
+     * page untouched, instead of rewriting all of them.
+     */
+    public static int renderArticleHtml(final Path articlesDir, final String onlyArticle) throws IOException {
         final Path websiteRoot = articlesDir.getParent();
         final List<Path> files = new ArrayList<>();
         try (final var stream = Files.walk(articlesDir)) {
             stream.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".md"))
                     .filter(MarkdownRunner::isArticleDoc)
+                    .filter(p -> onlyArticle == null || articlesDir.relativize(p).toString().replace('\\', '/').equals(onlyArticle)
+                            || p.getFileName().toString().equals(onlyArticle))
                     .sorted()
                     .forEach(files::add);
         }

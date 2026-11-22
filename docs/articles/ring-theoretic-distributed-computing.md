@@ -37,15 +37,10 @@ fold's declared laws, *monoidic* and *commutative*, are the license; no other fe
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
 ![figure 1](images/ring-theoretic-distributed-computing/fig-01.svg)
 
-A program may contract more than once. Every fold that declares these laws is a *cut*, and each cut plans the run of
-instructions before it. The program **expands** across the available machines, **contracts** at the fold, and starts
-again from the one value the fold left at home.
-
-<!-- figure source: images/ring-theoretic-distributed-computing/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
-![figure 2](images/ring-theoretic-distributed-computing/fig-02.svg)
-
-This article develops that reading. The first section recalls the distributive laws of the stream ring and its
-function subrings. The second states the *shard identity*, the one rewrite every distribution pattern below lowers to,
+This article develops the relationship between the distributivity laws of `+` and physical, real-world
+distributed computing.
+The first section recalls the distributive laws of the stream ring and its function subrings. The second states the
+*shard identity*, the one rewrite every distribution pattern below lowers to,
 and proves it from Theorems 18 and 19. The third extends it to programs with many cuts. The fourth closes a program into
 a loop, the superstep of bulk synchronous computation, run again and again. The fifth shows that a coefficient is
 itself an index set, so a single value can be distributed by splitting its unrolls instead of its members. The sixth
@@ -100,8 +95,8 @@ stream, and the two partials are folded once more.
 
 **Definition (cut).** A *cut* is a reduce function $r$ whose partial results recombine through a reduce function
 $C(r)$, its *combiner*, that is monoidic and commutative. A fold that declares those laws itself is its own combiner,
-$C(r) = r$ (`sum`, `prod`); a fold defined by a derivation recombines through the fold that defines it ($
-\texttt{count} = \texttt{map}(1) \cdot \texttt{sum}$, so $C(\texttt{count}) = \texttt{sum}$).
+$C(r) = r$ (`sum`, `prod`); a fold defined by a derivation recombines through the fold that defines it (
+$\texttt{count} = \texttt{map}(1) \cdot \texttt{sum}$, so $C(\texttt{count}) = \texttt{sum}$).
 
 **Proposition (the shard identity).** Let the seed $s = s_1 + \cdots + s_k$ be partitioned across $k$ places, let $f$ be
 a floatable run, and let $r$ be a cut. Then
@@ -240,7 +235,8 @@ places again.
 
 A cut contracts a stream once. A loop contracts it again and again: the frontier one pass leaves is the next pass's
 input (figure 5). The menu's entry N names the pattern, iterative computation,
-$x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$, and in mtron the loop is `repeat`. Bounded at $n$ passes, the loop is the
+$x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$, and in mtron the loop is `repeat`. Bounded at $n$ passes, the loop is
+the
 $n$-fold product $x\,f^{n}$.
 
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-06.tex (the PDF surface typesets it; the svg is its render) -->
@@ -421,7 +417,7 @@ or compose the others (N, R, M, I).
 | **K** | $\checkmark$ | limit / top-k push-down   | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                                                       |
 | **L** |              | mergeable sketches        | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                                                                    |
 | **M** |              | matrix multiplication     | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)                                             |
-| **N** | $\checkmark$ | iterative / BSP           | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a superstep, repeated: `law_bsp` deals each pass of a whole-frontier `repeat`; the merge is the superstep boundary |
+| **N** | $\checkmark$ | iterative / BSP           | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a superstep, repeated: `law_bsp` deals each pass of a whole-frontier `repeat`; the merge is the superstep boundary                     |
 | **O** | $\checkmark$ | broadcast constants       | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                                                                                               | a constant rides as an argument of the floatable run: no fan-out change (Theorem 6)                                                    |
 | **P** |              | computed seeds            | $[0, n) = \uplus_i \mathrm{index}_i$                                                                                               | the index space is split, not the data: one constant-size message per peer                                                             |
 | **Q** |              | monad migration           | $\mathrm{authority}(m)$                                                                                                            | ship the monad, not the value: the continuation travels, one shard per step                                                            |

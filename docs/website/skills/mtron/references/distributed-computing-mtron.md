@@ -6,7 +6,8 @@ description: |
   declared theories and process laws on `object::T` / `morphism::T`, `Law.Helper`'s *computed* combiner, and the
   `plan::T` vocabulary (`cut` / `where` / spans) built by `PlanBuilder`, applied by `PlanInterpreter`, and emitted by
   `Shard` — the body of the `law_shard` rule in the machine's rewrite pool (`instset().rewrites()`; the local law
-  rules are /m's, `law_shard` is `catRewrite`'s). One row per pattern (A–W): its algebraic law (the latex), the mtron
+  rules are /m's, `law_shard` and `law_bsp` are `catRewrite`'s; `law_bsp`, the superstep of entry N, is `Bsp`).
+  One row per pattern (A–W): its algebraic law (the latex), the mtron
   you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif).
   A play button marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented
   below with the seed partition it complements.
@@ -238,7 +239,7 @@ A ▶ play button = implemented today (it plays the pattern's cast); no play but
 | **K** |                                                                                                      | limit / top-k push-down     | $\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)$                                             | each lane keeps its own top k, and the master merges and keeps k                                  |
 | **L** |                                                                                                      | mergeable sketches          | $\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)$                                                                                  | a sketch fold that declares its monoid theory plugs into A, E and H                               |
 | **M** |                                                                                                      | matrix multiplication       | $A \cdot (B + C) = A \cdot B + A \cdot C$                                                                                          | O plus an addressed union (rows), A with the matrix sum (inner k), G over block keys (2-D)        |
-| **N** |                                                                                                      | iterative / BSP             | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a sharded superstep, repeated: the combiner is the superstep boundary                             |
+| **N** |                                                                                                      | iterative / BSP             | $x^{*} = x \vee f(x) \vee f^{2}(x) \vee \cdots$                                                                                    | a superstep, repeated: `law_bsp` deals each pass; the merge is the boundary                              |
 | **O** | <!-- cast: dist-const title="O" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->       | broadcast constants         | $ca \cdot 1b = 1a \cdot 1b \cdot c1$                                                                                               | a constant rides as an argument of the floatable run: no fan-out change (Thm 6)                   |
 | **P** |                                                                                                      | computed seeds              | $[0, n) = \uplus_i \mathrm{index}_i$                                                                                               | the index space is split, not the data: one O(1) message per peer, nothing shipped                |
 | **Q** |                                                                                                      | monad migration             | $\mathrm{authority}(m)$                                                                                                            | ship the monad, not the value: the continuation travels, `law_shard` per step                     |
@@ -271,7 +272,7 @@ single expression shows.
 | **K** | `{...}.order(s)==[{k}_]`                                           | lanes `order(s)==[{k}_]`; the master `kmerge(s)==[{k}_]`, as `kmerge` is `causal`                  |
 | **L** | `{...}.hll()`                                                      | A, E or H once the sketch declares its monoid theory                                               |
 | **M** | `mtrx::[...].mult(mtrx::[...])`                                    | O + an addressed union (rows); A with the matrix sum (inner k); G over block keys (2-D)            |
-| **N** | a sharded superstep, repeated                                      | `repeat` / `loop` around the layout                                                                |
+| **N** | `x.repeat?<=A{*}(code=>f,until=>p)`                               | `law_bsp`: `repeat?<=A{*}(code=>branch?<=A{*}&split=part(<p_i> => f?hop=0, …),until=>p)` |
 | **O** | `{...}.plus(B).sum()`                                              | the constant `B` rides as an argument of the floatable run                                         |
 | **P** | Monte Carlo: a count and an RNG seed per peer                      | one O(1) message per peer                                                                          |
 | **Q** | a remote read mid-chain                                            | `law_shard` per step: the continuation ships                                                       |
@@ -291,6 +292,9 @@ dealt seed ships its floatable run and only the branch's merge recombines (an in
 partition). Floating is `Inst.isPure`, so an instruction handed an effect keeps the run home.
 `K` done 2026-11-20 — top-k is `order(s)==[{k}_]`, the select of `id()` slots that keeps the first k positions, and the
 cut absorbs it because `kmerge` declares `causal`; see *K* below.
+`N` done 2026-11-22 — `law_bsp`, its own rule beside `law_shard` (Marko): a whole-frontier `repeat?<=A{*}` whose code
+is pure and floatable has its code dealt over the dialed peers on every pass, the loop and its predicates home; see *N*
+below.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
 `lst`, never a bag); `M` is a note; `I` is infrastructure. `C` needs only Thm 5 and a pure chain. `T` is the machine
 semiring's groupoid, the stream ring's process dual. `V`'s unrolls are independent terms (Definition 3), which is why
@@ -323,7 +327,7 @@ distribution — the menu (A–W)
 ├─ orthogonal                     (multiply any fan-out)
 │  └─ D:✅  S:✅  U:✅  V:✅ (the run's own multiplicity)
 └─ composite & substrate          (built from the above)
-   └─ N  R  M  I
+   └─ N:✅  R  M  I
 ```
 
 <!-- figure source: assets/tikz/distributed-patterns.tex (same recipe); the rendered image is the original A–S menu — the table and the tree above are authoritative for U/V/W -->
@@ -341,7 +345,7 @@ The four top branches read the two axes of `docs/design/distributed-patterns-thr
 - **orthogonal** multiplies any fan-out: `D` ships every round trip in parallel (max RTT), `S` keeps a slice home, and
   `V` factors the run's own multiplicity — a closed span range — across the same fan-out, each lane carrying the whole
   seed and a narrowed span (`?hop` recurses the remaining range).
-- **composite & substrate** builds on the rest: `N` iterates a sharded superstep, `R` writes results to a spatial
+- **composite & substrate** builds on the rest: `N` iterates a dealt superstep (`law_bsp`), `R` writes results to a spatial
   address, `M` decomposes into O / A / G over three index splits, `I` lowers the plan's axes to a layout.
 
 Implemented is a ▶ play button in the table, a ✅ (green) in the tree; white = the law holds, the lowering is unwritten.
@@ -367,8 +371,8 @@ partials through the combiner: the chain **expands** into one lane per place and
 - **A literal seed is dealt by the plan.** Each lane carries its own part, `<p_i> => start(part_i).<program>`, so the
   listing shows what each place runs. With no `start` left at home the branch takes nothing: it is the initial form,
   `branch?<={0}(…)`.
-- **A computed bag stays home and is dealt when the branch runs.** Whatever cannot float before the run (a `repeat`,
-  an effect) is the prefix, which runs where the code stands:
+- **A computed bag stays home and is dealt when the branch runs.** Whatever cannot float before the run (a gathering
+  `repeat?<=A{*}`, whose own code `law_bsp` deals instead; an effect) is the prefix, which runs where the code stands:
   `<prefix>.branch?<=T{*}&split=part(<p_i> => <program>, …)` (`repeat() [[ plus(10).order ]]`, Marko 2026-11-05).
   Its **dom coefficient** is `{*}` by default (the barrier); a stated one pages it — see *the branch's gather grain*.
 - **A run partition replicates the seed and narrows the exponent.** A seeded lane carries the whole seed and its own
@@ -481,6 +485,59 @@ and is `[-2,-3]`: the map over the lst and the `>-` stay home, since one obj has
 after the `>-` (`>-.mult(-1)`) ships with the second sort. Without the `>-`, the second sort meets the lst alone and
 stays home (`[[-5,-4,-3,-2]]`).
 
+### N — iterative / BSP (`repeat?<=A{*}`, `law_bsp`)
+
+`repeat` has two readings, and its **dom coefficient** picks one (Marko, 2026-11-22). With the default dom of one,
+`repeat` loops one monad at a time, the way a traverser walks: each monad runs its passes alone and the processor
+interleaves them. With an unbounded dom, `repeat?<=A{*}`, the swarm's barrier hands it the whole frontier once, and
+each pass applies the code to all of it before the next pass begins: a superstep. `loop()` counts passes and is shared
+by every member; `until`, `emit` and `esc` are judged per member against it; a member that leaves (or becomes a fail)
+is emitted, and the rest, bulked, are the next frontier. For a floatable code the two readings answer the same, by
+right distributivity; they part when a pass holds a fold, which meets one member per monad but the whole frontier per
+superstep: `{1,2,3}.repeat(code=>sum(),until=>loop()?>0)` is `{1,2,3}`, the `?<=int{*}` form is `6`.
+
+`law_bsp` (`Bsp`, registered in `catRewrite` before `law_shard`) deals a superstep's code over the dialed peers:
+
+```mtron
+x.repeat?<=A{*}(code=>f, until=>p)
+  ⇝  x.repeat?<=A{*}(code=>branch?<=A{*}&split=part(<p_1> => f?hop=0, …, <p_k> => f?hop=0), until=>p)
+```
+
+- **`repeat` and `branch` split the work.** The `repeat` owns the loop: it stays home, holds the frontier, counts the
+  passes and judges the predicates. The `branch` owns the place: inside the code, it gathers each pass's frontier
+  (`?<=A{*}`), deals it by its own rule (`BranchInst#deal`: member j to lane j mod k, a bulked member whole), and its
+  merge, the ring's `+`, is the superstep boundary, since no pass starts before every lane of the last has answered.
+- **What is dealt.** `f` must be pure and floatable instruction by instruction, each retyped at the carrier flowing
+  into it (law_shard's own `floatable` pattern): such an `f` distributes over the stream sum. A fold, a gather or an
+  effect in `f` leaves the repeat as written. So do a per-monad repeat, a repeat that states `?hop=0`, a code a keyed
+  branch already deals, and a machine with no dialed peer.
+- **Where.** The **dialed** peers that serve `eval`, never the roster: the roster counts every interface of a machine
+  as a place. Each lane states `?hop=0`, so a peer runs `f` and plans nothing further.
+- **Graph walks.** A space read is untyped (`#`), and the traversal steps declare `pure` (out, in, both, outE, inE,
+  bothE, inV, outV, bothV), so `*g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4)` deals `both()` over the peers.
+  On peers that boot the same graph at the same route (`boot/space/grph/peer.boot.mtron`), a dealt vertex binds to the
+  peer's copy by its id. The walk counts the walks of length five ending at each vertex, $(A^{5}\mathbf{1})_v$: `{99}`
+  for marko, lop and josh, `{41}` for vadas, ripple and peter, six bulked members carrying 420 walks.
+- **The topology draws the loop.** `explain()>>ext/topology/format` draws a repeat as its body once with a back edge
+  from the exit to the entry:
+
+```
+       ┌─►//0─{2}─{1}─┐
+{4}─┬──┤              ├─►//local─{2}─{1}─┬─{2}
+    ▲  └─►//1─{2}─{1}─┘                  │
+    └────────────────────────────────────┘
+```
+
+- **The dom coefficient is the schedule.** `{1}` walks each monad on its own (asynchronous), `{*}` waits for the whole
+  frontier (lock step), and a bounded `{n}` will page it: the processor runs and dumps pages of n as a lazy barrier
+  (Marko: the coroutine belongs to the processor, not to the instruction), and repeat's gate widens from `isGather()`
+  to `isBatching()`.
+
+Open: the frontier kept on the peers between passes (fusing one pass's branch with the next); a deal weighted by
+coefficient instead of by member; a pass that holds a cut, whose combiner would run at every superstep boundary; and a
+bulked member's count across a remote lane, pinned by `DistributedComputingTest`'s disabled
+`test_N_a_bulked_member_keeps_its_count_on_a_remote_lane`.
+
 ### T — migrating a frame of reference
 
 `move()` relocates the *frame of reference* — the machine the code runs in — rather than moving data. It is the
@@ -537,7 +594,9 @@ instruction is still bare when `law_shard` runs, before resolution, so it stays 
 - **V multiplies A/E/G** — the seed and the run are independent multiplicities: a lane's narrowed span is itself an
   A-fold, so the tree recurses over the remaining range. `V` never changes the seed's split; a multi-member seed still
   factors by the seed axis first.
-- **N is G + J + O under `kleene`**, with R for rounds.
+- **N is W under `repeat`**: each pass of a whole-frontier repeat is a cutless run dealt over the peers (`law_bsp`),
+  and the branch's merge is the superstep boundary. A pass that holds a cut stays home today; R would make rounds
+  durable.
 - **M (1)** is O plus an addressed union; **M (2)** is A with matrix `sum`; **M (3)** is G over block keys.
 - **L plugs into A, E and H** by declaring theories, with no new lowering.
 - **C is B with one owner**, and **Q is C per step**.

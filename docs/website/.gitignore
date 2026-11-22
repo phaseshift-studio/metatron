@@ -2,8 +2,12 @@
 /*
 # ...except these pages
 !/index.html
-!/tractatus.html
 !/start.html
+# ...the tractatus: a static redirect to the landing grid below (the old single
+# super-page is gone), plus one page per section rendered by AsciiDocRunner from
+# docs/website/adoc/tractatus.adoc + the section .adoc files
+!/tractatus.html
+!/tractatus/
 # ...the 404 page, which wrangler.jsonc wires to not_found_handling: "404-page"
 !/404.html
 # ...and the committed agent-skills tree (published by the website deploy)

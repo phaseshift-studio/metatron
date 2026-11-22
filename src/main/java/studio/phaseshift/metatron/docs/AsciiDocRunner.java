@@ -247,12 +247,13 @@ public class AsciiDocRunner {
                             baseName.endsWith(".adoc")
                                     ? baseName.substring(0, baseName.length() - ".adoc".length()) + ".html"
                                     : baseName + ".html");
-                    renderChromePage(asciidoctor, outputPath.resolve(inputPath.getFileName()), htmlOut, outputPath);
+                    renderChromePage(asciidoctor, outputPath.resolve(inputPath.getFileName()), htmlOut, outputPath, "");
                 } else {
                     for (final String page : CHROME_PAGES) {
                         renderChromePage(asciidoctor, outputPath.resolve(page + ".adoc"),
-                                htmlPath.resolve(page + ".html"), outputPath);
+                                htmlPath.resolve(page + ".html"), outputPath, "");
                     }
+                    renderTractatus(asciidoctor, outputPath, htmlPath);
                 }
             }
         }
@@ -263,14 +264,57 @@ public class AsciiDocRunner {
     }
 
     /**
-     * The standalone ("chrome") pages rendered in book mode: {@code index}
-     * (homepage), {@code start} (quick start), and {@code tractatus} (the
-     * super-page that {@code include::}s every section .adoc). Everything else is a
-     * section or template pulled into tractatus and is not rendered standalone.
+     * The standalone ("chrome") pages rendered in book mode at the website root:
+     * {@code index} (homepage) and {@code start} (quick start). The tractatus is no
+     * longer one super-page: {@link #renderTractatus} renders its landing grid plus
+     * one page per section under {@code tractatus/}.
      */
-    private static final List<String> CHROME_PAGES = List.of("index", "start", "tractatus");
+    private static final List<String> CHROME_PAGES = List.of("index", "start");
 
     private static final Pattern TITLE_ATTR = Pattern.compile("^:title:\\s*(.+)$", Pattern.MULTILINE);
+
+    /** The heading of a tractatus section (its own page title), e.g. {@code == Coefficients}. */
+    private static final Pattern SECTION_HEADING = Pattern.compile("^={1,6}\\s+(.+?)\\s*$", Pattern.MULTILINE);
+
+    /** The {@code :card-file: <name>} values from the tractatus landing source, in grid order. */
+    private static final Pattern CARD_FILE = Pattern.compile("^:card-file:\\s*([\\w./-]+)\\s*$");
+
+    /**
+     * The attribute header prepended to a tractatus section before it is rendered as
+     * its own page: the section .adoc files carry no header (they are fragments the
+     * old single-page {@code tractatus.adoc} used to {@code include::}), so the same
+     * header the landing page declares is reproduced here. Keep in sync with the
+     * header block in {@code docs/website/adoc/tractatus.adoc}.
+     */
+    private static final String SECTION_HEADER = """
+            :revnumber: 0.1-alpha
+            :imagesdir: ../images
+            :favicon: ../favicon.ico
+            :highlightjsdir: ../highlight
+            :source-highlighter: highlight.js
+            :highlightjs-languages: mtron,bash,json
+            :highlightjs-theme: monokai
+            :icons: font
+            :icon-set: fas
+            :stem: latexmath
+            :data-uri:
+            :sectnums!:
+            :!toc:
+            :linkcss!:
+            :license-url: https://www.gnu.org/licenses/agpl-3.0.html
+            :license-title: AGPLv3
+            :lang: en
+            :max-width: 100%
+            :app-name: metatron
+            :version-label: ring-oriented computing
+            :docname: metatron documentation
+            :L: latexmath
+            :nofooter:
+            :noheader:
+            :!header-footer:
+            :!example-caption:
+
+            """;
 
     /**
      * Render one .adoc to a full page: the Asciidoctor body fragment (no header/
@@ -279,21 +323,80 @@ public class AsciiDocRunner {
      * document's {@code :title:} attribute, falling back to the default.
      */
     private static void renderChromePage(final Asciidoctor asciidoctor, final Path sourceAdoc,
-                                         final Path htmlOut, final Path baseDir) throws IOException {
+                                         final Path htmlOut, final Path baseDir, final String depth) throws IOException {
         if (!Files.exists(sourceAdoc)) {
             LOG.warn("[docs-runner] " + sourceAdoc.getFileName() + " not found — skipping HTML");
             return;
         }
         final String adoc = Files.readString(sourceAdoc);
-        final String body = asciidoctor.convert(adoc, Options.builder()
+        writePage(htmlOut, SiteChrome.header(depth, titleOf(adoc), "")
+                + convert(asciidoctor, adoc, baseDir) + SiteChrome.footer(depth));
+    }
+
+    /**
+     * The tractatus, split into a landing grid ({@code tractatus/index.html}) and one
+     * page per section ({@code tractatus/<name>.html}). The landing source is the
+     * single source of truth: each {@code :card-file: <name>} names the section .adoc
+     * to render, in grid order.
+     */
+    private static void renderTractatus(final Asciidoctor asciidoctor, final Path outputPath,
+                                        final Path htmlPath) throws IOException {
+        final Path landing = outputPath.resolve("tractatus.adoc");
+        if (!Files.exists(landing)) {
+            LOG.warn("[docs-runner] tractatus.adoc not found — skipping the tractatus");
+            return;
+        }
+        final Path tractatusDir = htmlPath.resolve("tractatus");
+        Files.createDirectories(tractatusDir);
+        renderChromePage(asciidoctor, landing, tractatusDir.resolve("index.html"), outputPath, "..");
+        for (final String file : tractatusSections(landing)) {
+            final Path source = outputPath.resolve(file + ".adoc");
+            if (!Files.exists(source)) {
+                LOG.warn("[docs-runner] tractatus section missing: " + source.getFileName());
+                continue;
+            }
+            renderSectionPage(asciidoctor, source, tractatusDir.resolve(file + ".html"), outputPath);
+        }
+    }
+
+    /** The {@code :card-file: <name>} values from the landing source, in grid order. */
+    private static List<String> tractatusSections(final Path landing) throws IOException {
+        final List<String> files = new ArrayList<>();
+        for (final String line : Files.readAllLines(landing)) {
+            final Matcher m = CARD_FILE.matcher(line);
+            if (m.find()) files.add(m.group(1));
+        }
+        return files;
+    }
+
+    /** Render one tractatus section .adoc as its own page, at depth 1 ({@code ../}). */
+    private static void renderSectionPage(final Asciidoctor asciidoctor, final Path source,
+                                          final Path htmlOut, final Path baseDir) throws IOException {
+        final String body = Files.readString(source);
+        final String title = sectionTitle(body);
+        writePage(htmlOut, SiteChrome.header("..", title, "")
+                + convert(asciidoctor, SECTION_HEADER + body, baseDir) + SiteChrome.footer(".."));
+    }
+
+    /** A section's own page title, from its first heading (e.g. {@code == Coefficients}). */
+    private static String sectionTitle(final String adoc) {
+        final Matcher m = SECTION_HEADING.matcher(adoc);
+        return m.find() ? m.group(1).strip() : "Tractatus";
+    }
+
+    /** Convert {@code adoc} to a body fragment with the shared Asciidoctor options. */
+    private static String convert(final Asciidoctor asciidoctor, final String adoc, final Path baseDir) {
+        return asciidoctor.convert(adoc, Options.builder()
                 .safe(SafeMode.UNSAFE)
                 .standalone(false)
                 .toFile(false)
                 .baseDir(baseDir.toFile())
                 .build());
-        final String page = SiteChrome.header("", titleOf(adoc), "") + body + SiteChrome.footer("");
+    }
+
+    private static void writePage(final Path htmlOut, final String page) throws IOException {
         Files.writeString(htmlOut, page);
-        LOG.info("[docs-runner] " + sourceAdoc.getFileName() + " -> " + htmlOut);
+        LOG.info("[docs-runner] " + htmlOut.getFileName() + " -> " + htmlOut);
     }
 
     /**
