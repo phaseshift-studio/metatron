@@ -686,7 +686,7 @@ a client overrides is its protocol's capability:
 | `http_client`           | `from` (GET), `to` (POST) — no `eval`: a web document is read or written, never asked to evaluate                         |
 | `ws_client`             | `eval`, `from`, `to` — the full set over the socket                                                                       |
 | `id_client` (`loop`)    | `eval`, `from`, `to` — all local: `eval` applies against this machine, `from`/`to` read/write it                          |
-| `mcp_client` (tools)    | one override per tool, keyed by the tool's tid — a tool answers as `eval`, another as `from`, …                           |
+| `mcp_client`            | one per tool; a client of `mcp_mtron` also gets `eval` and `to` (`eval_mtron`) and `from` (`read_memory`)                 |
 | `mqtt_client` (planned) | `from` (SUBSCRIBE), `to` (PUBLISH) — no `eval`; the client is not yet isolated (`mqttspace::T` speaks the protocol today) |
 
 The planned `mqtt_client` speaks the same two verbs over MQTT: `to` is a **retained PUBLISH** (plus a write to a

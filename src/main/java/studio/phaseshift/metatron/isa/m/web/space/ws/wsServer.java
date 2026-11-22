@@ -431,8 +431,12 @@ public final class wsServer extends Listener {
         // one: a program that computes without blocking keeps a virtual thread's carrier, so as many runaway programs as
         // there are cores would stall every virtual thread in the VM, where a platform thread is time-sliced. It goes
         // back to the pool warm (a per-thread cache outlives one frame) and is listed under /sys/thread/executor while it
-        // runs. Any other session's frames keep their order, on the worker.
-        if (session.rec() instanceof mtron_wsHandler program && program.evaluates())
+        // runs. AN MCP REQUEST IS A PROGRAM TOO (2026-11-22): its tools/call evaluates mtron (eval_mtron) that waits on
+        // other machines exactly as a frame does, the same tree deadlocked on the worker, and MCP answers each request
+        // under its own id, so a connection's requests may answer in any order as well. Any other session's frames keep
+        // their order, on the worker.
+        if (session.rec() instanceof mtron_wsHandler program && program.evaluates()
+                || session.rec() instanceof mcp_wsHandler)
             ThreadExecutor.instance().execute(() -> guard(conn, () -> this.evaluate(conn, session, message)));
         else
             this.evaluate(conn, session, message);

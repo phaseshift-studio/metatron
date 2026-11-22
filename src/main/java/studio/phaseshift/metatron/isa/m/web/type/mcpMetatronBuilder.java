@@ -82,6 +82,17 @@ public final class mcpMetatronBuilder {
      * {@code mcp_wsHandler}).
      */
     public static final fURI MCP_MTRON_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_mtron");
+    /**
+     * the tools a client of this server declares as a metatron node's primitives (mcpClient): eval_mtron is its eval and
+     * carries its to, read_memory is its from. One spelling for both sides, so a rename here cannot silently leave a
+     * client without them.
+     */
+    public static final fURI EVAL_MTRON_TID = MCP_MTRON_SERVER_TID.extend("eval_mtron");
+    public static final fURI READ_MEMORY_TID = MCP_MTRON_SERVER_TID.extend("read_memory");
+    /**
+     * eval_mtron's second argument, {@code mime=>application/x-mtron}: the mime type its answer is rendered in
+     */
+    public static final String MIME_ARG = "mime";
     public static final Type MCP_MTRON_SERVER_TYPE = mcpMetatronBuilder.server();
 
     public static Type server() {
@@ -141,7 +152,7 @@ public final class mcpMetatronBuilder {
                     Map.of(uri("current_memory"), "the memory to remember -- e.g. a str::T, a markdown::T, etc.",
                             uri("previous_memory"), "a previous memory vid to chain current memory to"),
                     "(experimental) returns a memory relation of the form (current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
-            tools.at(uri(mTool.toolName(toolTid("read_memory"))), docWrap(instC(toolTid("read_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
+            tools.at(uri(mTool.toolName(READ_MEMORY_TID)), docWrap(instC(READ_MEMORY_TID.dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj memId = inst.arg(f("memory_vid"), 0);
                                 if (!memId.isNoObj())
@@ -152,9 +163,9 @@ public final class mcpMetatronBuilder {
                     Map.of(uri("memory_vid"), "the vid of the memory to read"),
                     "(experimental) returns the result of reading the provided memory"), MUTABLE);
             // eval_mtron — the foundational tool: evaluate metatron expressions
-            tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
-                            f(mTool.toolName(toolTid("eval_mtron"))).dom(ALL.maybe()).rng(ALL.maybeSome()),
-                            rec(uri(CODE), CODE_TYPE, uri(MIMEQ_TID).maybe().asUri(), MIME_OBJ_TYPE), (lhs, inst) -> {
+            tools.at(uri(mTool.toolName(EVAL_MTRON_TID)), docWrap(instC(
+                            f(mTool.toolName(EVAL_MTRON_TID)).dom(ALL.maybe()).rng(ALL.maybeSome()),
+                            rec(uri(CODE), CODE_TYPE, uri(MIME_ARG).maybe().asUri(), MIME_OBJ_TYPE), (lhs, inst) -> {
                                 // code arrives already parsed to code::T by the schema-aware JSON
                                 // layer — no JSON-massaging here; just evaluate it.
                                 try {
@@ -164,7 +175,7 @@ public final class mcpMetatronBuilder {
                                     if (result.isFail())
                                         return result;
                                     // mimeq picks the rendering: application/x-mtron → native, anything else → JSON
-                                    final MIME.MIMEType mime = MIME.MIMEType.of(inst.arg(MIMEQ_TID, 1).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)).uriValue().toString(), MIME.MIMEType.APPLICATION_MTRON);
+                                    final MIME.MIMEType mime = MIME.MIMEType.of(inst.arg(MIME_ARG, 1).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)).uriValue().toString(), MIME.MIMEType.APPLICATION_MTRON);
                                     return !mime.isJson() ? str(new String(mime.serializer().outputBytes(result).array(), StandardCharsets.UTF_8)) : result;
                                 } catch (final Exception e) {
                                     return fail(e);
@@ -172,7 +183,7 @@ public final class mcpMetatronBuilder {
 
                             }), "noobj lhs", "the result of the code evaluation",
                     Map.of(uri(CODE), "mtron code to evaluate",
-                            uri(MIMEQ_TID).maybe(), "result mime type (default application/x-mtron); common: application/x-mtron, application/json, application/x-mtron-ui, text/plain"),
+                            uri(MIME_ARG).maybe(), "result mime type (default application/x-mtron); common: application/x-mtron, application/json, application/x-mtron-ui, text/plain"),
                     "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces
             tools.at(uri(mTool.toolName(toolTid("list_space"))), docWrap(instC(
