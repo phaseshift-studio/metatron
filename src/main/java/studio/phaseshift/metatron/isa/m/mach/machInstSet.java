@@ -1210,7 +1210,10 @@ public class machInstSet extends AbstractInstSet {
                                     // THE TAG IS THE VID'S LAST SEGMENT, never a replacement for the vid: an answer's own
                                     // vid is its identity (a graph element's g:V/1), and a tag that replaced it detached
                                     // every addressed answer a lane shipped home. One with no vid is addressed by the tag
-                                    return answer.selfVID(null == answer.vid() ? tag : answer.vid().extend(tag.toString()));
+                                    // a tag that is not a hex literal comes from a client built before the hex
+                                    // segment: it replaces the vid, as that client's router expects
+                                    return answer.selfVID(null == answer.vid() || !studio.phaseshift.metatron.util.CommonUtil.isHex(tag.name())
+                                            ? tag : answer.vid().extend(tag.toString()));
                                 })
                                 .create()
                 ))),
