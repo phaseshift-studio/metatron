@@ -581,10 +581,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.9M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  594G ...',
-    'tmpfs                   31G  3.5M ...',
+    '/dev/nvme0n1p2         916G  592G ...',
+    'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -593,10 +593,10 @@ mtron&gt; bash('df -h')
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
 ==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 5ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 5ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder&lt;228&gt;]]
@@ -737,9 +737,9 @@ mtron&gt; */sys/thread/+.count()
 ==&gt;78
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::712.0,
-    free_mem_jvm=&gt;mB::179.2428,
+    free_mem_jvm=&gt;mB::511.0717,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::532.7571,
+    used_mem_jvm=&gt;mB::200.9282,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-43-generic',
     arch=&gt;'amd64',
