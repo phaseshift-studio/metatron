@@ -188,11 +188,12 @@ members. The law is causality, not monotonicity in the prefix order, which a sor
 **A cut is planned at every level of a tree.** A place handed a lane may plan it again, over places of its own. The
 budget `?hop` states how many levels a plan may take (the menu's entry E): `law_shard` reads it off the fold, and every
 lane carries it one level down, on its head, so a leaf states `?hop=0` and plans nothing further. To grow a tree, each
-peer harvests two peers of its own, with the `harvest` its boot file defines:
+peer harvests two peers of its own, with the `harvest` its boot file defines. A peer booting two more takes longer than
+a lane's default wait of five seconds, so the branch states its own `?timeout`, in seconds:
 
 ```mtron_pre
-branch(<//0> => start({2,3}).harvest(<boot/space/grph/peer.boot.mtron>), /
-       <//1> => start({4,5}).harvest(<boot/space/grph/peer.boot.mtron>))
+branch?timeout=60(<//0> => start({2,3}).harvest(<boot/space/grph/peer.boot.mtron>), /
+                  <//1> => start({4,5}).harvest(<boot/space/grph/peer.boot.mtron>))
 ```
 
 Now `//0` holds `//2` and `//3`, and `//1` holds `//4` and `//5`. Each level is the shard identity again: a place deals
@@ -206,7 +207,6 @@ $$
 ```mtron_pre
 {1,2,3,4,5,6,7,8}.plus(1).sum?hop=2()
 {1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>format
-{1,2,3,4,5,6,7,8}.plus(1).sum?hop=2().explain()>>ext/topology/format
 ```
 
 The root's two lanes state `?hop=1`, a level left, so each peer plans its share over its own two peers. The topology is
@@ -321,12 +321,8 @@ a fold stays home, as the shard identity requires: dealt, the `sum()` above woul
 {1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3).explain()>>format
 ```
 
-The topology draws the loop as it runs: the pass's fan once, and a back edge from the merge to where the frontier
-enters.
-
-```mtron_pre
-{1,2,3}.repeat?<=int{*}(code=>plus(1),until=>loop()?>3).explain()>>ext/topology/format
-```
+The topology under the plan draws the loop as it runs: the pass's fan once, and a back edge from the merge to where the
+frontier enters.
 
 **A walk over a graph.** The peers were booted with the modern graph, the same six vertices with the same ids on every
 machine, so a vertex dealt to any peer binds to that peer's copy of itself. Walking `both()` five times from every
@@ -344,7 +340,7 @@ itself pure, so `law_bsp` deals `both()` like any floatable run:
 
 ```mtron_pre
 *g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4)>>name
-*g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4).explain()>>ext/topology/format
+*g:V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4).explain()>>format
 ```
 
 **A tree of supersteps.** The superstep's budget is read as `law_shard` reads a fold's: a `?hop` on the `repeat`, or on

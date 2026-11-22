@@ -534,7 +534,8 @@ where `h` is the superstep's height, one when unstated, so a lane is `f?hop=0` u
   On peers that boot the same graph at the same route (`boot/space/grph/peer.boot.mtron`), a dealt vertex binds to the
   peer's copy by its id. The walk counts the walks of length five ending at each vertex, $(A^{5}\mathbf{1})_v$: `{99}`
   for marko, lop and josh, `{41}` for vadas, ripple and peter, six bulked members carrying 420 walks.
-- **The topology draws the loop.** `explain()>>ext/topology/format` draws a repeat as its body once with a back edge
+- **The topology draws the loop.** `explain()>>format` draws it under the plan (the extension alone is
+  `explain()>>ext/topology/format`): a repeat is its body once, with a back edge
   from the exit to the entry. Here `{1,2,3}.repeat?<=int{*}(code=>plus(1),…)` is dealt over two peers: each member
   reaches a lane at most once (`{0,3}`), the lanes add where they merge (`{0,6}`), and the repeat answers any number
   (`{*}`):
