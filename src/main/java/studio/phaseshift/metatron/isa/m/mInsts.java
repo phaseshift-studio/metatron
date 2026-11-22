@@ -1393,8 +1393,16 @@ public final class mInsts {
                             }
                             return objs(toEmit);
                         })
-                        // REPEAT IS PURE (Marko, 2026-11-22): it runs its code arg and nothing else, so it is exactly as pure as
-                        // that code (Inst.isPure reads every arg too), and law_shard may float a pure loop into its lanes
+                        // REPEAT IS PURE (Marko, 2026-11-22): purity is the instruction's own law, not its arguments', and
+                        // repeat itself does nothing that is not functionally pure.
+                        // NOTE, OPEN (Marko will address it): Inst.isPure, the test a planner reads before it moves a call
+                        // (law_shard's floatable run, law_bsp's dealt code, law_absorbing), is the instruction's law AND
+                        // every argument's (Inst.Helper.isPure), and since 8506da5fc a keyed argument (a Rel: repeat's
+                        // code=>, a branch's //0=>) counts too. So repeat(code=>plus(1).print(_)) reads impure and stays
+                        // home, though repeat is pure. The two questions are conflated: what an instruction does, and
+                        // whether a call may move with what it is handed. The same holds for branch, which never inspects
+                        // its lanes for its own law (monoidic, pure), yet a branch call with an effectful lane now reads
+                        // impure. Kept as is for now (InstTest's purity rows pin today's behavior).
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build()
