@@ -45,7 +45,7 @@ leaves out, a fold that recombines through itself after a lift:
 - a fold that declares `monoidic` + `commutative` is **its own** combiner (`sum`, `prod`);
 - a fold defined by its `derivation` recombines through the fold that defines it (`count ↦ sum`,
   `order(s) ↦ kmerge(s)`, and a bare `order()` ↦ `kmerge()`: an omitted argument is noobj, which the derivation's
-  `s{?}` admits);
+  `s{?}` admits), when every hole it re-applies is blind to mass (`Law.Helper.massBlind`): `order(cc())` has none;
 - a keyed fold `group([k ⇒ h])` recombines **pointwise** — `sum()==[_=>combiner(h)]` — which no single edge names;
 - a fold whose derivation ends in itself, `r ↦ ℓ·r`, recombines through **itself after the lift**: every lane runs
   `ℓ` in its place, and home runs `r` over the summaries (`mean`, entry J; `combiner` stays null for it).
@@ -297,7 +297,8 @@ is the data-index-space sibling of `V`: same "nothing ships" spirit, but its ind
 dealt seed ships its floatable run and only the branch's merge recombines (an index set was already the cutless run
 partition). Floating is `Inst.isPure`, so an instruction handed an effect keeps the run home.
 `K` done 2026-11-20 — top-k is `order(s)==[{k}_]`, the select of `id()` slots that keeps the first k positions, and the
-cut absorbs it because `kmerge` declares `causal`; see *K* below.
+cut absorbs it because `kmerge` declares `causal`; see *K* below. Since 2026-11-22 a key that reads mass (`cc()`)
+sorts at home, where every mass is whole.
 `J` done 2026-11-22 — `mean ↦ ℓ·mean`: each lane runs the lift `ℓ`, its mean weighted by its count (`{n}m`, the
 count riding the coefficient), and home runs the weighted mean; see *J* below.
 `N` done 2026-11-22 — `law_bsp`, its own rule beside `law_shard` (Marko): a whole-frontier `repeat?<=A{*}` whose code
@@ -519,6 +520,17 @@ bag the second cut deals. `{1,2,3,4,5}.order(neg())==[{4}_]==[{4}mult(-1)]>-.ord
 and is `[-2,-3]`: the map over the lst and the `>-` stay home, since one obj has nothing to deal, and a map written
 after the `>-` (`>-.mult(-1)`) ships with the second sort. Without the `>-`, the second sort meets the lst alone and
 stays home (`[[-5,-4,-3,-2]]`).
+
+**A key that reads mass sorts at home.** A sort compares each member by its key, and a floatable key reads the
+member's value, never its mass (Thm 6: `{n}v·f = {n}(v·f)`). `cc()` reads the mass, and a shard parts a value's mass
+across its lanes, `{n₁}v` in one and `{n₂}v` in another, so each lane would sort by a mass the branch's merge then
+changes (`{[{2}2,{3}1],[{2}2,{3}3]}.kmerge(cc())` is `[{4}2,{3}3,{3}1]`, out of order). So `order(s)`'s derivation
+recombines only a key blind to mass (`Law.Helper.massBlind`: each instruction has a contract that floats and none that
+reduces, and so does every code it is handed). For `order(cc())` the cut is gone: the run before it ships (W), the
+merge adds equal members' masses, and home sorts by whole masses.
+`{11,21,31,41,12,22,13}.mod(10).order(cc())==[{1}_]` ships `mod(10)` and answers `[3]`, as at home. The books for
+top-k by mass are the bulked part, bounded by the distinct members. Shipping fewer is a threshold algorithm's job
+(TPUT, Cao and Wang), a multi-round exchange the branch does not have yet.
 
 ### N — iterative / BSP (`repeat?<=A{*}`, `law_bsp`)
 

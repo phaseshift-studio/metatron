@@ -271,8 +271,12 @@ public class catTypes {
                                 else {
                                     final Rec block = morphism.asRec();
                                     block.at(uri(OBJ), chain, MUTABLE);
-                                    if (declared.isNoObj())
-                                        attachShape(block, chain, contracts.get(i));
+                                    // THE SHAPE IS THE CONTRACT THAT RAN: form and class are read off the resolver's
+                                    // pick at the carrier, which knows the arity and binds the generics, claimed or not.
+                                    // A claim keys the laws, derivation and analysis, but read at the carrier alone it can
+                                    // name the wrong overload (cc() reads a coefficient and cc(3) sets one, both claimed
+                                    // at the generic A, so the carrier's claim names the reader for both)
+                                    attachShape(block, chain, contracts.get(i));
                                     morphisms.add(block);
                                 }
                             }
@@ -322,9 +326,10 @@ public class catTypes {
     }
 
     /**
-     * Attach the form and class of the contract the resolver picked for an op no {@code ?decq} claim declares: the
-     * seed's {@code {0} => A} reads initial and is no endomorphism. The contract is read here and never stored, since a
-     * rec or lst holding an initial instruction evaluates it.
+     * Attach the form and class of the contract the resolver picked, the one that ran, whether or not a {@code ?decq}
+     * claim declares the op: the seed's {@code {0} => A} reads initial and is no endomorphism, and {@code cc(3)} on an
+     * int reads {@code int => int{**}}, an endomorphism, where the claim read at the carrier names the reader. The
+     * contract is read here and never stored, since a rec or lst holding an initial instruction evaluates it.
      */
     private static void attachShape(final Rec morphism, final Inst chain, final Inst contract) {
         if (null == contract || !contract.tid().hasDom() || !contract.tid().basePath().equals(chain.tid().basePath()))

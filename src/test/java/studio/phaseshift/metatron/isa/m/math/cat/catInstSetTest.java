@@ -450,6 +450,45 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * A CODE IS BLIND TO MASS WHEN THE COEFFICIENT FLOATS THROUGH IT (Thm 6, Law.Helper#massBlind): each instruction has
+     * a contract that floats and none that reduces, and so does every code it is handed. {@code cc()} answers mass and
+     * {@code count()} reads copies, so neither is blind, nor is anything handed one. Each row: the code % blind.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "neg()               % true",
+            "id()                % true",
+            "mod(3).neg()        % true",
+            "is(gt(2))           % true",
+            "cc()                % false",
+            "cc().neg()          % false",
+            "count()             % false",
+            "is(cc().gt(1))      % false",
+    }, delimiter = '%')
+    void testACodeIsBlindToMassWhenTheCoefficientFloatsThroughIt(final String code, final boolean blind) {
+        checkEquality(LOG, bool(blind), bool(Law.Helper.massBlind(ObjmtronSerializer.parse(code.trim()))), true);
+    }
+
+    /**
+     * A KEY THAT READS MASS HAS NO COMBINER (Marko 2026-11-22, order(cc())). A shard parts each value's mass across its
+     * lanes, so a sort keyed by mass would sort each lane by partial masses and merge the runs by whole ones:
+     * {@code order(s) ↦ split([_])·kmerge(s)} recombines only a key blind to mass. Each row: the call % a combiner.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "order()             % true",
+            "order(neg())        % true",
+            "order(mod(3))       % true",
+            "order(cc())         % false",
+            "order(cc().neg())   % false",
+            "order(count())      % false",
+    }, delimiter = '%')
+    void testAKeyThatReadsMassHasNoCombiner(final String call, final boolean combines) {
+        final Inst keyed = Law.Helper.keyed(ObjmtronSerializer.<Call>parse(call.trim()).tryToInst().asInst(), T(INT_TID));
+        checkEquality(LOG, bool(combines), bool(null != Law.Helper.combiner(keyed)), true);
+    }
+
+    /**
      * A DEFAULT IS COEFFICIENT ADMISSION: an argument a call does not pass is noobj, which only a hole admitting zero
      * takes (Marko 2026-11-08: noobj is within {@code #{0,1}}). The equations are the ones the instructions declare
      * ({@code ?decq}), and a call tests the lhs as a value tests a type ({@link Obj#test}): {@code order(#{?}::T@b)} takes
@@ -1281,14 +1320,14 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * An abstraction's morphisms carry each instruction's own form and class. An op a {@code ?decq} claim declares is
-     * keyed by that claim. One no claim declares is keyed by the contract the resolver picks, so the seed reads
-     * initial ({@code start} is registered {@code {0} => A}) instead of the bare instruction's {@code # => #} mapper
-     * and endomorphism, and the maybe-dom {@code is} reads standard. Where an unclaimed op's overloads disagree, only
-     * the picked contract can say which ran, and it is read at the carrier: {@code cc(3)} sets a coefficient
-     * ({@code A => A{*}}, an endomorphism) and {@code cc()} reads one ({@code A{*} => int}, an endomorphism on int
-     * alone), where the registrations agree on no class. Each row: the chain % each morphism's form, seed first % each
-     * morphism's class labels ({@code -} for none).
+     * An abstraction's morphisms carry each instruction's own form and class, read off the contract the resolver picks,
+     * the one that ran; a {@code ?decq} claim keys the laws. So the seed reads initial ({@code start} is registered
+     * {@code {0} => A}) instead of the bare instruction's {@code # => #} mapper and endomorphism, and the maybe-dom
+     * {@code is} reads standard. Where an op's overloads differ, only the picked contract can say which ran, read at the
+     * carrier: {@code cc(3)} sets a coefficient ({@code A => A{*}}, an endomorphism) and {@code cc()} reads one
+     * ({@code A{*} => int}, an endomorphism on int alone). Both are claimed at the generic {@code A} (pure, since
+     * 2026-11-22), so the claim read at the carrier alone names the reader for both. Each row: the chain % each
+     * morphism's form, seed first % each morphism's class labels ({@code -} for none).
      */
     @ParameterizedTest
     @CsvSource(value = {

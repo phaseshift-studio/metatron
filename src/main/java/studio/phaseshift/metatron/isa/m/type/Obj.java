@@ -2013,22 +2013,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .body((lhs, inst) -> lhs.isType() ? lhs.asType().parentType() : lhs.type())
                             .create(),
                     InstBuilder.build()
-                            .tid(CC_INST_TID)
-                            .dom(A.maybeSome(), "any obj")
-                            .rng(INT_TID, "the lhs obj coefficient")
-                            .argLst()
-                            .desc("maps an obj to it's coefficient with a function f(lhs^c)->c")
-                            .body((lhs, inst) -> jnt(lhs.c().max()))
-                            .create(),
-                    InstBuilder.build()
-                            .tid(CC_INST_TID)
-                            .dom(A, "any obj")
-                            .rng(A.any(), "the lhs obj with new coefficient")
-                            .argLst(T(INT_TID), "a coefficient for lhs obj")
-                            .desc("sets the coefficient of the lhs obj via f(lhs,c)->lhs^c")
-                            .body((lhs, inst) -> lhs.c(inst.arg(0).intValue()))
-                            .create(),
-                    InstBuilder.build()
                             .tid(THROW_INST_TID)
                             .dom(ALL.maybeSome(), "any obj")
                             .rng(FAIL_TID, "a fail::T carrying the arg message")

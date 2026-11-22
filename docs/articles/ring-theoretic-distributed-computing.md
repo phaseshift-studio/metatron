@@ -185,6 +185,20 @@ Each place sorts its share and keeps two, and home merges the runs and keeps two
 members. The law is causality, not monotonicity in the prefix order, which a sorted merge lacks: `[1]` is a prefix of
 `[1,2]`, yet merging each with `[3]` gives `[1,3]` and `[1,2,3]`.
 
+**A key that reads mass ships no sort.** A sort compares each member by its key, and a floatable key reads the
+member's value, not its mass: $\{n\}v\,f = \{n\}(v\,f)$ (Theorem 6). A key that reads the coefficient does not, as
+$\{n\}v\,\mathrm{cc} = n$. A shard parts a value's mass across places, $\{n_1\}v$ in one and $\{n_2\}v$ in another,
+and only the merge makes it whole, $\{n_1\}v + \{n_2\}v = \{n_1 + n_2\}v$, so each place would sort by a mass the
+merge then changes. For such a key `order` has no combiner: its run still ships, the branch's merge adds the masses of
+equal members, and home sorts by whole masses.
+
+```mtron_pre
+{11,21,31,41,12,22,13}.mod(10).order(cc())
+{11,21,31,41,12,22,13}.mod(10).order(cc()).explain()>>format
+```
+
+Each place maps its share, and home receives `{4}1`, `{2}2` and `3` with every mass whole.
+
 **A cut may recombine through itself, after a lift.** `mean` is no monoid: the mean of two means is not the mean of
 their union. What recombines is a summary of each part, its mean weighted by its count, and the stream ring carries the
 weight as a coefficient. Write $\ell$ for the lift $a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$, so `{1,1,2}` lifts to
@@ -519,6 +533,7 @@ still the star; only what travels changes.
 | `mean`                  | $\{\lvert a\rvert\}\,\mathrm{mean}(a)$ | the stream's sum, then $\ell$ | `mean`                                    |
 | variance                | $(\lvert a\rvert, \sum a, \sum a^2)$   | componentwise $+$             | $(n, s_1, s_2) \mapsto s_2/n - (s_1/n)^2$ |
 | top-$k$                 | the $k$ least of $a$, sorted           | merge and keep $k$            | $\mathrm{id}$                             |
+| top-$k$ by mass         | $a$ bulked, each member with its mass  | the stream's sum              | `order(cc())==[{k}_]`                     |
 | distinct count, approx. | a sketch of $a$                        | the sketch's union            | its estimate                              |
 | median                  | $a$ itself                             | the stream's sum              | the middle member                         |
 
@@ -526,7 +541,9 @@ Gray et al. sort aggregates by the size of their books [[4]](#references): *dist
 answer (`sum`, `count`, `max`), *algebraic* when they are a bounded tuple of distributive books (`mean`, variance,
 top-$k$), and *holistic* when no bound holds (the median, the mode, an exact distinct count). A holistic fold's books
 are its whole part, so a star would ship every member and save nothing: it stays home, unless a sketch trades
-exactness for bounded books (L).
+exactness for bounded books (L). Top-$k$ by mass sits between: a place's heaviest $k$ need not hold the whole's, as a
+value of middling mass everywhere outweighs one heavy in a single place, so its books are the bulked part, bounded by
+the distinct members rather than the members, and a threshold algorithm ships fewer [[5]](#references).
 
 **The coefficient is a ledger.** A conventional engine keeps `mean`'s books as a pair, a sum and a count, with a
 combiner of its own. The stream ring needs neither, since every obj already carries a count, its coefficient. So
@@ -611,3 +628,5 @@ or compose the others (N, R, M, I).
 4. Gray, J., Chaudhuri, S., Bosworth, A., Layman, A., Reichart, D., Venkatrao, M., Pellow, F., Pirahesh, H., "Data
    Cube: A Relational Aggregation Operator Generalizing Group-By, Cross-Tab, and Sub-Totals," Data Mining and Knowledge
    Discovery 1(1), pages 29–53, 1997.
+5. Cao, P., Wang, Z., "Efficient Top-K Query Calculation in Distributed Networks," Proceedings of the Twenty-Third
+   Annual ACM Symposium on Principles of Distributed Computing (PODC), 2004.

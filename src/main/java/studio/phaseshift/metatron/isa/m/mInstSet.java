@@ -1740,8 +1740,17 @@ public class mInstSet extends AbstractInstSet {
      * otherwise the type's vid as a uri. (a noobj{c} uri and a noobj literal parse to different
      * classes — noobj-vs-noobj is the one equivalence test literals can express)
      */
+    /**
+     * The least count a coefficient admits, or noobj (the slot omitted) when it is unbounded below, as a range is
+     * whose coefficient may be set negative (cc's A.any()).
+     */
+    private static Obj least(final cInt c) {
+        return null == c.min() ? noobj() : jnt(c.min());
+    }
+
     private static Obj domRngValue(final Type t) {
-        if (0L == t.c().min()) return noobj();
+        // a range unbounded below has no min (cc's A.any(): a coefficient may be set negative), and is no zero
+        if (Long.valueOf(0L).equals(t.c().min())) return noobj();
         return uri(f(t.vid().small().pathString()));
     }
 
@@ -1800,9 +1809,9 @@ public class mInstSet extends AbstractInstSet {
                     uri(ARGS), lst(i.args().elements().toList()),
                     uri(Tokens.F), i.hasf() ? (i.f().isLambda() ? str("<j>") : i.getMtronFunctionObj()) : noobj(),
                     uri(FORM), uri(f(Inst.Form.of(i).toString())),
-                    uri(C_DOM), jnt(e.cDom().min()),
-                    uri(C_RNG), jnt(e.cRng().min()),
-                    uri(C_OUT), jnt(running.min())));
+                    uri(C_DOM), least(e.cDom()),
+                    uri(C_RNG), least(e.cRng()),
+                    uri(C_OUT), least(running)));
         }
         // rewrite-stage chain: this rec describes the COMPILED code, so it points BACK at the submitted
         // expression's rec; that rec is the chain's last and terminates it (noobj). explain() therefore

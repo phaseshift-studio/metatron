@@ -926,6 +926,10 @@ public class InstTest extends AbstractObjTest {
             "1        % repeat(code=>plus(1).print(_),until=>is(gt(10)))     % false",
             // loop() has no declared law yet (still an Obj interface inst): when it moves to mInsts with Law.pure, true
             "1        % repeat(code=>plus(1),until=>loop().is(gt(3)))        % false",
+            // cc moved to mInsts with Law.pure (Marko, 2026-11-22): both the reader and the setter, and a sort keyed by it
+            "{3}5     % cc()                   % true",
+            "5        % cc(3)                  % true",
+            "{1,1,2}  % order(cc())            % true",
     }, delimiter = '%')
     public void testAnInstructionIsPureWhenDeclaredOrComposedOfPureInstructions(final String lhs, final String code, final boolean pure) {
         final Call parsed = ObjmtronSerializer.parse(code.trim()).as();

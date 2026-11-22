@@ -455,6 +455,25 @@ public class DistributedComputingTest extends AbstractMetatronTest {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
+    /**
+     * K, BY MASS (Marko 2026-11-22, order(cc())): a sort keyed by mass ships no lane. A shard parts each value's mass
+     * across its lanes, so a lane would sort by partial masses and {@code kmerge(cc())} would merge the runs by whole
+     * ones: sharded, {@code {11,13,21,23,31,33,12,32,22,42}.mod(10).order(cc())} answered {@code [{4}2,{3}3,{3}1]},
+     * out of order. The key is not blind to mass (Law.Helper#massBlind), so order has no combiner and is no cut: the
+     * floatable run before it still ships (W), the branch's merge adds the masses of equal members, and home sorts by
+     * whole masses. The masses here, 4, 2 and 1, never tie, so each answer has one order. Exact top-k by mass across
+     * places (a threshold algorithm, or a keyed mass merge) is future work.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{11,21,31,41,12,22,13}.mod(10).order(cc())                  % branch().order()            % [3,{2}2,{4}1]",
+            "{11,21,31,41,12,22,13}.mod(10).order(cc())==[{1}_]          % branch().order().select()   % [3]",
+            "{11,21,31,41,12,22,13}.mod(10).order(cc().neg())==[{1}_]    % branch().order().select()   % [{4}1]",
+    }, delimiter = '%')
+    void test_K_a_sort_by_mass_sorts_at_home(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
     // ================================================================================================
     // K — limit / top-k push-down: take(k)·⊕ = take(k)·⊕·take(k). Keeping the first k positions commutes with
     // the sorted merge, as the first k of a merge draw only on the first k of each run: kmerge is CAUSAL. On a
