@@ -214,6 +214,10 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/1.out(knows).{0,1}out(created).out()>>name      % {'ripple','lop'}",
             "*/g/V/1.{0,1}out(knows).out(created)>>name            % {'lop','ripple','lop'}",
             "*/g/V/+.{0,2}out()>>name                              % {'marko','peter',{2}'vadas',{2}'josh',{5}'lop',{3}'ripple'}",
+            // THE BSP WALK (Marko, 2026-11-22): five passes of both() from every vertex, per monad and over the whole
+            // frontier (repeat?<=A{*}: each pass a superstep over all of it). Both answer A^5 applied to all-ones
+            "*/g/V/+.repeat(code=>both(),until=>loop()?>4)>>name                % {{99}'marko',{99}'lop',{99}'josh',{41}'vadas',{41}'ripple',{41}'peter'}",
+            "*/g/V/+.repeat?<=A{*}(code=>both(),until=>loop()?>4)>>name         % {{99}'marko',{99}'lop',{99}'josh',{41}'vadas',{41}'ripple',{41}'peter'}",
             // an OPEN span loops until noobj (Marko, 2026-11-13): out() over the modern graph halts where the edges run out
             "*/g/V/1.{*}out()>>name                                % {'marko','vadas','josh','lop','ripple','lop'}",
             "*/g/V/1.{+}out()>>name                                % {'vadas','josh','lop','ripple','lop'}",
