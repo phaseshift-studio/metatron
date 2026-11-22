@@ -611,46 +611,46 @@ and computes its cut/span/where without consulting the code below; the descent (
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==>[abstraction::[obj=>[
-                   morphism[start?args=[/m/int]]::[
-                    name=>start,
-                    form=>initial,
-                    src=>!λ#(){<j>},
-                    trgt=>!λ#(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>start(5)],
-                   morphism[plus?rng=int&dom=int&args=[/m/int]]::[
-                    name=>plus,
-                    form=>mapper,
-                    class=>[endo],
-                    src=>!λint(){<j>},
-                    trgt=>!λint(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>plus(0),
-                    ...(1 more)],
-                   morphism[neg?rng=int&dom=int&args]::[
-                    name=>neg,
-                    form=>mapper,
-                    class=>[
-                     endo,
-                     iso,
-                     auto,
-                     section,
-                     retraction,
-                     mono,
-                     epi],
-                    src=>!λint(){<j>},
-                    trgt=>!λint(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>neg(),
-                    ...(1 more)],
-                   morphism[neg?rng=int&dom=int&args]::[
-                    name=>neg,
-                    form=>mapper,
-                    class=>[
-                     endo,
-                     iso,
-                     auto,
+==>[abstraction::[obj=>[morphism[start?args=[/m/int]]::[
+                         name=>start,
+                         form=>initial,
+                         src=>!λ#(){<j>},
+                         trgt=>!λ#(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>start(5)],
+                        morphism[plus?rng=int&dom=int&args=[/m/int]]::[
+                         name=>plus,
+                         form=>mapper,
+                         class=>[endo],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>plus(0),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
+                          retraction,
+                          mono,
+                          epi],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>neg(),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
    ...
 ```
 ### `plan::T` — a rewrite rule as a value

@@ -1,0 +1,1579 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Large Language Models</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
+         (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
+         downloading it on every page view. Page-specific MathJax config scripts (e.g. the
+         theory articles) run during parse, before this loader fires. -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var content = document.querySelector('main') || document.body;
+            var text = content.textContent || '';
+            if (text.indexOf('\\(') === -1 && text.indexOf('\\[') === -1) return;
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js';
+            mathjax.async = true;
+            document.head.appendChild(mathjax);
+        });
+    </script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                                src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                                src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                                src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus/index.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+   <!-- <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/splash"
+               title="the metatron web console — served by this machine">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div> -->
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1"><h2 id="sec-large-language-models" class="discrete">Large Language Models</h2>
+<div class="legend-index">
+<ul>
+<li class="legend-lvl-3"><a href="#sec-models" onclick="var t=document.getElementById('sec-models');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Models</a></li>
+<li class="legend-lvl-3"><a href="#sec-agents" onclick="var t=document.getElementById('sec-agents');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Agents</a></li>
+<li class="legend-lvl-4"><a href="#sec-features" onclick="var t=document.getElementById('sec-features');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Features</a></li>
+<li class="legend-lvl-4"><a href="#sec-tools" onclick="var t=document.getElementById('sec-tools');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Tools</a></li>
+<li class="legend-lvl-5"><a href="#sec-inst-as-tool" onclick="var t=document.getElementById('sec-inst-as-tool');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Inst as Tool</a></li>
+<li class="legend-lvl-5"><a href="#sec-mcp-tool-as-inst" onclick="var t=document.getElementById('sec-mcp-tool-as-inst');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">MCP Tool as Inst</a></li>
+<li class="legend-lvl-4"><a href="#sec-skills" onclick="var t=document.getElementById('sec-skills');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Skills</a></li>
+<li class="legend-lvl-4"><a href="#sec-sessions" onclick="var t=document.getElementById('sec-sessions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Sessions</a></li>
+<li class="legend-lvl-3"><a href="#sec-notes" onclick="var t=document.getElementById('sec-notes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Notes</a></li>
+<li class="legend-lvl-4"><a href="#sec-mcp-server-client-notifications-in-mtron" onclick="var t=document.getElementById('sec-mcp-server-client-notifications-in-mtron');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mcp server->client notifications in mtron</a></li>
+<li class="legend-lvl-3"><a href="#sec-agent-based-programming-language" onclick="var t=document.getElementById('sec-agent-based-programming-language');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent-based programming language</a></li>
+</ul>
+</div>
+<details>
+<summary class="title">documentation setup</summary>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; import(/m/web)
+...
+mtron&gt; import(/m/ai/llm)
+...
+mtron&gt; import(/m/math)
+...
+mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
+                     q        =&gt; [mimeq::[=&gt;]],
+                     pattern  =&gt; &lt;http://#&gt;,
+                     route    =&gt; [/mcp     =&gt; mcp_mtron_http,
+                                   /       =&gt; &lt;&gt;]]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;],
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+                 q=&gt;[analq::[pattern=&gt;analq,pre_read=&gt;inst(uri::T){&lt;j&gt;},qless_write=&gt;inst(uri::T,
+                                                                                          #::T){&lt;j&gt;},qless_read=&gt;inst(uri::T,
+                                                                                                                      #::T){&lt;j&gt;},obj=&gt;analyzer::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;}]]]]
+mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
+                   pattern  =&gt; &lt;ws://#&gt;,
+                   q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
+                   route    =&gt; [/mtron  =&gt; mtron_ws,
+                              /mcp    =&gt; mcp_mtron_ws]]
+==&gt;fail::[parse error at line 1, col 1: unable to construct ws_server::T: fail::['inst apply failure: a ws_server serves a socket: origin=&gt;&lt;ws://origin:port&gt; required, got noobj (at /m/inst/ctor)']
+   	while parsing: ws_server::[host     =&gt; ws://localhost:8555,
+                      pattern  =&gt; &lt;ws://#&gt;,
+                      q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
+                      route    =&gt; [/mtron  =&gt; mtron_ws,
+                                 /mcp    =&gt; mcp_mtron_ws]]]
+mtron&gt; fsspace::[pattern  =&gt; fs:#,
+                 route    =&gt; [fs:=&gt;&lt;.metatron&gt;]]@/sys/space/fs</code></pre>
+</div>
+</div>
+</div>
+</details>
+<div class="paragraph">
+<p>Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. <a href="https://www.anthropic.com/">Anthropic</a> and/or <a href="https://openai.com/">OpenAI</a>) and local providers (e.g. <a href="https://ollama.com/">Ollama</a>, <a href="http://lmstudio.ai/">LMStudio</a>, and/or <a href="http://localai.io/">LocalAI</a>) serving as the compute-intensive inferencing backends.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Pair Programmer</strong>: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user.
+This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).</p>
+</li>
+<li>
+<p><strong>Agent Development</strong>: A large portion of an LLM&#8217;s functional elements are embedded in the URI address space and made accessible to mtron via respective spaces.
+These components are called <strong>features</strong> and metatron offers a rich set of features that can can be composed to yield custom agent behaviors:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>tools</strong>: every mtron <code>inst</code> has an <code>as()</code>-mapping to <code>tool</code>, where the <code>docq</code> processor of the <code>inst</code> provides the name, description, and argument notes necessary for LLM tool selection.
+While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.</p>
+</li>
+<li>
+<p><strong>thoughts</strong>: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.</p>
+</li>
+<li>
+<p><strong>sessions</strong>: an LLMs interactions and thoughts can be stored and retrieved at a later time to enable long-term memory and context awareness.</p>
+</li>
+<li>
+<p><strong>skills</strong>: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems.
+Skills can be pulled from the Anthropic-specified <code>.agent</code> directory that has a corresponding <code>SKILL.md</code> file and associated resources.
+Or, can be created programmatically in metaron.</p>
+</li>
+<li>
+<p><strong>notes</strong>: pass information to an LLM during a chat iteration without interrupting them.
+LLMs will periodically check their note stack for any advice/information from the user about their task at hand.</p>
+</li>
+<li>
+<p><strong>prompts</strong>: specific prompts or instructions can be stored and retrieved to help guide an LLM&#8217;s response.</p>
+</li>
+<li>
+<p><strong>response formats</strong>: a mtron <code>rec</code> can serve as a schema object instructing the LLM to populate the <code>rec</code> with their answer to avoid arbitrary string responses in favor of structured responses.</p>
+</li>
+<li>
+<p><strong>concepts</strong>: generative memory structures that extract ideas from agent chat histories in order to provide semantic indices into the agents verbatim memory structures.</p>
+</li>
+<li>
+<p><strong>gguff vector files</strong>: a training feature&#8230;&#8203;</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>MCP Servers</strong>: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward.
+MCP servers and their tools offer numerous ways by which LLMs can interact with their environment.</p>
+</li>
+</ol>
+</div>
+<h3 id="sec-models" class="discrete">Models</h3>
+<div class="paragraph">
+<p>A <code>model::T</code> references a LLM endpoint.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; |/m/ai/llm/model::T</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Models can be either cloud-based AI LLMs or local LLMs.
+Two example models are provided below.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; model::[provider =&gt; ollama,
+               protocol =&gt; ollama,
+               host     =&gt; http://localhost:11434,
+               llm      =&gt; &lt;qwen3.5:4b&gt;]
+==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
+           size=&gt;gB::3.1571,
+           context=&gt;262144,
+           provider=&gt;ollama,
+           protocol=&gt;ollama,
+           host=&gt;http://localhost:11434,
+           llm=&gt;&lt;qwen3.5:4b&gt;]
+mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
+               api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
+               provider =&gt; deepseek,
+               protocol =&gt; openai,
+               llm      =&gt; &lt;deepseek-v4-pro&gt;]
+==&gt;model::[name=&gt;deepseek-v4-pro,
+           host=&gt;&lt;https://api.deepseek.com/v1&gt;,
+           api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
+           provider=&gt;deepseek,
+           protocol=&gt;openai,
+           llm=&gt;deepseek-v4-pro]</code></pre>
+</div>
+</div>
+<!--
+catalog::[host         => <http://localhost:11434>,            /
+pattern     => <ollama:#>,                          /
+name        => <ollama>,                            /
+route       => [ollama:=><>]]@/sys/space/ollama
+catalog::[host         => <https://api.openai.com/v1>,          /
+organization => !*</sys/env/OPENAI_ORG_ID>,           /
+api_key      => !*</sys/env/OPENAI_API_KEY>,          /
+pattern      => <openai:#>,                           /
+name         => <openai>,                             /
+route        => [<openai:>=><>]]@/sys/space/openai
+-->
+<div class="paragraph">
+<p>The majority of cloud and local LLM providers expose HTTP/REST endpoints.
+These endpoints can be programmatically inspected using mtron in order to locate a model that meets a particular use case requirement.
+For example, the expression belows is used to find a suitable model for the examples in this documentation.
+This expression makes two Ollama API calls:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>get all models that are larger than 1 gig and smaller than 5 gigs.</p>
+</li>
+<li>
+<p>filter down to those models that have <code>thinking</code> and <code>tool</code> capabilities.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The resultant Ollama <code>rec::T</code> is then morphed into a <code>model::T</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+There are two expressions in the example below that are bound by an intermediate
+<code>ollama_model</code> stack reference.
+The purpose of breaking up the example into two expression is to highlight the Ollama representation of a model before morphing it into a <code>model::T</code> ready for use in the <code>/m/ai/llm</code> instruction set.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *http://localhost:11434/v1/models/+.&gt;&gt;.
+         =?=[size=&gt;as(real::T).as(bB::T).
+                   ?&gt;gB::1.0.
+                   ?&lt;gB::5.0].
+         -&lt;[_=&gt;-&lt;[name=&gt;&gt;&gt;name.as(str::T)].
+               to(http://localhost:11434/api/show).
+               =?=[capabilities=&gt;has(thinking).has(tools)]].dom().
+         order(&gt;&gt;size * -1).
+         take(1).to(ollama_model)
+==&gt;fail::[parse error at line 1, col 39:
+     *http://localhost:11434/v1/models/+.&gt;&gt;.
+            =?=[size=&gt;as(real::T).as(bB::...
+                                           ^
+     expected an obj]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>stream all the models currently available on the local ollama server.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>filter out models too small (for ollama, the cloud models) and models too big.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>create <code>rec::T</code> with domain the ollama model and range further details about the model.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>an <code>http</code> POST is made and only those details that have <code>thinking</code> and <code>tools</code> capabilites remain.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>the domain of the intermediate <code>rec::T</code> is projected out.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>reverse sort the ollama models by their size.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>select the smallest ollama model of those remaining.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>store the result in an intermediate stack variable called <code>ollama_model</code>.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *ollama_model.&gt;&gt;name.
+         -&lt;[host     =&gt; http://localhost:11434,
+            provider =&gt; ollama,
+            protocol =&gt; ollama,
+            llm      =&gt; as(uri::T)].as(model::T).
+         to(metatron_model)</code></pre>
+</div>
+</div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_a_note_on_unit_conversions" class="discrete">a note on unit conversions</h4>
+<div class="paragraph">
+<p>The <code>size</code> relation maps to a <code>bB::T</code> (bytes) while the <code>where()</code> clause filtered on <code>gB::T</code> (gigabytes).
+The conversion between the different data size units is handled automatically by the type constructors of those data size types.
+These types are distributed in the <code>/m/math</code> instruction set and imported via <code>import(/m/math)</code> (or <code>import(/m/math,math:)</code> if naming conflicts may emerge).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;     ​1​
+==&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime
+==&gt;int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent
+==&gt;currency::T@/m/math/currency/usd
+==&gt;currency::T@/m/math/currency/euro
+==&gt;real::T@/m/math/metric
+==&gt;metric::T[][ctor?mm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm
+==&gt;metric::T[][ctor?cm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm
+==&gt;metric::T[][ctor?dm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm
+==&gt;metric::T[][ctor?meter&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter
+==&gt;metric::T[][ctor?km&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/km
+==&gt;real::T@/m/math/imperial
+==&gt;imperial::T[][ctor?inch&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch
+==&gt;imperial::T[][ctor?foot&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot
+==&gt;imperial::T[][ctor?yard&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard
+==&gt;imperial::T[][ctor?mile&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile
+==&gt;int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat
+==&gt;lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx
+==&gt;real::T@/m/math/datasize
+==&gt;datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB
+==&gt;datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB
+==&gt;datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB
+==&gt;datasize::T[][ctor?gB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB
+==&gt;datasize::T[][ctor?tB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB
+==&gt;datasize::T[][ctor?pB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB
+==&gt;real::T@/m/math/currency
+==&gt;real::T@/m/math/time
+==&gt;time::T[][ctor?nanos&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos
+==&gt;time::T[][ctor?micros&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/micros
+==&gt;time::T[][ctor?millis&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/millis
+==&gt;time::T[][ctor?second&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/second
+==&gt;time::T[][ctor?minute&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/minute
+==&gt;time::T[][ctor?hour&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/hour
+==&gt;time::T[][ctor?day&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/day</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>get the types defined in <code>/m/math</code> <code>instset</code> and then drain that <code>lst</code> to a stream to see a more detailed string representation.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; gB::500.0.as(mB::T)     ​1​
+==&gt;mB::512000.0
+mtron&gt; gB::500.0.as(kB::T)     ​2​
+==&gt;kB::5.2428E8
+mtron&gt; tB::1.0.as(mB::T)     ​3​
+==&gt;mB::1048576.0</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>convert gigabytes to megabytes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>convert gigabytes to kilobytes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>convert terabytes to megabytes</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<!--
+|inst?model{?}<=#{?}(a=>uri::T){
+  *<http://localhost:11434/api/tags/+>.
+   where(>>skill.has(thinking).has(tools)).
+   where(>>size.?>gB::1.0.?<gB::5.0).
+   order(>>size * -1.0).
+   take(1).
+   to(*a) }@doc_model
+[source,mtron]
+----
+mtron> *<fs:agent.mtron>     ​1​
+mtron> *<fs:agent.mtron/feature>     ​2​
+----
+
+<1> if a file contains mtron source, the mtron source is the obj referred to by the file uri.
+<2> the previous callout entails that a file path can be extended beyond the file boundary.
+-->
+<h3 id="sec-agents" class="discrete">Agents</h3>
+<div class="paragraph">
+<p>The most important type in <code>/m/ai/llm</code> is <code>agent::T</code>.
+While a <code>model::T</code> represents the gateway to a particular data structure and inferencing engine, an <code>agent::T</code> subsumes one or more <code>model::T</code> in its functioning.
+Along with models, and agent can be equipped with other data structures and processes that provide a richer, more intelligent entity within metatron.
+These supplemental structures and processes are collectively known as <strong>features</strong>.
+The metatron encoding of an example agent distributed with metatron named Dr.Stynx is provided below.
+Over the remainder of this documentation, each of the components of Dr.Stynx&#8217;s representation will be made clear.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">agent::[
+ name     =&gt; 'dr.stynx',
+ desc     =&gt; 'the agent dr.stynx is here to be of use in the metatron',
+ root     =&gt; !*boot/args/internal/agent_home,
+ feature  =&gt; [
+  token_message_feature::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){ *&lt;/usr/dr/session/1&gt;.else(
+                                         session::[agent     =&gt; !*boot/args/internal/agent_home,
+                                                   user      =&gt; !*boot/args/internal/user_home,
+                                                   name      =&gt; 'general chat',
+                                                   algorithm =&gt; [max=&gt;262144]]
+                                                         ==[_=&gt;_].to(/usr/dr/session/1)).
+                                          map(token_counter_tool::[style=&gt;[anchor=&gt;top_right,width=&gt;50]]@&lt;token_widget&gt;)},
+                             to            =&gt; inst(tok=&gt;rec::T) { @token_widget&gt;&gt;=(==[style=&gt;_] + *tok).display()  },
+                             session       =&gt; /usr/dr/session/1],
+  chat_feature:::::::[model         =&gt; !(*&lt;/usr/dr/model&gt;.else(model::[provider     =&gt; ollama,
+                                                                       protocol     =&gt; ollama,
+                                                                       host         =&gt; &lt;http://ginger.local:11434&gt;,
+                                                                       llm          =&gt; &lt;qwen3.8:27b&gt;].to(/usr/dr/model))),
+                      response      =&gt; [complete =&gt; println?rec&lt;=rec("{{y}}{{:horse:}} ${&gt;&gt;chat}")]],
+  think_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){
+                                          accordion_widget::[title =&gt; "thoughts", 
+                                                             body  =&gt; "",
+                                                             style =&gt; style::[
+                                                               anchor=&gt;top_middle,
+                                                               right=&gt;10,
+                                                               width=&gt;100,
+                                                               top=&gt;2]]@&lt;think_widget&gt; },
+                      on_before_chat =&gt; inst(){ @&lt;think_widget&gt; &gt;&gt;= [body=&gt;""] },
+                      think          =&gt; [to =&gt; inst(a=&gt;str::T){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }]],
+  midchat_feature:::::[              =&gt; ],
+  compaction_feature::[model         =&gt; !*/usr/dr/model,
+                       threshold     =&gt; 0.8],
+  loop_feature::::::::[max_loop      =&gt; 100],
+  skill_feature:::::::[skill         =&gt; [&lt;mfs:.metatron/skills/metatron&gt;, 
+                                         &lt;mfs:.metatron/skills/mtron&gt;,
+                                         &lt;mfs:.metatron/skills/ide&gt;]],
+  lucene_concept_feature::::[=&gt;],
+  audit_feature::::::[on_before_chat  =&gt; inst(a=&gt;agent::T) {   
+                                         accordion_widget::[title  =&gt; "audit",
+                                                            body   =&gt; "",
+                                                            style  =&gt; style::[
+                                                              anchor=&gt;bottom_right,
+                                                              left  =&gt;-2,
+                                                              top   =&gt;5,
+                                                              width =&gt;75,
+                                                              height =&gt; 25,
+                                                              foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
+                      to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }],
+  summarize_feature::[              =&gt; ],
+  todo_feature:::::::[              =&gt; ],
+  embed_feature::::::[root          =&gt; embed:chat_result,
+                      model         =&gt; model::[provider     =&gt; ollama,
+                                               protocol     =&gt; ollama,
+                                               host         =&gt; &lt;http://ginger.local:11434&gt;,
+                                               llm          =&gt; &lt;qwen3-embedding:4b&gt;]],
+  tool_feature:::::::[tool          =&gt; [!*sql,
+                                        !(map(json::"""
+                                        {
+                                          "mcpServers": {
+                                            "codegraph": {
+                                              "command": "codegraph",
+                                              "args": [
+                                                "serve",
+                                                "&lt;--mcp&gt;"
+                                              ]
+                                            }
+                                          }
+                                        }
+                                        """@codegraph).as(mcp_client::T)),
+                                        [==mcp_client::[host=&gt;&lt;http://127.0.0.1:64342/stream&gt;]==],
+                                        !*find_file,
+                                        !*read_file,
+                                        !*edit_file,
+                                        [==mcp_client::[host=&gt;&lt;http://ginger.local:11437/mcp&gt;]==],
+                                        /m/inst/web?str&lt;=#{?}(url=&gt;union(uri::T,str::T),native=&gt;bool{?}::T){ *&lt;url&gt;.as(uri::T).*_.-&lt;|[*native.else(false) =&gt; as(rec::T).as(str::T), _ =&gt; _]&gt;&gt; },
+                                        !*bash?reject=['\brm\b','\bgit\b'],
+                                        mcp_client::[host=&gt;&lt;http://localhost:8777/mcp&gt;]],
+                   to =&gt;  inst(a=&gt;rec::T){ @&lt;tool_widget&gt;.else(
+                                             grid_widget::[grid=&gt;[,],
+                                                           style=&gt;[anchor=&gt;bottom_middle,
+                                                                   border=&gt;continuous,
+                                                                   height=&gt;30,
+                                                                   width=&gt;100]].to(tool_widget)).
+                                           side(w -&gt; -&lt;accordion_widget::[title=&gt;"""{{r}}&gt;&gt;{{/r}}{{m}}${*a&gt;&gt;name}{{g}}({{/g}}${*a&gt;&gt;arguments}{{g}}){{/g}}{{/m}}""",
+                                                                          body=&gt;"""{{y}}${*a&gt;&gt;result}{{/y}}"""]).
+                                           @&lt;tool_widget/grid&gt; &gt;&gt;=(+(-&lt;[-&lt;[ !*w ]]))                          
+                                           .side(@tool_widget.display()).end() }],
+  cost_feature:::::::[rate          =&gt; [in  =&gt; usd_currency::0.435,
+                                        out =&gt; usd_currency::0.870]],
+  system_feature:::::[              =&gt; ]]]@&lt;dr&gt;;</code></pre>
+</div>
+</div>
+<h4 id="sec-features" class="discrete">Features</h4>
+<div class="paragraph">
+<p>The following subsections focus on a particular <code>/m/ai/llm</code> <strong>feature</strong>.</p>
+</div>
+<!--
+
+The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM).
+Example features include https://en.wikipedia.org/wiki/Large_language_model#Tool_use[tools], https://agentskills.io/home[skills], https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/chat-history?pivots=programming-language-csharp[sessions], https://arxiv.org/abs/2410.10630[thinking], https://fvivas.com/en/response-formats-in-llms-guide-chatgpt-claude-more/[response formats], and other similar enrichments.
+While models do vary in their capacity to leverage certain features, features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from pre-defined features.
+In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
+
+[discrete]
+[[sec-tools]]
+==== Tools
+
+Tools are functions that models can use for problem solving.
+In metatron, every `inst` is a tool.
+Moreover, from the agent's perspective, every MCP server tool is an `inst`.
+Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve the problem at hand.
+
+[discrete]
+[[sec-inst-as-tool]]
+===== Inst as Tool
+
+A model is loaded using `doc_model`.
+The loaded model is handed a `!*`-reference to the mtron `eval` instruction.
+This is the most general instruction in mtron enabling any mtron expression to be passed in as a `str`, parsed, compiled, evaluated, and `rhs` results returned.
+
+[source,mtron]
+----
+mtron> doc_model(aix).>>=+
+        [feature =>[
+          tool      => [!*eval],
+          response  => [to=>_]]]
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]
+----
+
+[source,mtron]
+----
+mtron> @aix.chat('evaluate the following expression using your mtron eval tool: [1,2]==[+2,-<[+3,+4]]==[_,>-]')
+----
+
+[discrete]
+[[sec-mcp-tool-as-inst]]
+===== MCP Tool as Inst
+
+metatron is capable of both hosting MCP tools (**servers**) and using MCP tools (**clients**).
+In the following example, an mtron MCP server is managed by a `wsspace` (web socket space).
+
+.metatron hosted mcp server
+[source,mtron]
+----
+mtron> wsspace::[host     => ws://localhost:8555,
+                 pattern  => ws://#,
+                 q        => [docq::[=>],subq::[=>]],
+                 route    => [/mcp => mcp_mtron_ws]]@/sys/space/web/ws
+==>wsspace::[host=>ws://localhost:8555,
+             pattern=>ws://#,
+             q=>[
+              docq::[
+               pattern=>docq,
+               pre_read=>inst(uri::T){<j>},
+               pre_write=>inst(uri::T,#::T){<j>},
+               obj=>memspace::[pattern=><#>,q=>[,]],
+               inst=>/m/instset::[q=>[,]]],
+              subq::[pattern=>subq,pre_read=>inst(uri::T){<j>},pre_write=>inst(uri::T,#::T){<j>},qless_write=>inst(uri::T,
+                                                                                                                   #::T){<j>},obj=>[,]]],
+             route=>[/mcp=>mcp_mtron_ws]]@/sys/space/web/ws
+----
+
+The `/m/web` instruction set realizes an MCP tool as a refinement of `inst`.
+As such, an MCP client has an natural mapping to an LLM tool feature.
+
+.metatron hosted mcp clients
+[source,mtron]
+----
+mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]
+mtron> doc_model(aix).>>=+
+        [feature =>[
+          tool      => [!*/usr/ai/mcp/mtron],
+          response  => [to=>_]]]
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]
+----
+
+Given that an `mcp_client::T` is an index of `insts`.
+Nothing prevents their `insts` being used by other processes such as a human user.
+And since, metatron is able to map common data formats to `obj`, its possible to take the result of the mcp tool and post process it to derive further more refined statistics not offered by the tool.
+
+[source,mtron]
+----
+/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj'). /
+  -<[supers => -<[count => >>supertypes.count(),                                                      /
+                  kinds => >>supertypes>>kind>-[,]],                                                  /
+     subs   => -<[count => >>subtypes.count(),                                                        /
+                  kinds => >>subtypes>>kind>-[,]]]
+----
+
+[discrete]
+[[sec-skills]]
+==== Skills
+
+[source,mtron]
+----
+mtron> *<fs:skills/mtron/SKILL.md>
+----
+
+[discrete]
+[[sec-sessions]]
+==== Sessions
+
+The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions).
+This example relies on an agent `SKILL.md` file stored on the local file system (`fs:`).
+
+[source,mtron]
+----
+mtron> [,]@/usr/ai/session     ​1​
+==>[,]@/usr/ai/session
+mtron> *ollama:+.
+        where(>>skill.has(thinking).has(tools)).
+        where(>>size.?>gB::1.0.?<gB::5.0).
+        order(>>size * -1.0).
+        take(1).
+        >>=+[feature=>[
+              session  => [agent     => /usr/ai,
+                           user      => /usr/marko,
+                           name      => 'general chat',
+                           algorithm => [max=>15]]@/usr/ai/session/1,
+              tool     => [!*eval],
+              think    => print(_),
+              response => [to=>to(/usr/ai/response)]]].
+        to(aix)
+==>fail::[parse error at line 1, col 1: lst index out of bounds: 1 > 0
+   	while parsing: *ollama:+.
+           where(>>skill.has(thinking).has(tools)).
+           where(>>size.?>gB::1.0.?<gB::5.0).
+           order(>>size * -1.0).
+           take(1).
+           >>=+[feature=>[
+                 session  => [agent     => /usr/ai,
+                              user      => /usr/marko,
+                              name      => 'general chat',
+                              algorithm => [max=>15]]@/usr/ai/session/1,
+                 tool     => [!*eval],
+                 think    => print(_),
+                 response => [to=>to(/usr/ai/response)]]].
+           to(aix)]
+----
+
+<1> create a `lst` to server as the an ordered sequence of chat interactions.
+<2> stream all the models currently available on the local ollama server.
+<3> filter out those models that don't support thinking and tool use.
+<4> filter out models too small (for ollama, the cloud models) and models too big.
+<5> reverse sort the models by their size.
+<6> select the smallest model of those remaining.
+<7> attach features/enrichements to the model.
+<8> give the model a session structure for extended context.
+<9> give the model access to mtron's eval instruction.
+<10> have the model print its thoughts to the console terminal
+<11> have the model store its responses to the `/usr/ai` space.
+<12> write the model to `aix`.
+
+The first part of the stream above was about widdling down the set of available models to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating model features.
+
+Once a model was selected, then the second phase served to enrich the model with a session structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and a location to place its response (embedded in space).
+
+With the model loaded and equipped, it's possible to communicate with it.
+
+
+----
+@aix.chat("I need you evaluate the mtron expresion `-<[_=>_]>>.>-[,]-<[_,-<[_=>_]>>]>>.>-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
+----
+
+[.card]
+--
+[discrete,.center]
+==== a note on unit conversions
+
+[.accordion-small]
+[%collapsible]
+./m/math instset import
+====
+
+----
+import(/m/math)
+----
+
+Or, using structured responses, the unstructured text result can be turned into a mtron obj.
+
+@ai.chat("what was the answer again?", [answer=>?int::T])
+
+[discrete]
+[[sec-notes]]
+=== Notes
+
+metatron introduces the concept of _notes_ to the agent toolkit.
+Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task -- that is, within a single chat iteration.
+Notes are useful in the following situations:
+
+. **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought.
+Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
+. **real-time system message**: the agent's system message is written at the start of chat and remains static for the duration of the interaction.
+Notes serve as dynamic system messages allowing programmatic alterations in the agent's behavior within a single interaction.
+
+Notes are enabled by adding `note\=>[,]` to the agent's configuration.
+The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
+
+[source,mtron]
+----
+@<openai:gpt-4o>.at(robotron).
+ >>=[feature=>[tool => [!*eval],           <1>
+     note => [,]]]                         <2>
+----
+
+<1> `eval` is required — the agent calls it internally to read and consume notes.
+<2> `[,]` initializes an empty note list and activates the note-checking instruction in the agent's system message.
+
+While `robotron` is executing a task, a note can be pushed at any time from any other mtron context:
+
+[source,mtron]
+----
+@robotron/note >>= +['actually, can you provide the result in euros, not dollars']   <1>
+----
+
+<1> `+` concatenates to the note `lst`.
+Because the list carries an anchored reference (`@vid`), the mutation is automatically persisted to space.
+
+[.card]
+--
+[discrete,.center]
+==== @vid auto-persistence Any `obj` that carries an `@vid` is __anchored__ to its spatial location.
+Mutations to such objs are automatically reflected in the space at that address — no explicit re-assignment required.
+
+The difference between `.to()` and `.at()` is critical here:
+
+[source,mtron]
+----
+mtron> 1.to(a) + 2 + 3
+==>6
+mtron> *a
+==>1
+mtron> 1.at(a) + 2 + 3
+==>6@a
+mtron> *a
+==>6
+----
+
+<1> `.to()` saves a snapshot at `a` but the `@vid` is **not** carried through the chain.
+<2> `a` still holds the original snapshot.
+<3> `.at()` binds `@vid` to the result, so every subsequent operation in the chain auto-persists.
+<4> `a` reflects the final value of the entire chain.
+
+The note list uses `at()` semantics: `[,]@/usr/ai/notes` initialises the list with its `@vid` already bound, so `@/usr/ai/notes + ['note']` persists automatically without re-assignment.
+--
+
+The agent receives the following standing instruction embedded in its system message at `chat()` time:
+
+[.card]
+--
+[discrete,.center]
+==== note-checking protocol Always check for notes using the `eval` tool before, during, and after your task: +
+`*<robotron/note>.remove(0)` +
+`noobj` means _no note right now_ — check again later. +
+Notes are of **crucial importance** and must be acted on immediately.
+--
+
+Notes form a **FIFO queue** — `remove(0)` pops the oldest note, leaving newer ones untouched for subsequent polls.
+An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.
+
+[discrete]
+[[sec-mcp-server-client-notifications-in-mtron]]
+==== mcp server->client notifications in mtron
+
+Typically, a client will request services from an MCP server -- tool listing, tool evaluations, etc.
+It's important to note that the https://modelcontextprotocol.io/docs/learn/architecture#notifications[MCP specification] has a little known feature that allows the server to initiate communication with the client.
+This feature is called **notifications** and it can be implemented in pure mtron.
+
+[source,mtron]
+----
+<ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[                /
+ on_recv => inst?#<=lst(message=>?lst::T){                                /
+  -<json::[                                                               /
+   jsonrpc => '2.0',                                                      /
+   method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,      /
+   params  => *message>>1](payload=>_){                                   /
+    *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]
+----
+
+<1> Add the `subq` query processor to the websocket space.
+This extends the space with pub/sub sematics.
+
+[source,mtron,role="center-code"]
+----
+                     wsspace::[=>]@/sys/space/web/ws
+  anywhere            ┌──────────────────────────┐                mcp client
+┌─────────┐  write    │ ?subq:            ws://# │  send()      ┌────────────┐
+│ payload ├──────────►│ +/notifications/#        ├─────────────►│ intellij/  │
+└─────────┘           │                          │ JSON-RPC 2.0 │ claude/... │
+                      │ on_recv:                 │              └────────────┘
+ /mcp/0/notifications.│..-<json::[jsonrpc=>...]  │
+                      │    *srv>>>send(*payload) │
+                      └──────────────────────────┘
+----
+
+The MCP notifications specification notes the following method specs:
+
+[cols=".^2a,.^6",separator=🧱,options=header,role="table-bordered small center"]
+|===
+^🧱 method ^🧱 description
+🧱 `resources/updated`      🧱 Sent when the content of a specific subscribed resource changes; the params include the resource uri, and the client should perform a resources/read to get the new data.
+🧱 `resources/list_changed` 🧱 Sent when the list of available resources has changed, prompting the client to refresh its resource list.
+🧱 `prompts/list_changed`   🧱 Sent when the list of available prompt templates has changed.
+🧱 `tools/list_changed`     🧱 Sent when the list of available tools has changed (typically when the server declares the listChanged capability).
+🧱 `logging/message`        🧱 Sent by the server to provide log output to the client, triggered when the client has configured logging via logging/setLevel.
+🧱 `roots/list_changed`     🧱 _Client -> server_ (not a server notification): sent by the client when its list of filesystem roots changes. Metatron accepts it and never answers it.
+|===
+
+If an MCP session is spawned at `ws://localhost:8555/mcp/0`, then writing an obj to `ws://localhost:8555/mcp/0/notification/x/y` will automatically be routed to the MCP client in a proper https://www.jsonrpc.org/[JSON-RPC 2.0] transport object.
+
+NOTE: A link:../../.claude/skills/mtron/references/mcp-server-notifications.md[mini-SKILL] is available for this pattern — it captures the development session learnings, pitfalls, and mechanics for agents and users working with MCP server→client notifications.
+
+[discrete]
+[[sec-agent-based-programming-language]]
+=== agent-based programming language
+
+The LLM, its sessions, tools, skills, thoughts, and response formats are all first-class entities in the metatron.
+Interacting with an LLM is equivalent to evaluating an instruction.
+Moreover, an LLM's response is simply the `rhs` of the instruction.
+As such, in mtron, function composition applies to LLM interactions.
+Agent-oriented computations can be defined and executed in a "workflow" type manner.
+Conceptually, the LLM's state exists in (side effect/monadic) space, where instructions along the code's execution path can access it accordingly and naturally.
+
+[source,mtron]
+----
+    enriched llm
+   ┌──────────────────────────────────────────────────┐
+   │       session                      thoughts      │
+   │       tools                        skills        │
+   │       response format              notes         │
+   └──────────────────────────────────────────────────┘
+                   .               .               .
+                   .               .               .
+                   .             ┌────┐            .
+                   .          ┌─►│chat├──────────┐ .
+                   .          │  └────┘          │ .
+                   .          │                  ▼ .
+   ┌────┐        ┌────┐       │  ┌────┐         ┌────┐
+---│    ├───────►│chat├───────┼─►│    ├────────►│chat│---
+   └────┘        └────┘       │  └────┘         └────┘
+                              │                  ▲
+                              │  ┌────┐          │
+                              └─►│    ├──────────┘
+                                 └────┘
+----
+
+The mtron example below contains two structured response calls to the agent used in the running examples thus far.
+Note the use of the tools provided to the agent.
+
+[source,mtron]
+----
+*robotron
+*robotron.chat('what is 6 + 23?',[answer=>int::T])                                 /
+       .where([answer => ?>20])                                                    /
+       .*robotron.chat('what was the last answer you gave me?',[answer=>int::T])   /
+       .>>answer                                                                   /
+       .-<|[?>23 => print('a big answer'),                                         /
+               _ => print('a small answer')].>>.mult(1000)
+*<local:.agent/robotron/session>
+----
+
+<1> The agent used in the previous examples.
+<2> Treat `chat()` like any other instruction within a larger mtron composition.
+<3> The llm's chat sessions with requests and responses accessible.
+--></main>
+<footer class="container-fluid fixed-bottom text-light footer">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="bi bi-envelope text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

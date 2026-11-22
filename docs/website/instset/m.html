@@ -294,7 +294,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="../tractatus.html">the
+                <a class="nav-link" href="../tractatus/index.html">the
                     tractatus</a>
             </li>
             <!-- SKILLS-MENU:START -->
@@ -328,7 +328,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
@@ -525,10 +524,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">358</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">21</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">358</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">22</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/m-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 18, 2026</span>
+            <span class="instset-built">built November 22, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -562,177 +561,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
-             const=&gt;[,],
-             type=&gt;[
-              &lt;#&gt;::T,
-              bool::T,
-              int::T,
-              real::T,
-              bytes::T,
-              str::T,
-              uri::T,
-              uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law,
-              rec::T[?[{?}law=&gt;lst[{+}law]::T]]@/m/theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                involution,
-                left_distributive,
-                right_distributive]]]@/m/theory/ring_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               inv=&gt;inst::T,
-               {?}law=&gt;[monoidic,unit,involution],
-               {?}rewrite=&gt;[
-                [op(a::T).op(inv(a::T))=&gt;],
-                [op(inv(a::T)).op(a::T)=&gt;]]]]@/m/theory/group_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit],
-               {?}rewrite=&gt;[[op(id)=&gt;]]]]@/m/theory/monoid_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit,commutative]]]@/m/theory/commutative_monoid_theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               inv=&gt;inst::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                involution,
-                left_distributive,
-                right_distributive]]]@/m/theory/field_theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                left_distributive,
-                right_distributive]]]@/m/theory/rig_theory,
-              theory::T[?[
-               or=&gt;inst::T,
-               and=&gt;inst::T,
-               not=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               one=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[
-                monoidic,
-                unit,
-                commutative,
-                idempotent,
-                involution,
-                complement,
-                left_distributive,
-                right_distributive]]]@/m/theory/boolean_theory,
-              theory::T[?[
-               meet=&gt;inst::T,
-               join=&gt;inst::T,
-               bottom=&gt;&lt;#&gt;::T,
-               top=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/lattice_theory,
-              theory::T[?[
-               op=&gt;inst::T,
-               id=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/semilattice_theory,
-              theory::T[?[
-               add=&gt;inst::T,
-               mul=&gt;inst::T,
-               zero=&gt;&lt;#&gt;::T,
-               {?}law=&gt;[monoidic,left_distributive]]]@/m/theory/near_ring_theory,
-              uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form,
-              rel::T,
-              lst::T,
-              rec::T,
-              inst::T,
-              code::T,
-              fail::T,
-              /m/space::T[][ctor?memspace&lt;=(isa(rec::T)){&lt;j&gt;}]@/m/space/memspace,
-              rec::T[?[
-               pattern=&gt;uri::T,
-               {?}pre_write=&gt;inst::T,
-               {?}post_write=&gt;inst::T,
-               {?}qless_write=&gt;inst::T,
-               {?}qless_read=&gt;inst::T,
-               {?}pre_read=&gt;inst::T,
-               {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc,
-              str::T@/m/str/rx,
-              qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=(){&lt;j&gt;}]@/m/qproc/subq,
-              rec::T[?[{?}target=&gt;uri::T,code=&gt;&lt;#?dom=lst&gt;::T]]@/m/qproc/subq/sub,
-              lst::T[?[uri::T,&lt;#{*}&gt;::T]]@/m/qproc/subq/pub,
-              rec::T[?[usr=&gt;uri::T]]@/m/qproc/lockq/lock,
-              qproc::T[][ctor?analq&lt;=(){&lt;j&gt;}]@/m/qproc/analq,
-              qproc::T[][ctor?typeq&lt;=(){&lt;j&gt;}]@/m/qproc/typeq,
-              rec::T[?[
-               {?}obj=&gt;&lt;#{*}&gt;::T,
-               {?}dom=&gt;str::T,
-               {?}rng=&gt;str::T,
-               {?}args=&gt;&lt;#&gt;::T,
-               desc=&gt;str::T,
-               {?}build=&gt;str::T,
-               {?}example=&gt;lst::T]][ctor?docs&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq/docs,
-              rec::T[?[
-               obj=&gt;&lt;#&gt;::T,
-               {?}theory=&gt;&lt;#&gt;::T,
-               {?}law=&gt;&lt;#&gt;::T,
-               {?}inverse=&gt;&lt;#&gt;::T,
-               {?}converse=&gt;&lt;#&gt;::T,
-               {?}derivation=&gt;&lt;#&gt;::T,
-               {?}form=&gt;&lt;#&gt;::T,
-               {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs,
-              qproc::T[][ctor?docq&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq,
-              qproc::T[][ctor?mintq&lt;=(){&lt;j&gt;}]@/m/qproc/mintq,
-              qproc::T[][ctor?shortq&lt;=(){&lt;j&gt;}]@/m/qproc/shortq,
-              qproc::T[][ctor?safeq&lt;=(){&lt;j&gt;}]@/m/qproc/safeq,
-              qproc::T[][ctor?incrq&lt;=(){&lt;j&gt;}]@/m/qproc/incrq,
-              qproc::T[][ctor?embedq&lt;=(){&lt;j&gt;}]@/m/qproc/embedq,
-              qproc::T[][ctor?constq&lt;=(){&lt;j&gt;}]@/m/qproc/constq,
-              qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
-              qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
-              qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
-              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
-             rewrite=&gt;[
-              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
-              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
-              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
-              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;]){&lt;j&gt;},
-              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_poset?code{?}&lt;=code([
-                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
-                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
-                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
-                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
-              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
-              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;},
-              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
-              /m/inst/rewrite/pred_extract(){&lt;j&gt;}],
              inst=&gt;[
               as?bool&lt;=bool(bool::T){&lt;j&gt;},
               as?bytes&lt;=bool(bytes::T){&lt;j&gt;},
@@ -877,6 +705,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               id?A{*}&lt;=A{*}(){&lt;j&gt;},
               map?B{*}&lt;=A{?}(B{*}::T){&lt;j&gt;},
               branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
+              repeat?A{*}&lt;=A&amp;monad_out=+&amp;monad_in=+({?}esc=&gt;A{*}::T,
+                                                    code=&gt;A{*}::T,
+                                                    {?}until=&gt;bool::T,
+                                                    {?}emit=&gt;bool::T){&lt;j&gt;},
               order?lst[{*}A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
               swap?A&lt;=A(B::T){&lt;j&gt;},
               *uri::T,
@@ -937,10 +769,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               as?B&lt;=A(B::T){&lt;j&gt;},
               loop?int&lt;=A&amp;monad_in=state/loop(){&lt;j&gt;},
               path?lst&lt;=A&amp;monad_in=state/path(){&lt;j&gt;},
-              repeat?A{*}&lt;=A&amp;monad_out=+&amp;monad_in=+({?}esc=&gt;A{*}::T,
-                                                    code=&gt;A{*}::T,
-                                                    {?}until=&gt;bool::T,
-                                                    {?}emit=&gt;bool::T){&lt;j&gt;},
               !#{?}::T,
               !*#{?}::T,
               !@#{?}::T,
@@ -1008,6 +836,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               rshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               lshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               start?A{**}&lt;={0}(A{**}::T){&lt;j&gt;},
+              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
+              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
+              isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
               isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;},
               isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
               isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
@@ -1016,13 +847,182 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
               isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
               isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
-              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
-              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
-              isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
               save?#&lt;=#(){&lt;j&gt;},
               ctor(),
               lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
-              as?str&lt;=docs(str::T){&lt;j&gt;}]]@/m</code></pre>
+              as?str&lt;=docs(str::T){&lt;j&gt;}],
+             const=&gt;[,],
+             type=&gt;[
+              &lt;#&gt;::T,
+              bool::T,
+              int::T,
+              real::T,
+              bytes::T,
+              str::T,
+              uri::T,
+              uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law,
+              rec::T[?[{?}law=&gt;lst[{+}law]::T]]@/m/theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                involution,
+                left_distributive,
+                right_distributive]]]@/m/theory/ring_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               inv=&gt;inst::T,
+               {?}law=&gt;[monoidic,unit,involution],
+               {?}rewrite=&gt;[
+                [op(a::T).op(inv(a::T))=&gt;],
+                [op(inv(a::T)).op(a::T)=&gt;]]]]@/m/theory/group_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit],
+               {?}rewrite=&gt;[[op(id)=&gt;]]]]@/m/theory/monoid_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit,commutative]]]@/m/theory/commutative_monoid_theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               inv=&gt;inst::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                involution,
+                left_distributive,
+                right_distributive]]]@/m/theory/field_theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                left_distributive,
+                right_distributive]]]@/m/theory/rig_theory,
+              theory::T[?[
+               or=&gt;inst::T,
+               and=&gt;inst::T,
+               not=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               one=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[
+                monoidic,
+                unit,
+                commutative,
+                idempotent,
+                involution,
+                complement,
+                left_distributive,
+                right_distributive]]]@/m/theory/boolean_theory,
+              theory::T[?[
+               meet=&gt;inst::T,
+               join=&gt;inst::T,
+               bottom=&gt;&lt;#&gt;::T,
+               top=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/lattice_theory,
+              theory::T[?[
+               op=&gt;inst::T,
+               id=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,unit,commutative,idempotent]]]@/m/theory/semilattice_theory,
+              theory::T[?[
+               add=&gt;inst::T,
+               mul=&gt;inst::T,
+               zero=&gt;&lt;#&gt;::T,
+               {?}law=&gt;[monoidic,left_distributive]]]@/m/theory/near_ring_theory,
+              uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form,
+              rel::T,
+              lst::T,
+              rec::T,
+              inst::T,
+              code::T,
+              fail::T,
+              /m/space::T[][ctor?memspace&lt;=(isa(rec::T)){&lt;j&gt;}]@/m/space/memspace,
+              rec::T[?[
+               pattern=&gt;uri::T,
+               {?}pre_write=&gt;inst::T,
+               {?}post_write=&gt;inst::T,
+               {?}qless_write=&gt;inst::T,
+               {?}qless_read=&gt;inst::T,
+               {?}pre_read=&gt;inst::T,
+               {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc,
+              str::T@/m/str/rx,
+              qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=(){&lt;j&gt;}]@/m/qproc/subq,
+              rec::T[?[{?}target=&gt;uri::T,code=&gt;&lt;#?dom=lst&gt;::T]]@/m/qproc/subq/sub,
+              lst::T[?[uri::T,&lt;#{*}&gt;::T]]@/m/qproc/subq/pub,
+              rec::T[?[usr=&gt;uri::T]]@/m/qproc/lockq/lock,
+              qproc::T[][ctor?analq&lt;=(){&lt;j&gt;}]@/m/qproc/analq,
+              qproc::T[][ctor?typeq&lt;=(){&lt;j&gt;}]@/m/qproc/typeq,
+              rec::T[?[
+               {?}obj=&gt;&lt;#{*}&gt;::T,
+               {?}dom=&gt;str::T,
+               {?}rng=&gt;str::T,
+               {?}args=&gt;&lt;#&gt;::T,
+               desc=&gt;str::T,
+               {?}build=&gt;str::T,
+               {?}example=&gt;lst::T]][ctor?docs&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq/docs,
+              rec::T[?[
+               obj=&gt;&lt;#&gt;::T,
+               {?}theory=&gt;&lt;#&gt;::T,
+               {?}law=&gt;&lt;#&gt;::T,
+               {?}inverse=&gt;&lt;#&gt;::T,
+               {?}converse=&gt;&lt;#&gt;::T,
+               {?}derivation=&gt;&lt;#&gt;::T,
+               {?}form=&gt;&lt;#&gt;::T,
+               {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs,
+              qproc::T[][ctor?docq&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq,
+              qproc::T[][ctor?mintq&lt;=(){&lt;j&gt;}]@/m/qproc/mintq,
+              qproc::T[][ctor?shortq&lt;=(){&lt;j&gt;}]@/m/qproc/shortq,
+              qproc::T[][ctor?safeq&lt;=(){&lt;j&gt;}]@/m/qproc/safeq,
+              qproc::T[][ctor?incrq&lt;=(){&lt;j&gt;}]@/m/qproc/incrq,
+              qproc::T[][ctor?embedq&lt;=(){&lt;j&gt;}]@/m/qproc/embedq,
+              qproc::T[][ctor?constq&lt;=(){&lt;j&gt;}]@/m/qproc/constq,
+              qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
+              qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
+              qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
+              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
+             rewrite=&gt;[
+              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
+              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
+              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
+              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;]){&lt;j&gt;},
+              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_poset?code{?}&lt;=code([
+                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
+                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
+                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
+                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
+              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
+              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;},
+              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
+              /m/inst/rewrite/explain_topology?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/pred_extract(){&lt;j&gt;}]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -1564,6 +1564,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__inst__rewrite__explain_analysis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">explain_analysis</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__inst__rewrite__explain_topology" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">explain_topology</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__inst__rewrite__form_map_unwrap" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">form_map_unwrap</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
@@ -1677,26 +1680,26 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="tab-pane fade" id="algebra-__m__bool-mtron" role="tabpanel" aria-labelledby="algebra-__m__bool-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[bool]::[obj=&gt;bool::T,
                theory=&gt;[
                 boolean=&gt;boolean_theory::[
-                 or=&gt;plus?bool&lt;=bool(bool::T){&lt;j&gt;},
-                 and=&gt;mult?bool&lt;=bool(bool::T){&lt;j&gt;},
+                 or=&gt;!*/m/inst/plus?rng=/m/bool&amp;dom=/m/bool,
+                 and=&gt;!*/m/inst/mult?rng=/m/bool&amp;dom=/m/bool,
                  not=&gt;!*/m/inst/not?rng=/m/bool&amp;dom=/m/bool,
                  zero=&gt;false,
                  one=&gt;true],
                 rig=&gt;rig_theory::[
-                 add=&gt;plus?bool&lt;=bool(bool::T){&lt;j&gt;},
-                 mul=&gt;mult?bool&lt;=bool(bool::T){&lt;j&gt;},
+                 add=&gt;!*/m/inst/plus?rng=/m/bool&amp;dom=/m/bool,
+                 mul=&gt;!*/m/inst/mult?rng=/m/bool&amp;dom=/m/bool,
                  zero=&gt;false,
                  one=&gt;true],
                 lattice=&gt;lattice_theory::[
-                 meet=&gt;mult?bool&lt;=bool(bool::T){&lt;j&gt;},
-                 join=&gt;plus?bool&lt;=bool(bool::T){&lt;j&gt;},
+                 meet=&gt;!*/m/inst/mult?rng=/m/bool&amp;dom=/m/bool,
+                 join=&gt;!*/m/inst/plus?rng=/m/bool&amp;dom=/m/bool,
                  bottom=&gt;false,
                  top=&gt;true],
                 add_monoid=&gt;monoid_theory::[
-                 op=&gt;plus?bool&lt;=bool(bool::T){&lt;j&gt;},
+                 op=&gt;!*/m/inst/plus?rng=/m/bool&amp;dom=/m/bool,
                  id=&gt;false],
                 mul_monoid=&gt;monoid_theory::[
-                 op=&gt;mult?bool&lt;=bool(bool::T){&lt;j&gt;},
+                 op=&gt;!*/m/inst/mult?rng=/m/bool&amp;dom=/m/bool,
                  id=&gt;true]],
                morphed_to=&gt;!λ(){&lt;j&gt;},
                morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -1770,7 +1773,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         <div class="tab-pane fade show active" id="algebra-__m__bytes-theories" role="tabpanel" aria-labelledby="algebra-__m__bytes-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">0x</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__bytes-mtron" role="tabpanel" aria-labelledby="algebra-__m__bytes-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[bytes]::[obj=&gt;bytes::T,
                 theory=&gt;[add_monoid=&gt;monoid_theory::[
-                 op=&gt;plus?bytes&lt;=bytes(bytes::T){&lt;j&gt;},
+                 op=&gt;!*/m/inst/plus?rng=/m/bytes&amp;dom=/m/bytes,
                  id=&gt;0x]],
                 morphed_to=&gt;!λ(){&lt;j&gt;},
                 morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -1817,20 +1820,20 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         <div class="tab-pane fade" id="algebra-__m__code-mtron" role="tabpanel" aria-labelledby="algebra-__m__code-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[code]::[obj=&gt;code::T,
                theory=&gt;[
                 ring=&gt;ring_theory::[
-                 add=&gt;plus?code&lt;=code(code::T){&lt;j&gt;},
-                 mul=&gt;compose?code&lt;=code(code::T){&lt;j&gt;},
-                 zero=&gt;end?{0}&lt;=code(){&lt;j&gt;},
-                 one=&gt;id?code&lt;=code(){&lt;j&gt;}],
+                 add=&gt;!*/m/inst/plus?rng=/m/code&amp;dom=/m/code,
+                 mul=&gt;!*/m/inst/compose?rng=/m/code&amp;dom=/m/code,
+                 zero=&gt;!*/m/inst/end?rng=/m/code{0}&amp;dom=/m/code,
+                 one=&gt;!*/m/inst/id?rng=/m/code&amp;dom=/m/code],
                 add_group=&gt;group_theory::[
-                 op=&gt;branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
-                 id=&gt;end?{0}&lt;=code(){&lt;j&gt;},
-                 inv=&gt;neg?code&lt;=code(){&lt;j&gt;}],
+                 op=&gt;!*/m/inst/branch,
+                 id=&gt;!*/m/inst/end?rng=/m/code{0}&amp;dom=/m/code,
+                 inv=&gt;!*/m/inst/neg?rng=/m/code&amp;dom=/m/code],
                 add_monoid=&gt;monoid_theory::[
-                 op=&gt;branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
-                 id=&gt;end?{0}&lt;=code(){&lt;j&gt;}],
+                 op=&gt;!*/m/inst/branch,
+                 id=&gt;!*/m/inst/end?rng=/m/code{0}&amp;dom=/m/code],
                 mul_monoid=&gt;monoid_theory::[
-                 op=&gt;compose?code&lt;=code(code::T){&lt;j&gt;},
-                 id=&gt;id?code&lt;=code(){&lt;j&gt;}]],
+                 op=&gt;!*/m/inst/compose?rng=/m/code&amp;dom=/m/code,
+                 id=&gt;!*/m/inst/id?rng=/m/code&amp;dom=/m/code]],
                morphed_to=&gt;!λ(){&lt;j&gt;},
                morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
     </div>
@@ -1984,16 +1987,18 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
                      {?}f=&gt;&lt;#&gt;::T,
                      form=&gt;uri::T,
                      c_dom=&gt;int::T,
-                     c_rng=&gt;int::T]]]]@/m/inst/explain/explanation</code></pre></div>
+                     c_rng=&gt;int::T]],
+         {?}ext=&gt;rec::T]]@/m/inst/explain/explanation</code></pre></div>
     
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> a structured explanation of a resolved expression produced by explain()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#ext" class="text-light">ext</a> <span class="text-light">=&gt;</span> <a href="#"the explain extensions (Marko, 2026-11-20): rewrites beside explain_analysis, each writing its rec at ext__<name> (ext__topology) and appending that rec's format to this one's"" class="text-info">topology) and appending that rec&#39;s format to this one&#39;s&quot;</a>
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively'" class="text-info">&#39;lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively&#39;</a>
   <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -2165,19 +2170,19 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         <div class="tab-pane fade" id="algebra-__m__int-mtron" role="tabpanel" aria-labelledby="algebra-__m__int-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[int]::[obj=&gt;int::T,
               theory=&gt;[
                ring=&gt;ring_theory::[
-                add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
-                mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                add=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                 zero=&gt;0,
                 one=&gt;1],
                add_group=&gt;group_theory::[
-                op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
                 id=&gt;0,
-                inv=&gt;neg?int&lt;=int(){&lt;j&gt;}],
+                inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
                add_monoid=&gt;monoid_theory::[
-                op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
                 id=&gt;0],
                mul_monoid=&gt;monoid_theory::[
-                op=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                 id=&gt;1]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
               morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -2219,7 +2224,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/law</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law</code></pre></div>
     
     
     <div class="card-body border-top py-2">
@@ -2337,10 +2342,10 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
         <div class="tab-pane fade" id="algebra-__m__lst-mtron" role="tabpanel" aria-labelledby="algebra-__m__lst-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[lst]::[obj=&gt;lst::T,
               theory=&gt;[
                add_monoid=&gt;monoid_theory::[
-                op=&gt;plus?lst&lt;=lst(lst::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/plus?rng=/m/lst&amp;dom=/m/lst,
                 id=&gt;[,]],
                mul_monoid=&gt;monoid_theory::[
-                op=&gt;mult?lst&lt;=lst(lst::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/mult?rng=/m/lst&amp;dom=/m/lst,
                 id=&gt;[one()]]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
               morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -2518,18 +2523,24 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> a structured profile report produced by profile()</p>
+    <p class="mb-0 text-light"> a structured profile report produced by profile(); a distributed profile nests its places&#39; reports</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
-  <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
+  <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
   <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+  <a href="#level" class="text-light">level</a> <span class="text-light">=&gt;</span> <a href="#"per level below this report, the places' apply: count, min, max and total"" class="text-info">&quot;per level below this report, the places&#39; apply: count, min, max and total&quot;</a>
   <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
-  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty print format'" class="text-info">&#39;lazily constructed pretty print format&#39;</a>
   <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
-  <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
-  <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
+  <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
+  <a href="#depth" class="text-light">depth</a> <span class="text-light">=&gt;</span> <a href="#'the levels of places below this report (a star is 1)'" class="text-info">&#39;the levels of places below this report (a star is 1)&#39;</a>
+  <a href="#place" class="text-light">place</a> <span class="text-light">=&gt;</span> <a href="#"a distributed profile's places: each lane's report, keyed by the path-encoded machine that made it"" class="text-info">&quot;a distributed profile&#39;s places: each lane&#39;s report, keyed by the path-encoded machine that made it&quot;</a>
+  <a href="#machine" class="text-light">machine</a> <span class="text-light">=&gt;</span> <a href="#'the machine the report was made on: its host, its vid and its process id'" class="text-info">&#39;the machine the report was made on: its host, its vid and its process id&#39;</a>
+  <a href="#path" class="text-light">path</a> <span class="text-light">=&gt;</span> <a href="#'the critical path: the slowest place at each level, from here down to a leaf'" class="text-info">&#39;the critical path: the slowest place at each level, from here down to a leaf&#39;</a>
+  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
+  <a href="#leaf" class="text-light">leaf</a> <span class="text-light">=&gt;</span> <a href="#'the leaves below this report: how many (count), the objs their runs carried (c_sum) and their summed apply (time)'" class="text-info">&#39;the leaves below this report: how many (count), the objs their runs carried (c_sum) and their summed apply (time)&#39;</a>
+  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -2617,29 +2628,29 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
         <div class="tab-pane fade" id="algebra-__m__real-mtron" role="tabpanel" aria-labelledby="algebra-__m__real-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[real]::[obj=&gt;real::T,
                theory=&gt;[
                 field=&gt;field_theory::[
-                 add=&gt;plus?real&lt;=real(real::T){&lt;j&gt;},
-                 mul=&gt;mult?real&lt;=real(real::T){&lt;j&gt;},
+                 add=&gt;!*/m/inst/plus?rng=/m/real&amp;dom=/m/real,
+                 mul=&gt;!*/m/inst/mult?rng=/m/real&amp;dom=/m/real,
                  zero=&gt;0.0,
                  one=&gt;1.0,
-                 inv=&gt;inv?real&lt;=real(){&lt;j&gt;}],
+                 inv=&gt;!*/m/inst/inv?rng=/m/real&amp;dom=/m/real],
                 ring=&gt;ring_theory::[
-                 add=&gt;plus?real&lt;=real(real::T){&lt;j&gt;},
-                 mul=&gt;mult?real&lt;=real(real::T){&lt;j&gt;},
+                 add=&gt;!*/m/inst/plus?rng=/m/real&amp;dom=/m/real,
+                 mul=&gt;!*/m/inst/mult?rng=/m/real&amp;dom=/m/real,
                  zero=&gt;0.0,
                  one=&gt;1.0],
                 add_group=&gt;group_theory::[
-                 op=&gt;plus?real&lt;=real(real::T){&lt;j&gt;},
+                 op=&gt;!*/m/inst/plus?rng=/m/real&amp;dom=/m/real,
                  id=&gt;0.0,
-                 inv=&gt;neg?real&lt;=real(){&lt;j&gt;}],
+                 inv=&gt;!*/m/inst/neg?rng=/m/real&amp;dom=/m/real],
                 mul_group=&gt;group_theory::[
-                 op=&gt;mult?real&lt;=real(real::T){&lt;j&gt;},
+                 op=&gt;!*/m/inst/mult?rng=/m/real&amp;dom=/m/real,
                  id=&gt;1.0,
-                 inv=&gt;inv?real&lt;=real(){&lt;j&gt;}],
+                 inv=&gt;!*/m/inst/inv?rng=/m/real&amp;dom=/m/real],
                 add_monoid=&gt;monoid_theory::[
-                 op=&gt;plus?real&lt;=real(real::T){&lt;j&gt;},
+                 op=&gt;!*/m/inst/plus?rng=/m/real&amp;dom=/m/real,
                  id=&gt;0.0],
                 mul_monoid=&gt;monoid_theory::[
-                 op=&gt;mult?real&lt;=real(real::T){&lt;j&gt;},
+                 op=&gt;!*/m/inst/mult?rng=/m/real&amp;dom=/m/real,
                  id=&gt;1.0]],
                morphed_to=&gt;!λ(){&lt;j&gt;},
                morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -2687,10 +2698,10 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
         <div class="tab-pane fade" id="algebra-__m__rec-mtron" role="tabpanel" aria-labelledby="algebra-__m__rec-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[rec]::[obj=&gt;rec::T,
               theory=&gt;[
                add_monoid=&gt;monoid_theory::[
-                op=&gt;plus?rec&lt;=rec(rec{??}::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/plus?rng=/m/rec&amp;dom=/m/rec,
                 id=&gt;[=&gt;]],
                add_commutative_monoid=&gt;commutative_monoid_theory::[
-                op=&gt;plus?rec&lt;=rec(rec{??}::T){&lt;j&gt;},
+                op=&gt;!*/m/inst/plus?rng=/m/rec&amp;dom=/m/rec,
                 id=&gt;[=&gt;]]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
               morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -2757,7 +2768,7 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
         <div class="tab-pane fade show active" id="algebra-__m__rel-theories" role="tabpanel" aria-labelledby="algebra-__m__rel-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mul_monoid">mul_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">id()=&gt;id()</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__rel-mtron" role="tabpanel" aria-labelledby="algebra-__m__rel-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[rel]::[obj=&gt;rel::T,
               theory=&gt;[mul_monoid=&gt;monoid_theory::[
-               op=&gt;mult?rel{*}&lt;=rel(rel{*}::T){&lt;j&gt;},
+               op=&gt;!*/m/inst/mult?rng=/m/rel&amp;dom=/m/rel,
                id=&gt;id()=&gt;id()]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
               morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -2927,7 +2938,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
         <div class="tab-pane fade show active" id="algebra-__m__str-theories" role="tabpanel" aria-labelledby="algebra-__m__str-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&#39;&#39;</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__str-mtron" role="tabpanel" aria-labelledby="algebra-__m__str-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[str]::[obj=&gt;str::T,
               theory=&gt;[add_monoid=&gt;monoid_theory::[
-               op=&gt;plus?str&lt;=str(str::T){&lt;j&gt;},
+               op=&gt;!*/m/inst/plus?rng=/m/str&amp;dom=/m/str,
                id=&gt;&#39;&#39;]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
               morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -3072,7 +3083,7 @@ abc?typeq -&gt; &#39;not an int&#39; [-- yields a fail::T --]</code></pre>
         <div class="tab-pane fade show active" id="algebra-__m__uri-theories" role="tabpanel" aria-labelledby="algebra-__m__uri-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mul_monoid">mul_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;&gt;</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__uri-mtron" role="tabpanel" aria-labelledby="algebra-__m__uri-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[uri]::[obj=&gt;uri::T,
               theory=&gt;[mul_monoid=&gt;monoid_theory::[
-               op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
+               op=&gt;!*/m/inst/mult?rng=/m/uri&amp;dom=/m/uri,
                id=&gt;&lt;&gt;]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
               morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
@@ -3227,8 +3238,8 @@ a/b/c/                           [-- relative/branch uri            --]
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs inst obj" class="text-info">the lhs inst obj</a> <span class="text-light">=&gt;</span> <a href="#the result of the lhs inst application" class="text-success">the result of the lhs inst application</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#args" class="text-light">args</a> <span class="text-light">=&gt;</span> <a href="#'the inst args (optional)'" class="text-info">&#39;the inst args (optional)&#39;</a>
-  <a href="#lhs" class="text-light">lhs</a> <span class="text-light">=&gt;</span> <a href="#'the obj to apply the lhs inst to'" class="text-info">&#39;the obj to apply the lhs inst to&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lhs" class="text-light">lhs</a> <span class="text-light">=&gt;</span> <a href="#'the obj to apply the lhs inst to'" class="text-info">&#39;the obj to apply the lhs inst to&#39;</a>
+  <a href="#args" class="text-light">args</a> <span class="text-light">=&gt;</span> <a href="#'the inst args (optional)'" class="text-info">&#39;the inst args (optional)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__args">
@@ -4805,7 +4816,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__as-doc-52" role="tabpanel" aria-labelledby="__m__inst__as-doc-52-tab">
     <div class="card-body border-top py-2">
@@ -5669,7 +5680,11 @@ arguments are blocked, so a call is not computed here.
 </div>
 </div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a structured explanation of the expression (an explanation::T with desc/per_inst/format)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#an explanation::T analysis of the expression" class="text-success">an explanation::T analysis of the expression</a></pre>
+</div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__filter">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -6276,11 +6291,23 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">isa</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__inst" data-bs-toggle="tooltip" title="domain" class="code text-info">inst</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__inst{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">inst{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__rel" data-bs-toggle="tooltip" title="domain" class="code text-info">rel</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__rel{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">rel{?}</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/isa</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
@@ -6312,18 +6339,6 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
 </div>
     
     
@@ -6337,7 +6352,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__kmerge-doc-0-tab').click();document.getElementById('__m__inst__kmerge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">kmerge?lst[{*}A{*}]&lt;=lst[{*}A{*}]{*}(#{?}::T){&lt;j&gt;}</code></pre>
-<div class="declared-row"><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+<div class="declared-row"><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-causal">causal<span class="chip-tip"><span class="chip-tip-name">causal</span><span class="chip-tip-desc">the first n of the output depend only on the first n of each input — \(f(x_1, \dots, x_m)|_n = f(x_1|_n, \dots, x_m|_n)|_n\): a causal (non-anticipative) stream function, so a prefix kept after the fold may be kept in each part first</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
@@ -8145,7 +8160,16 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a profiling::T analysis of prior instruction in the code —
+every monad the run produced up to the marker is aggregated into one compressed report (stages, per-instruction times, rewrite rules, flow, cache)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the expression being profiled" class="text-info">the expression being profiled</a> <span class="text-light">=&gt;</span> <a href="#a profiling::T analysis of the expression" class="text-success">a profiling::T analysis of the expression</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://markorodriguez.com&gt;.as(rec::T)&gt;&gt;html/head/title.profile()
+*&lt;http://markorodriguez.com&gt;.as(rec::T)&gt;&gt;html/head/title.profile()&gt;&gt;format</code></pre>
+</div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__q">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -8277,19 +8301,19 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
                                       code=&gt;A{*}::T,
                                       {?}until=&gt;bool::T,
                                       {?}emit=&gt;bool::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> a repetition function: loopback application of the code with escape/exit/emit predicates</p>
+    <p class="mb-0 text-light"> a repetition function: loopback application of the code with escape/exit/emit predicates. With an unbounded dom (repeat?&lt;=A{*}) it is the BSP form: the barrier hands over the whole frontier and each pass applies the code to all of it at once (a dealing branch in the code parts it over the peers), loop() counts passes and is shared by every member, esc/emit/until are judged per member, and a member that becomes a fail leaves the loop as its answer</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the repeated application results" class="text-success">the repeated application results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
-  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
   <a href="#{?}esc" class="text-light">{?}esc</a> <span class="text-light">=&gt;</span> <a href="#'the escape predicate'" class="text-info">&#39;the escape predicate&#39;</a>
+  <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
+  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__reverse">
@@ -9518,7 +9542,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">21</span></h3>
+    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">22</span></h3>
     <div class="card mb-3" id="__m__inst__rewrite__branch_collapse">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -9603,11 +9627,26 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
             <span class="code text-warning fw-bold">explain_analysis</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/rewrite/explain_analysis?rng=/m/code{?}&amp;dom=/m/code&amp;args&amp;analysis</small>
+        <small class="text-muted code">/m/inst/rewrite/explain_analysis?rng=/m/code{?}&amp;dom=/m/code&amp;args&amp;zindex=1000</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. &gt;&gt;format) — \(\mathrm{explain} \leadsto \mathrm{explain\_analysis}(\ldots)\), mirror of profile_analysis
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__inst__rewrite__explain_topology">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">explain_topology</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/inst/rewrite/explain_topology?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/explain_topology?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> an explain extension: the distribution topology of the compiled chain, its point coefficients alone (the seed, each lane&#39;s share and what its instructions leave, the merge at home and what the master&#39;s instructions leave), as data at explain()&gt;&gt;ext/topology/flow, drawn at explain()&gt;&gt;ext/topology/format and appended to explain()&gt;&gt;format. A lane with levels left re-plans where it runs, so that machine explains it (a peer is asked over the network) and its subtree is drawn inside the lane
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
@@ -9775,11 +9814,11 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
             <span class="code text-warning fw-bold">profile_analysis</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/rewrite/profile_analysis?rng=/m/code{?}&amp;dom=/m/code&amp;args&amp;analysis</small>
+        <small class="text-muted code">/m/inst/rewrite/profile_analysis?rng=/m/code{?}&amp;dom=/m/code&amp;args&amp;zindex=1000</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> rewrites a().b().c().profile() to profile_analysis(a().b().c()): \(\mathrm{profile} \leadsto \mathrm{profile\_analysis}(\ldots)\)
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> rewrites a().b().c().profile() to profile_analysis(a().b().c()), and a distribution plan&#39;s a().branch(…).profile_collate() to profile_collate(a().branch(…)), the master&#39;s run timed around its branch: \(\mathrm{profile} \leadsto \mathrm{profile\_analysis}(\ldots)\)
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
