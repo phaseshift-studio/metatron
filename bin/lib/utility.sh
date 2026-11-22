@@ -65,19 +65,37 @@ command_exists() {
 spinner() {
     local pid=$1
     local message="${2:-Processing...}"
+    # third arg: a log file to watch (maven). The latest interesting line is shown on
+    # the same line as the spinner, so a cold-cache download is visibly moving.
+    local log="${3:-}"
     local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-    local i=0
+    local i=0 start=$SECONDS cols cand=""
+    cols=$(tput cols 2>/dev/null || echo 100)
+    [ "$cols" -gt 40 ] 2>/dev/null || cols=100
 
     # Hide cursor
     tput civis 2>/dev/null || true
 
     while kill -0 "$pid" 2>/dev/null; do
         i=$(( (i + 1) % 10 ))
-        printf "\r${spin:$i:1} %s" "$message"
+        # every 0.5s: the newest transfer / lifecycle line from the log
+        if [ -n "$log" ] && [ "$i" -eq 5 ]; then
+            cand=$(tail -c 8000 "$log" 2>/dev/null | tr -d '\r' \
+                   | grep -E "Downloading from|Downloaded from|Resolving|Compiling|BUILD|ERROR" \
+                   | tail -n 1 | sed -E 's/^\[[A-Z]+\][[:space:]]*//' | cut -c1-$(( cols - 28 ))
+                   ) || cand=""
+        fi
+        printf "\r\033[K${spin:$i:1} %s (%ds)%s" "$message" "$(( SECONDS - start ))" "${cand:+ | $cand}"
+        # A process stopped by SIGTTIN still answers kill -0 (so the loop would spin
+        # forever); say what actually happened the first time we notice it.
+        if [ "$i" -eq 0 ] && grep -qs '^State:.*T' "/proc/$pid/status" 2>/dev/null; then
+            printf "\r\033[K%s %s -- process is STOPPED (background job touched the TTY)\n" \
+                   "${spin:$i:1}" "$message"
+        fi
         sleep 0.1
     done
 
     # Show cursor and clear line
     tput cnorm 2>/dev/null || true
-    printf "\r\033[K%b %s\n" "${GREEN}✓${NC}" "$message"
+    printf "\r\033[K%b %s (%ds)\n" "${GREEN}✓${NC}" "$message" "$(( SECONDS - start ))"
 }

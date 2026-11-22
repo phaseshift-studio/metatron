@@ -121,10 +121,37 @@ else
     if [ "$CP_STALE" -eq 1 ]; then
         MVN_LOG=$(mktemp)
         set +e
-        "$MVNW" dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
-        if [ "$MCP_MODE" -eq 1 ]; then spinner $! "resolving dependencies" >&2; else spinner $! "resolving dependencies"; fi
-        wait $!
-        MVN_EXIT=$?
+        # OFFLINE FIRST. The classpath only needs what is already in the local repo, and
+        # an offline resolve never dials a remote. That matters because a transitive
+        # dependency's POM (moquette-parent 0.18.0) declares a "Paho Releases" repo that
+        # is dead: Maven's plugin-prefix scan queried it and waited 181s on the socket,
+        # which is the "hangs at resolving dependencies" report -- and why pre-building
+        # made it disappear. Warm cache => instant; only a genuinely cold cache pays for
+        # a network resolve, and that one shows its downloads on the spinner line.
+        # Fully-qualified coordinates also skip plugin-prefix resolution entirely.
+        CP_GOAL="org.apache.maven.plugins:maven-dependency-plugin:3.11.0:build-classpath"
+        if "$MVNW" -o -B "$CP_GOAL" \
+                -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" \
+                < /dev/null > "$MVN_LOG" 2>&1; then
+            MVN_EXIT=0
+        else
+            echo "==> offline resolve failed (cold cache?) — retrying online" >&2
+            # Resolver-level timeouts (not just wagon): the dead "Paho Releases" host
+            # that a transitive POM declares was costing 181s per cold resolve. Bounded
+            # to seconds per attempt, maven falls through to the next repo instead.
+            "$MVNW" -B \
+                -Dmaven.wagon.http.connectionTimeout=5000 \
+                -Dmaven.wagon.http.readTimeout=15000 \
+                -Daether.connector.http.connectionTimeout=3000 \
+                -Daether.connector.http.requestTimeout=10000 \
+                -Daether.connector.connectTimeout=3000 \
+                -Daether.connector.requestTimeout=10000 \
+                "$CP_GOAL" -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" \
+                < /dev/null > "$MVN_LOG" 2>&1 &
+            if [ "$MCP_MODE" -eq 1 ]; then spinner $! "resolving dependencies" "$MVN_LOG" >&2; else spinner $! "resolving dependencies" "$MVN_LOG"; fi
+            wait $!
+            MVN_EXIT=$?
+        fi
         set -e
         grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
         rm -f "$MVN_LOG"
@@ -138,12 +165,21 @@ else
     CLASSPATH="target/classes:src/main/resources:$(tr -d '\n' < "$CP_FILE")"
 
     # ── compile (only if needed) ────────────────────────────────────────
-    if [ ! -d target/classes ] || \
+    # A partial or aborted compile leaves target/classes looking fresh (its directory
+    # mtime is recent) while classes the boot needs are missing -- the VM then dies with
+    # ClassNotFoundException (observed: Uri$Helper) and the launcher exits silently.
+    # A canary class makes that state count as stale, so it recompiles instead.
+    CANARY='target/classes/studio/phaseshift/metatron/isa/m/type/Uri$Helper.class'
+    if [ ! -d target/classes ] || [ ! -f "$CANARY" ] || \
        [ -n "$(find src -name '*.java' -newer target/classes -print -quit 2>/dev/null)" ]; then
         MVN_LOG=$(mktemp)
         set +e
-        "$MVNW" compile -q > "$MVN_LOG" 2>&1 &
-        # spinner $! "compiling"
+        # same </dev/null, -B and wagon timeouts as the classpath resolve above
+        "$MVNW" -B \
+            -Dmaven.wagon.http.connectionTimeout=30000 \
+            -Dmaven.wagon.http.readTimeout=120000 \
+            compile < /dev/null > "$MVN_LOG" 2>&1 &
+        if [ "$MCP_MODE" -eq 1 ]; then spinner $! "compiling" "$MVN_LOG" >&2; else spinner $! "compiling" "$MVN_LOG"; fi
         wait $!
         MVN_EXIT=$?
         set -e
