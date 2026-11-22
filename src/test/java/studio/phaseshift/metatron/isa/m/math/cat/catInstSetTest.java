@@ -482,6 +482,9 @@ public class catInstSetTest extends AbstractInstSetTest {
             "order(cc())         % false",
             "order(cc().neg())   % false",
             "order(count())      % false",
+            // a group's keys are per-member functions too: a lane would key a value by part of its mass
+            "group([mod(2)=>count()])   % true",
+            "group([cc()=>count()])     % false",
     }, delimiter = '%')
     void testAKeyThatReadsMassHasNoCombiner(final String call, final boolean combines) {
         final Inst keyed = Law.Helper.keyed(ObjmtronSerializer.<Call>parse(call.trim()).tryToInst().asInst(), T(INT_TID));

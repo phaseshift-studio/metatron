@@ -46,9 +46,12 @@ leaves out, a fold that recombines through itself after a lift:
 - a fold defined by its `derivation` recombines through the fold that defines it (`count ↦ sum`,
   `order(s) ↦ kmerge(s)`, and a bare `order()` ↦ `kmerge()`: an omitted argument is noobj, which the derivation's
   `s{?}` admits), when every hole it re-applies is blind to mass (`Law.Helper.massBlind`): `order(cc())` has none;
-- a keyed fold `group([k ⇒ h])` recombines **pointwise** — `sum()==[_=>combiner(h)]` — which no single edge names;
+- a keyed fold `group([k ⇒ h])` recombines **pointwise** — `sum()==[_=>combiner(h)]` — which no single edge names,
+  when its keys are blind to mass (`group([cc()=>…])` stays home);
 - a fold whose derivation ends in itself, `r ↦ ℓ·r`, recombines through **itself after the lift**: every lane runs
-  `ℓ` in its place, and home runs `r` over the summaries (`mean`, entry J; `combiner` stays null for it).
+  `ℓ` in its place, and home runs `r` over the summaries (`mean`, entry J; `combiner` stays null for it). A keyed
+  fold of such folds lifts per key (`Law.Helper.pointwiseLift`): lanes run `group([k ⇒ ℓ])`, and home runs
+  `sum()==[_=>r]`. `Law.Helper.lifted` answers both as a `Lift(lane, home)`.
 
 A point on the cut is a multiplicity of its answer, `(a+b)·r{d} = {d}((a·r + b·r)·C)`: no lane carries it, and
 home's combiner does, so `count{2}()` recombines through `sum{2}()` and `mean{2}()` through `mean{2}()`.
@@ -460,6 +463,23 @@ The combiner is pointwise, computed from `h`'s (`Law.Helper.pointwise`). The rec
 partials append into a bag, and a bulked partial reads as its copies (the lanes' bag bulks equal ones). `==[_=>C]` is
 `select`, the per-key fold. A `lst` is an atom of the merge, so an `order`'s sorted partials bag whole per key and
 `kmerge` merges the runs.
+
+**A keyed mean lifts per key (G × J).** `mean` has no combiner, so `group([k ⇒ mean()])` cannot recombine
+pointwise; it recombines per key through mean's lift instead:
+
+```mtron
+lane_i:   start?hop=0(<part_i>).group([mod(2)=>split?<=int{*}([mean(),count()]).cc(_>>1)>>0])   [-- [1=>{3}3.0] --]
+master:   branch?<={0}&split=part(<p_1> => …, <p_2> => …).sum()==[_=>mean()]                     [-- [1=>3.0,0=>4.0] --]
+```
+
+Each lane answers a rec of `{n}m` books, the deep merge bags each key's books with their weights intact, and the
+per-key `mean` reads the weighted mean. It recurses: `group([mod(2)=>group([mod(3)=>mean()])])` lifts at both levels.
+
+**A key that reads mass keeps the group home.** group bulks before it keys (since 2026-11-22, as `order` bulks before
+it sorts), so `group([cc()=>count()])` keys each value by its whole mass, the same for `{1,1,2}` and for a computed
+`{1,2,3,4}.mod(2)`. Sharded, a lane would key a value by part of its mass, so the pointwise combiner requires keys
+blind to mass: the run ships and group runs at home. A sharded rec keeps its keys in lane order, which can differ from
+home's first-seen order, so G's own row stays disabled until the key order is pinned.
 
 ### J — algebraic aggregates (`mean`)
 

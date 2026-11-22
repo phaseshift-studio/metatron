@@ -1093,23 +1093,33 @@ public enum Law {
         }
 
         /**
-         * THE FOLD, LIFTED, when it recombines through ITSELF (menu entry J, algebraic aggregates): the rhs of a declared
-         * derivation {@code r ↦ ℓ·r} whose last instruction is the lhs's own fold, its holes filled from {@code keyed}'s
-         * arguments. Every lane runs the lift {@code ℓ} in the fold's place, and home runs the last instruction, the fold
-         * as the equation states it, over the lanes' summaries, whose type need not be the carrier's (an int's mean lifts
-         * to reals). The equation alone is true of folds that do not distribute
-         * ({@code median ↦ split([median()])>>0·median}), so declared in this form it states more: {@code ℓ} is a
-         * SUFFICIENT STATISTIC of {@code r}, itself a self-combining fold, {@code (a+b)ℓ = (aℓ+bℓ)ℓ}. Then
-         * {@code (a+b)r = (a+b)ℓr = (aℓ+bℓ)ℓr = (aℓ+bℓ)r}, Thm 19 with every lane running {@code ℓ} and home re-applying
-         * {@code r}: {@code mean?<=int{*}() ↦ split?<=int{*}([mean(),count()])·cc(_>>1)·>>0·mean()}. A lane answers its
-         * mean weighted by its count, {@code {n}m}; the stream's sum adds the weights of equal means; and the weighted
-         * mean of the partials is the mean of the whole. Null when the fold declares no such derivation, as every fold
+         * A LIFTED CUT: what every lane runs in the cut's place, a summary of its part, and what home runs over the lanes'
+         * summaries ({@link #lifted}).
+         */
+        public record Lift(List<Inst> lane, List<Inst> home) {
+        }
+
+        /**
+         * THE FOLD, LIFTED, when it recombines through ITSELF (menu entry J, algebraic aggregates): read off a declared
+         * derivation {@code r ↦ ℓ·r} whose rhs ends in the lhs's own fold, its holes filled from {@code keyed}'s
+         * arguments. Every lane runs the lift {@code ℓ} in the fold's place, and home runs the rhs's last instruction, the
+         * fold as the equation states it, over the lanes' summaries, whose type need not be the carrier's (an int's mean
+         * lifts to reals). A keyed fold whose values are one lifted fold lifts per key ({@link #pointwiseLift}). The
+         * equation alone is true of folds that do not distribute ({@code median ↦ split([median()])>>0·median}), so
+         * declared in this form it states more: {@code ℓ} is a SUFFICIENT STATISTIC of {@code r}, itself a
+         * self-combining fold, {@code (a+b)ℓ = (aℓ+bℓ)ℓ}. Then {@code (a+b)r = (a+b)ℓr = (aℓ+bℓ)ℓr = (aℓ+bℓ)r}, Thm 19
+         * with every lane running {@code ℓ} and home re-applying {@code r}:
+         * {@code mean?<=int{*}() ↦ split?<=int{*}([mean(),count()])·cc(_>>1)·>>0·mean()}. A lane answers its mean weighted
+         * by its count, {@code {n}m}; the stream's sum adds the weights of equal means; and the weighted mean of the
+         * partials is the mean of the whole. Null when the fold declares no such derivation, as every fold
          * {@link #combiner} recombines does: a lane runs that fold as written.
          */
-        public static Call lifted(final Inst keyed) {
+        public static Lift lifted(final Inst keyed) {
             final Rec entry = lawsOf(keyed.tid());
             if (entry.isNoObj() || Inst.Form.reducer != Inst.Form.of(keyed))
                 return null;
+            if (GROUP_INST_TID.equals(keyed.tid().basePath()))
+                return pointwiseLift(keyed);
             final Rec derivation = declaredDerivation(entry);
             if (derivation.isNoObj())
                 return null;
@@ -1123,7 +1133,36 @@ public enum Law {
             final Map<fURI, Obj> holes = Code.Helper.bind(List.of(keyed), List.of(derived));
             if (null == holes || !holes.values().stream().allMatch(Helper::massBlind))
                 return null;
-            return code(Call.Helper.update(List.of(keyed), rec(code(List.of(derived)), code(rhs))));
+            final List<Inst> lifted = Call.Helper.update(List.of(keyed), rec(code(List.of(derived)), code(rhs)));
+            return new Lift(lifted.subList(0, lifted.size() - 1), List.of(lifted.getLast()));
+        }
+
+        /**
+         * THE POINTWISE LIFT (menu entries G and J composed): a keyed fold whose values are one lifted fold,
+         * {@code group([k⇒mean()])}, recombines per key through that fold after its lift. Every lane runs
+         * {@code group([k⇒ℓ])}, answering each key's summary ({@code {n}m} for a mean), and home merges the lanes' recs,
+         * which bags colliding summaries with their weights intact, then runs the fold per key over each bag:
+         * {@code sum()==[_=>mean()]}, as {@link #pointwise} runs a combiner. The keys must be blind to mass
+         * ({@link #massBlind}), as a lane holds part of a value's. Null when a value is no lifted fold, or the values
+         * differ, or a key reads mass.
+         */
+        private static Lift pointwiseLift(final Inst keyed) {
+            if (1 != keyed.args().count() || !keyed.arg(0).isRec())
+                return null;
+            final List<Rel> spec = keyed.arg(0).asRec().elements().toList();
+            final Obj fold = spec.isEmpty() ? null : spec.getFirst().secondDirect();
+            if (null == fold || !fold.isInst() || !spec.stream().allMatch(kv -> kv.secondDirect().isInst()
+                    && Inst.Helper.same(kv.secondDirect().asInst(), fold.asInst()) && massBlind(kv.first())))
+                return null;
+            final Lift per = lifted(fold.asInst());
+            if (null == per)
+                return null;
+            // the lane's group: each key's value is the lift, written as the chain writes it (resolved where it runs)
+            final Map<Obj, Obj> lanes = new LinkedHashMap<>();
+            spec.forEach(kv -> lanes.put(kv.first(), code(per.lane())));
+            final Call merge = sum_().select_(rec(id_().tryToInst(), 1 == per.home().size() ? per.home().getFirst() : code(per.home())));
+            return new Lift(List.of(instB(GROUP_INST_TID, lst(rec(lanes)))),
+                    List.of(keyed(merge.insts().getFirst(), T(REC_TID)), merge.insts().getLast()));
         }
 
         /**
@@ -1161,7 +1200,8 @@ public enum Law {
          * it is computed from that combiner, never named — {@code sum()==[_=>combiner(h)]}: the rec {@code sum} (the deep
          * merge, which appends colliding partials into a bag — a lst kept whole, so an {@code order}'s sorted runs reach
          * {@code kmerge} as runs — and reads a bulked partial as its copies), then a per-key fold. Null, so nothing shards,
-         * when a value is not a fold with a combiner ({@code mean}, a constant), or when the spec's entries fold differently
+         * when a key reads mass ({@link #massBlind}), when a value is not a fold with a combiner (a constant; {@code mean}
+         * recombines per key through its lift, {@link #pointwiseLift}), or when the spec's entries fold differently
          * (a key keeps no record of the entry that claimed it, and the claim falls differently in every part, so even folds
          * with one combiner would mix).
          */
@@ -1171,6 +1211,9 @@ public enum Law {
             final List<Obj> folds = keyed.arg(0).asRec().elements().map(Rel::secondDirect).toList();
             final Obj fold = folds.isEmpty() ? null : folds.getFirst();
             if (null == fold || !fold.isInst() || !folds.stream().allMatch(f -> f.isInst() && Inst.Helper.same(f.asInst(), fold.asInst())))
+                return null;
+            // A KEY THAT READS MASS PARTS ITS GROUPS ACROSS LANES (massBlind): a lane keys a value by part of its mass
+            if (!keyed.arg(0).asRec().elements().allMatch(kv -> massBlind(kv.first())))
                 return null;
             final Obj perKey = perKey(fold, laws);
             if (null == perKey)

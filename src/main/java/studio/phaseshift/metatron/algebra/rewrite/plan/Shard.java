@@ -208,9 +208,8 @@ public final class Shard {
         // RECOMBINES THROUGH ITSELF AFTER A LIFT (J, mean ↦ ℓ·mean) has every lane run the lift in its place, so a lane
         // answers a summary of its part, and home runs the fold as its equation states it, over the summaries
         final Call combined = 0 > cut ? null : Law.Helper.combiner(typed.get(cut), chain.laws());
-        final Call lifted = 0 > cut || null != combined ? null : Law.Helper.lifted(typed.get(cut));
-        final List<Inst> lift = null == lifted ? List.of() : lifted.insts().subList(0, lifted.insts().size() - 1);
-        final List<Inst> combiner = null != lifted ? pointed(List.of(raw(lifted.insts().getLast())), insts.get(cut))
+        final Law.Helper.Lift lifted = 0 > cut || null != combined ? null : Law.Helper.lifted(typed.get(cut));
+        final List<Inst> combiner = null != lifted ? pointed(lifted.home(), insts.get(cut))
                 : null == combined ? List.of()
                 : typed.get(cut) == combined ? List.of(insts.get(cut)) : pointed(combined.insts(), insts.get(cut));
         // THE SEED: a literal at the head is dealt by the plan; anything else is the bag the branch takes when it runs.
@@ -304,7 +303,7 @@ public final class Shard {
                         : inst);
             }
             if (0 <= cut)
-                lane.addAll(null == lifted ? List.of(raw(insts.get(cut))) : lift.stream().map(Shard::stated).toList());
+                lane.addAll(null == lifted ? List.of(raw(insts.get(cut))) : lifted.lane().stream().map(Shard::stated).toList());
             if (absorbs)
                 lane.add(raw(insts.get(cut + 1)));
             if (profiling)
@@ -560,13 +559,22 @@ public final class Shard {
     }
 
     /**
-     * THE INSTRUCTION AS ITS EQUATION STATES IT: a lift read off a declared derivation (J) keeps the domain the equation
-     * states, which is part of what it means and nothing this machine bound: {@code split?<=int{*}} gathers the lane's
-     * whole part, where a bare {@code split} would take one member at a time. All else is {@link #raw}.
+     * THE INSTRUCTION AS ITS EQUATION STATES IT: a lift read off a declared derivation (J) keeps every domain the
+     * equation states, at any depth, which is part of what it means and nothing this machine bound:
+     * {@code split?<=int{*}} gathers the lane's whole part, where a bare {@code split} would take one member at a time,
+     * and a keyed lift holds it in each key's value ({@code group([k⇒split?<=int{*}(…)…])}). All else is {@link #raw}.
      */
     static Inst stated(final Inst inst) {
-        final Inst raw = raw(inst);
-        return inst.tid().hasDom() ? instB(raw.tid().dom(inst.tid().dom()), raw.args()) : raw;
+        final Poly args = inst.args().isRec()
+                ? rec(inst.args().asRec().elements().map(kv -> rel(kv.first(), statedArg(kv.second()))))
+                : lst(inst.args().elements().map(Shard::statedArg).toList());
+        return instB(inst.tid().removeQ(RNG).removeQ(ARGS), args);
+    }
+
+    private static Obj statedArg(final Obj arg) {
+        return arg.isObjInst() ? stated(arg.asInst())
+                : arg.isCode() ? code(arg.asCode().insts().stream().map(Shard::stated).toList())
+                : arg;
     }
 
     private static Obj rawArg(final Obj arg) {
