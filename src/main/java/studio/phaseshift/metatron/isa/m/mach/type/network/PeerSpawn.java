@@ -203,21 +203,17 @@ public final class PeerSpawn {
     // ========================================================================
 
     private static void declare(final fURI key, final fURI address) {
-        // INTO roster/machine, and nothing else: the space keeps `discover` beside it. The key is the peer's origin
-        // (ws://localhost:PORT), which is no path segment, so the row goes in through the table it belongs to rather
-        // than at an address of its own. A forked node is an mtron node reached over ws: [mtron => [ws => …]].
-        final fURI at = Network.ROOT_ROSTER.extend(MACHINE);
-        final Map<Obj, Obj> machines = new LinkedHashMap<>(Machine.read(at).orElse(rec0()).asRec().jvm());
-        machines.put(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address))));
-        Machine.write(at, rec(machines));
+        // ADDED AS THE RING ADDS IT, and taken back the same way (undeclare): the roster keeps a count beside every
+        // other filer. The key is the peer's origin (ws://localhost:PORT), a rec key and no path segment. A forked node
+        // is an mtron node reached over ws: [mtron => [ws => …]].
+        Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
+                .plus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address)))))));
         DECLARED.add(key);
     }
 
     private static void undeclare(final fURI key) {
-        final fURI at = Network.ROOT_ROSTER.extend(MACHINE);
-        final Map<Obj, Obj> machines = new LinkedHashMap<>(Machine.read(at).orElse(rec0()).asRec().jvm());
-        if (machines.keySet().removeIf(k -> k.isUri() && key.equals(k.uriValue())))
-            Machine.write(at, rec(machines));
+        Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
+                .minus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address(key))))))));
     }
 
     // ========================================================================

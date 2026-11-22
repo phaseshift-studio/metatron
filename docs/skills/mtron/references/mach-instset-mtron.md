@@ -341,17 +341,19 @@ reach and presence and restores a shadowed name.
 | `machine`      | `<host> => [<protocol> => [<transport> => uri{+}]]`: the dialect a machine answers in, the client that carries it there |
 
 A protocol is the wire dialect (`mtron`) and a transport the client that carries it (`ws`, `http`, `mcp`), so one box's
-mtron over websockets and over its mcp server are two lists of one row. An address is written at its own path, and the
-space builds the levels above it:
+mtron over websockets and over its mcp server are two lists of one row. A row is added with `+` and taken back with
+`-`: rec minus is rec plus with the coefficients inverted, so the roster keeps a count, an address two filers vouch for
+stays until both take it back, and a read nets the terms.
 
 ```mtron
-</network/roster/machine/lab/mtron/ws> -> <ws://192.168.1.42:8555/mtron>   [-- file one address --]
-</network/roster/machine/lab/mtron/mcp> -> <ws://192.168.1.42:8555/mcp>    [-- the same box, carried by mcp --]
-</network/roster/machine/lab> -> noobj                                     [-- forget the box --]
+@/network/roster >>= +[machine=>[lab=>[mtron=>[ws=><ws://192.168.1.42:8555/mtron>]]]]   [-- file one address --]
+@/network/roster >>= +[machine=>[lab=>[mtron=>[mcp=><ws://192.168.1.42:8555/mcp>]]]]    [-- the same box, carried by mcp --]
+@/network/roster >>= -[machine=>[lab=>[mtron=>[ws=><ws://192.168.1.42:8555/mtron>]]]]   [-- take it back --]
 ```
 
-A row dials nothing. Reaching a machine is dialing one of its addresses with the client its transport names, and
-`*~/network/status` reports an address never dialed `known`.
+mDNS files each announcing instance's rows this way and takes them back by the instance's name, which is all a removal
+carries. A row dials nothing. Reaching a machine is dialing one of its addresses with the client its transport names, and
+`*~/network/status` reports a ws or http address never dialed `known` (an mcp-carried one is read at its own address).
 
 ### reach
 
