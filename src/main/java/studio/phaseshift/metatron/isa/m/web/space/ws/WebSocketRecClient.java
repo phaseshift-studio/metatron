@@ -58,6 +58,12 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     public static final int CONNECT_TIMEOUT_MS = 5_000;
 
     private final WebSocketRec wsclient;
+    /**
+     * the client answers the far side's requests: its rec wears the mtron protocol hat ({@code protocol => mtron_ws},
+     * {@link wsServer#wearsMtronHat}), so a frame it reads may be a request, and it reads every frame with full write
+     * semantics ({@link #onMessage(String)})
+     */
+    private final boolean answersRequests;
     protected final GraphittyLogger LOG = Graphitty.log(this);
     /**
      * the OWNER closed this client: the one explicit shutdown, after which it is never redialed
@@ -79,6 +85,8 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     public WebSocketRecClient(final WebSocketRec wsclient) {
         super(java.net.URI.create(wsclient.at(HOST).uriValue().toString()), new Draft_6455(), null, CONNECT_TIMEOUT_MS);
         this.wsclient = wsclient;
+        // decided before the dial: the first frame can arrive as soon as the connection opens
+        this.answersRequests = wsServer.wearsMtronHat(wsclient);
         this.wsclient.socket = this;
         this.wsclient.selfTID(WS_CLIENT_TID);
         this.wsclient.socket.setAttachment(this.wsclient.vid());
@@ -212,17 +220,24 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     // A CLIENT READS A FRAME AS AN ANSWER, NOT AS A WRITE: the parse runs with Obj.Helper.SELF_VID bound, so every vid
     // in the frame addresses the obj where the far side keeps it (g:V/1, each member of a stream, a constructed value,
     // the trip's tag) and nothing is stored here. The handler runs after the read, outside the binding, and writes
-    // whatever it writes (Marko, 2026-11-22)
+    // whatever it writes (Marko, 2026-11-22).
+    // A PROTOCOL CLIENT (protocol=>mtron_ws) ALSO ANSWERS THE FAR SIDE'S REQUESTS, and it evaluates a request as it reads
+    // the frame, so the request's writes (a vid(), a constructor's store, a MUTABLE update, the computers and threads it
+    // spawns) must land. It can't tell a request from a reply until the frame is evaluated, so it reads every frame with
+    // full write semantics, and its reply reads store again. A reply marked in the frame itself would make this exact
+    // (Marko: abc@\x, selfVID as syntax).
     @Override
     public void onMessage(final String message) {
-        this.wsclient.onMessage(this, ScopedValue.where(Obj.Helper.SELF_VID, true)
-                .call(() -> this.getIO().input().serializer().inputBytes(ByteBuffer.wrap(message.getBytes()))));
+        this.wsclient.onMessage(this, this.readFrame(() -> this.getIO().input().serializer().inputBytes(ByteBuffer.wrap(message.getBytes()))));
     }
 
     @Override
     public void onMessage(final ByteBuffer message) {
-        this.wsclient.onMessage(this, ScopedValue.where(Obj.Helper.SELF_VID, true)
-                .call(() -> this.getIO().input().serializer().inputBytes(message)));
+        this.wsclient.onMessage(this, this.readFrame(() -> this.getIO().input().serializer().inputBytes(message)));
+    }
+
+    private Obj readFrame(final ScopedValue.CallableOp<Obj, RuntimeException> read) {
+        return this.answersRequests ? read.call() : ScopedValue.where(Obj.Helper.SELF_VID, true).call(read);
     }
 
     public boolean state() {

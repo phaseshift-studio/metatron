@@ -142,8 +142,7 @@ public final class wsServer extends Listener {
                             // A PROTOCOL HAT: protocol=>mtron_ws installs the mtron facade's full surface (apply-and-
                             // respond on_message, on_error, state) as guarded defaults, so the client can answer a
                             // server-initiated request. Explicit fields still win — the guards fill only what is absent.
-                            final studio.phaseshift.metatron.isa.m.type.Obj protocol = config.get(uri(PROTOCOL));
-                            if (null != protocol && !protocol.isNoObj() && isMtronFacade(protocol))
+                            if (wearsMtronHat(wsRec))
                                 mtron_wsHandler.install(wsRec);
                             final WebSocketRecClient client = new WebSocketRecClient(wsRec);
                             // INDEXING IS UNCONDITIONAL. A dial whose far side is not up yet still declares a peer:
@@ -165,6 +164,16 @@ public final class wsServer extends Listener {
     private static boolean isMtronFacade(final Obj protocol) {
         final Obj resolved = protocol.isUri() ? Machine.read(protocol.uriValue()) : protocol;
         return resolved.isType() && mtron_wsHandler.WS_MTRON_HANDLER_TID.equals(resolved.asType().vid());
+    }
+
+    /**
+     * Does a client rec wear the mtron protocol hat ({@code protocol => mtron_ws})? The ws_client constructor installs
+     * the facade on a rec that does ({@link mtron_wsHandler#install}), and its client then answers the far side's
+     * requests, so it reads every frame with full write semantics ({@code WebSocketRecClient.onMessage}).
+     */
+    static boolean wearsMtronHat(final Rec rec) {
+        final Obj protocol = rec.jvm().get(uri(PROTOCOL));
+        return null != protocol && !protocol.isNoObj() && isMtronFacade(protocol);
     }
 
     public static final Type WS_SERVER_TYPE = TypeBuilder.build()
