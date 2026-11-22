@@ -248,12 +248,30 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
             "*/g/V/4.{-1,1}out()>>name                             % {'marko','josh','ripple','lop'}",
             "*/g/V/1.{-1}in()>>name                                % {'vadas','josh','lop'}",
             "*/g/V/1.{-1}both()>>name                              % {'vadas','josh','lop'}",
+            // THE EDGE STEPS' CONVERSES (Marko, 2026-11-22): outE inverts to outV, inE to inV, bothE to bothV, and back
+            "*/g/E/7.{-1}outE()>>name                              % \"marko\"",
+            "*/g/E/7.{-1}inE()>>name                               % \"vadas\"",
+            "*/g/E/7.bothV()>>name                                 % {'marko','vadas'}",
+            "*/g/E/7.{-1}bothE()>>name                             % {'marko','vadas'}",
+            "*/g/V/1.{-1}outV().count()                            % 3",
+            "*/g/V/3.{-1}inV().count()                             % 3",
+            "*/g/V/4.{-1}bothV().count()                           % 3",
             "*/g/V/4.{-1}out().{0,1}out()>>name                    % {'marko','vadas','josh','lop'}",
             // the escape hatch, in the same suffix form a fused run compiles to
             "*/g/V/1.gremlin('out(\"knows\").values(\"name\")')    % {'vadas','josh'}",
     }, delimiter = '%')
     public void testSingleElementInstructionTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * THE TRAVERSAL STEPS ARE PURE (Marko, 2026-11-22): each reads the graph's adjacency and writes nothing, so a planner
+     * may move it to the data, and law_bsp deals a superstep of them over the peers. Undeclared, purity fails closed.
+     */
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"out()", "in()", "both()", "outE()", "inE()", "bothE()", "inV()", "outV()", "bothV()"})
+    public void testTheTraversalStepsArePure(final String step) {
+        org.junit.jupiter.api.Assertions.assertTrue(studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse(step).asCall().isPure(), step + " is declared pure");
     }
 
     /**
