@@ -1268,7 +1268,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             // RO_TEST (read-only type-test mode): check only, skip the incidental space write
             // A Space (and an InstSet, which is a Space) is a container registered via addSpace/import, not a value
             // to be written at its own vid — writing it back into itself is what a catch-all used to swallow.
-            if (!BootLoader.RO_TEST && null != obj.vid() && !obj.isType() && !obj.isSpace())
+            // A VID WHOSE LAST SEGMENT IS A HEX LITERAL CARRIES A ROUND TRIP'S TAG (g:V/1/0x4a6752e0, WebSocketObj):
+            // wire bookkeeping that never leaves the ws air lock, so nothing is stored at it. A client evaluates the
+            // reply frames it reads, and an addressed answer stored at its tagged vid was a write into the client's own
+            // spaces (a peer's vertex written into the master's graph at V/1/0x..., which threw) (Marko, 2026-11-22).
+            if (!BootLoader.RO_TEST && null != obj.vid() && !isHex(obj.vid().name()) && !obj.isType() && !obj.isSpace())
                 Machine.write(obj.vid(), obj);
         }
 
