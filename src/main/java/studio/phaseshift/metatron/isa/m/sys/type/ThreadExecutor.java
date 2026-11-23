@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
@@ -222,13 +223,16 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
         // A FRAME OF REFERENCE IS PER-THREAD, so handing work to a worker loses it unless the boundary carries it
         // IN. Captured HERE, on the caller's thread, because that is where "where I stand" lives. The OUT half is
         // the worker's own job: createTask() records its landing via AbstractThread.complete() before it completes
-        // the future, so the session that adopts the landing never races its publication.
+        // the future, so the session that adopts the landing never races its publication. WHETHER THE WORK IS AN
+        // OBSERVATION'S is carried the same way (Analyzer.OBSERVING): a delivery's threads are marked as it was.
         final Machine perspective = Machine.current();
+        final boolean observing = Analyzer.OBSERVING.get();
         if (thread instanceof VirtualThread) {
             final Thread javaThread = Thread.ofVirtual()
                     .name(null != thread.vid() ? thread.vid().toString() : "metatron-virtual")
                     .unstarted(() -> {
                         Machine.current(perspective);
+                        Analyzer.OBSERVING.set(observing);
                         wrapped.run();
                     });
             thread.setJavaThread(javaThread);
@@ -237,6 +241,7 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
             this.service.execute(() -> {
                 thread.setJavaThread(Thread.currentThread());
                 Machine.current(perspective);
+                Analyzer.OBSERVING.set(observing);
                 wrapped.run();
             });
         }

@@ -261,6 +261,10 @@ monotonic in practice), `gauge::T` (a point-in-time `real`) and `timer::T` (`cou
 settings `step` and `profile` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
 machine's components, a cluster's machines).
 
+A subscriber's own work is counted but never published: a code subscriber (`~/processor/analyzer/analysis?subq ->
+sub::[code=>…]`) is evaluated on each delivery, and that evaluation counts in the analysis without scheduling another
+publication, so each outside change is heard once.
+
 **Off is `noobj`.** `~/processor/analyzer -> noobj` removes the analyzer, so nothing records into it (its address then
 reads `noobj`), and a rec written there later — `~/processor/analyzer -> [profile=>true]` — installs a new one whose
 meters start at zero. `~/processor/analyzer/analysis/time -> noobj` mutes the one probe and everything below it, and any

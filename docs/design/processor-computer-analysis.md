@@ -331,7 +331,14 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
    registry — the machine's space — answers them all). A change schedules one publication a `step` later (default 250
    ms) and every change until then rides it: a subscriber hears at most one `pub::[<address>, analysis::T]` per step,
    carrying every change before it, and a quiet analyzer publishes nothing. Delivery is `QCollection.publish`, the
-   same one a write's broadcast uses. No Java listener lists.
+   same one a write's broadcast uses. No Java listener lists. **An observer's work is counted, never announced**
+   (Marko, 2026-11-23): a code subscriber is evaluated on each delivery, and no publication can include the cost of its
+   own delivery, which exists only after it — announcing it published forever, one delivery and one computer per step.
+   `Analyzer.OBSERVING` marks a publication's thread and every thread it starts (`ThreadExecutor` carries it beside
+   the frame of reference); a marked recording counts and schedules nothing. A subscriber so hears each change something
+   else makes once, a delivery behind its own cost, which a pull reads now. `?subq` is untouched: a subscriber that
+   writes what it subscribes to wrote its own loop. The mark does not cross the wire, so two machines whose subscribers
+   report to each other still trade at most one publication per step each.
 6. **Export is a serializer** over `analysis::T`, as mapped above — not a second collection path.
 7. **Events are not meters.** A record of individual occurrences (`WireTrace`'s exchanges) is a bounded ring a human
    reads; the counts behind it are the producer's meters, counted at the same tap.
@@ -437,10 +444,6 @@ every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicSta
   halts the unstamped original, so the console, a ws or http reply (`MFail.reported`) files it again in
   `~/processor/fail`, and an enclosing computer files a nested evaluation's fail in its own stack — open: whether a
   computer halts the copy it filed, which would also give a reported fail its computer's address;
-- a CODE subscriber to `~/processor/analyzer/analysis?subq` (`sub::[code=>…]`) is evaluated on each delivery, which
-  counts an `eval` and so schedules the next publication: it is handed one every step for as long as it subscribes (a
-  probe, 2026-11-23: `eval` rose 6 → 12 → 17 over three seconds with no other evaluation, and held at 1 with no
-  subscriber) — open: whether a delivery runs unmeasured;
 - more producers, each at its own analyzer: memory (writes, deletes, reads per space), `http_server` (requests by
   route, status, latency), `tble`/`dcmnt` (query time, index use), the compiler (resolve/rewrite outside a profile);
 - a gauge read on demand (open sockets per listener) — a supplier-backed meter, sampled as the analysis is built;

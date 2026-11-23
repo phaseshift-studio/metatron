@@ -864,6 +864,40 @@ public class AnalyzerTest extends AbstractMetatronTest {
     }
 
     /**
+     * AN OBSERVER'S WORK IS COUNTED, NEVER ANNOUNCED (Marko, 2026-11-23): a code subscriber to the processor's analysis
+     * is evaluated on each delivery, and that evaluation is the machine's — counted in the very analysis it reads — but it
+     * schedules no publication. So a change something else makes is heard once and the machine goes quiet: no
+     * publication of its own delivery, and no computer minted for one, step after step.
+     */
+    @Test
+    void shouldCountAnObserversWorkWithoutAnnouncingIt() {
+        final Machine machine = Machine.current().push(f("analyzer_observer"));
+        try {
+            final Analyzer processor = machine.processor().analyzer();
+            ObjmtronSerializer.parse("~/processor/analyzer/analysis?subq -> sub::[code=>>>1.to(/usr/analyzer_observer)]").apply();
+            CommonUtil.sleepThread(PUBLISHED_MS);
+            final long settled = read(processor.analysis(), "eval");
+            final int computers = machine.processor().computers().jvm().size();
+            CommonUtil.sleepThread(PUBLISHED_MS);
+            assertEquals(settled, read(processor.analysis(), "eval"),
+                    "a delivery announces nothing, so the machine goes quiet: " + processor.analysis());
+            assertEquals(computers, machine.processor().computers().jvm().size(), "and mints no computer while it is");
+            Machine.parse("1.plus(1)").apply(noobj());
+            CommonUtil.sleepThread(PUBLISHED_MS);
+            assertEquals(settled + 2, read(processor.analysis(), "eval"),
+                    "a change something else makes is heard once, and both evaluations count, the delivery's too: " + processor.analysis());
+            assertEquals(read(processor.analysis(), "eval"),
+                    Machine.read(f("/usr/analyzer_observer")).asRec().at(uri("eval")).intValue() + 1,
+                    "the subscriber heard the analysis as it stood before its own delivery: " + Machine.read(f("/usr/analyzer_observer")));
+            CommonUtil.sleepThread(PUBLISHED_MS);
+            assertEquals(settled + 2, read(processor.analysis(), "eval"), "and then nothing: " + processor.analysis());
+        } finally {
+            Machine.write(f("~/processor/analyzer/analysis").addQ(SUBQ), noobj());
+            machine.pop();
+        }
+    }
+
+    /**
      * A NETWORK SWITCHED BACK ON GAUGES ITS PEERS AGAIN: the peer gauge is registered with every analyzer the network
      * is given, so one written at {@code ~/network/analyzer} after a noobj samples them as the first did.
      */

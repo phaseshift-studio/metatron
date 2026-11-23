@@ -60,7 +60,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * stand, so the meters cost nothing until someone looks. A copy of the rec (a read may stamp one) shares the cells.
  * <p>
  * THE PUBLICATION IS A STEP, NOT AN ECHO. The first change of a quiet analyzer schedules one publication a {@code step}
- * later and every change until then rides it, so a subscriber hears at most one analysis per step however hot the probe,
+ * later and every change until then rides it, so a subscriber hears at most one analysis per step however hot the probe
+ * (and never one its own delivery caused: {@link Analyzer#OBSERVING}),
  * and a quiet analyzer publishes nothing. The subscriptions are found where the analysis is read — its address's
  * {@code ?subq}, which the machine's space answers for every component alike, so {@code ~/+/analyzer/analysis?subq}
  * hears them all — and each is handed {@code pub::[<address>, analysis::T]}.
@@ -286,7 +287,9 @@ public class BasicAnalyzer extends MRec implements Analyzer {
      * and the recording goes on, and the next change schedules again.
      */
     private Analyzer changed() {
-        if (null == this.component || !Machine.loaded() || !this.pending.compareAndSet(false, true))
+        // an observer's work is counted above and announced never (OBSERVING): the loop it would close is the
+        // publication's own delivery measured, published, delivered again
+        if (null == this.component || !Machine.loaded() || OBSERVING.get() || !this.pending.compareAndSet(false, true))
             return this;
         final Machine machine = Machine.current();
         if (null == machine.vid()) {
@@ -294,6 +297,9 @@ public class BasicAnalyzer extends MRec implements Analyzer {
             return this;
         }
         final fURI address = machine.vid().resolve().extend(this.component).extend(ANALYZER).extend(ANALYSIS);
+        // THE PUBLICATION IS AN OBSERVATION: its thread is started marked, so it reads its subscriptions and starts each
+        // delivery marked, and whatever a delivery runs is the observer's work
+        OBSERVING.set(true);
         try {
             QCollection.docWrap(VirtualThread.virtual(instLambda(_ -> {
                 try {
@@ -316,6 +322,8 @@ public class BasicAnalyzer extends MRec implements Analyzer {
             // ... and so is one that breaks the recording, or stops every publication after it
             this.pending.set(false);
             this.logger().debug("unable to schedule the publication of %s: %s", address, e.getMessage());
+        } finally {
+            OBSERVING.set(false);
         }
         return this;
     }

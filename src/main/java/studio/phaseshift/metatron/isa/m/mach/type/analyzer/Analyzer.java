@@ -82,6 +82,16 @@ public interface Analyzer extends Rec {
     ThreadLocal<Analyzer> PROFILE = new ThreadLocal<>();
 
     /**
+     * THE WORK AN OBSERVATION CAUSES (Marko, 2026-11-23): on while an analyzer publishes, and carried into every thread
+     * that work starts ({@code ThreadExecutor} carries it beside the frame of reference), so a subscriber's delivery and
+     * everything it runs are marked. What a marked thread records is COUNTED — an observer's evaluations are the
+     * machine's — and ANNOUNCES NOTHING: no publication can include the cost of its own delivery, which exists only
+     * after it, so announcing that cost would publish forever. The cost rides the next change something else makes, and
+     * a pull reads it now.
+     */
+    ThreadLocal<Boolean> OBSERVING = ThreadLocal.withInitial(() -> false);
+
+    /**
      * count {@code delta} more at {@code probe} — a {@code counter}, the monotonic meter.
      */
     Analyzer incr(fURI probe, long delta);
