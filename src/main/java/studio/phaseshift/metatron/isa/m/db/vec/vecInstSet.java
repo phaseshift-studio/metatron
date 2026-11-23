@@ -20,13 +20,13 @@ package studio.phaseshift.metatron.isa.m.db.vec;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.db.vec.space.vecSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.db.vec.space.vecSpace;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -60,7 +61,10 @@ public class vecInstSet extends AbstractInstSet {
 
 
     public static final Type VEC_TYPE = TypeBuilder.build().tid(LST_TID).vid(VEC_TID).create();
-    public static final Type CMPLX_TYPE = TypeBuilder.build().tid(LST_TID).vid(CMPLX_TID).isaPredicate(lst(REAL_TYPE, REAL_TYPE)).create();
+    public static final Type CMPLX_TYPE = TypeBuilder.build()
+            .tid(LST_TID)
+            .vid(CMPLX_TID)
+            .isaPredicate(T(LST_TID.poly(REAL_TID, REAL_TID))).create();
     public static final Type MTRX_TYPE = TypeBuilder.build()
             .tid(LST_TID)
             .vid(MTRX_TID)

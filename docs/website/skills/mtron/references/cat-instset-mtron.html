@@ -1256,7 +1256,7 @@ map</strong> (who is dialed) — and is not a rewrite projection at all: a place
 </thead>
 <tbody>
 <tr><td><code>obj</code></td><td>the machine address <code>//host[/path]</code> — <code>host()</code> is the roster key, <code>path()</code> the frame vid (empty = the host's root machine). Who evaluates.</td></tr>
-<tr><td><code>authority</code></td><td>the transports that reach it (<code>scheme://host:port</code>); two aliases of one machine are values, never two places</td></tr>
+<tr><td><code>authority</code></td><td>the transports that reach it (<code>scheme://host:port[/route]</code>); two aliases of one machine are values, never two places</td></tr>
 <tr><td><code>instset</code></td><td>(reserved — the ISAs resolvable here, the vocabulary coordinate; joined when <code>/m/math/cat/signature</code> lands)</td></tr>
 <tr><td><code>source</code></td><td>(optional) who declared it (<code>mdns</code>, boot profile, a dial)</td></tr>
 <tr><td><code>linked_to</code></td><td><strong>derived</strong> — the peers this machine dialed to this place (outbound edges)</td></tr>
@@ -1291,7 +1291,7 @@ a client overrides is its protocol's capability:</p>
 <tr><td><code>http_client</code></td><td><code>from</code> (GET), <code>to</code> (POST) — no <code>eval</code>: a web document is read or written, never asked to evaluate</td></tr>
 <tr><td><code>ws_client</code></td><td><code>eval</code>, <code>from</code>, <code>to</code> — the full set over the socket</td></tr>
 <tr><td><code>id_client</code> (<code>loop</code>)</td><td><code>eval</code>, <code>from</code>, <code>to</code> — all local: <code>eval</code> applies against this machine, <code>from</code>/<code>to</code> read/write it</td></tr>
-<tr><td><code>mcp_client</code> (tools)</td><td>one override per tool, keyed by the tool's tid — a tool answers as <code>eval</code>, another as <code>from</code>, …</td></tr>
+<tr><td><code>mcp_client</code></td><td>one per tool; a client of <code>mcp_mtron</code> also gets <code>eval</code>, <code>from</code> and <code>to</code>, all through <code>eval_mtron</code></td></tr>
 <tr><td><code>mqtt_client</code> (planned)</td><td><code>from</code> (SUBSCRIBE), <code>to</code> (PUBLISH) — no <code>eval</code>; the client is not yet isolated (<code>mqttspace::T</code> speaks the protocol today)</td></tr>
 </tbody>
 </table>

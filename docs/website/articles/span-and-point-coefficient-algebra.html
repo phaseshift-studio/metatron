@@ -1213,16 +1213,16 @@ walks object by
 object: \(\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \rangle + \langle 3, 4 \rangle\).</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.{0,1}sum()
 ==&gt;1
+==&gt;2
 ==&gt;3
-==&gt;4
-==&gt;{2}2
-==&gt;12
+==&gt;6
 mtron&gt; {1,2,3}.branch(id(),sum())
 ==&gt;{2}1
 ==&gt;{2}2
 ==&gt;{2}3
 mtron&gt; {1,2,3}.{1,2}count()
-==&gt;5
+==&gt;3
+==&gt;1
 mtron&gt; {1,2}.{0,2}plus(1)
 ==&gt;1
 ==&gt;{2}2
@@ -1243,7 +1243,8 @@ mtron&gt; [a=&gt;[a=&gt;[b=&gt;5]]].{*}&gt;&gt;(a)
 ==&gt;[a=&gt;[b=&gt;5]]
 ==&gt;[b=&gt;5]
 mtron&gt; {1,2,3}.is(gt(5)).{1,2}count()
-==&gt;2
+==&gt;0
+==&gt;1
 </code></pre>
 <p>In mtron, <code>{n}a</code> and <code>{m,n}a</code> are each one instruction, and the processor walks it: the input, then each run one step
 past the last, the runs from \(m\) on kept, until the run \(n\) or a run that leaves the domain of <code>a</code>. How much of a run a

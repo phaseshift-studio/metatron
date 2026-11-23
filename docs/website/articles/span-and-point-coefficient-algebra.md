@@ -804,16 +804,16 @@ object: $\langle 1, 2 \rangle a^{[0,2]} = \langle 1, 2 \rangle + \langle 2, 3 \r
 ```mtron
 mtron> {1,2,3}.{0,1}sum()
 ==>1
+==>2
 ==>3
-==>4
-==>{2}2
-==>12
+==>6
 mtron> {1,2,3}.branch(id(),sum())
 ==>{2}1
 ==>{2}2
 ==>{2}3
 mtron> {1,2,3}.{1,2}count()
-==>5
+==>3
+==>1
 mtron> {1,2}.{0,2}plus(1)
 ==>1
 ==>{2}2
@@ -836,7 +836,8 @@ mtron> [a=>[a=>[b=>5]]].{*}>>(a)
 ==>[a=>[b=>5]]
 ==>[b=>5]
 mtron> {1,2,3}.is(gt(5)).{1,2}count()
-==>2
+==>0
+==>1
 ```
 In mtron, `{n}a` and `{m,n}a` are each one instruction, and the processor walks it: the input, then each run one step
 past the last, the runs from $m$ on kept, until the run $n$ or a run that leaves the domain of `a`. How much of a run a

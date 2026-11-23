@@ -20,7 +20,7 @@ would put a plate behind every diagram. `\\tikzset{every node/…{fill=none}}` k
 labels unbacked for the same reason — nothing opaque sits between the ink and the page.
 The PDF surface is untouched by any of this: it reads the sidecar, not the SVG.
 
-    bin/render-tikz.py [dir ...]     # default: docs/website/articles/images
+    bin/render-tikz.py <file.tex|dir> ...  # at least one .tex file or directory (required)
     bin/render-tikz.py --png …       # also write a raster fallback beside each svg
     bin/render-tikz.py --png --dpi 300 …  # a sharper raster (default 200)
     bin/render-tikz.py --ink black … # for a light page (white ink is invisible on one)
@@ -49,7 +49,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-DEFAULT_DIRS = ['docs/website/articles/images']
+# no default target: a .tex file or a directory must be given explicitly (see usage)
 PREAMBLE = r"""\documentclass[border=4pt]{standalone}
 \usepackage{tikz}
 \usepackage{tikz-cd}
@@ -143,21 +143,29 @@ def render(sidecars, build: Path, png: bool, ink: str, dpi: int):
 
 
 def scale_svg(path: Path, scale: float) -> None:
-    """Rescale the root svg's width/height, leaving the viewBox (so: losslessly)."""
+    """Rescale the root svg's width/height from the viewBox (so: idempotent, lossless).
+
+    pdftocairo writes the viewBox at print size and this never touches it, so the
+    display size is derived from the viewBox — multiplying the *current* width/height
+    instead would compound on a re-run of an already-scaled svg.
+    """
     if scale == 1:
         return
     text = path.read_text(encoding='utf-8')
-    # the first width/height in the document are the root <svg> element's
-    scaled = re.sub(r'\b(width|height)="([\d.]+)(?:pt)?"',
-                    lambda m: f'{m.group(1)}="{float(m.group(2)) * scale:g}"',
-                    text, count=2)
+    m = re.search(r'\bviewBox="[-\d.]+ [-\d.]+ ([\d.]+) ([\d.]+)"', text)
+    if not m:
+        return
+    width = float(m.group(1)) * scale
+    height = float(m.group(2)) * scale
+    scaled = re.sub(r'\bwidth="[^"]*"', f'width="{width:g}"', text, count=1)
+    scaled = re.sub(r'\bheight="[^"]*"', f'height="{height:g}"', scaled, count=1)
     path.write_text(scaled, encoding='utf-8')
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument('dirs', nargs='*', default=DEFAULT_DIRS,
-                        help=f'sidecar directories (default: {" ".join(DEFAULT_DIRS)})')
+    parser.add_argument('paths', nargs='*',
+                        help='.tex sidecar file(s) and/or directory(ies) of .tex sidecars (required)')
     parser.add_argument('--png', action='store_true', help='also write a raster fallback')
     parser.add_argument('--dpi', type=int, default=200, help='raster resolution for --png (default 200)')
     parser.add_argument('--ink', default='white',
@@ -170,9 +178,22 @@ def main() -> int:
                         help='do not write; fail when a committed svg differs from a fresh render')
     args = parser.parse_args()
 
-    sidecars = sorted(p for d in args.dirs for p in Path(d).rglob('*.tex'))
+    if not args.paths:
+        parser.error('at least one .tex file or directory is required')
+    sidecars = []
+    for p in args.paths:
+        path = Path(p)
+        if path.is_file():
+            if path.suffix != '.tex':
+                sys.exit(f'render-tikz: not a .tex file: {path}')
+            sidecars.append(path)
+        elif path.is_dir():
+            sidecars.extend(path.rglob('*.tex'))
+        else:
+            sys.exit(f'render-tikz: no such path: {path}')
+    sidecars = sorted(set(sidecars))
     if not sidecars:
-        sys.exit(f'render-tikz: no .tex sidecars under {", ".join(args.dirs)}')
+        sys.exit('render-tikz: no .tex sidecars found')
 
     build = Path(tempfile.mkdtemp(prefix='render-tikz.', dir=Path.cwd() / 'target'))
     try:

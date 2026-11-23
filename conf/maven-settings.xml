@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Maven settings. Wired in through .mvn/maven.config (-s), so every build in
+  this checkout — the dev launcher, bin/metatron-docker, CI — picks it up without
+  anyone having to remember a flag.
+
+  Why: moquette-parent-0.18.0.pom (a transitive dependency of the MQTT support)
+  declares a repository with id "Paho Releases" pointing at
+  https://repo.eclipse.org/content/repositories/paho-releases/ . That host no longer
+  answers, and Maven's plugin-prefix scan queries EVERY declared repository for
+  /.meta/prefixes.txt before it starts building. A measured cold resolve spent 181 of
+  its 231 seconds waiting on that socket, which is the "hangs at resolving
+  dependencies" report. Mirroring the id to Central replaces the dead host with one
+  that is up (Central carries the org.eclipse.paho artifacts), and the resolver
+  timeouts in bin/metatron bound anything else that goes quiet.
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+  <mirrors>
+    <mirror>
+      <id>paho-releases-via-central</id>
+      <name>Paho Releases (dead) served from Maven Central</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+      <mirrorOf>Paho Releases</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>

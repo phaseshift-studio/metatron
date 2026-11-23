@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}rewriter=>'the second stage — the code::T to ...',
-           {?}parser=>'the first stage — source text to o...',
            {?}typer=>'the fourth stage — the per-machine...',
-           {?}resolver=>'the third stage — the walk that th...'],
+           {?}resolver=>'the third stage — the walk that th...',
+           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}parser=>'the first stage — source text to o...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -277,10 +277,10 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}analyzer=>"the processor's statistics (analyz...",
            {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
            {?}result=>'the objs the last evaluation produ...',
+           {?}analyzer=>"the processor's statistics (analyz...",
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -397,7 +397,7 @@ mtron> */m/mach/component/network?docq
      {?}host=>uri::T,
      {?}roster=>[
       {?}discover=>rec{*}::T[?[status=>bool::T]]@/m/web/discovery,
-      {?}machine=>[uri::T=>uri{+}::T]],
+      {?}machine=>[uri::T=>[uri::T=>[uri::T=>uri{+}::T]]]],
      {?}peer=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/path_encoding=>rec::T[?[
       origin=>uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/origin,
       {?}host=>uri::T,
@@ -410,15 +410,15 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}status=>'the health method — an auto inst c...',
            {?}listener=>'the sockets this machine serves th...',
            {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per...",
            {?}analyzer=>"the network's statistics (analyzer...",
-           {?}roster=>'known machines, connectionless: <h...'],
+           {?}roster=>'what the system knows, connectionl...',
+           {?}status=>'the health method — an auto inst c...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
-           'network::[roster=>[b=><ws://192.16...',
+           'network::[roster=>[machine=>[lab=>...',
            'network::[peer=>[<ws/localhost/391...']]
 ```
 | index      | holds                                                             | scope                                         |
@@ -429,6 +429,29 @@ mtron> */m/mach/component/network?docq
 
 The **roster** — what the system knows — is one listing at the root, shared by every frame. A `pop` retracts its level's
 reach and presence and restores a shadowed name.
+
+### knowledge
+
+| `roster` field | value                                                                                                                    |
+|----------------|--------------------------------------------------------------------------------------------------------------------------|
+| `discover`     | where the discovery protocols are mounted (`mdns_discovery::T`, a `discovery::T`); `discover/+.?[status=>false]` is what is down, deleting one stops it |
+| `machine`      | `<host> => [<protocol> => [<transport> => uri{+}]]`: the dialect a machine answers in, the client that carries it there |
+
+A protocol is the wire dialect (`mtron`) and a transport the client that carries it (`ws`, `http`, `mcp`), so one box's
+mtron over websockets and over its mcp server are two lists of one row. A row is added with `+` and taken back with
+`-`: rec minus is rec plus with the coefficients inverted, so the roster keeps a count, an address two filers vouch for
+stays until both take it back, and a read nets the terms.
+
+```mtron
+@/network/roster >>= +[machine=>[lab=>[mtron=>[ws=><ws://192.168.1.42:8555/mtron>]]]]   [-- file one address --]
+@/network/roster >>= +[machine=>[lab=>[mtron=>[mcp=><ws://192.168.1.42:8555/mcp>]]]]    [-- the same box, carried by mcp --]
+@/network/roster >>= -[machine=>[lab=>[mtron=>[ws=><ws://192.168.1.42:8555/mtron>]]]]   [-- take it back --]
+```
+
+mDNS files each announcing instance's rows this way and takes them back by the instance's name, which is all a removal
+carries. A filer takes back only what it filed, and only while it is still listed, so a row taken back by hand stays gone
+until it is filed again. A row dials nothing. Reaching a machine is dialing one of its addresses with the client its transport names, and
+`*~/network/status` reports a ws or http address never dialed `known` (an mcp-carried one is read at its own address).
 
 ### reach
 
@@ -477,8 +500,10 @@ mtron> </network/peer/#> -> noobj                            [-- hang up every m
 ```
 ### presence
 
-A machine's authorities — what mDNS announces and a roster files — are its listening surfaces (`ws_server::T`,
-`http_server::T`). A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
+A machine's authorities are its listening surfaces (`ws_server::T`, `http_server::T`). What mDNS announces, and a
+roster files, is each mtron endpoint on them: a listener's origin extended by a route whose handler speaks mtron — an
+`mtron::T`, filed under the socket's scheme (`ws://host:8555/mtron` at `mtron/ws`), or metatron's mcp server, filed under
+`mcp` (`ws://host:8555/mcp` at `mtron/mcp`). The TXT record carries the route, `protocol` and `transport`. A backend the machine dials (`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, not
 identity: its host and credentials never leave the machine, and an address carrying userinfo is refused.
 
 | `listener::T` field | value                                                           |
@@ -515,7 +540,8 @@ mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
     ...(1 more)]
 ```
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
-its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client`
+its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three, and so does an
+`mcp_client` of a metatron server (`mcp_mtron`), each a program sent to its `eval_mtron` tool. An `http_client`
 declares `from` (GET) and `to` (POST, which stores and evaluates nothing). A shard target serves `to` and `eval`.
 `send_recv` is a `ws_client`'s raw wire instruction: `1.plus(2).send_recv(|plus(45))` evaluates `plus(45)` remotely
 against the shipped monad. Instructions are total, $P(\mathrm{Obj}) \to P(\mathrm{Obj})$: a reach answers a smaller set

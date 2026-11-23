@@ -587,9 +587,9 @@ have actually cost someone an afternoon.</p>
 <tr><th>term</th><th>means</th></tr>
 </thead>
 <tbody>
-<tr><td><code>roster</code></td><td>what the system <strong>knows</strong>: <code>&lt;host&gt; =&gt; uri{+}</code>, connectionless. Shared at the root</td></tr>
+<tr><td><code>roster</code></td><td>what the system <strong>knows</strong>: <code>machine/&lt;host&gt;/&lt;protocol&gt;/&lt;transport&gt; =&gt; uri{+}</code> and the <code>discover</code> protocols that fill it; connectionless, shared at the root</td></tr>
 <tr><td><code>peer</code></td><td>what this machine has <strong>dialed</strong>: one member per surface, keyed by the dial's path</td></tr>
-<tr><td><code>listener</code></td><td>what it <strong>answers on</strong>: the sockets it serves, and therefore what mDNS announces</td></tr>
+<tr><td><code>listener</code></td><td>what it <strong>answers on</strong>: the sockets it serves; mDNS announces their mtron routes</td></tr>
 <tr><td><code>prefix</code> (network)</td><td>what you <strong>call</strong> it: <code>&lt;label&gt; =&gt; origin</code>, one listing at the root</td></tr>
 <tr><td>reach</td><td>dialed peers — per frame, retractable, <strong>not</strong> inherited</td></tr>
 <tr><td>denotation</td><td>what a spelling means — machine-global, inherited, never scoped</td></tr>
