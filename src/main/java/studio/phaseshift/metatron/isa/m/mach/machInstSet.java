@@ -811,8 +811,9 @@ public class machInstSet extends AbstractInstSet {
                                 //
                                 // THE ROSTER'S TWO FIELDS. `discover` is where the discovery protocols
                                 // are mounted (mdns_discovery::T, each a discovery::T publishing its status), so
-                                // discover/+.?[status=>false] answers what is down, and deleting one turns
-                                // it off. `machine` is what they and every declaration file:
+                                // discover/+.?[status=>false] answers what is down, and deleting one at its
+                                // own address turns it off (a delete of the bag rewrites the roster and closes
+                                // nothing). `machine` is what they and every declaration file:
                                 // <host> => [<protocol> => [<transport> => uri{+}]] — the wire dialect a
                                 // machine answers in (mtron), the client that carries it there (ws, http,
                                 // mcp), and every address it answers at by that pair. Reaching a machine

@@ -124,7 +124,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
      */
     private final String hostName;
     private boolean started = false;
-    private boolean closed = false;
+    private volatile boolean closed = false;
     /**
      * how often the announced set is re-read against the live surfaces — surfaces come and go for the VM's whole
      * life, and a look is local (no round trip), so a short tick costs nothing
@@ -143,7 +143,9 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * <p>
      * GUARDED BY THE ROSTER'S OWN ADDRESS ({@link Network#ROOT_ROSTER}), the one monitor every writer holds that reads,
      * merges and writes the roster back: this handler, whose JmDNS per local address hear one peer on several threads,
-     * and PeerSpawn. So no write drops a row another wrote between its read and its write.
+     * and PeerSpawn. So no Java writer drops a row another wrote between its read and its write. A Java monitor binds
+     * only Java writers: an mtron write to the roster takes none, and one that lands between a read and its write is
+     * dropped.
      */
     private final Map<String, List<Obj>> filed = new HashMap<>();
     /**
@@ -152,7 +154,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * instance at different addresses: the instance files the union, and one responder's removal takes back only what
      * no other responder still resolves. Guarded like {@link #filed}.
      */
-    private final Map<String, Map<String, List<Obj>>> heard = new HashMap<>();
+    private final Map<String, Map<InetAddress, List<Obj>>> heard = new HashMap<>();
 
     public mdnsDiscovery(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MDNS_DISCOVERY_TID, vid);
@@ -347,8 +349,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
             try {
                 final JmDNS mdns = JmDNS.create(address, this.hostName);
                 surfaces().forEach((surface, transport) -> this.announce(mdns, service, surface, transport));
-                mdns.addServiceListener(service.toString(), new PeerListener(mdns, address.getHostAddress()));
-                mdns.addServiceListener(service.toString(), new PeerListener(mdns, address.getHostAddress()));
+                mdns.addServiceListener(service.toString(), new PeerListener(mdns, address));
                 synchronized (this.lifecycle) {
                     // CLOSED WHILE WE WERE DIALING -- own this responder here and stop, or it outlives the
                     // handler and status() reads true again after close
@@ -611,10 +612,9 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * THE WHOLE BODY RUNS AS {@link #owner}: {@link #ours} reads this machine's authorities and the write lands
      * in this machine's roster, and the JmDNS callback thread stands in neither.
      * <p>
-     * VISIBLE FOR TESTING, its addresses handed in beside the info: a resolved {@code ServiceInfo} cannot be built with
-     * addresses, and the listener hands in {@code info.getInet4Addresses()}.
+     * VISIBLE FOR TESTING, like {@link #roster}: a test hands in a {@code ServiceInfoImpl} that carries its addresses.
      */
-    void admit(final String responder, final ServiceInfo info, final InetAddress[] addresses) {
+    void admit(final InetAddress responder, final ServiceInfo info) {
         final Machine current = Machine.current();
         Machine.current(this.owner);
         try {
@@ -624,6 +624,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
             }
             // A RESOLUTION WITHOUT ADDRESSES IS NOT ONE THAT HAS NONE: the A records arrive on their own, and filing
             // what this one names would take back everything the instance filed before
+            final InetAddress[] addresses = info.getInet4Addresses();
             if (0 == addresses.length) {
                 this.LOG.debug("mdns: %s resolved without an address — waiting for a complete one", info.getName());
                 return;
@@ -643,7 +644,10 @@ public class mdnsDiscovery extends MRec implements Closeable {
                         uri(dialable(address, info.getPort(), scheme, route).basePath().toString()))))));
             }
             synchronized (Network.ROOT_ROSTER) {
-                final Map<String, List<Obj>> responders = this.heard.computeIfAbsent(info.getKey(), key -> new HashMap<>());
+                // A CLOSED HANDLER HEARS NOTHING: a resolution JmDNS queued before the close still runs after it
+                if (this.closed)
+                    return;
+                final Map<InetAddress, List<Obj>> responders = this.heard.computeIfAbsent(info.getKey(), key -> new HashMap<>());
                 responders.put(responder, rows);
                 if (this.roster(info.getKey(), responders.values().stream().flatMap(List::stream).toList()) > 0)
                     this.LOG.info("mdns: discovered %s: %s", machine, rows);
@@ -698,15 +702,17 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * The levels a host's last address leaves stay, an empty rec: its addresses net to nothing, and
      * {@link Network#machines()} lists no machine without one.
      * <p>
-     * VISIBLE FOR TESTING: this is the whole roster contribution of a discovery protocol, and it is testable
-     * without multicast, a second host or a resolved {@code ServiceInfo} — which none of the admission path above
-     * can be.
+     * VISIBLE FOR TESTING: this is the whole roster contribution of a discovery protocol, testable without multicast
+     * or a second host.
      *
      * @return how many rows were newly filed
      */
     int roster(final String instance, final List<Obj> rows) {
-        final List<Obj> now = rows.stream().distinct().toList();
         synchronized (Network.ROOT_ROSTER) {
+            // ONCE CLOSED, NOTHING IS FILED: close() took back what this handler filed, and a filing after it -- a
+            // resolution JmDNS had queued, the baseline of a listen() the close overtook -- would never be taken back.
+            // close() sets the flag before it takes this monitor, so whatever runs after its take-back sees it.
+            final List<Obj> now = this.closed ? List.of() : rows.stream().distinct().toList();
             final List<Obj> before = this.filed.getOrDefault(instance, List.of());
             final List<Obj> added = now.stream().filter(row -> !before.contains(row)).toList();
             Rec merged = Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec();
@@ -812,12 +818,12 @@ public class mdnsDiscovery extends MRec implements Closeable {
      * VISIBLE FOR TESTING, like {@link #admit}: {@code ServiceInfo.create} builds exactly the address-less info a
      * removal carries.
      */
-    void retract(final String responder, final ServiceInfo info) {
+    void retract(final InetAddress responder, final ServiceInfo info) {
         final Machine current = Machine.current();
         Machine.current(this.owner);
         try {
             synchronized (Network.ROOT_ROSTER) {
-                final Map<String, List<Obj>> responders = this.heard.getOrDefault(info.getKey(), new HashMap<>());
+                final Map<InetAddress, List<Obj>> responders = this.heard.getOrDefault(info.getKey(), new HashMap<>());
                 responders.remove(responder);
                 if (responders.isEmpty())
                     this.heard.remove(info.getKey());
@@ -835,9 +841,9 @@ public class mdnsDiscovery extends MRec implements Closeable {
          * the local address this listener's responder is bound to: what tells one responder's resolution of an
          * instance from another's
          */
-        private final String responder;
+        private final InetAddress responder;
 
-        private PeerListener(final JmDNS mdns, final String responder) {
+        private PeerListener(final JmDNS mdns, final InetAddress responder) {
             this.mdns = mdns;
             this.responder = responder;
         }
@@ -850,7 +856,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
 
         @Override
         public void serviceResolved(final ServiceEvent event) {
-            mdnsDiscovery.this.admit(this.responder, event.getInfo(), event.getInfo().getInet4Addresses());
+            mdnsDiscovery.this.admit(this.responder, event.getInfo());
         }
 
         @Override

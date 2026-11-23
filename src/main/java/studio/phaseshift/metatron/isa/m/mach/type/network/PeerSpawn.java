@@ -204,12 +204,15 @@ public final class PeerSpawn {
 
     private static void declare(final fURI key, final fURI address) {
         // ADDED AS THE RING ADDS IT, and taken back the same way (undeclare): the roster keeps a count beside every
-        // other filer. The key is the peer's origin (ws://localhost:PORT), a rec key and no path segment. A forked node
-        // is an mtron node reached over ws: [mtron => [ws => …]]. Under the roster's own address, the monitor every
-        // roster writer holds (mdnsDiscovery too), so neither drops the other's row between its read and its write.
+        // other filer. The key is the peer's origin (ws://localhost:PORT), a rec key and no path segment. A spawned node
+        // is an mtron node carried by its address's own scheme ([mtron => [ws => …]]; a remote authority's wss or http
+        // alike, a forked one is ws, which resolve() holds it to), so the scheme-keyed view lists it and undeclare's
+        // test of that view holds for every scheme. Under the roster's own
+        // address, the monitor every roster writer holds (mdnsDiscovery too), so neither drops the other's row between
+        // its read and its write.
         synchronized (Network.ROOT_ROSTER) {
             Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
-                    .plus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address)))))));
+                    .plus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(address.scheme()), uri(address)))))));
         }
         DECLARED.add(key);
     }
@@ -221,7 +224,7 @@ public final class PeerSpawn {
             if (Machine.current().network().machines().jvm().keySet().stream()
                     .anyMatch(listed -> listed.isUri() && key.toString().equals(listed.uriValue().toString())))
                 Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
-                        .minus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(WS), uri(address(key))))))));
+                        .minus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(address(key).scheme()), uri(address(key))))))));
         }
     }
 
@@ -315,8 +318,12 @@ public final class PeerSpawn {
         // `ws://host:port/worker/#` instead of `/worker/#`, and the node would answer nothing the parent sends.
         final String root = requested.localize().toString();
         if (root.isEmpty() || root.equals("/"))
-            throw MTronException.of("push(%s) needs a namespace path: the node's store is mounted there", requested);
+            throw MTronException.of("spawn(%s) needs a namespace path: the node's store is mounted there", requested);
         final fURI scheme = null == requested.scheme() ? requested.scheme("ws") : requested;
+        // A FORKED NODE SERVES ws AND NOTHING ELSE (MachNode): a loopback authority asked for over another scheme would
+        // be declared, and listed, at an address nothing answers
+        if (scheme.isLoopbackHost() && !WS.equals(scheme.scheme()))
+            throw MTronException.of("spawn(%s) forks a node that serves ws only, so a local authority is ws://", requested);
         return scheme.hasPort() ? scheme : scheme.port(freePort());
     }
 

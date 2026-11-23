@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
@@ -142,40 +143,121 @@ public class NetworkBranchTest extends AbstractMetatronTest {
 
     /**
      * A SPAWNED PEER IS FILED AS THE RING FILES IT, AND TAKEN BACK WITH ITS FRAME: a non-loopback authority forks
-     * nothing and is declared, its origin keying an mtron/ws row the scheme-keyed view lists once however often it is
+     * nothing and is declared, its origin keying an mtron row the scheme-keyed view lists once however often it is
      * asked for; the frame that holds a connection to it reaps it on pop, the row taken back, and the origin can be
-     * declared again. The connection is a dial nothing answers (TEST-NET-3): an offline, supervised link, which the
-     * constructor waits out (CONNECT_TIMEOUT_MS) before indexing it.
+     * declared again.
      */
     @Test
     public void testASpawnedPeerIsAnMtronRowItsFrameTakesBack() {
         final Obj declared = Machine.read(Network.ROOT_ROSTER);
         final fURI origin = f("").scheme(WS).host("203.0.113.9").port(generatePort());
-        final fURI address = PeerSpawn.address(origin);
-        final java.util.function.Supplier<Obj> listed = () -> Machine.current().network().machines().jvm().entrySet().stream()
-                .filter(entry -> entry.getKey().isUri() && origin.toString().equals(entry.getKey().uriValue().toString()))
-                .map(Map.Entry::getValue).findFirst().orElse(noobj());
         try {
             final Machine child = Machine.current().push(f("spawn_reaper"));
             try {
-                checkEquality(LOG, uri(address), uri(PeerSpawn.spawn(origin.extend(f("/spawned")))), true);
+                checkEquality(LOG, uri(PeerSpawn.address(origin)), uri(PeerSpawn.spawn(origin.extend(f("/spawned")))), true);
                 PeerSpawn.spawn(origin.extend(f("/spawned")));
-                checkEquality(LOG, uri(address), listed.get(), true);
-                // the construction PeerCluster dials with: the constructor waits the dial out, and indexing mints the
-                // peer the pop reaps, offline and supervised
-                Network.Helper.index(new WebSocketRecClient(new WebSocketRec(mutableMap(
-                        uri(HOST), uri(address),
-                        uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
-                        uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null)));
+                checkEquality(LOG, uri(PeerSpawn.address(origin)), listed(origin), true);
+                offline(PeerSpawn.address(origin));
             } finally {
                 child.pop();
             }
-            checkEquality(LOG, noobj(), listed.get(), true);
+            checkEquality(LOG, noobj(), listed(origin), true);
             PeerSpawn.spawn(origin.extend(f("/spawned")));
-            checkEquality(LOG, uri(address), listed.get(), true);
+            checkEquality(LOG, uri(PeerSpawn.address(origin)), listed(origin), true);
         } finally {
             Machine.write(Network.ROOT_ROSTER, declared);
         }
+    }
+
+    /**
+     * A TAKE-BACK INTO A WIPED TABLE IS SKIPPED: the machine table written noobj after the spawn holds no count of it,
+     * so the pop's undeclare takes nothing back, and the origin declared again is listed — where a take-back into the
+     * absent level would leave a sign the new declaration cancels.
+     */
+    @Test
+    public void testASpawnAfterAWipedTableIsListed() {
+        final Obj declared = Machine.read(Network.ROOT_ROSTER);
+        final fURI origin = f("").scheme(WS).host("203.0.113.9").port(generatePort());
+        try {
+            final Machine child = Machine.current().push(f("spawn_wiped"));
+            try {
+                PeerSpawn.spawn(origin.extend(f("/spawned")));
+                offline(PeerSpawn.address(origin));
+                Machine.write(Network.ROOT_ROSTER.extend(MACHINE), noobj());
+            } finally {
+                child.pop();
+            }
+            PeerSpawn.spawn(origin.extend(f("/spawned")));
+            checkEquality(LOG, uri(PeerSpawn.address(origin)), listed(origin), true);
+        } finally {
+            Machine.write(Network.ROOT_ROSTER, declared);
+        }
+    }
+
+    /**
+     * A SPAWN IS FILED UNDER ITS OWN SCHEME: a wss authority's mtron endpoint is carried by wss, so the scheme-keyed
+     * view lists it, and the pop that reaps it takes it back — filed under ws, it was never listed and never taken back.
+     */
+    @Test
+    public void testAWssSpawnIsListedAndTakenBack() {
+        final Obj declared = Machine.read(Network.ROOT_ROSTER);
+        final fURI origin = f("").scheme(WSS).host("203.0.113.9").port(generatePort());
+        try {
+            final Machine child = Machine.current().push(f("spawn_wss"));
+            try {
+                PeerSpawn.spawn(origin.extend(f("/spawned")));
+                checkEquality(LOG, uri(PeerSpawn.address(origin)), listed(origin), true);
+                offline(PeerSpawn.address(origin));
+            } finally {
+                child.pop();
+            }
+            checkEquality(LOG, noobj(), listed(origin), true);
+        } finally {
+            Machine.write(Network.ROOT_ROSTER, declared);
+        }
+    }
+
+    /**
+     * A LOCAL AUTHORITY IS ws: a forked node serves ws and nothing else (MachNode), so resolve() — which forks nothing —
+     * passes a loopback request with no scheme (defaulted to ws, how every boot profile and harvest spawns) or with ws,
+     * and refuses one over another scheme, before spawn forks or declares anything.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // scheme % resolves to % why
+            "null    % ws   % no scheme is ws: how every boot profile and harvest spawns",
+            "ws      % ws   % ws passes as it is",
+            "wss     % null % wss is refused: nothing on the node answers it",
+            "http    % null % http is refused: nothing on the node answers it",
+    }, delimiter = '%', nullValues = "null")
+    void testALocalAuthorityIsWs(final String scheme, final String resolved, final String why) {
+        final fURI local = f("").host("localhost").port(generatePort());
+        final fURI requested = (null == scheme ? local : local.scheme(scheme)).extend(f("/spawned"));
+        if (null == resolved)
+            assertThrows(MTronException.class, () -> PeerSpawn.resolve(requested), why);
+        else
+            checkEquality(LOG, uri(local.scheme(resolved).extend(f("/spawned"))), uri(PeerSpawn.resolve(requested)), true);
+    }
+
+    /**
+     * what the scheme-keyed view lists for one origin key, by uri text
+     */
+    private static Obj listed(final fURI origin) {
+        return Machine.current().network().machines().jvm().entrySet().stream()
+                .filter(entry -> entry.getKey().isUri() && origin.toString().equals(entry.getKey().uriValue().toString()))
+                .map(Map.Entry::getValue).findFirst().orElse(noobj());
+    }
+
+    /**
+     * a connection the current frame holds and a pop reaps: the construction PeerCluster dials with, at an address
+     * nothing answers (TEST-NET-3), which the constructor waits out (CONNECT_TIMEOUT_MS) before indexing it offline
+     * and supervised
+     */
+    private static void offline(final fURI address) {
+        Network.Helper.index(new WebSocketRecClient(new WebSocketRec(mutableMap(
+                uri(HOST), uri(address),
+                uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null)));
     }
 
     @Test
