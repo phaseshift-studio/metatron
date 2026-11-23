@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.space.variableStack;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
@@ -38,6 +39,7 @@ import java.util.Set;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -230,22 +232,21 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
     }*/
 
     /**
-     * An absolute address is a space's to answer, nothing included: the machine's own space ({@code <vid>/#}) answers
-     * the machine's components itself. Only when no space covers it does the machine answer with its own rec — a
-     * machine with no vid, which mounts no space of its own.
-     * <p>
-     * The machine is asked with {@code at}, <b>never</b> {@code read}: a read would come straight back here and
-     * a root read would re-enter itself.
+     * the key memory's q-procs are read under, read directly on every access memory routes
      */
+    Obj Q = uri(QPROC);
+
     /**
      * AN ACCESS THIS MEMORY HANDS TO THE SPACE THAT COVERS IT passes through this memory's own q-procs (Marko,
      * 2026-11-23): memory is a space whose addresses are its spaces, so its {@code ?analq} measures each space it routes
-     * to, the access counted at the space's address (its mount, else its pattern's root). A memory that declares no
-     * q-procs pays one check. An access that carries a query is the space's own metadata traffic, and passes straight
-     * through.
+     * to, the access counted at the space's address (its mount, else its pattern's root). THE GATE COMES FIRST: a memory
+     * that declares no q-procs reads one map entry and builds nothing, and a {@code q} that holds anything but q-procs
+     * (a bad write) is taken for none, so it cannot break every access memory routes. An access that carries a query is
+     * the space's own metadata traffic, and passes straight through.
      */
     default Obj through(final Space space, final fURI vid) {
-        return vid.hasQ() ? space.read(vid)
+        return vid.hasQ() || !(this.jvm().get(Q) instanceof Lst qs && !qs.isEmpty() && qs.elements().allMatch(QProc.class::isInstance))
+                ? space.read(vid)
                 : QProc.Layer.read(this, null != space.vid() ? space.vid() : space.pattern().retractPattern(), () -> space.read(vid));
     }
 
@@ -253,10 +254,19 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
      * a write this memory hands to the space that covers it, through this memory's own q-procs: see {@link #through(Space, fURI)}
      */
     default Obj through(final Space space, final fURI vid, final Obj obj) {
-        return vid.hasQ() ? space.write(vid, obj)
+        return vid.hasQ() || !(this.jvm().get(Q) instanceof Lst qs && !qs.isEmpty() && qs.elements().allMatch(QProc.class::isInstance))
+                ? space.write(vid, obj)
                 : QProc.Layer.write(this, null != space.vid() ? space.vid() : space.pattern().retractPattern(), obj, () -> space.write(vid, obj));
     }
 
+    /**
+     * An absolute address is a space's to answer, nothing included: the machine's own space ({@code <vid>/#}) answers
+     * the machine's components itself. Only when no space covers it does the machine answer with its own rec — a
+     * machine with no vid, which mounts no space of its own.
+     * <p>
+     * The machine is asked with {@code at}, <b>never</b> {@code read}: a read would come straight back here and
+     * a root read would re-enter itself.
+     */
     default Obj readAbsolute(final fURI vid) {
         // findSpace, not getSpaceFor: the machine's own keys are the fallback, not a space, and resolving them is
         // this method's job — getSpaceFor must never return the machine cast to a Space (Machine is a Rec).

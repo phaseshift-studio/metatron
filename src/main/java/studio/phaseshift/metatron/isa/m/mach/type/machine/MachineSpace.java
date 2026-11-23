@@ -166,7 +166,7 @@ public final class MachineSpace extends memSpace {
             // the network IS a space now: its own read applies the layer, so bracketing here would double the hooks
             return this.owner.network().read(vid);
         // MEMORY'S OWN ?analq answers for the spaces it routes to (/memory/space/<s>?analq), never the store's
-        if (MEMORY.equals(part) && vid.hasQ(QCollection.ANALQ))
+        if (MEMORY.equals(part) && vid.hasQ(QCollection.ANALQ) && QProc.Helper.checkQProcs(this.owner.memory(), vid))
             return QProc.Layer.read(this.owner.memory(), vid, () -> noobj());
         // ~/sys, and a query on the machine or a component, are the store's: the component itself is no doc
         if (SYS.equals(part) || vid.hasQ())
@@ -234,7 +234,7 @@ public final class MachineSpace extends memSpace {
         if (NETWORK.equals(part) && this.below(vid) && !analyzes)
             return this.owner.network().write(vid, obj);
         // MEMORY'S OWN ?analq takes the requests for the spaces it routes to: /memory/space/<s>?analq -> analysis::[…]
-        if (MEMORY.equals(part) && vid.hasQ(QCollection.ANALQ))
+        if (MEMORY.equals(part) && vid.hasQ(QCollection.ANALQ) && QProc.Helper.checkQProcs(this.owner.memory(), vid))
             return QProc.Layer.write(this.owner.memory(), vid, obj, () -> obj);
         // AN ANALYZER IS WRITTEN IN PLACE: the analyzer IS its holder's meters, so a write at it declares its settings
         // (step, profile) field by field, and a write below it sets the one field. Its holder is a component's
@@ -249,10 +249,19 @@ public final class MachineSpace extends memSpace {
         Obj holder = at > this.depth ? this.owner.atDirect(uri(part)) : noobj();
         for (final String segment : at > this.depth ? segments.subList(this.depth + 1, at) : List.<String>of())
             holder = holder.isRec() ? holder.asRec().atDirect(uri(segment)) : noobj();
-        if (holder instanceof Analyzer.Aggregator aggregator) {
+        // an analyzer its holder keeps, else the one its ?analq holds (~/memory/analyzer, ~/memory/space/<s>/analyzer),
+        // which is written as the holder's own is, but comes and goes with its q-proc, never by a write at it
+        final Analyzer analq = holder instanceof Analyzer.Aggregator aggregator && null != aggregator.analyzer() ? null
+                : holder instanceof Addressable source ? source.analq() : null;
+        if (holder instanceof Analyzer.Aggregator || null != analq) {
+            final Obj held = holder;
             final List<String> field = segments.subList(at + 1, segments.size());
             final boolean analysis = !field.isEmpty() && ANALYSIS.equals(field.getFirst());
-            final Analyzer analyzer = aggregator.analyzer();
+            final Analyzer analyzer = null != analq ? analq : ((Analyzer.Aggregator) holder).analyzer();
+            if (null != analq && field.isEmpty()) {
+                LOG.warn("%s's analyzer is its analq's, and comes and goes with that q-proc (write its q): %s refused", holder.vid(), vid);
+                return noobj();
+            }
             final Set<fURI> meters = Set.of(Analysis.COUNTER_TID, Analysis.GAUGE_TID, Analysis.TIMER_TID);
             if ((analysis && 1 == field.size()) || (!field.isEmpty() && Analyzer.MUTE.equals(uri(field.getFirst())))) {
                 LOG.warn("an analyzer's analysis and mutes are derived, not written (mute a probe at analysis/<probe>): %s refused", vid);
@@ -273,10 +282,10 @@ public final class MachineSpace extends memSpace {
             }
             return QProc.Layer.write(this, vid, obj, () -> {
                 if (field.isEmpty() && obj.isNoObj())
-                    aggregator.analyzer(null);
+                    ((Analyzer.Aggregator) held).analyzer(null);
                 else if (null == analyzer && obj.isRec())
                     // a component's publishes at its address; one held deeper is read where it is held
-                    aggregator.analyzer(new BasicAnalyzer(new LinkedHashMap<>(obj.asRec().jvm()), MACH_ANALYZER_TID, null,
+                    ((Analyzer.Aggregator) held).analyzer(new BasicAnalyzer(new LinkedHashMap<>(obj.asRec().jvm()), MACH_ANALYZER_TID, null,
                             at == this.depth + 1 ? part : null));
                 else if (analysis)
                     analyzer.mute(f(String.join("/", field.subList(1, field.size()))), obj.isNoObj());

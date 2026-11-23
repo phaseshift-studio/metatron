@@ -30,8 +30,12 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -40,6 +44,26 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * q-proc, changing a setting) changes that space — no second copy in a store beside the index.
  */
 public class MemorySpaceMountTest extends AbstractMetatronTest {
+
+    /**
+     * MEMORY'S Q-PROCS ARE READ WITH CARE, since every access memory routes reads them: a {@code q} that holds no
+     * q-procs (the brackets forgotten) is taken for none, and is repaired by writing it again; and a ?analq under
+     * /memory is refused, as any space's undeclared query is, while memory declares none.
+     */
+    @Test
+    void testMemorysQProcsCannotBreakItsRouting() {
+        Machine.evaluate("memspace::[pattern=>/carea/#]@/memory/space/carea");
+        final Obj refused = Machine.evaluate("/memory/space/carea?analq -> analysis::[read=>counter::T]");
+        assertTrue(refused.isFail(), "memory declares no analq yet: the request is refused, never silently taken: " + refused);
+        Machine.evaluate("/memory/q -> analq::[=>]");
+        try {
+            Machine.evaluate("/carea/a -> 1");
+            assertEquals(1L, Machine.read(f("/carea/a")).intValue(), "a q that holds no q-proc list breaks no access memory routes");
+        } finally {
+            Machine.evaluate("/memory/q -> noobj");
+        }
+        assertEquals(1L, Machine.read(f("/carea/a")).intValue(), "and it is repaired by writing it again");
+    }
 
     /**
      * MEMORY IS A SPACE WHOSE ADDRESSES ARE ITS SPACES (Marko, 2026-11-23). With {@code q => [analq::[=>]]} at the memory,
@@ -67,8 +91,15 @@ public class MemorySpaceMountTest extends AbstractMetatronTest {
             assertEquals(2L, Machine.read(f("/memory/analyzer/analysis/addr/memory/space/logs/read")).intValue(),
                     "and walked into, a space's readings at its address");
             Machine.evaluate("/memory/space/logs/q -> [analq::[=>]]");
-            assertInstanceOf(Analyzer.class, Machine.read(f("/memory/space/logs/analyzer")),
-                    "a space that declares analq has its analyzer read at its mount address");
+            final Space mounted = Machine.current().memory().spaces().jvm().get(uri("logs")).as();
+            assertSame(mounted.analq(), Machine.read(f("/memory/space/logs/analyzer")),
+                    "a space that declares analq has its own analyzer read at its mount address");
+            final Analyzer memory = (Analyzer) Machine.read(f("/memory/analyzer"));
+            assertTrue(Machine.write(f("/memory/analyzer"), noobj()).isNoObj(), "an analq's analyzer is not switched off at its address");
+            assertSame(memory, Machine.read(f("/memory/analyzer")), "it comes and goes with its q-proc");
+            Machine.write(f("/memory/analyzer/step"), jnt(100));
+            assertEquals(100L, memory.atDirect(uri("step")).intValue(), "a setting written at it lands in the analq's analyzer");
+            assertNull(Machine.current().memory().analyzer(), "and installs no analyzer of memory's own beside it");
         } finally {
             Machine.evaluate("/memory/q -> noobj");
         }
