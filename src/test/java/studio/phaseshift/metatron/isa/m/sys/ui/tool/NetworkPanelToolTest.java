@@ -107,8 +107,8 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         exchange(PEER_A, "2.plus(2)", 6L);
         // EVERY COUNT IS A WIRE FACT, the network's meter counted where frames cross the socket (send/onMessage) --
         // never the window's rows, which hold two exchanges here
-        this.wire.incr(f(WIRE), f(RECV), 3L);
-        this.wire.incr(f(WIRE), f(SENT), 5L);
+        this.wire.incr(f(WIRE).extend(f(RECV)), 3L);
+        this.wire.incr(f(WIRE).extend(f(SENT)), 5L);
         final String summary = plain(lines(false, 12, "", 120).getFirst());
         assertTrue(summary.startsWith("↓3 ↑5"), "the frames each way, read off the network's meters: " + summary);
         assertTrue(summary.contains("1 peer"), "one lane is described: " + summary);

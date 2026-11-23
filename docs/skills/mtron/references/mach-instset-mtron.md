@@ -271,7 +271,8 @@ construction, so `<scheme>://host:port/#?analq` answers that socket's analysis: 
 `read` at its wire address, a sent message a `write` there, a hang-up a write of `noobj` (the `delete` subset), and
 `connections` a gauge beside them. Each socket's q-proc holds its own analyzer, so two servers on one machine never
 share meters — and the network's `~/network/analyzer` still counts the WIRE (`wire/sent`, `wire/recv`, every frame
-either way), which is a different question from the work one server did. An `?analq` read of a local socket is
+either way), which is a different question from the work one server did, and gauges the peers it holds (`peer`,
+sampled when the analysis is read, so a connect shows before any frame is sent). An `?analq` read of a local socket is
 answered locally even while a peer is declared at that origin: the meters of a socket this machine holds are not a
 peer's to answer.
 

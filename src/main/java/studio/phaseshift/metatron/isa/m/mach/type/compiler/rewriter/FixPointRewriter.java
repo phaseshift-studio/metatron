@@ -119,17 +119,18 @@ public class FixPointRewriter extends AbstractRewriter {
                     .forEach(r -> {
                         //this.logger().warn("rewrite: %s", r);
                         //this.logger().warn("code: %s", rewritten.get());
-                        final long t0 = null == profile ? 0L : System.nanoTime();
+                        final long t0 = Analyzer.Helper.start(profile);
                         final Code before = rewritten.get();
                         // capture the inst count BEFORE apply: rewriters mutate the code in place
                         // (selfJVM), so reading before.size() after the fact reports the post size.
                         final int in = before.codeValue().size();
                         final Obj out = r.apply(before);
+                        // the rule's probes are named by the rule, so their path is built only while a run is profiled
                         if (null != profile) {
-                            final fURI rule = f(r.tid().name());
-                            profile.record(f(REWRITE), rule.extend(TIME), System.nanoTime() - t0);
-                            profile.incr(f(REWRITE), rule.extend(IN), in);
-                            profile.incr(f(REWRITE), rule.extend(OUT), out.isCode() ? out.asCode().codeValue().size() : in);
+                            final fURI rule = f(REWRITE).extend(r.tid().name());
+                            Analyzer.Helper.stop(profile, rule.extend(TIME), t0);
+                            Analyzer.Helper.incr(profile, rule.extend(IN), in);
+                            Analyzer.Helper.incr(profile, rule.extend(OUT), out.isCode() ? out.asCode().codeValue().size() : in);
                         }
                         if (out.isCode())
                             rewritten.set(out.asCode());

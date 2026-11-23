@@ -19,11 +19,11 @@
 package studio.phaseshift.metatron.isa.m.mach.type.analyzer;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.ANALYZER;
@@ -38,23 +38,23 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * analyzer::[analysis => analysis::T, step => int::T, profile => bool::T, enabled => bool::T]
  * </pre>
  * <ul>
- *   <li><b>recording</b> ({@link #incr}, {@link #record}, {@link #set}) is the producer's, in Java, where the thing it
- *   counts happens. It never writes a rec: the meters are lock-free cells, so a socket frame or a monad step pays an
+ *   <li><b>recording</b> is the producer's, in Java, where the thing it counts happens, and always through the verbs
+ *   of {@link Helper}. It never writes a rec: the meters are lock-free cells, so a socket frame or a monad step pays an
  *   atomic add — never a map copy, a type check or a store write;</li>
  *   <li><b>reading</b> is anyone's, in mtron: {@code *~/network/analyzer/analysis/wire/sent};</li>
  *   <li><b>subscribing</b> is the space's own pubsub: {@code ~/+/analyzer/analysis?subq -> sub::[code=>…]} receives
  *   {@code pub::[<address>, analysis::T]} at most once per {@code step} (millis), and only after a change;</li>
  *   <li><b>{@code profile}</b> switches on a component's costly instrumentation (the processor's per-monad timings),
- *   which is off by default; <b>{@code enabled}</b> switches recording itself off, so a producer's one {@link
- *   #enabled()} read elides the meter work entirely.</li>
+ *   which is off by default; <b>{@code enabled}</b> switches recording itself off, so a verb's one {@link #enabled()}
+ *   read elides the meter work entirely.</li>
  * </ul>
  * <p>
- * An analyzer is used two ways, named by the two sub-interfaces below: an {@link Aggregator} OWNS one (a component, at
- * {@code ~/<component>/analyzer} in the machine's space), and a {@link Recorder} RECORDS into one (a server). Analyzers
- * live only in the machine's component space — the meta-construct, never sprinkled through a data address. A DATA SPACE
- * records through the {@code ?analq} q-proc instead, and so does a SERVER: a {@code listener::T} is an addressable
- * source carrying its own {@code ?analq}, so the analyzer it records into is the one its q-proc holds rather than a
- * resolved {@code analyzer => path} reference into a shared component's meters.
+ * A PROBE IS A PATH: {@code wire/recv}, {@code resolve/inst_resolve}, {@code per_inst/0/time}. The analysis nests a
+ * probe as deep as its path, so a read walks it ({@code *~/network/analyzer/analysis/wire}).
+ * <p>
+ * An analyzer sits at its owner's address (Marko, 2026-11-22/23): a component's at {@code ~/<component>/analyzer}, in
+ * the machine's space; a server's in the {@code ?analq} q-proc its socket carries; a profiled run's in
+ * {@link #PROFILE}. A DATA SPACE records through the {@code ?analq} q-proc it declares.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -68,25 +68,32 @@ public interface Analyzer extends Rec {
     /**
      * THE ANALYZER THIS THREAD'S RUN IS PROFILED INTO, or {@code null} when nothing profiles it. {@code profile()} sets
      * one of its own for the runs it times, and a computer whose processor's analyzer has {@code profile} on sets that
-     * one; a computer minted under a profile carries it to whichever thread runs it. The costly instrumentation reads
-     * it once and measures only when it is set, so a run nobody profiles pays one thread-local read per probe.
+     * one; a computer minted under a profile carries it to whichever thread runs it. Handed to the verbs, it is the
+     * run's gate: a run nobody profiles pays one thread-local read per probe and measures nothing.
      */
     ThreadLocal<Analyzer> PROFILE = new ThreadLocal<>();
 
     /**
-     * count {@code delta} more at {@code group/probe} — a {@code counter}, the monotonic meter.
+     * count {@code delta} more at {@code probe} — a {@code counter}, the monotonic meter.
      */
-    Analyzer incr(fURI group, fURI probe, long delta);
+    Analyzer incr(fURI probe, long delta);
 
     /**
-     * one more observation of {@code nanos} at {@code group/probe} — a {@code timer}: count, total, min, max.
+     * one more observation of {@code nanos} at {@code probe} — a {@code timer}: count, total, min, max.
      */
-    Analyzer record(fURI group, fURI probe, long nanos);
+    Analyzer record(fURI probe, long nanos);
 
     /**
-     * the value at {@code group/probe} now — a {@code gauge}, the point-in-time meter (the one kind that is no monoid).
+     * the value at {@code probe} now — a {@code gauge}, the point-in-time meter (the one kind that is no monoid).
      */
-    Analyzer set(fURI group, fURI probe, double value);
+    Analyzer set(fURI probe, double value);
+
+    /**
+     * a {@code gauge} at {@code probe} whose value is {@code sample}'s, taken each time the analysis is built. Nothing
+     * records it, so it can never miss an event — and nothing announces it either: a sampled gauge changes without
+     * scheduling a publication, and a subscriber sees it with the next change.
+     */
+    Analyzer gauge(fURI probe, DoubleSupplier sample);
 
     /**
      * @return the analysis the meters hold as they stand — a value built for this read, which the reader may keep
@@ -94,12 +101,18 @@ public interface Analyzer extends Rec {
     Analysis analysis();
 
     /**
+     * the key the {@code enabled} setting is read under — a constant, like {@link #KEY}
+     */
+    Obj ENABLED_KEY = uri(ENABLED);
+
+    /**
      * whether recording is on — a setting switched off at {@code ~/<component>/analyzer/enabled}. On by default; a
-     * producer reads it once per event so that, muted, it pays that one read and nothing else.
+     * verb reads it once per event so that, muted, the producer pays that one read and nothing else. A DIRECT MAP
+     * READ that builds nothing: a verb asks on every event, inside the type graph's own lookup too, where building an
+     * obj (or an {@code at()} that resolves one) looks a type up again and recurses without end.
      */
     default boolean enabled() {
-        final Obj enabled = this.at(uri(ENABLED));
-        return !enabled.isBool() || enabled.boolValue();
+        return !(this.jvm().get(ENABLED_KEY) instanceof Obj enabled) || !enabled.isBool() || enabled.boolValue();
     }
 
     /**
@@ -122,119 +135,85 @@ public interface Analyzer extends Rec {
     }
 
     /**
-     * RECORDER — the RECORDING role: a thing (a server) that records into an analyzer. Its {@link #analyzer()} is the
-     * analyzer it carries (null when it carries none, and recording is then a noop) and its {@link #group()} is the
-     * group its probes read under inside it — a server's is the empty group, since its analyzer is its own and its
-     * probes sit flat at the analysis root.
-     * <p>
-     * Recording goes through {@link Helper#incr}/{@link Helper#set}/{@link Helper#record}/{@link Helper#timed}, which
-     * gate it: a producer pays one {@code null} read and one {@link Analyzer#enabled()} read and nothing else when its
-     * analyzer is absent or muted. {@link Helper#locateBaseAnalyzer} resolves an {@code analyzer => path} binding into
-     * the analyzer that path names and the group that path leaves below it — the {@code locateBasePoly} walk, for
-     * analyzers.
+     * THE RECORDING VERBS — the one way a producer records, so no statistics code is interleaved with the work it
+     * measures (Marko, 2026-11-23). Each verb is handed the analyzer to record into and GATES ITSELF: an absent analyzer
+     * ({@code null}) or a muted one ({@code enabled => false}) records nothing, and the work a verb wraps runs bare. Which
+     * analyzer is the gate's choice, never the verb's:
+     * <ul>
+     *   <li>the OWNER's, for the cheap meters that are always on: {@code network.analyzer()}, a server's
+     *   {@code analyzer()};</li>
+     *   <li>the RUN's, {@code Analyzer.PROFILE.get()}, for the costly ones a profile switches on.</li>
+     * </ul>
+     * A probe is a {@code static final} path built from the tokens, so a probe nobody measures costs no {@code f()}.
+     * {@link #timed} wraps a block; {@link #start}/{@link #stop} time a region with no lambda, for a hot path or one with
+     * early exits.
      */
-    interface Recorder extends Rec {
-
-        /**
-         * the analyzer this thing records into, or {@code null} when it carries none (recording is a noop)
-         */
-        Analyzer analyzer();
-
-        /**
-         * the group this thing records under inside its analyzer, or {@code null} when it carries none
-         */
-        fURI group();
-
-        /**
-         * whether recording is on — a reader switches it off at the analyzer's {@code enabled} setting
-         */
-        default boolean enabled() {
-            final Analyzer analyzer = this.analyzer();
-            return null != analyzer && analyzer.enabled();
+    final class Helper {
+        private Helper() {
         }
 
         /**
-         * the recording verbs, gated — one algorithm, one place: a producer calls these and never considers whether its
-         * analyzer is absent or muted, nor where the group lives.
+         * count {@code delta} more at {@code probe}
          */
-        final class Helper {
-            private Helper() {
-            }
+        public static void incr(final Analyzer analyzer, final fURI probe, final long delta) {
+            if (null != analyzer && analyzer.enabled())
+                analyzer.incr(probe, delta);
+        }
 
-            /**
-             * count {@code delta} more at {@code <group>/<probe>} — the one obvious line for a counter.
-             */
-            public static void incr(final Recorder recorder, final fURI probe, final long delta) {
-                final Analyzer analyzer = recorder.analyzer();
-                final fURI group = recorder.group();
-                if (null == analyzer || null == group || !analyzer.enabled())
-                    return;
-                analyzer.incr(group, probe, delta);
-            }
+        /**
+         * the gauge at {@code probe} is {@code value} now
+         */
+        public static void set(final Analyzer analyzer, final fURI probe, final double value) {
+            if (null != analyzer && analyzer.enabled())
+                analyzer.set(probe, value);
+        }
 
-            /**
-             * the value at {@code <group>/<probe>} now — the one obvious line for a gauge.
-             */
-            public static void set(final Recorder recorder, final fURI probe, final double value) {
-                final Analyzer analyzer = recorder.analyzer();
-                final fURI group = recorder.group();
-                if (null == analyzer || null == group || !analyzer.enabled())
-                    return;
-                analyzer.set(group, probe, value);
-            }
+        /**
+         * one more observation of {@code nanos} at {@code probe} — a duration measured elsewhere
+         */
+        public static void record(final Analyzer analyzer, final fURI probe, final long nanos) {
+            if (null != analyzer && analyzer.enabled())
+                analyzer.record(probe, nanos);
+        }
 
-            /**
-             * one more observation of {@code nanos} at {@code <group>/<probe>} — the raw timer, when the elapsed time
-             * was measured outside {@link #timed}.
-             */
-            public static void record(final Recorder recorder, final fURI probe, final long nanos) {
-                final Analyzer analyzer = recorder.analyzer();
-                final fURI group = recorder.group();
-                if (null == analyzer || null == group || !analyzer.enabled())
-                    return;
-                analyzer.record(group, probe, nanos);
+        /**
+         * run {@code work}, recording its elapsed nanos at {@code probe}, and answer what it answers. Unmeasured, the
+         * clock is never read and {@code work} runs bare.
+         */
+        public static <R> R timed(final Analyzer analyzer, final fURI probe, final Supplier<R> work) {
+            if (null == analyzer || !analyzer.enabled())
+                return work.get();
+            final long t0 = System.nanoTime();
+            try {
+                return work.get();
+            } finally {
+                analyzer.record(probe, System.nanoTime() - t0);
             }
+        }
 
-            /**
-             * time {@code work}, recording the elapsed nanos at {@code <group>/<probe>}. Muted, the clock is never read
-             * and {@code work} runs bare — the t0/record/nanoTime-skip idiom is here, not at the call site.
-             */
-            public static <R> R timed(final Recorder recorder, final fURI probe, final Supplier<R> work) {
-                final Analyzer analyzer = recorder.analyzer();
-                final fURI group = recorder.group();
-                if (null == analyzer || null == group || !analyzer.enabled())
-                    return work.get();
-                final long t0 = System.nanoTime();
-                try {
-                    return work.get();
-                } finally {
-                    analyzer.record(group, probe, System.nanoTime() - t0);
-                }
-            }
+        /**
+         * the clock a region starts at, for {@link #stop}: {@code 0} when nothing measures it, so an unmeasured region
+         * never reads the clock
+         */
+        public static long start(final Analyzer analyzer) {
+            return null == analyzer ? 0L : System.nanoTime();
+        }
 
-            /**
-             * THE BASE ANALYZER A PATH NAMES, and the group it leaves below it — the {@code locateBasePoly} walk, for
-             * analyzers: retract up from {@code path} until an {@link Analyzer} is read at a component's {@code
-             * analyzer} door ({@code ~/<component>/analyzer}); the retracted tail is the group. {@code
-             * ~/network/analyzer/web_analyzer/http} resolves to the network's analyzer with group
-             * {@code web_analyzer/http}. Answers {@code null} when the path names no component's analyzer.
-             */
-            public static Located locateBaseAnalyzer(final fURI path) {
-                fURI candidate = path;
-                while (!candidate.segments().isEmpty()) {
-                    final Obj read = Machine.read(candidate);
-                    if (read instanceof Analyzer analyzer && ANALYZER.equals(candidate.segments().getLast()))
-                        return new Located(analyzer, path.removePrefix(candidate));
-                    candidate = candidate.retract(1);
-                }
-                return null;
-            }
+        /**
+         * one more observation at {@code probe}: the nanos since {@code t0}, the clock {@link #start} answered
+         */
+        public static void stop(final Analyzer analyzer, final fURI probe, final long t0) {
+            if (null != analyzer && analyzer.enabled())
+                analyzer.record(probe, System.nanoTime() - t0);
+        }
 
-            /**
-             * an analyzer and the group within it a path resolves to
-             */
-            public record Located(Analyzer analyzer, fURI group) {
-            }
+        /**
+         * a gauge at {@code probe} sampled from {@code sample} each time the analysis is read — registered once, where
+         * the thing it samples is built
+         */
+        public static void gauge(final Analyzer analyzer, final fURI probe, final DoubleSupplier sample) {
+            if (null != analyzer)
+                analyzer.gauge(probe, sample);
         }
     }
 }

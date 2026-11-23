@@ -66,6 +66,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class SpecificitySelector extends MRec implements Selector {
 
+    /**
+     * the resolver's lookup and hint composition, timed while a run is profiled
+     */
+    private static final fURI INST_RESOLVE_PROBE = f(Tokens.RESOLVE).extend(Tokens.INST_RESOLVE);
     private static final SpecificitySelector INSTANCE = new SpecificitySelector(mutableMap(), MACH_SPECIFICITY_SELECTOR_TID, null);
 
     public static SpecificitySelector single() {
@@ -129,11 +133,7 @@ public class SpecificitySelector extends MRec implements Selector {
             if (fetched.isObjInst())
                 return Inst.Helper.bindQ(lhs, userInst, Inst.Helper.unaddressed(fetched.asInst()));
         }
-        final Analyzer profile = Analyzer.PROFILE.get();
-        final long t0 = null == profile ? 0L : System.nanoTime();
-        final Obj fetched = Machine.read(basePath);
-        if (null != profile)
-            profile.record(f(Tokens.RESOLVE), f(Tokens.INST_RESOLVE), System.nanoTime() - t0);
+        final Obj fetched = Analyzer.Helper.timed(Analyzer.PROFILE.get(), INST_RESOLVE_PROBE, () -> Machine.read(basePath));
 
         // A GENERIC CAST TARGET NAMES NO RANGE. A cast's target IS its range, so as(A::T) asks for no particular
         // type, and an overload that produces one (rec => json) cannot serve it: only a generic-range cast can,
@@ -192,14 +192,13 @@ public class SpecificitySelector extends MRec implements Selector {
      */
     private Inst hintCompose(final Inst candidate, final Inst userInst) {
         final Analyzer profile = Analyzer.PROFILE.get();
-        final long t0 = null == profile ? 0L : System.nanoTime();
+        final long t0 = Analyzer.Helper.start(profile);
         Inst hinted = userInst.hasDom() ? candidate.dom(this.hintedDom(candidate.dom(), userInst.dom())) : candidate;
         hinted = userInst.hasRng() ? hinted.rng(userInst.rng()) : hinted;
         hinted = userInst.tid().basePath().equals(AS_INST_TID)
                 ? hinted.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : Obj.Helper.specificType(userInst.arg(0)))
                 : hinted;
-        if (null != profile)
-            profile.record(f(Tokens.RESOLVE), f(Tokens.INST_RESOLVE), System.nanoTime() - t0);
+        Analyzer.Helper.stop(profile, INST_RESOLVE_PROBE, t0);
         return hinted;
     }
 
@@ -232,14 +231,13 @@ public class SpecificitySelector extends MRec implements Selector {
         if (userInst.hasDom() && !Inst.Helper.admitsIgnoringCoefficient(candidate, userInst.dom()))
             return null;
         final Analyzer profile = Analyzer.PROFILE.get();
-        final long t0 = null == profile ? 0L : System.nanoTime();
+        final long t0 = Analyzer.Helper.start(profile);
         Inst hinted = userInst.hasDom() ? candidate.dom(userInst.dom()) : candidate;
         hinted = userInst.hasRng() ? hinted.rng(userInst.rng()) : hinted;
         hinted = userInst.tid().basePath().equals(AS_INST_TID)
                 ? hinted.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : userInst.arg(0).asType())
                 : hinted;
-        if (null != profile)
-            profile.record(f(Tokens.RESOLVE), f(Tokens.INST_RESOLVE), System.nanoTime() - t0);
+        Analyzer.Helper.stop(profile, INST_RESOLVE_PROBE, t0);
         return hinted;
     }
 

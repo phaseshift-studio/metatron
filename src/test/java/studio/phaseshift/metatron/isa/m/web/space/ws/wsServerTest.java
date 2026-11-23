@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.Tokens.RUN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -446,5 +447,49 @@ public class wsServerTest extends AbstractMetatronTest {
         }
         assertFalse(reads.isNoObj(), "a read lands in the socket's analysis within five seconds");
         return reads.asRec();
+    }
+
+    /**
+     * A PEER SHOWS IN THE NETWORK'S ANALYSIS AS SOON AS IT IS HELD: {@code peer} is a gauge of the peers the level
+     * holds, sampled when the analysis is read, so a bare connect counts before any frame is sent, and a drop takes it
+     * away again.
+     */
+    @Test
+    void testAPeerShowsInTheNetworkAnalysis() throws Exception {
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final Network network = Machine.current().network();
+        Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
+        final Obj held = Machine.read(f("/network/analyzer/analysis/peer"));
+        assertFalse(held.isNoObj(), "a connect shows in the analysis: " + Machine.read(f("/network/analyzer/analysis")));
+        assertTrue(held.realValue() >= 1.0d, "the peer this level holds is counted: " + held);
+        network.drop(this.socket);
+        final long deadline = System.currentTimeMillis() + 5000;
+        while (System.currentTimeMillis() < deadline && network.peers().elements().count() > 0)
+            Thread.sleep(50);
+        assertEquals(0.0d, Machine.read(f("/network/analyzer/analysis/peer")).realValue(), 0.0d,
+                "and a drop takes it away, with no event to tell the gauge");
+    }
+
+    /**
+     * A MUTED NETWORK COUNTS NO FRAME: the wire's taps record through the verbs, so the network analyzer's
+     * {@code enabled} setting holds for them as it does for every other meter, while the frames themselves still flow.
+     */
+    @Test
+    void testAMutedNetworkCountsNoFrame() {
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final Network network = Machine.current().network();
+        Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
+        final Obj warm = network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)"));
+        assertFalse(warm.isFail(), "the socket answers: " + warm);
+        Machine.write(f("/network/analyzer/enabled"), bool(false));
+        try {
+            final long before = Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue();
+            final Obj answer = network.submit(this.socket, ObjmtronSerializer.parse("1.plus(2)"));
+            assertFalse(answer.isFail(), "a muted network still carries frames: " + answer);
+            assertEquals(before, Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue(),
+                    "and counts none of them");
+        } finally {
+            Machine.write(f("/network/analyzer/enabled"), bool(true));
+        }
     }
 }

@@ -87,6 +87,12 @@ public final class TypeGraph {
      */
     public static volatile boolean CACHE_ENABLED = true;
 
+    /**
+     * a profiled lookup's probes
+     */
+    private static final fURI CACHE_HITS = f(CACHE).extend(HITS);
+    private static final fURI CACHE_MISSES = f(CACHE).extend(MISSES);
+
     public TypeGraph() {
     }
 
@@ -117,12 +123,10 @@ public final class TypeGraph {
         final Analyzer profile = Analyzer.PROFILE.get();
         final Entry hit = this.resolved.get(key);
         if (null != hit && hit.gen == this.generation.get()) {
-            if (null != profile)
-                profile.incr(f(CACHE), f(HITS), 1L);
+            Analyzer.Helper.incr(profile, CACHE_HITS, 1L);
             return hit.type;
         }
-        if (null != profile)
-            profile.incr(f(CACHE), f(MISSES), 1L);
+        Analyzer.Helper.incr(profile, CACHE_MISSES, 1L);
         final long gen = this.generation.get();
         // WATCH BEFORE RESOLVING: a registration that lands while resolve runs must not lose to it. with
         // the watch in place first, that write's onWrite finds the key watched and bumps the generation,

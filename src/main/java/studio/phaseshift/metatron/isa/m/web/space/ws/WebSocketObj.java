@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
@@ -173,7 +174,7 @@ public interface WebSocketObj extends Rec, Closeable {
             }
             // THE WIRE IS COUNTED WHERE IT IS: below the q-procs, which see only the writes this machine addresses at a
             // peer — never a reply, never an inbound push — so a ?subq could not feed these meters
-            Machine.current().network().analyzer().incr(f(WIRE), f(SENT), 1L);
+            Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_SENT, 1L);
             // ... AND A SERVER COUNTS ITS OWN REPLY AS A WRITE AT THE ROUTE IT SERVED, in the socket's own analyzer:
             // the network's wire meters say what crossed this vm's sockets, the listener's say what one server did
             final Listener served = this.listener();

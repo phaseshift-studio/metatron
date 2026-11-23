@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -151,6 +152,13 @@ public final class QCollection {
     public static final String ANALQ = "analq";
     public static final fURI ANALQ_PATTERN = f(ANALQ);
     public static final fURI ANALQ_TID = QPROC_TID.extend(ANALQ_PATTERN);
+    // the access meters an ?analq records, read flat at the analysis root
+    private static final fURI READ_COUNT = f("read/count");
+    private static final fURI READ_LATENCY = f("read/latency");
+    private static final fURI WRITE_COUNT = f("write/count");
+    private static final fURI WRITE_LATENCY = f("write/latency");
+    private static final fURI DELETE_COUNT = f("write/delete/count");
+    private static final fURI DELETE_LATENCY = f("write/delete/latency");
     public static final Type ANALQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(ANALQ_TID)
@@ -587,27 +595,27 @@ public final class QCollection {
                 .obj(f(OBJ), analyzer)
                 .preRead(vid -> analyzer.analysis())
                 .qlessRead((vid, obj) -> {
-                    if (vid.hasQ() || !analyzer.enabled())
+                    if (vid.hasQ())
                         return noobj();
                     final long nanos = QProc.Layer.elapsedNanos();
-                    analyzer.incr(f(""), f("read/count"), 1L);
+                    Analyzer.Helper.incr(analyzer, READ_COUNT, 1L);
                     if (nanos >= 0L)            // no Layer bracket (a source with its own sequence) is not a 0ns read
-                        analyzer.record(f(""), f("read/latency"), nanos);
+                        Analyzer.Helper.record(analyzer, READ_LATENCY, nanos);
                     return noobj();
                 })
                 .broadcast((vid, obj) -> {
-                    if (vid.hasQ() || !analyzer.enabled())
+                    if (vid.hasQ())
                         return noobj();
                     // write/latency times EVERY write, deletes included, exactly as write/count counts them: the
                     // delete subset is a second view of the same accesses, not a mutually exclusive bucket
                     final long nanos = QProc.Layer.elapsedNanos();
-                    analyzer.incr(f(""), f("write/count"), 1L);
+                    Analyzer.Helper.incr(analyzer, WRITE_COUNT, 1L);
                     if (nanos >= 0L)
-                        analyzer.record(f(""), f("write/latency"), nanos);
+                        Analyzer.Helper.record(analyzer, WRITE_LATENCY, nanos);
                     if (obj.isNoObj()) {
-                        analyzer.incr(f(""), f("write/delete/count"), 1L);
+                        Analyzer.Helper.incr(analyzer, DELETE_COUNT, 1L);
                         if (nanos >= 0L)
-                            analyzer.record(f(""), f("write/delete/latency"), nanos);
+                            Analyzer.Helper.record(analyzer, DELETE_LATENCY, nanos);
                     }
                     return noobj();
                 })

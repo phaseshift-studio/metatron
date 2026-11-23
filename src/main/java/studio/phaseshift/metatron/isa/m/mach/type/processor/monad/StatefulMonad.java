@@ -70,8 +70,8 @@ public interface StatefulMonad extends Monad<Lst> {
         final Analyzer profile = Analyzer.PROFILE.get();
         if (null == profile)
             return;
-        profile.incr(f(FLOW), f(MONADS), 1L);
-        profile.incr(f(FLOW), f(C_SUM), coeffMagnitude(this.obj()));
+        profile.incr(f(FLOW).extend(MONADS), 1L);
+        profile.incr(f(FLOW).extend(C_SUM), coeffMagnitude(this.obj()));
     }
 
     @Override
@@ -91,16 +91,16 @@ public interface StatefulMonad extends Monad<Lst> {
         final long t0 = null == profile ? 0L : System.nanoTime();
         final Inst nxt = code.nextInst(this.inst());
         if (null != profile) {
-            profile.record(f(APPLY), f(NEXT), System.nanoTime() - t0);
+            profile.record(f(APPLY).extend(NEXT), System.nanoTime() - t0);
             final fURI curVid = this.inst().vid();
             if (null != curVid) {
-                profile.incr(f(PER_INST), curVid.extend(MONAD_OUT), 1L);
-                profile.incr(f(PER_INST), curVid.extend(C_OUT), coeffMagnitude(obj));
+                profile.incr(f(PER_INST).extend(curVid.extend(MONAD_OUT)), 1L);
+                profile.incr(f(PER_INST).extend(curVid.extend(C_OUT)), coeffMagnitude(obj));
             }
             final fURI nxtVid = nxt.vid();
             if (null != nxtVid) {
-                profile.incr(f(PER_INST), nxtVid.extend(MONAD_IN), 1L);
-                profile.incr(f(PER_INST), nxtVid.extend(C_IN), coeffMagnitude(obj));
+                profile.incr(f(PER_INST).extend(nxtVid.extend(MONAD_IN)), 1L);
+                profile.incr(f(PER_INST).extend(nxtVid.extend(C_IN)), coeffMagnitude(obj));
             }
         }
         return this.jvm(lst(CommonUtil.arrayList(obj, nxt, state, code)));
@@ -289,10 +289,10 @@ public interface StatefulMonad extends Monad<Lst> {
                 : written.apply(this.c().isOne() ? input : input.c(c -> c.mult(this.c())));
         if (null != profile) {
             final long elapsed = System.nanoTime() - t0;
-            profile.record(f(APPLY), f(APPLY), elapsed);
+            profile.record(f(APPLY).extend(APPLY), elapsed);
             final fURI vid = this.inst().vid();
             if (null != vid)
-                profile.record(f(PER_INST), vid.extend(TIME), elapsed);
+                profile.record(f(PER_INST).extend(vid.extend(TIME)), elapsed);
         }
         // write lens: where the result lands (default obj). '+' = the monad's new contents,
         // returned raw for the machine to re-queue; other write-targets are future work.
@@ -301,8 +301,8 @@ public interface StatefulMonad extends Monad<Lst> {
             // out-flow here — a gather (sum?int<=int{*}) emits one monad carrying its coefficient.
             final fURI outVid = this.inst().vid();
             if (null != profile && null != outVid && !result.isNoObj()) {
-                profile.incr(f(PER_INST), outVid.extend(MONAD_OUT), 1L);
-                profile.incr(f(PER_INST), outVid.extend(C_OUT), coeffMagnitude(result));
+                profile.incr(f(PER_INST).extend(outVid.extend(MONAD_OUT)), 1L);
+                profile.incr(f(PER_INST).extend(outVid.extend(C_OUT)), coeffMagnitude(result));
             }
             return result;
         }

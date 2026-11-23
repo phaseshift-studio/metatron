@@ -121,6 +121,13 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      */
     fURI CURRENT_ROSTER = f("~/network/roster");
     fURI ROOT_ROSTER = f("/network/roster");
+    /**
+     * THE WIRE'S PROBES in a level's analyzer: the frames that crossed its sockets each way, counted where each one
+     * crosses, and {@code peer}, a gauge of the peers the level holds, sampled when the analysis is read.
+     */
+    fURI WIRE_SENT = f(WIRE).extend(SENT);
+    fURI WIRE_RECV = f(WIRE).extend(RECV);
+    fURI PEER_GAUGE = f(PEER);
 
     default Rec roster() {
         return Machine.read(ROOT_ROSTER).orElse(rec());

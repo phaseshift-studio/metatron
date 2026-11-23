@@ -388,7 +388,7 @@ public final class wsServer extends Listener {
             final fURI peer = this.admit(taken, conn, session);
             if (null != peer)
                 this.sessions.put(conn, new Session(taken, session, peer, evaluating));
-            Analyzer.Recorder.Helper.set(this, f("connections"), this.sessions.size());
+            Analyzer.Helper.set(this.analyzer(), CONNECTIONS, this.sessions.size());
         });
     }
 
@@ -423,7 +423,7 @@ public final class wsServer extends Listener {
         // A HANG-UP IS A DELETE: a write of noobj at the wire address the session served — the analq's write/delete
         // subset, counted and timed like any other write through the socket
         QProc.Layer.write(this, session.rec().wire(), noobj(), () -> noobj());
-        Analyzer.Recorder.Helper.set(this, f("connections"), this.sessions.size());
+        Analyzer.Helper.set(this.analyzer(), CONNECTIONS, this.sessions.size());
         as(session.route().machine(), () -> {
             session.rec().onClose(conn, code, reason, remote);
             // the inbound peer dies with its socket: reach is a capability, retracted with the connection
@@ -470,7 +470,7 @@ public final class wsServer extends Listener {
                     // session's handler came after the program, or never. It counts on the wire of the machine whose
                     // route it took. The whole answer is then a READ at that route in this socket's analyzer: timed
                     // from here, and counted with its latency once the answer has been given.
-                    Machine.current().network().analyzer().incr(f(WIRE), f(RECV), 1L);
+                    Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_RECV, 1L);
                     QProc.Layer.read(this, session.rec().wire(), () -> {
                         session.rec().onMessage(conn, message);
                         return noobj();

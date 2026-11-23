@@ -55,6 +55,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class GenericBinder extends MRec implements Binder {
 
+    /**
+     * the binder's two steps, timed while a run is profiled
+     */
+    private static final fURI GENERIC_BINDING_PROBE = f(RESOLVE).extend(GENERIC_BINDING);
+    private static final fURI INST_COMPOSITION_PROBE = f(RESOLVE).extend(INST_COMPOSITION);
     private static final GenericBinder INSTANCE = new GenericBinder(mutableMap(), MACH_GENERIC_BINDER_TID, null);
 
     public static GenericBinder single() {
@@ -83,7 +88,7 @@ public class GenericBinder extends MRec implements Binder {
             final Inst userInst = users.get(i);
             // 1. generics: bind the candidate's unresolved types to the lhs, and reject the candidate
             //    when an argument cannot be reconciled with the user's.
-            final long t1 = null == profile ? 0L : System.nanoTime();
+            final long t1 = Analyzer.Helper.start(profile);
             // binding copies the candidate (generics, args, coefficient): never at the definition's own address
             final Inst unaddressed = Inst.Helper.unaddressed(candidates.get(i));
             // an instruction lhs (higher-order) binds nothing; noobj is an Inst too (the ring's zero) but binds like any obj
@@ -95,7 +100,7 @@ public class GenericBinder extends MRec implements Binder {
             // 2. arguments: resolve the user's args against the bound candidate (this is where nested
             //    code arguments are compiled), then seed an initial inst's range from its own argument
             //    and carry the call's coefficient onto the result.
-            final long t2 = null == profile ? 0L : System.nanoTime();
+            final long t2 = Analyzer.Helper.start(profile);
             final Poly<?, ?> resolvedArgs = Inst.Helper.resolveArgs(userInst, bound, input);
             if (null == resolvedArgs)
                 return null;
@@ -119,10 +124,8 @@ public class GenericBinder extends MRec implements Binder {
             // does the same for an unspecialized call (Inst.Helper.fullSignature), and the frame a fail reports is
             // this tid, so a stale `[#]` names no contract at all.
             bound = Inst.Helper.fullSignature(bound);
-            if (null != profile) {
-                profile.record(f(RESOLVE), f(GENERIC_BINDING), t2 - t1);
-                profile.record(f(RESOLVE), f(INST_COMPOSITION), System.nanoTime() - t2);
-            }
+            Analyzer.Helper.record(profile, GENERIC_BINDING_PROBE, t2 - t1);
+            Analyzer.Helper.stop(profile, INST_COMPOSITION_PROBE, t2);
             // 3. the user's api query maps (block, ...) ride onto the bound contract.
             bound = Inst.Helper.bindQ(input, userInst, bound);
             sequence.add(bound);

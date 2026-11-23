@@ -117,8 +117,8 @@ public class StatusLineTest extends AbstractMetatronTest {
     void testNetGauge(final long received, final long sent, final String expected, final String description) {
         // the network's meters, as the wire taps record them (WebSocketObj, WebSocketRec)
         final Analyzer wire = new BasicAnalyzer();
-        wire.incr(f(WIRE), f(RECV), received);
-        wire.incr(f(WIRE), f(SENT), sent);
+        wire.incr(f(WIRE).extend(f(RECV)), received);
+        wire.incr(f(WIRE).extend(f(SENT)), sent);
         assertEquals(expected, Graphitty.strip(StatusLine.netMarkup("y", BACK, wire.analysis())).trim(), description);
     }
 
@@ -143,9 +143,9 @@ public class StatusLineTest extends AbstractMetatronTest {
     @Test
     void shouldShowOnlyTheProbesTheTapsRecord() {
         final Analyzer wire = new BasicAnalyzer();
-        wire.record(f(WIRE), f("trip"), 5_000_000L);
-        wire.incr(f(WIRE), f(TIMEOUT), 1L);
-        wire.incr(f(WIRE), f(RECV), 2L);
+        wire.record(f(WIRE).extend(f("trip")), 5_000_000L);
+        wire.incr(f(WIRE).extend(f(TIMEOUT)), 1L);
+        wire.incr(f(WIRE).extend(f(RECV)), 2L);
         final String markup = StatusLine.netMarkup("y", BACK, wire.analysis());
         assertEquals("↓2 ↑0", Graphitty.strip(markup).trim(), "frames each way, and nothing else: " + markup);
         assertFalse(markup.contains("{{r&"), "no retired probe tints the bar: " + markup);
@@ -159,7 +159,7 @@ public class StatusLineTest extends AbstractMetatronTest {
     void shouldReadTheGaugeOffTheNetworkAnalyzer() {
         final Analyzer network = Machine.current().network().analyzer();
         final String before = Graphitty.strip(StatusLine.netMarkup("y", BACK, network.analysis())).trim();
-        network.incr(f(WIRE), f(SENT), 3L);
+        network.incr(f(WIRE).extend(f(SENT)), 3L);
         final String after = Graphitty.strip(StatusLine.netMarkup("y", BACK, network.analysis())).trim();
         final long sentBefore = Long.parseLong(before.substring(before.indexOf('↑') + 1));
         assertEquals(sentBefore + 3L, Long.parseLong(after.substring(after.indexOf('↑') + 1)),

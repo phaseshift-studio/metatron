@@ -44,6 +44,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
@@ -52,6 +53,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis.TIMER_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -80,9 +82,9 @@ public class AnalyzerTest extends AbstractMetatronTest {
 
     private static Analysis measured(final long sent, final long... splits) {
         final Analyzer analyzer = new BasicAnalyzer();
-        analyzer.incr(f(WIRE), f(SENT), sent);
+        analyzer.incr(f(WIRE).extend(f(SENT)), sent);
         for (final long split : splits)
-            analyzer.record(f(APPLY), f(SPLIT), split);
+            analyzer.record(f(APPLY).extend(f(SPLIT)), split);
         return analyzer.analysis();
     }
 
@@ -119,10 +121,10 @@ public class AnalyzerTest extends AbstractMetatronTest {
     @Test
     void shouldNestAProbeAsDeepAsItsPath() {
         final Analyzer analyzer = new BasicAnalyzer();
-        analyzer.incr(f(PER_INST), f("0").extend(MONAD_IN), 3L);
-        analyzer.record(f(PER_INST), f("0").extend(TIME), 40L);
-        analyzer.record(f(PER_INST), f("0").extend(TIME), 10L);
-        analyzer.record(f(PER_INST), f("1").extend(TIME), 7L);
+        analyzer.incr(f(PER_INST).extend(f("0").extend(MONAD_IN)), 3L);
+        analyzer.record(f(PER_INST).extend(f("0").extend(TIME)), 40L);
+        analyzer.record(f(PER_INST).extend(f("0").extend(TIME)), 10L);
+        analyzer.record(f(PER_INST).extend(f("1").extend(TIME)), 7L);
         final Analysis analysis = analyzer.analysis();
         assertEquals(3L, read(analysis, "per_inst/0/monad_in"), "the counter sits at its path: " + analysis);
         assertEquals(TIMER_TID, analysis.at(uri("per_inst/0/time")).tid().basePath(), "a timer is typed by its kind");
@@ -139,8 +141,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
     @Test
     void shouldKeepTheLastReadingOfAGauge() {
         final Analyzer analyzer = new BasicAnalyzer();
-        analyzer.set(f(WIRE), f(OPEN), 3.5d);
-        analyzer.set(f(WIRE), f(OPEN), 1.25d);
+        analyzer.set(f(WIRE).extend(f(OPEN)), 3.5d);
+        analyzer.set(f(WIRE).extend(f(OPEN)), 1.25d);
         assertEquals(1.25d, analyzer.analysis().at(uri("wire/open")).realValue(), 0.0d);
     }
 
@@ -157,8 +159,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
         try {
             final List<Future<?>> running = IntStream.range(0, threads).<Future<?>>mapToObj(t -> pool.submit(() -> {
                 for (int i = 1; i <= each; i++) {
-                    analyzer.incr(f(WIRE), f(SENT), 1L);
-                    analyzer.record(f(APPLY), f(SPLIT), i);
+                    analyzer.incr(f(WIRE).extend(f(SENT)), 1L);
+                    analyzer.record(f(APPLY).extend(f(SPLIT)), i);
                 }
             })).toList();
             for (final Future<?> run : running)
@@ -181,9 +183,9 @@ public class AnalyzerTest extends AbstractMetatronTest {
     @Test
     void shouldHandAReaderAValue() {
         final Analyzer analyzer = new BasicAnalyzer();
-        analyzer.incr(f(WIRE), f(SENT), 1L);
+        analyzer.incr(f(WIRE).extend(f(SENT)), 1L);
         final Analysis before = analyzer.analysis();
-        analyzer.incr(f(WIRE), f(SENT), 1L);
+        analyzer.incr(f(WIRE).extend(f(SENT)), 1L);
         assertEquals(1L, read(before, "wire/sent"), "a read is the meters as they stood");
         assertEquals(2L, read(analyzer.analysis(), "wire/sent"), "and the next read is fresh");
         before.at(uri(WIRE)).asRec().jvm().put(uri(SENT), BasicAnalysis.counter(99L));
@@ -210,7 +212,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
         assertEquals(a, Analysis.Helper.merge(empty, a), "and on the left");
         // disjoint probes are a union
         final Analyzer flow = new BasicAnalyzer();
-        flow.incr(f(FLOW), f(MONADS), 6L);
+        flow.incr(f(FLOW).extend(f(MONADS)), 6L);
         final Analysis union = Analysis.Helper.merge(a, flow.analysis());
         assertEquals(1L, read(union, "wire/sent"), "a's probes survive");
         assertEquals(6L, read(union, "flow/monads"), "and so do the other's");
@@ -219,9 +221,9 @@ public class AnalyzerTest extends AbstractMetatronTest {
     @Test
     void shouldKeepTheLaterGaugeWhenMerging() {
         final Analyzer x = new BasicAnalyzer();
-        x.set(f(WIRE), f(OPEN), 2.0d);
+        x.set(f(WIRE).extend(f(OPEN)), 2.0d);
         final Analyzer y = new BasicAnalyzer();
-        y.set(f(WIRE), f(OPEN), 5.0d);
+        y.set(f(WIRE).extend(f(OPEN)), 5.0d);
         assertEquals(5.0d, Analysis.Helper.merge(x.analysis(), y.analysis()).at(uri("wire/open")).realValue(), 0.0d,
                 "a gauge is no monoid: the later reading stands");
     }
@@ -240,10 +242,10 @@ public class AnalyzerTest extends AbstractMetatronTest {
             final Analyzer analyzer = machine.<Component>at(uri(component)).analyzer();
             final fURI at = f("~").extend(component).extend(ANALYZER);
             assertInstanceOf(Analyzer.class, Machine.read(at), "the analyzer is read at its address");
-            analyzer.incr(f(FLOW), f(MONADS), 7L);
+            analyzer.incr(f(FLOW).extend(f(MONADS)), 7L);
             assertEquals(7L, Machine.read(at.extend(ANALYSIS).extend(FLOW).extend(MONADS)).intValue(),
                     "and its meters through it, as they stand");
-            analyzer.incr(f(FLOW), f(MONADS), 1L);
+            analyzer.incr(f(FLOW).extend(f(MONADS)), 1L);
             assertEquals(8L, Machine.read(at.extend(ANALYSIS).extend(FLOW).extend(MONADS)).intValue(), "live");
         } finally {
             machine.pop();
@@ -260,7 +262,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
         final Machine machine = Machine.current().push(f("analyzer_write"));
         try {
             final Analyzer analyzer = machine.<Component>at(uri(component)).analyzer();
-            analyzer.incr(f(WIRE), f(SENT), 2L);
+            analyzer.incr(f(WIRE).extend(f(SENT)), 2L);
             final fURI at = f("~").extend(component).extend(ANALYZER);
             Machine.write(at.extend(STEP), jnt(400));
             assertEquals(400L, analyzer.atDirect(uri(STEP)).intValue(), "a field write lands in the analyzer itself");
@@ -302,18 +304,18 @@ public class AnalyzerTest extends AbstractMetatronTest {
             }));
             final Analyzer network = machine.network().analyzer();
             for (int i = 0; i < 200; i++)
-                network.incr(f(WIRE), f(SENT), 1L);
+                network.incr(f(WIRE).extend(f(SENT)), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(1, heard.get(), "a burst rides one publication, not one per change");
             assertEquals(200L, read(last.get(), "wire/sent"), "and the publication carries every change before it");
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(1, heard.get(), "a quiet analyzer publishes nothing");
-            network.incr(f(WIRE), f(SENT), 1L);
+            network.incr(f(WIRE).extend(f(SENT)), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(2, heard.get(), "the next change is the next publication");
             assertEquals(201L, read(last.get(), "wire/sent"), "carrying the meters as they stand");
             Machine.write(f("~/network/analyzer/analysis").addQ(SUBQ), noobj());
-            network.incr(f(WIRE), f(SENT), 1L);
+            network.incr(f(WIRE).extend(f(SENT)), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(2, heard.get(), "an unsubscribed analyzer reaches no one");
         } finally {
@@ -336,7 +338,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
                 heard.incrementAndGet();
                 return noobj();
             }));
-            machine.processor().analyzer().incr(f(FLOW), f(MONADS), 1L);
+            machine.processor().analyzer().incr(f(FLOW).extend(f(MONADS)), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(1, heard.get(), "a step of " + step + " publishes the change");
         } finally {
@@ -359,7 +361,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
                 return noobj();
             }));
             final List<fURI> running = listedThreads(RUN);
-            machine.network().analyzer().incr(f(WIRE), f(SENT), 1L);
+            machine.network().analyzer().incr(f(WIRE).extend(f(SENT)), 1L);
             final List<fURI> scheduled = listedThreads(RUN).stream().filter(thread -> !running.contains(thread)).toList();
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertNotNull(heardOn.get(), "the subscriber hears the change");
@@ -392,11 +394,11 @@ public class AnalyzerTest extends AbstractMetatronTest {
             final AtomicBoolean refusing = new AtomicBoolean(true);
             refuseThreads(machine, refusing);
             final Analyzer network = machine.network().analyzer();
-            network.incr(f(WIRE), f(SENT), 1L);
+            network.incr(f(WIRE).extend(f(SENT)), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(0, heard.get(), "a change whose publication cannot be made goes unpublished");
             refusing.set(false);
-            network.incr(f(WIRE), f(SENT), 1L);
+            network.incr(f(WIRE).extend(f(SENT)), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(1, heard.get(), "and the next change publishes");
             assertEquals(2L, read(last.get(), "wire/sent"), "carrying the change that went unpublished");
@@ -418,8 +420,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
                 heard.add(pub.asLst().lstValue().getFirst().uriValue().toString());
                 return noobj();
             }));
-            machine.network().analyzer().incr(f(WIRE), f(SENT), 1L);
-            machine.processor().analyzer().incr(f(FLOW), f(MONADS), 1L);
+            machine.network().analyzer().incr(f(WIRE).extend(f(SENT)), 1L);
+            machine.processor().analyzer().incr(f(FLOW).extend(f(MONADS)), 1L);
             CommonUtil.sleepThread(PUBLISHED_MS);
             final fURI root = machine.vid().resolve();
             assertTrue(heard.contains(root.extend(NETWORK).extend(ANALYZER).extend(ANALYSIS).toString()),
@@ -429,6 +431,76 @@ public class AnalyzerTest extends AbstractMetatronTest {
         } finally {
             machine.pop();
         }
+    }
+
+    // ======================== the verbs ========================
+
+    /**
+     * EVERY VERB GATES ITSELF, so no producer tests for an analyzer before it records: an absent analyzer records nothing
+     * and the work a verb wraps still runs, a muted one ({@code enabled => false}) records nothing, and a live one keeps
+     * each verb's meter — a block that throws is timed too, and its throw passes through.
+     */
+    @Test
+    void shouldGateEveryVerbOnTheAnalyzerItIsHanded() {
+        final fURI counted = f("verb/counted");
+        final fURI gauged = f("verb/gauged");
+        final fURI timed = f("verb/timed");
+        final fURI region = f("verb/region");
+        // absent: nothing to record into, and the work is still the work
+        Analyzer.Helper.incr(null, counted, 1L);
+        Analyzer.Helper.set(null, gauged, 1.0d);
+        assertEquals("done", Analyzer.Helper.timed(null, timed, () -> "done"), "an unmeasured block runs bare");
+        assertEquals(0L, Analyzer.Helper.start(null), "an unmeasured region never reads the clock");
+        Analyzer.Helper.stop(null, region, 0L);
+        // muted: the analyzer is there and switched off
+        final Analyzer muted = new BasicAnalyzer();
+        muted.at(uri(ENABLED), bool(false), MUTABLE);
+        Analyzer.Helper.incr(muted, counted, 1L);
+        Analyzer.Helper.set(muted, gauged, 1.0d);
+        assertEquals("done", Analyzer.Helper.timed(muted, timed, () -> "done"), "a muted block runs bare");
+        Analyzer.Helper.stop(muted, region, Analyzer.Helper.start(muted));
+        assertTrue(muted.analysis().isEmpty(), "a muted analyzer records nothing: " + muted.analysis());
+        // live: each verb keeps its meter
+        final Analyzer live = new BasicAnalyzer();
+        Analyzer.Helper.incr(live, counted, 2L);
+        Analyzer.Helper.set(live, gauged, 0.5d);
+        assertEquals("done", Analyzer.Helper.timed(live, timed, () -> "done"), "a measured block answers what it answers");
+        Analyzer.Helper.stop(live, region, Analyzer.Helper.start(live));
+        assertThrows(IllegalStateException.class, () -> Analyzer.Helper.timed(live, timed, () -> {
+            throw new IllegalStateException("the block failed");
+        }));
+        final Analysis analysis = live.analysis();
+        assertEquals(2L, read(analysis, "verb/counted"), "the counter: " + analysis);
+        assertEquals(0.5d, analysis.at(uri("verb/gauged")).realValue(), 0.0d, "the gauge: " + analysis);
+        assertEquals(2L, read(analysis, "verb/timed/count"), "both blocks timed, the one that threw included: " + analysis);
+        assertEquals(1L, read(analysis, "verb/region/count"), "the region: " + analysis);
+    }
+
+    /**
+     * A SAMPLED GAUGE IS READ, NEVER RECORDED: its value is the sample's as the analysis is built, it follows what it
+     * samples with no event, a stray recording at its probe changes nothing, and a sample that fails drops the probe
+     * from that read rather than breaking it.
+     */
+    @Test
+    void shouldSampleAGaugeAsTheAnalysisIsRead() {
+        final Analyzer analyzer = new BasicAnalyzer();
+        final AtomicLong held = new AtomicLong(2L);
+        Analyzer.Helper.gauge(analyzer, f("level/peer"), held::get);
+        final Obj first = analyzer.analysis().at(uri("level/peer"));
+        assertEquals(Analysis.GAUGE_TID, first.tid().basePath(), "a sampled meter is a gauge: " + first);
+        assertEquals(2.0d, first.realValue(), 0.0d, "read as the analysis is built");
+        held.set(5L);
+        assertEquals(5.0d, analyzer.analysis().at(uri("level/peer")).realValue(), 0.0d, "and it follows what it samples");
+        Analyzer.Helper.incr(analyzer, f("level/peer"), 1L);
+        assertEquals(5.0d, analyzer.analysis().at(uri("level/peer")).realValue(), 0.0d,
+                "a stray recording at a sampled probe changes nothing");
+        Analyzer.Helper.gauge(analyzer, f("level/broken"), () -> {
+            throw new IllegalStateException("what it sampled is gone");
+        });
+        final Analysis analysis = analyzer.analysis();
+        assertTrue(analysis.at(uri("level/broken")).isNoObj(), "a sample that fails drops its probe: " + analysis);
+        assertEquals(5.0d, analysis.at(uri("level/peer")).realValue(), 0.0d, "and the rest of the read stands");
+        Analyzer.Helper.gauge(null, f("level/peer"), held::get);
     }
 
     // ======================== the profile ========================
@@ -515,8 +587,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
         try {
             // a pushed machine's network is a level of its own, with meters of its own: they start at zero
             final Analyzer analyzer = machine.network().analyzer();
-            analyzer.incr(f(WIRE), f(SENT), 100L);
-            analyzer.incr(f(WIRE), f(RECV), 50L);
+            analyzer.incr(f(WIRE).extend(f(SENT)), 100L);
+            analyzer.incr(f(WIRE).extend(f(RECV)), 50L);
             // total = wire/sent + wire/recv, attached to the analyzer as a derived (auto) field
             Machine.write(f("~/network/analyzer/total"),
                     auto_(instLambda(lhs -> {
@@ -525,7 +597,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
                     })).tryToInst());
             assertEquals(150L, Machine.read(f("~/network/analyzer/total")).intValue(),
                     "a derived field computes over the live analysis");
-            analyzer.incr(f(WIRE), f(SENT), 5L);
+            analyzer.incr(f(WIRE).extend(f(SENT)), 5L);
             assertEquals(155L, Machine.read(f("~/network/analyzer/total")).intValue(),
                     "and re-derives as the meters move");
             assertTrue(Machine.read(f("~/network/analyzer/analysis")).asRec().at(uri("total")).isNoObj(),

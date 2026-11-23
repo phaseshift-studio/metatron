@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.DoubleSupplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_ANALYZER_TID;
@@ -71,16 +72,35 @@ public class BasicAnalyzer extends MRec implements Analyzer {
 
     /**
      * ONE METER'S CELLS. A counter adds to {@code count}; a timer counts its observations there and sums their nanos in
-     * {@code total}, keeping the least and the greatest; a gauge holds its reading's bits. The kind is fixed at birth.
+     * {@code total}, keeping the least and the greatest; a gauge holds its reading's bits, or is SAMPLED from
+     * {@code sample} as it is read. The kind is fixed at birth.
      */
-    private record Meter(fURI kind, LongAdder count, LongAdder total, AtomicLong min, AtomicLong max, AtomicLong gauge) {
+    private record Meter(fURI kind, LongAdder count, LongAdder total, AtomicLong min, AtomicLong max, AtomicLong gauge,
+                         DoubleSupplier sample) {
 
         private static Meter of(final fURI kind) {
             return new Meter(kind, new LongAdder(), new LongAdder(), new AtomicLong(Long.MAX_VALUE),
-                    new AtomicLong(Long.MIN_VALUE), new AtomicLong());
+                    new AtomicLong(Long.MIN_VALUE), new AtomicLong(), null);
         }
 
+        // cells of its own, so a stray recording at a sampled probe is harmless: the sample is what is read
+        private static Meter sampled(final DoubleSupplier sample) {
+            return new Meter(Analysis.GAUGE_TID, new LongAdder(), new LongAdder(), new AtomicLong(Long.MAX_VALUE),
+                    new AtomicLong(Long.MIN_VALUE), new AtomicLong(), sample);
+        }
+
+        /**
+         * the meter's reading, or null for a sampled gauge whose sample failed: a statistic that can break the read it
+         * answers is worse than none
+         */
         private Obj read() {
+            if (null != this.sample) {
+                try {
+                    return BasicAnalysis.gauge(this.sample.getAsDouble());
+                } catch (final RuntimeException e) {
+                    return null;
+                }
+            }
             if (Analysis.COUNTER_TID.equals(this.kind))
                 return BasicAnalysis.counter(this.count.sum());
             if (Analysis.GAUGE_TID.equals(this.kind))
@@ -92,9 +112,9 @@ public class BasicAnalyzer extends MRec implements Analyzer {
     }
 
     /**
-     * group => probe => meter: two lookups and no allocation once a probe exists
+     * probe => meter: one lookup and no allocation once a probe exists
      */
-    private final Map<fURI, Map<fURI, Meter>> meters = new ConcurrentHashMap<>();
+    private final Map<fURI, Meter> meters = new ConcurrentHashMap<>();
     /**
      * a publication is scheduled, and every change until it runs rides it
      */
@@ -139,14 +159,14 @@ public class BasicAnalyzer extends MRec implements Analyzer {
     // ======================== recording ========================
 
     @Override
-    public Analyzer incr(final fURI group, final fURI probe, final long delta) {
-        this.meter(group, probe, Analysis.COUNTER_TID).count().add(delta);
+    public Analyzer incr(final fURI probe, final long delta) {
+        this.meter(probe, Analysis.COUNTER_TID).count().add(delta);
         return this.changed();
     }
 
     @Override
-    public Analyzer record(final fURI group, final fURI probe, final long nanos) {
-        final Meter meter = this.meter(group, probe, Analysis.TIMER_TID);
+    public Analyzer record(final fURI probe, final long nanos) {
+        final Meter meter = this.meter(probe, Analysis.TIMER_TID);
         meter.count().increment();
         meter.total().add(nanos);
         meter.min().accumulateAndGet(nanos, Math::min);
@@ -155,13 +175,19 @@ public class BasicAnalyzer extends MRec implements Analyzer {
     }
 
     @Override
-    public Analyzer set(final fURI group, final fURI probe, final double value) {
-        this.meter(group, probe, Analysis.GAUGE_TID).gauge().set(Double.doubleToRawLongBits(value));
+    public Analyzer set(final fURI probe, final double value) {
+        this.meter(probe, Analysis.GAUGE_TID).gauge().set(Double.doubleToRawLongBits(value));
         return this.changed();
     }
 
-    private Meter meter(final fURI group, final fURI probe, final fURI kind) {
-        return this.meters.computeIfAbsent(group, _ -> new ConcurrentHashMap<>()).computeIfAbsent(probe, _ -> Meter.of(kind));
+    @Override
+    public Analyzer gauge(final fURI probe, final DoubleSupplier sample) {
+        this.meters.put(probe, Meter.sampled(sample));
+        return this;
+    }
+
+    private Meter meter(final fURI probe, final fURI kind) {
+        return this.meters.computeIfAbsent(probe, _ -> Meter.of(kind));
     }
 
     // ======================== reading ========================
@@ -170,16 +196,19 @@ public class BasicAnalyzer extends MRec implements Analyzer {
     public Analysis analysis() {
         // in path order, so two reads of the same meters print alike
         final Map<fURI, Meter> paths = new TreeMap<>(Comparator.comparing(fURI::toString));
-        this.meters.forEach((group, probes) -> probes.forEach((probe, meter) -> paths.put(group.extend(probe), meter)));
+        paths.putAll(this.meters);
         final Map<Obj, Obj> analysis = new LinkedHashMap<>();
         paths.forEach((path, meter) -> {
+            final Obj reading = meter.read();
+            if (null == reading)
+                return;
             // A PROBE NESTS AS DEEP AS ITS PATH: per_inst/0/time is per_inst => [0 => [time => timer]], which is what a
             // read walks (*…/analysis/per_inst/0/time) — a flat key holding slashes would be a key no path can reach
             Map<Obj, Obj> level = analysis;
             final List<String> segments = path.segments();
             for (final String segment : segments.subList(0, segments.size() - 1))
                 level = level.computeIfAbsent(uri(segment), _ -> rec()).asRec().jvm();
-            level.put(uri(segments.getLast()), meter.read());
+            level.put(uri(segments.getLast()), reading);
         });
         return new BasicAnalysis(analysis);
     }

@@ -89,6 +89,13 @@ public final class mqttServer extends Listener {
      * the address base a session's vid hangs off — one segment per connected client
      */
     private static final fURI SESSION_VIDS = f("/sys/mqtt/session");
+    /**
+     * the broker's counters, kept in its socket's analyzer and read back by its $SYS leaves
+     */
+    private static final fURI MESSAGES_RECEIVED = f("messages/received");
+    private static final fURI MESSAGES_SENT = f("messages/sent");
+    private static final fURI PACKETS_RECEIVED = f("packets/received");
+    private static final fURI PACKETS_SENT = f("packets/sent");
 
     /**
      * the broker's own namespace — mqtt-reserved: its state is served from this server's SYS rec, never from the space
@@ -204,16 +211,13 @@ public final class mqttServer extends Listener {
 
     /**
      * A $SYS COUNTER leaf that IS the analyzer's own value — one metric aggregator: the broker's packet and message
-     * counters live in its analyzer, and a $SYS leaf dereferences the analysis at {@code <group>/<rel>}. An unbound
+     * counters live in its analyzer, and a $SYS leaf dereferences the analysis at {@code <rel>}. An unbound
      * broker (no analyzer) or an unrecorded probe answers {@code noobj}, the honest "absent" — never a fabricated zero.
      */
     private static Obj metric(final mqttServer server, final String rel) {
         return auto_(instLambda("mqtt_" + rel.replace('/', '_'), ALL.maybe(), INT_TID.maybe(), (_, _) -> {
             final Analyzer analyzer = server.analyzer();
-            final fURI group = server.group();
-            if (null == analyzer || null == group)
-                return noobj();
-            return analyzer.analysis().at(uri(group.extend(f(rel)).toString()));
+            return null == analyzer ? noobj() : analyzer.analysis().at(uri(rel));
         })).tryToInst();
     }
 
@@ -354,7 +358,7 @@ public final class mqttServer extends Listener {
             this.sessions.put(conn, session);
             this.sessionsByVid.put(vid, session);
             session.start();
-            Analyzer.Recorder.Helper.set(this, f("connections"), this.sessionCount());
+            Analyzer.Helper.set(this.analyzer(), CONNECTIONS, this.sessionCount());
             this.pushSys(); // a session opening is a moment: the client count its $SYS watchers cover has moved
         } catch (final Exception e) {
             LOG.debug("mqtt connection from %s dropped: %s", conn.getRemoteSocketAddress(), e.getMessage());
@@ -375,7 +379,7 @@ public final class mqttServer extends Listener {
         synchronized (this.sysSubs) {
             this.sysSubs.remove(session);
         }
-        Analyzer.Recorder.Helper.set(this, f("connections"), this.sessionCount());
+        Analyzer.Helper.set(this.analyzer(), CONNECTIONS, this.sessionCount());
         this.pushSys(); // the remaining watchers see the count the retirement leaves behind
     }
 
@@ -400,7 +404,7 @@ public final class mqttServer extends Listener {
             LOG.debug("mqtt $SYS publish dropped: %s is the broker's own namespace", topic);
             return;
         }
-        Analyzer.Recorder.Helper.incr(this, f("messages/received"), 1L);
+        Analyzer.Helper.incr(this.analyzer(), MESSAGES_RECEIVED, 1L);
         QProc.Layer.read(this, topic, () -> {
             this.machine.memory().write(topic, obj);
             return noobj();
@@ -412,11 +416,11 @@ public final class mqttServer extends Listener {
      * a session's read and write each pass through one — the broker's packet counters, in and out
      */
     void packetIn() {
-        Analyzer.Recorder.Helper.incr(this, f("packets/received"), 1L);
+        Analyzer.Helper.incr(this.analyzer(), PACKETS_RECEIVED, 1L);
     }
 
     void packetOut() {
-        Analyzer.Recorder.Helper.incr(this, f("packets/sent"), 1L);
+        Analyzer.Helper.incr(this.analyzer(), PACKETS_SENT, 1L);
     }
 
     /**
@@ -627,7 +631,7 @@ public final class mqttServer extends Listener {
                     session.deliver(pub);
                     return payload;
                 });
-                Analyzer.Recorder.Helper.incr(this, f("messages/sent"), 1L);
+                Analyzer.Helper.incr(this.analyzer(), MESSAGES_SENT, 1L);
             } catch (final Exception e) {
                 LOG.debug("mqtt delivery to %s failed: %s", session.vid(), e.getMessage());
             }

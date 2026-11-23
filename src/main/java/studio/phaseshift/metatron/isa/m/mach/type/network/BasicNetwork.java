@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -135,6 +136,10 @@ public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
                 });
         // the status METHOD is an entry like any other: `*/network/status` evaluates it, closing over this level
         this.write(f(STATUS), this.status());
+        // THE PEERS THIS LEVEL HOLDS, a gauge sampled whenever the analysis is read: a peer comes and goes by a dial, a
+        // drop, a redial, an inbound co-mount or the supervisor, and a sampled gauge can miss none of them -- so a bare
+        // connect, before any frame crosses, already shows in the analysis
+        Analyzer.Helper.gauge(this.analyzer(), PEER_GAUGE, () -> this.peers().elements().count());
     }
 
     /**

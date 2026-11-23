@@ -61,14 +61,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * writes and latencies — instead of every server sharing the network's analyzer through a {@code recorder} reference.
  * A request, a received message and a fetched frame are READS at their wire address; a sent message is a WRITE there;
  * a hang-up is a write of {@code noobj} (a delete); connections is the one gauge. {@link #analyzer()} is the analyzer
- * that q-proc holds, so {@link Analyzer.Recorder.Helper} records into this socket's own meters.
+ * that q-proc holds, so {@link Analyzer.Helper}'s verbs record into this socket's own meters.
  * <p>
  * The door is where access is RECORDED, not where a protocol is performed: a server hands its event to
  * {@link studio.phaseshift.metatron.furi.QProc.Layer} with the work as the supplier, so the access is timed where it
  * happens (one layer, as every source applies it), while {@link #read}/{@link #write} answer the address-level
  * questions a reader asks of the socket's space ({@code ?analq}, and the analysis itself).
  */
-public abstract class Listener extends MRec implements Addressable, Analyzer.Recorder, Closeable {
+public abstract class Listener extends MRec implements Addressable, Closeable {
 
     /**
      * Where a connection lands: the level whose table holds the matched route, the route's key, and its target. The
@@ -84,6 +84,11 @@ public abstract class Listener extends MRec implements Addressable, Analyzer.Rec
      * Ascending specificity: more literal segments, then fewer wildcards, then — two different keys of the same shape,
      * such as {@code /a/#} and {@code /+/b} — the smaller key, so the walk answers the same route every time.
      */
+    /**
+     * the one gauge every server keeps beside its access meters: the sessions it holds now
+     */
+    protected static final fURI CONNECTIONS = f("connections");
+
     public static final Comparator<fURI> SPECIFICITY = Comparator
             .comparingLong((fURI key) -> key.segments().stream().filter(Listener::literal).count())
             .thenComparingLong(key -> -key.segments().stream().filter(Listener::wildcard).count())
@@ -143,7 +148,6 @@ public abstract class Listener extends MRec implements Addressable, Analyzer.Rec
      * THE ACCESS ANALYZER: the analyzer the listener's {@code ?analq} q-proc holds — this socket's own meters, never a
      * reference to a component's. Null when the q-proc has been retracted, which mutes recording.
      */
-    @Override
     public Analyzer analyzer() {
         for (final Obj q : this.qs().lstValue()) {
             if (q instanceof QProc qProc && QCollection.ANALQ_PATTERN.equals(qProc.pattern())
@@ -151,16 +155,6 @@ public abstract class Listener extends MRec implements Addressable, Analyzer.Rec
                 return analyzer;
         }
         return null;
-    }
-
-    /**
-     * The group the access meters are read under: EMPTY, so a probe sits flat at the analysis root
-     * ({@code read => [count, latency]}, {@code write => [...]}, {@code connections => gauge}) — the shape a space's
-     * {@code ?analq} answers.
-     */
-    @Override
-    public fURI group() {
-        return f("");
     }
 
     /**

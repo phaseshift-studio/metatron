@@ -322,15 +322,31 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
 7. **Events are not meters.** A record of individual occurrences (`WireTrace`'s exchanges) is a bounded ring a human
    reads; the counts behind it are the producer's meters, counted at the same tap.
 
-### `Recorder` and `?analq` — the recording side (2026-11-15, revised 2026-11-16)
+### The recording verbs and `?analq` — the recording side (2026-11-15, revised 2026-11-16 and 2026-11-23)
 
 `Analyzer` is the *instrument*. A component that OWNS one is an `Analyzer.Aggregator` (`Component` extends it; the
-network and the processor carry one). A thing that RECORDS into one is an `Analyzer.Recorder`: today that is `Listener`,
-and the analyzer it records into is the one its own `?analq` q-proc holds.
+network and the processor carry one); a server records into the one its own `?analq` q-proc holds; a profiled run
+records into `Analyzer.PROFILE`.
 
-- **`Recorder.Helper.incr/set/record/timed`** are the gated recording path: a producer never considers whether its
-  analyzer is absent or muted. `timed` wraps the work — the `t0`-before/`record`-after/skip-`nanoTime`-when-off idiom
-  lives once, in the Helper, so a muted producer pays one `null` read and runs its work bare.
+- **`Analyzer.Helper`'s verbs are the one recording path** (Marko, 2026-11-23: no if/else statistics code interleaved
+  with an object's work). Each is handed the analyzer to record into and gates itself, so an absent (`null`) or muted
+  (`enabled => false`) analyzer records nothing and a wrapped block runs bare. Which analyzer is the gate's choice:
+  the owner's for the cheap meters that are always on (`network.analyzer()`, a server's `analyzer()`), the run's
+  (`Analyzer.PROFILE.get()`) for the costly ones a profile switches on. A probe is one path (`wire/recv`,
+  `resolve/inst_resolve`), held in a `static final` so a probe nobody measures costs no `f()`.
+
+  | verb | meter |
+  |---|---|
+  | `incr(analyzer, probe, delta)` | counter |
+  | `set(analyzer, probe, value)` | gauge, set at an event |
+  | `record(analyzer, probe, nanos)` | timer, a duration measured elsewhere |
+  | `timed(analyzer, probe, () -> work)` | timer around a block, answering what the block answers |
+  | `start(analyzer)` … `stop(analyzer, probe, t0)` | timer around a region, with no lambda: a hot path, or one with early exits |
+  | `gauge(analyzer, probe, () -> sample)` | gauge sampled each time the analysis is read: it can miss no event, and nothing announces it |
+
+  A probe named by runtime data (`per_inst/<vid>/…`, `rewrite/<rule>/…`) is built only while a run is profiled, so its
+  call stays behind the one `null != profile` the path needs. The per-step probes (`StatefulMonad`, the computer's
+  split and barrier, `repeat()`) still record directly; they move to the verbs once the per-step cost is measured.
 - **A data space** records through the `?analq` q-proc it declares (`QCollection.analQ()`): `QProc.Layer` counts and
   times every read and write handed to the space, deletes as a subset of the writes, and the space answers them flat at
   `*<pattern>?analq` (`read => [count, latency], write => [count, latency, delete => [count, latency]]`). An access that
@@ -339,19 +355,21 @@ and the analyzer it records into is the one its own `?analq` q-proc holds.
   construction (`Listener`), so `*<origin>/#?analq` answers that socket's analysis: a request or a received message is
   a read at its wire address (timed over its whole answer and counted with that latency once the answer is given;
   only the wire, `wire/recv`, counts a frame as it arrives), a sent message a write, a hang-up a write of `noobj`, and
-  `connections` a gauge set through `Recorder.Helper`. Two servers on one machine never share meters.
+  `connections` a gauge set through the verbs. Two servers on one machine never share meters.
 - The 2026-11-15 design bound each server to a shared bucket under the network's analyzer
   (`analyzer => ~/network/analyzer/web_analyzer/http`, resolved by `Analyzable.Helper.locateBase`). The per-socket
-  `?analq` replaced it on 2026-11-16; `Recorder.Helper.locateBaseAnalyzer` is that walk's remnant.
+  `?analq` replaced it on 2026-11-16, and the verbs replaced the `Analyzer.Recorder` role, its `group`, its Helper and
+  `locateBaseAnalyzer` on 2026-11-23.
 
 **Producers today.**
 
 | component | probe | kind | where it is counted |
 |---|---|---|---|
 | network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`; a frame as it arrives, before it is read or run (`wsServer.evaluate` for a server's session, `WebSocketRecClient.readFrame` for a client) |
+| network | `peer` | gauge, sampled when read | `BasicNetwork`, registered once: the peers the level holds |
 | a listener or a data space (`?analq`) | `read/{count, latency}`, `write/{count, latency}`, `write/delete/{count, latency}` | counter, timer | `QProc.Layer`, around the source's own access |
 | a listener | `connections` | gauge | `wsServer`, `mqttServer`, as sessions open and close |
-| an mqtt server | `messages/{received, sent}`, `packets/{received, sent}` | counter | `mqttServer`, through `Recorder.Helper` (its `$SYS` counters read them) |
+| an mqtt server | `messages/{received, sent}`, `packets/{received, sent}` | counter | `mqttServer`, through the verbs (its `$SYS` counters read them) |
 | processor (profiled) | `apply/split`, `apply/apply`, `apply/next` | timer | `BasicSwarmComputer.split`, `StatefulMonad.apply/next` |
 | processor (profiled) | `flow/monads`, `flow/c_sum`, `flow/processors` | counter | the monad loop, each computer minted |
 | processor (profiled) | `per_inst/<vid>/{monad_in, monad_out, c_in, c_out}`, `…/time` | counter, timer | `StatefulMonad`, the barrier |
