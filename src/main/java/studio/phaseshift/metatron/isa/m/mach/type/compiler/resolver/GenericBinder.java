@@ -47,8 +47,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * the coefficient, and copies the user's api query maps — returning null at any step that rejects
  * the candidate.
  *
- * While a run is profiled ({@link Analyzer#PROFILE}) it times its two steps into the profile's resolve group —
- * {@code resolve/generic_binding} and {@code resolve/inst_composition} — beside the selector's
+ * While a run is profiled ({@link Analyzer#PROFILE}) it times its two steps at the profile's
+ * {@code resolve/generic_binding} and {@code resolve/inst_composition} probes, beside the selector's
  * {@code resolve/inst_resolve}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)

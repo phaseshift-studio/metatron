@@ -83,6 +83,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public final class mInsts {
 
+    /**
+     * repeat()'s probes in a profiled run: each pass, and the phases a pass is made of
+     */
+    private static final fURI REPEAT_LOOP_PROBE = f(REPEAT).extend(LOOP);
+    private static final fURI REPEAT_STATE_PROBE = f(REPEAT).extend(STATE);
+    private static final fURI REPEAT_ESC_PROBE = f(REPEAT).extend(ESC);
+    private static final fURI REPEAT_EMIT_PROBE = f(REPEAT).extend(EMIT);
+    private static final fURI REPEAT_UNTIL_PROBE = f(REPEAT).extend(UNTIL);
+    private static final fURI REPEAT_CODE_PROBE = f(REPEAT).extend(CODE);
+
     private mInsts() {
     }
 
@@ -1402,7 +1412,7 @@ public final class mInsts {
                             // repeat/esc, emit, until, code and state -- and counts each pass (repeat/loop)
                             final Analyzer profile = Analyzer.PROFILE.get();
                             if (null != profile)
-                                profile.incr(f(REPEAT).extend(LOOP), 1L);
+                                profile.incr(REPEAT_LOOP_PROBE, 1L);
                             final long book0 = null == profile ? 0L : System.nanoTime();
                             final Obj escPredicate = inst.arg(f(ESC), 0);
                             final Obj repeatedApply = inst.arg(f(CODE), 1);
@@ -1411,14 +1421,14 @@ public final class mInsts {
                             final List<Obj> toEmit = new ArrayList<>();
                             final StatefulMonad monad = StatefulMonad.of(lhs);
                             if (null != profile)
-                                profile.record(f(REPEAT).extend(STATE), System.nanoTime() - book0);
+                                profile.record(REPEAT_STATE_PROBE, System.nanoTime() - book0);
                             final long esc0 = null == profile ? 0L : System.nanoTime();
                             // esc through the same lens as until and emit: applied bare, a one-instruction predicate
                             // (esc=>is(gt(3))) received the whole monad and never fired (Marko, 2026-11-22)
                             final Obj escCode = escPredicate.isCall() ? escPredicate.<Call>as().asCode() : escPredicate;
                             final boolean esc = escCode.apply(monad).booleanCheck();
                             if (null != profile)
-                                profile.record(f(REPEAT).extend(ESC), System.nanoTime() - esc0);
+                                profile.record(REPEAT_ESC_PROBE, System.nanoTime() - esc0);
                             if (esc) {
                                 toEmit.add(monad.loopback(false).nextInst());
                             } else {
@@ -1431,12 +1441,12 @@ public final class mInsts {
                                     final StatefulMonad m = monad.loopback(false);
                                     final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
                                     if (null != profile)
-                                        profile.record(f(REPEAT).extend(STATE), System.nanoTime() - book1);
+                                        profile.record(REPEAT_STATE_PROBE, System.nanoTime() - book1);
                                     final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().asCode() : emitPredicate;
                                     final long emit0 = null == profile ? 0L : System.nanoTime();
                                     final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
                                     if (null != profile)
-                                        profile.record(f(REPEAT).extend(EMIT), System.nanoTime() - emit0);
+                                        profile.record(REPEAT_EMIT_PROBE, System.nanoTime() - emit0);
                                     if (emit)
                                         toEmit.add(repeatMonad.popLoop().nextInst());
                                     // wrap the predicate in code so a single-inst until (is(gt(10))) goes
@@ -1446,7 +1456,7 @@ public final class mInsts {
                                     final long until0 = null == profile ? 0L : System.nanoTime();
                                     final boolean until = untilCode.apply(repeatMonad).booleanCheck();
                                     if (null != profile)
-                                        profile.record(f(REPEAT).extend(UNTIL), System.nanoTime() - until0);
+                                        profile.record(REPEAT_UNTIL_PROBE, System.nanoTime() - until0);
                                     if (until) {
                                         if (!emit)
                                             toEmit.add(repeatMonad.popLoop().nextInst());
@@ -1454,11 +1464,11 @@ public final class mInsts {
                                         final long code0 = null == profile ? 0L : System.nanoTime();
                                         final Obj codeResult = repeatedApply.apply(repeatMonad.obj());
                                         if (null != profile)
-                                            profile.record(f(REPEAT).extend(CODE), System.nanoTime() - code0);
+                                            profile.record(REPEAT_CODE_PROBE, System.nanoTime() - code0);
                                         final long book2 = null == profile ? 0L : System.nanoTime();
                                         final StatefulMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
                                         if (null != profile)
-                                            profile.record(f(REPEAT).extend(STATE), System.nanoTime() - book2);
+                                            profile.record(REPEAT_STATE_PROBE, System.nanoTime() - book2);
                                         toEmit.add(monadX);
                                     }
                                 }

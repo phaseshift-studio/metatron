@@ -133,7 +133,10 @@ public class SpecificitySelector extends MRec implements Selector {
             if (fetched.isObjInst())
                 return Inst.Helper.bindQ(lhs, userInst, Inst.Helper.unaddressed(fetched.asInst()));
         }
-        final Obj fetched = Analyzer.Helper.timed(Analyzer.PROFILE.get(), INST_RESOLVE_PROBE, () -> Machine.read(basePath));
+        final Analyzer profile = Analyzer.PROFILE.get();
+        final long t0 = Analyzer.Helper.start(profile);
+        final Obj fetched = Machine.read(basePath);
+        Analyzer.Helper.stop(profile, INST_RESOLVE_PROBE, t0);
 
         // A GENERIC CAST TARGET NAMES NO RANGE. A cast's target IS its range, so as(A::T) asks for no particular
         // type, and an overload that produces one (rec => json) cannot serve it: only a generic-range cast can,

@@ -83,6 +83,11 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
     protected final GraphittyLogger LOG = Graphitty.log(this);
     private static final Supplier<Obj> RUNNING_SUPPLIER = ListMonad::of;
     private static final AtomicLong PROCESSOR_COUNTER = new AtomicLong(0);
+    /**
+     * the computer's probes in a profiled run: each computer minted, and each monad split
+     */
+    private static final fURI FLOW_PROCESSORS_PROBE = f(FLOW).extend(PROCESSORS);
+    private static final fURI APPLY_SPLIT_PROBE = f(APPLY).extend(SPLIT);
 
     private final AtomicInteger infiniteFailCounter = new AtomicInteger(0);
     /**
@@ -98,7 +103,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
         // indexes it by <n> (~ resolves to that machine's vid on write) -- its evaluation's fails are filed beneath it
         super(jvm, tid, null == vid ? f("~/processor/computer").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
         if (null != this.profile)
-            this.profile.incr(f(FLOW).extend(PROCESSORS), 1L);
+            this.profile.incr(FLOW_PROCESSORS_PROBE, 1L);
         // Ensure machine state fields exist with defaults
         final Map<Obj, Obj> cache = new LinkedHashMap<>(this.jvm().getOrDefault(uri(CACHE), rec()).recValue());
         cache.putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());
@@ -404,8 +409,8 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
                     final fURI barVid = barrier.inst().vid();
                     final Analyzer profile = Analyzer.PROFILE.get();
                     if (null != profile && null != barVid && !result.isNoObj()) {
-                        profile.incr(f(PER_INST).extend(barVid.extend(MONAD_OUT)), 1L);
-                        profile.incr(f(PER_INST).extend(barVid.extend(C_OUT)), StatefulMonad.coeffMagnitude(result));
+                        profile.incr(StatefulMonad.PER_INST_PROBE.extend(barVid.extend(MONAD_OUT)), 1L);
+                        profile.incr(StatefulMonad.PER_INST_PROBE.extend(barVid.extend(C_OUT)), StatefulMonad.coeffMagnitude(result));
                     }
                     final Inst nextInst = code.nextInst(barrier.inst());
                     if (nextInst.isGather()) {
@@ -486,7 +491,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
             computer.running().append(monad.obj(pair.get1()));
         computer.logger().trace("{{g}}=>{{/g}} splitting monad %s / %s (inst: %s)", pair.get0(), pair.get1(), monad.inst());
         if (null != profile)
-            profile.record(f(APPLY).extend(SPLIT), System.nanoTime() - t0);
+            profile.record(APPLY_SPLIT_PROBE, System.nanoTime() - t0);
         return monad.obj(pair.get0());
     }
 
@@ -518,7 +523,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
     protected BasicSwarmComputer() {
         // MObj no-arg constructor — sets parent=noobj, does NOT call objCheckAndSave
         if (null != this.profile)
-            this.profile.incr(f(FLOW).extend(PROCESSORS), 1L);
+            this.profile.incr(FLOW_PROCESSORS_PROBE, 1L);
     }
 
     @Override

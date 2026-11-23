@@ -83,24 +83,12 @@ public class BasicAnalyzer extends MRec implements Analyzer {
                     new AtomicLong(Long.MIN_VALUE), new AtomicLong(), null);
         }
 
-        // cells of its own, so a stray recording at a sampled probe is harmless: the sample is what is read
-        private static Meter sampled(final DoubleSupplier sample) {
-            return new Meter(Analysis.GAUGE_TID, new LongAdder(), new LongAdder(), new AtomicLong(Long.MAX_VALUE),
-                    new AtomicLong(Long.MIN_VALUE), new AtomicLong(), sample);
-        }
-
         /**
-         * the meter's reading, or null for a sampled gauge whose sample failed: a statistic that can break the read it
-         * answers is worse than none
+         * the meter's reading — a sampled gauge's taken now, which throws when what it samples fails
          */
         private Obj read() {
-            if (null != this.sample) {
-                try {
-                    return BasicAnalysis.gauge(this.sample.getAsDouble());
-                } catch (final RuntimeException e) {
-                    return null;
-                }
-            }
+            if (null != this.sample)
+                return BasicAnalysis.gauge(this.sample.getAsDouble());
             if (Analysis.COUNTER_TID.equals(this.kind))
                 return BasicAnalysis.counter(this.count.sum());
             if (Analysis.GAUGE_TID.equals(this.kind))
@@ -182,7 +170,9 @@ public class BasicAnalyzer extends MRec implements Analyzer {
 
     @Override
     public Analyzer gauge(final fURI probe, final DoubleSupplier sample) {
-        this.meters.put(probe, Meter.sampled(sample));
+        // cells of its own, so a stray recording at a sampled probe is harmless: the sample is what is read
+        this.meters.put(probe, new Meter(Analysis.GAUGE_TID, new LongAdder(), new LongAdder(),
+                new AtomicLong(Long.MAX_VALUE), new AtomicLong(Long.MIN_VALUE), new AtomicLong(), sample));
         return this;
     }
 
@@ -199,9 +189,15 @@ public class BasicAnalyzer extends MRec implements Analyzer {
         paths.putAll(this.meters);
         final Map<Obj, Obj> analysis = new LinkedHashMap<>();
         paths.forEach((path, meter) -> {
-            final Obj reading = meter.read();
-            if (null == reading)
+            final Obj reading;
+            try {
+                reading = meter.read();
+            } catch (final RuntimeException e) {
+                // a sample that failed is left out of this read: a statistic that can break the read it answers is
+                // worse than none
+                this.logger().debug("unable to sample %s: %s", path, e.getMessage());
                 return;
+            }
             // A PROBE NESTS AS DEEP AS ITS PATH: per_inst/0/time is per_inst => [0 => [time => timer]], which is what a
             // read walks (*…/analysis/per_inst/0/time) — a flat key holding slashes would be a key no path can reach
             Map<Obj, Obj> level = analysis;

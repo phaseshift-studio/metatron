@@ -193,11 +193,11 @@ public final class mqttServer extends Listener {
                                 uri("messages"), sysCall("mqtt_pending", () -> server.queue.jvm().size()),
                                 uri("queue"), server.queue),
                         uri("packets"), rec(
-                                uri("received"), metric(server, "packets/received"),
-                                uri("sent"), metric(server, "packets/sent")),
+                                uri("received"), metric(server, PACKETS_RECEIVED),
+                                uri("sent"), metric(server, PACKETS_SENT)),
                         uri("messages"), rec(
-                                uri("received"), metric(server, "messages/received"),
-                                uri("sent"), metric(server, "messages/sent"))));
+                                uri("received"), metric(server, MESSAGES_RECEIVED),
+                                uri("sent"), metric(server, MESSAGES_SENT))));
         sys.jvm().putAll(server.at(SYS_KEY).orElse(rec()).jvm());
         return sys;
     }
@@ -211,13 +211,13 @@ public final class mqttServer extends Listener {
 
     /**
      * A $SYS COUNTER leaf that IS the analyzer's own value — one metric aggregator: the broker's packet and message
-     * counters live in its analyzer, and a $SYS leaf dereferences the analysis at {@code <rel>}. An unbound
+     * counters live in its analyzer, and a $SYS leaf dereferences the analysis at the probe it records. An unbound
      * broker (no analyzer) or an unrecorded probe answers {@code noobj}, the honest "absent" — never a fabricated zero.
      */
-    private static Obj metric(final mqttServer server, final String rel) {
-        return auto_(instLambda("mqtt_" + rel.replace('/', '_'), ALL.maybe(), INT_TID.maybe(), (_, _) -> {
+    private static Obj metric(final mqttServer server, final fURI probe) {
+        return auto_(instLambda("mqtt_" + probe.toString().replace('/', '_'), ALL.maybe(), INT_TID.maybe(), (_, _) -> {
             final Analyzer analyzer = server.analyzer();
-            return null == analyzer ? noobj() : analyzer.analysis().at(uri(rel));
+            return null == analyzer ? noobj() : analyzer.analysis().at(uri(probe));
         })).tryToInst();
     }
 

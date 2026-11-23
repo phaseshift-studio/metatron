@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import static studio.phaseshift.metatron.Tokens.MACH_ISA_TID;
 
 /**
- * analysis::T — what a component has measured: a {@code Rec} whose paths are probes and whose leaves are meters,
- * {@code group => [probe => meter]}, a probe nesting as deep as its path ({@code per_inst/0/time}).
+ * analysis::T — what a component has measured: a {@code Rec} whose paths are probes and whose leaves are meters, a
+ * probe nesting as deep as its path ({@code per_inst/0/time} is {@code per_inst => [0 => [time => timer]]}).
  * <p>
  * A meter's tid IS its kind — {@code counter} (a monotonic int), {@code gauge} (a point-in-time real), or
  * {@code timer} (a {@code rec[count, total, min, max]} distribution of nanoseconds). Derived metrics — rates, ratios,

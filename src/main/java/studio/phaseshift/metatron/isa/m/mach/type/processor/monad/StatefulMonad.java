@@ -54,6 +54,16 @@ import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MONAD_TID;
 public interface StatefulMonad extends Monad<Lst> {
 
     /**
+     * the per-step probes a profiled run records, held as paths so a step builds none: the stages and the flow, and
+     * the root every per-instruction probe ({@code per_inst/<vid>/…}) extends
+     */
+    fURI APPLY_APPLY_PROBE = f(APPLY).extend(APPLY);
+    fURI APPLY_NEXT_PROBE = f(APPLY).extend(NEXT);
+    fURI FLOW_MONADS_PROBE = f(FLOW).extend(MONADS);
+    fURI FLOW_C_SUM_PROBE = f(FLOW).extend(C_SUM);
+    fURI PER_INST_PROBE = f(PER_INST);
+
+    /**
      * the coefficient magnitude of an obj — its exact multiplicity when it has one, else 1
      * (the bulk it carries as a single monad).
      */
@@ -70,8 +80,8 @@ public interface StatefulMonad extends Monad<Lst> {
         final Analyzer profile = Analyzer.PROFILE.get();
         if (null == profile)
             return;
-        profile.incr(f(FLOW).extend(MONADS), 1L);
-        profile.incr(f(FLOW).extend(C_SUM), coeffMagnitude(this.obj()));
+        profile.incr(FLOW_MONADS_PROBE, 1L);
+        profile.incr(FLOW_C_SUM_PROBE, coeffMagnitude(this.obj()));
     }
 
     @Override
@@ -91,16 +101,16 @@ public interface StatefulMonad extends Monad<Lst> {
         final long t0 = null == profile ? 0L : System.nanoTime();
         final Inst nxt = code.nextInst(this.inst());
         if (null != profile) {
-            profile.record(f(APPLY).extend(NEXT), System.nanoTime() - t0);
+            profile.record(APPLY_NEXT_PROBE, System.nanoTime() - t0);
             final fURI curVid = this.inst().vid();
             if (null != curVid) {
-                profile.incr(f(PER_INST).extend(curVid.extend(MONAD_OUT)), 1L);
-                profile.incr(f(PER_INST).extend(curVid.extend(C_OUT)), coeffMagnitude(obj));
+                profile.incr(PER_INST_PROBE.extend(curVid.extend(MONAD_OUT)), 1L);
+                profile.incr(PER_INST_PROBE.extend(curVid.extend(C_OUT)), coeffMagnitude(obj));
             }
             final fURI nxtVid = nxt.vid();
             if (null != nxtVid) {
-                profile.incr(f(PER_INST).extend(nxtVid.extend(MONAD_IN)), 1L);
-                profile.incr(f(PER_INST).extend(nxtVid.extend(C_IN)), coeffMagnitude(obj));
+                profile.incr(PER_INST_PROBE.extend(nxtVid.extend(MONAD_IN)), 1L);
+                profile.incr(PER_INST_PROBE.extend(nxtVid.extend(C_IN)), coeffMagnitude(obj));
             }
         }
         return this.jvm(lst(CommonUtil.arrayList(obj, nxt, state, code)));
@@ -289,10 +299,10 @@ public interface StatefulMonad extends Monad<Lst> {
                 : written.apply(this.c().isOne() ? input : input.c(c -> c.mult(this.c())));
         if (null != profile) {
             final long elapsed = System.nanoTime() - t0;
-            profile.record(f(APPLY).extend(APPLY), elapsed);
+            profile.record(APPLY_APPLY_PROBE, elapsed);
             final fURI vid = this.inst().vid();
             if (null != vid)
-                profile.record(f(PER_INST).extend(vid.extend(TIME)), elapsed);
+                profile.record(PER_INST_PROBE.extend(vid.extend(TIME)), elapsed);
         }
         // write lens: where the result lands (default obj). '+' = the monad's new contents,
         // returned raw for the machine to re-queue; other write-targets are future work.
@@ -301,8 +311,8 @@ public interface StatefulMonad extends Monad<Lst> {
             // out-flow here — a gather (sum?int<=int{*}) emits one monad carrying its coefficient.
             final fURI outVid = this.inst().vid();
             if (null != profile && null != outVid && !result.isNoObj()) {
-                profile.incr(f(PER_INST).extend(outVid.extend(MONAD_OUT)), 1L);
-                profile.incr(f(PER_INST).extend(outVid.extend(C_OUT)), coeffMagnitude(result));
+                profile.incr(PER_INST_PROBE.extend(outVid.extend(MONAD_OUT)), 1L);
+                profile.incr(PER_INST_PROBE.extend(outVid.extend(C_OUT)), coeffMagnitude(result));
             }
             return result;
         }

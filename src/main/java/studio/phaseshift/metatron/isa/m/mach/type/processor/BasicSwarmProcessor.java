@@ -80,14 +80,15 @@ public class BasicSwarmProcessor extends MRec implements Processor {
     }
 
     /**
-     * Mint a computer for {@code code}. A PROCESSOR THAT PROFILES (its analyzer's {@code profile => true}) mints it under
+     * Mint a computer for {@code code}. A PROCESSOR THAT PROFILES (its analyzer's {@code profile => true}, and the analyzer
+     * not muted: read once per mint, so a muted one profiles no probe rather than only the probes that ask) mints it under
      * its own analyzer, so every evaluation it runs is measured there — unless the evaluation is already profiled (a
      * {@code profile()} times its own runs into an analyzer of its own).
      */
     @Override
     public BasicSwarmComputer apply(final Code code) {
         if (null == Analyzer.PROFILE.get() && this.jvm().get(Analyzer.KEY) instanceof Analyzer analyzer
-                && analyzer.atDirect(uri(PROFILE)).orElse(BOOL_FALSE).boolValue()) {
+                && analyzer.enabled() && analyzer.atDirect(uri(PROFILE)).orElse(BOOL_FALSE).boolValue()) {
             Analyzer.PROFILE.set(analyzer);
             try {
                 return BasicSwarmComputer.of(code);

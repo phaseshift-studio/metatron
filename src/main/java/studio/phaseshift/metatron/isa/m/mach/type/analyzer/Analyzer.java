@@ -38,9 +38,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * analyzer::[analysis => analysis::T, step => int::T, profile => bool::T, enabled => bool::T]
  * </pre>
  * <ul>
- *   <li><b>recording</b> is the producer's, in Java, where the thing it counts happens, and always through the verbs
- *   of {@link Helper}. It never writes a rec: the meters are lock-free cells, so a socket frame or a monad step pays an
- *   atomic add — never a map copy, a type check or a store write;</li>
+ *   <li><b>recording</b> is the producer's, in Java, where the thing it counts happens, through the verbs of
+ *   {@link Helper} (the per-step probes of the processor and {@code repeat()} still record directly, until their
+ *   per-step cost is measured). It never writes a rec: the meters are lock-free cells, so a socket frame or a monad step
+ *   pays an atomic add — never a map copy, a type check or a store write;</li>
  *   <li><b>reading</b> is anyone's, in mtron: {@code *~/network/analyzer/analysis/wire/sent};</li>
  *   <li><b>subscribing</b> is the space's own pubsub: {@code ~/+/analyzer/analysis?subq -> sub::[code=>…]} receives
  *   {@code pub::[<address>, analysis::T]} at most once per {@code step} (millis), and only after a change;</li>
@@ -90,8 +91,9 @@ public interface Analyzer extends Rec {
 
     /**
      * a {@code gauge} at {@code probe} whose value is {@code sample}'s, taken each time the analysis is built. Nothing
-     * records it, so it can never miss an event — and nothing announces it either: a sampled gauge changes without
-     * scheduling a publication, and a subscriber sees it with the next change.
+     * records it, so it can never miss an event, and muting the analyzer does not hide it (it is read, not recorded) —
+     * and nothing announces it either: a sampled gauge changes without scheduling a publication, and a subscriber sees it
+     * with the next change.
      */
     Analyzer gauge(fURI probe, DoubleSupplier sample);
 
@@ -116,9 +118,9 @@ public interface Analyzer extends Rec {
     }
 
     /**
-     * AGGREGATOR — the OWNER role: a component whose analyzer is the aggregation point its recorders send their meters
-     * into, held at {@code ~/<component>/analyzer}. The analyzer is the meta-construct in the machine's space; the
-     * aggregator's {@code analysis::T} is the union of everything recorded into it.
+     * AGGREGATOR — the OWNER role: a component whose analyzer is where its producers record, held at
+     * {@code ~/<component>/analyzer}. The analyzer is the meta-construct in the machine's space; the aggregator's
+     * {@code analysis::T} is the union of everything recorded into it.
      */
     interface Aggregator extends Rec {
 
@@ -135,7 +137,7 @@ public interface Analyzer extends Rec {
     }
 
     /**
-     * THE RECORDING VERBS — the one way a producer records, so no statistics code is interleaved with the work it
+     * THE RECORDING VERBS — how a producer records, so no statistics code is interleaved with the work it
      * measures (Marko, 2026-11-23). Each verb is handed the analyzer to record into and GATES ITSELF: an absent analyzer
      * ({@code null}) or a muted one ({@code enabled => false}) records nothing, and the work a verb wraps runs bare. Which
      * analyzer is the gate's choice, never the verb's:

@@ -81,14 +81,14 @@ public abstract class Listener extends MRec implements Addressable, Closeable {
     }
 
     /**
-     * Ascending specificity: more literal segments, then fewer wildcards, then — two different keys of the same shape,
-     * such as {@code /a/#} and {@code /+/b} — the smaller key, so the walk answers the same route every time.
-     */
-    /**
      * the one gauge every server keeps beside its access meters: the sessions it holds now
      */
     protected static final fURI CONNECTIONS = f("connections");
 
+    /**
+     * Ascending specificity: more literal segments, then fewer wildcards, then — two different keys of the same shape,
+     * such as {@code /a/#} and {@code /+/b} — the smaller key, so the walk answers the same route every time.
+     */
     public static final Comparator<fURI> SPECIFICITY = Comparator
             .comparingLong((fURI key) -> key.segments().stream().filter(Listener::literal).count())
             .thenComparingLong(key -> -key.segments().stream().filter(Listener::wildcard).count())

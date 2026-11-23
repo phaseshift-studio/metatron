@@ -461,6 +461,8 @@ public class wsServerTest extends AbstractMetatronTest {
         Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
         final Obj held = Machine.read(f("/network/analyzer/analysis/peer"));
         assertFalse(held.isNoObj(), "a connect shows in the analysis: " + Machine.read(f("/network/analyzer/analysis")));
+        // at least the dialed peer: a loopback socket also admits the inbound end as a peer, on the server's own thread,
+        // so whether it is there yet is a race this test does not pin
         assertTrue(held.realValue() >= 1.0d, "the peer this level holds is counted: " + held);
         network.drop(this.socket);
         final long deadline = System.currentTimeMillis() + 5000;
@@ -479,17 +481,39 @@ public class wsServerTest extends AbstractMetatronTest {
         wsServer.serve(this.socket, mtron("/mtron"));
         final Network network = Machine.current().network();
         Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
-        final Obj warm = network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)"));
-        assertFalse(warm.isFail(), "the socket answers: " + warm);
+        checkEquality(LOG, jnt(2), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)")), true);
         Machine.write(f("/network/analyzer/enabled"), bool(false));
         try {
-            final long before = Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue();
-            final Obj answer = network.submit(this.socket, ObjmtronSerializer.parse("1.plus(2)"));
-            assertFalse(answer.isFail(), "a muted network still carries frames: " + answer);
-            assertEquals(before, Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue(),
-                    "and counts none of them");
+            final long received = Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue();
+            final long sent = Machine.read(f("/network/analyzer/analysis/wire/sent")).orElse(jnt(0)).intValue();
+            // a muted network still carries frames: the round trip answers
+            checkEquality(LOG, jnt(3), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(2)")), true);
+            assertEquals(received, Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue(),
+                    "and counts none it receives");
+            assertEquals(sent, Machine.read(f("/network/analyzer/analysis/wire/sent")).orElse(jnt(0)).intValue(),
+                    "and none it sends");
         } finally {
             Machine.write(f("/network/analyzer/enabled"), bool(true));
+        }
+    }
+
+    /**
+     * A LEVEL GAUGES ONLY ITS OWN PEERS: a connection belongs to the machine that dialed it, never inherited by a pushed
+     * frame (NetworkUnion), so the frame's network counts none while its parent holds one.
+     */
+    @Test
+    void testAPushedLevelGaugesOnlyItsOwnPeers() {
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final Machine root = Machine.current();
+        Network.Helper.connect(root.network(), this.socket.extend("mtron"), WS_CLIENT_TID);
+        assertTrue(Machine.read(f("~/network/analyzer/analysis/peer")).realValue() >= 1.0d, "the dialing level counts its peer");
+        final Machine child = root.push(f("ws_server_peer_gauge"));
+        try {
+            assertEquals(0.0d, Machine.read(f("~/network/analyzer/analysis/peer")).realValue(), 0.0d,
+                    "a pushed frame holds no peer of its own, and inherits none");
+        } finally {
+            Machine.current(child);
+            child.pop();
         }
     }
 }

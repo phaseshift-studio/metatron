@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Set;
@@ -437,8 +438,9 @@ public class AnalyzerTest extends AbstractMetatronTest {
 
     /**
      * EVERY VERB GATES ITSELF, so no producer tests for an analyzer before it records: an absent analyzer records nothing
-     * and the work a verb wraps still runs, a muted one ({@code enabled => false}) records nothing, and a live one keeps
-     * each verb's meter — a block that throws is timed too, and its throw passes through.
+     * and the work a verb wraps still runs, a muted one ({@code enabled => false}) records nothing — though a gauge it
+     * samples still reads, being read and not recorded — and a live one keeps each verb's meter. A block that throws is
+     * timed too, and its throw passes through.
      */
     @Test
     void shouldGateEveryVerbOnTheAnalyzerItIsHanded() {
@@ -446,9 +448,11 @@ public class AnalyzerTest extends AbstractMetatronTest {
         final fURI gauged = f("verb/gauged");
         final fURI timed = f("verb/timed");
         final fURI region = f("verb/region");
+        final fURI recorded = f("verb/recorded");
         // absent: nothing to record into, and the work is still the work
         Analyzer.Helper.incr(null, counted, 1L);
         Analyzer.Helper.set(null, gauged, 1.0d);
+        Analyzer.Helper.record(null, recorded, 5L);
         assertEquals("done", Analyzer.Helper.timed(null, timed, () -> "done"), "an unmeasured block runs bare");
         assertEquals(0L, Analyzer.Helper.start(null), "an unmeasured region never reads the clock");
         Analyzer.Helper.stop(null, region, 0L);
@@ -457,23 +461,29 @@ public class AnalyzerTest extends AbstractMetatronTest {
         muted.at(uri(ENABLED), bool(false), MUTABLE);
         Analyzer.Helper.incr(muted, counted, 1L);
         Analyzer.Helper.set(muted, gauged, 1.0d);
+        Analyzer.Helper.record(muted, recorded, 5L);
         assertEquals("done", Analyzer.Helper.timed(muted, timed, () -> "done"), "a muted block runs bare");
         Analyzer.Helper.stop(muted, region, Analyzer.Helper.start(muted));
         assertTrue(muted.analysis().isEmpty(), "a muted analyzer records nothing: " + muted.analysis());
+        Analyzer.Helper.gauge(muted, f("verb/sampled"), () -> 3.0d);
+        assertEquals(3.0d, muted.analysis().at(uri("verb/sampled")).realValue(), 0.0d,
+                "but a gauge it samples is read, not recorded, so muting does not hide it");
         // live: each verb keeps its meter
         final Analyzer live = new BasicAnalyzer();
         Analyzer.Helper.incr(live, counted, 2L);
         Analyzer.Helper.set(live, gauged, 0.5d);
+        Analyzer.Helper.record(live, recorded, 5L);
         assertEquals("done", Analyzer.Helper.timed(live, timed, () -> "done"), "a measured block answers what it answers");
         Analyzer.Helper.stop(live, region, Analyzer.Helper.start(live));
-        assertThrows(IllegalStateException.class, () -> Analyzer.Helper.timed(live, timed, () -> {
-            throw new IllegalStateException("the block failed");
+        assertThrows(MTronException.class, () -> Analyzer.Helper.timed(live, timed, () -> {
+            throw MTronException.of("the block failed");
         }));
         final Analysis analysis = live.analysis();
         assertEquals(2L, read(analysis, "verb/counted"), "the counter: " + analysis);
         assertEquals(0.5d, analysis.at(uri("verb/gauged")).realValue(), 0.0d, "the gauge: " + analysis);
         assertEquals(2L, read(analysis, "verb/timed/count"), "both blocks timed, the one that threw included: " + analysis);
         assertEquals(1L, read(analysis, "verb/region/count"), "the region: " + analysis);
+        assertEquals(5L, read(analysis, "verb/recorded/total"), "the duration measured elsewhere: " + analysis);
     }
 
     /**
@@ -495,7 +505,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
         assertEquals(5.0d, analyzer.analysis().at(uri("level/peer")).realValue(), 0.0d,
                 "a stray recording at a sampled probe changes nothing");
         Analyzer.Helper.gauge(analyzer, f("level/broken"), () -> {
-            throw new IllegalStateException("what it sampled is gone");
+            throw MTronException.of("what it sampled is gone");
         });
         final Analysis analysis = analyzer.analysis();
         assertTrue(analysis.at(uri("level/broken")).isNoObj(), "a sample that fails drops its probe: " + analysis);
@@ -569,6 +579,28 @@ public class AnalyzerTest extends AbstractMetatronTest {
             Machine.write(f("~/processor/analyzer/profile"), bool(false));
             Machine.parse("{1,2,3}.plus(1)").apply(noobj());
             assertEquals(during, read(processor.analysis(), "flow/monads"), "nothing more once the profile is off");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * A MUTED PROCESSOR PROFILES NOTHING: with {@code profile => true} and {@code enabled => false}, the processor mints no
+     * computer under its analyzer, so not one probe records — the stages, the flow and each instruction's included, which
+     * record outside the verbs, as well as the resolver's and the cache's, which go through them.
+     */
+    @Test
+    void shouldProfileNothingThroughAMutedProcessorAnalyzer() {
+        final Machine machine = Machine.current().push(f("analyzer_muted_profile"));
+        try {
+            final Analyzer processor = machine.processor().analyzer();
+            Machine.write(f("~/processor/analyzer/profile"), bool(true));
+            Machine.write(f("~/processor/analyzer/enabled"), bool(false));
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            assertTrue(processor.analysis().isEmpty(), "a muted processor profiles nothing: " + processor.analysis());
+            Machine.write(f("~/processor/analyzer/enabled"), bool(true));
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            assertTrue(read(processor.analysis(), "flow/monads") > 0, "and unmuted, it profiles again: " + processor.analysis());
         } finally {
             machine.pop();
         }

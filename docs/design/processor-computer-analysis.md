@@ -328,9 +328,12 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
 network and the processor carry one); a server records into the one its own `?analq` q-proc holds; a profiled run
 records into `Analyzer.PROFILE`.
 
-- **`Analyzer.Helper`'s verbs are the one recording path** (Marko, 2026-11-23: no if/else statistics code interleaved
+- **`Analyzer.Helper`'s verbs are how a producer records** (Marko, 2026-11-23: no if/else statistics code interleaved
   with an object's work). Each is handed the analyzer to record into and gates itself, so an absent (`null`) or muted
-  (`enabled => false`) analyzer records nothing and a wrapped block runs bare. Which analyzer is the gate's choice:
+  (`enabled => false`) analyzer records nothing and a wrapped block runs bare. A muted processor analyzer with
+  `profile => true` mints no profiled computer at all, so it profiles nothing rather than only the probes that go
+  through the verbs; a sampled gauge is read, not recorded, so muting does not hide it. Which analyzer is the gate's
+  choice:
   the owner's for the cheap meters that are always on (`network.analyzer()`, a server's `analyzer()`), the run's
   (`Analyzer.PROFILE.get()`) for the costly ones a profile switches on. A probe is one path (`wire/recv`,
   `resolve/inst_resolve`), held in a `static final` so a probe nobody measures costs no `f()`.
