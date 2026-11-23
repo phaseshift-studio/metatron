@@ -22,9 +22,7 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.Handshakedata;
 import org.java_websocket.handshake.ServerHandshake;
-import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -41,7 +39,6 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
@@ -211,22 +208,10 @@ public class WebSocketRec extends MRec implements WebSocketObj {
 
     @Override
     public void onMessage(final WebSocket conn, final Obj message) {
+        // the frame was counted as it arrived, before it was read or run: on the wire and as a read at its route by the
+        // server that took it (wsServer), on the wire by the client that read it (WebSocketRecClient)
         try {
-            // the single inbound funnel: a client's onMessage delegates into this same method, so counting here
-            // counts every frame that arrived on any socket, handled or not -- into the network of the machine the
-            // frame arrived in (a server session runs in its route's machine)
-            Machine.current().network().analyzer().incr(f(WIRE), f(RECV), 1L);
-            // A SERVER ALSO COUNTS THE FRAME AS A READ AT THE ROUTE IT SERVED, and the READ IS THE HANDLING: the
-            // layer brackets on_message, so read/count is the frames this server took and read/latency the time it
-            // spent answering them. Two meter sets, two questions (what crossed the wire, what the server did).
-            final Listener served = this.listener();
-            if (null == served)
-                this.handle(message);
-            else
-                QProc.Layer.read(served, this.wire(), () -> {
-                    this.handle(message);
-                    return noobj();
-                });
+            this.handle(message);
         } catch (final Exception e) {
             LOG.error("error processing message: %s", e);
         }

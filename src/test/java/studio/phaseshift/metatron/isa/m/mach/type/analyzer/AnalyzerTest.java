@@ -481,6 +481,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
             Machine.parse("{1,2,3}.plus(1)").apply(noobj());
             final long during = read(processor.analysis(), "flow/monads");
             assertTrue(during > 0, "the processor's own analyzer measured the evaluation: " + processor.analysis());
+            assertTrue(read(processor.analysis(), "cache/hits") + read(processor.analysis(), "cache/misses") > 0,
+                    "and the type lookups its computers made: " + processor.analysis());
             final Machine child = machine.push(f("child"));
             try {
                 final Analyzer own = child.processor().analyzer();

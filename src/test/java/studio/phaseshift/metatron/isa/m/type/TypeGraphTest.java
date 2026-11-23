@@ -85,11 +85,12 @@ public class TypeGraphTest extends AbstractMetatronTest {
 
     /**
      * A PROFILED LOOKUP IS COUNTED IN ITS PROFILE: each hit and miss lands in the analyzer the run is profiled into
-     * (cache/hits, cache/misses), and a lookup outside any profile is counted nowhere -- the graph keeps no counters
-     * of its own for one profile to reset under another.
+     * (cache/hits, cache/misses), and a lookup outside the run is counted nowhere -- another thread's while the profile
+     * is set, this thread's once it is not, and a lookup that bypasses the cache -- so the graph keeps no counters of
+     * its own for one profile to reset under another.
      */
     @Test
-    public void testProfiledLookupsCountIntoTheProfile() {
+    public void testProfiledLookupsCountIntoTheProfile() throws InterruptedException {
         final TypeGraph graph = Machine.current().memory().typeGraph();
         // resolved once, up front: a resolver that walked the graph itself would add lookups of its own to the counts
         final Type type = MType.T(f("int"));
@@ -102,6 +103,12 @@ public class TypeGraphTest extends AbstractMetatronTest {
             graph.clear();
             graph.memo(key, () -> type);    // a miss, cached again
             graph.memo(key, () -> type);    // a hit
+            // a concurrent evaluation's hit is that evaluation's, not this run's
+            final Thread other = new Thread(() -> graph.memo(key, () -> type));
+            other.start();
+            other.join();
+            // a key that names nothing bypasses the cache, and a bypass is no lookup
+            graph.memo(new TypeGraph.Key(null, null, null, null), () -> type);
         } finally {
             Analyzer.PROFILE.remove();
         }

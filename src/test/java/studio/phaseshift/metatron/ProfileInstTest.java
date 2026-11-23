@@ -83,11 +83,11 @@ public class ProfileInstTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE CACHE STATS ARE READ OFF THE PROFILE'S OWN ANALYZER: the timed runs look types up, each lookup counted as a
-     * hit or a miss into the analyzer the runs are profiled into, and the rate is those counts' own.
+     * THE CACHE SECTION COUNTS THE TIMED RUNS' TYPE LOOKUPS, and its rate is those counts' own. That the counts are the
+     * profile's alone, never a concurrent evaluation's, is TypeGraphTest's to show.
      */
     @Test
-    public void testCacheStatsAreTheTimedRunsOwn() {
+    public void testCacheRateMatchesItsCounts() {
         final Obj cache = ObjmtronSerializer.eval("1.plus(2).profile()>>cache");
         assertFalse(cache.isFail(), "profile()>>cache should not fail: " + cache);
         final long hits = cache.asRec().at(uri(HITS)).intValue();

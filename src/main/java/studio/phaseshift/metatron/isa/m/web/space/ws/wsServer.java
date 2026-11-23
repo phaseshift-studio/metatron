@@ -460,13 +460,21 @@ public final class wsServer extends Listener {
      * One frame, evaluated as the machine whose route the connection took, on the thread that runs it.
      */
     private void evaluate(final WebSocket conn, final Session session, final String message) {
-        // the frame is counted where it is handled — the session's on_message read (WebSocketRec), in this socket's
-        // analyzer — so there is no second meter here
         session.evaluating().add(Thread.currentThread());
         try {
             // a hang-up between the lookup and here found no thread to interrupt, so the session is asked for again
             if (session == this.sessions.get(conn))
-                as(session.route().machine(), () -> session.rec().onMessage(conn, message));
+                as(session.route().machine(), () -> {
+                    // THE FRAME IS COUNTED AS IT ARRIVES, before any of it runs: an mtron session evaluates its frame
+                    // before on_message, and an mcp session answers it without on_message, so a count in the session's
+                    // handler came after the program, or never. It counts on the wire of the machine whose route it
+                    // took, and as a READ at that route in this socket's analyzer, timed over the whole answer.
+                    Machine.current().network().analyzer().incr(f(WIRE), f(RECV), 1L);
+                    QProc.Layer.read(this, session.rec().wire(), () -> {
+                        session.rec().onMessage(conn, message);
+                        return noobj();
+                    });
+                });
         } finally {
             // THE HANG-UP'S INTERRUPT ENDS WITH THE EVALUATION: the worker serves the socket's other connections, and
             // Java-WebSocket's worker loop exits on an interrupt left set

@@ -377,7 +377,7 @@ public class machInstSet extends AbstractInstSet {
                         MACH_ANALYSIS_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)
                                 .vid(Analysis.ANALYSIS_TID, "what a component has measured: a rec whose paths are probes and whose leaves are meters (counter::T, gauge::T, timer::T). Derived values -- rates, means, ratios -- are computed from it, never stored in it, so two analyses merge: counters add, timers combine, a gauge keeps the later reading.")
-                                .example("*~/network/analyzer/analysis/wire   [-- the frames and round trips that crossed this machine's sockets --]")
+                                .example("*~/network/analyzer/analysis/wire   [-- the frames that crossed this machine's sockets, each way --]")
                                 .create(),
                         MACH_COUNTER_TYPE = TypeBuilder.build()
                                 .tid(NAT_TID)

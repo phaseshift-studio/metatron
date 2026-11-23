@@ -25,6 +25,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.print_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
@@ -237,6 +239,8 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     }
 
     private Obj readFrame(final ScopedValue.CallableOp<Obj, RuntimeException> read) {
+        // THE FRAME IS COUNTED AS IT ARRIVES, before the read: a protocol client evaluates a request while it reads it
+        Machine.current().network().analyzer().incr(f(WIRE), f(RECV), 1L);
         return this.answersRequests ? read.call() : ScopedValue.where(Obj.Helper.SELF_VID, true).call(read);
     }
 

@@ -370,4 +370,51 @@ public class wsServerTest extends AbstractMetatronTest {
                 "the session's hang-up is a delete: " + after);
         assertEquals(0.0d, after.at(uri("connections")).realValue(), "and the gauge falls with it");
     }
+
+    /**
+     * A FRAME IS COUNTED AS IT ARRIVES, before its program runs: the program a frame carries reads the wire with its own
+     * arrival already counted. Counted after its evaluation, a frame never saw itself, and the first read of a quiet
+     * machine's network analysis answered an empty analysis.
+     */
+    @Test
+    void testAFrameIsCountedBeforeItsProgramRuns() {
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final Network network = Machine.current().network();
+        Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
+        // one round trip first: whatever the connection exchanges as it opens has arrived before the count is taken
+        final Obj warm = network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)"));
+        assertFalse(warm.isFail(), "the socket answers: " + warm);
+        // client and server share this machine's network, so its wire counts the server's arrivals and the client's
+        final long before = Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue();
+        final Obj seen = network.submit(this.socket, ObjmtronSerializer.parse("*/network/analyzer/analysis/wire/recv"));
+        assertFalse(seen.isFail(), "the program answered: " + seen);
+        assertEquals(before + 1L, seen.orElse(jnt(0)).intValue(),
+                "the program read the wire with its own frame already counted: " + seen);
+    }
+
+    /**
+     * AN MCP REQUEST IS COUNTED AS IT ARRIVES, as every frame is: on the wire of the machine whose route it took, and
+     * as a read in the socket's own analysis. An mcp session answers without on_message, which is where a frame used to
+     * be counted, so its requests were counted nowhere.
+     */
+    @Test
+    void testAnMcpRequestIsCountedAsItArrives() throws Exception {
+        wsServer.serve(this.socket, rec(uri("/mcp"), uri(MCP_MTRON_SERVER_TID.toString())));
+        final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
+        final WebSocketClient client = this.client("/mcp", replies);
+        try {
+            assertTrue(client.connectBlocking(2, TimeUnit.SECONDS), "the client dials the route");
+            // the raw client's own frames are no machine's: this machine's wire counts only what the server takes
+            final long before = Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue();
+            client.send("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
+            assertNotNull(replies.poll(5, TimeUnit.SECONDS), "the server answers the ping");
+            assertEquals(before + 1L, Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue(),
+                    "the request crossed the wire into this machine");
+            final Rec analysis = Machine.read(this.socket.extend(ALL).addQ("analq")).asRec();
+            assertEquals(1L, analysis.at(uri("read")).asRec().at(uri("count")).intValue(),
+                    "and is a read in the socket's own analysis: " + analysis);
+        } finally {
+            client.closeBlocking();
+        }
+    }
 }
