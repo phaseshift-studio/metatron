@@ -1,0 +1,1388 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Ring Theoretic Distributed Structures · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
+         (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
+         downloading it on every page view. Page-specific MathJax config scripts (e.g. the
+         theory articles) run during parse, before this loader fires. -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var content = document.querySelector('main') || document.body;
+            var text = content.textContent || '';
+            if (text.indexOf('\\(') === -1 && text.indexOf('\\[') === -1) return;
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js';
+            mathjax.async = true;
+            document.head.appendChild(mathjax);
+        });
+    </script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+        <link href="../css/theory-article.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/db/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                            src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus/index.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-structures.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>Ring Theoretic Distributed Structures</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-structures.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-structures.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+   <!-- <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/splash"
+               title="the metatron web console — served by this machine">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div> -->
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="article-doc">
+        <h1 class="article-title mb-1">Ring Theoretic Distributed Structures</h1>
+        <small class="article-subtitle">A data structure is a term of a ring of references. Its layouts are the factorizations of the term, every read is invariant across them, and the laws that distribute a program decide where its data may be split.</small>
+        <div class="article-author">Dr. Marko A. Rodriguez<br>Dr. Stynx</div>
+    </div>
+    <div class="article-body">
+<p><strong>DRAFT</strong>: This article is currently being developed. As of November 22, 2026, the reference ring, record merge and
+the layout invariance of reads are implemented in metatron. The data-local shard, record composition, and a single
+algebra for lists are entailed by the theory and not yet built; each is marked where it occurs.</p>
+<h2>Introduction</h2>
+<p>In Ring Theoretic Distributed Computing <a href="./ring-theoretic-distributed-computing.html">[4]</a>, a program is a term of the
+stream ring. The \(+\) branches a stream into computations that share nothing, so they may run on any machine; the
+\(\cdot\) composes them in series; and distribution stops only where a reduce function contracts a stream. This article
+reads <em>data</em> the same way. A data structure is a term of a ring of references. Its \(+\) branches an address into
+independent references, which may be stored on any machine, and its \(\cdot\) extends an address, which keeps what it
+extends together. A layout of the structure (nested, flat, or anything between) is a factorization of its term, and
+every read answers the same in every layout, because a read is linear.</p>
+<p>The ring that decides where a program may be split therefore decides where its data may be split, and the two compile
+alike. Factoring a program shares work and factoring data shares an address. Expanding a program parallelizes it and
+expanding data partitions it. A reduce is where a program must synchronize, and an overwrite is where data must.</p>
+<p>The first section defines the reference ring on paths. The second defines a structure as a sum of arrows from paths to
+objects, defines a read as a left quotient, and proves reads linear. The third reads a layout as a factorization and
+proves reads invariant across layouts. The fourth places a structure across machines and derives the data shard
+identity. The fifth treats writes and deletes. The sixth reads the containers, records, lists and relations, as
+branches of arrows, and finds two rings for lists and a theorem that their operations do not mix. The seventh sets
+the two articles side by side.</p>
+<h2>The Reference Ring</h2>
+<p>::: <strong>Definition 1</strong> (Paths). Let \(\Sigma\) be a set of <em>segments</em>. A <em>path</em> is a word \(u = \sigma_1 \cdots \sigma_n\)
+over \(\Sigma\), and the empty word \(\varepsilon\) is the empty path. Paths multiply by concatenation, \(u \cdot v = uv\),
+which is associative with unit \(\varepsilon\), so the paths form the free monoid \(\Sigma^*\).
+:::</p>
+<p>::: <strong>Definition 2</strong> (Reference ring). Let \(\mathcal{C}\) be the coefficients of <a href="./stream-ring-theory.html">[1]</a>, a
+commutative ring with unity (the integers, in metatron). A <em>reference</em> is a finite sum \(a = \sum_i c_i\,u_i\) of
+paths with coefficients, and the empty sum is \(0\). References add coefficientwise, \(c\,u + d\,u = (c + d)\,u\), and
+multiply path by path:
+\[
+\begin{equation*}
+\Big(\sum_i c_i\,u_i\Big) \cdot \Big(\sum_j d_j\,v_j\Big) = \sum_{i,j} (c_i d_j)\,(u_i v_j).
+\end{equation*}
+\]
+The references form the set \(\mathcal{U} = \mathcal{C}\langle\Sigma\rangle\).
+:::</p>
+<p>\(\mathcal{U}\) is the free algebra on \(\Sigma\): the polynomials whose variables are segments and do not commute [8].
+Its \(+\) is the <em>branch</em>, \(a + b = \{a, b\}\), and its \(\cdot\) is <em>extension</em>, \(a \cdot b = a/b\), as in the uri
+reference ring of the tractatus <a href="../tractatus/uri.html">[5]</a>.</p>
+<p>::: <strong>Theorem 1</strong> (The reference ring). \(\langle\mathcal{U}, +, \cdot\rangle\) is a ring with zero \(0\) and unity
+\(\varepsilon\). Its \(+\) is commutative, its \(\cdot\) is associative, and \(\cdot\) distributes over \(+\) on both sides. Its
+\(\cdot\) is not commutative when \(\Sigma\) has two segments or more.
+:::</p>
+<p>::: <em>Proof.</em> \(\mathcal{U}\) is the monoid ring \(\mathcal{C}[\Sigma^*]\), the free \(\mathcal{C}\)-module on the free
+monoid with the monoid's product extended bilinearly. Bilinearity is the two distributive laws, associativity and the
+unit are the monoid's, and \(0 \cdot a = a \cdot 0 = 0\) follows from distributivity. If \(\sigma \neq \tau\) are
+segments, then \(\sigma\tau \neq \tau\sigma\) as words. ◻
+:::</p>
+<p><strong>Live proof.</strong> A sum of paths that share a prefix and a suffix factors around what differs,
+\(abd + acd = a\,(b + c)\,d\). Paths that share nothing stay whole, in either order, and like paths add their
+coefficients, \(ab + ab = 2\,ab\).</p>
+<pre><code class="language-mtron">mtron&gt; &lt;/a/b/d&gt; + &lt;/a/c/d&gt;
+==&gt;&lt;/a/{b,c}/d&gt;
+mtron&gt; &lt;/a/b&gt; + &lt;/c/d&gt;
+==&gt;&lt;/{a/b,c/d}&gt;
+mtron&gt; &lt;/c/d&gt; + &lt;/a/b&gt;
+==&gt;&lt;/{a/b,c/d}&gt;
+mtron&gt; &lt;/a/b&gt; + &lt;/a/b&gt;
+==&gt;/a/b{2}
+</code></pre>
+<p>Extension distributes over a branch on either side, \(a(b + c)d \cdot e = a(b + c)de\) and
+\(e \cdot a(b + c)d = ea(b + c)d\), and the empty path is the unity on both sides.</p>
+<pre><code class="language-mtron">mtron&gt; &lt;/a/b&gt;.mult(&lt;/c/d&gt;)
+==&gt;/a/b/c/d
+mtron&gt; &lt;/a/{b,c}/d&gt;.mult(&lt;/e&gt;)
+==&gt;&lt;/a/{b,c}/d/e&gt;
+mtron&gt; &lt;/e&gt;.mult(&lt;/a/{b,c}/d&gt;)
+==&gt;&lt;/e/a/{b,c}/d&gt;
+mtron&gt; &lt;/a/b&gt;.mult(&lt;&gt;)
+==&gt;/a/b
+mtron&gt; &lt;&gt;.mult(&lt;/a/b&gt;)
+==&gt;/a/b
+</code></pre>
+<p>The zero adds nothing and annihilates, \(ab + 0 = ab\) and \(ab \cdot 0 = 0\). The unity is not the zero:
+\(ab + \varepsilon\) is the branch \(\{\varepsilon, ab\}\).</p>
+<pre><code class="language-mtron">mtron&gt; &lt;/a/b&gt; + noobj
+==&gt;/a/b
+mtron&gt; &lt;/a/b&gt;.mult(noobj).count()
+==&gt;0
+mtron&gt; &lt;/a/b&gt; + &lt;&gt;
+==&gt;&lt;{,/a/b}&gt;
+mtron&gt; {noobj,&lt;/a/b&gt;}
+==&gt;/a/b
+</code></pre>
+<p>In mtron, a uri is written in angle brackets, <code>&lt;a/b&gt;</code>, and a branch <code>{b,c}</code> inside a path is the factored sum.
+<code>plus</code> and <code>mult</code> are \(+\) and \(\cdot\), written infix as <code>+</code> and <code>*</code> with a space on each side, since a <code>*</code> with no
+space is a dereference. The empty uri <code>&lt;&gt;</code> is \(\varepsilon\) and <code>noobj</code> is \(0\), which outputs nothing, so a zero is
+shown by its count. A coefficient prints after its path, <code>/a/b{2}</code>. With <code>noobj</code> on the left, <code>noobj + a</code> outputs
+nothing, because an instruction is never applied to the empty stream. The left identity holds of the stream itself,
+which is the last line above.</p>
+<p>::: <strong>Proposition 1</strong> (Points multiply along a path). For coefficients \(c, d\) and paths \(u, v\),
+\((c\,u)(d\,v) = (cd)\,uv\). A coefficient on any segment of a path is a coefficient on the whole path,
+\(\sigma_1 \cdots (c\,\sigma_i) \cdots \sigma_n = c\,(\sigma_1 \cdots \sigma_n)\), so negating \(k\) segments
+multiplies the path by \((-1)^k\).
+:::</p>
+<p>::: <em>Proof.</em> The product is bilinear, and \(\mathcal{C}\) is commutative, so it is central in \(\mathcal{U}\). ◻
+:::</p>
+<p>Coefficients add across a branch and multiply along a path. This is the point law of
+<a href="./span-and-point-coefficient-algebra.html">[2]</a>, here a theorem of the reference ring.</p>
+<p><strong>Live proof.</strong> Two negated segments multiply to a positive path, so \(ab + (-a)(-b) = 2\,ab\). Three negated segments
+give a negative path, which cancels \(abc\), and so does the negated path itself.</p>
+<pre><code class="language-mtron">mtron&gt; &lt;/a/b&gt; + &lt;/{{-1}a}/{{-1}b}&gt;
+==&gt;/a/b{2}
+mtron&gt; &lt;/a/b/c&gt;.plus(&lt;/{{-1}a}/{{-1}b}/{{-1}c}&gt;).count()
+==&gt;0
+mtron&gt; &lt;/a/b&gt;.plus({-1}&lt;/a/b&gt;).count()
+==&gt;0
+</code></pre>
+<p>An expression built from segments, \(+\), \(\cdot\) and coefficients <em>denotes</em> the reference it expands to, and two
+expressions that denote one reference are two <em>factorizations</em> of it. mtron writes a sum in the factorization that
+takes out its longest common prefix and suffix and branches the rest, <code>a/{b,c}/d</code>. That factorization is always
+exact, because factoring out a common prefix or suffix is distributivity. A product of branches is a stronger claim.</p>
+<p>::: <strong>Proposition 2</strong> (Rectangular factors). Let \(u_1, \ldots, u_n\) be distinct paths of length \(m\). Then
+\[
+\begin{equation*}
+u_1 + \cdots + u_n = \Big(\sum_{\sigma \in S_1} \sigma\Big) \cdots \Big(\sum_{\sigma \in S_m} \sigma\Big)
+\end{equation*}
+\]
+for sets of segments \(S_1, \ldots, S_m\) if and only if \(\{u_1, \ldots, u_n\} = S_1 \times \cdots \times S_m\).
+:::</p>
+<p>::: <em>Proof.</em> The product expands to \(\sum \sigma_1 \cdots \sigma_m\) over \(S_1 \times \cdots \times S_m\). Distinct
+tuples are distinct words, so each word has coefficient \(1\). Two references are equal exactly when their coefficients
+agree path by path. ◻
+:::</p>
+<p>A product of branches stands for every combination of its members, so a sum of paths is a product of branches only
+when it holds every combination. \(ab + cd\) is not \((a + c)(b + d)\), whose expansion adds \(ad\) and \(cb\).</p>
+<p><strong>Live proof.</strong> The four paths \(ab + ad + cb + cd\) are the rectangle \((a + c)(b + d)\). mtron writes their sum as a
+branch of four paths, the product as a product of branches, and the two are one reference: subtracting \(ab\) from the
+product leaves the other three.</p>
+<pre><code class="language-mtron">mtron&gt; &lt;/a/b&gt;.plus(&lt;/a/d&gt;).plus(&lt;/c/b&gt;).plus(&lt;/c/d&gt;)
+==&gt;&lt;/{a/b,a/d,c/b,c/d}&gt;
+mtron&gt; &lt;/{a,c}/{b,d}&gt;
+==&gt;&lt;/{a,c}/{b,d}&gt;
+mtron&gt; &lt;/{a,c}/{b,d}&gt;.plus({-1}&lt;/a/b&gt;)
+==&gt;&lt;/{a/d,c/b,c/d}&gt;
+</code></pre>
+<h2>Structures and Reads</h2>
+<p>::: <strong>Definition 3</strong> (Structure). Let \(X\) be the objects of <a href="./stream-ring-theory.html">[1]</a>. A <em>structure</em> is a finite
+sum of arrows from paths to objects, with coefficients,
+\[
+\begin{equation*}
+D = \sum_i c_i\,(u_i \Rightarrow x_i), \qquad u_i \in \Sigma^*,\quad x_i \in X,
+\end{equation*}
+\]
+and the empty sum is \(0\). A reference extends a structure on the left, path by path,
+\(p \cdot (u \Rightarrow x) = (pu \Rightarrow x)\), extended bilinearly. The structures form a left \(\mathcal{U}\)-module
+\(\mathcal{D}\).
+:::</p>
+<p>An arrow \(u \Rightarrow x\) stores the object \(x\) at the address \(u\), and its coefficient is the number of copies stored
+there, the <em>point</em> of <a href="./span-and-point-coefficient-algebra.html">[2]</a>. An arrow into the zero is no arrow,
+\(u \Rightarrow 0 = 0\): storing nothing stores nothing.</p>
+<p>::: <strong>Definition 4</strong> (Read). The <em>read</em> of \(D\) at a path \(p\) is the stream of the objects stored at \(p\). The <em>subtree</em>
+of \(D\) at \(p\) is what \(D\) stores below \(p\), addressed from \(p\):
+\[
+\begin{equation*}
+D(p) = \sum_{i \,:\, u_i = p} c_i\,x_i,
+\qquad
+p^{-1}D = \sum_{i \,:\, u_i = p\,v_i} c_i\,(v_i \Rightarrow x_i).
+\end{equation*}
+\]
+A <em>wildcard</em> reads every child, \(D(p \ast q) = \sum_{\sigma \in \Sigma} D(p\,\sigma\,q)\), a finite sum because \(D\) is
+finite.
+:::</p>
+<p>\(p^{-1}D\) is the left quotient of \(D\) by \(p\), Brzozowski's derivative [6] taken by a path instead of a letter. It is how
+a read cascades into a container: an interior node reads as its subtree.</p>
+<p>::: <strong>Theorem 2</strong> (Reads are linear). For structures \(D, E\) and paths \(p, q\),
+\[
+\begin{equation*}
+(D + E)(p) = D(p) + E(p), \qquad
+p^{-1}(D + E) = p^{-1}D + p^{-1}E, \qquad
+(pq)^{-1}D = q^{-1}\big(p^{-1}D\big), \qquad
+p^{-1}(p \cdot D) = D.
+\end{equation*}
+\]
+:::</p>
+<p>::: <em>Proof.</em> The first two equations hold because both sides select the same arrows from the same sum. The third holds
+because \(u = pqv\) exactly when \(u = pw\) with \(w = qv\). The fourth is left cancellation in the free monoid: \(pu = pv\)
+only if \(u = v\). ◻
+:::</p>
+<p><strong>Live proof.</strong> Two structures that share an address merge below it,
+\((ab \Rightarrow 1) + (ac \Rightarrow 2) = a \cdot \big((b \Rightarrow 1) + (c \Rightarrow 2)\big)\), and both forms
+read \(2\) at \(ac\).</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;[b=&gt;1]] + [a=&gt;[c=&gt;2]]
+==&gt;[a=&gt;[b=&gt;1,c=&gt;2]]
+mtron&gt; [a=&gt;[b=&gt;1,c=&gt;2]]&gt;&gt;a&gt;&gt;c
+==&gt;2
+mtron&gt; {[a=&gt;[b=&gt;1]],[a=&gt;[c=&gt;2]]}&gt;&gt;a&gt;&gt;c
+==&gt;2
+</code></pre>
+<p>In mtron, a rec <code>[k=&gt;v]</code> writes arrows out of its keys, and a rec nested at a key extends the key (Definition 8), so
+<code>[a=&gt;[b=&gt;1]]</code> is \((ab \Rightarrow 1)\). <code>&gt;&gt;</code> reads a child, so <code>&gt;&gt;a&gt;&gt;c</code> is the read at \(ac\). A stream <code>{…}</code> of recs is
+their sum, and an instruction applied to a stream applies to each member.</p>
+<h2>Layouts</h2>
+<p>::: <strong>Definition 5</strong> (Layout). A <em>layout</em> of a structure \(D\) is a sum \(D = O_1 + \cdots + O_m\) of <em>objects</em>, each an
+expression stored as one unit: a value at an address, or a container. Two layouts are <em>equivalent</em> when they denote
+the same structure.
+:::</p>
+<p>::: <strong>Theorem 3</strong> (Layout invariance). Equivalent layouts answer every read alike: every read, every subtree, and every
+wildcard read.
+:::</p>
+<p>::: <em>Proof.</em> A read is a function of the structure a layout denotes (Definition 4), and equivalent layouts denote the
+same structure. ◻
+:::</p>
+<p>The proof is one line, because the substance is in Definition 5: layouts are equivalent exactly when the ring's laws
+carry one to the other. A matrix \(m\) with entries \(a_{ij}\) is, entry-wise, row-wise and nested,
+\[
+\begin{equation*}
+\sum_{i,j} \big(m\,i\,j \Rightarrow a_{ij}\big)
+\;=\; \sum_{i} m\,i \cdot \Big(\sum_{j} \big(j \Rightarrow a_{ij}\big)\Big)
+\;=\; m \cdot \Big(\sum_{i} i \cdot \sum_{j} \big(j \Rightarrow a_{ij}\big)\Big),
+\end{equation*}
+\]
+so the row read \(D(m\,0 \ast)\) and the column read \(D(m \ast 0)\) answer the same in all three. The tractatus runs all
+three embeddings live <a href="../tractatus/uri.html">[5]</a>. The layouts differ only in cost, as a read touches what its layout
+stores together, so a planner may choose a layout by cost alone, as <a href="./ring-theoretic-distributed-computing.html">[4]</a>
+chooses a plan.</p>
+<p><strong>Live proof.</strong> The nested layout of a two-row matrix reads \(6\) at row \(1\), column \(2\).</p>
+<pre><code class="language-mtron">mtron&gt; [[0,1,2,3],[4,5,6,7]]&gt;&gt;1&gt;&gt;2
+==&gt;6
+</code></pre>
+<p>::: <strong>Proposition 3</strong> (What a layout shows). The number of objects in a layout is not a function of the structure it
+denotes.
+:::</p>
+<p>::: <em>Proof.</em> \([a \Rightarrow [b \Rightarrow 1, c \Rightarrow 2]]\) is one object and
+\(\{[a \Rightarrow [b \Rightarrow 1]], [a \Rightarrow [c \Rightarrow 2]]\}\) is two, and both denote
+\((ab \Rightarrow 1) + (ac \Rightarrow 2)\). ◻
+:::</p>
+<p><strong>Live proof.</strong> The two layouts count differently, and the sum of the expanded layout is the nested one.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;[b=&gt;1,c=&gt;2]].count()
+==&gt;1
+mtron&gt; {[a=&gt;[b=&gt;1]],[a=&gt;[c=&gt;2]]}.count()
+==&gt;2
+mtron&gt; {[a=&gt;[b=&gt;1]],[a=&gt;[c=&gt;2]]}.sum()
+==&gt;[a=&gt;[b=&gt;1,c=&gt;2]]
+</code></pre>
+<p>An operation is therefore invariant across layouts exactly when it factors through the structure. Reads do
+(Theorem 3), and so does any fold of reads. Counting objects, ordering them, or measuring a container's length does
+not, so none of these may be moved across a change of layout. These are the operations a rewriter cannot distribute
+over a branch either: a count of a merged stream is one object, while the counts of its parts are two.</p>
+<h2>Placement</h2>
+<p>::: <strong>Definition 6</strong> (Placement). A <em>placement</em> of a structure \(D\) over places \(1, \ldots, k\) assigns each object of a
+layout of \(D\) to one place. Place \(j\) holds \(D_j\), the sum of the objects assigned to it, so
+\(D = D_1 + \cdots + D_k\). Write \(\pi_j\) for the map that keeps the arrows held at place \(j\). Then
+\[
+\begin{equation*}
+\pi_1 + \cdots + \pi_k = 1,
+\qquad
+\pi_i\,\pi_j =
+\begin{cases}
+\pi_j &amp; \text{if $i = j$}, \\
+0 &amp; \text{otherwise},
+\end{cases}
+\end{equation*}
+\]
+so the \(\pi_j\) are a complete set of orthogonal idempotents [8].
+:::</p>
+<p>The deal of <a href="./ring-theoretic-distributed-computing.html">[4]</a> is the same construction on a stream. Its shares sum to
+the identity, which is all the tree of supersteps needs, and orthogonality, \(\pi_i\,\pi_j = 0\), is what makes the
+shares disjoint.</p>
+<p>::: <strong>Theorem 4</strong> (The data shard identity). Let \(D = D_1 + \cdots + D_k\) be a placement, \(p\) a path, and \(r\) a cut of
+<a href="./ring-theoretic-distributed-computing.html">[4]</a> with combiner \(C(r)\). Then
+\[
+\begin{equation*}
+D(p) = D_1(p) + \cdots + D_k(p),
+\qquad
+D(p)\,r = \big(D_1(p)\,r + \cdots + D_k(p)\,r\big)\;C(r).
+\end{equation*}
+\]
+:::</p>
+<p>::: <em>Proof.</em> The first equation is Theorem 2, by induction on \(k\). The second is the shard identity of
+<a href="./ring-theoretic-distributed-computing.html">[4]</a> applied to the seed \(D_1(p) + \cdots + D_k(p)\) with no floatable run. ◻
+:::</p>
+<p>Read from right to left, the identity sends the program to the data: each place reads and folds what it holds, and
+only the partials travel. It is entry B of the menu of <a href="./ring-theoretic-distributed-computing.html">[4]</a>, the
+data-local shard, whose seed the placement partitions rather than a deal.</p>
+<p>[To be written: entry B lowered by <code>law_shard</code>, with each lane reading the part its place holds.]</p>
+<p>::: <strong>Theorem 5</strong> (Factoring colocates). If \(O = p \cdot (E + F)\) is one object of a layout, every placement of that
+layout holds \(p \cdot E\) and \(p \cdot F\) at one place. The layout with \(O\) replaced by the two objects \(p \cdot E\) and
+\(p \cdot F\) is equivalent, and it admits every placement of the first together with those that hold the two apart.
+:::</p>
+<p>::: <em>Proof.</em> A placement assigns each object to one place, and \(p \cdot (E + F) = p \cdot E + p \cdot F\) by
+distributivity. ◻
+:::</p>
+<p>The placements a layout admits are ordered by factoring: expanding refines them and factoring coarsens them. The fully
+expanded layout, one arrow per object, admits every placement, and a single object admits one. A product colocates
+and a sum frees, which makes exact the tractatus's reading of the multiplicative form as dependent and the additive
+form as independent <a href="../tractatus/uri.html">[5]</a>.</p>
+<p>::: <strong>Theorem 6</strong> (Replication needs idempotence). Let \(D = D_1 + R + D_2\), and let two places hold \(D_1 + R\) and
+\(D_2 + R\), so that \(R\) is held twice. The two reads sum to \(D(p) + R(p)\). A commutative monoid fold \(r\) answers
+\(D(p)\,r\) over that sum, whatever \(R\) is, if and only if it is idempotent, \(x \oplus x = x\).
+:::</p>
+<p>::: <em>Proof.</em> By Theorem 2 the reads sum to \(D(p) + R(p)\). If \(x \oplus x = x\), then
+$r\big(D(p) + R(p)\big) = r\big(D_1(p) + D_2(p)\big) \oplus r\big(R(p)\big) \oplus r\big(R(p)\big)
+= r\big(D_1(p) + D_2(p)\big) \oplus r\big(R(p)\big) = r\big(D(p)\big)$. Conversely, take \(D = R\) a single object \(x\):
+the condition reads \(r(x + x) = r(x)\), which is \(x \oplus x = x\). ◻
+:::</p>
+<p><strong>Live proof.</strong> A replicated object arrives twice and counts twice, \(1 + 1 = 2 \cdot 1\), while an idempotent fold sees
+it once.</p>
+<pre><code class="language-mtron">mtron&gt; {1,1}
+==&gt;{2}1
+mtron&gt; {1,1}.sup()
+==&gt;1
+</code></pre>
+<p>This is entry H of <a href="./ring-theoretic-distributed-computing.html">[4]</a> read on data: a replica may serve a read only to a
+fold that does not count. The copies at one address split like any sum, which is the point form of entry V.</p>
+<p>::: <strong>Proposition 4</strong> (A point is a share). For \(n = n_1 + n_2\),
+\(n\,(p \Rightarrow x) = n_1\,(p \Rightarrow x) + n_2\,(p \Rightarrow x)\), so the copies stored at one address may be
+held at two places.
+:::</p>
+<p><strong>Live proof.</strong> Two copies and one copy are three copies.</p>
+<pre><code class="language-mtron">mtron&gt; {{2}5,5}
+==&gt;{3}5
+</code></pre>
+<h2>Writes and Deletes</h2>
+<p>::: <strong>Definition 7</strong> (Writes). A <em>write</em> adds, \(D \mapsto D + E\). For a path \(p\), let \(\pi_p\) keep the arrows whose
+paths begin with \(p\). A <em>delete</em> at \(p\) is \(\delta_p = 1 - \pi_p\), and an <em>overwrite</em> stores \(x\) at \(p\) alone,
+\(\omega_{p,x}(D) = \delta_p(D) + (p \Rightarrow x)\).
+:::</p>
+<p>::: <strong>Theorem 7</strong> (Sums commute, overwrites do not). Writes commute and associate, \((D + E) + F = (D + F) + E\).
+Overwrites at one path do not commute: \(\omega_{p,y}\big(\omega_{p,x}(D)\big) = \delta_p(D) + (p \Rightarrow y)\),
+which differs from \(\omega_{p,x}\big(\omega_{p,y}(D)\big)\) whenever \(x \neq y\).
+:::</p>
+<p>::: <em>Proof.</em> \(+\) is commutative and associative. \(\delta_p\) is idempotent and \(\delta_p(p \Rightarrow x) = 0\), so
+$\omega_{p,y}\big(\omega_{p,x}(D)\big) = \delta_p\big(\delta_p(D) + (p \Rightarrow x)\big) + (p \Rightarrow y)
+= \delta_p(D) + (p \Rightarrow y)$. ◻
+:::</p>
+<p>Replicas that only add converge whatever order their writes arrive in, which is the property of a conflict-free
+replicated data type [9]. Replicas that overwrite must agree on an order. An overwrite is to data what a cut is to a
+program <a href="./ring-theoretic-distributed-computing.html">[4]</a>: the one place where order matters.</p>
+<p><strong>Live proof.</strong> Adds in either order store one bag, \(\{1, 2, 3\}\) at \(a\), while overwrites keep whichever came last.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;1].plus([a=&gt;2]).plus([a=&gt;3])
+==&gt;[a=&gt;{1,2,3}]
+mtron&gt; [a=&gt;1].plus([a=&gt;3]).plus([a=&gt;2])
+==&gt;[a=&gt;{1,3,2}]
+mtron&gt; [a=&gt;1].update([a=&gt;2]).update([a=&gt;3])
+==&gt;[a=&gt;3]
+mtron&gt; [a=&gt;1].update([a=&gt;3]).update([a=&gt;2])
+==&gt;[a=&gt;2]
+</code></pre>
+<p>::: <strong>Theorem 8</strong> (Two ways to delete). A delete distributes over a placement,
+\(\delta_p(D_1 + \cdots + D_k) = \delta_p(D_1) + \cdots + \delta_p(D_k)\), so each place deletes what it holds without
+reading anything. Subtracting an arrow, \(D - c\,(p \Rightarrow x)\), removes it only when \(c\,(p \Rightarrow x)\) is
+what \(D\) stores at \(p\).
+:::</p>
+<p>::: <em>Proof.</em> \(\pi_p\) selects arrows, so it is additive, and so is \(\delta_p = 1 - \pi_p\). Subtraction removes
+\(c\,(p \Rightarrow x)\) exactly when that term is a term of \(D\). ◻
+:::</p>
+<p>The ring offers two ways to delete. The additive way subtracts what is stored and must know it, coefficient and
+object, before it writes. The multiplicative way projects and needs to know nothing.</p>
+<p>::: <strong>Proposition 5</strong> (The zero names no delete). No structure holds an arrow into the zero, since
+\(k \Rightarrow 0 = 0\). A container therefore cannot carry a delete as an arrow to the zero: the record
+\([b \Rightarrow 0]\) is the empty record, and a write of it changes nothing.
+:::</p>
+<p><strong>Live proof.</strong> Subtracting what is stored deletes it, $[a \Rightarrow 1, b \Rightarrow 2] + [b \Rightarrow -2]
+= [a \Rightarrow 1]$, the additive way, whether as a sum or as an update by a sum. An arrow into <code>noobj</code> is no arrow,
+so updating with one changes nothing, and the mark <code>none</code> deletes without knowing what is stored.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2] + [b=&gt;{-1}2]
+==&gt;[a=&gt;1]
+mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= +[b=&gt;{-1}2]
+==&gt;[a=&gt;1]
+mtron&gt; [b=&gt;noobj]
+==&gt;[=&gt;]
+mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;noobj]
+==&gt;[a=&gt;1,b=&gt;2]
+mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]
+==&gt;[a=&gt;1]
+</code></pre>
+<p>In mtron, <code>&gt;&gt;=</code> is update, <code>{-1}2</code> is the anti-object of <code>2</code>, and <code>none</code> is the mark that removes a key.</p>
+<p><code>none</code> is a scar. It is a mark outside the ring, which the update interprets as \(\delta_k\), because the ring's own zero
+cannot say <em>delete</em> (Proposition 5). The ring has a delete of its own, however, and it needs no mark and no
+knowledge of what is stored. Read a record as a relation from its keys (Definition 8), let relations compose
+(Definition 11), and take the parametric unity \(1 \Rightarrow 1\) of <a href="./parametric-identities-in-ring-theory.html">[3]</a>.</p>
+<p>::: <strong>Theorem 9</strong> (A delete is an idempotent). For a key \(k\), the relation \((1 \Rightarrow 1) - (k \Rightarrow k)\) is
+idempotent, and composing it on the left of a record deletes the key:
+\[
+\begin{equation*}
+\big((1 \Rightarrow 1) - (k \Rightarrow k)\big) \cdot D = \delta_k(D).
+\end{equation*}
+\]
+:::</p>
+<p>::: <em>Proof.</em> \((1 \Rightarrow 1) \cdot D = D\) by Theorem 2 of <a href="./parametric-identities-in-ring-theory.html">[3]</a>, and
+\((k \Rightarrow k) \cdot (k' \Rightarrow v)\) is \(k \Rightarrow v\) when \(k' = k\) and \(0\) otherwise, so
+\((k \Rightarrow k) \cdot D = \pi_k(D)\). Idempotence:
+$\big((1 \Rightarrow 1) - (k \Rightarrow k)\big)^2 = (1 \Rightarrow 1) - 2,(k \Rightarrow k) + (k \Rightarrow k)
+= (1 \Rightarrow 1) - (k \Rightarrow k)$. ◻
+:::</p>
+<p><strong>Live proof.</strong> Written as a list of arrows (Definition 9), a record composes today. The unity keeps every arrow, and
+\(k \Rightarrow k\) keeps the arrows out of \(k\), which is \(\pi_k\).</p>
+<pre><code class="language-mtron">mtron&gt; [(id()=&gt;id())].mult([(a=&gt;1),(b=&gt;2)])
+==&gt;[a=&gt;1,b=&gt;2]
+mtron&gt; [(b=&gt;b)].mult([(a=&gt;1),(b=&gt;2)])
+==&gt;[b=&gt;2]
+</code></pre>
+<p>[To be written: the difference itself. Today a coefficient on an arrow is placed on both of its ends, so
+<code>[{-1}(b=&gt;b)]</code> prints <code>[{-1}b=&gt;{-1}b]</code>, which a bilinear arrow reads as \((-1)^2 = +1\), and records do not define
+<code>mult</code>. With the coefficient placed once and record composition defined, the scar closes.]</p>
+<h2>Containers as Branches of Arrows</h2>
+<p>A container is a branch of arrows. A record is the <em>named</em> branch, whose arrows leave keys, and a list read by its
+indices is the <em>indexed</em> branch. Both are relations, so the relation ring of
+<a href="./parametric-identities-in-ring-theory.html">[3]</a> is their common algebra.</p>
+<h3>Records</h3>
+<p>::: <strong>Definition 8</strong> (Record). A record is the sum of the arrows out of its keys,
+\([k_1 \Rightarrow v_1, \ldots, k_n \Rightarrow v_n] = \sum_i (k_i \Rightarrow v_i)\). A record nested at a key extends
+the key, \(\big(k \Rightarrow [j \Rightarrow v]\big) = k \cdot (j \Rightarrow v) = (kj \Rightarrow v)\), so a record is
+a structure and its key paths are its addresses.
+:::</p>
+<p>::: <strong>Theorem 10</strong> (Merge is the sum). Records add as structures:
+\[
+\begin{equation*}
+(k \Rightarrow E) + (k \Rightarrow F) = k \cdot (E + F),
+\qquad
+(k \Rightarrow x) + (k \Rightarrow y) = \big(k \Rightarrow \{x, y\}\big),
+\qquad
+(k \Rightarrow 0) = 0.
+\end{equation*}
+\]
+Under this merge the records form a commutative monoid whose identity is the empty record.
+:::</p>
+<p>::: <em>Proof.</em> The first equation is distributivity of the module action, and the second writes the same sum with the
+branch of its objects at the shared address. The third is \(k \cdot 0 = 0\). \(+\) is commutative and associative, and
+the empty record is the empty sum. ◻
+:::</p>
+<p><strong>Live proof.</strong> Records merge below a shared key, branch their values at a shared address, and drop an arrow into the
+zero.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;[b=&gt;1]] + [a=&gt;[c=&gt;2]]
+==&gt;[a=&gt;[b=&gt;1,c=&gt;2]]
+mtron&gt; [a=&gt;1] + [a=&gt;2]
+==&gt;[a=&gt;{1,2}]
+mtron&gt; [a=&gt;noobj,b=&gt;2]
+==&gt;[b=&gt;2]
+</code></pre>
+<p>As relations, records also compose. An arrow out of a key meets an arrow out of its value,
+\([a \Rightarrow 1] \cdot [1 \Rightarrow x] = [a \Rightarrow x]\): a lookup through two records, the one-step join.</p>
+<p>[To be written: record composition in mtron. <code>[a=&gt;1].mult([1=&gt;10])</code> finds no <code>mult</code> for records today.]</p>
+<h3>Lists: Two Rings</h3>
+<p>A list \([x_0, \ldots, x_{n-1}]\) admits two readings as a ring term, and each reading is a ring.</p>
+<p>::: <strong>Definition 9</strong> (Indexed list). Read by its indices, a list is the sum of the arrows out of them,
+\([x_0, \ldots, x_{n-1}] = \sum_{i &lt; n} (i \Rightarrow x_i)\).
+:::</p>
+<p>::: <strong>Theorem 11</strong> (The indexed ring). Indexed lists add slot by slot and multiply by composition:
+\[
+\begin{equation*}
+(i \Rightarrow x) + (i \Rightarrow y) = \big(i \Rightarrow \{x, y\}\big),
+\qquad
+\Big(\sum_i (i \Rightarrow u_i)\Big) \cdot \Big(\sum_j (j \Rightarrow v_j)\Big) = \sum_i \big(i \Rightarrow v_{u_i}\big),
+\end{equation*}
+\]
+where \(v_{u_i} = 0\) when \(u_i\) is not an index of \(v\). The zero is the empty list, and a slot holding the zero is no
+arrow, so \(x + (-x) = [\,]\). The unity is the parametric unity \(1 \Rightarrow 1\), and no list is the unity. With
+these operations the indexed lists are a ring: the relation ring restricted to arrows out of indices.
+:::</p>
+<p>::: <em>Proof.</em> The sum is Theorem 10 at an index. The product is composition in the relation ring
+(Definition 1 of <a href="./parametric-identities-in-ring-theory.html">[3]</a>): \((i \Rightarrow a) \cdot (j \Rightarrow b)\) is
+\(i \Rightarrow b\) when \(a = j\) and \(0\) otherwise. \(i \Rightarrow 0 = 0\) removes empty slots. The unity is
+Theorem 2 of <a href="./parametric-identities-in-ring-theory.html">[3]</a>, and that no list is the unity is its Theorem 1,
+as the indices are infinitely many. The ring axioms are those of the relation ring. ◻
+:::</p>
+<p>So \([1,2,3] + [4,5] = [\{1,4\}, \{2,5\}, 3]\) in the indexed ring, and \((u \cdot v)_i = v_{u_i}\) looks up \(v\) at the
+values of \(u\). Concatenation is not the product here. It is a shifted sum, \(u \mathbin{+\!\!+} v = u + \tau^{|u|}(v)\),
+where \(\tau^{n}\) adds \(n\) to every index and \(|u|\) is one more than the greatest index of \(u\).</p>
+<p><strong>Live proof.</strong> Written as a list of arrows, a list composes as the indexed ring says. A list that sends
+\(0 \mapsto 2\), \(1 \mapsto 0\), \(2 \mapsto 1\) permutes the values of the other, and a slot holding two values looks up
+both.</p>
+<pre><code class="language-mtron">mtron&gt; [(0=&gt;2),(1=&gt;0),(2=&gt;1)].mult([(0=&gt;10),(1=&gt;20),(2=&gt;30)])
+==&gt;[0=&gt;30,1=&gt;10,2=&gt;20]
+mtron&gt; [(0=&gt;1),(0=&gt;4),(1=&gt;2)].mult([(0=&gt;9),(1=&gt;8),(2=&gt;7),(4=&gt;6)])
+==&gt;[0=&gt;8,0=&gt;6,1=&gt;7]
+</code></pre>
+<p>::: <strong>Definition 10</strong> (Word list). Read as a word, a list is the product of its slots,
+\([x_1, \ldots, x_n] = x_1 \cdots x_n\), a monomial of the free algebra \(\mathcal{C}\langle X\rangle\) whose segments are
+objects.
+:::</p>
+<p>::: <strong>Theorem 12</strong> (The word ring). Word lists multiply by concatenation with unity the empty list, and add as the
+reference ring adds paths, factoring a common prefix and suffix: \([1,2,3] + [1,5,3] = [1, \{2,5\}, 3]\), while
+\([1,2,3] + [4,5]\) is the branch of the two whole words. A branch in a slot is a sum of words, the zero is the empty sum,
+and the additive inverse negates one slot, \(-[x_1, \ldots, x_n] = [-x_1, x_2, \ldots, x_n]\).
+:::</p>
+<p>::: <em>Proof.</em> \(\mathcal{C}\langle X\rangle\) is Theorem 1 with objects for segments, and the inverse is Proposition 1. ◻
+:::</p>
+<p><strong>Live proof.</strong> In mtron a list adds by concatenation today, so the word ring's sum is shown on the reference ring,
+whose paths are words.</p>
+<pre><code class="language-mtron">mtron&gt; &lt;/1/2/3&gt; + &lt;/1/5/3&gt;
+==&gt;&lt;/1{/2,/5}/3&gt;
+mtron&gt; &lt;/1/2/3&gt; + &lt;/4/5&gt;
+==&gt;&lt;/{1/2/3,4/5}&gt;
+</code></pre>
+<p>The two readings differ most visibly in how a coefficient enters a list.</p>
+<p>::: <strong>Proposition 6</strong> (Linear and multilinear). An indexed list is linear in its slots and a word list is multilinear:
+\[
+\begin{equation*}
+\big[c\,x_1, \ldots, c\,x_n\big] = c\,[x_1, \ldots, x_n] \;\text{(indexed)},
+\qquad
+\big[c\,x_1, \ldots, c\,x_n\big] = c^{n}\,[x_1, \ldots, x_n] \;\text{(word)}.
+\end{equation*}
+\]
+:::</p>
+<p>::: <em>Proof.</em> An indexed list is a sum, and \(\sum_i (i \Rightarrow c\,x_i) = c \sum_i (i \Rightarrow x_i)\). A word list
+is a product, and \((c\,x_1) \cdots (c\,x_n) = c^{n}\,x_1 \cdots x_n\) by Proposition 1. ◻
+:::</p>
+<p>Coefficients add across a branch and multiply along a chain: an indexed list is a branch and a word list is a chain.
+Negating every slot negates an indexed list, but negates a word list only when its length is odd. A value with
+coefficient \(c\) and span \(n\), laid out along an axis, is \(c\,[v, \ldots, v]\) with the coefficient written once, and it
+counts \(c \cdot n\) objects. Writing \(c\) on every slot keeps that count in the indexed ring, and in the word ring it
+raises the coefficient of the whole word to \(c^{n}\).</p>
+<p><strong>Live proof.</strong> mtron lays out a negated span by writing the coefficient on every slot, and a branch in a slot bags as
+objects at one index. Both are the indexed reading.</p>
+<pre><code class="language-mtron">mtron&gt; [{-1}5{4}]
+==&gt;[{-1}5,{-1}5,{-1}5,{-1}5]
+mtron&gt; [1,{2,3},4]&gt;-
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;4
+</code></pre>
+<p>In the word ring, the first list would be \((-1)^4\,[5,5,5,5] = [5,5,5,5]\), and the second would be the sum of the
+words \([1,2,4]\) and \([1,3,4]\), whose bag is \(\{2 \cdot 1, 2, 3, 2 \cdot 4\}\).</p>
+<h3>The Hybrid Is No Ring</h3>
+<p>Each ring is coherent alone. Their operations do not mix.</p>
+<p>::: <strong>Theorem 13</strong> (No hybrid ring). On lists that keep their empty slots, let \(\oplus\) be the slot sum of the indexed
+ring and \(\otimes\) the concatenation of the word ring. Then:</p>
+<ol>
+<li>The empty list is the identity of both \(\oplus\) and \(\otimes\), so \(\langle L, \oplus, \otimes\rangle\) is not a ring.</li>
+<li>\(\otimes\) distributes over \(\oplus\) on neither side.</li>
+<li>\((a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes d)\) whenever \(a\) and \(b\) have the same length.</li>
+<li>\(x \oplus (-x)\) is the list of \(|x|\) empty slots, not the empty list. \(\langle L, \oplus\rangle\) is not a group but
+a Clifford monoid: for each length \(n\), the lists of length \(n\) form a group, and these groups are glued along
+\(\langle \mathbb{N}, \max \rangle\) by padding with empty slots.</li>
+<li>If an empty slot is identified with no slot, as the indexed ring requires, \(\otimes\) is not well defined.
+:::</li>
+</ol>
+<p>::: <em>Proof.</em> (1) \(x \oplus [\,] = x\), as the shorter list is padded, and \(x \otimes [\,] = x\). In a ring with \(0 = 1\),
+every \(a = a \cdot 1 = a \cdot 0 = 0\). (2) On the left, \([7] \otimes ([1] \oplus [2]) = [7, \{1,2\}]\) while
+\(([7] \otimes [1]) \oplus ([7] \otimes [2]) = [2 \cdot 7, \{1,2\}]\). On the right,
+\(([1] \oplus [2,3]) \otimes [9] = [\{1,2\}, 3, 9]\) while
+\(([1] \otimes [9]) \oplus ([2,3] \otimes [9]) = [\{1,2\}, \{3,9\}, 9]\). (3) Both sides hold \(a \oplus b\) in the first
+\(|a|\) slots and \(c \oplus d\) after them. (4) Slot by slot, \(x_i + (-x_i) = 0\) leaves the slot empty, and the length
+of \(x\) remains. Lists of one length \(n\) add slot by slot, which is a group with identity the \(n\) empty slots, and a
+sum of lengths \(m\) and \(n\) has length \(\max(m, n)\). A semigroup that is a strong semilattice of groups in this way is a
+Clifford semigroup [11]. (5) \([1] = [1, 0]\) under the identification, yet \([1] \otimes [2] = [1, 2]\) while
+\([1, 0] \otimes [2] = [1, 0, 2]\). ◻
+:::</p>
+<p>Clause 3 is the interchange law of a direct sum, not the distributive law of a product. Under \(\oplus\), two lists
+advance in lockstep, slot against slot, as two processes advance step against step under the synchronous product of
+SCCS [10]. Clause 4 is the same calculus: a step cancelled by its inverse is an idle step, not an absent one.</p>
+<p><strong>Live proof.</strong> In mtron today, a list adds by concatenation, which does not commute, and multiplies by the product of
+<a href="./parametric-identities-in-ring-theory.html">[3]</a>: every slot of the left times every slot of the right. On values,
+that product is the Cauchy product of polynomials in a position variable, with its slots left ungrouped: grouping
+its terms by \(i + j\) gives \([4, \{5,8\}, \{10,12\}, 15]\). On lists of arrows it is the composition of Theorem 11. A
+sum over a stream of lists depends on the order of the stream.</p>
+<pre><code class="language-mtron">mtron&gt; [1,2,3] + [4,5]
+==&gt;[1,2,3,4,5]
+mtron&gt; [4,5] + [1,2,3]
+==&gt;[4,5,1,2,3]
+mtron&gt; [1,2,3] * [4,5]
+==&gt;[4,5,8,10,12,15]
+mtron&gt; {[1,2],[3]}.sum()
+==&gt;[1,2,3]
+mtron&gt; {[3],[1,2]}.sum()
+==&gt;[3,1,2]
+</code></pre>
+<p>So today's list takes its \(+\) from the word ring, where concatenation is the product, and its \(\cdot\) from a
+positional reading: one operation from each. A fold whose operation is a commutative monoid ships as a star, in the shapes of
+<a href="./ring-theoretic-distributed-computing.html">[4]</a>. Concatenation is associative and not commutative, so a fold of lists
+by concatenation ships at best as a pipeline. Concatenation is the factorization an ordered fold distributes over: a
+fold \(h\) that is a monoid homomorphism out of concatenation satisfies
+\(h(u \mathbin{+\!\!+} v) = h(u) \odot h(v)\), entry F of the menu. Both rings give lists a commutative \(+\).</p>
+<p>[Open: which ring's operations a list names <code>+</code> and <code>*</code>.]</p>
+<h3>Relations</h3>
+<p>::: <strong>Definition 11</strong> (Relation ring). The relations of <a href="./parametric-identities-in-ring-theory.html">[3]</a> are the
+finite sums of arrows between objects. They add as sums and multiply by composition, with the parametric unity
+\(1 \Rightarrow 1\).
+:::</p>
+<p>Records and indexed lists are the relations whose arrows leave keys and indices. The relation ring is the ring of
+finitely supported matrices <a href="./parametric-identities-in-ring-theory.html">[3]</a>, and composition is matrix
+multiplication, so the matrix multiplication of entry M of <a href="./ring-theoretic-distributed-computing.html">[4]</a> is
+composition in this ring, and the &quot;addressed union&quot; of that entry is the slot sum of the indexed ring.</p>
+<p>In mtron, a rel declares only its product today: a sum of rels is a stream of rels, which leaves the type, and its
+zero, <code>noobj</code>, cannot be written in a record (Proposition 5). The code ring declares its zero as the instruction
+<code>end</code> with range <code>code{0}</code> instead, an object that outputs nothing, and a relation's zero could be named the same way.</p>
+<h2>The Mirror</h2>
+<table>
+<thead>
+<tr><th> </th><th>Distributed Computing <a href="./ring-theoretic-distributed-computing.html">[4]</a></th><th>Distributed Structures</th></tr>
+</thead>
+<tbody>
+<tr><td>term</td><td>a program in the stream ring</td><td>a structure in the reference ring</td></tr>
+<tr><td>\(+\)</td><td>branch: computations share nothing, so placement is free (Theorem 5 of <a href="./stream-ring-theory.html">[1]</a>)</td><td>branch: references share nothing, so placement is free</td></tr>
+<tr><td>\(\cdot\)</td><td>composition in series</td><td>extension, which colocates within an object (Theorem 5)</td></tr>
+<tr><td>linear part</td><td>the floatable run, right distributive</td><td>the read (Theorem 2)</td></tr>
+<tr><td>synchronization</td><td>the cut, a reduce function</td><td>the overwrite (Theorem 7)</td></tr>
+<tr><td>the identity</td><td>\(s\,f\,r = (s_1 f r + \cdots + s_k f r)\,C(r)\)</td><td>\(D(p)\,r = (D_1(p)\,r + \cdots + D_k(p)\,r)\,C(r)\) (Theorem 4)</td></tr>
+<tr><td>partition</td><td>the deal, shares summing to \(1\)</td><td>the placement, orthogonal idempotents (Definition 6)</td></tr>
+<tr><td>redundancy</td><td>entry H, an idempotent fold</td><td>replication needs an idempotent fold (Theorem 6)</td></tr>
+<tr><td>index sets</td><td>a span splits by exponent, a point by copies</td><td>a point splits by copies (Proposition 4)</td></tr>
+<tr><td>invariance</td><td>the answer at every height, arity and schedule</td><td>every read in every layout (Theorem 3)</td></tr>
+<tr><td>cost</td><td>a planner descends the patterns</td><td>a planner descends the layouts</td></tr>
+</tbody>
+</table>
+<h2>Conclusion</h2>
+<p><strong>NOTES</strong>:</p>
+<ul>
+<li>A data structure is a term of the reference ring \(\mathcal{C}\langle\Sigma\rangle\), whose \(+\) is the branch and
+whose \(\cdot\) is extension. Its layouts are its factorizations.</li>
+<li>A read is a left quotient, and reads are linear, so every read answers the same in every layout. Counting objects,
+ordering them, and a container's length are not reads, and they see the layout.</li>
+<li>A product of branches is exact only over a rectangle of paths (Proposition 2). The sound sum factors only prefixes
+and suffixes.</li>
+<li>A placement is a complete set of orthogonal idempotents. The data shard identity is entry B: the program goes to
+the data.</li>
+<li>A product colocates and a sum frees. Expanding a layout refines its placements, and replication needs an
+idempotent fold.</li>
+<li>Sums commute and overwrites do not: an overwrite is the data's cut. A delete projects and distributes, and a
+subtraction must know what it removes. The ring's zero cannot name a delete, which is the scar <code>none</code> covers, and
+the parametric unity heals it: \((1 \Rightarrow 1) - (k \Rightarrow k)\) deletes \(k\).</li>
+<li>A record is the named branch: its merge is the sum and its composition the one-step join.</li>
+<li>A list has two rings. The indexed ring has the slot sum and composition; the word ring has the branch and
+concatenation. Their operations do not mix (Theorem 13), and today's list takes one of each.</li>
+<li>[To be written: entry B lowered; record composition; the coefficient of an arrow placed once; a relation's zero
+named as an instruction; the choice of ring for lists.]</li>
+</ul>
+<h2>References</h2>
+<ol>
+<li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red Herring's Ship's Log: Chronicles in the Sea
+of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.</li>
+<li>Rodriguez, M.A., Dr. Stynx,
+&quot;<a href="./span-and-point-coefficient-algebra.html">A Span and Point Coefficient Algebra for Stream Rings</a>.&quot;</li>
+<li>Rodriguez, M.A., Dr. Stynx, &quot;<a href="./parametric-identities-in-ring-theory.html">Parametric Identities in Ring Theory</a>.&quot;</li>
+<li>Rodriguez, M.A., Dr. Stynx, &quot;<a href="./ring-theoretic-distributed-computing.html">Ring Theoretic Distributed Computing</a>.&quot;</li>
+<li>&quot;<a href="../tractatus/uri.html">Uniform Resource Identifiers</a>,&quot; the metatron tractatus.</li>
+<li>Brzozowski, J.A., &quot;Derivatives of Regular Expressions,&quot; Journal of the ACM 11(4), pages 481–494, 1964.</li>
+<li>Codd, E.F., &quot;A Relational Model of Data for Large Shared Data Banks,&quot; Communications of the ACM 13(6), pages
+377–387, 1970.</li>
+<li>Lam, T.Y., &quot;A First Course in Noncommutative Rings,&quot; Graduate Texts in Mathematics 131, Springer, 1991.</li>
+<li>Shapiro, M., Preguiça, N., Baquero, C., Zawirski, M., &quot;Conflict-free Replicated Data Types,&quot; Stabilization, Safety,
+and Security of Distributed Systems (SSS 2011), Lecture Notes in Computer Science 6976, pages 386–400, 2011.</li>
+<li>Milner, R., &quot;Calculi for Synchrony and Asynchrony,&quot; Theoretical Computer Science 25(3), pages 267–310, 1983.</li>
+<li>Howie, J.M., &quot;Fundamentals of Semigroup Theory,&quot; London Mathematical Society Monographs, Oxford University Press,
+1995.</li>
+</ol>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="bi bi-envelope text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>
