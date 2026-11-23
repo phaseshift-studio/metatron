@@ -337,7 +337,7 @@ reach and presence and restores a shadowed name.
 
 | `roster` field | value                                                                                                                    |
 |----------------|--------------------------------------------------------------------------------------------------------------------------|
-| `discover`     | where the discovery protocols are mounted (`mdns_discovery::T`, a `discovery::T`); `discover/+.?[status=>false]` is what is down, deleting one stops it |
+| `discover`     | where the discovery protocols are mounted (`mdns_discovery::T`, a `discovery::T`); `discover/+.?[status=>false]` is what is down, and deleting one at its own address stops it |
 | `machine`      | `<host> => [<protocol> => [<transport> => uri{+}]]`: the dialect a machine answers in, the client that carries it there |
 
 A protocol is the wire dialect (`mtron`) and a transport the client that carries it (`ws`, `http`, `mcp`), so one box's

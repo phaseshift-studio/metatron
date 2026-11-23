@@ -32,8 +32,11 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import javax.jmdns.ServiceInfo;
+import javax.jmdns.impl.ServiceInfoImpl;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,10 +87,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       keys it files it under; a route of another protocol, a wildcard route and a socket that serves no route
  *       stay home, and a frame's route is the frame's</li>
  * </ul>
- * The admission path above {@link mdnsDiscovery#roster} is deliberately NOT exercised here: it needs multicast,
- * a second host and a {@code ServiceInfo} resolved to addresses, none of which a unit test can fabricate — a TXT
- * record alone it can, so what a hearer reads off one is pinned. {@code bin/test/mdns_analyzer.py} is the vehicle
- * for the rest, end to end.
+ * The admission path ({@link mdnsDiscovery#admit}, {@link mdnsDiscovery#retract}) is exercised with resolutions built
+ * as JmDNS builds them — a {@code ServiceInfoImpl} carrying its TXT record and addresses — and removals as JmDNS hands
+ * them, the instance's name alone. What needs multicast and a second host is {@code bin/test/mdns_analyzer.py}'s, end
+ * to end.
  */
 public class mdnsDiscoveryTest extends AbstractMetatronTest {
 
@@ -105,11 +108,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     private static final int PEER_PORT = 8555;
 
     private static InetAddress peer() {
-        try {
-            return InetAddress.getByAddress(new byte[]{10, 0, 0, 1});
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+        return ip(10, 0, 0, 1);
     }
     private static final fURI FIRST = f("ws://203.0.113.7:9999/mtron");
     private static final fURI SECOND = f("ws://198.51.100.4:9999/mtron");
@@ -668,15 +667,16 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
 
     /**
      * A REMOVAL AS JMDNS HANDS IT: built from the PTR record alone, it names the instance and nothing else, and takes
-     * back exactly what the instance's resolution filed. {@code ServiceInfo.create} builds that address-less info.
+     * back exactly what the instance's resolution filed.
      */
     @Test
     public void testARemovalByNameTakesBackWhatTheResolutionFiled() {
         final mdnsDiscovery handler = handler();
         try {
-            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{peer()});
-            assertTrue(holds(f("peer"), f(WS), heardAt(peer())), "the resolution files its address: " + roster());
-            handler.retract("r1", ServiceInfo.create(TEST_SERVICE.toString(), "peerbox-ws-8555/mtron", 0, 0, 0, Map.of()));
+            handler.admit(responder(1), resolved("peerbox-ws-8555/mtron", peer()));
+            assertEquals(List.of(heardAt(peer()).toString()), texts(addresses(f("peer"), f(MTRON), f(WS))),
+                    "the resolution files its address: " + roster());
+            handler.retract(responder(1), removal("peerbox-ws-8555/mtron"));
             checkEquality(LOG, noobj(), addresses(f("peer"), f(MTRON), f(WS)), true);
         } finally {
             handler.close();
@@ -684,18 +684,19 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
-     * A RESOLUTION THAT IS NOT YET WHOLE FILES NOTHING AND TAKES NOTHING BACK: one without addresses (the A records
-     * arrive on their own) or without a TXT record leaves what the instance filed as it was.
+     * A RESOLUTION THAT IS NOT YET WHOLE FILES NOTHING AND TAKES NOTHING BACK: a re-resolution of the instance without
+     * addresses (the A records arrive on their own), or without a TXT record though it carries one, leaves what the
+     * instance filed as it was.
      */
     @Test
     public void testAnIncompleteResolutionFilesNothing() {
         final mdnsDiscovery handler = handler();
         try {
-            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{peer()});
-            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[0]);
-            assertTrue(holds(f("peer"), f(WS), heardAt(peer())), "an address-less resolution takes nothing back: " + roster());
-            handler.admit("r1", ServiceInfo.create(TEST_SERVICE.toString(), "silent", PEER_PORT, 0, 0, Map.of()), new InetAddress[]{other()});
-            assertFalse(holds(f("peer"), f(WS), heardAt(other())), "nor does one without a TXT record file: " + roster());
+            handler.admit(responder(1), resolved("peerbox-ws-8555/mtron", peer()));
+            handler.admit(responder(1), resolved("peerbox-ws-8555/mtron"));
+            handler.admit(responder(1), resolution("peerbox-ws-8555/mtron", Map.of(), other()));
+            assertEquals(List.of(heardAt(peer()).toString()), texts(addresses(f("peer"), f(MTRON), f(WS))),
+                    "neither the address-less nor the TXT-less re-resolution moves what was filed: " + roster());
         } finally {
             handler.close();
         }
@@ -710,14 +711,14 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     public void testOneRespondersRemovalKeepsWhatAnotherResolves() {
         final mdnsDiscovery handler = handler();
         try {
-            handler.admit("r1", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{peer()});
-            handler.admit("r2", resolved("peerbox-ws-8555/mtron"), new InetAddress[]{other()});
+            handler.admit(responder(1), resolved("peerbox-ws-8555/mtron", peer()));
+            handler.admit(responder(2), resolved("peerbox-ws-8555/mtron", other()));
             assertEquals(sorted(heardAt(peer()), heardAt(other())), texts(addresses(f("peer"), f(MTRON), f(WS))),
                     "the instance files what both responders resolve: " + roster());
-            handler.retract("r1", ServiceInfo.create(TEST_SERVICE.toString(), "peerbox-ws-8555/mtron", 0, 0, 0, Map.of()));
+            handler.retract(responder(1), removal("peerbox-ws-8555/mtron"));
             assertEquals(List.of(heardAt(other()).toString()), texts(addresses(f("peer"), f(MTRON), f(WS))),
                     "one responder's removal keeps what the other resolves: " + roster());
-            handler.retract("r2", ServiceInfo.create(TEST_SERVICE.toString(), "peerbox-ws-8555/mtron", 0, 0, 0, Map.of()));
+            handler.retract(responder(2), removal("peerbox-ws-8555/mtron"));
             checkEquality(LOG, noobj(), addresses(f("peer"), f(MTRON), f(WS)), true);
         } finally {
             handler.close();
@@ -725,14 +726,40 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
-     * A CLOSED HANDLER TAKES BACK WHAT IT FILED: JmDNS's close sends no removal, and a handler mounted again would
-     * otherwise file every row over the first's, a count of two that one later take-back leaves listed.
+     * TWO RESPONDERS THAT RESOLVE ONE ADDRESS KEEP IT UNTIL BOTH GO, counted once: on Linux every responder hears every
+     * link, so this is the usual case, and a removal that took back what its responder resolved would drop an address
+     * the other still resolves.
+     */
+    @Test
+    public void testAnAddressTwoRespondersResolveStaysUntilBothGo() {
+        final mdnsDiscovery handler = handler();
+        try {
+            handler.admit(responder(1), resolved("peerbox-ws-8555/mtron", peer()));
+            handler.admit(responder(2), resolved("peerbox-ws-8555/mtron", peer()));
+            handler.retract(responder(1), removal("peerbox-ws-8555/mtron"));
+            assertEquals(List.of(heardAt(peer()).toString()), texts(addresses(f("peer"), f(MTRON), f(WS))),
+                    "the address the other responder resolves stays: " + roster());
+            assertTrue(once(addresses(f("peer"), f(MTRON), f(WS))), "and is counted once: " + roster());
+            handler.retract(responder(2), removal("peerbox-ws-8555/mtron"));
+            checkEquality(LOG, noobj(), addresses(f("peer"), f(MTRON), f(WS)), true);
+        } finally {
+            handler.close();
+        }
+    }
+
+    /**
+     * A CLOSED HANDLER TAKES BACK WHAT IT FILED, AND FILES NOTHING AFTER: JmDNS's close sends no removal, and a
+     * resolution it queued before the close still runs after it. A handler mounted again files over nothing.
      */
     @Test
     public void testAClosedHandlerTakesBackWhatItFiled() {
         final mdnsDiscovery first = handler();
         first.roster("a", List.of(row(PEER, f(WS), FIRST)));
         first.close();
+        checkEquality(LOG, noobj(), addresses(PEER, f(MTRON), f(WS)), true);
+        first.admit(responder(1), resolved("peerbox-ws-8555/mtron", peer()));
+        first.roster("b", List.of(row(PEER, f(WS), SECOND)));
+        checkEquality(LOG, noobj(), addresses(f("peer"), f(MTRON), f(WS)), true);
         checkEquality(LOG, noobj(), addresses(PEER, f(MTRON), f(WS)), true);
         final mdnsDiscovery second = handler();
         try {
@@ -904,12 +931,48 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
-     * a resolution as JmDNS hands one, with its TXT record — its addresses are handed in beside it, since
-     * {@code ServiceInfo.create} cannot carry any (and leaves the SRV target empty: the host files as {@code peer})
+     * a resolution as JmDNS hands one, with its TXT record and its addresses (the SRV target left empty: the host files
+     * as {@code peer})
      */
-    private static ServiceInfo resolved(final String name) {
-        return ServiceInfo.create(TEST_SERVICE.toString(), name, PEER_PORT, 0, 0,
-                Map.of(ROUTE, "/mtron", SCHEME, WS, PROTOCOL, MTRON, TRANSPORT, WS));
+    private static ServiceInfo resolved(final String name, final InetAddress... addresses) {
+        return resolution(name, Map.of(ROUTE, "/mtron", SCHEME, WS, PROTOCOL, MTRON, TRANSPORT, WS), addresses);
+    }
+
+    /**
+     * a resolution built as JmDNS builds one: a {@code ServiceInfoImpl} carrying the TXT record and the addresses
+     */
+    private static ServiceInfo resolution(final String name, final Map<String, String> txt, final InetAddress... addresses) {
+        return new ServiceInfoImpl(TEST_SERVICE.toString(), name, "", PEER_PORT, 0, 0, false, txt) {
+            @Override
+            public Inet4Address[] getInet4Addresses() {
+                return Stream.of(addresses).map(Inet4Address.class::cast).toArray(Inet4Address[]::new);
+            }
+        };
+    }
+
+    /**
+     * a removal as JmDNS hands one: the instance's name, and nothing else
+     */
+    private static ServiceInfo removal(final String name) {
+        return ServiceInfo.create(TEST_SERVICE.toString(), name, 0, 0, 0, Map.of());
+    }
+
+    /**
+     * the local address a responder is bound to, the key its resolutions are kept under
+     */
+    private static InetAddress responder(final int index) {
+        return ip(127, 0, 0, 10 + index);
+    }
+
+    /**
+     * an IPv4 address from its four octets
+     */
+    private static InetAddress ip(final int a, final int b, final int c, final int d) {
+        try {
+            return InetAddress.getByAddress(new byte[]{(byte) a, (byte) b, (byte) c, (byte) d});
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     /** where a hearer files a resolution's address */
@@ -918,11 +981,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     private static InetAddress other() {
-        try {
-            return InetAddress.getByAddress(new byte[]{10, 0, 0, 2});
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+        return ip(10, 0, 0, 2);
     }
 
     private static List<String> sorted(final fURI... addresses) {
