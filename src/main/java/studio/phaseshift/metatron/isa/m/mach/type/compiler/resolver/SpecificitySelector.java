@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
@@ -318,11 +319,18 @@ public class SpecificitySelector extends MRec implements Selector {
             } else if (lhs.baseTypeID().basePath().equals(apiDomID.basePath())) {
                 score += 250;
             }
-            // bonus for more specific dom/rng matches
-            if (!apiInst.dom().isBaseType())
-                score += 500;
-            if (!apiInst.rng().isBaseType())
-                score += 500;
+            // bonus for more specific dom/rng matches. A REFINED DOMAIN IS A CLAIM ABOUT THE INPUT, so it outranks a base
+            // one only for an input known to be in it (inRefinement). An input that says nothing -- the noobj a code is
+            // resolved from, a generic #, a bag the type system reads as noobj -- is admitted by every domain, and with
+            // the bonus unearned the complex sum (+1000) outranked the exact int sum (+500) for every such input: an
+            // inst body's last window {2,3}, the lanes of sum{2}(), sum@3 in a shard (Marko, 2026-11-22: "sum is broken")
+            final boolean refinedDom = !apiInst.dom().isBaseType();
+            if (!refinedDom || this.inRefinement(lhs, lhsID, userInst, apiInst)) {
+                if (refinedDom)
+                    score += 500;
+                if (!apiInst.rng().isBaseType())
+                    score += 500;
+            }
         }
 
         // Argument specificity (500 points for non-generic first arg)
@@ -360,5 +368,30 @@ public class SpecificitySelector extends MRec implements Selector {
         }
 
         return score;
+    }
+
+    /**
+     * WHETHER THE INPUT IS KNOWN TO BE IN A CANDIDATE'S REFINED DOMAIN -- the evidence a refined signature's specificity
+     * rests on ({@link #scoreSpecificity}). The call may state it ({@code sum?<=cmplx{*}()}), or the lhs may be typed it
+     * (a {@code cmplx{2}::T} at compile time, a {@code cmplx::[1.0,2.0]} value). A value is in it when the domain's
+     * predicate admits it ({@code 5} is a nat), and a bag when every member is: a bag's own type says nothing (the window
+     * {@code {2,3}} reads as noobj), so its members are the evidence, and the first that is not ends the test. A type
+     * names no member, so it is evidence only by name ({@code int{3}::T} is not a nat), and noobj is evidence of nothing.
+     */
+    private boolean inRefinement(final Obj lhs, final fURI lhsID, final Inst userInst, final Inst apiInst) {
+        final fURI refined = Obj.Helper.specificTypeId(apiInst.dom()).basePath();
+        if (lhsID.basePath().equals(refined)
+                || (userInst.hasDom() && Obj.Helper.specificTypeId(userInst.dom()).basePath().equals(refined)))
+            return true;
+        if (lhs.isType() || lhs.isNoObj())
+            return false;
+        final Obj unit = apiInst.dom().c(cInt.ONE());
+        final Iterator<Obj> members = lhs.stream().iterator();
+        if (!members.hasNext())
+            return false;
+        while (members.hasNext())
+            if (!members.next().c(cInt.ONE()).test(unit))
+                return false;
+        return true;
     }
 }
