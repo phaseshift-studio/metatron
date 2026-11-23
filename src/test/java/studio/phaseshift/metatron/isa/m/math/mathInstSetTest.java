@@ -98,6 +98,10 @@ public class mathInstSetTest extends AbstractInstSetTest {
             // that says nothing (an inst body's last window {2,3}, a bag the type system reads as noobj)
             "{1,1,2,3}.inst?int<=int{2}(){ sum() }                 % {2,5}",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{10}(){ sum() }        % 36",
+            // a complex window resolved when it runs is evidence by its members, and a bag is in the refinement only when
+            // every member is: [1.0,2.0] is a complex number, [3,4,5] is not, so that window takes lst's sum
+            "{cmplx::[1.0,2.0],cmplx::[3.0,4.0],cmplx::[5.0,6.0],cmplx::[7.0,8.0]}.inst?cmplx<=cmplx{2}(){ sum() } % {cmplx::[4.0,6.0],cmplx::[12.0,14.0]}",
+            "{[1.0,2.0],[3,4,5]}.inst?lst<=lst{2}(){ sum() }       % [1.0,2.0,3,4,5]",
             "cmplx::[1.0,2.0] - cmplx::[3.0,4.0]                   % cmplx::[-2.0,-2.0]",
             "cmplx::[1.0,2.0] * cmplx::[3.0,4.0]                   % cmplx::[-5.0,10.0]",
             "cmplx::[1.0,2.0].div(cmplx::[1.0,1.0])                % cmplx::[1.5,0.5]",
