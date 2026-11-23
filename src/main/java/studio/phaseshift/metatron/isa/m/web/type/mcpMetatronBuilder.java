@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -226,11 +227,11 @@ public final class mcpMetatronBuilder {
                                                         .map(e -> str(e.getKey().uriValue().name()))
                                                         .toList().toArray(Obj[]::new)
                                                         : new Obj[0])),
-                                        // what the components have measured -- the network's wire, and the
-                                        // processor's evaluations while its profile is on
+                                        // what the components have measured -- the network's wire and peers, and
+                                        // the processor's evaluations (eval, time, fail); a switched-off one, nothing
                                         uri(ANALYSIS), rec(
-                                                uri(NETWORK), machine.network().analyzer().analysis(),
-                                                uri(PROCESSOR), machine.processor().analyzer().analysis()));
+                                                uri(NETWORK), Analyzer.Helper.analysis(machine.network().analyzer()),
+                                                uri(PROCESSOR), Analyzer.Helper.analysis(machine.processor().analyzer())));
                             }), "noobj lhs", "the machine's vid and tid, its spaces, and the three naming tables it answers to",
                     Map.of(uri(MACHINE), "the frame you are standing in: vid and tid",
                             uri("spaces"), "how many spaces are mounted",

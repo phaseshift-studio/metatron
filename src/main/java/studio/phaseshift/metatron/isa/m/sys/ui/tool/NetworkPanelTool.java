@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.sys.ui.tool;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
 import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
@@ -213,7 +214,7 @@ public class NetworkPanelTool extends AccordionWidget {
     @Override
     protected List<String> bodySource(final Map<Obj, Obj> fields) {
         final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
-        return panelLines(WireTrace.snapshot(this.max()), Machine.current().network().analyzer().analysis(),
+        return panelLines(WireTrace.snapshot(this.max()), Analyzer.Helper.analysis(Machine.current().network().analyzer()),
                 this.paused(), this.max(), this.peerFilter(), this.foldedPeers(), Math.max(0, interior - 2));
     }
 
@@ -234,7 +235,7 @@ public class NetworkPanelTool extends AccordionWidget {
         if (bodyRow < 0)
             return false;
         final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
-        final List<LineUI> layout = layout(WireTrace.snapshot(this.max()), Machine.current().network().analyzer().analysis(),
+        final List<LineUI> layout = layout(WireTrace.snapshot(this.max()), Analyzer.Helper.analysis(Machine.current().network().analyzer()),
                 this.paused(), this.max(), this.peerFilter(), this.foldedPeers(), Math.max(0, interior - 2));
         if (bodyRow >= layout.size())
             return false;

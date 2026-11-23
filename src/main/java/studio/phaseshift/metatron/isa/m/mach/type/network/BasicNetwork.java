@@ -136,10 +136,20 @@ public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
                 });
         // the status METHOD is an entry like any other: `*/network/status` evaluates it, closing over this level
         this.write(f(STATUS), this.status());
-        // THE PEERS THIS LEVEL HOLDS, a gauge sampled whenever the analysis is read: a peer comes and goes by a dial, a
-        // drop, a redial, an inbound co-mount or the supervisor, and a sampled gauge can miss none of them -- so a bare
-        // connect, before any frame crosses, already shows in the analysis
-        Analyzer.Helper.gauge(this.analyzer(), PEER_GAUGE, () -> this.peers().elements().count());
+        this.analyzer(this.analyzer());
+    }
+
+    /**
+     * THE PEERS THIS LEVEL HOLDS, a gauge sampled whenever the analysis is read, registered with each analyzer the level
+     * is given (one written at {@code ~/network/analyzer} after it was switched off too): a peer comes and goes by a
+     * dial, a drop, a redial, an inbound co-mount or the supervisor, and a sampled gauge can miss none of them -- so a
+     * bare connect, before any frame crosses, already shows in the analysis
+     */
+    @Override
+    public Analyzer.Aggregator analyzer(final Analyzer analyzer) {
+        Network.super.analyzer(analyzer);
+        Analyzer.Helper.gauge(analyzer, PEER_GAUGE, () -> this.peers().elements().count());
+        return this;
     }
 
     /**

@@ -25,6 +25,7 @@ import org.jline.utils.Status;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
@@ -137,7 +138,7 @@ public class StatusLine implements Runnable, AutoCloseable {
         this.onSegment(TYPE_CHECK, CommandPalette::cycleTyper);
         // the wire, read off the network's meters (~/network/analyzer/analysis/wire) -- the bar's thread is the root's
         this.addWidget(f("net"), () -> netMarkup(getForegroundColor(), getBackgroundColor(),
-                Machine.current().network().analyzer().analysis()));
+                Analyzer.Helper.analysis(Machine.current().network().analyzer())));
         // the wire is the panel's subject, so the gauge is the pointer's way in
         this.onSegment("net", CommandPalette::showNetworkPanel);
         // THE TIME THE CURRENT EVALUATION IS TAKING — the stopwatch the console has always shown, not a wall

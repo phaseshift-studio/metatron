@@ -27,13 +27,16 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.DoubleSupplier;
 
@@ -104,6 +107,15 @@ public class BasicAnalyzer extends MRec implements Analyzer {
      */
     private final Map<fURI, Meter> meters = new ConcurrentHashMap<>();
     /**
+     * THE MUTED PROBES, each with its subtree: an immutable set swapped whole, so a recording that finds it empty (the
+     * common case) pays one read. A cell, as the meters are, so a copy of the rec mutes with its original.
+     */
+    private final AtomicReference<Set<fURI>> muted = new AtomicReference<>(Set.of());
+    /**
+     * the owner that holds this analyzer at its address: the first to {@link #claim} it
+     */
+    private final AtomicReference<fURI> owner = new AtomicReference<>();
+    /**
      * a publication is scheduled, and every change until it runs rides it
      */
     private final AtomicBoolean pending = new AtomicBoolean();
@@ -148,12 +160,16 @@ public class BasicAnalyzer extends MRec implements Analyzer {
 
     @Override
     public Analyzer incr(final fURI probe, final long delta) {
+        if (this.muted(probe))
+            return this;
         this.meter(probe, Analysis.COUNTER_TID).count().add(delta);
         return this.changed();
     }
 
     @Override
     public Analyzer record(final fURI probe, final long nanos) {
+        if (this.muted(probe))
+            return this;
         final Meter meter = this.meter(probe, Analysis.TIMER_TID);
         meter.count().increment();
         meter.total().add(nanos);
@@ -164,6 +180,8 @@ public class BasicAnalyzer extends MRec implements Analyzer {
 
     @Override
     public Analyzer set(final fURI probe, final double value) {
+        if (this.muted(probe))
+            return this;
         this.meter(probe, Analysis.GAUGE_TID).gauge().set(Double.doubleToRawLongBits(value));
         return this.changed();
     }
@@ -180,6 +198,43 @@ public class BasicAnalyzer extends MRec implements Analyzer {
         return this.meters.computeIfAbsent(probe, _ -> Meter.of(kind));
     }
 
+    @Override
+    public Analyzer mute(final fURI probe, final boolean muted) {
+        // swapped whole, so a concurrent mute and lift never lose each other
+        this.muted.updateAndGet(probes -> {
+            final Set<fURI> next = new HashSet<>(probes);
+            if (muted)
+                next.add(probe);
+            else
+                next.removeIf(path -> path.hasPrefix(probe));
+            return Set.copyOf(next);
+        });
+        // what a muted probe counted is dropped: written back, it counts from zero. A sampled gauge stays registered,
+        // hidden while muted, because nothing registers it again
+        if (muted)
+            this.meters.entrySet().removeIf(meter -> meter.getKey().hasPrefix(probe) && null == meter.getValue().sample());
+        return this;
+    }
+
+    /**
+     * whether {@code probe} is muted: itself, or a probe above it
+     */
+    private boolean muted(final fURI probe) {
+        final Set<fURI> probes = this.muted.get();
+        if (probes.isEmpty())
+            return false;
+        for (final fURI path : probes) {
+            if (probe.hasPrefix(path))
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean claim(final fURI owner) {
+        return this.owner.compareAndSet(null, owner) || owner.equals(this.owner.get());
+    }
+
     // ======================== reading ========================
 
     @Override
@@ -187,6 +242,7 @@ public class BasicAnalyzer extends MRec implements Analyzer {
         // in path order, so two reads of the same meters print alike
         final Map<fURI, Meter> paths = new TreeMap<>(Comparator.comparing(fURI::toString));
         paths.putAll(this.meters);
+        paths.keySet().removeIf(this::muted);
         final Map<Obj, Obj> analysis = new LinkedHashMap<>();
         paths.forEach((path, meter) -> {
             final Obj reading;

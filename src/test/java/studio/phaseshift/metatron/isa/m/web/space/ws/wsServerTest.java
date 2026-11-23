@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -52,7 +53,6 @@ import static studio.phaseshift.metatron.Tokens.RUN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -473,28 +473,35 @@ public class wsServerTest extends AbstractMetatronTest {
     }
 
     /**
-     * A MUTED NETWORK COUNTS NO FRAME: the wire's taps record through the verbs, so the network analyzer's
-     * {@code enabled} setting holds for them as it does for every other meter, while the frames themselves still flow.
+     * A NETWORK SWITCHED OFF COUNTS NO FRAME: noobj written at its analyzer removes it, so the wire's taps are handed
+     * nothing to record into, while the frames themselves still flow. A rec written there switches it back on, with new
+     * meters that count from zero and the peer gauge registered with them.
      */
     @Test
-    void testAMutedNetworkCountsNoFrame() {
+    void testANetworkSwitchedOffCountsNoFrame() {
         wsServer.serve(this.socket, mtron("/mtron"));
         final Network network = Machine.current().network();
         Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
         checkEquality(LOG, jnt(2), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)")), true);
-        Machine.write(f("/network/analyzer/enabled"), bool(false));
+        final Analyzer before = network.analyzer();
+        Machine.write(f("/network/analyzer"), noobj());
         try {
-            final long received = Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue();
-            final long sent = Machine.read(f("/network/analyzer/analysis/wire/sent")).orElse(jnt(0)).intValue();
-            // a muted network still carries frames: the round trip answers
+            assertNull(network.analyzer(), "noobj removes the network's analyzer");
+            final long received = before.analysis().at(uri("wire/recv")).orElse(jnt(0)).intValue();
+            final long sent = before.analysis().at(uri("wire/sent")).orElse(jnt(0)).intValue();
+            // a network switched off still carries frames: the round trip answers
             checkEquality(LOG, jnt(3), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(2)")), true);
-            assertEquals(received, Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue(),
-                    "and counts none it receives");
-            assertEquals(sent, Machine.read(f("/network/analyzer/analysis/wire/sent")).orElse(jnt(0)).intValue(),
-                    "and none it sends");
+            assertEquals(received, before.analysis().at(uri("wire/recv")).orElse(jnt(0)).intValue(), "and counts none it receives");
+            assertEquals(sent, before.analysis().at(uri("wire/sent")).orElse(jnt(0)).intValue(), "and none it sends");
         } finally {
-            Machine.write(f("/network/analyzer/enabled"), bool(true));
+            Machine.write(f("/network/analyzer"), rec());
         }
+        final Analyzer after = network.analyzer();
+        assertNotSame(before, after, "a rec written at it switches it back on, with meters of its own");
+        assertTrue(after.analysis().at(uri("wire")).isNoObj(), "which count from zero: " + after.analysis());
+        assertTrue(Machine.read(f("/network/analyzer/analysis/peer")).realValue() >= 1.0d, "the peer gauge registered with them");
+        checkEquality(LOG, jnt(4), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(3)")), true);
+        assertTrue(after.analysis().at(uri("wire/sent")).orElse(jnt(0)).intValue() > 0, "and the frames counted again");
     }
 
     /**

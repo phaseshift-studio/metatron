@@ -216,8 +216,7 @@ public final class mqttServer extends Listener {
      */
     private static Obj metric(final mqttServer server, final fURI probe) {
         return auto_(instLambda("mqtt_" + probe.toString().replace('/', '_'), ALL.maybe(), INT_TID.maybe(), (_, _) -> {
-            final Analyzer analyzer = server.analyzer();
-            return null == analyzer ? noobj() : analyzer.analysis().at(uri(probe));
+            return Analyzer.Helper.analysis(server.analyzer()).at(uri(probe));
         })).tryToInst();
     }
 

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.mach.type;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
@@ -36,6 +37,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.transientFail;
@@ -56,6 +58,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Processor extends Component {
+
+    /**
+     * THE MACHINE'S EVALUATIONS, in its processor's analyzer ({@code ~/processor/analyzer/analysis}), on by default and
+     * kept by the processor, so they outlive the computers that ran them: {@code eval} counts each run as it starts,
+     * {@code time} times it to its end, and {@code fail} counts each fail filed in the machine's stacks.
+     */
+    fURI EVAL_PROBE = f("eval");
+    fURI TIME_PROBE = f(TIME);
+    fURI FAIL_PROBE = f("fail");
 
     /**
      * INSTANTIATE — apply this architecture to {@code code} and mint a computing instance. The returned computer is
@@ -89,6 +100,14 @@ public interface Processor extends Component {
 
         private Helper() {
             // do nothing
+        }
+
+        /**
+         * the analyzer the machine this thread stands in counts its evaluations into, {@code ~/processor/analyzer} — or
+         * {@code null}, before there is a machine or once it is switched off
+         */
+        public static Analyzer statistics() {
+            return Machine.loaded() ? Machine.current().processor().analyzer() : null;
         }
 
         /**

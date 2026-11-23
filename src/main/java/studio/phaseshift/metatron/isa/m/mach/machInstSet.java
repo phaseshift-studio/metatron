@@ -328,9 +328,9 @@ public class machInstSet extends AbstractInstSet {
                                         uri(STATE).maybe(), "the run state: stop, run or pause",
                                         uri(RESULT).maybe(), "the objs the last evaluation produced",
                                         uri(TRACER).maybe(), "the processor's diagnostics (tracer::T), as the compiler's typer is its type checking: a pushed machine's processor carries a copy of its parent's",
-                                        uri(ANALYZER).maybe(), "the processor's statistics (analyzer::T): with profile=>true every evaluation's monad flow and stage timings are measured into it (apply, flow, per_inst, resolve, rewrite, repeat, cache), at ~/processor/analyzer/analysis"))
+                                        uri(ANALYZER).maybe(), "the processor's statistics (analyzer::T), the machine's evaluations at ~/processor/analyzer/analysis: eval counts each run as it starts, time times it to its end, fail counts each fail filed. With profile=>true each evaluation is profiled into an analyzer of its own, held by its computer at ~/processor/computer/<n>/analyzer (apply, flow, per_inst, resolve, rewrite, repeat, cache). Written noobj, it is switched off"))
                                 .slots(mutableMap(
-                                        uri(COMPUTER), "the computers this processor minted, one per evaluation, by number: computer/<n>; an evaluation's uncaught fails are filed in its computer's stack, computer/<n>/fail",
+                                        uri(COMPUTER), "the computers this processor minted, one per evaluation, by number: computer/<n>; an evaluation's uncaught fails are filed in its computer's stack, computer/<n>/fail, and a profiled evaluation's statistics are its computer's analyzer, computer/<n>/analyzer",
                                         uri("fail"), "the machine's fail stack: an uncaught fail raised outside any evaluation, keyed by ?incrq; read with @ to keep each fail's address, so that catching it removes it"))
                                 .create(),
                         MACH_SWARM_PROCESSOR_TYPE = TypeBuilder.build()
@@ -343,9 +343,11 @@ public class machInstSet extends AbstractInstSet {
                         MACH_COMPUTER_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_COMPUTER_TID, "the computing instance a processor mints for one evaluation: the code it runs and the state of the run")
-                                .isaPredicate(rec(uri(CODE), ALL_TYPE, uri(CACHE).maybe().asUri(), REC_TYPE), Map.of(
+                                .isaPredicate(rec(uri(CODE), ALL_TYPE, uri(CACHE).maybe().asUri(), REC_TYPE,
+                                        uri(ANALYZER).maybe().asUri(), T(MACH_ANALYZER_TID)), Map.of(
                                         uri(CODE), "the code::T the computer runs",
-                                        uri(CACHE).maybe(), "the state of the run"))
+                                        uri(CACHE).maybe(), "the state of the run",
+                                        uri(ANALYZER).maybe(), "the evaluation's profile (analyzer::T), when it was profiled: by a processor whose analyzer has profile=>true, or by a profile() it ran -- the first computer minted under a profile holds it"))
                                 .create(),
                         MACH_SWARM_COMPUTER_TYPE = TypeBuilder.build()
                                 .tid(MACH_COMPUTER_TID)
@@ -400,7 +402,7 @@ public class machInstSet extends AbstractInstSet {
                         // analysis, derived as it is read, and its settings sit beside it
                         MACH_ANALYZER_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_ANALYZER_TID, "a component's statistics, at ~/<component>/analyzer: its analysis (what it has measured, derived as it is read), the step it publishes that analysis at to ~/+/analyzer/analysis?subq subscribers, and whether the component's costly instrumentation is on. The producer records in java, where the thing it counts happens, and never through a write.")
+                                .vid(MACH_ANALYZER_TID, "a component's statistics, at ~/<component>/analyzer: its analysis (what it has measured, derived as it is read), the step it publishes that analysis at to ~/+/analyzer/analysis?subq subscribers, and whether the component's costly instrumentation is on. The producer records in java, where the thing it counts happens, and never through a write. Off is noobj: written at the analyzer, it removes it (a rec written later installs a new one); written at analysis/<probe>, it mutes that probe and its subtree, and any other value written there lifts the mute.")
                                 // every slot is optional: a BasicAnalyzer is checked against this type while its rec is
                                 // still empty (MObj's constructor)
                                 .isaPredicate(rec(
@@ -410,7 +412,8 @@ public class machInstSet extends AbstractInstSet {
                                         uri(ANALYSIS).maybe(), "the analysis::T the component has measured, built from its meters each time it is read",
                                         uri(STEP).maybe(), "the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step",
                                         uri(PROFILE).maybe(), "whether the component's costly instrumentation is on (default false): the processor's per-monad timings"))
-                                .example("*~/processor/analyzer/analysis   [-- the processor's measurements --]",
+                                .example("*~/processor/analyzer/analysis   [-- the machine's evaluations: eval, time, fail --]",
+                                        "~/processor/analyzer/analysis/time -> noobj   [-- stop timing evaluations --]",
                                         "~/network/analyzer/analysis?subq -> sub::[code=>>>1.to(/usr/wire)]   [-- each published analysis lands at /usr/wire --]")
                                 .constructor(arg -> new BasicAnalyzer(mutableMap(arg.asRec().jvm()), MACH_ANALYZER_TID, arg.vid()))
                                 .create(),

@@ -102,8 +102,11 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
         // ~/processor/computer/<n>: the computer is written into the processor of the machine it is minted in, which
         // indexes it by <n> (~ resolves to that machine's vid on write) -- its evaluation's fails are filed beneath it
         super(jvm, tid, null == vid ? f("~/processor/computer").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
-        if (null != this.profile)
-            this.profile.incr(FLOW_PROCESSORS_PROBE, 1L);
+        // A PROFILED EVALUATION'S STATISTICS ARE ITS COMPUTER'S: the first computer minted under a profile claims it and
+        // holds it at ~/processor/computer/<n>/analyzer, past the run (the computers nested in the run record into it)
+        if (null != this.profile && this.profile.claim(this.vid()))
+            this.jvm().put(Analyzer.KEY, this.profile);
+        Analyzer.Helper.incr(this.profile, FLOW_PROCESSORS_PROBE, 1L);
         // Ensure machine state fields exist with defaults
         final Map<Obj, Obj> cache = new LinkedHashMap<>(this.jvm().getOrDefault(uri(CACHE), rec()).recValue());
         cache.putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());
@@ -316,8 +319,13 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
                     && !"profile_compute".equals(name) && !"explain_compute".equals(name))
                 LOG.debug("processor %s evaluating a %d-instruction code sequence: %s", this.vid(), submittedInsts.size(), submitted);
         }
-        // THE RUN IS PROFILED INTO the analyzer this computer was minted under, on whichever thread runs it; the
-        // thread's own is put back after, so a computer minted outside a profile is never measured into one
+        // THE RUN IS COUNTED BY THE MACHINE'S PROCESSOR as it starts and timed to its end, into ~/processor/analyzer,
+        // which outlives this computer...
+        final Analyzer statistics = Processor.Helper.statistics();
+        Analyzer.Helper.incr(statistics, Processor.EVAL_PROBE, 1L);
+        final long t0 = Analyzer.Helper.start(statistics);
+        // ... and PROFILED INTO the analyzer this computer was minted under, on whichever thread runs it; the thread's
+        // own is put back after, so a computer minted outside a profile is never measured into one
         final Analyzer outer = Analyzer.PROFILE.get();
         if (this.profile != outer)
             Analyzer.PROFILE.set(this.profile);
@@ -326,6 +334,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
         } finally {
             if (this.profile != outer)
                 Analyzer.PROFILE.set(outer);
+            Analyzer.Helper.stop(statistics, Processor.TIME_PROBE, t0);
         }
     }
 
@@ -522,8 +531,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
      */
     protected BasicSwarmComputer() {
         // MObj no-arg constructor — sets parent=noobj, does NOT call objCheckAndSave
-        if (null != this.profile)
-            this.profile.incr(FLOW_PROCESSORS_PROBE, 1L);
+        Analyzer.Helper.incr(this.profile, FLOW_PROCESSORS_PROBE, 1L);
     }
 
     @Override

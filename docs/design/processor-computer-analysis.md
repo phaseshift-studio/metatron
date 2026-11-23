@@ -299,6 +299,10 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
    *~/network/analyzer/analysis/wire/sent           [-- read live: the meters as they stand --]
    ~/processor/analyzer/profile -> true             [-- a write sets a setting in place --]
    ~/network/analyzer -> [step=>1000]               [-- a write AT the analyzer declares settings, never replaces it --]
+   ~/processor/analyzer -> noobj                    [-- OFF: the analyzer is removed, and nothing records into it --]
+   ~/processor/analyzer -> [profile=>true]          [-- ON: a rec written where there is none installs a new one --]
+   ~/processor/analyzer/analysis/time -> noobj      [-- mute one probe and its subtree; any other value lifts it --]
+   *~/processor/computer/7/analyzer/analysis        [-- a profiled evaluation's statistics, at its computer --]
    ```
 
    The analysis is derived as it is read (an `auto` closing over the analyzer, the `~/network/status` form) and takes
@@ -310,8 +314,15 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
 4. **Costly instrumentation is off by default; cheap counters are always on.** A component's costly probes run only
    while a run is profiled: `Analyzer.PROFILE` is the analyzer the current thread's run is profiled into, and a probe
    reads it once and measures only when it is set (one thread-local read when it is not). `profile()` scopes a fresh
-   analyzer around its own timed runs; a processor whose analyzer has `profile => true` mints every computer under
-   its own analyzer; a computer carries the profile it was minted under to whichever thread runs it.
+   analyzer around its own timed runs; a processor whose analyzer has `profile => true` mints each evaluation under an
+   analyzer of the evaluation's own; a computer carries the profile it was minted under to whichever thread runs it.
+   **A profile is held by the first computer minted under it** (`Analyzer.claim`, 2026-11-23), at
+   `~/processor/computer/<n>/analyzer` beside the computer's code and fails: the evaluation's own computer for a
+   processor that profiles, the first timed run's for `profile()`. Nested computers record into it without holding it.
+   The processor's own analyzer keeps the machine's totals instead, always on: `eval` counts each computer's run as it
+   starts, `time` times it to its end, `fail` counts each fail where it is filed. The totals are the processor's, so
+   they outlive the computers — a FIFO cap on `~/processor/computer/+` (Marko's, in design) evicts a computer's
+   profile and leaves the totals.
 5. **Pull is the read; push is `?subq`.** Subscribers use the space's own pubsub:
    `~/network/analyzer/analysis?subq -> sub::[code=>…]`, or `~/+/analyzer/analysis?subq` for every component (one
    registry — the machine's space — answers them all). A change schedules one publication a `step` later (default 250
@@ -329,12 +340,16 @@ network and the processor carry one); a server records into the one its own `?an
 records into `Analyzer.PROFILE`.
 
 - **`Analyzer.Helper`'s verbs are how a producer records** (Marko, 2026-11-23: no if/else statistics code interleaved
-  with an object's work). Each is handed the analyzer to record into and gates itself, so an absent (`null`) or muted
-  (`enabled => false`) analyzer records nothing and a wrapped block runs bare. A muted processor analyzer with
-  `profile => true` mints no profiled computer at all, so it profiles nothing rather than only the probes that go
-  through the verbs; a sampled gauge is read, not recorded, so muting does not hide it. Which analyzer is the gate's
-  choice:
-  the owner's for the cheap meters that are always on (`network.analyzer()`, a server's `analyzer()`), the run's
+  with an object's work). Each is handed the analyzer to record into and gates itself, so an absent analyzer (`null`:
+  none kept, or switched off by a `noobj` write) records nothing and a wrapped block runs bare. **Off is `noobj`**
+  (Marko, 2026-11-23): written at the analyzer it removes it — a processor switched off has no `profile` to read, so it
+  profiles nothing as well — and a rec written there later installs a new one, whose meters start at zero (a component
+  that samples a gauge registers it with every analyzer it is given, `Aggregator.analyzer(Analyzer)`). Written at
+  `analysis/<probe>`, it mutes that probe and its subtree: the analyzer skips it, drops what it counted, and hides a
+  sampled gauge there rather than dropping it; any other value written at the probe lifts the mute. Which analyzer is
+  the gate's choice:
+  the owner's for the cheap meters that are always on (`network.analyzer()`, the processor's evaluations, a server's
+  `analyzer()`), the run's
   (`Analyzer.PROFILE.get()`) for the costly ones a profile switches on. A probe is one path (`wire/recv`,
   `resolve/inst_resolve`), held in a `static final` so a probe nobody measures costs no `f()`.
 
@@ -369,7 +384,9 @@ records into `Analyzer.PROFILE`.
 | component | probe | kind | where it is counted |
 |---|---|---|---|
 | network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`; a frame as it arrives, before it is read or run (`wsServer.evaluate` for a server's session, `WebSocketRecClient.readFrame` for a client) |
-| network | `peer` | gauge, sampled when read | `BasicNetwork`, registered once: the peers the level holds |
+| network | `peer` | gauge, sampled when read | `BasicNetwork`, registered with each analyzer the level is given: the peers it holds |
+| processor | `eval`, `time` | counter, timer | `BasicSwarmComputer`'s run: counted as it starts, timed to its end, nested evaluations included |
+| processor | `fail` | counter | `MFail.incrStackWrap`, where a fail is filed (once: an already-filed fail is answered as it stands) |
 | a listener or a data space (`?analq`) | `read/{count, latency}`, `write/{count, latency}`, `write/delete/{count, latency}` | counter, timer | `QProc.Layer`, around the source's own access |
 | a listener | `connections` | gauge | `wsServer`, `mqttServer`, as sessions open and close |
 | an mqtt server | `messages/{received, sent}`, `packets/{received, sent}` | counter | `mqttServer`, through the verbs (its `$SYS` counters read them) |
@@ -381,14 +398,16 @@ records into `Analyzer.PROFILE`.
 | processor (profiled) | `repeat/{esc, emit, until, code, state}`, `repeat/loop` | timer, counter | `repeat()` |
 | processor (profiled) | `cache/{hits, misses}` | counter | `TypeGraph.memo`, per type lookup |
 
-"Profiled" is the analyzer in `Analyzer.PROFILE`: the one `profile()` scopes around its timed runs, or the processor's
-own while its `profile` setting is on.
+"Profiled" is the analyzer in `Analyzer.PROFILE`: the one `profile()` scopes around its timed runs, or a fresh one per
+evaluation while the processor's `profile` setting is on. Either is held by the first computer minted under it, so its
+probes are read at `~/processor/computer/<n>/analyzer/analysis`.
 
 The status line's wire gauge (`↓ ↑`) and the network panel's summary read the network analyzer's `wire/recv` and
 `wire/sent`, and the panel repaints as a `?subq` subscriber to it. `profile()` builds its whole `profiling::T` report
 from its scoped analyzer, the `cache` section included: the type graph's hits and misses during the timed runs.
 
-**Retired.** `WireStats` (static atomics with a private listener list); the network analyzer's `wire/trip` and
+**Retired.** The analyzer's `enabled` setting (2026-11-23): off is a `noobj` write, at the analyzer or at one probe of
+its analysis. `WireStats` (static atomics with a private listener list); the network analyzer's `wire/trip` and
 `wire/timeout` (the raw round-trip timer and deadline-miss counter), retired 2026-11-15 when the servers moved onto the
 `web_analyzer` buckets, and on 2026-11-22 their last readers: the status line's `⇄` count and the network panel's
 summary `⇄`/`✗` (a lane's own exchange and timeout counts are WireTrace's rows, and stay). The type graph's own
@@ -405,8 +424,13 @@ every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicSta
   `/memory/space/usr/marko/analyzer`, narrowed to `xyz` (how many reads and writes hit it), and `*/usr/marko/#?analq`
   is the analysis of the whole space;
 - the OpenMetrics serializer and an `http_server` route over `~/+/analyzer/analysis` (the Grafana path);
-- a query-execution timer — open: whether nested argument evaluations (each a computer) belong in it, or only the
-  evaluations a user submits (`Machine.evaluate`, the console's executor);
+- the query-execution timer is the processor's `time` (2026-11-23), and with `eval` it counts every computer's run,
+  nested argument evaluations included — open: whether the evaluations a user submits (`Machine.evaluate`, the
+  console's executor) want a count of their own;
+- a CODE subscriber to `~/processor/analyzer/analysis?subq` (`sub::[code=>…]`) is evaluated on each delivery, which
+  counts an `eval` and so schedules the next publication: it is handed one every step for as long as it subscribes (a
+  probe, 2026-11-23: `eval` rose 6 → 12 → 17 over three seconds with no other evaluation, and held at 1 with no
+  subscriber) — open: whether a delivery runs unmeasured;
 - more producers, each at its own analyzer: memory (writes, deletes, reads per space), `http_server` (requests by
   route, status, latency), `tble`/`dcmnt` (query time, index use), the compiler (resolve/rewrite outside a profile);
 - a gauge read on demand (open sockets per listener) — a supplier-backed meter, sampled as the analysis is built;

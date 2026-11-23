@@ -26,11 +26,13 @@ import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -39,6 +41,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MEM_SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_ANALYZER_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -211,19 +214,33 @@ public final class MachineSpace extends memSpace {
         // member refused (BasicNetwork); the component's own address is the store's, as every component's is
         if (NETWORK.equals(part) && this.below(vid) && !analyzes)
             return this.owner.network().write(vid, obj);
-        // A COMPONENT'S ANALYZER IS WRITTEN IN PLACE, NEVER REPLACED: the analyzer IS the component's meters, so a write
-        // at it declares its settings (step, profile) field by field, and a write below it sets the one field. Its
-        // analysis is derived from the meters and takes no write. A ?subq registers in this space, the one registry.
-        if (analyzes && !vid.hasQ() && this.owner.at(uri(part)) instanceof Component component) {
+        // A COMPONENT'S ANALYZER IS WRITTEN IN PLACE: the analyzer IS the component's meters, so a write at it declares
+        // its settings (step, profile) field by field, and a write below it sets the one field. OFF IS NOOBJ (Marko,
+        // 2026-11-23): noobj at the analyzer removes it -- every verb is then handed null and records nothing -- and a
+        // rec written while it is absent installs a new one; noobj at a key of its analysis mutes that probe, and any
+        // other value written there lifts the mute (the analysis is derived from the meters: what is written is never
+        // its value). A ?subq registers in this space, the one registry. The component is the live one the machine holds.
+        if (analyzes && !vid.hasQ() && this.owner.atDirect(uri(part)) instanceof Component component) {
             final List<String> segments = vid.qLess().resolve().segments();
             final List<String> field = segments.subList(this.depth + 2, segments.size());
-            if (!field.isEmpty() && ANALYSIS.equals(field.getFirst())) {
+            final boolean analysis = !field.isEmpty() && ANALYSIS.equals(field.getFirst());
+            final Analyzer analyzer = component.analyzer();
+            if (analysis && 1 == field.size()) {
                 LOG.warn("an analysis is derived from its meters, not written: %s refused", vid);
                 return noobj();
             }
+            if (null == analyzer && !field.isEmpty()) {
+                LOG.warn("%s keeps no analyzer (a rec written at it installs one): %s refused", part, vid);
+                return noobj();
+            }
             return QProc.Layer.write(this, vid, obj, () -> {
-                final Analyzer analyzer = component.analyzer();
-                if (!field.isEmpty())
+                if (field.isEmpty() && obj.isNoObj())
+                    component.analyzer(null);
+                else if (null == analyzer && obj.isRec())
+                    component.analyzer(new BasicAnalyzer(new LinkedHashMap<>(obj.asRec().jvm()), MACH_ANALYZER_TID, null, part));
+                else if (analysis)
+                    analyzer.mute(f(String.join("/", field.subList(1, field.size()))), obj.isNoObj());
+                else if (!field.isEmpty())
                     analyzer.at(uri(String.join("/", field)), obj, MUTABLE);
                 else if (obj.isRec())
                     obj.asRec().jvm().forEach((key, value) -> {

@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -74,6 +76,8 @@ public class MFail extends MObj implements Fail {
         // write AT the pattern: `fail.vid(pattern)` is a tagged clone, which writes itself to that vid on
         // construction, so stamping first consumed a second counter value per fail (the stack held only evens)
         final Obj o = Machine.write(pattern, fail);
+        // counted where it is filed, so once: a fail already filed (a nested evaluation's) was answered above
+        Analyzer.Helper.incr(Processor.Helper.statistics(), Processor.FAIL_PROBE, 1L);
         // a CAUGHT fail is a value (isFail() is false by design): it is filed just like an uncaught one
         if (o.isFail() || o.isCaughtFail())
             return o.as();

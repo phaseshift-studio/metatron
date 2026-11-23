@@ -29,6 +29,8 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -54,7 +56,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis.TIMER_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -91,6 +92,22 @@ public class AnalyzerTest extends AbstractMetatronTest {
 
     private static long read(final Obj analysis, final String path) {
         return analysis.asRec().at(uri(path)).orElse(jnt(0)).intValue();
+    }
+
+    /**
+     * the probes a processor that profiles nothing keeps: the machine's evaluations, counted and timed
+     */
+    private static final Set<Obj> EVALUATED = Set.of(uri(Processor.EVAL_PROBE), uri(Processor.TIME_PROBE));
+
+    /**
+     * the computers of {@code machine}'s processor that hold a profile, in the order they were minted — what
+     * {@code ~/processor/computer/+/analyzer} reads
+     */
+    private static List<BasicSwarmComputer> profiled(final Machine machine) {
+        return machine.processor().computers().jvm().values().stream()
+                .filter(obj -> obj instanceof BasicSwarmComputer computer && computer.jvm().get(Analyzer.KEY) instanceof Analyzer)
+                .map(obj -> (BasicSwarmComputer) obj)
+                .toList();
     }
 
     // ======================== the types ========================
@@ -437,10 +454,9 @@ public class AnalyzerTest extends AbstractMetatronTest {
     // ======================== the verbs ========================
 
     /**
-     * EVERY VERB GATES ITSELF, so no producer tests for an analyzer before it records: an absent analyzer records nothing
-     * and the work a verb wraps still runs, a muted one ({@code enabled => false}) records nothing — though a gauge it
-     * samples still reads, being read and not recorded — and a live one keeps each verb's meter. A block that throws is
-     * timed too, and its throw passes through.
+     * EVERY VERB GATES ITSELF, so no producer tests for an analyzer before it records: an absent analyzer (none kept, or
+     * switched off) records nothing and the work a verb wraps still runs, and a live one keeps each verb's meter. A
+     * block that throws is timed too, and its throw passes through.
      */
     @Test
     void shouldGateEveryVerbOnTheAnalyzerItIsHanded() {
@@ -456,18 +472,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
         assertEquals("done", Analyzer.Helper.timed(null, timed, () -> "done"), "an unmeasured block runs bare");
         assertEquals(0L, Analyzer.Helper.start(null), "an unmeasured region never reads the clock");
         Analyzer.Helper.stop(null, region, 0L);
-        // muted: the analyzer is there and switched off
-        final Analyzer muted = new BasicAnalyzer();
-        muted.at(uri(ENABLED), bool(false), MUTABLE);
-        Analyzer.Helper.incr(muted, counted, 1L);
-        Analyzer.Helper.set(muted, gauged, 1.0d);
-        Analyzer.Helper.record(muted, recorded, 5L);
-        assertEquals("done", Analyzer.Helper.timed(muted, timed, () -> "done"), "a muted block runs bare");
-        Analyzer.Helper.stop(muted, region, Analyzer.Helper.start(muted));
-        assertTrue(muted.analysis().isEmpty(), "a muted analyzer records nothing: " + muted.analysis());
-        Analyzer.Helper.gauge(muted, f("verb/sampled"), () -> 3.0d);
-        assertEquals(3.0d, muted.analysis().at(uri("verb/sampled")).realValue(), 0.0d,
-                "but a gauge it samples is read, not recorded, so muting does not hide it");
+        assertTrue(Analyzer.Helper.analysis(null).isEmpty(), "and an absent analyzer reads as nothing measured");
         // live: each verb keeps its meter
         final Analyzer live = new BasicAnalyzer();
         Analyzer.Helper.incr(live, counted, 2L);
@@ -484,6 +489,38 @@ public class AnalyzerTest extends AbstractMetatronTest {
         assertEquals(2L, read(analysis, "verb/timed/count"), "both blocks timed, the one that threw included: " + analysis);
         assertEquals(1L, read(analysis, "verb/region/count"), "the region: " + analysis);
         assertEquals(5L, read(analysis, "verb/recorded/total"), "the duration measured elsewhere: " + analysis);
+    }
+
+    /**
+     * A MUTED PROBE IS AN ANALYSIS KEY WRITTEN NOOBJ: it records nothing, and neither does any probe below it, while its
+     * siblings record on (a probe is muted by its path, never by a prefix of its name); what it counted is dropped, so
+     * written back it counts from zero; and a sampled gauge it covers is hidden, never dropped, because nothing would
+     * register it again.
+     */
+    @Test
+    void shouldMuteAProbeAndItsSubtreeUntilItIsWrittenBack() {
+        final Analyzer analyzer = new BasicAnalyzer();
+        final AtomicLong held = new AtomicLong(3L);
+        Analyzer.Helper.incr(analyzer, f("verb/counted"), 2L);
+        Analyzer.Helper.gauge(analyzer, f("verb/sampled"), held::get);
+        analyzer.mute(f("verb"), true);
+        Analyzer.Helper.incr(analyzer, f("verb/counted"), 1L);
+        Analyzer.Helper.set(analyzer, f("verb/gauged"), 1.0d);
+        Analyzer.Helper.record(analyzer, f("verb/recorded"), 5L);
+        Analyzer.Helper.stop(analyzer, f("verb/region"), Analyzer.Helper.start(analyzer));
+        Analyzer.Helper.incr(analyzer, f("verbose/counted"), 1L);
+        final Analysis muted = analyzer.analysis();
+        assertTrue(muted.at(uri("verb")).isNoObj(), "a muted probe and its subtree leave the analysis: " + muted);
+        assertEquals(1L, read(muted, "verbose/counted"), "a sibling its name prefixes records on: " + muted);
+        analyzer.mute(f("verb/counted"), false);
+        Analyzer.Helper.incr(analyzer, f("verb/counted"), 1L);
+        assertTrue(analyzer.analysis().at(uri("verb")).isNoObj(),
+                "a probe below a muted one stays muted: " + analyzer.analysis());
+        analyzer.mute(f("verb"), false);
+        Analyzer.Helper.incr(analyzer, f("verb/counted"), 1L);
+        final Analysis lifted = analyzer.analysis();
+        assertEquals(1L, read(lifted, "verb/counted"), "written back, a probe counts from zero: " + lifted);
+        assertEquals(3.0d, lifted.at(uri("verb/sampled")).realValue(), 0.0d, "and a gauge it hid is sampled again: " + lifted);
     }
 
     /**
@@ -516,8 +553,9 @@ public class AnalyzerTest extends AbstractMetatronTest {
     // ======================== the profile ========================
 
     /**
-     * A PROFILE MEASURES EXACTLY THE RUNS IT SCOPES: a processor whose profile is off measures nothing, a scoped run
-     * measures its stages and its flow into the scope's analyzer alone, and nothing leaks into the processor's.
+     * A PROFILE MEASURES EXACTLY THE RUNS IT SCOPES: a processor whose profile is off profiles nothing (it counts the
+     * evaluation, and that is all), a scoped run measures its stages and its flow into the scope's analyzer alone, and
+     * nothing of it leaks into the processor's.
      */
     @Test
     void shouldMeasureOnlyTheRunsAProfileScopes() {
@@ -525,7 +563,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
         try {
             final Analyzer processor = machine.processor().analyzer();
             Machine.parse("{1,2,3}.plus(1).sum()").apply(noobj());
-            assertTrue(processor.analysis().isEmpty(), "a processor whose profile is off measures nothing: " + processor.analysis());
+            assertEquals(EVALUATED, processor.analysis().jvm().keySet(),
+                    "a processor whose profile is off counts the evaluation and profiles nothing: " + processor.analysis());
             final Analyzer profile = new BasicAnalyzer();
             Analyzer.PROFILE.set(profile);
             try {
@@ -541,7 +580,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
             assertTrue(read(measured, "cache/hits") + read(measured, "cache/misses") > 0,
                     "its type lookups counted: " + measured);
             assertFalse(measured.at(uri(PER_INST)).isNoObj(), "and each instruction's flow kept: " + measured);
-            assertTrue(processor.analysis().isEmpty(), "nothing leaked into the processor's own analyzer");
+            assertEquals(EVALUATED, processor.analysis().jvm().keySet(),
+                    "nothing of the profile leaked into the processor's own analyzer: " + processor.analysis());
             final long monads = read(measured, "flow/monads");
             Machine.parse("{1,2,3}.plus(1).sum()").apply(noobj());
             assertEquals(monads, read(profile.analysis(), "flow/monads"), "and a run outside the scope is not the scope's");
@@ -551,56 +591,198 @@ public class AnalyzerTest extends AbstractMetatronTest {
     }
 
     /**
-     * A PROCESSOR THAT PROFILES measures every evaluation it runs into its own analyzer, until it stops; a pushed
-     * machine profiles as its parent did at the push, into meters of its own.
+     * A PROCESSOR THAT PROFILES gives each evaluation a profile of its own, held by the computer that ran it at
+     * {@code ~/processor/computer/<n>/analyzer}, while its own analyzer keeps only the machine's totals — until it stops; a
+     * pushed machine profiles as its parent did at the push, into computers of its own.
      */
     @Test
-    void shouldProfileEveryEvaluationWhileTheProcessorProfiles() {
+    void shouldProfileEachEvaluationAtTheComputerThatRanIt() {
         final Machine machine = Machine.current().push(f("analyzer_profile"));
         try {
             final Analyzer processor = machine.processor().analyzer();
             Machine.write(f("~/processor/analyzer/profile"), bool(true));
             Machine.parse("{1,2,3}.plus(1)").apply(noobj());
-            final long during = read(processor.analysis(), "flow/monads");
-            assertTrue(during > 0, "the processor's own analyzer measured the evaluation: " + processor.analysis());
-            assertTrue(read(processor.analysis(), "cache/hits") + read(processor.analysis(), "cache/misses") > 0,
-                    "and the type lookups its computers made: " + processor.analysis());
+            final List<BasicSwarmComputer> first = profiled(machine);
+            assertEquals(1, first.size(), "the evaluation's computer holds its profile: " + first);
+            final fURI at = first.getFirst().vid().extend(ANALYZER).extend(ANALYSIS);
+            final long during = Machine.read(at.extend(FLOW).extend(MONADS)).intValue();
+            assertTrue(during > 0, "read at the computer's address, " + at);
+            final Analysis profile = Machine.read(at).as();
+            assertTrue(read(profile, "cache/hits") + read(profile, "cache/misses") > 0,
+                    "with the type lookups its computers made: " + profile);
+            assertEquals(EVALUATED, processor.analysis().jvm().keySet(),
+                    "while the processor's own analyzer keeps the totals alone: " + processor.analysis());
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            final List<BasicSwarmComputer> second = profiled(machine);
+            assertEquals(2, second.size(), "the next evaluation is profiled at its own computer: " + second);
+            assertNotSame(second.get(0).jvm().get(Analyzer.KEY), second.get(1).jvm().get(Analyzer.KEY),
+                    "into an analyzer of its own");
+            assertEquals(during, Machine.read(at.extend(FLOW).extend(MONADS)).intValue(),
+                    "and the first evaluation's profile is left as it was");
             final Machine child = machine.push(f("child"));
             try {
-                final Analyzer own = child.processor().analyzer();
-                assertNotSame(processor, own, "a pushed machine's processor measures into meters of its own");
-                assertTrue(own.atDirect(uri(PROFILE)).boolValue(), "under the settings it was pushed with");
+                assertTrue(child.processor().analyzer().atDirect(uri(PROFILE)).boolValue(),
+                        "a pushed machine profiles under the settings it was pushed with");
                 Machine.parse("{1,2,3}.plus(1)").apply(noobj());
-                assertTrue(read(own.analysis(), "flow/monads") > 0, "so the child's evaluation is the child's");
-                assertEquals(during, read(processor.analysis(), "flow/monads"), "and never the parent's");
+                assertEquals(1, profiled(child).size(), "so the child's evaluation is profiled at the child's computer");
+                assertEquals(2, profiled(machine).size(), "and never at the parent's");
             } finally {
                 child.pop();
             }
             Machine.write(f("~/processor/analyzer/profile"), bool(false));
             Machine.parse("{1,2,3}.plus(1)").apply(noobj());
-            assertEquals(during, read(processor.analysis(), "flow/monads"), "nothing more once the profile is off");
+            assertEquals(2, profiled(machine).size(), "nothing more is profiled once the profile is off");
         } finally {
             machine.pop();
         }
     }
 
     /**
-     * A MUTED PROCESSOR PROFILES NOTHING: with {@code profile => true} and {@code enabled => false}, the processor mints no
-     * computer under its analyzer, so not one probe records — the stages, the flow and each instruction's included, which
-     * record outside the verbs, as well as the resolver's and the cache's, which go through them.
+     * A PROFILE()'S ANALYZER IS HELD BY THE FIRST COMPUTER ITS TIMED RUNS MINT, the first claim being the one that holds:
+     * the report is read off that analyzer, which stays at the computer's address after the report is made, and the
+     * computers its other runs mint record into it without holding it.
      */
     @Test
-    void shouldProfileNothingThroughAMutedProcessorAnalyzer() {
-        final Machine machine = Machine.current().push(f("analyzer_muted_profile"));
+    void shouldHoldAProfileAtTheFirstComputerItsRunsMint() {
+        final Analyzer claimed = new BasicAnalyzer();
+        assertTrue(claimed.claim(f("~/processor/computer/1")), "the first claim holds an analyzer");
+        assertTrue(claimed.claim(f("~/processor/computer/1")), "and holds it again");
+        assertFalse(claimed.claim(f("~/processor/computer/2")), "and no later one does");
+        final Machine machine = Machine.current().push(f("analyzer_claim"));
+        try {
+            final Obj flow = ObjmtronSerializer.eval("{1,2,3}.plus(1).profile()>>flow");
+            final List<BasicSwarmComputer> held = profiled(machine);
+            assertEquals(1, held.size(), "one computer holds the profile: " + held);
+            final long processors = flow.asRec().at(uri(PROCESSORS)).intValue();
+            assertTrue(processors > 1, "the timed runs minted several computers: " + flow);
+            assertEquals(processors,
+                    Machine.read(held.getFirst().vid().extend(ANALYZER).extend(ANALYSIS).extend(FLOW).extend(PROCESSORS)).intValue(),
+                    "and the one that holds the profile holds what the report was read from");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    // ======================== the processor's evaluations ========================
+
+    /**
+     * THE PROCESSOR COUNTS THE MACHINE'S EVALUATIONS, profile or not: each run counted as it starts and timed to its end,
+     * and each fail counted where it is filed — once, though the evaluation answers it on. The counts are the
+     * processor's, so they outlive the computers that ran them.
+     */
+    @Test
+    void shouldCountEveryEvaluationAtTheProcessor() {
+        final Machine machine = Machine.current().push(f("analyzer_evaluations"));
         try {
             final Analyzer processor = machine.processor().analyzer();
+            final long before = read(processor.analysis(), "eval");
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            final long one = read(processor.analysis(), "eval") - before;
+            assertTrue(one > 0, "an evaluation is counted: " + processor.analysis());
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            final Analysis three = processor.analysis();
+            assertEquals(before + 3 * one, read(three, "eval"), "each one: " + three);
+            assertEquals(read(three, "eval"), read(three, "time/count"), "each run timed to its end: " + three);
+            assertTrue(three.at(uri("fail")).isNoObj(), "and no fail counted where none was filed: " + three);
+            Machine.parse("1.plus(b)").apply(noobj());
+            assertEquals(1L, read(processor.analysis(), "fail"), "an evaluation that fails counts its fail once: " + processor.analysis());
+            final long evaluations = read(processor.analysis(), "eval");
+            machine.processor().close();
+            assertTrue(machine.processor().computers().isEmpty(), "with the computers that ran them reaped");
+            assertEquals(evaluations, read(processor.analysis(), "eval"), "the counts stand");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * OFF IS NOOBJ: a processor whose analyzer is written noobj keeps none — its address reads noobj, and it counts no
+     * evaluation and profiles none, profile on or not — and a field written while it is off is refused. A rec written at
+     * the analyzer installs a new one, which counts from zero under the settings the rec states.
+     */
+    @Test
+    void shouldSwitchAnAnalyzerOffAndOnByWritingIt() {
+        final Machine machine = Machine.current().push(f("analyzer_off"));
+        try {
+            final Analyzer original = machine.processor().analyzer();
             Machine.write(f("~/processor/analyzer/profile"), bool(true));
-            Machine.write(f("~/processor/analyzer/enabled"), bool(false));
+            final long evals = read(original.analysis(), "eval");
+            final int profiles = profiled(machine).size();
             Machine.parse("{1,2,3}.plus(1)").apply(noobj());
-            assertTrue(processor.analysis().isEmpty(), "a muted processor profiles nothing: " + processor.analysis());
-            Machine.write(f("~/processor/analyzer/enabled"), bool(true));
+            final long one = read(original.analysis(), "eval") - evals;
+            final int profiledOne = profiled(machine).size() - profiles;
+            assertTrue(one > 0 && profiledOne > 0, "an evaluation is counted and profiled while the analyzer is on");
+            Machine.write(f("~/processor/analyzer"), noobj());
+            assertNull(machine.processor().analyzer(), "noobj removes the analyzer");
+            assertTrue(Machine.read(f("~/processor/analyzer")).isNoObj(), "so its address reads noobj");
+            final long counted = read(original.analysis(), "eval");
             Machine.parse("{1,2,3}.plus(1)").apply(noobj());
-            assertTrue(read(processor.analysis(), "flow/monads") > 0, "and unmuted, it profiles again: " + processor.analysis());
+            Machine.parse("1.plus(b)").apply(noobj());
+            assertEquals(counted, read(original.analysis(), "eval"), "an evaluation is counted nowhere");
+            assertTrue(original.analysis().at(uri("fail")).isNoObj(), "nor a fail");
+            assertEquals(profiles + profiledOne, profiled(machine).size(), "and profiled nowhere, though the profile was on");
+            assertTrue(Machine.write(f("~/processor/analyzer/step"), jnt(100)).isNoObj(), "a field written while it is off is refused");
+            assertNull(machine.processor().analyzer(), "and installs nothing");
+            Machine.write(f("~/processor/analyzer"), rec(uri(PROFILE), bool(true)));
+            final Analyzer installed = machine.processor().analyzer();
+            assertNotNull(installed, "a rec written at the analyzer installs one");
+            assertNotSame(original, installed, "a new one");
+            assertTrue(installed.atDirect(uri(PROFILE)).boolValue(), "under the settings the rec states");
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            assertEquals(one, read(installed.analysis(), "eval"), "counting from zero: " + installed.analysis());
+            assertEquals(profiles + 2 * profiledOne, profiled(machine).size(), "and profiling again");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * A PROBE IS MUTED AT ITS ADDRESS: noobj written at {@code analysis/<probe>} stops it while its siblings record on,
+     * and any other value written there lifts the mute, the probe counting again from zero; the analysis as a whole
+     * still takes no write.
+     */
+    @Test
+    void shouldMuteAProbeWrittenNoobjAtItsAddress() {
+        final Machine machine = Machine.current().push(f("analyzer_mute"));
+        try {
+            final Analyzer processor = machine.processor().analyzer();
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            assertFalse(Machine.read(f("~/processor/analyzer/analysis/time")).isNoObj(), "an evaluation is timed");
+            Machine.write(f("~/processor/analyzer/analysis/time"), noobj());
+            assertTrue(Machine.read(f("~/processor/analyzer/analysis/time")).isNoObj(), "until its probe is written noobj");
+            final long evals = read(processor.analysis(), "eval");
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            assertTrue(Machine.read(f("~/processor/analyzer/analysis/time")).isNoObj(), "then it times nothing: " + processor.analysis());
+            assertTrue(read(processor.analysis(), "eval") > evals, "while its sibling counts on: " + processor.analysis());
+            Machine.write(f("~/processor/analyzer/analysis/time"), bool(true));
+            final long lifted = read(processor.analysis(), "eval");
+            Machine.parse("{1,2,3}.plus(1)").apply(noobj());
+            assertEquals(read(processor.analysis(), "eval") - lifted, read(processor.analysis(), "time/count"),
+                    "written back, it times again, from zero: " + processor.analysis());
+            assertTrue(Machine.write(f("~/processor/analyzer/analysis"), noobj()).isNoObj(), "the analysis as a whole takes no write");
+            assertFalse(processor.analysis().isEmpty(), "so nothing is muted by one");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * A NETWORK SWITCHED BACK ON GAUGES ITS PEERS AGAIN: the peer gauge is registered with every analyzer the network
+     * is given, so one written at {@code ~/network/analyzer} after a noobj samples them as the first did.
+     */
+    @Test
+    void shouldGaugePeersThroughAReinstalledNetworkAnalyzer() {
+        final Machine machine = Machine.current().push(f("analyzer_network_on"));
+        try {
+            assertEquals(0.0d, Machine.read(f("~/network/analyzer/analysis/peer")).realValue(), 0.0d, "a level with no peer gauges none");
+            Machine.write(f("~/network/analyzer"), noobj());
+            assertNull(machine.network().analyzer(), "noobj removes the network's analyzer");
+            assertTrue(Machine.read(f("~/network/analyzer/analysis/peer")).isNoObj(), "and its gauge with it");
+            Machine.write(f("~/network/analyzer"), rec());
+            assertNotNull(machine.network().analyzer(), "an empty rec installs one");
+            final Obj peer = Machine.read(f("~/network/analyzer/analysis/peer"));
+            assertEquals(Analysis.GAUGE_TID, peer.tid().basePath(), "which gauges the peers again: " + peer);
         } finally {
             machine.pop();
         }

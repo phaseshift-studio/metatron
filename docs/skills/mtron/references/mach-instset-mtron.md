@@ -245,7 +245,7 @@ separate axes of a machine.
 | `swarm_processor::T`               | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result                                                                                                                                                                                                        |
 | `computer::T`, `swarm_computer::T` | the computer an evaluation runs in: its code and the state of the run                                                                                                                                                                                                                                                                                 |
 | `tracer::T`                        | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's                                                                                     |
-| `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`/`enabled`; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
+| `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`; `noobj` written at it switches it off, at `analysis/<probe>` mutes that probe; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
 
 Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
 stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
@@ -258,8 +258,19 @@ The `analyzer::T` is a measuring component's statistics, in the typer's and the 
 Java (`incr`/`record`/`set`) where the thing it counts happens, and anyone reads the live `analysis::T` — derived from
 the meters as it is read — at `~/<component>/analyzer/analysis`. The meters are `counter::T` (a `nat`, non-negative and
 monotonic in practice), `gauge::T` (a point-in-time `real`) and `timer::T` (`count`/`total`/`min`/`max` of nanos); the
-settings `step`, `profile` and `enabled` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
+settings `step` and `profile` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
 machine's components, a cluster's machines).
+
+**Off is `noobj`.** `~/processor/analyzer -> noobj` removes the analyzer, so nothing records into it (its address then
+reads `noobj`), and a rec written there later — `~/processor/analyzer -> [profile=>true]` — installs a new one whose
+meters start at zero. `~/processor/analyzer/analysis/time -> noobj` mutes the one probe and everything below it, and any
+other value written at that probe lifts the mute.
+
+**The processor counts the machine's evaluations**, always on: `eval` (each computer's run, nested evaluations
+included), `time` (a timer over each run) and `fail` (each fail filed) at `*~/processor/analyzer/analysis`. With
+`~/processor/analyzer/profile -> true`, each evaluation is also profiled into an analyzer of its own, held by the
+computer that ran it: `*~/processor/computer/<n>/analyzer/analysis` (the monad flow, per-instruction counts and stage
+timings). A `profile()`'s analyzer is held the same way, by the first computer its timed runs mint.
 
 A **data space** is not a component, and its metrics are its `?analq` q-proc rather than a `~/<space>/analyzer` field:
 the q-proc holds the `analyzer::T`, so it travels with the space, and `read`/`write`/`delete` counts and latencies are
