@@ -57,6 +57,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,6 +69,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PATH_ENCODING_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -328,6 +330,26 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         assertFalse(resp.body().contains("\"error\""), "machine_info should not error");
     }
 
+    /**
+     * eval_mtron's mime ARGUMENT PICKS THE RENDERING ON THE WIRE: a JSON mime answers the value itself, which the mcp
+     * layer writes as JSON ({@code 3}), and application/x-mtron, the default, its mtron text, a str it writes as a JSON
+     * string ({@code "3"}). Keyed by the q-proc tid, the argument was never read, and both answered the str.
+     */
+    @Test
+    public void testEvalMtronsMimePicksTheRenderingOnTheWire() throws Exception {
+        final String json = this.evalMtronOverHttp("1.plus(2)", "application/json");
+        assertTrue(json.contains("\"text\":\"3\""), "a JSON mime answers the value as JSON: " + json);
+        final String mtron = this.evalMtronOverHttp("1.plus(2)", "application/x-mtron");
+        assertTrue(mtron.contains("\"text\":\"\\\"3\\\"\""), "application/x-mtron answers mtron text, a JSON string: " + mtron);
+    }
+
+    private String evalMtronOverHttp(final String code, final String mime) throws Exception {
+        final var resp = httpPost("/mcp", "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"tools/call\",\"params\":{\"name\":\""
+                + mTool.toolName(EVAL_MTRON_TID) + "\",\"arguments\":{\"code\":\"" + code + "\",\"mime\":\"" + mime + "\"}}}", null);
+        assertEquals(200, resp.statusCode(), resp.body());
+        return resp.body();
+    }
+
     @Test
     public void testHttpPostPing() throws Exception {
         final var resp = httpPost("/mcp",
@@ -544,6 +566,16 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
             Machine.write(f("/test/node/rec"), rec(uri("name"), str("zarathustra"), uri("age"), jnt(33)));
             checkEquality(LOG, rec(uri("name"), str("zarathustra"), uri("age"), jnt(33)),
                     Machine.read(origin.extend(f("/test/node/rec"))), true);
+            // A MULTI-MATCH READ ANSWERS EACH MATCH, and a TYPED VALUE KEEPS ITS TID: through read_memory's JSON the
+            // first came back as one lst and the second as a plain rec
+            Machine.write(f("/test/node/many/a"), jnt(1));
+            Machine.write(f("/test/node/many/b"), jnt(2));
+            assertEquals(List.of(1L, 2L), Machine.read(origin.extend(f("/test/node/many/+"))).stream()
+                    .map(Obj::intValue).sorted().toList(), transport + " — each match, as itself");
+            Machine.write(f("/test/node/typed"), uri("ws/typed/8555/mtron").tid(PATH_ENCODING_TID));
+            final Obj typed = Machine.read(origin.extend(f("/test/node/typed")));
+            assertEquals(PATH_ENCODING_TID, typed.tid().basePath(), transport + " — the typed value keeps its tid: " + typed);
+            assertEquals("ws/typed/8555/mtron", typed.uriValue().toString(), transport + " — and its value: " + typed);
             Machine.write(origin.extend(f("/test/node/written")), jnt(9));
             checkEquality(LOG, jnt(9), Machine.read(f("/test/node/written")), true);
             checkEquality(LOG, jnt(3), Machine.current().network().submit(origin, mParser.parse("1.plus(2)")), true);
