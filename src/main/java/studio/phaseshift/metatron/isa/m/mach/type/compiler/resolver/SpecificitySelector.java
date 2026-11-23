@@ -325,7 +325,7 @@ public class SpecificitySelector extends MRec implements Selector {
             // the bonus unearned the complex sum (+1000) outranked the exact int sum (+500) for every such input: an
             // inst body's last window {2,3}, the lanes of sum{2}(), sum@3 in a shard (Marko, 2026-11-22: "sum is broken")
             final boolean refinedDom = !apiInst.dom().isBaseType();
-            if (!refinedDom || this.inRefinement(lhs, lhsID, userInst, apiInst)) {
+            if (!refinedDom || this.inRefinement(lhs, userInst, apiInst)) {
                 if (refinedDom)
                     score += 500;
                 if (!apiInst.rng().isBaseType())
@@ -372,20 +372,24 @@ public class SpecificitySelector extends MRec implements Selector {
 
     /**
      * WHETHER THE INPUT IS KNOWN TO BE IN A CANDIDATE'S REFINED DOMAIN -- the evidence a refined signature's specificity
-     * rests on ({@link #scoreSpecificity}). The call may state it ({@code sum?<=cmplx{*}()}), or the lhs may be typed it
-     * (a {@code cmplx{2}::T} at compile time, a {@code cmplx::[1.0,2.0]} value). A value is in it when the domain's
-     * predicate admits it ({@code 5} is a nat), and a bag when every member is: a bag's own type says nothing (the window
-     * {@code {2,3}} reads as noobj), so its members are the evidence, and the first that is not ends the test. A type
-     * names no member, so it is evidence only by name ({@code int{3}::T} is not a nat), and noobj is evidence of nothing.
+     * rests on ({@link #scoreSpecificity}). The call may state it ({@code sum?<=cmplx{*}()}), or the lhs may be named it
+     * (a {@code cmplx{2}::T}, a {@code cmplx::[1.0,2.0]}). A type is evidence by hierarchy, as the nominal gate asks it:
+     * a {@code student} type is in {@code person} (the refinement chain is walked), and {@code int{3}::T} is in no
+     * {@code nat} (a type that states no predicate is in no predicated domain). A value is in it when the domain admits it
+     * ({@code 5} is a nat), and a bag when every member is: a bag's own type says nothing (the window {@code {2,3}} reads
+     * as noobj), so its members are the evidence, and the first that is not ends the test. Noobj, and the noobj type (no
+     * copies, which every domain admitting zero admits), are evidence of nothing.
      */
-    private boolean inRefinement(final Obj lhs, final fURI lhsID, final Inst userInst, final Inst apiInst) {
+    private boolean inRefinement(final Obj lhs, final Inst userInst, final Inst apiInst) {
         final fURI refined = Obj.Helper.specificTypeId(apiInst.dom()).basePath();
-        if (lhsID.basePath().equals(refined)
+        if (Obj.Helper.specificTypeId(lhs).basePath().equals(refined)
                 || (userInst.hasDom() && Obj.Helper.specificTypeId(userInst.dom()).basePath().equals(refined)))
             return true;
-        if (lhs.isType() || lhs.isNoObj())
+        if (lhs.isNoObj() || lhs.c().isZero())
             return false;
         final Obj unit = apiInst.dom().c(cInt.ONE());
+        if (lhs.isType())
+            return lhs.asType().c(cInt.ONE()).testByID(unit);
         final Iterator<Obj> members = lhs.stream().iterator();
         if (!members.hasNext())
             return false;

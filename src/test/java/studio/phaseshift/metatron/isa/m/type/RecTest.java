@@ -1958,4 +1958,31 @@ public class RecTest extends AbstractAlgebraTest {
     public void testMultiplicityFiberAnswersATypedReduction(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
+    /**
+     * A SUB-REFINEMENT TAKES ITS PARENT'S OVERLOAD. A student is a person ({@code student -> person::T@student}), so a
+     * call with an overload on person and one on rec resolves to the person one, the most specific domain the student is
+     * in, when the call compiles (its lhs is the student type) as when it runs. A refined domain earns its specificity on
+     * evidence the input is in it, and for a type the refinement chain is that evidence (2026-11-22: requiring the
+     * domain's own name gave the student the rec overload at compile time and the person one at run time).
+     */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec::T@person",
+            "student -> person::T@student",
+            "greet?dom=person -> |inst?<=person(){ 'a person' }",
+            "greet?dom=rec -> |inst?<=rec(){ 'a rec' }",
+    })
+    @CsvSource(value = {
+            "student::[name=>'ada'].greet()     % 'a person'",
+            "person::[name=>'ada'].greet()      % 'a person'",
+            "[name=>'ada'].greet()              % 'a rec'",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testASubRefinementTakesItsParentsOverload(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 }
