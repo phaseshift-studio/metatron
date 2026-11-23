@@ -311,7 +311,7 @@ public final class wsServer extends Listener {
         if (!origin.isUri())
             throw MTronException.of("a ws_server serves a socket: origin=><ws://origin:port> required, got %s", origin);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec()).declare(config);
+        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec(), config);
     }
 
     /**
@@ -319,6 +319,14 @@ public final class wsServer extends Listener {
      * or above this one already holds, or bind it here. Answers the server.
      */
     public static Listener serve(final fURI origin, final Rec routes) {
+        return serve(origin, routes, rec());
+    }
+
+    /**
+     * serve as {@link #serve(fURI, Rec)} does, the q-procs {@code config} declares put on a socket this call binds and
+     * never on one another machine holds (Listener.declare)
+     */
+    private static Listener serve(final fURI origin, final Rec routes, final Rec config) {
         final Network level = Machine.current().network();
         final Listener held = Network.Helper.listenerFor(origin);
         if (null != held) {
@@ -331,6 +339,7 @@ public final class wsServer extends Listener {
         if (!routes.isEmpty())
             jvm.put(uri(ROUTE), routes);
         final wsServer server = new wsServer(jvm, level);
+        server.declare(config);
         try {
             Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {

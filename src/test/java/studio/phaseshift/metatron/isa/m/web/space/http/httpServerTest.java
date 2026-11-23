@@ -292,4 +292,30 @@ public class httpServerTest extends AbstractMetatronTest {
         assertTrue(read.at(uri("latency")).asRec().at(uri("count")).intValue() >= 1L,
                 "and the read is timed where the handling ran");
     }
+
+    /**
+     * A HTTP SERVER TAKES THE ANALQ ITS CONFIG DECLARES, as every server does (Listener.declare): its cap is the
+     * one stated, in place of the analq it is built with
+     */
+    @Test
+    public void testAHttpServerTakesTheAnalqItsConfigDeclares() throws Exception {
+        final int port;
+        try (final java.net.ServerSocket free = new java.net.ServerSocket(0)) {
+            port = free.getLocalPort();
+        }
+        final studio.phaseshift.metatron.furi.fURI origin = studio.phaseshift.metatron.furi.fURI.Singleton.f("http://127.0.0.1:" + port);
+        final studio.phaseshift.metatron.furi.QProc declared = studio.phaseshift.metatron.furi.q.QCollection.analQ(
+                studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("read"),
+                        studio.phaseshift.metatron.isa.m.type.impl.MType.T(studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis.COUNTER_TID)));
+        final studio.phaseshift.metatron.isa.m.mach.type.network.Listener server = httpServer.of(studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
+                studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(studio.phaseshift.metatron.Tokens.ORIGIN), studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(origin),
+                studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(studio.phaseshift.metatron.Tokens.QPROC), studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(java.util.List.of(declared))));
+        try {
+            org.junit.jupiter.api.Assertions.assertSame(declared, server.qs().lstValue().stream()
+                    .filter(q -> q instanceof studio.phaseshift.metatron.furi.QProc proc && proc.pattern().equals(studio.phaseshift.metatron.furi.q.QCollection.ANALQ_PATTERN))
+                    .findFirst().orElseThrow(), "the declared analq, in place of the one the server is built with");
+        } finally {
+            studio.phaseshift.metatron.isa.m.mach.type.Machine.current().network().unlisten(origin);
+        }
+    }
 }

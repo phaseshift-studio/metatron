@@ -181,7 +181,7 @@ public final class httpServer extends Listener {
         if (!origin.isUri())
             throw MTronException.of("an http_server serves a socket: origin=><http://host:port> required, got %s", origin);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec(), config).declare(config);
+        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec(), config);
     }
 
     /**
@@ -213,6 +213,7 @@ public final class httpServer extends Listener {
         if (!routes.isEmpty())
             jvm.put(uri(ROUTE), routes);
         final httpServer server = new httpServer(jvm, level, tls);
+        server.declare(config);
         try {
             Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {

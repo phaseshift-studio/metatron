@@ -133,6 +133,12 @@ public class wsServerTest extends AbstractMetatronTest {
                 .filter(q -> q instanceof QProc proc && proc.pattern().equals(QCollection.ANALQ_PATTERN)).toList();
         assertEquals(1, analqs.size(), "one analq: " + analqs);
         assertSame(declared, analqs.getFirst(), "the declared one, in place of the one the server is built with");
+        final QProc joiner = QCollection.analQ(rec(uri("write"), T(Analysis.COUNTER_TID)));
+        assertSame(server, wsServer.WS_SERVER_TYPE.constructor().apply(
+                rec(uri(ORIGIN), uri(this.socket), uri(ROUTE), mtron("/joined"), uri(QPROC), lst(List.of(joiner)))), "a second config joins the socket");
+        assertSame(declared, server.qs().lstValue().stream()
+                        .filter(q -> q instanceof QProc proc && proc.pattern().equals(QCollection.ANALQ_PATTERN)).findFirst().orElseThrow(),
+                "and leaves the q-procs of the socket it joined as they are");
     }
 
     @Test

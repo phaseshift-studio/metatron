@@ -229,7 +229,7 @@ public final class mqttServer extends Listener {
         if (!host.isUri())
             throw MTronException.of("an mqtt_server serves a socket: host=><mqtt://host:port> required, got %s", host);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec()).declare(config);
+        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec(), config);
     }
 
     /**
@@ -245,6 +245,14 @@ public final class mqttServer extends Listener {
      * {@link Listener#route(fURI)} walks it live, and on this server's rec, where it is introspectable.
      */
     public static Listener serve(final fURI origin, final Rec routes) {
+        return serve(origin, routes, rec());
+    }
+
+    /**
+     * serve as {@link #serve(fURI, Rec)} does, the q-procs {@code config} declares put on a socket this call binds and
+     * never on one another machine holds (Listener.declare)
+     */
+    private static Listener serve(final fURI origin, final Rec routes, final Rec config) {
         final Network level = Machine.current().network();
         final Listener held = Network.Helper.listenerFor(origin);
         if (null != held)
@@ -257,6 +265,7 @@ public final class mqttServer extends Listener {
             if (!routes.isEmpty())
                 jvm.put(uri(ROUTE), routes);
             server = new mqttServer(jvm, level);
+            server.declare(config);
         } catch (final IOException e) {
             throw MTronException.of(e, "unable to bind mqtt server %s", origin);
         }

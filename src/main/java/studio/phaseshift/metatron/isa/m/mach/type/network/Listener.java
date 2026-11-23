@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -118,18 +120,23 @@ public abstract class Listener extends MRec implements Addressable, Closeable {
     /**
      * THE Q-PROCS A SERVER'S CONFIG DECLARES ARE ITS OWN (Marko, 2026-11-23): {@code ws_server::[…, q=>[analq::[…]]]}
      * puts each on this listener, one with a pattern this listener already speaks taking that one's place, so a server
-     * states its analq's cap as any space does. A server that declares none keeps the analq it was built with. A socket
-     * another machine already holds is that one listener, so a config that joins it declares on it too.
+     * states its analq's cap as any space does. A server that declares none keeps the analq it was built with. The
+     * factories declare only on a socket they bind: a config that joins a socket another machine holds leaves that
+     * listener's q-procs as they are. The list is replaced whole, never edited in place, since a live socket's threads
+     * read it.
      */
     public Listener declare(final Rec config) {
         final Obj q = config.at(uri(QPROC));
-        if (q.isLst())
-            q.asLst().elements().forEach(each -> {
-                if (each instanceof QProc proc) {
-                    this.qs().lstValue().removeIf(held -> held instanceof QProc h && h.pattern().equals(proc.pattern()));
-                    this.addQ(proc);
-                }
-            });
+        if (!q.isLst())
+            return this;
+        final List<Obj> qs = new ArrayList<>(this.qs().lstValue());
+        q.asLst().elements().forEach(each -> {
+            if (each instanceof QProc proc) {
+                qs.removeIf(held -> held instanceof QProc h && h.pattern().equals(proc.pattern()));
+                qs.add(proc);
+            }
+        });
+        this.at(uri(QPROC), lst(qs), MUTABLE);
         return this;
     }
 
