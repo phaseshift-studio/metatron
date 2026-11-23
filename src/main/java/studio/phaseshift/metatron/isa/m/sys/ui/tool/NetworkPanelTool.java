@@ -317,18 +317,9 @@ public class NetworkPanelTool extends AccordionWidget {
         // THE COUNTS ARE THE NETWORK'S METERS, not the window's: the wire is counted at its taps, beside the rows, so a
         // frozen view still reports the live totals
         final ToLongFunction<fURI> wire = probe -> analysis.at(uri(f(WIRE).extend(probe))).orElse(jnt(0)).intValue();
-        final long timeouts = wire.applyAsLong(f(TIMEOUT));
-        // the color LETTER, so it can be dropped into a tag: a timeout tints the trip count and stays quiet otherwise
-        final String trouble = timeouts > 0 ? "r" : "y";
-        // A CROSS, NOT A TIMEPIECE. This is a count of deadlines that were missed, and an hourglass beside live
-        // numbers reads as a clock — which is exactly how it was misread. Drawn only when there is one, so a
-        // healthy wire says nothing at all.
-        final String alarms = timeouts > 0 ? " {{w}}\u2717 {{r}}%d{{w}}".formatted(timeouts) : "";
-        lines.add(new LineUI(MiniWidget.clip("{{c}}⇄{{%s}}%d {{c}}↓{{%s}}%d {{c}}↑{{%s}}%d%s  {{y}}%d peer%s%s"
-                        .formatted(trouble, wire.applyAsLong(f(TRIP).extend(COUNT)),
-                                trouble, wire.applyAsLong(f(RECV)),
-                                trouble, wire.applyAsLong(f(SENT)),
-                                alarms,
+        lines.add(new LineUI(MiniWidget.clip("{{c}}↓{{y}}%d {{c}}↑{{y}}%d  {{y}}%d peer%s%s"
+                        .formatted(wire.applyAsLong(f(RECV)),
+                                wire.applyAsLong(f(SENT)),
                                 snapshot.lanes().size(),
                                 1 == snapshot.lanes().size() ? "" : "s",
                                 paused ? "  {{r}}PAUSED" : ""),
@@ -340,6 +331,9 @@ public class NetworkPanelTool extends AccordionWidget {
             if (!peerFilter.isEmpty() && !lane.peer().contains(peerFilter))
                 continue;
             final String last = lane.lastLatencyMs() < 0 ? "" : "  {{y}}" + lane.lastLatencyMs() + "ms{{X}}";
+            // A CROSS, NOT A TIMEPIECE. This is a count of deadlines that were missed, and an hourglass beside live
+            // numbers reads as a clock — which is exactly how it was misread. Drawn only when there is one, so a
+            // healthy lane says nothing at all.
             final String timeout = lane.timeouts() > 0 ? "  {{r}}\u2717 " + lane.timeouts() : "";
             final boolean laneFolded = folded.contains(lane.peer());
             // THE LANE MARKER IS THE PER-PEER ACCORDION: ▼ when the lane is open, ▶ when it is closed to its

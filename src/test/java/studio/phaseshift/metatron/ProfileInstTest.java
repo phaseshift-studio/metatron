@@ -24,8 +24,13 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.HITS;
+import static studio.phaseshift.metatron.Tokens.HIT_RATE;
+import static studio.phaseshift.metatron.Tokens.MISSES;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * {@code profile()} — the {@code profile::T} instruction that times the resolve (compile) and
@@ -75,5 +80,20 @@ public class ProfileInstTest extends AbstractMetatronTest {
     public void testBareProfileIsNoOp() {
         // bare profile() with no preceding code is a no-op (returns the lhs), like bare explain()
         assertFalse(ObjmtronSerializer.eval("1.plus(2)").isFail(), "sanity: 1.plus(2) evals");
+    }
+
+    /**
+     * THE CACHE STATS ARE READ OFF THE PROFILE'S OWN ANALYZER: the timed runs look types up, each lookup counted as a
+     * hit or a miss into the analyzer the runs are profiled into, and the rate is those counts' own.
+     */
+    @Test
+    public void testCacheStatsAreTheTimedRunsOwn() {
+        final Obj cache = ObjmtronSerializer.eval("1.plus(2).profile()>>cache");
+        assertFalse(cache.isFail(), "profile()>>cache should not fail: " + cache);
+        final long hits = cache.asRec().at(uri(HITS)).intValue();
+        final long misses = cache.asRec().at(uri(MISSES)).intValue();
+        assertTrue(hits + misses > 0, "the timed runs look types up, and every lookup is counted: " + cache);
+        assertEquals((double) hits / (double) (hits + misses), cache.asRec().at(uri(HIT_RATE)).realValue(), 1e-9,
+                "the rate is the counts' own: " + cache);
     }
 }

@@ -328,7 +328,7 @@ public class machInstSet extends AbstractInstSet {
                                         uri(STATE).maybe(), "the run state: stop, run or pause",
                                         uri(RESULT).maybe(), "the objs the last evaluation produced",
                                         uri(TRACER).maybe(), "the processor's diagnostics (tracer::T), as the compiler's typer is its type checking: a pushed machine's processor carries a copy of its parent's",
-                                        uri(ANALYZER).maybe(), "the processor's statistics (analyzer::T): with profile=>true every evaluation's monad flow and stage timings are measured into it (apply, flow, per_inst, resolve, rewrite, repeat), at ~/processor/analyzer/analysis"))
+                                        uri(ANALYZER).maybe(), "the processor's statistics (analyzer::T): with profile=>true every evaluation's monad flow and stage timings are measured into it (apply, flow, per_inst, resolve, rewrite, repeat, cache), at ~/processor/analyzer/analysis"))
                                 .slots(mutableMap(
                                         uri(COMPUTER), "the computers this processor minted, one per evaluation, by number: computer/<n>; an evaluation's uncaught fails are filed in its computer's stack, computer/<n>/fail",
                                         uri("fail"), "the machine's fail stack: an uncaught fail raised outside any evaluation, keyed by ?incrq; read with @ to keep each fail's address, so that catching it removes it"))

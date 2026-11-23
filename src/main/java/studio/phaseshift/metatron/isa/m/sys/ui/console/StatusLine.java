@@ -241,22 +241,15 @@ public class StatusLine implements Runnable, AutoCloseable {
     }
 
     /**
-     * The wire's gauge: completed round trips, frames received, frames sent — the network's meters
-     * ({@code ~/network/analyzer/analysis/wire}).
+     * The wire's gauge: frames received, frames sent — the network's meters ({@code ~/network/analyzer/analysis/wire}).
      * <p>
      * It replaces the bytes-in/out widgets, which read a counter fed by LLM token bytes, MQTT payloads and database
      * reads as well as sockets, so it never measured the network — and which were computed once at construction and
-     * never changed again.
-     * <p>
-     * A wire that is answering is the normal state, so it reads quietly; a timeout tints the trip count red. A pure
-     * function of the analysis it is handed, so it is tested like the banner.
+     * never changed again. A pure function of the analysis it is handed, so it is tested like the banner.
      */
     static String netMarkup(final String fore, final String back, final Analysis analysis) {
         final ToLongFunction<fURI> wire = probe -> analysis.at(uri(f(WIRE).extend(probe))).orElse(jnt(0)).intValue();
-        // a timeout tints the trip count and nothing else: the bar is a glance, the timeouts themselves are the
-        // panel's to itemize (see NetworkPanelTool)
-        return " {{W}}⇄{{%s&[%s]}}%d {{W}}↓{{%s&[%s]}}%d {{W}}↑{{%s&[%s]}}%d".formatted(
-                wire.applyAsLong(f(TIMEOUT)) > 0 ? "r" : fore, back, wire.applyAsLong(f(TRIP).extend(COUNT)),
+        return " {{W}}↓{{%s&[%s]}}%d {{W}}↑{{%s&[%s]}}%d".formatted(
                 fore, back, wire.applyAsLong(f(RECV)),
                 fore, back, wire.applyAsLong(f(SENT)));
     }

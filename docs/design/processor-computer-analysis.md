@@ -322,44 +322,55 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
 7. **Events are not meters.** A record of individual occurrences (`WireTrace`'s exchanges) is a bounded ring a human
    reads; the counts behind it are the producer's meters, counted at the same tap.
 
-### `analyzable` — the owner side, and `Analyzable.Helper` (2026-11-15)
+### `Recorder` and `?analq` — the recording side (2026-11-15, revised 2026-11-16)
 
-`Analyzer` is the *instrument*; **`Analyzable`** is the thing that carries one. A component is not automatically
-analyzable, and an analyzer is not a component: `Analyzer` extends `Rec`, and `Analyzable extends Rec` is a mixin any
-rec — a component, a listener (server), or later a data-path space — opts into.
+`Analyzer` is the *instrument*. A component that OWNS one is an `Analyzer.Aggregator` (`Component` extends it; the
+network and the processor carry one). A thing that RECORDS into one is an `Analyzer.Recorder`: today that is `Listener`,
+and the analyzer it records into is the one its own `?analq` q-proc holds.
 
-- `Analyzable.analyzer()` answers the analyzer it records into (null when it carries none → recording is a noop);
-  `Analyzable.group()` answers the group it records under inside a shared analyzer.
-- **`Analyzable.Helper.incr/set/record/timed`** are the one gated recording path: a producer calls
-  `Helper.timed(this, latency, this::doRead)` and never considers whether its analyzer is absent or muted, nor where the
-  group lives. `timed` wraps the work — the `t0`-before/`record`-after/skip-`nanoTime`-when-off idiom lives once, in the
-  Helper, so a muted producer pays one `null` read and runs its work bare.
-- **`Analyzable.Helper.locateBase(path)`** is the `locateBasePoly` walk, for analyzers: retract up from `path` until an
-  `analyzer::T` is read, and the retracted tail is the group. A server's `analyzer => ~/network/analyzer/web_analyzer/http`
-  binds to the network's analyzer under group `web_analyzer/http`, so many servers share one meter store and each is
-  discriminated by its group (`web_analyzer/http`, `web_analyzer/mqtt`, `web_analyzer/ws`) — and the flattened total
-  remains a read-time derivation over those groups.
-- **The servers** (`http_server`, `mqtt_server`, `ws_server`) are `Analyzable` via their common `Listener`: their
-  `analyzer => path` config is resolved once at construction, and their request/message/connection taps call the Helper.
+- **`Recorder.Helper.incr/set/record/timed`** are the gated recording path: a producer never considers whether its
+  analyzer is absent or muted. `timed` wraps the work — the `t0`-before/`record`-after/skip-`nanoTime`-when-off idiom
+  lives once, in the Helper, so a muted producer pays one `null` read and runs its work bare.
+- **A data space** records through the `?analq` q-proc it declares (`QCollection.analQ()`): `QProc.Layer` counts and
+  times every read and write handed to the space, deletes as a subset of the writes, and the space answers them flat at
+  `*<pattern>?analq` (`read => [count, latency], write => [count, latency, delete => [count, latency]]`). An access that
+  carries a query is metadata traffic and is not counted.
+- **A server** (`http_server`, `ws_server`, `mqtt_server`) is an addressable source carrying its own `?analq` from
+  construction (`Listener`), so `*<origin>/#?analq` answers that socket's analysis: a request or a received message is
+  a read at its wire address, a sent message a write, a hang-up a write of `noobj`, and `connections` a gauge set
+  through `Recorder.Helper`. Two servers on one machine never share meters.
+- The 2026-11-15 design bound each server to a shared bucket under the network's analyzer
+  (`analyzer => ~/network/analyzer/web_analyzer/http`, resolved by `Analyzable.Helper.locateBase`). The per-socket
+  `?analq` replaced it on 2026-11-16; `Recorder.Helper.locateBaseAnalyzer` is that walk's remnant.
 
 **Producers today.**
 
 | component | probe | kind | where it is counted |
 |---|---|---|---|
 | network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`, `WebSocketRec.onMessage` |
+| a listener or a data space (`?analq`) | `read/{count, latency}`, `write/{count, latency}`, `write/delete/{count, latency}` | counter, timer | `QProc.Layer`, around the source's own access |
+| a listener | `connections` | gauge | `wsServer`, `mqttServer`, as sessions open and close |
 | processor (profiled) | `apply/split`, `apply/apply`, `apply/next` | timer | `BasicSwarmComputer.split`, `StatefulMonad.apply/next` |
 | processor (profiled) | `flow/monads`, `flow/c_sum`, `flow/processors` | counter | the monad loop, each computer minted |
 | processor (profiled) | `per_inst/<vid>/{monad_in, monad_out, c_in, c_out}`, `…/time` | counter, timer | `StatefulMonad`, the barrier |
 | processor (profiled) | `resolve/{inst_resolve, generic_binding, inst_composition}` | timer | `SpecificitySelector`, `GenericBinder` |
 | processor (profiled) | `rewrite/<rule>/{in, out, time}` | counter, timer | `FixPointRewriter`, per rule |
 | processor (profiled) | `repeat/{esc, emit, until, code, state}`, `repeat/loop` | timer, counter | `repeat()` |
+| processor (profiled) | `cache/{hits, misses}` | counter | `TypeGraph.memo`, per type lookup |
 
-The status line's wire gauge and the network panel's summary read the network analyzer, and the panel repaints as a
-`?subq` subscriber to it. `profile()` builds its `profiling::T` report from its scoped analyzer.
+"Profiled" is the analyzer in `Analyzer.PROFILE`: the one `profile()` scopes around its timed runs, or the processor's
+own while its `profile` setting is on.
+
+The status line's wire gauge (`↓ ↑`) and the network panel's summary read the network analyzer's `wire/recv` and
+`wire/sent`, and the panel repaints as a `?subq` subscriber to it. `profile()` builds its whole `profiling::T` report
+from its scoped analyzer, the `cache` section included: the type graph's hits and misses during the timed runs.
 
 **Retired.** `WireStats` (static atomics with a private listener list); the network analyzer's `wire/trip` and
-`wire/timeout` (the raw round-trip timer and deadline-miss counter, retired when the servers moved onto the
-`web_analyzer` buckets); the process-global profiling accumulators
+`wire/timeout` (the raw round-trip timer and deadline-miss counter), retired 2026-11-15 when the servers moved onto the
+`web_analyzer` buckets, and on 2026-11-22 their last readers: the status line's `⇄` count and the network panel's
+summary `⇄`/`✗` (a lane's own exchange and timeout counts are WireTrace's rows, and stay). The type graph's own
+hit/miss/skip counters, which `profile()` zeroed with `resetStats()` for every evaluation on the machine (2026-11-22:
+the hits and misses are probes on the profile's analyzer). The process-global profiling accumulators
 (`StatefulMonad.T_*`/`INST_*`/`MONADS`/`COEFF_SUM`/`T_REPEAT_*`, `ScoringResolver.T_*`,
 `FixPointRewriter.REWRITE_*`, `BasicSwarmComputer.PROCESSORS`), which every evaluation paid for in the monad loop and
 every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicStats`, which recorded nothing —
@@ -367,6 +378,9 @@ every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicSta
 
 **Next.**
 
+- analyzers stored in space (Marko, 2026-11-22): `*/usr/marko/xyz?analq` answers the analyzer stored at
+  `/memory/space/usr/marko/analyzer`, narrowed to `xyz` (how many reads and writes hit it), and `*/usr/marko/#?analq`
+  is the analysis of the whole space;
 - the OpenMetrics serializer and an `http_server` route over `~/+/analyzer/analysis` (the Grafana path);
 - a query-execution timer — open: whether nested argument evaluations (each a computer) belong in it, or only the
   evaluations a user submits (`Machine.evaluate`, the console's executor);

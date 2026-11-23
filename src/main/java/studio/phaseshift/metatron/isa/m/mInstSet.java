@@ -2076,12 +2076,10 @@ public class mInstSet extends AbstractInstSet {
         } catch (final Throwable ignored) {
             // cold-start semi-resolution may throw; the timed loop below will surface a real failure
         }
-        final TypeGraph graph = Machine.current().memory().typeGraph();
-        graph.resetStats();
         // THE TIMED RUNS ARE PROFILED INTO AN ANALYZER OF THEIR OWN: every probe they pass -- the resolver's stages, each
-        // rewrite rule, the processor's split/apply/next, each instruction's flow -- records into it and nowhere else, so
-        // a profile measures exactly its own runs (never a concurrent evaluation's) and zeroes no one's meters. The
-        // warm-up above is not profiled.
+        // rewrite rule, the processor's split/apply/next, each instruction's flow, the type graph's hits and misses --
+        // records into it and nowhere else, so a profile measures exactly its own runs (never a concurrent evaluation's)
+        // and zeroes no one's meters. The warm-up above is not profiled.
         final Analyzer profile = new BasicAnalyzer();
         final Analyzer outer = Analyzer.PROFILE.get();
         final int iters = 5;
@@ -2135,6 +2133,8 @@ public class mInstSet extends AbstractInstSet {
         final long totalRuleTime = rules.stream().mapToLong(rule -> ruleTime.applyAsLong(rule.getValue())).sum();
         final long monads = read.applyAsLong(f(FLOW).extend(MONADS));
         final long coeffSum = read.applyAsLong(f(FLOW).extend(C_SUM));
+        final long hits = read.applyAsLong(f(CACHE).extend(HITS));
+        final long misses = read.applyAsLong(f(CACHE).extend(MISSES));
         final double ms = 1_000_000.0; // nanos -> millis
         // per-rewrite-rule reduction records, sorted by time (the order the text table reads them in)
         final List<Obj> ruleRecs = rules.stream()
@@ -2183,9 +2183,10 @@ public class mInstSet extends AbstractInstSet {
                         uri(MONADS), jnt(monads), uri(C_SUM), jnt(coeffSum),
                         uri(COMPRESSION), real(0L == monads ? 0.0 : (double) coeffSum / (double) monads),
                         uri(PROCESSORS), jnt(read.applyAsLong(f(FLOW).extend(PROCESSORS)))),
+                // the type graph's lookups during the timed runs; a run that looked nothing up missed nothing
                 uri(CACHE), rec(
-                        uri(HITS), jnt(graph.hits()), uri(MISSES), jnt(graph.misses()),
-                        uri(HIT_RATE), real(graph.hitRate())));
+                        uri(HITS), jnt(hits), uri(MISSES), jnt(misses),
+                        uri(HIT_RATE), real(0L == hits + misses ? 1.0 : (double) hits / (double) (hits + misses))));
         // the text is rendered from the fields, as a nesting master renders a place's, and the format leads the report
         final String text = profileText(rec(fields), true);
         final Map<Obj, Obj> report = mutableMap(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str("\n" + text))));

@@ -76,13 +76,12 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
-     * A round trip as the tap records it (WebSocketObj.sendRecv): a row in the window and an observation of the
-     * network's round-trip timer, beside it.
+     * A round trip as the tap records it (WebSocketObj.sendRecv): a row in the window. The network keeps no meter for
+     * it — its frames are counted where they cross the socket (send/onMessage).
      */
     private void exchange(final String peer, final String request, final long elapsedMs) {
         WireTrace.exchange(peer, null, str(request), str("answer:" + request), System.currentTimeMillis(),
                 elapsedMs, WireTrace.Outcome.OK);
-        this.wire.record(f(WIRE), f(TRIP), elapsedMs * 1_000_000L);
     }
 
     private static String plain(final String line) {
@@ -100,19 +99,19 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
-     * The summary line leads with the three counts the status gauge shows, so the panel and the bar never disagree.
+     * The summary line leads with the two counts the status gauge shows, so the panel and the bar never disagree.
      */
     @Test
     void shouldLeadWithTheWireCounts() {
         exchange(PEER_A, "1.plus(1)", 4L);
         exchange(PEER_A, "2.plus(2)", 6L);
+        // EVERY COUNT IS A WIRE FACT, the network's meter counted where frames cross the socket (send/onMessage) --
+        // never the window's rows, which hold two exchanges here
+        this.wire.incr(f(WIRE), f(RECV), 3L);
+        this.wire.incr(f(WIRE), f(SENT), 5L);
         final String summary = plain(lines(false, 12, "", 120).getFirst());
-        assertTrue(summary.contains("⇄2"), "two round trips completed: " + summary);
+        assertTrue(summary.startsWith("↓3 ↑5"), "the frames each way, read off the network's meters: " + summary);
         assertTrue(summary.contains("1 peer"), "one lane is described: " + summary);
-        // EVERY COUNT IS A WIRE FACT, the network's meter counted at its tap: the round trips this fixture records as the
-        // tap does, but ↓/↑ are counted where frames are (send/onMessage), so they stay at zero here -- the honest answer
-        assertTrue(summary.contains("↓0") && summary.contains("↑0"),
-                "frames are counted by the socket tap, not invented by the ledger: " + summary);
     }
 
     /**
@@ -309,17 +308,16 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
-     * A timeout is drawn in the lane that suffered it, on the summary line and in the lane's own count.
+     * A timeout is drawn in the lane that suffered it, in the lane's own count. The summary line carries the network's
+     * meters only, and the network keeps no timeout meter.
      */
     @Test
-    void shouldMarkATimeoutOnTheSummaryAndTheLane() {
+    void shouldMarkATimeoutOnItsLane() {
         WireTrace.exchange(PEER_B, null, str("ping"), null, System.currentTimeMillis(), 30_000L,
                 WireTrace.Outcome.TIMEOUT);
-        // the tap counts the missed deadline beside the row
-        this.wire.incr(f(WIRE), f(TIMEOUT), 1L);
         final List<String> lines = lines(false, 12, "", 120);
-        assertTrue(plain(lines.getFirst()).contains("✗ 1"), "the summary counts the timeout with a cross, not a clock: " + plain(lines.getFirst()));
-        assertTrue(plain(lines.get(1)).contains("✗ 1"), "and the lane does too: " + plain(lines.get(1)));
+        assertFalse(plain(lines.getFirst()).contains("✗"), "the summary counts no timeout: " + plain(lines.getFirst()));
+        assertTrue(plain(lines.get(1)).contains("✗ 1"), "the lane counts it with a cross, not a clock: " + plain(lines.get(1)));
         assertTrue(plain(lines.get(2)).contains("timeout"), "the exchange says what happened: " + plain(lines.get(2)));
         assertEquals(3, lines.size(), "nothing came back, so nothing is tabbed under it: " + lines);
     }

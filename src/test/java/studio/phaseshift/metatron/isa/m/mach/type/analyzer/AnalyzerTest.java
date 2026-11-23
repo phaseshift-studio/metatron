@@ -78,11 +78,11 @@ public class AnalyzerTest extends AbstractMetatronTest {
      */
     private static final long PUBLISHED_MS = 4 * BasicAnalyzer.DEFAULT_STEP;
 
-    private static Analysis measured(final long sent, final long... trips) {
+    private static Analysis measured(final long sent, final long... splits) {
         final Analyzer analyzer = new BasicAnalyzer();
         analyzer.incr(f(WIRE), f(SENT), sent);
-        for (final long trip : trips)
-            analyzer.record(f(WIRE), f(TRIP), trip);
+        for (final long split : splits)
+            analyzer.record(f(APPLY), f(SPLIT), split);
         return analyzer.analysis();
     }
 
@@ -158,7 +158,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
             final List<Future<?>> running = IntStream.range(0, threads).<Future<?>>mapToObj(t -> pool.submit(() -> {
                 for (int i = 1; i <= each; i++) {
                     analyzer.incr(f(WIRE), f(SENT), 1L);
-                    analyzer.record(f(WIRE), f(TRIP), i);
+                    analyzer.record(f(APPLY), f(SPLIT), i);
                 }
             })).toList();
             for (final Future<?> run : running)
@@ -168,10 +168,10 @@ public class AnalyzerTest extends AbstractMetatronTest {
         }
         final Analysis analysis = analyzer.analysis();
         assertEquals((long) threads * each, read(analysis, "wire/sent"), "every increment counted");
-        assertEquals((long) threads * each, read(analysis, "wire/trip/count"), "every observation counted");
-        assertEquals((long) threads * each * (each + 1) / 2, read(analysis, "wire/trip/total"), "and summed");
-        assertEquals(1L, read(analysis, "wire/trip/min"), "the least kept");
-        assertEquals(each, read(analysis, "wire/trip/max"), "the greatest kept");
+        assertEquals((long) threads * each, read(analysis, "apply/split/count"), "every observation counted");
+        assertEquals((long) threads * each * (each + 1) / 2, read(analysis, "apply/split/total"), "and summed");
+        assertEquals(1L, read(analysis, "apply/split/min"), "the least kept");
+        assertEquals(each, read(analysis, "apply/split/max"), "the greatest kept");
     }
 
     /**
@@ -199,10 +199,10 @@ public class AnalyzerTest extends AbstractMetatronTest {
         final Analysis c = measured(4L, 20L);
         final Analysis ab = Analysis.Helper.merge(a, b);
         assertEquals(3L, read(ab, "wire/sent"), "counters add");
-        assertEquals(3L, read(ab, "wire/trip/count"), "timers combine their counts");
-        assertEquals(45L, read(ab, "wire/trip/total"), "and their totals");
-        assertEquals(5L, read(ab, "wire/trip/min"), "the least of the leasts");
-        assertEquals(30L, read(ab, "wire/trip/max"), "the greatest of the greatests");
+        assertEquals(3L, read(ab, "apply/split/count"), "timers combine their counts");
+        assertEquals(45L, read(ab, "apply/split/total"), "and their totals");
+        assertEquals(5L, read(ab, "apply/split/min"), "the least of the leasts");
+        assertEquals(30L, read(ab, "apply/split/max"), "the greatest of the greatests");
         assertEquals(Analysis.Helper.merge(ab, c), Analysis.Helper.merge(a, Analysis.Helper.merge(b, c)), "associative");
         assertEquals(ab, Analysis.Helper.merge(b, a), "commutative: counters and timers are order-free");
         final Analysis empty = new BasicAnalyzer().analysis();
@@ -456,6 +456,8 @@ public class AnalyzerTest extends AbstractMetatronTest {
             assertTrue(read(measured, "flow/processors") > 0, "and its computers: " + measured);
             assertTrue(read(measured, "apply/apply/count") > 0, "its applies timed: " + measured);
             assertTrue(read(measured, "resolve/inst_resolve/count") > 0, "its resolution timed: " + measured);
+            assertTrue(read(measured, "cache/hits") + read(measured, "cache/misses") > 0,
+                    "its type lookups counted: " + measured);
             assertFalse(measured.at(uri(PER_INST)).isNoObj(), "and each instruction's flow kept: " + measured);
             assertTrue(processor.analysis().isEmpty(), "nothing leaked into the processor's own analyzer");
             final long monads = read(measured, "flow/monads");
@@ -501,7 +503,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
     // ======================== derived fields ========================
 
     /**
-     * A DERIVED FIELD IS A CUSTOM ANALYSIS OVER THE ANALYSIS: a metric no analyzable emits can be attached to the
+     * A DERIVED FIELD IS A CUSTOM ANALYSIS OVER THE ANALYSIS: a metric no producer records can be attached to the
      * analyzer as an auto field, computed on read over the live analysis — a sibling of the analysis, never part of its
      * mergeable core.
      */
@@ -509,19 +511,19 @@ public class AnalyzerTest extends AbstractMetatronTest {
     void shouldComputeADerivedFieldOverTheAnalysis() {
         final Machine machine = Machine.current().push(f("analyzer_derived"));
         try {
+            // a pushed machine's network is a level of its own, with meters of its own: they start at zero
             final Analyzer analyzer = machine.network().analyzer();
-            analyzer.incr(f("web_analyzer/http"), f("requests"), 100L);
-            analyzer.incr(f("web_analyzer/mqtt/messages"), f("sent"), 50L);
-            // total = requests + messages/sent, attached to the analyzer as a derived (auto) field
+            analyzer.incr(f(WIRE), f(SENT), 100L);
+            analyzer.incr(f(WIRE), f(RECV), 50L);
+            // total = wire/sent + wire/recv, attached to the analyzer as a derived (auto) field
             Machine.write(f("~/network/analyzer/total"),
                     auto_(instLambda(lhs -> {
                         final Analysis analysis = analyzer.analysis();
-                        return jnt(analysis.at(uri("web_analyzer/http/requests")).intValue()
-                                + analysis.at(uri("web_analyzer/mqtt/messages/sent")).intValue());
+                        return jnt(analysis.at(uri("wire/sent")).intValue() + analysis.at(uri("wire/recv")).intValue());
                     })).tryToInst());
             assertEquals(150L, Machine.read(f("~/network/analyzer/total")).intValue(),
                     "a derived field computes over the live analysis");
-            analyzer.incr(f("web_analyzer/http"), f("requests"), 5L);
+            analyzer.incr(f(WIRE), f(SENT), 5L);
             assertEquals(155L, Machine.read(f("~/network/analyzer/total")).intValue(),
                     "and re-derives as the meters move");
             assertTrue(Machine.read(f("~/network/analyzer/analysis")).asRec().at(uri("total")).isNoObj(),

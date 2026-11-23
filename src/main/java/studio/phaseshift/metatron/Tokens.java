@@ -495,12 +495,11 @@ public final class Tokens {
     public static final String STEP = "step";
     public static final String PROFILE = "profile";
     public static final String ENABLED = "enabled";
-    // the network analyzer's probes (Marko, 2026-11-13: wire/{sent,recv,trip,timeout}): the frames that crossed a
-    // socket each way, and the round trips that completed on it
+    // the network analyzer's probes (Marko, 2026-11-13): wire/{sent,recv}, the frames that crossed a socket each way
+    // (the round trips themselves are WireTrace's rows, not meters)
     public static final String WIRE = "wire";
     public static final String SENT = "sent";
     public static final String RECV = "recv";
-    public static final String TRIP = "trip";
     public static final String SELECTOR = "selector";
     public static final String BINDER = "binder";
     // profiling::T rec keys — the structured profile() report

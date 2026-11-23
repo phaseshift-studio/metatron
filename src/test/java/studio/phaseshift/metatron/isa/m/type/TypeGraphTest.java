@@ -25,6 +25,9 @@ import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -38,6 +41,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * the type-structure cache: memoization hits, invalidation on type-path
@@ -77,6 +81,34 @@ public class TypeGraphTest extends AbstractMetatronTest {
         final Type second = graph.memo(key, resolve);
         assertSame(first, second, "the memo must hand back the cached instance: first= " + first + " second= " + second);
         assertEquals(1, resolves.get(), "a cached resolution must not re-run the resolver: resolves=" + resolves.get());
+    }
+
+    /**
+     * A PROFILED LOOKUP IS COUNTED IN ITS PROFILE: each hit and miss lands in the analyzer the run is profiled into
+     * (cache/hits, cache/misses), and a lookup outside any profile is counted nowhere -- the graph keeps no counters
+     * of its own for one profile to reset under another.
+     */
+    @Test
+    public void testProfiledLookupsCountIntoTheProfile() {
+        final TypeGraph graph = Machine.current().memory().typeGraph();
+        // resolved once, up front: a resolver that walked the graph itself would add lookups of its own to the counts
+        final Type type = MType.T(f("int"));
+        final TypeGraph.Key key = new TypeGraph.Key(f("int").big(), null, null, null);
+        graph.memo(key, () -> type);
+        final Analyzer profile = new BasicAnalyzer();
+        Analyzer.PROFILE.set(profile);
+        try {
+            graph.memo(key, () -> type);    // a hit
+            graph.clear();
+            graph.memo(key, () -> type);    // a miss, cached again
+            graph.memo(key, () -> type);    // a hit
+        } finally {
+            Analyzer.PROFILE.remove();
+        }
+        graph.memo(key, () -> type);        // outside the profile again
+        final Analysis analysis = profile.analysis();
+        assertEquals(2L, analysis.at(uri("cache/hits")).intValue(), "the profiled hits, and only those: " + analysis);
+        assertEquals(1L, analysis.at(uri("cache/misses")).intValue(), "the profiled miss: " + analysis);
     }
 
     @Test

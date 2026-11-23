@@ -719,7 +719,7 @@ public final class CommandPalette extends MRec {
     private static final int NETWORK_PANEL_HEIGHT = 20;
 
     /**
-     * Open the network panel as a floating widget — the status bar's wire gauge ({@code ⇄ ↓ ↑}) calls this. The
+     * Open the network panel as a floating widget — the status bar's wire gauge ({@code ↓ ↑}) calls this. The
      * size is the panel's natural size capped by the terminal, so a small window still gets a panel that fits; its
      * row budget is the box's interior, so the panel fills the viewport instead of leaving rows unused.
      * <p>

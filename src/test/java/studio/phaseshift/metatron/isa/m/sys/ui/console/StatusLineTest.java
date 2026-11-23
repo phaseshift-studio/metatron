@@ -107,18 +107,16 @@ public class StatusLineTest extends AbstractMetatronTest {
     }
 
     /**
-     * The wire's gauge: the three counts that replaced bytes-in/out, as the bar renders them.
+     * The wire's gauge: the two counts that replaced bytes-in/out, as the bar renders them.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "0  % 0 % 0 % ⇄0 ↓0 ↑0   % an idle wire reads as zeros, not as an error",
-            "12 % 8 % 4 % ⇄12 ↓8 ↑4  % trips, arrivals and departures are counted separately",
+            "0 % 0 % ↓0 ↑0  % an idle wire reads as zeros, not as an error",
+            "8 % 4 % ↓8 ↑4  % arrivals and departures are counted separately",
     }, delimiter = '%')
-    void testNetGauge(final long trips, final long received, final long sent, final String expected, final String description) {
+    void testNetGauge(final long received, final long sent, final String expected, final String description) {
         // the network's meters, as the wire taps record them (WebSocketObj, WebSocketRec)
         final Analyzer wire = new BasicAnalyzer();
-        for (int i = 0; i < trips; i++)
-            wire.record(f(WIRE), f(TRIP), 5_000_000L);
         wire.incr(f(WIRE), f(RECV), received);
         wire.incr(f(WIRE), f(SENT), sent);
         assertEquals(expected, Graphitty.strip(StatusLine.netMarkup("y", BACK, wire.analysis())).trim(), description);
@@ -139,17 +137,18 @@ public class StatusLineTest extends AbstractMetatronTest {
     }
 
     /**
-     * A wire that answers is the normal state and stays quiet; a timed-out one says so in color, without changing
-     * the counts.
+     * THE GAUGE SHOWS ONLY WHAT THE TAPS RECORD: the round-trip timer and the timeout counter were retired from the
+     * network's analyzer, so a probe left under their old names neither counts nor colors the bar.
      */
     @Test
-    void shouldTintTheTripCountOnlyWhenTheWireHasTimedOut() {
+    void shouldShowOnlyTheProbesTheTapsRecord() {
         final Analyzer wire = new BasicAnalyzer();
-        assertFalse(StatusLine.netMarkup("y", BACK, wire.analysis()).contains("{{r&"), "an answering wire is quiet");
+        wire.record(f(WIRE), f("trip"), 5_000_000L);
         wire.incr(f(WIRE), f(TIMEOUT), 1L);
-        assertTrue(StatusLine.netMarkup("y", BACK, wire.analysis()).contains("{{r&"), "a timeout is the one thing worth a color");
-        assertEquals("⇄0 ↓0 ↑0", Graphitty.strip(StatusLine.netMarkup("y", BACK, wire.analysis())).trim(),
-                "the count is unchanged — only its color is");
+        wire.incr(f(WIRE), f(RECV), 2L);
+        final String markup = StatusLine.netMarkup("y", BACK, wire.analysis());
+        assertEquals("↓2 ↑0", Graphitty.strip(markup).trim(), "frames each way, and nothing else: " + markup);
+        assertFalse(markup.contains("{{r&"), "no retired probe tints the bar: " + markup);
     }
 
     /**

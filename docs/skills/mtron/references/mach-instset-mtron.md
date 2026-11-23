@@ -275,7 +275,7 @@ either way), which is a different question from the work one server did. An `?an
 answered locally even while a peer is declared at that origin: the meters of a socket this machine holds are not a
 peer's to answer.
 
-A metric no analyzable emits can be attached to the analyzer as a **derived `!` field** — a live computation over the
+A metric no producer records can be attached to the analyzer as a **derived `!` field** — a live computation over the
 analysis, pulled on demand (the mtron form of a recording rule):
 
 ```mtron_pre

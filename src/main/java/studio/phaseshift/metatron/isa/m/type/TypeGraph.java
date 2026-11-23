@@ -20,11 +20,17 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+
+import static studio.phaseshift.metatron.Tokens.CACHE;
+import static studio.phaseshift.metatron.Tokens.HITS;
+import static studio.phaseshift.metatron.Tokens.MISSES;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
  * a cached view over the type registry.
@@ -81,12 +87,6 @@ public final class TypeGraph {
      */
     public static volatile boolean CACHE_ENABLED = true;
 
-    // cache statistics: hits/misses measure the memo hit-rate, skips are the lookups
-    // that bypass the cache entirely (boot window or a degenerate tid==vid==null key)
-    private final AtomicLong hits = new AtomicLong(0);
-    private final AtomicLong misses = new AtomicLong(0);
-    private final AtomicLong skips = new AtomicLong(0);
-
     public TypeGraph() {
     }
 
@@ -104,23 +104,25 @@ public final class TypeGraph {
      * <p>
      * generation-stamped: if an invalidation lands while {@code resolve} is running,
      * the (possibly stale) result is returned to this caller but never cached.
+     * <p>
+     * a PROFILED run ({@link Analyzer#PROFILE}) counts each lookup's hit or miss into its analyzer
+     * ({@code cache/hits}, {@code cache/misses}); the graph keeps no counters of its own, so no profile resets
+     * another's. the profile is read only past the boot window, never inside a static type constant's
+     * {@code <clinit>} chain.
      */
     public Type memo(final Key key, final Supplier<Type> resolve) {
         this.rebind();
-        if (BootLoader.BOOTING || (null == key.tid() && null == key.vid())) {
-            this.skips.incrementAndGet();
+        if (BootLoader.BOOTING || (null == key.tid() && null == key.vid()) || !CACHE_ENABLED)
             return resolve.get();
-        }
-        if (!CACHE_ENABLED) {
-            this.skips.incrementAndGet();
-            return resolve.get();
-        }
+        final Analyzer profile = Analyzer.PROFILE.get();
         final Entry hit = this.resolved.get(key);
         if (null != hit && hit.gen == this.generation.get()) {
-            this.hits.incrementAndGet();
+            if (null != profile)
+                profile.incr(f(CACHE), f(HITS), 1L);
             return hit.type;
         }
-        this.misses.incrementAndGet();
+        if (null != profile)
+            profile.incr(f(CACHE), f(MISSES), 1L);
         final long gen = this.generation.get();
         // WATCH BEFORE RESOLVING: a registration that lands while resolve runs must not lose to it. with
         // the watch in place first, that write's onWrite finds the key watched and bumps the generation,
@@ -207,43 +209,6 @@ public final class TypeGraph {
 
     public long generation() {
         return this.generation.get();
-    }
-
-    /**
-     * number of {@link #memo} lookups that hit the cache.
-     */
-    public long hits() {
-        return this.hits.get();
-    }
-
-    /**
-     * number of {@link #memo} lookups that missed and re-resolved.
-     */
-    public long misses() {
-        return this.misses.get();
-    }
-
-    /**
-     * number of {@link #memo} lookups that bypassed the cache (boot window or degenerate key).
-     */
-    public long skips() {
-        return this.skips.get();
-    }
-
-    /**
-     * fraction of cache lookups that hit, in {@code [0.0, 1.0]}; {@code 1.0} when nothing has been looked up yet.
-     */
-    public double hitRate() {
-        final long h = this.hits.get();
-        final long m = this.misses.get();
-        final long total = h + m;
-        return 0L == total ? 1.0 : (double) h / (double) total;
-    }
-
-    public void resetStats() {
-        this.hits.set(0);
-        this.misses.set(0);
-        this.skips.set(0);
     }
 
     public void clear() {
