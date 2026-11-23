@@ -320,7 +320,10 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
    `~/processor/computer/<n>/analyzer` beside the computer's code and fails: the evaluation's own computer for a
    processor that profiles, the first timed run's for `profile()`. Nested computers record into it without holding it.
    The processor's own analyzer keeps the machine's totals instead, always on: `eval` counts each computer's run as it
-   starts, `time` times it to its end, `fail` counts each fail where it is filed. The totals are the processor's, so
+   starts, `time` times it to its end, `fail` counts each uncaught fail a run halts with — so, as `eval` counts a nested
+   run, a fail a nested evaluation raised counts again in each run it fails, and a boundary that files the answer again
+   (the console's, a reply's) counts nothing. A profile is written as a component's analyzer is, at its computer's
+   address (`~/processor/computer/<n>/analyzer/analysis/flow -> noobj`). The totals are the processor's, so
    they outlive the computers — a FIFO cap on `~/processor/computer/+` (Marko's, in design) evicts a computer's
    profile and leaves the totals.
 5. **Pull is the read; push is `?subq`.** Subscribers use the space's own pubsub:
@@ -346,8 +349,11 @@ records into `Analyzer.PROFILE`.
   profiles nothing as well — and a rec written there later installs a new one, whose meters start at zero (a component
   that samples a gauge registers it with every analyzer it is given, `Aggregator.analyzer(Analyzer)`). Written at
   `analysis/<probe>`, it mutes that probe and its subtree: the analyzer skips it, drops what it counted, and hides a
-  sampled gauge there rather than dropping it; any other value written at the probe lifts the mute. Which analyzer is
-  the gate's choice:
+  sampled gauge there rather than dropping it; any other value written at the probe lifts the mute. The mutes are read
+  at `*~/processor/analyzer/mute`, derived as the analysis is, and a pushed machine's analyzer starts with its parent's,
+  as it starts with its settings. What would change nothing is refused rather than answered: a bool written at the
+  analyzer, a mute of a key inside a meter's reading (`analysis/time/count`), a write at a derived field. Which analyzer
+  is the gate's choice:
   the owner's for the cheap meters that are always on (`network.analyzer()`, the processor's evaluations, a server's
   `analyzer()`), the run's
   (`Analyzer.PROFILE.get()`) for the costly ones a profile switches on. A probe is one path (`wire/recv`,
@@ -386,7 +392,7 @@ records into `Analyzer.PROFILE`.
 | network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`; a frame as it arrives, before it is read or run (`wsServer.evaluate` for a server's session, `WebSocketRecClient.readFrame` for a client) |
 | network | `peer` | gauge, sampled when read | `BasicNetwork`, registered with each analyzer the level is given: the peers it holds |
 | processor | `eval`, `time` | counter, timer | `BasicSwarmComputer`'s run: counted as it starts, timed to its end, nested evaluations included |
-| processor | `fail` | counter | `MFail.incrStackWrap`, where a fail is filed (once: an already-filed fail is answered as it stands) |
+| processor | `fail` | counter | `BasicSwarmComputer`, each uncaught fail a run halts with, beside its filing in the computer's stack |
 | a listener or a data space (`?analq`) | `read/{count, latency}`, `write/{count, latency}`, `write/delete/{count, latency}` | counter, timer | `QProc.Layer`, around the source's own access |
 | a listener | `connections` | gauge | `wsServer`, `mqttServer`, as sessions open and close |
 | an mqtt server | `messages/{received, sent}`, `packets/{received, sent}` | counter | `mqttServer`, through the verbs (its `$SYS` counters read them) |
@@ -427,6 +433,10 @@ every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicSta
 - the query-execution timer is the processor's `time` (2026-11-23), and with `eval` it counts every computer's run,
   nested argument evaluations included — open: whether the evaluations a user submits (`Machine.evaluate`, the
   console's executor) want a count of their own;
+- an evaluation's uncaught fail is filed twice (review, 2026-11-23): the computer files a stamped copy in its stack and
+  halts the unstamped original, so the console, a ws or http reply (`MFail.reported`) files it again in
+  `~/processor/fail`, and an enclosing computer files a nested evaluation's fail in its own stack — open: whether a
+  computer halts the copy it filed, which would also give a reported fail its computer's address;
 - a CODE subscriber to `~/processor/analyzer/analysis?subq` (`sub::[code=>…]`) is evaluated on each delivery, which
   counts an `eval` and so schedules the next publication: it is handed one every step for as long as it subscribes (a
   probe, 2026-11-23: `eval` rose 6 → 12 → 17 over three seconds with no other evaluation, and held at 1 with no

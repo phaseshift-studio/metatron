@@ -68,6 +68,12 @@ public interface Analyzer extends Rec {
     Obj KEY = uri(ANALYZER);
 
     /**
+     * the key its muted probes are read under, {@code *~/processor/analyzer/mute}: derived as it is read, as the analysis
+     * is, and written only through the analysis ({@link #mute})
+     */
+    Obj MUTE = uri("mute");
+
+    /**
      * THE ANALYZER THIS THREAD'S RUN IS PROFILED INTO, or {@code null} when nothing profiles it. {@code profile()} sets
      * one of its own for the runs it times, and a processor whose analyzer has {@code profile} on sets a new one for each
      * evaluation it mints; a computer minted under a profile carries it to whichever thread runs it. Handed to the
@@ -92,9 +98,9 @@ public interface Analyzer extends Rec {
 
     /**
      * a {@code gauge} at {@code probe} whose value is {@code sample}'s, taken each time the analysis is built. Nothing
-     * records it, so it can never miss an event, and muting the analyzer does not hide it (it is read, not recorded) —
-     * and nothing announces it either: a sampled gauge changes without scheduling a publication, and a subscriber sees it
-     * with the next change.
+     * records it, so it can never miss an event; a mute of its probe hides it rather than dropping it, because nothing
+     * would register it again — and nothing announces it either: a sampled gauge changes without scheduling a
+     * publication, and a subscriber sees it with the next change.
      */
     Analyzer gauge(fURI probe, DoubleSupplier sample);
 
@@ -107,7 +113,8 @@ public interface Analyzer extends Rec {
      * MUTE {@code probe} — the analysis key written {@code noobj}, {@code ~/<component>/analyzer/analysis/<probe> -> noobj}
      * — or lift its mute ({@code muted => false}: any other value written there). A muted probe, and every probe below
      * it, records nothing and leaves the analysis; what it had counted is dropped, so a probe written back counts again
-     * from zero. A sampled gauge is only hidden: nothing records it, and it is registered once.
+     * from zero. A sampled gauge is only hidden: nothing records it, and it is registered once. The muted probes are
+     * read at {@link #MUTE}, and an analyzer built from another's rec (a pushed machine's) mutes what that one did.
      */
     Analyzer mute(fURI probe, boolean muted);
 
@@ -229,6 +236,15 @@ public interface Analyzer extends Rec {
         public static void gauge(final Analyzer analyzer, final fURI probe, final DoubleSupplier sample) {
             if (null != analyzer)
                 analyzer.gauge(probe, sample);
+        }
+
+        /**
+         * THE HOLDER HOLDS {@code analyzer} if it is the first to {@link Analyzer#claim} it — what a computer does with
+         * the profile it is minted under
+         */
+        public static void claim(final Aggregator holder, final Analyzer analyzer) {
+            if (null != analyzer && analyzer.claim(holder.vid()))
+                holder.analyzer(analyzer);
         }
 
         /**

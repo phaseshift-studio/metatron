@@ -23,8 +23,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
-import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -214,37 +215,55 @@ public final class MachineSpace extends memSpace {
         // member refused (BasicNetwork); the component's own address is the store's, as every component's is
         if (NETWORK.equals(part) && this.below(vid) && !analyzes)
             return this.owner.network().write(vid, obj);
-        // A COMPONENT'S ANALYZER IS WRITTEN IN PLACE: the analyzer IS the component's meters, so a write at it declares
-        // its settings (step, profile) field by field, and a write below it sets the one field. OFF IS NOOBJ (Marko,
-        // 2026-11-23): noobj at the analyzer removes it -- every verb is then handed null and records nothing -- and a
-        // rec written while it is absent installs a new one; noobj at a key of its analysis mutes that probe, and any
-        // other value written there lifts the mute (the analysis is derived from the meters: what is written is never
-        // its value). A ?subq registers in this space, the one registry. The component is the live one the machine holds.
-        if (analyzes && !vid.hasQ() && this.owner.atDirect(uri(part)) instanceof Component component) {
-            final List<String> segments = vid.qLess().resolve().segments();
-            final List<String> field = segments.subList(this.depth + 2, segments.size());
+        // AN ANALYZER IS WRITTEN IN PLACE: the analyzer IS its holder's meters, so a write at it declares its settings
+        // (step, profile) field by field, and a write below it sets the one field. Its holder is a component's
+        // (<vid>/<component>/analyzer) or held deeper (a profiled evaluation's, <vid>/processor/computer/<n>/analyzer),
+        // reached live. OFF IS NOOBJ (Marko, 2026-11-23): noobj at the analyzer removes it -- every verb is then handed
+        // null and records nothing -- and a rec written while it is absent installs a new one; noobj at a key of its
+        // analysis mutes that probe, and any other value written there lifts the mute. What it derives (the analysis, its
+        // mutes) takes no other write, and neither does a key inside a meter's reading. A ?subq registers in this space.
+        final List<String> segments = vid.qLess().resolve().segments();
+        final int at = null == part || vid.hasQ() || segments.size() <= this.depth + 1 ? -1
+                : this.depth + 1 + segments.subList(this.depth + 1, segments.size()).indexOf(ANALYZER);
+        Obj holder = at > this.depth ? this.owner.atDirect(uri(part)) : noobj();
+        for (final String segment : at > this.depth ? segments.subList(this.depth + 1, at) : List.<String>of())
+            holder = holder.isRec() ? holder.asRec().atDirect(uri(segment)) : noobj();
+        if (holder instanceof Analyzer.Aggregator aggregator) {
+            final List<String> field = segments.subList(at + 1, segments.size());
             final boolean analysis = !field.isEmpty() && ANALYSIS.equals(field.getFirst());
-            final Analyzer analyzer = component.analyzer();
-            if (analysis && 1 == field.size()) {
-                LOG.warn("an analysis is derived from its meters, not written: %s refused", vid);
+            final Analyzer analyzer = aggregator.analyzer();
+            final Set<fURI> meters = Set.of(Analysis.COUNTER_TID, Analysis.GAUGE_TID, Analysis.TIMER_TID);
+            if ((analysis && 1 == field.size()) || (!field.isEmpty() && Analyzer.MUTE.equals(uri(field.getFirst())))) {
+                LOG.warn("an analyzer's analysis and mutes are derived, not written (mute a probe at analysis/<probe>): %s refused", vid);
+                return noobj();
+            }
+            if (field.isEmpty() && !obj.isRec() && !obj.isNoObj()) {
+                LOG.warn("an analyzer is written a rec (its settings) or noobj (off): %s refused", vid);
                 return noobj();
             }
             if (null == analyzer && !field.isEmpty()) {
-                LOG.warn("%s keeps no analyzer (a rec written at it installs one): %s refused", part, vid);
+                LOG.warn("%s keeps no analyzer (a rec written at it installs one): %s refused", holder.vid(), vid);
+                return noobj();
+            }
+            if (analysis && IntStream.range(2, field.size()).anyMatch(end ->
+                    meters.contains(analyzer.analysis().at(uri(String.join("/", field.subList(1, end)))).tid().basePath()))) {
+                LOG.warn("a key inside a meter's reading is no probe: %s refused", vid);
                 return noobj();
             }
             return QProc.Layer.write(this, vid, obj, () -> {
                 if (field.isEmpty() && obj.isNoObj())
-                    component.analyzer(null);
+                    aggregator.analyzer(null);
                 else if (null == analyzer && obj.isRec())
-                    component.analyzer(new BasicAnalyzer(new LinkedHashMap<>(obj.asRec().jvm()), MACH_ANALYZER_TID, null, part));
+                    // a component's publishes at its address; one held deeper is read where it is held
+                    aggregator.analyzer(new BasicAnalyzer(new LinkedHashMap<>(obj.asRec().jvm()), MACH_ANALYZER_TID, null,
+                            at == this.depth + 1 ? part : null));
                 else if (analysis)
                     analyzer.mute(f(String.join("/", field.subList(1, field.size()))), obj.isNoObj());
                 else if (!field.isEmpty())
                     analyzer.at(uri(String.join("/", field)), obj, MUTABLE);
                 else if (obj.isRec())
                     obj.asRec().jvm().forEach((key, value) -> {
-                        if (!uri(ANALYSIS).equals(key))
+                        if (!uri(ANALYSIS).equals(key) && !Analyzer.MUTE.equals(key))
                             analyzer.at(key, value, MUTABLE);
                     });
                 return obj;
@@ -252,7 +271,6 @@ public final class MachineSpace extends memSpace {
         }
         // the instset writes its table doors, ~/instset/<table>/<name>, into this machine's own level (BasicInstSet)
         if (INSTSET.equals(part) && !vid.hasQ()) {
-            final List<String> segments = vid.qLess().resolve().segments();
             if (segments.size() == this.depth + 3 && Set.of(REWRITE, INST, TYPE, CONST).contains(segments.get(this.depth + 1)))
                 return this.owner.instset().write(f(String.join("/", segments.subList(this.depth + 1, segments.size()))), obj);
         }
@@ -266,7 +284,6 @@ public final class MachineSpace extends memSpace {
                 || (PROCESSOR.equals(part) && (!vid.hasQ() || vid.hasQ(QCollection.INCRQ)));
         if (!folds)
             return super.write(vid, obj);
-        final List<String> segments = vid.qLess().resolve().segments();
         final Obj below = uri(String.join("/", segments.subList(this.depth + 1, segments.size())));
         if (MEMORY.equals(part))
             // THE MEMORY IS THE SOLE OWNER OF ITS SPACES: <vid>/memory/space/<mount> reads the LIVE space out of the

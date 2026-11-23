@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -154,6 +155,12 @@ public class BasicAnalyzer extends MRec implements Analyzer {
         // meters whatever rec it is built from, and only its settings come from the rec. (A copy of the analyzer -- a
         // read may stamp one -- is a java clone, which runs no constructor and shares the cells.)
         this.jvm().put(uri(ANALYSIS), auto_(instLambda(lhs -> this.analysis())).tryToInst());
+        // ... AND SO ARE ITS MUTES, which it takes from the rec as it takes its settings: a pushed machine's analyzer
+        // mutes what its parent's did, and one written as analyzer::[mute=>[time]] starts muted
+        if (this.at(MUTE) instanceof Obj inherited && inherited.isLst())
+            this.muted.set(Set.copyOf(inherited.asLst().elements().map(Obj::uriValue).toList()));
+        this.jvm().put(MUTE, auto_(instLambda(lhs -> this.muted.get().isEmpty() ? noobj()
+                : lst(this.muted.get().stream().sorted(Comparator.comparing(fURI::toString)).map(probe -> (Obj) uri(probe)).toList()))).tryToInst());
     }
 
     // ======================== recording ========================
@@ -201,7 +208,7 @@ public class BasicAnalyzer extends MRec implements Analyzer {
     @Override
     public Analyzer mute(final fURI probe, final boolean muted) {
         // swapped whole, so a concurrent mute and lift never lose each other
-        this.muted.updateAndGet(probes -> {
+        final Set<fURI> before = this.muted.getAndUpdate(probes -> {
             final Set<fURI> next = new HashSet<>(probes);
             if (muted)
                 next.add(probe);
@@ -209,9 +216,10 @@ public class BasicAnalyzer extends MRec implements Analyzer {
                 next.removeIf(path -> path.hasPrefix(probe));
             return Set.copyOf(next);
         });
-        // what a muted probe counted is dropped: written back, it counts from zero. A sampled gauge stays registered,
-        // hidden while muted, because nothing registers it again
-        if (muted)
+        // WHAT A MUTED PROBE COUNTED IS DROPPED, as it is muted and again as the mute is lifted: a recording that passed the
+        // gate as the mute landed can leave a count behind, and a probe written back counts from zero. A lift that lifts
+        // nothing drops nothing. A sampled gauge stays registered, hidden while muted, because nothing registers it again
+        if (muted || before.stream().anyMatch(path -> path.hasPrefix(probe)))
             this.meters.entrySet().removeIf(meter -> meter.getKey().hasPrefix(probe) && null == meter.getValue().sample());
         return this;
     }

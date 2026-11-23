@@ -75,7 +75,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BasicSwarmComputer extends VirtualThread implements Computer {
+public class BasicSwarmComputer extends VirtualThread implements Computer, Analyzer.Aggregator {
 
     public static final int MAX_FAILS = 10;
 
@@ -104,8 +104,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
         super(jvm, tid, null == vid ? f("~/processor/computer").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
         // A PROFILED EVALUATION'S STATISTICS ARE ITS COMPUTER'S: the first computer minted under a profile claims it and
         // holds it at ~/processor/computer/<n>/analyzer, past the run (the computers nested in the run record into it)
-        if (null != this.profile && this.profile.claim(this.vid()))
-            this.jvm().put(Analyzer.KEY, this.profile);
+        Analyzer.Helper.claim(this, this.profile);
         Analyzer.Helper.incr(this.profile, FLOW_PROCESSORS_PROBE, 1L);
         // Ensure machine state fields exist with defaults
         final Map<Obj, Obj> cache = new LinkedHashMap<>(this.jvm().getOrDefault(uri(CACHE), rec()).recValue());
@@ -320,8 +319,10 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
                 LOG.debug("processor %s evaluating a %d-instruction code sequence: %s", this.vid(), submittedInsts.size(), submitted);
         }
         // THE RUN IS COUNTED BY THE MACHINE'S PROCESSOR as it starts and timed to its end, into ~/processor/analyzer,
-        // which outlives this computer...
-        final Analyzer statistics = Processor.Helper.statistics();
+        // which outlives this computer (read off the slot, so a machine with no processor of its own -- mach0 -- or one
+        // switched off counts nothing, and a processor template is never applied to count)...
+        final Analyzer statistics = Machine.loaded() && Machine.current().atDirect(uri(PROCESSOR)) instanceof Processor processor
+                ? processor.analyzer() : null;
         Analyzer.Helper.incr(statistics, Processor.EVAL_PROBE, 1L);
         final long t0 = Analyzer.Helper.start(statistics);
         // ... and PROFILED INTO the analyzer this computer was minted under, on whichever thread runs it; the thread's
@@ -330,7 +331,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
         if (this.profile != outer)
             Analyzer.PROFILE.set(this.profile);
         try {
-            return this.runMonads();
+            return this.runMonads(statistics);
         } finally {
             if (this.profile != outer)
                 Analyzer.PROFILE.set(outer);
@@ -338,7 +339,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
         }
     }
 
-    private Obj runMonads() {
+    private Obj runMonads(final Analyzer statistics) {
         final Code code = this.resolve(this.at(LHS)).code();
         if (this.running().c().isZero()) {
             final Obj start = this.at(LHS);
@@ -389,8 +390,12 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
                             LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
                             n.obj().iterator().forEachRemaining(no -> {
                                 // this.halted().append(no); // TODO: make configurable (lazy result or aggregate result)
-                                if (no.isUncaughtFail())
+                                if (no.isUncaughtFail()) {
+                                    // counted by the evaluation it halts, as eval counts its run: a boundary that files
+                                    // the answer again (the console's, a reply's) files no new fail
+                                    Analyzer.Helper.incr(statistics, Processor.FAIL_PROBE, 1L);
                                     MFail.incrStackWrap(no.asFail(), MFail.failStackPattern(this.vid()));
+                                }
                                 Processor.Helper.apply(no, this.onHalt());
                             });
                         } else {

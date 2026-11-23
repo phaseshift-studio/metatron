@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.mach.type;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
-import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
@@ -62,7 +61,8 @@ public interface Processor extends Component {
     /**
      * THE MACHINE'S EVALUATIONS, in its processor's analyzer ({@code ~/processor/analyzer/analysis}), on by default and
      * kept by the processor, so they outlive the computers that ran them: {@code eval} counts each run as it starts,
-     * {@code time} times it to its end, and {@code fail} counts each fail filed in the machine's stacks.
+     * {@code time} times it to its end, and {@code fail} counts each uncaught fail a run halts with — as {@code eval}
+     * counts a nested run, a fail a nested evaluation raised counts again in each evaluation it fails.
      */
     fURI EVAL_PROBE = f("eval");
     fURI TIME_PROBE = f(TIME);
@@ -100,14 +100,6 @@ public interface Processor extends Component {
 
         private Helper() {
             // do nothing
-        }
-
-        /**
-         * the analyzer the machine this thread stands in counts its evaluations into, {@code ~/processor/analyzer} — or
-         * {@code null}, before there is a machine or once it is switched off
-         */
-        public static Analyzer statistics() {
-            return Machine.loaded() ? Machine.current().processor().analyzer() : null;
         }
 
         /**

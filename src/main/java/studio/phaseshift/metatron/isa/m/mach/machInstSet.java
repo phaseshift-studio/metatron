@@ -408,8 +408,10 @@ public class machInstSet extends AbstractInstSet {
                                 .isaPredicate(rec(
                                         uri(ANALYSIS).maybe().asUri(), ALL_TYPE,
                                         uri(STEP).maybe(), INT_TYPE,
-                                        uri(PROFILE).maybe(), BOOL_TYPE), Map.of(
+                                        uri(PROFILE).maybe(), BOOL_TYPE,
+                                        uri("mute").maybe().asUri(), ALL_TYPE), Map.of(
                                         uri(ANALYSIS).maybe(), "the analysis::T the component has measured, built from its meters each time it is read",
+                                        uri("mute").maybe(), "the probes muted (written noobj at analysis/<probe>), a lst of uris read as they stand; an analyzer built from another's rec, as a pushed machine's is, starts with its mutes",
                                         uri(STEP).maybe(), "the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step",
                                         uri(PROFILE).maybe(), "whether the component's costly instrumentation is on (default false): the processor's per-monad timings"))
                                 .example("*~/processor/analyzer/analysis   [-- the machine's evaluations: eval, time, fail --]",

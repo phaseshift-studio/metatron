@@ -264,13 +264,16 @@ machine's components, a cluster's machines).
 **Off is `noobj`.** `~/processor/analyzer -> noobj` removes the analyzer, so nothing records into it (its address then
 reads `noobj`), and a rec written there later — `~/processor/analyzer -> [profile=>true]` — installs a new one whose
 meters start at zero. `~/processor/analyzer/analysis/time -> noobj` mutes the one probe and everything below it, and any
-other value written at that probe lifts the mute.
+other value written at that probe lifts the mute; `*~/processor/analyzer/mute` lists what is muted, and a pushed machine
+starts with its parent's mutes, as with its settings.
 
 **The processor counts the machine's evaluations**, always on: `eval` (each computer's run, nested evaluations
-included), `time` (a timer over each run) and `fail` (each fail filed) at `*~/processor/analyzer/analysis`. With
+included), `time` (a timer over each run) and `fail` (each uncaught fail a run halts with) at
+`*~/processor/analyzer/analysis`. With
 `~/processor/analyzer/profile -> true`, each evaluation is also profiled into an analyzer of its own, held by the
 computer that ran it: `*~/processor/computer/<n>/analyzer/analysis` (the monad flow, per-instruction counts and stage
-timings). A `profile()`'s analyzer is held the same way, by the first computer its timed runs mint.
+timings), written as a component's analyzer is (`…/computer/<n>/analyzer/analysis/flow -> noobj`). A `profile()`'s
+analyzer is held the same way, by the first computer its timed runs mint.
 
 A **data space** is not a component, and its metrics are its `?analq` q-proc rather than a `~/<space>/analyzer` field:
 the q-proc holds the `analyzer::T`, so it travels with the space, and `read`/`write`/`delete` counts and latencies are
