@@ -20,11 +20,14 @@ package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
+import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -74,6 +77,22 @@ public interface Addressable {
      */
     default Lst qs() {
         return this instanceof Rec rec ? rec.at(uri(QPROC)).orElse(lst0()) : lst0();
+    }
+
+    /**
+     * THE ANALYZER THIS SOURCE'S {@code ?analq} HOLDS, or {@code null} when it declares none: where its accesses are
+     * measured, read at {@code <holder>/analyzer} for a source that keeps no analyzer of its own (a space,
+     * {@code ~/memory/space/<s>/analyzer}; the memory, {@code ~/memory/analyzer}). A thought of Marko's (2026-11-23) is to
+     * make the analyzer a function of addressability; until a component's own analyzer and its analq's are one, this
+     * is named apart from {@code Aggregator.analyzer()}.
+     */
+    default Analyzer analq() {
+        for (final Obj q : this.qs().lstValue()) {
+            if (q instanceof QProc proc && QCollection.ANALQ_PATTERN.equals(proc.pattern())
+                    && proc.asRec().at(uri(OBJ)) instanceof Analyzer analyzer)
+                return analyzer;
+        }
+        return null;
     }
 
     /**

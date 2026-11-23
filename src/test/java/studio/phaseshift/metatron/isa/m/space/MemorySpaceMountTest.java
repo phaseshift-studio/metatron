@@ -24,10 +24,12 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -61,6 +63,12 @@ public class MemorySpaceMountTest extends AbstractMetatronTest {
             final Obj spaces = Machine.read(f("/memory/space/+?analq"));
             assertEquals(2L, spaces.asRec().at(uri("logs")).asRec().at(uri("read")).intValue(), "the spaces answer at /memory/space/+: " + spaces);
             assertFalse(Machine.read(f("/memory/#?analq")).asRec().at(uri("read/count")).isNoObj(), "and memory's totals at /memory/#");
+            assertInstanceOf(Analyzer.class, Machine.read(f("/memory/analyzer")), "memory's analyzer is read at its address: the one its analq holds");
+            assertEquals(2L, Machine.read(f("/memory/analyzer/analysis/addr/memory/space/logs/read")).intValue(),
+                    "and walked into, a space's readings at its address");
+            Machine.evaluate("/memory/space/logs/q -> [analq::[=>]]");
+            assertInstanceOf(Analyzer.class, Machine.read(f("/memory/space/logs/analyzer")),
+                    "a space that declares analq has its analyzer read at its mount address");
         } finally {
             Machine.evaluate("/memory/q -> noobj");
         }

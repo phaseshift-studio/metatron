@@ -384,10 +384,29 @@ records into `Analyzer.PROFILE`.
   A probe named by runtime data (`per_inst/<vid>/…`, `rewrite/<rule>/…`) is built only while a run is profiled, so its
   call stays behind the one `null != profile` the path needs. The per-step probes (`StatefulMonad`, the computer's
   split and barrier, `repeat()`) still record directly; they move to the verbs once the per-step cost is measured.
-- **A data space** records through the `?analq` q-proc it declares (`QCollection.analQ()`): `QProc.Layer` counts and
-  times every read and write handed to the space, deletes as a subset of the writes, and the space answers them flat at
-  `*<pattern>?analq` (`read => [count, latency], write => [count, latency, delete => [count, latency]]`). An access that
-  carries a query is metadata traffic and is not counted.
+- **A data space** records through the `?analq` q-proc it declares (`QCollection.analQ(cap)`): `QProc.Layer` counts and
+  times every read and write handed to the space, deletes as a subset of the writes, and the space answers those
+  totals at `*<pattern>/#?analq` (`read => [count, latency], write => [count, latency, delete => [count, latency]]`). An
+  access that carries a query is metadata traffic and is not counted.
+- **An address asks to be measured** (Marko, 2026-11-23): `/usr/marko/abc?analq -> analysis::[read=>counter::T]`.
+  - **A request is the type of its answer.** Its keys are events (read, write, delete, miss) and its values the meter
+    each is read as, so `*/usr/marko/abc?analq` answers `analysis::[read=>counter::12]`.
+  - **The space's `analq::[…]` is its cap**, the widest request it allows (`analq::[read=>timer::T, max=>100]`). A
+    request fits when each event it asks for is one the cap names, measured no more finely (counter <= timer).
+  - **Defaults.** An empty cap allows every event as a timer, and an empty request takes the whole cap.
+  - **Refusals and withdrawal.** A request beyond the cap, or an address past `max`, gets a `fail::T`. noobj withdraws
+    a request and drops its readings.
+  - **The address is the scope.** A pattern request (`abc/#?analq`) measures each address it covers, each on its own.
+    The readings nest under `addr/<path>` in the analyzer, and the requests are held in its rec (`request`).
+  - **Reads.** An address that asked answers its own readings, `<addr>/+?analq` its children's. Any other `?analq`
+    read answers the space's whole analysis, as every one did before.
+- **Memory is a space whose addresses are its spaces.** Every access memory hands to a covering space passes through
+  memory's own q-procs (`Memory.through`), at the space's address.
+  - With `/memory/q -> [analq::[=>]]`, a space asks at its mount
+    (`/memory/space/logs?analq -> analysis::[read=>counter::T]`) and declares nothing itself.
+  - It answers there, the spaces at `/memory/space/+?analq`, and memory's totals at `/memory/#?analq`.
+  - An analyzer is read where its holder is: the holder's own (`~/network/analyzer`), else the one its `?analq` holds
+    (`Addressable.analq()`): `~/memory/analyzer`, `~/memory/space/<s>/analyzer`.
 - **A server** (`http_server`, `ws_server`, `mqtt_server`) is an addressable source carrying its own `?analq` from
   construction (`Listener`), so `*<origin>/#?analq` answers that socket's analysis: a request or a received message is
   a read at its wire address (timed over its whole answer and counted with that latency once the answer is given;
@@ -439,9 +458,12 @@ every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicSta
 
 **Next.**
 
-- analyzers stored in space (Marko, 2026-11-22): `*/usr/marko/xyz?analq` answers the analyzer stored at
-  `/memory/space/usr/marko/analyzer`, narrowed to `xyz` (how many reads and writes hit it), and `*/usr/marko/#?analq`
-  is the analysis of the whole space;
+- `by=>peer::T`, a request broken down by who made each access (Marko, 2026-11-23): deferred, because
+  `Machine.read`/`write` carry only a uri and an obj, and who is asking is known only by thread;
+- the analyzer as a function of addressability, `Addressable.analyzer()` (a thought of Marko's, 2026-11-23). Today
+  a component's own analyzer (`Aggregator.analyzer()`) and its `?analq`'s (`Addressable.analq()`) are named apart:
+  memory and the network are both;
+- an instset and `mqttSpace` run their own q-proc sequence and never count a read;
 - the OpenMetrics serializer and an `http_server` route over `~/+/analyzer/analysis` (the Grafana path);
 - the query-execution timer is the processor's `time` (2026-11-23), and with `eval` it counts every computer's run,
   nested argument evaluations included — open: whether the evaluations a user submits (`Machine.evaluate`, the

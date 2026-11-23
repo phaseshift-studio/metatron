@@ -167,12 +167,7 @@ public abstract class Listener extends MRec implements Addressable, Closeable {
      * reference to a component's. Null when the q-proc has been retracted, which mutes recording.
      */
     public Analyzer analyzer() {
-        for (final Obj q : this.qs().lstValue()) {
-            if (q instanceof QProc qProc && QCollection.ANALQ_PATTERN.equals(qProc.pattern())
-                    && qProc.asRec().at(uri(OBJ)) instanceof Analyzer analyzer)
-                return analyzer;
-        }
-        return null;
+        return this.analq();
     }
 
     /**

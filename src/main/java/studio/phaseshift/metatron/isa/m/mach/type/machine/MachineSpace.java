@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.mach.type.machine;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -172,6 +173,20 @@ public final class MachineSpace extends memSpace {
             return super.read(vid);
         if (null == part)
             return this.owner;
+        // AN ANALYZER IS READ WHERE ITS HOLDER IS: the holder's own (~/network/analyzer, a profiled computer's), else the
+        // one its ?analq holds (~/memory/analyzer, ~/memory/space/<s>/analyzer), the path below it walked into it
+        final List<String> path = vid.qLess().resolve().segments();
+        final int held = path.size() <= this.depth + 1 ? -1
+                : this.depth + 1 + path.subList(this.depth + 1, path.size()).indexOf(ANALYZER);
+        if (held > this.depth) {
+            Obj holder = this.owner.atDirect(uri(part));
+            for (final String segment : path.subList(this.depth + 1, held))
+                holder = holder.isRec() ? holder.asRec().atDirect(uri(segment)) : noobj();
+            final Analyzer analyzer = holder instanceof Analyzer.Aggregator aggregator && null != aggregator.analyzer()
+                    ? aggregator.analyzer() : holder instanceof Addressable source ? source.analq() : null;
+            if (null != analyzer)
+                return held + 1 == path.size() ? analyzer : analyzer.at(uri(String.join("/", path.subList(held + 1, path.size()))));
+        }
         // any other component, read live: the path below the machine walked into the component as it stands (the
         // whole remaining path, so <vid>/memory/previous walks into the memory rather than collapsing to its name)
         final List<String> segments = vid.qLess().resolve().segments();

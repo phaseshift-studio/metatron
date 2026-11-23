@@ -286,6 +286,20 @@ the q-proc holds the `analyzer::T`, so it travels with the space, and `read`/`wr
 read flat at the space's `?analq` (e.g. `*/t/#?analq` → `read => [count, latency], write => [count, latency, delete =>
 [count, latency]]`). A space records when it declares the q-proc; nothing is recorded for a space that does not.
 
+An **address asks to be measured**: `/t/abc?analq -> analysis::[read=>counter::T]`, after which `*/t/abc?analq`
+answers `analysis::[read=>counter::12]`. The request is the type of its answer: the keys are events (`read`, `write`,
+`delete`, `miss`), and the values are meters.
+- **The cap.** The space's `analq::[…]` is the widest request it allows, e.g. `q => [analq::[read=>timer::T, max=>100]]`.
+  A request must fit inside it (counter <= timer); one that does not, or an address past `max`, gets a `fail::T`.
+- **Defaults.** An empty cap allows every event as a timer, and `analysis::[=>]` takes the whole cap.
+- **Withdrawing.** `noobj` withdraws a request and drops its readings.
+- **Wider reads.** `*/t/+?analq` reads the children, and `*/t/#?analq` the space's totals.
+
+**Memory is a space of spaces.** With `/memory/q -> [analq::[=>]]`, a space asks at its mount
+(`/memory/space/logs?analq -> analysis::[read=>counter::T]`) without declaring anything itself.
+`*/memory/space/+?analq` reads every space, and `*/memory/analyzer` (or `*/memory/space/logs/analyzer`, for a space
+with its own analq) reads the analyzer where it is held.
+
 A **server is an addressable source too**, and its metrics are its own `?analq`. A listener is instrumented at
 construction, so `<scheme>://host:port/#?analq` answers that socket's analysis: a request or a received message is a
 `read` at its wire address, a sent message a `write` there, a hang-up a write of `noobj` (the `delete` subset), and
