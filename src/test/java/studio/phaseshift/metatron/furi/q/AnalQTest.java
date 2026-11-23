@@ -201,14 +201,73 @@ public interface AnalQTest extends QProcTest {
                     "a read asked to be timed under a cap that only counts it is refused");
             assertTrue(space.write(base.addQ(ANALQ), rec(uri("write"), T(Analysis.COUNTER_TID))).isFail(),
                     "an event the cap does not name is refused");
+            assertTrue(space.write(base.addQ(ANALQ), rec(uri("read"), T(Analysis.GAUGE_TID))).isFail(),
+                    "a gauge is never asked of an address: a request names counters and timers");
+            assertTrue(space.write(base.retract(1).extend("read").addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID))).isFail(),
+                    "an address with a segment named after an event cannot be measured on its own");
             assertFalse(space.write(base.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID))).isFail(),
                     "what the cap allows is taken");
-            space.read(base);
             assertTrue(space.write(other.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID))).isFail(),
-                    "a second address is past the cap's max of one");
+                    "a second address is past the cap's max of one, the first holding its slot from the request on");
+            space.qs().lstValue().removeIf(q -> ((QProc) q).pattern().equals(ANALQ_PATTERN));
+            space.addQ(QCollection.analQ(rec(uri("max"), jnt(5))));
+            assertFalse(space.write(base.addQ(ANALQ), rec(uri("write"), T(Analysis.TIMER_TID))).isFail(),
+                    "a cap that states only max states no event, and allows every one as a timer");
+            space.write(base.addQ(ANALQ), noobj());
         } finally {
             space.qs().lstValue().removeIf(q -> ((QProc) q).pattern().equals(ANALQ_PATTERN));
             space.addQ(QCollection.analQ());
+        }
+    }
+
+    /**
+     * A REQUEST'S LIFE, AS A REVIEW TRIED TO BREAK IT (2026-11-23).
+     * <ul>
+     *   <li>An address that asked answers an empty analysis before its first reading, never its data.</li>
+     *   <li>A pattern measures each address it covers, misses and deletes included when asked; an address's own request
+     *   is more specific than the pattern, and a wildcard access names no address.</li>
+     *   <li>A withdrawal is handled where it is written (the data untouched) and keeps what a standing request covers.</li>
+     *   <li>A request asked again is measured afresh, and a wildcard in mid-path withdraws as any pattern does.</li>
+     * </ul>
+     */
+    @Test
+    default void testAnalQRequestsLiveAndAreWithdrawn() {
+        final Space space = this.analQSpace();
+        final fURI tree = this.analQBaseURI().retract(1).extend("analq_tree");
+        final fURI a = tree.extend("a");
+        final fURI b = tree.extend("b");
+        final fURI pattern = tree.extend("#");
+        try {
+            space.write(a, jnt(42));
+            space.write(a.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID)));
+            final Obj before = space.read(a.addQ(ANALQ));
+            assertTrue(before.isRec() && before.asRec().isEmpty(), "asked and not yet read, an address answers an empty analysis, never its data: " + before);
+            space.write(pattern.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID), uri("miss"), T(Analysis.COUNTER_TID), uri("delete"), T(Analysis.COUNTER_TID)));
+            space.read(a);
+            space.read(b);
+            space.write(b, noobj());
+            space.read(pattern);
+            final Obj children = space.read(tree.extend("+").addQ(ANALQ));
+            assertEquals(1L, children.asRec().at(uri("a")).asRec().at(uri("read")).intValue(), "a counts its read under its own request: " + children);
+            assertTrue(children.asRec().at(uri("a")).asRec().at(uri("miss")).isNoObj(), "which is more specific than the pattern: " + children);
+            assertEquals(1L, children.asRec().at(uri("b")).asRec().at(uri("miss")).intValue(), "the pattern measures b's miss: " + children);
+            assertEquals(1L, children.asRec().at(uri("b")).asRec().at(uri("delete")).intValue(), "and its delete: " + children);
+            assertEquals(2, children.asRec().jvm().size(), "and a wildcard access is no address: " + children);
+            assertFalse(space.write(pattern.addQ(ANALQ), noobj()).isNoObj(), "a withdrawal is handled where it is written");
+            assertEquals(1L, space.read(a.addQ(ANALQ)).asRec().at(uri("read")).intValue(), "a standing request keeps its readings");
+            assertEquals(42L, space.read(a).intValue(), "and the data under the withdrawal is untouched");
+            assertTrue(space.read(tree.extend("+").addQ(ANALQ)).asRec().at(uri("b")).isNoObj(), "what the pattern alone measured goes with it");
+            space.write(a.addQ(ANALQ), rec(uri("read"), T(Analysis.TIMER_TID)));
+            space.read(a);
+            assertEquals(1L, space.read(a.addQ(ANALQ)).asRec().at(uri("read/count")).intValue(), "asked again, a request is measured afresh, as a timer now");
+            space.write(tree.extend("+").extend("status").addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID)));
+            space.write(tree.extend("+").extend("status").addQ(ANALQ), noobj());
+            space.read(a);
+            assertEquals(2L, space.read(a.addQ(ANALQ)).asRec().at(uri("read/count")).intValue(),
+                    "a wildcard in mid-path withdraws as any pattern does, muting nothing it never measured");
+        } finally {
+            space.write(a.addQ(ANALQ), noobj());
+            space.write(a, noobj());
         }
     }
 }

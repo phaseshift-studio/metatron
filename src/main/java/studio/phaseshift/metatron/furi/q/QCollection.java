@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.TriConsumer;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
@@ -167,7 +168,7 @@ public final class QCollection {
     // found nothing) -- in the order a request is shown
     private static final List<String> ANALQ_EVENTS = List.of("read", "write", "delete", "miss");
     private static final Obj ANALQ_REQUEST = uri("request");
-    private static final Obj ANALQ_MAX = uri("max");
+    private static final Obj ANALQ_CAP = uri("cap");
     // THE CAP, analq::[event=>meter::T, max=>int::T]: what this space lets an address ask for, and how many addresses
     public static final Type ANALQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
@@ -623,38 +624,53 @@ public final class QCollection {
      */
     public static QProc analQ(final Rec cap) {
         final BasicAnalyzer analyzer = new BasicAnalyzer();
-        final Set<fURI> meters = Set.of(Analysis.COUNTER_TID, Analysis.GAUGE_TID, Analysis.TIMER_TID);
-        // a meter kind, from a request's or a cap's value (counter::T, timer::T)
-        final java.util.function.Function<Obj, fURI> kind = obj -> meters.contains(obj.tid().basePath()) ? obj.tid().basePath()
-                : null != obj.vid() && meters.contains(obj.vid().basePath()) ? obj.vid().basePath() : null;
+        // a meter kind, from a request's or a cap's value: counter::T or timer::T (a gauge is set where it is kept, never
+        // asked of an address)
+        final java.util.function.Function<Obj, fURI> kind = obj -> Stream.of(obj.tid(), obj.vid()).filter(Objects::nonNull)
+                .map(fURI::basePath).filter(meter -> Analysis.COUNTER_TID.equals(meter) || Analysis.TIMER_TID.equals(meter))
+                .findFirst().orElse(null);
+        // A CAP STATES EVENTS, OR NONE: one that states none (analq::[=>], analq::[max=>100]) allows every event as a timer
+        final boolean states = ANALQ_EVENTS.stream().anyMatch(event -> !cap.at(uri(event)).isNoObj());
         final Map<String, fURI> allowed = new LinkedHashMap<>();
         for (final String event : ANALQ_EVENTS) {
-            if (cap.isEmpty())
-                allowed.put(event, Analysis.TIMER_TID);
-            else if (null != kind.apply(cap.at(uri(event))))
-                allowed.put(event, kind.apply(cap.at(uri(event))));
+            final fURI most = states ? kind.apply(cap.at(uri(event))) : Analysis.TIMER_TID;
+            if (null != most)
+                allowed.put(event, most);
         }
-        final long max = cap.at(ANALQ_MAX).isInt() ? cap.at(ANALQ_MAX).intValue() : Long.MAX_VALUE;
-        // address (or pattern) => event => kind, and the addresses measured so far (max bounds them)
+        final long max = cap.at(uri(MAX)).isInt() ? cap.at(uri(MAX)).intValue() : Long.MAX_VALUE;
+        // the cap is read where the analyzer is, beside the requests it governs
+        analyzer.jvm().put(ANALQ_CAP, cap);
+        // address (or pattern) => event => kind, and the addresses that hold a slot of max
         final Map<fURI, Map<String, fURI>> requests = new ConcurrentHashMap<>();
         final Set<fURI> measured = ConcurrentHashMap.newKeySet();
-        final java.util.function.Function<fURI, fURI> readings = at -> ANALQ_ADDR.extend(at.qLess().asRelative());
-        // the request an access falls under: its own address's, else the first pattern that covers it
-        final java.util.function.Function<fURI, Map<String, fURI>> asked = vid -> {
-            final Map<String, fURI> own = requests.get(vid.qLess());
-            if (null != own || requests.isEmpty())
-                return own;
-            return requests.entrySet().stream().filter(e -> e.getKey().hasPattern() && vid.qLess().test(e.getKey()))
-                    .map(Map.Entry::getValue).findFirst().orElse(null);
+        // AN ADDRESS'S READINGS nest under addr/<its path>. One whose path names an event (…/read) would put a child where
+        // its parent's reading is, and a wildcard access names no address: both count in the totals alone
+        final java.util.function.Predicate<fURI> measurable = at -> !at.hasPattern()
+                && at.segments().stream().noneMatch(ANALQ_EVENTS::contains);
+        final java.util.function.Function<fURI, fURI> readings = at -> ANALQ_ADDR.extend(at.asRelative());
+        // the request an address falls under: its own, else the most specific pattern that covers it
+        final java.util.function.Function<fURI, Map<String, fURI>> asked = at -> {
+            final Map<String, fURI> own = requests.get(at);
+            return null != own ? own : requests.entrySet().stream()
+                    .filter(entry -> entry.getKey().hasPattern() && at.test(entry.getKey()))
+                    .max(Comparator.comparingInt(entry -> entry.getKey().segments().size()))
+                    .map(Map.Entry::getValue).orElse(null);
         };
+        // what one address measured goes: a concrete prefix, so no pattern is ever muted
+        final java.util.function.Consumer<fURI> drop = at -> analyzer.mute(readings.apply(at), true).mute(readings.apply(at), false);
         // one event at one address, measured as it asked: a counter counts it, a timer times it too
         final TriConsumer<fURI, String, Long> measure = (vid, event, nanos) -> {
-            final Map<String, fURI> request = asked.apply(vid);
+            final fURI at = vid.qLess();
+            if (!measurable.test(at))
+                return;
+            final Map<String, fURI> request = asked.apply(at);
             if (null == request || !request.containsKey(event))
                 return;
-            final fURI at = vid.qLess();
-            if (!measured.contains(at) && (measured.size() >= max || !measured.add(at)))
-                return;
+            if (!measured.contains(at)) {
+                if (measured.size() >= max)
+                    return;
+                measured.add(at);
+            }
             final fURI probe = readings.apply(at).extend(event);
             if (Analysis.TIMER_TID.equals(request.get(event)))
                 Analyzer.Helper.record(analyzer, probe, Math.max(0L, nanos));
@@ -663,47 +679,55 @@ public final class QCollection {
         };
         // the requests as mtron reads them, rewritten whole on each change
         final Runnable publish = () -> {
-            final Map<Obj, Obj> held = new LinkedHashMap<>();
-            requests.forEach((address, events) -> {
-                final Map<Obj, Obj> request = new LinkedHashMap<>();
-                events.forEach((event, meter) -> request.put(uri(event), T(meter)));
-                held.put(uri(address), rec(request, Analysis.ANALYSIS_TID, null));
-            });
-            analyzer.jvm().put(ANALQ_REQUEST, rec(held));
+            synchronized (requests) {
+                final Map<Obj, Obj> held = new LinkedHashMap<>();
+                requests.forEach((address, events) -> {
+                    final Map<Obj, Obj> request = new LinkedHashMap<>();
+                    events.forEach((event, meter) -> request.put(uri(event), T(meter)));
+                    held.put(uri(address), rec(request, Analysis.ANALYSIS_TID, null));
+                });
+                analyzer.jvm().put(ANALQ_REQUEST, rec(held));
+            }
         };
         return QProc.Helper.build(ANALQ_TID, ANALQ_PATTERN)
                 .obj(f(OBJ), analyzer)
+                // ALWAYS AN ANALYSIS, never noobj: a q-proc's noobj is no answer, and the read would fall through to the data
                 .preRead(vid -> {
                     final fURI at = vid.qLess();
                     final Analysis analysis = analyzer.analysis();
-                    // an address that asked answers its own readings; its children answer at <addr>/+
                     if (!at.hasPattern() && requests.containsKey(at))
                         return own(analysis.at(uri(readings.apply(at))));
                     if (at.hasPattern() && "+".equals(at.segments().getLast()) && at.segments().size() > 1) {
-                        final Obj children = analysis.at(uri(readings.apply(at.retract(1))));
-                        if (!children.isRec())
-                            return noobj();
                         final Map<Obj, Obj> each = new LinkedHashMap<>();
-                        children.asRec().jvm().forEach((child, sub) -> {
-                            if (!ANALQ_EVENTS.contains(child.toString()) && sub.isRec())
-                                each.put(child, own(sub));
-                        });
-                        return rec(each);
+                        final Obj children = analysis.at(uri(readings.apply(at.retract(1))));
+                        if (children.isRec())
+                            children.asRec().jvm().forEach((child, sub) -> {
+                                if (!ANALQ_EVENTS.contains(child.toString()) && sub.isRec())
+                                    each.put(child, own(sub));
+                            });
+                        return rec(each, Analysis.ANALYSIS_TID, null);
                     }
                     return analysis;
                 })
                 .preWrite((vid, obj) -> {
                     final fURI at = vid.qLess();
                     if (obj.isNoObj()) {
-                        // withdrawn: the request goes, and what it measured with it
+                        // WITHDRAWN: the request goes, and so does what no standing request still covers. Answered with an
+                        // analysis, never noobj, so the write ends here: nothing is stored at <addr>?analq or broadcast
                         requests.remove(at);
-                        measured.removeIf(address -> address.equals(at) || (at.hasPattern() && address.test(at)));
-                        analyzer.mute(readings.apply(at.hasPattern() ? at.retract(1) : at), true).mute(readings.apply(at.hasPattern() ? at.retract(1) : at), false);
+                        for (final fURI address : List.copyOf(measured)) {
+                            if ((address.equals(at) || (at.hasPattern() && address.test(at))) && null == asked.apply(address)) {
+                                measured.remove(address);
+                                drop.accept(address);
+                            }
+                        }
                         publish.run();
-                        return noobj();
+                        return rec(new LinkedHashMap<>(), Analysis.ANALYSIS_TID, null);
                     }
                     if (!obj.isRec())
                         return fail(MTronException.of("an analysis request is a rec, analysis::[event=>meter::T]: %s", obj));
+                    if (!at.hasPattern() && !measurable.test(at))
+                        return fail(MTronException.of("%s cannot be measured on its own: a segment named after an event %s is where its parent's reading is", at, ANALQ_EVENTS));
                     final Map<String, fURI> request = new LinkedHashMap<>();
                     if (obj.asRec().isEmpty())
                         request.putAll(allowed);
@@ -715,9 +739,16 @@ public final class QCollection {
                             return fail(MTronException.of("%s asks for %s=>%s, which its space's analq allows as %s", at, event, entry.getValue(), null == most ? "nothing" : T(most)));
                         request.put(event, want);
                     }
-                    if (!at.hasPattern() && !requests.containsKey(at) && measured.size() >= max)
+                    if (!at.hasPattern() && !measured.contains(at) && measured.size() >= max)
                         return fail(MTronException.of("%s cannot be measured: its space measures at most %s addresses", at, max));
-                    requests.put(at, request);
+                    // a concrete request holds its slot from the start; one asked again is measured afresh, its readings
+                    // the type it now asks for
+                    final Map<String, fURI> before = requests.put(at, request);
+                    if (!at.hasPattern()) {
+                        measured.add(at);
+                        if (null != before)
+                            drop.accept(at);
+                    }
                     publish.run();
                     return obj;
                 })
@@ -758,23 +789,15 @@ public final class QCollection {
      * an address's own readings out of its subtree: its events, never its children's
      */
     private static Obj own(final Obj readings) {
-        if (!readings.isRec())
-            return noobj();
         final Map<Obj, Obj> events = new LinkedHashMap<>();
-        readings.asRec().jvm().forEach((key, value) -> {
-            if (ANALQ_EVENTS.contains(key.toString()))
-                events.put(key, value);
-        });
+        if (readings.isRec())
+            readings.asRec().jvm().forEach((key, value) -> {
+                if (ANALQ_EVENTS.contains(key.toString()))
+                    events.put(key, value);
+            });
         return rec(events, Analysis.ANALYSIS_TID, null);
     }
 
-    /**
-     * three arguments, nothing answered: one event at one address
-     */
-    @FunctionalInterface
-    private interface TriConsumer<A, B, C> {
-        void accept(A a, B b, C c);
-    }
 
     public static QProc docQ() {
         return docQ(noobj());
