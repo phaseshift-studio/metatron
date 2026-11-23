@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
@@ -41,6 +42,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -159,10 +161,18 @@ public final class QCollection {
     private static final fURI WRITE_LATENCY = f("write/latency");
     private static final fURI DELETE_COUNT = f("write/delete/count");
     private static final fURI DELETE_LATENCY = f("write/delete/latency");
+    // AN ADDRESS'S OWN READINGS nest under addr/<its path>, beside the space's totals, so a read of one walks the tree
+    private static final fURI ANALQ_ADDR = f("addr");
+    // what an address may ask to be measured on: a read, a write, a delete (a write of noobj), a miss (a read that
+    // found nothing) -- in the order a request is shown
+    private static final List<String> ANALQ_EVENTS = List.of("read", "write", "delete", "miss");
+    private static final Obj ANALQ_REQUEST = uri("request");
+    private static final Obj ANALQ_MAX = uri("max");
+    // THE CAP, analq::[event=>meter::T, max=>int::T]: what this space lets an address ask for, and how many addresses
     public static final Type ANALQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(ANALQ_TID)
-            .constructor(QCollection::analQ)
+            .constructor(rec -> QCollection.analQ(rec.isRec() ? rec.asRec() : rec()))
             .create();
     //
     public static final String DOCQ = "docq";
@@ -590,10 +600,127 @@ public final class QCollection {
      * ({@code mqttSpace}, an instset) is counted but not timed.
      */
     public static QProc analQ() {
+        return analQ(rec());
+    }
+
+    /**
+     * THE ANALQ OF A SPACE WHOSE CAP IS {@code cap} (Marko, 2026-11-23). It keeps the space's totals, as {@link #analQ()}
+     * always has: every read and write, its count and latency, answered at {@code *<pattern>/#?analq}. And it lets an
+     * address ask to be measured on its own: {@code <addr>?analq -> analysis::[read=>counter::T]}.
+     * <ul>
+     *   <li><b>A REQUEST IS THE TYPE OF ITS ANSWER</b>: its keys are events (read, write, delete, miss) and its values
+     *   the meter each is read as, so {@code *<addr>?analq} answers {@code analysis::[read=>counter::12]}. An empty
+     *   request asks for the whole cap; noobj written there withdraws the request and drops its readings.</li>
+     *   <li><b>THE CAP IS THE WIDEST REQUEST THIS SPACE ALLOWS</b>, {@code analq::[read=>timer::T, max=>100]}. A request
+     *   fits it when each event it asks for is one the cap names, measured no more finely (counter &lt;= timer: a timer
+     *   counts too). An empty cap allows every event as a timer. {@code max} bounds how many addresses are measured,
+     *   since one pattern request can name many; an address past it is not measured.</li>
+     *   <li><b>THE ADDRESS IS THE SCOPE</b>: a pattern request ({@code abc/#?analq}) measures each address it covers, each
+     *   on its own. An address that asked answers its own readings, {@code <addr>/+?analq} its children's, and any other
+     *   read of ?analq the space's whole analysis.</li>
+     * </ul>
+     * The requests are held in the analyzer's rec, {@code request => [<addr> => analysis::[…]]}, where mtron reads them.
+     */
+    public static QProc analQ(final Rec cap) {
         final BasicAnalyzer analyzer = new BasicAnalyzer();
+        final Set<fURI> meters = Set.of(Analysis.COUNTER_TID, Analysis.GAUGE_TID, Analysis.TIMER_TID);
+        // a meter kind, from a request's or a cap's value (counter::T, timer::T)
+        final java.util.function.Function<Obj, fURI> kind = obj -> meters.contains(obj.tid().basePath()) ? obj.tid().basePath()
+                : null != obj.vid() && meters.contains(obj.vid().basePath()) ? obj.vid().basePath() : null;
+        final Map<String, fURI> allowed = new LinkedHashMap<>();
+        for (final String event : ANALQ_EVENTS) {
+            if (cap.isEmpty())
+                allowed.put(event, Analysis.TIMER_TID);
+            else if (null != kind.apply(cap.at(uri(event))))
+                allowed.put(event, kind.apply(cap.at(uri(event))));
+        }
+        final long max = cap.at(ANALQ_MAX).isInt() ? cap.at(ANALQ_MAX).intValue() : Long.MAX_VALUE;
+        // address (or pattern) => event => kind, and the addresses measured so far (max bounds them)
+        final Map<fURI, Map<String, fURI>> requests = new ConcurrentHashMap<>();
+        final Set<fURI> measured = ConcurrentHashMap.newKeySet();
+        final java.util.function.Function<fURI, fURI> readings = at -> ANALQ_ADDR.extend(at.qLess().asRelative());
+        // the request an access falls under: its own address's, else the first pattern that covers it
+        final java.util.function.Function<fURI, Map<String, fURI>> asked = vid -> {
+            final Map<String, fURI> own = requests.get(vid.qLess());
+            if (null != own || requests.isEmpty())
+                return own;
+            return requests.entrySet().stream().filter(e -> e.getKey().hasPattern() && vid.qLess().test(e.getKey()))
+                    .map(Map.Entry::getValue).findFirst().orElse(null);
+        };
+        // one event at one address, measured as it asked: a counter counts it, a timer times it too
+        final TriConsumer<fURI, String, Long> measure = (vid, event, nanos) -> {
+            final Map<String, fURI> request = asked.apply(vid);
+            if (null == request || !request.containsKey(event))
+                return;
+            final fURI at = vid.qLess();
+            if (!measured.contains(at) && (measured.size() >= max || !measured.add(at)))
+                return;
+            final fURI probe = readings.apply(at).extend(event);
+            if (Analysis.TIMER_TID.equals(request.get(event)))
+                Analyzer.Helper.record(analyzer, probe, Math.max(0L, nanos));
+            else
+                Analyzer.Helper.incr(analyzer, probe, 1L);
+        };
+        // the requests as mtron reads them, rewritten whole on each change
+        final Runnable publish = () -> {
+            final Map<Obj, Obj> held = new LinkedHashMap<>();
+            requests.forEach((address, events) -> {
+                final Map<Obj, Obj> request = new LinkedHashMap<>();
+                events.forEach((event, meter) -> request.put(uri(event), T(meter)));
+                held.put(uri(address), rec(request, Analysis.ANALYSIS_TID, null));
+            });
+            analyzer.jvm().put(ANALQ_REQUEST, rec(held));
+        };
         return QProc.Helper.build(ANALQ_TID, ANALQ_PATTERN)
                 .obj(f(OBJ), analyzer)
-                .preRead(vid -> analyzer.analysis())
+                .preRead(vid -> {
+                    final fURI at = vid.qLess();
+                    final Analysis analysis = analyzer.analysis();
+                    // an address that asked answers its own readings; its children answer at <addr>/+
+                    if (!at.hasPattern() && requests.containsKey(at))
+                        return own(analysis.at(uri(readings.apply(at))));
+                    if (at.hasPattern() && "+".equals(at.segments().getLast()) && at.segments().size() > 1) {
+                        final Obj children = analysis.at(uri(readings.apply(at.retract(1))));
+                        if (!children.isRec())
+                            return noobj();
+                        final Map<Obj, Obj> each = new LinkedHashMap<>();
+                        children.asRec().jvm().forEach((child, sub) -> {
+                            if (!ANALQ_EVENTS.contains(child.toString()) && sub.isRec())
+                                each.put(child, own(sub));
+                        });
+                        return rec(each);
+                    }
+                    return analysis;
+                })
+                .preWrite((vid, obj) -> {
+                    final fURI at = vid.qLess();
+                    if (obj.isNoObj()) {
+                        // withdrawn: the request goes, and what it measured with it
+                        requests.remove(at);
+                        measured.removeIf(address -> address.equals(at) || (at.hasPattern() && address.test(at)));
+                        analyzer.mute(readings.apply(at.hasPattern() ? at.retract(1) : at), true).mute(readings.apply(at.hasPattern() ? at.retract(1) : at), false);
+                        publish.run();
+                        return noobj();
+                    }
+                    if (!obj.isRec())
+                        return fail(MTronException.of("an analysis request is a rec, analysis::[event=>meter::T]: %s", obj));
+                    final Map<String, fURI> request = new LinkedHashMap<>();
+                    if (obj.asRec().isEmpty())
+                        request.putAll(allowed);
+                    for (final Map.Entry<Obj, Obj> entry : obj.asRec().jvm().entrySet()) {
+                        final String event = entry.getKey().toString();
+                        final fURI want = kind.apply(entry.getValue());
+                        final fURI most = allowed.get(event);
+                        if (null == most || null == want || !(want.equals(most) || (Analysis.COUNTER_TID.equals(want) && Analysis.TIMER_TID.equals(most))))
+                            return fail(MTronException.of("%s asks for %s=>%s, which its space's analq allows as %s", at, event, entry.getValue(), null == most ? "nothing" : T(most)));
+                        request.put(event, want);
+                    }
+                    if (!at.hasPattern() && !requests.containsKey(at) && measured.size() >= max)
+                        return fail(MTronException.of("%s cannot be measured: its space measures at most %s addresses", at, max));
+                    requests.put(at, request);
+                    publish.run();
+                    return obj;
+                })
                 .qlessRead((vid, obj) -> {
                     if (vid.hasQ())
                         return noobj();
@@ -601,6 +728,9 @@ public final class QCollection {
                     Analyzer.Helper.incr(analyzer, READ_COUNT, 1L);
                     if (nanos >= 0L)            // no Layer bracket (a source with its own sequence) is not a 0ns read
                         Analyzer.Helper.record(analyzer, READ_LATENCY, nanos);
+                    measure.accept(vid, "read", nanos);
+                    if (obj.isNoObj())
+                        measure.accept(vid, "miss", nanos);
                     return noobj();
                 })
                 .broadcast((vid, obj) -> {
@@ -612,14 +742,38 @@ public final class QCollection {
                     Analyzer.Helper.incr(analyzer, WRITE_COUNT, 1L);
                     if (nanos >= 0L)
                         Analyzer.Helper.record(analyzer, WRITE_LATENCY, nanos);
+                    measure.accept(vid, "write", nanos);
                     if (obj.isNoObj()) {
                         Analyzer.Helper.incr(analyzer, DELETE_COUNT, 1L);
                         if (nanos >= 0L)
                             Analyzer.Helper.record(analyzer, DELETE_LATENCY, nanos);
+                        measure.accept(vid, "delete", nanos);
                     }
                     return noobj();
                 })
                 .create();
+    }
+
+    /**
+     * an address's own readings out of its subtree: its events, never its children's
+     */
+    private static Obj own(final Obj readings) {
+        if (!readings.isRec())
+            return noobj();
+        final Map<Obj, Obj> events = new LinkedHashMap<>();
+        readings.asRec().jvm().forEach((key, value) -> {
+            if (ANALQ_EVENTS.contains(key.toString()))
+                events.put(key, value);
+        });
+        return rec(events, Analysis.ANALYSIS_TID, null);
+    }
+
+    /**
+     * three arguments, nothing answered: one event at one address
+     */
+    @FunctionalInterface
+    private interface TriConsumer<A, B, C> {
+        void accept(A a, B b, C c);
     }
 
     public static QProc docQ() {

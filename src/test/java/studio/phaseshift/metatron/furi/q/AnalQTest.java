@@ -22,14 +22,18 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
@@ -144,5 +148,67 @@ public interface AnalQTest extends QProcTest {
         for (final String segment : path)
             node = node.asRec().at(uri(segment));
         return node.intValue();
+    }
+
+    /**
+     * AN ADDRESS THAT ASKS IS MEASURED ON ITS OWN, AS IT ASKED (Marko, 2026-11-23). A request is the type of its readings
+     * ({@code read=>counter::T} reads back as a count), an empty request asks for everything the cap allows (here every
+     * event, as a timer), the children answer at {@code <addr>/+?analq}, an address that never asked answers the space's
+     * whole analysis, and noobj withdraws a request along with what it measured.
+     */
+    @Test
+    default void testAnalQMeasuresAnAddressThatAsks() {
+        final Space space = this.analQSpace();
+        final fURI base = this.analQBaseURI();
+        final fURI other = base.retract(1).extend("analq_other");
+        final fURI silent = base.retract(1).extend("analq_silent");
+        assertFalse(space.write(base.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID))).isFail(), "a request within the cap is taken");
+        space.write(base, jnt(1));
+        space.read(base);
+        space.read(base);
+        final Obj own = space.read(base.addQ(ANALQ));
+        assertEquals(2L, own.asRec().at(uri("read")).intValue(), "it counts the reads it asked for: " + own);
+        assertTrue(own.asRec().at(uri("write")).isNoObj(), "and nothing it did not ask for: " + own);
+        space.write(other.addQ(ANALQ), rec());
+        space.write(other, jnt(2));
+        assertEquals(1L, space.read(other.addQ(ANALQ)).asRec().at(uri("write/count")).intValue(),
+                "an empty request takes the whole cap: its write is timed, and a timer counts too");
+        final Obj children = space.read(base.retract(1).extend("+").addQ(ANALQ));
+        assertEquals(2L, children.asRec().at(uri(base.name())).asRec().at(uri("read")).intValue(),
+                "the children answer at +, each with its own readings: " + children);
+        space.read(silent);
+        assertFalse(space.read(silent.addQ(ANALQ)).asRec().at(uri("read/count")).isNoObj(),
+                "an address that never asked answers the space's whole analysis");
+        space.write(base.addQ(ANALQ), noobj());
+        assertTrue(space.read(base.retract(1).extend("#").addQ(ANALQ)).asRec().at(uri(f("addr").extend(base.asRelative()))).isNoObj(),
+                "a withdrawn request takes what it measured with it");
+        space.write(other.addQ(ANALQ), noobj());
+    }
+
+    /**
+     * A REQUEST FITS ITS SPACE'S CAP OR IS REFUSED: an event the cap does not name, or one asked for more finely than the
+     * cap measures it (a timer under a counter), fails the write, and so does an address past the cap's {@code max}.
+     */
+    @Test
+    default void testAnalQRefusesARequestBeyondItsCap() {
+        final Space space = this.analQSpace();
+        final fURI base = this.analQBaseURI();
+        final fURI other = base.retract(1).extend("analq_other");
+        space.qs().lstValue().removeIf(q -> ((QProc) q).pattern().equals(ANALQ_PATTERN));
+        space.addQ(QCollection.analQ(rec(uri("read"), T(Analysis.COUNTER_TID), uri("max"), jnt(1))));
+        try {
+            assertTrue(space.write(base.addQ(ANALQ), rec(uri("read"), T(Analysis.TIMER_TID))).isFail(),
+                    "a read asked to be timed under a cap that only counts it is refused");
+            assertTrue(space.write(base.addQ(ANALQ), rec(uri("write"), T(Analysis.COUNTER_TID))).isFail(),
+                    "an event the cap does not name is refused");
+            assertFalse(space.write(base.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID))).isFail(),
+                    "what the cap allows is taken");
+            space.read(base);
+            assertTrue(space.write(other.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID))).isFail(),
+                    "a second address is past the cap's max of one");
+        } finally {
+            space.qs().lstValue().removeIf(q -> ((QProc) q).pattern().equals(ANALQ_PATTERN));
+            space.addQ(QCollection.analQ());
+        }
     }
 }
