@@ -775,6 +775,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         if (!tid.b().isOne())
             sb.append("{").append(tid.b().toString()).append("}");
         sb.append(tid.basePath().small());
+        // THE POINT TRAILS THE NAME, before the query, as the plain serializer writes it: the console drew plus{3}(34)
+        // as plus(34), so a lane's pointed program looked unpointed wherever it was shown
+        if (null != tid.d() && !tid.d().isOne())
+            sb.append("{").append(tid.d().toString()).append("}");
         // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
         // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side
         // that IS the default is left empty rather than spelled out: writing #{*} or #{?} there

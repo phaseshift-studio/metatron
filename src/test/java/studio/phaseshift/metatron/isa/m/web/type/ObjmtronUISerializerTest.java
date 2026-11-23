@@ -517,4 +517,17 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         this.LOG.debug("a spanned chain => %s", new Object[]{written});
         Assertions.assertTrue(written.contains("{0,4}"), written);
     }
+
+    /**
+     * THE DISPLAY SERIALIZER KEEPS THE POINT TOO, after the name and before the query: the console drew
+     * {@code plus{3}(34)} as {@code plus(34)}, so a lane's pointed program looked unpointed wherever it was shown.
+     */
+    @Test
+    public void testAPointedInstructionShowsItsPoint() {
+        final Obj code = ObjmtronSerializer.parse("start(1).{2}plus{3}(34).plus{3}?hop=0(34)").asCode();
+        final String written = ObjmtronUISerializer.blackWhite().write(code);
+        this.LOG.debug("a pointed chain => %s", new Object[]{written});
+        Assertions.assertTrue(written.contains("{2}plus{3}(34)"), written);
+        Assertions.assertTrue(written.contains("plus{3}?hop=0(34)"), written);
+    }
 }

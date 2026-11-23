@@ -443,6 +443,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (!tid.b().isOne())
             sb.append("{").append(tid.b().toString()).append("}");
         sb.append(tid.basePath());
+        // THE POINT IS THE INSTRUCTION'S TRAILING COEFFICIENT (op{c}), written after the name and before the query, the
+        // one place the parser reads it back into the tid's point (op?q{c} is not read as one). basePath() carries no
+        // coefficient, so plus{3}(34) printed as plus(34), and every lane law_shard shipped with a point ran unpointed on
+        // its peer: 1.plus{3}(34).plus{3}(34) answered {3}69, the lane count, for {9}69 (Marko, 2026-11-23)
+        if (null != tid.d() && !tid.d().isOne())
+            sb.append("{").append(tid.d().toString()).append("}");
         // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
         // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side
         // that IS the default is left empty rather than spelled out: writing #{*} or #{?} there

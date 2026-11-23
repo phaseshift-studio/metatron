@@ -650,6 +650,10 @@ public class PlaceLaneTest extends AbstractMetatronTest {
                         .map(point -> String.valueOf(point.min())).findFirst().orElse("1"))
                 .collect(Collectors.joining("|")), "the shares of the point: " + emitted);
         checkEquality(LOG, jnt(expected), evaluate(emitted).clone().selfVID(null), true);
+        // AND THE LAYOUT READ BACK FROM ITS WIRE FORM ANSWERS THE SAME: a lane reaches its peer as text, so a point the
+        // writer drops is a point the peer never runs, and the loop transport, handing objects over, never sees it
+        final Code wired = ObjmtronSerializer.parse(ObjmtronSerializer.single().write(emitted)).asCode();
+        checkEquality(LOG, jnt(expected), evaluate(wired).clone().selfVID(null), true);
     }
 
     /**

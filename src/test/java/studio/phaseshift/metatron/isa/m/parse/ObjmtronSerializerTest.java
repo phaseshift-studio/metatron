@@ -22,12 +22,29 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractSerializerTest;
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -166,5 +183,144 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         // READ IS THE WIRE'S OWN READER: a code expression is applied, so the round trip is the parser's code (the
         // text is a program, and reading it as a value would run it).
         checkEquality(LOG, code, ObjmtronSerializer.parse(wire).asCode(), true);
+    }
+
+    /// /////////////////////////////////////////////////////////////////////////////////////
+    /// STRICTNESS: NO COEFFICIENT IS LOST OR CORRUPTED ON THE WIRE
+    ///
+    /// An obj carries two coefficients (span-and-point-coefficient-algebra.md): a POINT, its mass ({c}x on a value,
+    /// op{c} on an instruction), and a SPAN, its extent (x{n} on a value, {n}op on an instruction). The writer is
+    /// rewritten often, and each time it can drop one without a single test failing: the 11-12 fix restored an
+    /// instruction's span, the point stayed dropped, and law_shard's lanes, which reach their peers as text, ran
+    /// unpointed for five days. Every row below is a round trip twice over: the text read back EQUALS what was written,
+    /// and every node of the tree keeps its base path, span, point and vid (nodes()), so a coefficient lost anywhere in
+    /// the tree fails at the node it was lost at, even if equality were ever loosened.
+    /// /////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * AN INSTRUCTION KEEPS EVERY COEFFICIENT ACROSS THE WIRE: a point alone and twice in a chain (the chain the peers
+     * answered {@code {3}69} for {@code {9}69}), negative and ranged, on an instruction with no arguments, beside a query
+     * and under a span; a span exact, negative, ranged and open; and either inside a branch, a rec value, a lst and a
+     * nested code, which is where a lane is held. The written fragment, where a row states one, must appear in the text
+     * as written: a point trails the name and precedes the query, the one place the parser reads it back. A ranged
+     * coefficient states none, as its spelling is the coefficient's own to choose; the round trip still pins it.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start(1).plus{3}(34)                         % plus{3}(34)",
+            "start(1).plus{3}(34).plus{3}(34)             % plus{3}(34)",
+            "start(1).plus{-1}(34)                        % plus{-1}(34)",
+            "start(1).plus{?}(2)                          %",
+            "start(5).id{3}()                             % id{3}()",
+            "start(1).plus{3}?hop=0(34)                   % plus{3}?hop=0(34)",
+            "start(1).{2}plus(34)                         % {2}",
+            "start(5).{-2}plus(1)                         % {-2}",
+            "start(0).{0,4}plus(1)                        % {0,4}",
+            "start(0).{*}plus(1)                          %",
+            "start(1).{2}plus{3}(34)                      % plus{3}(34)",
+            "start(1).{2,3}plus{3}(1)                     % plus{3}(1)",
+            "start(5).{-1}plus{3}(1)                      % plus{3}(1)",
+            "start(5).branch(plus{2}(34),mult{3}(2))      % mult{3}(2)",
+            "start([a=>plus{2}(34)])                      % plus{2}(34)",
+            "start([plus{2}(34),mult{3}(2)])              % mult{3}(2)",
+            "start([a=>start(1).plus(34).plus{3}(34)])    % plus{3}(34)",
+    }, delimiter = '%')
+    void testAnInstructionKeepsEveryCoefficientAcrossTheWire(final String source, final String written) {
+        final Code code = ObjmtronSerializer.parse(source).asCode();
+        final String wire = ObjmtronSerializer.single().write(code);
+        LOG.debug("testing {{b}}%s{{/b}} on the wire as {{b}}%s{{/b}}", source, wire);
+        if (null != written)
+            assertTrue(wire.contains(written.trim()), () -> "the coefficient is written as " + written.trim() + ": " + wire);
+        final Code back = ObjmtronSerializer.parse(wire).asCode();
+        checkEquality(LOG, code, back, true);
+        assertEquals(nodes(code), nodes(back), () -> "every node keeps its base path, span, point and vid: " + wire);
+    }
+
+    /**
+     * A VALUE KEEPS EVERY COEFFICIENT ACROSS THE WIRE, through the wire's own writer and reader: a point positive,
+     * negative and ranged, a span curled on the value, both at once, on a str and on a uri; a point at a lst slot and a
+     * span laid along one, a point in a rec value and on a whole lst; and a type's point, and the slot mass and slot run
+     * of a lst type.
+     */
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '`', value = {
+            "{3}5",
+            "{-1}5",
+            "{?}3",
+            "5{3}",
+            "{2}5{3}",
+            "{-1}5{4}",
+            "{3}'a'",
+            "{2}a/b",
+            "[{2}3,4]",
+            "[3{2}]",
+            "[a=>{3}5]",
+            "{2}[1,2]",
+            "int{3}::T",
+            "lst[{2}int]::T",
+            "lst[int{2}]::T",
+    })
+    void testAValueKeepsEveryCoefficientAcrossTheWire(final String literal) {
+        final Obj value = ObjmtronSerializer.parse(literal).apply();
+        final String wire = ObjmtronSerializer.single().write(value);
+        LOG.debug("testing {{b}}%s{{/b}} on the wire as {{b}}%s{{/b}}", literal, wire);
+        final Obj back = ObjmtronSerializer.single().read(wire);
+        checkEquality(LOG, value, back, true);
+        assertEquals(nodes(value), nodes(back), () -> "every node keeps its base path, span, point and vid: " + wire);
+    }
+
+    /**
+     * A LANE KEEPS ITS POINTS ACROSS THE WIRE, built in Java as law_shard builds a layout, never parsed: a keyed branch
+     * whose rec holds one code per place, each lane stamped with its budget and carrying a narrowed share
+     * ({@code plus{2}}) and the run's other point ({@code plus{3}}). A peer reads exactly this text, so a point the
+     * writer drops is a point the peer never runs.
+     */
+    @Test
+    void testALaneKeepsItsPointsAcrossTheWire() {
+        final Code lane = code(List.of(
+                instB(START_INST_TID.q(HOP, "0"), lst(jnt(1))),
+                instB(PLUS_INST_TID.d(cInt.of(2L)), lst(jnt(34))),
+                instB(PLUS_INST_TID.d(cInt.of(3L)), lst(jnt(34)))));
+        final Map<Obj, Obj> routes = new LinkedHashMap<>();
+        routes.put(uri(f("http://localhost:8777")), lane);
+        routes.put(uri(f("ws://192.168.1.72:8555")), lane);
+        final Code layout = code(List.of(instB(BRANCH_INST_TID, rec(routes))));
+        final String wire = ObjmtronSerializer.single().write(layout);
+        LOG.debug("a pointed layout on the wire: %s", wire);
+        assertTrue(wire.contains("plus{2}(34)") && wire.contains("plus{3}(34)"), () -> "every lane's points are written: " + wire);
+        final Code back = ObjmtronSerializer.parse(wire).asCode();
+        checkEquality(LOG, layout, back, true);
+        assertEquals(nodes(layout), nodes(back), () -> "every node keeps its base path, span, point and vid: " + wire);
+    }
+
+    /**
+     * EVERY NODE AS THE WIRE MUST KEEP IT: its base path, span, point and vid, depth first through a code's instructions,
+     * an instruction's arguments, a rec's keys and values, a lst's entries and a stream's members.
+     */
+    private static List<String> nodes(final Obj obj) {
+        final List<String> nodes = new ArrayList<>();
+        nodes(obj, nodes);
+        return nodes;
+    }
+
+    private static void nodes(final Obj obj, final List<String> nodes) {
+        if (obj.isNoObj()) {
+            nodes.add("noobj");
+            return;
+        }
+        nodes.add(obj.tid().basePath() + "{b=" + obj.tid().b() + ",d=" + obj.tid().d() + "}" + (obj.hasVID() ? "@" + obj.vid() : ""));
+        if (obj.isCode())
+            obj.asCode().insts().forEach(inst -> nodes(inst, nodes));
+        else if (obj.isInst())
+            nodes(obj.asInst().args(), nodes);
+        else if (obj.isRec())
+            obj.asRec().<Rel>elements().forEach(kv -> {
+                nodes(kv.first(), nodes);
+                nodes(kv.second(), nodes);
+            });
+        else if (obj.isLst())
+            obj.asLst().<Obj>elements().forEach(entry -> nodes(entry, nodes));
+        else if (obj.isObjs())
+            obj.stream().forEach(member -> nodes(member, nodes));
     }
 }
