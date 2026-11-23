@@ -407,7 +407,7 @@ records into `Analyzer.PROFILE`.
   - It answers there, the spaces at `/memory/space/+?analq`, and memory's totals at `/memory/#?analq`.
   - An analyzer is read where its holder is: the holder's own (`~/network/analyzer`), else the one its `?analq` holds
     (`Addressable.analq()`): `~/memory/analyzer`, `~/memory/space/<s>/analyzer`.
-- **A server** (`http_server`, `ws_server`, `mqtt_server`) is an addressable source carrying its own `?analq` from
+- **A server** (`http_server`, `ws_server`, `mqtt_server`) takes the q-procs its config declares on a socket it binds (`Listener.declare`, an analq replacing the built-in one; a config that joins a held socket changes nothing). It is an addressable source carrying its own `?analq` from
   construction (`Listener`), so `*<origin>/#?analq` answers that socket's analysis: a request or a received message is
   a read at its wire address (timed over its whole answer and counted with that latency once the answer is given;
   only the wire, `wire/recv`, counts a frame as it arrives), a sent message a write, a hang-up a write of `noobj`, and
@@ -464,6 +464,11 @@ every `profile()` reset for everyone; and `Stats`/`MStats`/`IOStats`/`MonadicSta
   a component's own analyzer (`Aggregator.analyzer()`) and its `?analq`'s (`Addressable.analq()`) are named apart:
   memory and the network are both;
 - an instset and `mqttSpace` run their own q-proc sequence and never count a read;
+- in a pushed machine, memory's `?analq` counts at the level that routes the access: a hit on a parent level's space
+  is counted by the child's union only, and a child's request for an inherited space never matches, since the space is
+  counted at the parent's mount;
+- an address with a segment named after an event (`…/read`) is measured in its space's totals only, since its readings
+  would nest where its parent's reading is; a wildcard access names no address and counts in the totals alone;
 - the OpenMetrics serializer and an `http_server` route over `~/+/analyzer/analysis` (the Grafana path);
 - the query-execution timer is the processor's `time` (2026-11-23), and with `eval` it counts every computer's run,
   nested argument evaluations included — open: whether the evaluations a user submits (`Machine.evaluate`, the

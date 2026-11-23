@@ -300,7 +300,7 @@ answers `analysis::[read=>counter::12]`. The request is the type of its answer: 
 `*/memory/space/+?analq` reads every space, and `*/memory/analyzer` (or `*/memory/space/logs/analyzer`, for a space
 with its own analq) reads the analyzer where it is held.
 
-A **server is an addressable source too**, and its metrics are its own `?analq`. A listener is instrumented at
+A **server is an addressable source too**, and its metrics are its own `?analq` (one its config declares, `ws_server::[…, q=>[analq::[read=>counter::T]]]`, takes the built-in one's place on a socket the config binds). A listener is instrumented at
 construction, so `<scheme>://host:port/#?analq` answers that socket's analysis: a request or a received message is a
 `read` at its wire address, a sent message a `write` there, a hang-up a write of `noobj` (the `delete` subset), and
 `connections` a gauge beside them. Each socket's q-proc holds its own analyzer, so two servers on one machine never

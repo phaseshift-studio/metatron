@@ -412,6 +412,8 @@ public class machInstSet extends AbstractInstSet {
                                         uri("mute").maybe().asUri(), ALL_TYPE), Map.of(
                                         uri(ANALYSIS).maybe(), "the analysis::T the component has measured, built from its meters each time it is read",
                                         uri("mute").maybe(), "the probes muted (written noobj at analysis/<probe>), a lst of uris read as they stand; an analyzer built from another's rec, as a pushed machine's is, starts with its mutes",
+                                        uri("cap").maybe(), "an analq's analyzer only: the cap its space declared, analq::[event=>meter::T, max=>int::T], the widest request an address may make",
+                                        uri("request").maybe(), "an analq's analyzer only: the addresses that asked to be measured, each => the analysis::[event=>meter::T] it asked for; their readings are under analysis/addr/<path>",
                                         uri(STEP).maybe(), "the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step",
                                         uri(PROFILE).maybe(), "whether the component's costly instrumentation is on (default false): the processor's per-monad timings"))
                                 .example("*~/processor/analyzer/analysis   [-- the machine's evaluations: eval, time, fail --]",
@@ -597,7 +599,7 @@ public class machInstSet extends AbstractInstSet {
                         // absolute index is the `space` entry inside it, so both are reachable from mtron
                         MACH_MEMORY_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_MEMORY_TID, "the memory contract of machine::T — a machine's data memory, the address space of instances: its relative bindings are the rec itself, and its index of absolute spaces is its space entry. A pushed machine's memory is a level over its parent's: a read falls through to the enclosing level, a write lands in this one. A read asks the network, then memory, then the instruction set when memory misses; memory routes names to addresses, the instruction set answers addresses.")
+                                .vid(MACH_MEMORY_TID, "the memory contract of machine::T — a machine's data memory, the address space of instances: its relative bindings are the rec itself, and its index of absolute spaces is its space entry. A pushed machine's memory is a level over its parent's: a read falls through to the enclosing level, a write lands in this one. A read asks the network, then memory, then the instruction set when memory misses; memory routes names to addresses, the instruction set answers addresses. Memory is a space whose addresses are its spaces: the q-procs it declares (q => [analq::[…]]) see every access it routes, at the address of the space that covers it, so /memory/space/<s>?analq -> analysis::[…] measures that space.")
                                 .slots(mutableMap(
                                         uri(SPACE), "the absolute spaces mounted at this level, by vid; an instruction set handed to memory is referred into the instset instead",
                                         uri(REDIRECT), "the redirect table: a short name to its home path, resolved by the nearest declaration (memory's prefix table)"))
