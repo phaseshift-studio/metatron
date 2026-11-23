@@ -113,10 +113,59 @@ public class WsClientProtocolTest extends AbstractMetatronTest {
         InstSet.importInstSet(WEB_ISA_TID);
         final int farPort = generatePort();
         final String tag = "0x5e1f0001";
-        final CompletableFuture<Void> started = new CompletableFuture<>();
         final CompletableFuture<WebSocket> session = new CompletableFuture<>();
         final CompletableFuture<String> answer = new CompletableFuture<>();
-        final WebSocketServer far = new WebSocketServer(new InetSocketAddress("localhost", farPort)) {
+        final WebSocketServer far = far(farPort, tag, session, answer);
+        final fURI x = f("/sys/hat/x");
+        try {
+            ObjmtronSerializer.parse("ws_client::[host=><ws://localhost:" + farPort + "/mtron>,protocol=>mtron_ws]@self").apply();
+            session.get(10, TimeUnit.SECONDS).send("reply(5.vid(</sys/hat/x>),<" + tag + ">)");
+            final String reply = answer.get(10, TimeUnit.SECONDS);
+            LOG.debug("the protocol client answered the request: %s", reply);
+            assertTrue(reply.contains("/sys/hat/x"), "the request must be answered, or this test proves nothing: " + reply);
+            checkEquality(LOG, jnt(5).selfVID(x), Machine.read(x), true);
+        } finally {
+            Machine.current().network().drop(f("ws://localhost:" + farPort));
+            Machine.write(x, noobj());
+            far.stop(1000);
+        }
+    }
+
+    /**
+     * A PROTOCOL CLIENT COUNTS A REQUEST AS IT ARRIVES, before it runs it. The client evaluates a request while it reads
+     * the frame, so a count taken after the read came after the program: here the request's program reads the wire,
+     * and finds its own frame already counted.
+     */
+    @Test
+    void testAProtocolClientCountsARequestBeforeItRunsIt() throws Exception {
+        InstSet.importInstSet(WEB_ISA_TID);
+        final int farPort = generatePort();
+        final String tag = "0x5e1f0002";
+        final CompletableFuture<WebSocket> session = new CompletableFuture<>();
+        final CompletableFuture<String> answer = new CompletableFuture<>();
+        final WebSocketServer far = far(farPort, tag, session, answer);
+        try {
+            ObjmtronSerializer.parse("ws_client::[host=><ws://localhost:" + farPort + "/mtron>,protocol=>mtron_ws]@self").apply();
+            final WebSocket conn = session.get(10, TimeUnit.SECONDS);
+            // a client's frames arrive on a socket thread, which stands in no machine: they count on this machine's wire
+            final long before = Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue();
+            conn.send("reply(*/network/analyzer/analysis/wire/recv.gt(" + before + "),<" + tag + ">)");
+            final String reply = answer.get(10, TimeUnit.SECONDS);
+            assertTrue(reply.contains("true"), "the request read the wire with its own frame already counted: " + reply);
+        } finally {
+            Machine.current().network().drop(f("ws://localhost:" + farPort));
+            far.stop(1000);
+        }
+    }
+
+    /**
+     * A BARE FAR SIDE at {@code port}, started: a socket that evaluates nothing, hands over its one session, and
+     * completes {@code answer} with the first frame that carries {@code tag}.
+     */
+    private static WebSocketServer far(final int port, final String tag, final CompletableFuture<WebSocket> session,
+                                       final CompletableFuture<String> answer) throws Exception {
+        final CompletableFuture<Void> started = new CompletableFuture<>();
+        final WebSocketServer far = new WebSocketServer(new InetSocketAddress("localhost", port)) {
             @Override
             public void onStart() {
                 started.complete(null);
@@ -145,19 +194,7 @@ public class WsClientProtocolTest extends AbstractMetatronTest {
         };
         far.setReuseAddr(true);
         far.start();
-        final fURI x = f("/sys/hat/x");
-        try {
-            started.get(5, TimeUnit.SECONDS);
-            ObjmtronSerializer.parse("ws_client::[host=><ws://localhost:" + farPort + "/mtron>,protocol=>mtron_ws]@self").apply();
-            session.get(10, TimeUnit.SECONDS).send("reply(5.vid(</sys/hat/x>),<" + tag + ">)");
-            final String reply = answer.get(10, TimeUnit.SECONDS);
-            LOG.debug("the protocol client answered the request: %s", reply);
-            assertTrue(reply.contains("/sys/hat/x"), "the request must be answered, or this test proves nothing: " + reply);
-            checkEquality(LOG, jnt(5).selfVID(x), Machine.read(x), true);
-        } finally {
-            Machine.current().network().drop(f("ws://localhost:" + farPort));
-            Machine.write(x, noobj());
-            far.stop(1000);
-        }
+        started.get(5, TimeUnit.SECONDS);
+        return far;
     }
 }

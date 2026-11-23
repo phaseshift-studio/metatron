@@ -56,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_HANDLER_TID;
@@ -347,11 +348,10 @@ public class wsServerTest extends AbstractMetatronTest {
         final Obj answer = network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)"));
         assertFalse(answer.isFail(), "the socket answered: " + answer);
 
-        final Rec analysis = Machine.read(analysisAddress).asRec();
-        assertTrue(analysis.at(uri("read")).asRec().at(uri("count")).intValue() >= 1L,
-                "the request is a read in the socket's analysis: " + analysis);
-        assertTrue(analysis.at(uri("read")).asRec().at(uri("latency")).asRec().at(uri("count")).intValue() >= 1L,
+        // the request is a read in the socket's analysis, once its answer has been given
+        assertTrue(this.reads(1L).at(uri("latency")).asRec().at(uri("count")).intValue() >= 1L,
                 "and the read is timed where the handler ran");
+        final Rec analysis = Machine.read(analysisAddress).asRec();
         assertTrue(analysis.at(uri("write")).asRec().at(uri("count")).intValue() >= 1L,
                 "the reply is a write at the route it served");
         assertEquals(1.0d, analysis.at(uri("connections")).realValue(), "connections is a gauge, one live session");
@@ -393,9 +393,9 @@ public class wsServerTest extends AbstractMetatronTest {
     }
 
     /**
-     * AN MCP REQUEST IS COUNTED AS IT ARRIVES, as every frame is: on the wire of the machine whose route it took, and
-     * as a read in the socket's own analysis. An mcp session answers without on_message, which is where a frame used to
-     * be counted, so its requests were counted nowhere.
+     * AN MCP REQUEST IS COUNTED, as every frame is: on the wire of the machine whose route it took as it arrives, and as
+     * a read in the socket's own analysis once it is answered. An mcp session answers without on_message, which is where
+     * a frame used to be counted, so its requests were counted nowhere.
      */
     @Test
     void testAnMcpRequestIsCountedAsItArrives() throws Exception {
@@ -410,11 +410,41 @@ public class wsServerTest extends AbstractMetatronTest {
             assertNotNull(replies.poll(5, TimeUnit.SECONDS), "the server answers the ping");
             assertEquals(before + 1L, Machine.read(f("/network/analyzer/analysis/wire/recv")).orElse(jnt(0)).intValue(),
                     "the request crossed the wire into this machine");
-            final Rec analysis = Machine.read(this.socket.extend(ALL).addQ("analq")).asRec();
-            assertEquals(1L, analysis.at(uri("read")).asRec().at(uri("count")).intValue(),
-                    "and is a read in the socket's own analysis: " + analysis);
+            assertEquals(1L, this.reads(1L).at(uri("count")).intValue(), "and is a read in the socket's own analysis");
         } finally {
             client.closeBlocking();
         }
+    }
+
+    /**
+     * A FRAME'S READ IS TIMED OVER ITS WHOLE ANSWER: the socket's read/latency spans the program the frame carries, not
+     * only the on_message that sends the answer after it.
+     */
+    @Test
+    void testAReadIsTimedOverItsProgram() {
+        InstSet.importInstSet(SYS_ISA_TID);
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final Network network = Machine.current().network();
+        Network.Helper.connect(network, this.socket.extend("mtron"), WS_CLIENT_TID);
+        final Obj answer = network.submit(this.socket, ObjmtronSerializer.parse("1.sleep(millis::200.0)"));
+        assertFalse(answer.isFail(), "the socket answered: " + answer);
+        final Rec latency = this.reads(1L).at(uri("latency")).asRec();
+        assertTrue(latency.at(uri("max")).intValue() >= 200_000_000L, "the read spans the program's 200ms: " + latency);
+    }
+
+    /**
+     * this socket's read meters once {@code count} reads have landed. A read is recorded when its answer has been given
+     * (QProc.Layer records it after the source returns, and the source is what sends the answer), so a client holding
+     * the answer can look before the read lands.
+     */
+    private Rec reads(final long count) {
+        final fURI analysis = this.socket.extend(ALL).addQ("analq");
+        Obj reads = Machine.read(analysis).asRec().at(uri("read"));
+        for (int waited = 0; waited < 5_000 && (reads.isNoObj() || reads.asRec().at(uri("count")).intValue() < count); waited += 50) {
+            CommonUtil.sleepThread(50);
+            reads = Machine.read(analysis).asRec().at(uri("read"));
+        }
+        assertFalse(reads.isNoObj(), "a read lands in the socket's analysis within five seconds");
+        return reads.asRec();
     }
 }

@@ -465,10 +465,11 @@ public final class wsServer extends Listener {
             // a hang-up between the lookup and here found no thread to interrupt, so the session is asked for again
             if (session == this.sessions.get(conn))
                 as(session.route().machine(), () -> {
-                    // THE FRAME IS COUNTED AS IT ARRIVES, before any of it runs: an mtron session evaluates its frame
-                    // before on_message, and an mcp session answers it without on_message, so a count in the session's
-                    // handler came after the program, or never. It counts on the wire of the machine whose route it
-                    // took, and as a READ at that route in this socket's analyzer, timed over the whole answer.
+                    // THE WIRE COUNTS THE FRAME AS IT ARRIVES, before any of it runs: an mtron session evaluates its
+                    // frame before on_message, and an mcp session answers it without on_message, so a count in the
+                    // session's handler came after the program, or never. It counts on the wire of the machine whose
+                    // route it took. The whole answer is then a READ at that route in this socket's analyzer: timed
+                    // from here, and counted with its latency once the answer has been given.
                     Machine.current().network().analyzer().incr(f(WIRE), f(RECV), 1L);
                     QProc.Layer.read(this, session.rec().wire(), () -> {
                         session.rec().onMessage(conn, message);

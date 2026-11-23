@@ -208,23 +208,17 @@ public class WebSocketRec extends MRec implements WebSocketObj {
 
     @Override
     public void onMessage(final WebSocket conn, final Obj message) {
-        // the frame was counted as it arrived, before it was read or run: on the wire and as a read at its route by the
-        // server that took it (wsServer), on the wire by the client that read it (WebSocketRecClient)
+        // the frame is metered before it reaches here: the wire counted it as it arrived, at the server that took it
+        // (wsServer, which also times its whole answer as a read at the route) or the client that read it
+        // (WebSocketRecClient). A FAIL IS CAUGHT BEFORE THE HANDLER IS ASKED TO RUN: an uncaught fail lhs skips a
+        // non-catch instruction's function (Processor.applyFunction's "a fail lhs skips the function" gate), so a frame
+        // whose answer is a fail would never reach on_message at all — not the socket's round-trip router, not a user
+        // handler. The answer's address is untouched: catching changes what the fail IS, not where it is.
         try {
-            this.handle(message);
+            this.at(uri(ON_MESSAGE)).apply(message.isFail() ? message.asFail().caughtTransient() : message);
         } catch (final Exception e) {
             LOG.error("error processing message: %s", e);
         }
-    }
-
-    /**
-     * A FAIL IS CAUGHT BEFORE THE HANDLER IS ASKED TO RUN. An uncaught fail lhs skips a non-catch instruction's
-     * function (Processor.applyFunction's "a fail lhs skips the function" gate), so a frame whose answer is a fail
-     * would never reach on_message at all — not the socket's round-trip router, not a user handler. The answer's
-     * address is untouched: catching changes what the fail IS, not where it is.
-     */
-    private void handle(final Obj message) {
-        this.at(uri(ON_MESSAGE)).apply(message.isFail() ? message.asFail().caughtTransient() : message);
     }
 
     @Override

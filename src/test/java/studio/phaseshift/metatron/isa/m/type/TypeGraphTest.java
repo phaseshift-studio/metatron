@@ -33,6 +33,8 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -90,7 +92,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
      * its own for one profile to reset under another.
      */
     @Test
-    public void testProfiledLookupsCountIntoTheProfile() throws InterruptedException {
+    public void testProfiledLookupsCountIntoTheProfile() throws Exception {
         final TypeGraph graph = Machine.current().memory().typeGraph();
         // resolved once, up front: a resolver that walked the graph itself would add lookups of its own to the counts
         final Type type = MType.T(f("int"));
@@ -103,10 +105,11 @@ public class TypeGraphTest extends AbstractMetatronTest {
             graph.clear();
             graph.memo(key, () -> type);    // a miss, cached again
             graph.memo(key, () -> type);    // a hit
-            // a concurrent evaluation's hit is that evaluation's, not this run's
-            final Thread other = new Thread(() -> graph.memo(key, () -> type));
-            other.start();
-            other.join();
+            // a concurrent evaluation's hit is that evaluation's, not this run's -- and it did happen: its answer is
+            // the cached type, so a lookup that threw on the other thread cannot pass for one that counted nowhere
+            final FutureTask<Type> other = new FutureTask<>(() -> graph.memo(key, () -> type));
+            new Thread(other).start();
+            assertSame(type, other.get(5, TimeUnit.SECONDS), "the other thread's lookup ran, and hit");
             // a key that names nothing bypasses the cache, and a bypass is no lookup
             graph.memo(new TypeGraph.Key(null, null, null, null), () -> type);
         } finally {

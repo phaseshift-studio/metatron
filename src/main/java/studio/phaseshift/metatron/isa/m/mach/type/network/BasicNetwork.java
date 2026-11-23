@@ -103,7 +103,8 @@ public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
         }
         jvm.putIfAbsent(uri(PATTERN), uri(UNMOUNTED));
         // THE WIRE'S METERS: every level carries its own analyzer, exactly as a processor does. The frame taps count
-        // into it where the frame crosses (WebSocketRec/WebSocketObj), and the machine's space answers it at
+        // into it where the frame crosses (WebSocketObj.send; wsServer.evaluate and WebSocketRecClient.readFrame as a
+        // frame arrives), and the machine's space answers it at
         // ~/network/analyzer. It is a CONSTRUCTED component field, never a config the caller supplies -- a network
         // with no meters could not record the sockets it holds, and every wire read would throw in the tap.
         jvm.putIfAbsent(uri(ANALYZER), new BasicAnalyzer(NETWORK));

@@ -337,9 +337,9 @@ and the analyzer it records into is the one its own `?analq` q-proc holds.
   carries a query is metadata traffic and is not counted.
 - **A server** (`http_server`, `ws_server`, `mqtt_server`) is an addressable source carrying its own `?analq` from
   construction (`Listener`), so `*<origin>/#?analq` answers that socket's analysis: a request or a received message is
-  a read at its wire address (counted as it arrives, timed over its whole answer), a sent message a write, a
-  hang-up a write of `noobj`, and `connections` a gauge set through `Recorder.Helper`. Two servers on one machine
-  never share meters.
+  a read at its wire address (timed over its whole answer and counted with that latency once the answer is given;
+  only the wire, `wire/recv`, counts a frame as it arrives), a sent message a write, a hang-up a write of `noobj`, and
+  `connections` a gauge set through `Recorder.Helper`. Two servers on one machine never share meters.
 - The 2026-11-15 design bound each server to a shared bucket under the network's analyzer
   (`analyzer => ~/network/analyzer/web_analyzer/http`, resolved by `Analyzable.Helper.locateBase`). The per-socket
   `?analq` replaced it on 2026-11-16; `Recorder.Helper.locateBaseAnalyzer` is that walk's remnant.
