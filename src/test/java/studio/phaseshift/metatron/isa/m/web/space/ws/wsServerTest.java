@@ -36,9 +36,13 @@ import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -55,7 +59,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.INST_CTOR_TID;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
+import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.Tokens.RUN;
@@ -63,6 +69,7 @@ import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -72,6 +79,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TID;
@@ -578,6 +586,75 @@ public class wsServerTest extends AbstractMetatronTest {
         } finally {
             Machine.write(f("/network/analyzer/analysis").addQ(SUBQ), noobj());
             network.drop(this.socket);
+            Machine.current(child);
+            child.pop();
+        }
+    }
+
+    /**
+     * AN OBSERVER'S ROUND TRIP FROM THE SERVER ANNOUNCES NOTHING, as one from the client does: a subscriber to the
+     * analysis of the machine whose route a connection took asks the client for something on each delivery, through the
+     * session that connection opened ({@code mtron_ws}'s apply is its round trip), and the client, wearing the mtron
+     * protocol, answers it. The reply arrives on the socket's own thread, which no executor marked, so the server reads
+     * it under {@link Analyzer#REPLY} while the trip is outstanding: it is counted on that machine's wire and announced
+     * never, and the machine goes quiet after the change that started it. The client dialed from the root, so the
+     * request it is asked and the answer it sends count on the root's wire, which no one observes here.
+     * <p>
+     * A loopback dial mints no inbound peer ({@link Network#accept}), so nothing but its socket reaches the session: the
+     * route's handler is a type whose constructor is {@code mtron_ws}'s own, keeping the session it builds.
+     */
+    @Test
+    void testAnObserversRoundTripFromTheServerAnnouncesNothing() throws Exception {
+        final Machine root = Machine.current();
+        final Machine child = root.push(f("ws_server_observed"));
+        final CompletableFuture<mtron_wsHandler> accepted = new CompletableFuture<>();
+        final Type kept = TypeBuilder.build().tid(WS_MTRON_HANDLER_TID).vid(f("/t/ws_server/kept_ws"))
+                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MTRON_HANDLER_TID), lst(T(REC_TID)), (_, inst) -> {
+                    final Obj built = WS_MTRON_HANDLER_TYPE.constructor().apply(inst.arg(0));
+                    accepted.complete(built.as());
+                    return built;
+                })).create();
+        // the server types a session by its route's type, so the type is published where that tid is read
+        Machine.write(kept.vid(), kept);
+        wsServer.serve(this.socket, rec(uri("/child"), kept));
+        Machine.current(root);
+        final Network network = root.network();
+        final AtomicInteger heard = new AtomicInteger();
+        final List<Obj> answers = Collections.synchronizedList(new ArrayList<>());
+        try {
+            ObjmtronSerializer.parse("ws_client::[host=><" + this.socket.extend("child") + ">,protocol=>mtron_ws]").apply();
+            checkEquality(LOG, jnt(2), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)")), true);
+            final mtron_wsHandler session = accepted.get(5, TimeUnit.SECONDS);
+            Machine.current(child);
+            final Analyzer analyzer = child.network().analyzer();
+            final long received = analyzer.analysis().at(uri("wire/recv")).orElse(jnt(0)).intValue();
+            Machine.write(f("~/network/analyzer/analysis").addQ(SUBQ), instLambda((pub, inst) -> {
+                heard.incrementAndGet();
+                answers.add(FutureObj.resolveFuture(session.apply(ObjmtronSerializer.parse("1.plus(2)"))));
+                return noobj();
+            }));
+            Analyzer.Helper.incr(analyzer, f("observer/kick"), 1L);
+            // QUIET IS A COUNT THAT HOLDS FOR A WHOLE WINDOW once every trip was answered: a late delivery only moves
+            // it, and a reply that announced its own trip would never let it hold
+            final long deadline = System.currentTimeMillis() + 10_000L;
+            int settled = -1;
+            while (-1 == settled && System.currentTimeMillis() < deadline) {
+                final int seen = heard.get();
+                CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
+                if (seen > 0 && seen == answers.size() && seen == heard.get())
+                    settled = seen;
+            }
+            assertTrue(settled >= 1, "the route's machine went quiet after the subscriber's round trip: heard " + heard.get() + ", answers " + answers);
+            checkEquality(LOG, jnt(3), answers.getFirst(), true);
+            // COUNTED, NEVER ANNOUNCED: each reply crossed into the route's machine and is on its wire
+            assertEquals(received + answers.size(), analyzer.analysis().at(uri("wire/recv")).orElse(jnt(0)).intValue(),
+                    "every reply is counted on the wire of the machine whose route it took");
+        } finally {
+            Machine.current(child);
+            Machine.write(f("~/network/analyzer/analysis").addQ(SUBQ), noobj());
+            Machine.current(root);
+            network.drop(this.socket);
+            Machine.write(kept.vid(), noobj());
             Machine.current(child);
             child.pop();
         }
