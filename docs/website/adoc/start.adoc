@@ -34,13 +34,20 @@
 [discrete]
 == Quick Start
 
-metatron is a data-oriented virtual machine and its language, **mtron**. A row in a
-database, a tag in an HTML page, a vertex in a graph, a value in memory on an IoT
-device — all of it lives in one address space and is read and written through a
-single referential model.
+++++
+<img src="images/metatron-character-ansi.png" width="350px" style="float:right; margin:10px;"></a>
+++++
 
-This page goes from nothing to a running REPL, then points at the parts of the
-documentation worth reading next.
+**metatron** is an algebraically specified distributed virtual machine. **mtron** is a typed, self-referential language aimed directly at manipulating metatron.
+The benefits of these two technologies are:
+
+1. write applications that naturally exist outside/across the confines of a single machine.
+2. process relational, graph, key-value, and document database from the same mtron perspective.
+3. enjoy the elegance of the top-to-bottom ring theoretic approach to distributed data structures and processes.
+* at minimum, enjoy a surprising number of "__huh. that's interesting.__"-moments.
+
+The concepts herein are guaranteed to inspire even the most grizzled of computer scientists as they find themselves at times engaging with metatron's fractal-like formal theory and, at other times, noodling away on a cluster-oriented, data driven application using a bizarre, alien-like language that blurs numerous, long-standing schisms that have separated database query languages from application development languages, object-oriented encapsulation from functional fluidity, intra-net from internet, and mathematics from software engineering.
+There is much to fathom within the wonderful world of metatron.
 
 [discrete]
 === Install
@@ -52,9 +59,9 @@ A POSIX shell is all that is required.
 curl -fsSL https://metatron.phaseshift.studio/install.sh | bash
 ----
 
-Or run it in a container.
+Or run it in a container...
 
-[source,bash]
+[source,mtron]
 ----
 docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -62,47 +69,44 @@ docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
   ghcr.io/phaseshift-studio/metatron:latest
 ----
 
-[source,bash]
+\...with Docker compose.
+
+[source,mtron]
 ----
 curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d
 ----
 
 [discrete]
-=== First expression
+=== Basic Concepts
 
-metatron evaluates mtron. A one-off expression runs with `-e`.
+metatron evaluates mtron.
+A one-off expression runs with `-e`.
 
-[source,bash]
+[source,mtron]
 ----
 $ bin/metatron -e "1-<[+2,+3]"
 [3,4]
 ----
 
-`1-<[...]` reads one object and applies two instructions to it, branching the one
-into two results — hence `[3,4]`. Everything in mtron is built from two operators:
+`1-<[...]` reads one object and applies two instructions to it, branching the one into two results — hence `[3,4]`.
+Everything in mtron is built from two operators:
 `*` composes instructions and `+` branches them.
 
-The same two operators describe a running program: the code is a graph of
-instructions, and a **monad** walks it, carrying the current value — forking wherever
-the code branches.
+The same two operators describe a running program: the code is a graph of instructions, and a **monad** walks it, carrying the current value — forking wherever the code branches.
 
 ++++
 <div class="text-center my-4">
-  <img src="images/code-structure.svg" alt="code structure: start, plus(1), split([plus(3), plus(2)]) branching into plus(3) and plus(2)" class="img-fluid" style="max-width: 520px;" />
-  <div class="small text-light opacity-75 mt-2">the code — `*` composes, `+` branches</div>
-  <img src="images/monad-propagation.svg" alt="a monad carrying int::5 through plus(1) to int::6, forking at split into int::9 and int::8" class="img-fluid mt-4" style="max-width: 520px;" />
-  <div class="small text-light opacity-75 mt-2">a monad propagates — and forks where the code branches</div>
+  <img src="images/dataflow.svg" alt="" class="img-fluid" />
 </div>
 ++++
 
 [discrete]
 === The console
 
-For interactive use, the console is a REPL with syntax highlighting,
-step-through compilation, and type checking.
+For interactive use, the console is a REPL with syntax highlighting, step-through compilation, and type checking.
 
-[source,bash]
+[source,mtron]
 ----
 $ bin/metatron
 mtron>
@@ -127,9 +131,8 @@ $ bin/metatron "[boot=>start.mtron,log=>info]"
 [discrete]
 === Where next
 
-* link:tractatus/index.html[The tractatus] — chapters on the language and the
-  machine. Begin with link:tractatus/ring.html[ring],
-  link:tractatus/uri.html[fURI], and link:tractatus/type.html[types].
+* link:tractatus/index.html[The tractatus] — chapters on the language and the machine.
+Begin with link:tractatus/ring.html[ring],
+link:tractatus/uri.html[fURI], and link:tractatus/type.html[types].
 * link:instset/index.html[Instruction sets] — the domains of discourse.
-* link:articles/stream-ring-theory.html[Stream ring theory] — the algebra the whole
-  thing is built on.
+* link:articles/stream-ring-theory.html[Stream ring theory] — the algebra the whole thing is built on.

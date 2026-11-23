@@ -1,0 +1,27 @@
+% dataflow.tex — start(6) . plus(1) . plus(_) . split . merge . sum = 14, with the monad
+% bullets (red) marking the value at each step. White ink on a transparent background.
+
+\begin{tikzcd}
+	&&&&&&& {\texttt{mult(2)}} &&&& \\
+	{\texttt{start(6)}} && {\texttt{plus(1)}} && {\texttt{plus(\_)}} && {\texttt{split}} && {\texttt{merge}} && {\texttt{sum}} & 14 \\
+	&&&&&&& {\texttt{neg()}}
+	\arrow[from=1-8, to=2-9]
+	\arrow["28"{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift left=3, color=red!80!white, from=1-8, to=2-9]
+	\arrow[from=2-1, to=2-3]
+	\arrow["6"{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift left=4, color=red!80!white, from=2-1, to=2-3]
+	\arrow[from=2-3, to=2-5]
+	\arrow["7"{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift left=4, color=red!80!white, from=2-3, to=2-5]
+	\arrow["7"'{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift left, color=red!80!white, from=2-5, to=2-5, loop, in=305, out=235, distance=10mm]
+	\arrow[from=2-5, to=2-7]
+	\arrow["14"{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift left=4, color=red!80!white, from=2-5, to=2-7]
+	\arrow[from=2-7, to=1-8]
+	\arrow["14"{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift left=3, color=red!80!white, from=2-7, to=1-8]
+	\arrow[from=2-7, to=3-8]
+	\arrow["14"'{inner sep=.8ex}, "\bullet"{marking, pos=0.45, text=red!80!white}, shift right=3, color=red!80!white, from=2-7, to=3-8]
+	\arrow[from=2-9, to=2-11]
+	\arrow["{-14}"'{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift right=3, color=red!80!white, bend left=12, from=2-9, to=2-11]
+	\arrow["28"{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift left=3, color=red!80!white, bend right=12, from=2-9, to=2-11]
+	\arrow[color=red!80!white, from=2-11, to=2-12]
+	\arrow[from=3-8, to=2-9]
+	\arrow["{-14}"'{inner sep=.8ex}, "\bullet"{marking, text=red!80!white}, shift right=3, color=red!80!white, from=3-8, to=2-9]
+\end{tikzcd}

@@ -510,7 +510,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">357</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">22</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">360</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">22</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/m-instset-mtron.md">md</a></div>
             <span class="instset-built">built November 22, 2026</span>
@@ -547,323 +547,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
              pattern=&gt;/m/#,
-             rewrite=&gt;[
-              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
-              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
-              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
-              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;]){&lt;j&gt;},
-              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_poset?code{?}&lt;=code([
-                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
-                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
-                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
-                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
-              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
-              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;},
-              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
-              /m/inst/rewrite/explain_topology?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/pred_extract(){&lt;j&gt;}],
-             inst=&gt;[
-              as?bool&lt;=bool(bool::T){&lt;j&gt;},
-              as?bytes&lt;=bool(bytes::T){&lt;j&gt;},
-              as?int&lt;=bool(int::T){&lt;j&gt;},
-              as?real&lt;=bool(real::T){&lt;j&gt;},
-              as?bool&lt;=bytes(bool::T){&lt;j&gt;},
-              zero?int&lt;=int(){&lt;j&gt;},
-              one?int&lt;=int(){&lt;j&gt;},
-              neg?int&lt;=int(){&lt;j&gt;},
-              div?int&lt;=int(int::T){&lt;j&gt;},
-              pow?int&lt;=int(int::T){&lt;j&gt;},
-              mod?int&lt;=int(int::T){&lt;j&gt;},
-              mean?real&lt;=int{*}(){&lt;j&gt;},
-              gt?bool&lt;=int(int::T){&lt;j&gt;},
-              gte?bool&lt;=int(int::T){&lt;j&gt;},
-              lt?bool&lt;=int(int::T){&lt;j&gt;},
-              lte?bool&lt;=int(int::T){&lt;j&gt;},
-              prod?int&lt;=int{*}(){&lt;j&gt;},
-              sum?int&lt;=int{*}(){&lt;j&gt;},
-              mult?int&lt;=int(int::T){&lt;j&gt;},
-              minus?int&lt;=int(int::T){&lt;j&gt;},
-              as?str&lt;=int(str::T){&lt;j&gt;},
-              plus?int&lt;=int(int::T){&lt;j&gt;},
-              gt?bool&lt;=real(real::T){&lt;j&gt;},
-              gte?bool&lt;=real(real::T){&lt;j&gt;},
-              lt?bool&lt;=real(real::T){&lt;j&gt;},
-              lte?bool&lt;=real(real::T){&lt;j&gt;},
-              neg?real&lt;=real(){&lt;j&gt;},
-              plus?real&lt;=real(real::T){&lt;j&gt;},
-              mult?real&lt;=real(real::T){&lt;j&gt;},
-              zero?real&lt;=real(){&lt;j&gt;},
-              one?real&lt;=real(){&lt;j&gt;},
-              inv?real&lt;=real(){&lt;j&gt;},
-              sum?real&lt;=real{*}(){&lt;j&gt;},
-              prod?real&lt;=real{*}(){&lt;j&gt;},
-              mean?real&lt;=real{*}(){&lt;j&gt;},
-              pow?real&lt;=real(real::T){&lt;j&gt;},
-              div?real&lt;=real(real::T){&lt;j&gt;},
-              minus?real&lt;=real(real::T){&lt;j&gt;},
-              as?str&lt;=real(str::T){&lt;j&gt;},
-              as?rec&lt;=bool(rec::T){&lt;j&gt;},
-              zero?bool&lt;=bool(){&lt;j&gt;},
-              one?bool&lt;=bool(){&lt;j&gt;},
-              plus?bool&lt;=bool(bool::T){&lt;j&gt;},
-              mult?bool&lt;=bool(bool::T){&lt;j&gt;},
-              not?bool&lt;=bool(){&lt;j&gt;},
-              as?str&lt;=bool(str::T){&lt;j&gt;},
-              as?rec&lt;=bytes(rec::T){&lt;j&gt;},
-              zero?bytes&lt;=bytes(){&lt;j&gt;},
-              plus?bytes&lt;=bytes(bytes::T){&lt;j&gt;},
-              as?str&lt;=bytes(str::T){&lt;j&gt;},
-              as?rec&lt;=str(rec::T){&lt;j&gt;},
-              reverse?str&lt;=str(){&lt;j&gt;},
-              zero?str&lt;=str(){&lt;j&gt;},
-              gt?bool&lt;=str(str::T){&lt;j&gt;},
-              gte?bool&lt;=str(str::T){&lt;j&gt;},
-              lt?bool&lt;=str(str::T){&lt;j&gt;},
-              lte?bool&lt;=str(str::T){&lt;j&gt;},
-              plus?str&lt;=str(str::T){&lt;j&gt;},
-              sum?str&lt;=str{*}(str{?}::T){&lt;j&gt;},
-              ucase?str&lt;=str(){&lt;j&gt;},
-              lcase?str&lt;=str(){&lt;j&gt;},
-              as?bytes&lt;=str(bytes::T){&lt;j&gt;},
-              as?bool&lt;=str(bool::T){&lt;j&gt;},
-              as?int&lt;=str(int::T){&lt;j&gt;},
-              as?real&lt;=str(real::T){&lt;j&gt;},
-              as?uri&lt;=str(uri::T){&lt;j&gt;},
-              split?lst&lt;=str(str::T){&lt;j&gt;},
-              merge?str&lt;=str{*}(str::T){&lt;j&gt;},
-              as?rec&lt;=uri(rec::T){&lt;j&gt;},
-              reverse?uri&lt;=uri(){&lt;j&gt;},
-              merge?uri&lt;=uri{*}(uri::T){&lt;j&gt;},
-              split?uri{*}&lt;=uri(){&lt;j&gt;},
-              name?uri&lt;=uri(){&lt;j&gt;},
-              minus?uri&lt;=uri(uri::T){&lt;j&gt;},
-              plus?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
-              mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
-              one?uri&lt;=uri(){&lt;j&gt;},
-              sum?uri&lt;=uri{*}(){&lt;j&gt;},
-              prod?uri&lt;=uri{*}(){&lt;j&gt;},
-              path?uri&lt;=uri(uri::T){&lt;j&gt;},
-              q?uri&lt;=uri(rec::T){&lt;j&gt;},
-              uri:c?lst&lt;=uri(uri::T){&lt;j&gt;},
-              pow?uri&lt;=uri(int::T){&lt;j&gt;},
-              scheme?uri{?}&lt;=uri(){&lt;j&gt;},
-              scheme?uri&lt;=uri(uri::T){&lt;j&gt;},
-              host?uri{?}&lt;=uri(){&lt;j&gt;},
-              host?uri&lt;=uri(uri::T){&lt;j&gt;},
-              port?int{?}&lt;=uri(){&lt;j&gt;},
-              port?uri&lt;=uri(int::T){&lt;j&gt;},
-              select?uri&lt;=uri(rec::T){&lt;j&gt;},
-              as?str&lt;=uri(str::T){&lt;j&gt;},
-              reverse?lst&lt;=lst(){&lt;j&gt;},
-              zero?lst&lt;=lst(){&lt;j&gt;},
-              one?lst&lt;=lst(){&lt;j&gt;},
-              plus?lst&lt;=lst(lst::T){&lt;j&gt;},
-              minus?lst&lt;=lst(lst::T){&lt;j&gt;},
-              mult?lst&lt;=lst(lst::T){&lt;j&gt;},
-              split?lst&lt;=A(lst::T){&lt;j&gt;},
-              merge?A{*}&lt;=lst[{*}A{*}](){&lt;j&gt;},
-              merge?uri&lt;=lst(uri::T){&lt;j&gt;},
-              merge?str&lt;=lst(str::T){&lt;j&gt;},
-              has?lst{?}&lt;=lst(#::T,#::T,#::T){&lt;j&gt;},
-              within?lst&lt;=lst(#{*}::T){&lt;j&gt;},
-              sum?lst&lt;=lst{*}(){&lt;j&gt;},
-              zip?lst&lt;=lst(A{+}::T){&lt;j&gt;},
-              select?B{*}&lt;=lst(A{+}::T){&lt;j&gt;},
-              select?lst{?}&lt;=lst(lst::T){&lt;j&gt;},
-              select?lst&lt;=lst(rec::T){&lt;j&gt;},
-              remove?A{*}&lt;=lst(int::T){&lt;j&gt;},
-              pow?lst&lt;=lst(int::T){&lt;j&gt;},
-              as?rec&lt;=lst(rec::T){&lt;j&gt;},
-              as?rec&lt;=int(rec::T){&lt;j&gt;},
-              as?lst&lt;=rec(lst::T){&lt;j&gt;},
-              as?uri&lt;=rec(uri::T){&lt;j&gt;},
-              zero?rec&lt;=rec(){&lt;j&gt;},
-              reverse?rec&lt;=rec(){&lt;j&gt;},
-              has?rec{?}&lt;=rec(#::T,#::T){&lt;j&gt;},
-              has?rec{?}&lt;=rec(#::T){&lt;j&gt;},
-              get?A{*}&lt;=rec(uri::T){&lt;j&gt;},
-              split?rec&lt;=A(rec::T){&lt;j&gt;},
-              merge?rel{*}&lt;=rec(){&lt;j&gt;},
-              dom?A{*}&lt;=rec(){&lt;j&gt;},
-              rng?A{*}&lt;=rec(){&lt;j&gt;},
-              plus?rec&lt;=rec(rec{??}::T){&lt;j&gt;},
-              minus?rec&lt;=rec(rec::T){&lt;j&gt;},
-              mplus?rec&lt;=rec(rec::T){&lt;j&gt;},
-              select?B{*}&lt;=rec(A{+}::T){&lt;j&gt;},
-              select?rec{?}&lt;=rec(rec::T){&lt;j&gt;},
-              within?rec&lt;=rec(#{*}::T){&lt;j&gt;},
-              sum?rec&lt;=rec{*}(){&lt;j&gt;},
-              as?rec&lt;=inst(rec::T){&lt;j&gt;},
-              as?lst&lt;=code(lst::T){&lt;j&gt;},
-              as?inst&lt;=code(inst::T){&lt;j&gt;},
-              compose?code&lt;=code(code::T){&lt;j&gt;},
-              update?code&lt;=code(rec::T){&lt;j&gt;},
-              end?{0}&lt;=code(){&lt;j&gt;},
-              id?code&lt;=code(){&lt;j&gt;},
-              neg?code&lt;=code(){&lt;j&gt;},
-              plus?code&lt;=code(code::T){&lt;j&gt;},
-              id?A&lt;=A(){&lt;j&gt;},
-              id?A{*}&lt;=A{*}(){&lt;j&gt;},
-              cc?int&lt;=A{*}(){&lt;j&gt;},
-              cc?A{**}&lt;=A(int::T){&lt;j&gt;},
-              map?B{*}&lt;=A{?}(B{*}::T){&lt;j&gt;},
-              branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
-              repeat?A{*}&lt;=A&amp;monad_out=+&amp;monad_in=+({?}esc=&gt;A{*}::T,
-                                                    code=&gt;A{*}::T,
-                                                    {?}until=&gt;bool::T,
-                                                    {?}emit=&gt;bool::T){&lt;j&gt;},
-              order?lst[{*}A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
-              swap?A&lt;=A(B::T){&lt;j&gt;},
-              *uri::T,
-              profile?/m/inst/profile/profiling&lt;=(){&lt;j&gt;},
-              as?bool&lt;=int(bool::T){&lt;j&gt;},
-              as?bytes&lt;=int(bytes::T){&lt;j&gt;},
-              as?real&lt;=int(real::T){&lt;j&gt;},
-              as?uri&lt;=int(uri::T){&lt;j&gt;},
-              as?int&lt;=real(int::T){&lt;j&gt;},
-              math?real&lt;=(str::T){&lt;j&gt;},
-              has?str{?}&lt;=str(str::T){&lt;j&gt;},
-              select?lst&lt;=str(str::T){&lt;j&gt;},
-              update?str&lt;=str(rec::T){&lt;j&gt;},
-              has?str{?}&lt;=str(rec::T){&lt;j&gt;},
-              as?int&lt;=uri(int::T){&lt;j&gt;},
-              as?uri&lt;=uri(uri::T){&lt;j&gt;},
-              has?uri{?}&lt;=uri(str::T){&lt;j&gt;},
-              has?uri{?}&lt;=uri(uri::T){&lt;j&gt;},
-              split?lst&lt;=uri(uri::T){&lt;j&gt;},
-              args?lst&lt;=inst(){&lt;j&gt;},
-              as?code&lt;=inst(code::T){&lt;j&gt;},
-              update?inst&lt;=inst(rec::T){&lt;j&gt;},
-              inactive?inst&lt;=inst(){&lt;j&gt;},
-              active?inst&lt;=inst(){&lt;j&gt;},
-              as?lst&lt;=rel(lst::T){&lt;j&gt;},
-              as?rec&lt;=rel(rec::T){&lt;j&gt;},
-              merge?rec&lt;=rel{*}(rec::T){&lt;j&gt;},
-              split?rel&lt;=A(rel::T){&lt;j&gt;},
-              dom?&lt;=rel(){&lt;j&gt;},
-              rng?&lt;=rel(){&lt;j&gt;},
-              get?A{?}&lt;=rel(#::T){&lt;j&gt;},
-              select?rel{?}&lt;=rel(rel::T){&lt;j&gt;},
-              plus?rel{*}&lt;=rel(rel{*}::T){&lt;j&gt;},
-              mult?rel{*}&lt;=rel(rel{*}::T){&lt;j&gt;},
-              neg?rel&lt;=rel(){&lt;j&gt;},
-              one?rel&lt;=rel(){&lt;j&gt;},
-              zero?rel&lt;=rel(){&lt;j&gt;},
-              as?uri&lt;=lst(lst[uri]::T){&lt;j&gt;},
-              as?lst&lt;=lst(lst::T){&lt;j&gt;},
-              as?code&lt;=lst(code::T){&lt;j&gt;},
-              cause?fail{?}&lt;=fail(){&lt;j&gt;},
-              path?str&lt;=fail(){&lt;j&gt;},
-              reify?rec&lt;=fail(){&lt;j&gt;},
-              native?B{*}&lt;=A{?}(str::T){&lt;j&gt;},
-              union?A{?}&lt;=A(B::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T){&lt;j&gt;},
-              serialize?B&lt;=A(/m/web::T){&lt;j&gt;},
-              fork?A{*}&lt;=A{*}(#::T){&lt;j&gt;},
-              range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)){&lt;j&gt;},
-              kmerge?lst[{*}A{*}]&lt;=lst[{*}A{*}]{*}(#{?}::T){&lt;j&gt;},
-              via?B&lt;=A(rel::T){&lt;j&gt;},
-              as?{0}&lt;=A(){&lt;j&gt;},
-              as?str&lt;=A(str::T){&lt;j&gt;},
-              as?B&lt;=A(#::T){&lt;j&gt;},
-              import?/m/space{*}&lt;=(uri::T,uri{?}::T){&lt;j&gt;},
-              dedup?A{*}&lt;=A{*}(){&lt;j&gt;},
-              barrier?A{*}&lt;=A{*}(uri::T){&lt;j&gt;},
-              barrier?A{*}&lt;=A{*}(){&lt;j&gt;},
-              as?B&lt;=A(B::T){&lt;j&gt;},
-              loop?int&lt;=A&amp;monad_in=state/loop(){&lt;j&gt;},
-              path?lst&lt;=A&amp;monad_in=state/path(){&lt;j&gt;},
-              !#{?}::T,
-              !*#{?}::T,
-              !@#{?}::T,
-              auto_to?#&lt;=(#::T),
-              catch?C{*}&lt;=A(B{*}::T){&lt;j&gt;},
-              end?{0}&lt;=#{**}(){&lt;j&gt;},
-              println?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;},
-              print?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;},
-              cascade(lst{?}::T){&lt;j&gt;},
-              at?B{*}&lt;=A{?}(uri::T){&lt;j&gt;},
-              and?bool&lt;=A(bool::T,
-                          bool::T,
-                          bool::T,
-                          bool::T,
-                          bool::T,
-                          bool::T,
-                          bool::T,
-                          bool::T){&lt;j&gt;},
-              or?bool&lt;=A(bool::T,
-                         bool::T,
-                         bool::T,
-                         bool::T,
-                         bool::T,
-                         bool::T,
-                         bool::T,
-                         bool::T){&lt;j&gt;},
-              apply?&lt;=#(#{?}::T){&lt;j&gt;},
-              filter?A{?}&lt;=A(#{?}::T){&lt;j&gt;},
-              side?A&lt;=A(#::T){&lt;j&gt;},
-              tid?uri&lt;=#(){&lt;j&gt;},
-              vid?uri{?}&lt;=A(){&lt;j&gt;},
-              vid?A&lt;=A(uri::T){&lt;j&gt;},
-              else?#{?}&lt;=(#{?}::T){&lt;j&gt;},
-              is?A{?}&lt;=A{?}(isa(bool::T).else(false)){&lt;j&gt;},
-              sorta?#{?}&lt;=#(#::T){&lt;j&gt;},
-              block?B{+}&lt;=A{?}(B{+}::T){&lt;j&gt;},
-              split?&lt;=#(#{+}::T){&lt;j&gt;},
-              split?lst&lt;=#(lst::T){&lt;j&gt;},
-              choose?rel{?}&lt;=#(rec::T){&lt;j&gt;},
-              merge?lst&lt;=A{*}(lst::T){&lt;j&gt;},
-              merge?&lt;=A{*}(#{*}::T){&lt;j&gt;},
-              merge?A{*}&lt;=A{*}(A{*}::T){&lt;j&gt;},
-              not?bool&lt;=#(#{?}::T){&lt;j&gt;},
-              eq?bool&lt;=A(A::T){&lt;j&gt;},
-              neq?bool&lt;=A(A::T){&lt;j&gt;},
-              to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;},
-              ref?#{**}&lt;=#(#{*}::T){&lt;j&gt;},
-              source?B{*}&lt;=A{?}(str::T){&lt;j&gt;},
-              type?#&lt;=#(){&lt;j&gt;},
-              throw?fail&lt;=#{*}(#{?}::T){&lt;j&gt;},
-              parent?#{?}&lt;=#(){&lt;j&gt;},
-              count?int&lt;=A{*}(){&lt;j&gt;},
-              skip?&lt;=#{*}(int::T){&lt;j&gt;},
-              take?&lt;=#{*}(int::T){&lt;j&gt;},
-              update?B{*}&lt;=A(B{*}::T){&lt;j&gt;},
-              explain?/m/inst/explain/explanation&lt;=(){&lt;j&gt;},
-              reify?rec&lt;=A(){&lt;j&gt;},
-              reduce?A&lt;=A{*}(#{?}::T){&lt;j&gt;},
-              group?rec&lt;=A{*}(rec::T){&lt;j&gt;},
-              eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-              parse(str::T){&lt;j&gt;},
-              rshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
-              lshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
-              start?A{**}&lt;={0}(A{**}::T){&lt;j&gt;},
-              isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;},
-              isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
-              isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
-              isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
-              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
-              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
-              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
-              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
-              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
-              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
-              isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
-              save?#&lt;=#(){&lt;j&gt;},
-              ctor(),
-              lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
-              as?str&lt;=docs(str::T){&lt;j&gt;}],
-             const=&gt;[,],
              type=&gt;[
               &lt;#&gt;::T,
               bool::T,
@@ -1007,7 +690,327 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
               qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
               qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
-              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq]]@/m</code></pre>
+              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
+             rewrite=&gt;[
+              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
+              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
+              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
+              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;]){&lt;j&gt;},
+              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_poset?code{?}&lt;=code([
+                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
+                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
+                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
+                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
+              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
+              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;},
+              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
+              /m/inst/rewrite/explain_topology?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/pred_extract(){&lt;j&gt;}],
+             inst=&gt;[
+              as?bool&lt;=bool(bool::T){&lt;j&gt;},
+              as?bytes&lt;=bool(bytes::T){&lt;j&gt;},
+              as?int&lt;=bool(int::T){&lt;j&gt;},
+              as?real&lt;=bool(real::T){&lt;j&gt;},
+              as?bool&lt;=bytes(bool::T){&lt;j&gt;},
+              zero?int&lt;=int(){&lt;j&gt;},
+              one?int&lt;=int(){&lt;j&gt;},
+              neg?int&lt;=int(){&lt;j&gt;},
+              div?int&lt;=int(int::T){&lt;j&gt;},
+              pow?int&lt;=int(int::T){&lt;j&gt;},
+              mod?int&lt;=int(int::T){&lt;j&gt;},
+              mean?real{?}&lt;=int{*}(){&lt;j&gt;},
+              gt?bool&lt;=int(int::T){&lt;j&gt;},
+              gte?bool&lt;=int(int::T){&lt;j&gt;},
+              lt?bool&lt;=int(int::T){&lt;j&gt;},
+              lte?bool&lt;=int(int::T){&lt;j&gt;},
+              prod?int&lt;=int{*}(){&lt;j&gt;},
+              sum?int&lt;=int{*}(){&lt;j&gt;},
+              mult?int&lt;=int(int::T){&lt;j&gt;},
+              minus?int&lt;=int(int::T){&lt;j&gt;},
+              as?str&lt;=int(str::T){&lt;j&gt;},
+              plus?int&lt;=int(int::T){&lt;j&gt;},
+              gt?bool&lt;=real(real::T){&lt;j&gt;},
+              gte?bool&lt;=real(real::T){&lt;j&gt;},
+              lt?bool&lt;=real(real::T){&lt;j&gt;},
+              lte?bool&lt;=real(real::T){&lt;j&gt;},
+              neg?real&lt;=real(){&lt;j&gt;},
+              plus?real&lt;=real(real::T){&lt;j&gt;},
+              mult?real&lt;=real(real::T){&lt;j&gt;},
+              zero?real&lt;=real(){&lt;j&gt;},
+              one?real&lt;=real(){&lt;j&gt;},
+              inv?real&lt;=real(){&lt;j&gt;},
+              sum?real&lt;=real{*}(){&lt;j&gt;},
+              prod?real&lt;=real{*}(){&lt;j&gt;},
+              mean?real{?}&lt;=real{*}(){&lt;j&gt;},
+              pow?real&lt;=real(real::T){&lt;j&gt;},
+              div?real&lt;=real(real::T){&lt;j&gt;},
+              minus?real&lt;=real(real::T){&lt;j&gt;},
+              as?str&lt;=real(str::T){&lt;j&gt;},
+              as?rec&lt;=bool(rec::T){&lt;j&gt;},
+              zero?bool&lt;=bool(){&lt;j&gt;},
+              one?bool&lt;=bool(){&lt;j&gt;},
+              plus?bool&lt;=bool(bool::T){&lt;j&gt;},
+              mult?bool&lt;=bool(bool::T){&lt;j&gt;},
+              not?bool&lt;=bool(){&lt;j&gt;},
+              as?str&lt;=bool(str::T){&lt;j&gt;},
+              as?rec&lt;=bytes(rec::T){&lt;j&gt;},
+              zero?bytes&lt;=bytes(){&lt;j&gt;},
+              plus?bytes&lt;=bytes(bytes::T){&lt;j&gt;},
+              as?str&lt;=bytes(str::T){&lt;j&gt;},
+              as?rec&lt;=str(rec::T){&lt;j&gt;},
+              reverse?str&lt;=str(){&lt;j&gt;},
+              zero?str&lt;=str(){&lt;j&gt;},
+              gt?bool&lt;=str(str::T){&lt;j&gt;},
+              gte?bool&lt;=str(str::T){&lt;j&gt;},
+              lt?bool&lt;=str(str::T){&lt;j&gt;},
+              lte?bool&lt;=str(str::T){&lt;j&gt;},
+              plus?str&lt;=str(str::T){&lt;j&gt;},
+              sum?str&lt;=str{*}(str{?}::T){&lt;j&gt;},
+              ucase?str&lt;=str(){&lt;j&gt;},
+              lcase?str&lt;=str(){&lt;j&gt;},
+              as?bytes&lt;=str(bytes::T){&lt;j&gt;},
+              as?bool&lt;=str(bool::T){&lt;j&gt;},
+              as?int&lt;=str(int::T){&lt;j&gt;},
+              as?real&lt;=str(real::T){&lt;j&gt;},
+              as?uri&lt;=str(uri::T){&lt;j&gt;},
+              split?lst&lt;=str(str::T){&lt;j&gt;},
+              merge?str&lt;=str{*}(str::T){&lt;j&gt;},
+              as?rec&lt;=uri(rec::T){&lt;j&gt;},
+              reverse?uri&lt;=uri(){&lt;j&gt;},
+              merge?uri&lt;=uri{*}(uri::T){&lt;j&gt;},
+              split?uri{*}&lt;=uri(){&lt;j&gt;},
+              name?uri&lt;=uri(){&lt;j&gt;},
+              minus?uri&lt;=uri(uri::T){&lt;j&gt;},
+              plus?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
+              mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
+              one?uri&lt;=uri(){&lt;j&gt;},
+              sum?uri&lt;=uri{*}(){&lt;j&gt;},
+              prod?uri&lt;=uri{*}(){&lt;j&gt;},
+              path?uri&lt;=uri(uri::T){&lt;j&gt;},
+              q?uri&lt;=uri(rec::T){&lt;j&gt;},
+              uri:c?lst&lt;=uri(uri::T){&lt;j&gt;},
+              pow?uri&lt;=uri(int::T){&lt;j&gt;},
+              scheme?uri{?}&lt;=uri(){&lt;j&gt;},
+              scheme?uri&lt;=uri(uri::T){&lt;j&gt;},
+              host?uri{?}&lt;=uri(){&lt;j&gt;},
+              host?uri&lt;=uri(uri::T){&lt;j&gt;},
+              port?int{?}&lt;=uri(){&lt;j&gt;},
+              port?uri&lt;=uri(int::T){&lt;j&gt;},
+              select?uri&lt;=uri(rec::T){&lt;j&gt;},
+              as?str&lt;=uri(str::T){&lt;j&gt;},
+              reverse?lst&lt;=lst(){&lt;j&gt;},
+              zero?lst&lt;=lst(){&lt;j&gt;},
+              one?lst&lt;=lst(){&lt;j&gt;},
+              plus?lst&lt;=lst(lst::T){&lt;j&gt;},
+              minus?lst&lt;=lst(lst::T){&lt;j&gt;},
+              mult?lst&lt;=lst(lst::T){&lt;j&gt;},
+              split?lst&lt;=A(lst::T){&lt;j&gt;},
+              merge?A{*}&lt;=lst[{*}A{*}](){&lt;j&gt;},
+              merge?uri&lt;=lst(uri::T){&lt;j&gt;},
+              merge?str&lt;=lst(str::T){&lt;j&gt;},
+              has?lst{?}&lt;=lst(#::T,#::T,#::T){&lt;j&gt;},
+              within?lst&lt;=lst(#{*}::T){&lt;j&gt;},
+              sum?lst&lt;=lst{*}(){&lt;j&gt;},
+              zip?lst&lt;=lst(A{+}::T){&lt;j&gt;},
+              select?B{*}&lt;=lst(A{+}::T){&lt;j&gt;},
+              select?lst{?}&lt;=lst(lst::T){&lt;j&gt;},
+              select?lst&lt;=lst(rec::T){&lt;j&gt;},
+              remove?A{*}&lt;=lst(int::T){&lt;j&gt;},
+              pow?lst&lt;=lst(int::T){&lt;j&gt;},
+              as?rec&lt;=lst(rec::T){&lt;j&gt;},
+              as?rec&lt;=int(rec::T){&lt;j&gt;},
+              as?lst&lt;=rec(lst::T){&lt;j&gt;},
+              as?uri&lt;=rec(uri::T){&lt;j&gt;},
+              zero?rec&lt;=rec(){&lt;j&gt;},
+              reverse?rec&lt;=rec(){&lt;j&gt;},
+              has?rec{?}&lt;=rec(#::T,#::T){&lt;j&gt;},
+              has?rec{?}&lt;=rec(#::T){&lt;j&gt;},
+              get?A{*}&lt;=rec(uri::T){&lt;j&gt;},
+              split?rec&lt;=A(rec::T){&lt;j&gt;},
+              merge?rel{*}&lt;=rec(){&lt;j&gt;},
+              dom?A{*}&lt;=rec(){&lt;j&gt;},
+              rng?A{*}&lt;=rec(){&lt;j&gt;},
+              plus?rec&lt;=rec(rec{??}::T){&lt;j&gt;},
+              minus?rec&lt;=rec(rec::T){&lt;j&gt;},
+              neg?rec&lt;=rec(){&lt;j&gt;},
+              mplus?rec&lt;=rec(rec::T){&lt;j&gt;},
+              select?B{*}&lt;=rec(A{+}::T){&lt;j&gt;},
+              select?rec{?}&lt;=rec(rec::T){&lt;j&gt;},
+              within?rec&lt;=rec(#{*}::T){&lt;j&gt;},
+              sum?rec&lt;=rec{*}(){&lt;j&gt;},
+              as?rec&lt;=inst(rec::T){&lt;j&gt;},
+              as?lst&lt;=code(lst::T){&lt;j&gt;},
+              as?inst&lt;=code(inst::T){&lt;j&gt;},
+              compose?code&lt;=code(code::T){&lt;j&gt;},
+              update?code&lt;=code(rec::T){&lt;j&gt;},
+              end?{0}&lt;=code(){&lt;j&gt;},
+              id?code&lt;=code(){&lt;j&gt;},
+              neg?code&lt;=code(){&lt;j&gt;},
+              plus?code&lt;=code(code::T){&lt;j&gt;},
+              id?A&lt;=A(){&lt;j&gt;},
+              id?A{*}&lt;=A{*}(){&lt;j&gt;},
+              sup?A{?}&lt;=A{*}(#{?}::T){&lt;j&gt;},
+              inf?A{?}&lt;=A{*}(#{?}::T){&lt;j&gt;},
+              cc?int&lt;=A{*}(){&lt;j&gt;},
+              cc?A{**}&lt;=A(int::T){&lt;j&gt;},
+              map?B{*}&lt;=A{?}(B{*}::T){&lt;j&gt;},
+              branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
+              repeat?A{*}&lt;=A&amp;monad_out=+&amp;monad_in=+({?}esc=&gt;A{*}::T,
+                                                    code=&gt;A{*}::T,
+                                                    {?}until=&gt;bool::T,
+                                                    {?}emit=&gt;bool::T){&lt;j&gt;},
+              order?lst[{*}A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
+              group?rec&lt;=A{*}(rec::T){&lt;j&gt;},
+              swap?A&lt;=A(B::T){&lt;j&gt;},
+              *uri::T,
+              profile?/m/inst/profile/profiling&lt;=(){&lt;j&gt;},
+              as?bool&lt;=int(bool::T){&lt;j&gt;},
+              as?bytes&lt;=int(bytes::T){&lt;j&gt;},
+              as?real&lt;=int(real::T){&lt;j&gt;},
+              as?uri&lt;=int(uri::T){&lt;j&gt;},
+              as?int&lt;=real(int::T){&lt;j&gt;},
+              math?real&lt;=(str::T){&lt;j&gt;},
+              has?str{?}&lt;=str(str::T){&lt;j&gt;},
+              select?lst&lt;=str(str::T){&lt;j&gt;},
+              update?str&lt;=str(rec::T){&lt;j&gt;},
+              has?str{?}&lt;=str(rec::T){&lt;j&gt;},
+              as?int&lt;=uri(int::T){&lt;j&gt;},
+              as?uri&lt;=uri(uri::T){&lt;j&gt;},
+              has?uri{?}&lt;=uri(str::T){&lt;j&gt;},
+              has?uri{?}&lt;=uri(uri::T){&lt;j&gt;},
+              split?lst&lt;=uri(uri::T){&lt;j&gt;},
+              args?lst&lt;=inst(){&lt;j&gt;},
+              as?code&lt;=inst(code::T){&lt;j&gt;},
+              update?inst&lt;=inst(rec::T){&lt;j&gt;},
+              inactive?inst&lt;=inst(){&lt;j&gt;},
+              active?inst&lt;=inst(){&lt;j&gt;},
+              as?lst&lt;=rel(lst::T){&lt;j&gt;},
+              as?rec&lt;=rel(rec::T){&lt;j&gt;},
+              merge?rec&lt;=rel{*}(rec::T){&lt;j&gt;},
+              split?rel&lt;=A(rel::T){&lt;j&gt;},
+              dom?&lt;=rel(){&lt;j&gt;},
+              rng?&lt;=rel(){&lt;j&gt;},
+              get?A{?}&lt;=rel(#::T){&lt;j&gt;},
+              select?rel{?}&lt;=rel(rel::T){&lt;j&gt;},
+              plus?rel{*}&lt;=rel(rel{*}::T){&lt;j&gt;},
+              mult?rel{*}&lt;=rel(rel{*}::T){&lt;j&gt;},
+              neg?rel&lt;=rel(){&lt;j&gt;},
+              one?rel&lt;=rel(){&lt;j&gt;},
+              zero?rel&lt;=rel(){&lt;j&gt;},
+              as?uri&lt;=lst(lst[uri]::T){&lt;j&gt;},
+              as?lst&lt;=lst(lst::T){&lt;j&gt;},
+              as?code&lt;=lst(code::T){&lt;j&gt;},
+              cause?fail{?}&lt;=fail(){&lt;j&gt;},
+              path?str&lt;=fail(){&lt;j&gt;},
+              reify?rec&lt;=fail(){&lt;j&gt;},
+              native?B{*}&lt;=A{?}(str::T){&lt;j&gt;},
+              union?A{?}&lt;=A(B::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T,B{?}::T){&lt;j&gt;},
+              serialize?B&lt;=A(/m/web::T){&lt;j&gt;},
+              fork?A{*}&lt;=A{*}(#::T){&lt;j&gt;},
+              range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)){&lt;j&gt;},
+              kmerge?lst[{*}A{*}]&lt;=lst[{*}A{*}]{*}(#{?}::T){&lt;j&gt;},
+              via?B&lt;=A(rel::T){&lt;j&gt;},
+              as?{0}&lt;=A(){&lt;j&gt;},
+              as?str&lt;=A(str::T){&lt;j&gt;},
+              as?B&lt;=A(#::T){&lt;j&gt;},
+              import?/m/space{*}&lt;=(uri::T,uri{?}::T){&lt;j&gt;},
+              dedup?A{*}&lt;=A{*}(){&lt;j&gt;},
+              barrier?A{*}&lt;=A{*}(uri::T){&lt;j&gt;},
+              barrier?A{*}&lt;=A{*}(){&lt;j&gt;},
+              as?B&lt;=A(B::T){&lt;j&gt;},
+              loop?int&lt;=A&amp;monad_in=state/loop(){&lt;j&gt;},
+              path?lst&lt;=A&amp;monad_in=state/path(){&lt;j&gt;},
+              !#{?}::T,
+              !*#{?}::T,
+              !@#{?}::T,
+              auto_to?#&lt;=(#::T),
+              catch?C{*}&lt;=A(B{*}::T){&lt;j&gt;},
+              end?{0}&lt;=#{**}(){&lt;j&gt;},
+              println?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;},
+              print?A{*}&lt;=A{?}(#{*}::T){&lt;j&gt;},
+              cascade(lst{?}::T){&lt;j&gt;},
+              at?B{*}&lt;=A{?}(uri::T){&lt;j&gt;},
+              and?bool&lt;=A(bool::T,
+                          bool::T,
+                          bool::T,
+                          bool::T,
+                          bool::T,
+                          bool::T,
+                          bool::T,
+                          bool::T){&lt;j&gt;},
+              or?bool&lt;=A(bool::T,
+                         bool::T,
+                         bool::T,
+                         bool::T,
+                         bool::T,
+                         bool::T,
+                         bool::T,
+                         bool::T){&lt;j&gt;},
+              apply?&lt;=#(#{?}::T){&lt;j&gt;},
+              filter?A{?}&lt;=A(#{?}::T){&lt;j&gt;},
+              side?A&lt;=A(#::T){&lt;j&gt;},
+              tid?uri&lt;=#(){&lt;j&gt;},
+              vid?uri{?}&lt;=A(){&lt;j&gt;},
+              vid?A&lt;=A(uri::T){&lt;j&gt;},
+              else?#{?}&lt;=(#{?}::T){&lt;j&gt;},
+              is?A{?}&lt;=A{?}(isa(bool::T).else(false)){&lt;j&gt;},
+              sorta?#{?}&lt;=#(#::T){&lt;j&gt;},
+              block?B{+}&lt;=A{?}(B{+}::T){&lt;j&gt;},
+              split?&lt;=#(#{+}::T){&lt;j&gt;},
+              split?lst&lt;=#(lst::T){&lt;j&gt;},
+              choose?rel{?}&lt;=#(rec::T){&lt;j&gt;},
+              merge?lst&lt;=A{*}(lst::T){&lt;j&gt;},
+              merge?&lt;=A{*}(#{*}::T){&lt;j&gt;},
+              merge?A{*}&lt;=A{*}(A{*}::T){&lt;j&gt;},
+              not?bool&lt;=#(#{?}::T){&lt;j&gt;},
+              eq?bool&lt;=A(A::T){&lt;j&gt;},
+              neq?bool&lt;=A(A::T){&lt;j&gt;},
+              to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;},
+              ref?#{**}&lt;=#(#{*}::T){&lt;j&gt;},
+              source?B{*}&lt;=A{?}(str::T){&lt;j&gt;},
+              type?#&lt;=#(){&lt;j&gt;},
+              throw?fail&lt;=#{*}(#{?}::T){&lt;j&gt;},
+              parent?#{?}&lt;=#(){&lt;j&gt;},
+              count?int&lt;=A{*}(){&lt;j&gt;},
+              skip?&lt;=#{*}(int::T){&lt;j&gt;},
+              take?&lt;=#{*}(int::T){&lt;j&gt;},
+              update?B{*}&lt;=A(B{*}::T){&lt;j&gt;},
+              explain?/m/inst/explain/explanation&lt;=(){&lt;j&gt;},
+              reify?rec&lt;=A(){&lt;j&gt;},
+              reduce?A&lt;=A{*}(#{?}::T){&lt;j&gt;},
+              eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+              parse(str::T){&lt;j&gt;},
+              rshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
+              lshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
+              start?A{**}&lt;={0}(A{**}::T){&lt;j&gt;},
+              isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;},
+              isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
+              isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
+              isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
+              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
+              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
+              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
+              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
+              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
+              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
+              isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
+              save?#&lt;=#(){&lt;j&gt;},
+              ctor(),
+              lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
+              as?str&lt;=docs(str::T){&lt;j&gt;}],
+             const=&gt;[,]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -1312,6 +1315,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__inst__inactive" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">inactive</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__inst__inf" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">inf</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__inv" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">inv</span>
     <span class="pill-label badge bg-success ms-2">I</span>
@@ -1482,6 +1488,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__sum" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sum</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__inst__sup" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sup</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__swap" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">swap</span>
@@ -1971,8 +1980,8 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
                      args=&gt;union(lst::T,rec::T),
                      {?}f=&gt;&lt;#&gt;::T,
                      form=&gt;uri::T,
-                     c_dom=&gt;int::T,
-                     c_rng=&gt;int::T]],
+                     {?}c_dom=&gt;int::T,
+                     {?}c_rng=&gt;int::T]],
          {?}ext=&gt;rec::T]]@/m/inst/explain/explanation</code></pre></div>
     
     
@@ -1980,10 +1989,10 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <p class="mb-0 text-light"> a structured explanation of a resolved expression produced by explain()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
   <a href="#ext" class="text-light">ext</a> <span class="text-light">=&gt;</span> <a href="#"the explain extensions (Marko, 2026-11-20): rewrites beside explain_analysis, each writing its rec at ext__<name> (ext__topology) and appending that rec's format to this one's"" class="text-info">topology) and appending that rec&#39;s format to this one&#39;s&quot;</a>
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively'" class="text-info">&#39;lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively&#39;</a>
-  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -3151,7 +3160,7 @@ a/b/c/                           [-- relative/branch uri            --]
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">357</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">360</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
         An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
@@ -3163,7 +3172,7 @@ a/b/c/                           [-- relative/branch uri            --]
             placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
-            aria-live="polite" aria-atomic="true">showing 357 of 357</span>
+            aria-live="polite" aria-atomic="true">showing 360 of 360</span>
     </div>
 </div>
     <div class="card mb-3 instset-inst-card" id="__m__inst__active">
@@ -5772,9 +5781,14 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> a grouping function \(f(X) \mapsto x&#39;\): groups the objs by the key rec and computes each group (sugar&#39;d %==)</p>
+    <p class="mb-0 text-light"> a grouping function \(f(X) \mapsto x&#39;\): groups the distinct members of the lhs, each with its whole mass, by the key rec and computes each group (sugar&#39;d %==)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#a rec of the grouped results" class="text-success">a rec of the grouped results</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{1,1,1,2,3,3}.group([mod(2)=&gt;count()])        [-- [1=&gt;5,0=&gt;1] --]
+{1,1,1,2,3,3}.group([mod(2)=&gt;mean()])         [-- [1=&gt;1.8,0=&gt;2.0], each group&#39;s mean weighed by its copies --]
+{1,2,3,4}.mod(2).group([cc()=&gt;count()])       [-- [2=&gt;4], each member keyed by its whole mass --]</code></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__gt">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -6193,6 +6207,29 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     
     
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__inf">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">inf</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{?}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/inst/inf</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__inf-doc-0-tab').click();document.getElementById('__m__inst__inf-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inf?A{?}&lt;=A{*}(#{?}::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-idempotent">idempotent<span class="chip-tip"><span class="chip-tip-name">idempotent</span><span class="chip-tip-desc">\(f(f(x)) = f(x)\)</span></span></span><span class="law-chip law-semi_right_distributive">semi_right_distributive<span class="chip-tip"><span class="chip-tip-name">semi_right_distributive</span><span class="chip-tip-desc">distributes over \(+\) on the right with a RE-APPLICATION — \((a+b)c = (ac+bc)c\), the reducer&#39;s distributivity (a near-ring, left-distributive only)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the infimum function \(f(X) \mapsto \inf X\): the least member of the lhs in the order a sort compares it (by the arg&#39;s projection, when given, as order&#39;s), whatever its mass; noobj for the empty stream. A meet: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some A to compare" class="text-info">maybe some A to compare</a> <span class="text-light">=&gt;</span> <a href="#the least A, or noobj for none" class="text-success">the least A, or noobj for none</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{3,1,4,1,5}.inf()          [-- 1 --]
+{&#39;b&#39;,&#39;a&#39;,&#39;c&#39;}.inf()        [-- &#39;a&#39; --]</code></pre>
+</div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__inv">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -6610,17 +6647,17 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">mean</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__int{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">int{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__int{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">int{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__real{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">real{?}</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/mean</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mean-doc-0-tab').click();document.getElementById('__m__inst__mean-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mean?real&lt;=int{*}(){&lt;j&gt;}</code></pre>
-<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mean?&lt;=int{*}()</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">split?&lt;=int{*}([mean(),count()]).cc(id().rshift(1)).rshift(0).mean()</code></pre></div>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mean-doc-0-tab').click();document.getElementById('__m__inst__mean-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mean?real{?}&lt;=int{*}(){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mean?real{?}&lt;=int{*}()</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">split?&lt;=int{*}([mean(),count()]).cc(id().rshift(1)).rshift(0).mean()</code></pre></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mean-doc-1-tab').click();document.getElementById('__m__inst__mean-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mean?real&lt;=real{*}(){&lt;j&gt;}</code></pre>
-<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mean?&lt;=real{*}()</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">split?&lt;=real{*}([mean(),count()]).cc(id().rshift(1)).rshift(0).mean()</code></pre></div>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mean-doc-1-tab').click();document.getElementById('__m__inst__mean-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mean?real{?}&lt;=real{*}(){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mean?real{?}&lt;=real{*}()</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">split?&lt;=real{*}([mean(),count()]).cc(id().rshift(1)).rshift(0).mean()</code></pre></div>
 </div>
 </div>
     
@@ -6650,7 +6687,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the mean of an int stream</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of int" class="text-info">a stream of int</a> <span class="text-light">=&gt;</span> <a href="#the mean of the lhs int stream" class="text-success">the mean of the lhs int stream</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of int" class="text-info">a stream of int</a> <span class="text-light">=&gt;</span> <a href="#the mean of the lhs int stream, or noobj for none" class="text-success">the mean of the lhs int stream, or noobj for none</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{1.0,2.0,3.0}.mean() [-- 2.0 --]</code></pre>
@@ -6659,7 +6696,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the mean of a stream of reals</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of reals" class="text-info">a stream of reals</a> <span class="text-light">=&gt;</span> <a href="#the mean of the lhs real stream" class="text-success">the mean of the lhs real stream</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of reals" class="text-info">a stream of reals</a> <span class="text-light">=&gt;</span> <a href="#the mean of the lhs real stream, or noobj for none" class="text-success">the mean of the lhs real stream, or noobj for none</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{1.0,2.0,3.0}.mean() [-- 2.0 --]</code></pre>
@@ -6845,7 +6882,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus-doc-4-tab').click();document.getElementById('__m__inst__minus-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?rec&lt;=rec(rec::T){&lt;j&gt;}</code></pre>
-<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span></div>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus-doc-5-tab').click();document.getElementById('__m__inst__minus-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__minus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
@@ -6951,9 +6988,9 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__minus-doc-4" role="tabpanel" aria-labelledby="__m__inst__minus-doc-4-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> remove the argument rec&#39;s matching entries from the lhs rec</p>
+    <p class="mb-0 text-light"> deep merge the inverted argument rec into the lhs rec</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the lhs rec without the removed entries" class="text-success">the lhs rec without the removed entries</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the deep merge of the two opposing sign recs" class="text-success">the deep merge of the two opposing sign recs</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__minus-doc-5" role="tabpanel" aria-labelledby="__m__inst__minus-doc-5-tab">
     <div class="card-body border-top py-2">
@@ -7203,7 +7240,11 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 <div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__neg" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg?real&lt;=real(){&lt;j&gt;}</code></pre></a></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-2-tab').click();document.getElementById('__m__inst__neg-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?code&lt;=code(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-2-tab').click();document.getElementById('__m__inst__neg-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?rec&lt;=rec(){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__neg" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg?rec&lt;=rec(){&lt;j&gt;}</code></pre></a></div>
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-3-tab').click();document.getElementById('__m__inst__neg-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?code&lt;=code(){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__neg" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg?code&lt;=code(){&lt;j&gt;}</code></pre></a></div>
 </div>
 <div class="variant-row">
@@ -7211,7 +7252,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-3-tab').click();document.getElementById('__m__inst__neg-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__neg" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-4-tab').click();document.getElementById('__m__inst__neg-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__neg" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 <div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__neg" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg?cmplx&lt;=cmplx(){&lt;j&gt;}</code></pre></a></div>
 </div>
 </div>
@@ -7249,6 +7290,13 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         style="font-size:0.75rem;max-width:60px;">
         <i class="bi bi-info-circle me-1"></i> 4
     </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__inst__neg-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__neg-doc-4"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="bi bi-info-circle me-1"></i> 5
+    </button>
 </li>
     </ul>
     <div class="tab-content" id="__m__inst__neg-content">
@@ -7266,11 +7314,17 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__neg-doc-2" role="tabpanel" aria-labelledby="__m__inst__neg-doc-2-tab">
     <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a negation function \(f(x) \mapsto 1/x\): the additive inverse of the lhs rec</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec" class="text-info">a rec</a> <span class="text-light">=&gt;</span> <a href="#the additive inverse" class="text-success">the additive inverse</a></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__neg-doc-3" role="tabpanel" aria-labelledby="__m__inst__neg-doc-3-tab">
+    <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the negation of code inverts its coefficient</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs code" class="text-info">the lhs code</a> <span class="text-light">=&gt;</span> <a href="#__m__code" class="text-success">code</a></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__neg-doc-3" role="tabpanel" aria-labelledby="__m__inst__neg-doc-3-tab">
+</div><div class="tab-pane fade " id="__m__inst__neg-doc-4" role="tabpanel" aria-labelledby="__m__inst__neg-doc-4-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> complex negation (additive inverse): \(-(a+bi)=-a-bi\)</p>
 </div><div class="card-body py-2">
@@ -8997,6 +9051,31 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div>
     </div>
+</div>
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__sup">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">sup</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{?}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/inst/sup</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__sup-doc-0-tab').click();document.getElementById('__m__inst__sup-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sup?A{?}&lt;=A{*}(#{?}::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-idempotent">idempotent<span class="chip-tip"><span class="chip-tip-name">idempotent</span><span class="chip-tip-desc">\(f(f(x)) = f(x)\)</span></span></span><span class="law-chip law-semi_right_distributive">semi_right_distributive<span class="chip-tip"><span class="chip-tip-name">semi_right_distributive</span><span class="chip-tip-desc">distributes over \(+\) on the right with a RE-APPLICATION — \((a+b)c = (ac+bc)c\), the reducer&#39;s distributivity (a near-ring, left-distributive only)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the supremum function \(f(X) \mapsto \sup X\): the greatest member of the lhs in the order a sort compares it (by the arg&#39;s projection, when given, as order&#39;s), whatever its mass; noobj for the empty stream. A join: commutative, associative and idempotent, so its partials recombine through itself, even when the parts overlap</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some A to compare" class="text-info">maybe some A to compare</a> <span class="text-light">=&gt;</span> <a href="#the greatest A, or noobj for none" class="text-success">the greatest A, or noobj for none</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{3,1,4,1,5}.sup()          [-- 5 --]
+{{3}2,7}.sup()             [-- 7: a member&#39;s mass does not weigh in --]
+{&#39;b&#39;,&#39;a&#39;,&#39;c&#39;}.sup()        [-- &#39;c&#39; --]
+{[a=&gt;3],[a=&gt;1]}.sup(_&gt;&gt;a)  [-- [a=&gt;3]: the argument is the comparator, as order&#39;s --]</code></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__swap">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">

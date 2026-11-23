@@ -84,9 +84,9 @@ have actually cost someone an afternoon.
 
 | term               | means                                                                              |
 |--------------------|------------------------------------------------------------------------------------|
-| `roster`           | what the system **knows**: `<host> => uri{+}`, connectionless. Shared at the root  |
+| `roster`           | what the system **knows**: `machine/<host>/<protocol>/<transport> => uri{+}` and the `discover` protocols that fill it; connectionless, shared at the root |
 | `peer`             | what this machine has **dialed**: one member per surface, keyed by the dial's path |
-| `listener`         | what it **answers on**: the sockets it serves, and therefore what mDNS announces   |
+| `listener`         | what it **answers on**: the sockets it serves; mDNS announces their mtron routes   |
 | `prefix` (network) | what you **call** it: `<label> => origin`, one listing at the root                 |
 | reach              | dialed peers — per frame, retractable, **not** inherited                           |
 | denotation         | what a spelling means — machine-global, inherited, never scoped                    |

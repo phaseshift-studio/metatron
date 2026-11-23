@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# compile TikZ / tikz-cd sidecars to SVG + PNG (white ink, transparent background — the
+# dark-site convention). A thin wrapper over bin/render-tikz.py with progress logging.
+#
+#   bin/render-images [dir ...]        render .tex sidecars under each dir
+#                                      (default: docs/website/images)
+#   bin/render-images --fix ...        first normalize post-1.0 tikz-cd keys in place:
+#                                        {rgb,255:...}       -> red!80!white
+#                                        curve={height=Hpt}  -> bend left/right
+#                                        between={a}{b}      -> removed
+#   bin/render-images --ink black ...  light page (white ink is invisible on one)
+#   bin/render-images --dpi 150 ...    raster resolution (default 300)
+
+set -euo pipefail
+
+repo="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$repo"
+
+# ── log helpers (colour only when stdout is a terminal) ─────────────────────────
+if [ -t 1 ]; then
+  BOLD=$'\033[1m'; DIM=$'\033[2m'; CYAN=$'\033[36m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
+else
+  BOLD= DIM= CYAN= GREEN= YELLOW= RESET=
+fi
+step() { printf ' %s==>%s %s%s%s\n' "$CYAN" "$RESET" "$BOLD" "$*" "$RESET"; }
+info() { printf '    %s%s%s\n' "$DIM" "$*" "$RESET"; }
+ok()   { printf ' %s✓%s %s%s%s\n' "$GREEN" "$RESET" "$BOLD" "$*" "$RESET"; }
+
+# ── args ────────────────────────────────────────────────────────────────────────
+dirs=(); fix=0; ink=white; dpi=300
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --fix) fix=1 ;;
+    --ink) ink="${2-}"; shift ;;
+    --dpi) dpi="${2-}"; shift ;;
+    -h|--help) sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) dirs+=("$1") ;;
+  esac
+  shift
+done
+dirs=("${dirs[@]:-docs/website/images}")
+
+# ── banner ──────────────────────────────────────────────────────────────────────
+step "render-images"
+info "ink: ${ink} · dpi: ${dpi} · dirs: ${dirs[*]}"
+
+# ── collect sidecars ────────────────────────────────────────────────────────────
+tex=()
+while IFS= read -r f; do tex+=("$f"); done < <(find "${dirs[@]}" -name '*.tex' -type f 2>/dev/null | sort)
+if [ "${#tex[@]}" -eq 0 ]; then
+  printf '    no .tex sidecars under %s\n' "${dirs[*]}"
+  exit 1
+fi
+info "${#tex[@]} sidecar(s):"
+for f in "${tex[@]}"; do info "• ${f}"; done
+
+# ── optional: normalize post-1.0 tikz-cd keys ───────────────────────────────────
+if [ "$fix" = 1 ]; then
+  step "normalize post-1.0 tikz-cd keys"
+  python3 - "${tex[@]}" <<'PY'
+import re, sys
+PINK = re.compile(r'\{rgb,255:red,\d+;green,\d+(?:;blue,\d+)?\}')
+CURVE = re.compile(r'curve=\{height=(-?[\d.]+)pt\}')
+BETWEEN = re.compile(r',?\s*between=\{[0-9.]+\}\{[0-9.]+\}')
+def curve(m):
+    h = float(m.group(1)); side = 'right' if h < 0 else 'left'
+    a = 35 if abs(h) >= 18 else (22 if abs(h) >= 12 else 12)
+    return f'bend {side}={a}'
+for f in sys.argv[1:]:
+    s = open(f).read()
+    c, v, b = len(PINK.findall(s)), len(CURVE.findall(s)), len(BETWEEN.findall(s))
+    s = PINK.sub('red!80!white', s)
+    s = CURVE.sub(curve, s)
+    s = BETWEEN.sub('', s)
+    if c or v or b:
+        open(f, 'w').write(s)
+        print(f'  {f}: {c} colour→red!80!white, {v} curve→bend, {b} between→removed')
+    else:
+        print(f'  {f}: nothing to fix')
+PY
+  ok "normalized"
+fi
+
+# ── render ──────────────────────────────────────────────────────────────────────
+step "render → SVG + PNG"
+"$repo/bin/render-tikz.py" --png --dpi "$dpi" --ink "$ink" "${dirs[@]}"
+
+# ── output summary ──────────────────────────────────────────────────────────────
+step "output"
+for f in "${tex[@]}"; do
+  for ext in svg png; do
+    o="${f%.tex}.${ext}"
+    [ -f "$o" ] && info "• ${o}  ($(du -h "$o" | cut -f1))"
+  done
+done
+ok "done"

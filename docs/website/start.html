@@ -507,20 +507,39 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 <div class="legend-index">
 <ul>
 <li class="legend-lvl-3"><a href="#sec-install" onclick="var t=document.getElementById('sec-install');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Install</a></li>
-<li class="legend-lvl-3"><a href="#sec-first-expression" onclick="var t=document.getElementById('sec-first-expression');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">First expression</a></li>
+<li class="legend-lvl-3"><a href="#sec-basic-concepts" onclick="var t=document.getElementById('sec-basic-concepts');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Basic Concepts</a></li>
 <li class="legend-lvl-3"><a href="#sec-the-console" onclick="var t=document.getElementById('sec-the-console');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The console</a></li>
 <li class="legend-lvl-3"><a href="#sec-where-next" onclick="var t=document.getElementById('sec-where-next');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Where next</a></li>
 </ul>
 </div>
+<img src="images/metatron-character-ansi.png" width="350px" style="float:right; margin:10px;"></a>
 <div class="paragraph">
-<p>metatron is a data-oriented virtual machine and its language, <strong>mtron</strong>. A row in a
-database, a tag in an HTML page, a vertex in a graph, a value in memory on an IoT
-device — all of it lives in one address space and is read and written through a
-single referential model.</p>
+<p><strong>metatron</strong> is an algebraically specified distributed virtual machine. <strong>mtron</strong> is a typed, self-referential language aimed directly at manipulating metatron.
+The benefits of these two technologies are:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>write applications that naturally exist outside/across the confines of a single machine.</p>
+</li>
+<li>
+<p>process relational, graph, key-value, and document database from the same mtron perspective.</p>
+</li>
+<li>
+<p>enjoy the elegance of the top-to-bottom ring theoretic approach to distributed data structures and processes.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>at minimum, enjoy a surprising number of "<em>huh. that&#8217;s interesting.</em>"-moments.</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
 </div>
 <div class="paragraph">
-<p>This page goes from nothing to a running REPL, then points at the parts of the
-documentation worth reading next.</p>
+<p>The concepts herein are guaranteed to inspire even the most grizzled of computer scientists as they find themselves at times engaging with metatron&#8217;s fractal-like formal theory and, at other times, noodling away on a cluster-oriented, data driven application using a bizarre, alien-like language that blurs numerous, long-standing schisms that have separated database query languages from application development languages, object-oriented encapsulation from functional fluidity, intra-net from internet, and mathematics from software engineering.
+There is much to fathom within the wonderful world of metatron.</p>
 </div>
 <h3 id="sec-install" class="discrete">Install</h3>
 <div class="paragraph">
@@ -532,56 +551,54 @@ documentation worth reading next.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Or run it in a container.</p>
+<p>Or run it in a container&#8230;&#8203;</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add $(stat -c '%g' /var/run/docker.sock) \
   ghcr.io/phaseshift-studio/metatron:latest</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>...with Docker compose.</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
 </div>
 </div>
-<h3 id="sec-first-expression" class="discrete">First expression</h3>
+<h3 id="sec-basic-concepts" class="discrete">Basic Concepts</h3>
 <div class="paragraph">
-<p>metatron evaluates mtron. A one-off expression runs with <code>-e</code>.</p>
+<p>metatron evaluates mtron.
+A one-off expression runs with <code>-e</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ bin/metatron -e "1-&lt;[+2,+3]"
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">$ bin/metatron -e "1-&lt;[+2,+3]"
 [3,4]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p><code>1-&lt;[&#8230;&#8203;]</code> reads one object and applies two instructions to it, branching the one
-into two results — hence <code>[3,4]</code>. Everything in mtron is built from two operators:
+<p><code>1-&lt;[&#8230;&#8203;]</code> reads one object and applies two instructions to it, branching the one into two results — hence <code>[3,4]</code>.
+Everything in mtron is built from two operators:
 <code>*</code> composes instructions and <code>+</code> branches them.</p>
 </div>
 <div class="paragraph">
-<p>The same two operators describe a running program: the code is a graph of
-instructions, and a <strong>monad</strong> walks it, carrying the current value — forking wherever
-the code branches.</p>
+<p>The same two operators describe a running program: the code is a graph of instructions, and a <strong>monad</strong> walks it, carrying the current value — forking wherever the code branches.</p>
 </div>
 <div class="text-center my-4">
-  <img src="images/code-structure.svg" alt="code structure: start, plus(1), split([plus(3), plus(2)]) branching into plus(3) and plus(2)" class="img-fluid" style="max-width: 520px;" />
-  <div class="small text-light opacity-75 mt-2">the code — `*` composes, `+` branches</div>
-  <img src="images/monad-propagation.svg" alt="a monad carrying int::5 through plus(1) to int::6, forking at split into int::9 and int::8" class="img-fluid mt-4" style="max-width: 520px;" />
-  <div class="small text-light opacity-75 mt-2">a monad propagates — and forks where the code branches</div>
+  <img src="images/dataflow.svg" alt="" class="img-fluid" />
 </div>
 <h3 id="sec-the-console" class="discrete">The console</h3>
 <div class="paragraph">
-<p>For interactive use, the console is a REPL with syntax highlighting,
-step-through compilation, and type checking.</p>
+<p>For interactive use, the console is a REPL with syntax highlighting, step-through compilation, and type checking.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ bin/metatron
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">$ bin/metatron
 mtron&gt;</code></pre>
 </div>
 </div>
@@ -607,16 +624,15 @@ mtron&gt;</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="tractatus/index.html">The tractatus</a> — chapters on the language and the
-machine. Begin with <a href="tractatus/ring.html">ring</a>,
+<p><a href="tractatus/index.html">The tractatus</a> — chapters on the language and the machine.
+Begin with <a href="tractatus/ring.html">ring</a>,
 <a href="tractatus/uri.html">fURI</a>, and <a href="tractatus/type.html">types</a>.</p>
 </li>
 <li>
 <p><a href="instset/index.html">Instruction sets</a> — the domains of discourse.</p>
 </li>
 <li>
-<p><a href="articles/stream-ring-theory.html">Stream ring theory</a> — the algebra the whole
-thing is built on.</p>
+<p><a href="articles/stream-ring-theory.html">Stream ring theory</a> — the algebra the whole thing is built on.</p>
 </li>
 </ul>
 </div></main>
