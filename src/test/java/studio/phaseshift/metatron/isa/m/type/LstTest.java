@@ -346,7 +346,11 @@ public class LstTest extends AbstractAlgebraTest {
             "@/sys/tmp/lst_test/0 >>= [a=>2]                                     % [a=>2,b=>[a,b,c]]",
             "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c]]",
             "*/sys/tmp/lst_test/0 >>= +[b=>2]                                    % [a=>2,b=>{2,[a,b,c]}]",
-            "*/sys/tmp/lst_test/0 >>= -[b=>2]                                    % [a=>2,b=>[a,b,c]]",
+            // REC MINUS IS THE INVERSE OF REC PLUS (Marko, a50f20251): an entry the rec does not hold is not removed but
+            // owed -- the copy above wrote nothing back, so b holds no 2 to cancel -- and a written plus then minus cancels
+            "*/sys/tmp/lst_test/0 >>= -[b=>2]                                    % [a=>2,b=>{[a,b,c],{-1}2}]",
+            "@/sys/tmp/lst_test/0 >>= +[b=>2]                                    % [a=>2,b=>{2,[a,b,c]}]",
+            "@/sys/tmp/lst_test/0 >>= -[b=>2]                                    % [a=>2,b=>[a,b,c]]",
             "@/sys/tmp/lst_test/0 >>= [b=>+[d,e]]                                % [a=>2,b=>[a,b,c,d,e]]",
             "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c,d,e]]",
             "@/sys/tmp/lst_test/0 >>= [b=>-[a,d]]                                % [a=>2,b=>[b,c,e]]",

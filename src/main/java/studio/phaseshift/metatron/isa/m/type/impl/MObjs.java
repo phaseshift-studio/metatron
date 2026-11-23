@@ -140,8 +140,13 @@ public class MObjs implements Objs, AutoCloseable {
                 map.merge(spanned ? o.d(cInt.ONE()) : o.c(studio.phaseshift.metatron.furi.C::one), spanned ? o.tid().d() : o.c(), cInt::plus);
             }
             this.jvm.clear();
-            map.forEach((k, v) -> this.jvm.add(k.tid().b().isOne() ? k.c(v) : k.d(v)));
-            assert this.jvm.size() == map.size();
+            // COPIES THAT CANCEL ARE GONE: zero copies of an obj is noobj, the ring's zero, and noobj is no member of a
+            // stream (Marko, 2026-11-22) -- {2,[a,b,c]} with {-1}2 is [a,b,c], never {[a,b,c],noobj}
+            map.forEach((k, v) -> {
+                if (!v.isZero())
+                    this.jvm.add(k.tid().b().isOne() ? k.c(v) : k.d(v));
+            });
+            assert this.jvm.size() <= map.size();
             map.clear();
         }
         return this;

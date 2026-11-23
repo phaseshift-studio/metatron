@@ -652,12 +652,18 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
          * holds ({@code {2}[a=>2]} holds {@code a=>{2}2}). A bulked operand therefore merges as the copies it stands for —
          * {@code [=>] + {2}[a=>[b=>2]]} is {@code [a=>[b=>{2}2]]}, the value {@code [a=>[b=>2]] + [a=>[b=>2]]} computes —
          * so a fold over a bulked stream ({@code sum}) answers what it answers over the copies.
+         * <p>
+         * COPIES THAT CANCEL ARE GONE. The union of two values is built as a stream, bulked and shrunk, never appended
+         * onto the lhs's bag (which the lhs rec still holds): rec minus is the inverse of rec plus, so
+         * {@code [b=>{2,[a,b,c]}] - [b=>2]} is {@code [b=>[a,b,c]]}, not a bag holding a zero.
          */
         public static Obj mergeObjRecursion(final Obj lhs, final Obj rhs) {
             if (lhs.isRec() && rhs.isRec())
                 return mergeRecRecursion(lhs.asRec(), rhs.asRec());
+            else if (rhs.isNoObj() || lhs.isNoObj())
+                return rhs.isNoObj() ? lhs : rhs;
             else
-                return lhs.append(rhs);
+                return objs(lhs, rhs);
         }
 
         /**
