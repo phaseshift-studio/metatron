@@ -337,8 +337,12 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
    `Analyzer.OBSERVING` marks a publication's thread and every thread it starts (`ThreadExecutor` carries it beside
    the frame of reference); a marked recording counts and schedules nothing. A subscriber so hears each change something
    else makes once, a delivery behind its own cost, which a pull reads now. `?subq` is untouched: a subscriber that
-   writes what it subscribes to wrote its own loop. The mark does not cross the wire, so two machines whose subscribers
-   report to each other still trade at most one publication per step each.
+   writes what it subscribes to wrote its own loop. A reply to an observer's round trip is the observer's work too: it
+   arrives on the socket library's own thread, which no executor marked, so the trip's waiter records the mark and,
+   while one is outstanding on a socket, a frame arriving there is counted and handled marked (an unrelated frame in
+   that window is counted, and announced with the next change). A request another machine sends is that machine's
+   work, so two machines whose subscribers push to each other, or a machine that dials itself, still trade at most one
+   publication per step each.
 6. **Export is a serializer** over `analysis::T`, as mapped above — not a second collection path.
 7. **Events are not meters.** A record of individual occurrences (`WireTrace`'s exchanges) is a bounded ring a human
    reads; the counts behind it are the producer's meters, counted at the same tap.

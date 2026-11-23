@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -39,6 +40,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.LinkedHashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -50,9 +52,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.Tokens.RUN;
+import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -502,6 +506,44 @@ public class wsServerTest extends AbstractMetatronTest {
         assertTrue(Machine.read(f("/network/analyzer/analysis/peer")).realValue() >= 1.0d, "the peer gauge registered with them");
         checkEquality(LOG, jnt(4), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(3)")), true);
         assertTrue(after.analysis().at(uri("wire/sent")).orElse(jnt(0)).intValue() > 0, "and the frames counted again");
+    }
+
+    /**
+     * AN OBSERVER'S ROUND TRIP ANNOUNCES NOTHING: a subscriber to the network's analysis that asks a peer for something
+     * on each delivery sends as the observer, and the reply, which arrives on the socket library's own thread, is
+     * counted as the observer's work too, so the network goes quiet after the change that started it. The route taken
+     * is the child's, so the request the server receives counts on the child's wire, never on the dialer's.
+     */
+    @Test
+    void testAnObserversRoundTripAnnouncesNothing() {
+        final Machine root = Machine.current();
+        wsServer.serve(this.socket, mtron("/mtron"));
+        final Machine child = root.push(f("ws_server_observer"));
+        wsServer.serve(this.socket, mtron("/child"));
+        Machine.current(root);
+        final Network network = root.network();
+        Network.Helper.connect(network, this.socket.extend("child"), WS_CLIENT_TID);
+        final AtomicInteger heard = new AtomicInteger();
+        try {
+            checkEquality(LOG, jnt(2), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)")), true);
+            CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
+            Machine.write(f("/network/analyzer/analysis").addQ(SUBQ), instLambda((pub, inst) -> {
+                heard.incrementAndGet();
+                network.submit(this.socket, ObjmtronSerializer.parse("1.plus(2)"));
+                return noobj();
+            }));
+            Analyzer.Helper.incr(network.analyzer(), f("observer/kick"), 1L);
+            CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
+            final int settled = heard.get();
+            assertTrue(settled >= 1, "the change was heard, and the subscriber made its round trip");
+            CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
+            assertEquals(settled, heard.get(), "and its reply announced nothing, so the network went quiet");
+        } finally {
+            Machine.write(f("/network/analyzer/analysis").addQ(SUBQ), noobj());
+            network.drop(this.socket);
+            Machine.current(child);
+            child.pop();
+        }
     }
 
     /**

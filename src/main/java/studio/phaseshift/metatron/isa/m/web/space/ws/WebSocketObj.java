@@ -194,11 +194,12 @@ public interface WebSocketObj extends Rec, Closeable {
     long DEFAULT_SEND_RECV_MS = 30_000L;
 
     /**
-     * A ROUND TRIP IN FLIGHT — the slot its reply lands in, keyed by the vid the request was sent under.
+     * A ROUND TRIP IN FLIGHT — the slot its reply lands in, keyed by the vid the request was sent under, and whether an
+     * observation made it ({@link Analyzer#OBSERVING}, read where the trip is made): its reply is then the observer's work.
      */
-    record Waiter(AtomicReference<Obj> obj, CountDownLatch latch) {
+    record Waiter(AtomicReference<Obj> obj, CountDownLatch latch, boolean observing) {
         static Waiter of() {
-            return new Waiter(new AtomicReference<>(noobj()), new CountDownLatch(1));
+            return new Waiter(new AtomicReference<>(noobj()), new CountDownLatch(1), Analyzer.OBSERVING.get());
         }
 
         void fill(final Obj reply) {
@@ -221,6 +222,18 @@ public interface WebSocketObj extends Rec, Closeable {
      * socket's.
      */
     Map<WebSocketObj, Map<fURI, Waiter>> WAITERS = Collections.synchronizedMap(new IdentityHashMap<>());
+
+    /**
+     * WHETHER AN OBSERVER'S ROUND TRIP IS OUTSTANDING ON {@code socket}. A frame arrives on the socket library's own
+     * thread, which no executor marked, and which reply it carries is known only once it is read: while such a trip is
+     * outstanding, a frame is counted, read and handed on as the observer's work, so the reply never announces the
+     * trip that asked for it. A frame that is no reply, arriving in that window, is counted all the same and announced
+     * with the next change.
+     */
+    static boolean observed(final WebSocketObj socket) {
+        final Map<fURI, Waiter> waiters = WAITERS.get(socket);
+        return null != waiters && waiters.values().stream().anyMatch(Waiter::observing);
+    }
 
     /**
      * The sockets whose {@link #router()} is installed — the handler is installed once, on first use, and never

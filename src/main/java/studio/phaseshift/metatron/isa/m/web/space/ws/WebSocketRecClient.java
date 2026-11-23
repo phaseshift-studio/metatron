@@ -230,18 +230,26 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     // (Marko: abc@\x, selfVID as syntax).
     @Override
     public void onMessage(final String message) {
-        this.wsclient.onMessage(this, this.readFrame(() -> this.getIO().input().serializer().inputBytes(ByteBuffer.wrap(message.getBytes()))));
+        this.received(() -> this.getIO().input().serializer().inputBytes(ByteBuffer.wrap(message.getBytes())));
     }
 
     @Override
     public void onMessage(final ByteBuffer message) {
-        this.wsclient.onMessage(this, this.readFrame(() -> this.getIO().input().serializer().inputBytes(message)));
+        this.received(() -> this.getIO().input().serializer().inputBytes(message));
     }
 
-    private Obj readFrame(final ScopedValue.CallableOp<Obj, RuntimeException> read) {
-        // THE FRAME IS COUNTED AS IT ARRIVES, before the read: a protocol client evaluates a request while it reads it
-        Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_RECV, 1L);
-        return this.answersRequests ? read.call() : ScopedValue.where(Obj.Helper.SELF_VID, true).call(read);
+    private void received(final ScopedValue.CallableOp<Obj, RuntimeException> read) {
+        // A REPLY TO AN OBSERVER'S ROUND TRIP IS THE OBSERVER'S WORK (WebSocketObj.observed): this is the socket library's
+        // thread, which no executor marked, so the trip's mark is put on it while the frame is counted, read and handed on
+        final boolean outer = Analyzer.OBSERVING.get();
+        Analyzer.OBSERVING.set(outer || WebSocketObj.observed(this.wsclient));
+        try {
+            // THE FRAME IS COUNTED AS IT ARRIVES, before the read: a protocol client evaluates a request while it reads it
+            Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_RECV, 1L);
+            this.wsclient.onMessage(this, this.answersRequests ? read.call() : ScopedValue.where(Obj.Helper.SELF_VID, true).call(read));
+        } finally {
+            Analyzer.OBSERVING.set(outer);
+        }
     }
 
     public boolean state() {

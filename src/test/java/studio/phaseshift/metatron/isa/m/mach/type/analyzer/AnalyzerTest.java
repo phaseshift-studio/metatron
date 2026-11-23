@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -42,6 +43,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -50,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -94,6 +97,17 @@ public class AnalyzerTest extends AbstractMetatronTest {
 
     private static long read(final Obj analysis, final String path) {
         return analysis.asRec().at(uri(path)).orElse(jnt(0)).intValue();
+    }
+
+    /**
+     * wait for {@code done}, a few seconds at most: a barrier where a fixed sleep would race a late thread
+     */
+    private static void await(final BooleanSupplier done, final String what) {
+        final long deadline = System.currentTimeMillis() + 5000L;
+        while (!done.getAsBoolean()) {
+            assertTrue(System.currentTimeMillis() < deadline, "timed out waiting for " + what);
+            CommonUtil.sleepThread(10L);
+        }
     }
 
     /**
@@ -872,28 +886,56 @@ public class AnalyzerTest extends AbstractMetatronTest {
     @Test
     void shouldCountAnObserversWorkWithoutAnnouncingIt() {
         final Machine machine = Machine.current().push(f("analyzer_observer"));
+        final fURI heard = f("/usr/analyzer_observer");
+        Machine.write(heard, noobj());
         try {
             final Analyzer processor = machine.processor().analyzer();
             ObjmtronSerializer.parse("~/processor/analyzer/analysis?subq -> sub::[code=>>>1.to(/usr/analyzer_observer)]").apply();
-            CommonUtil.sleepThread(PUBLISHED_MS);
+            // the subscription's own evaluation is a change; its delivery is counted as it starts, before its write lands
+            await(() -> !Machine.read(heard).isNoObj(), "the first delivery");
             final long settled = read(processor.analysis(), "eval");
             final int computers = machine.processor().computers().jvm().size();
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(settled, read(processor.analysis(), "eval"),
                     "a delivery announces nothing, so the machine goes quiet: " + processor.analysis());
             assertEquals(computers, machine.processor().computers().jvm().size(), "and mints no computer while it is");
+            final long before = Machine.read(heard).asRec().at(uri("eval")).intValue();
             Machine.parse("1.plus(1)").apply(noobj());
-            CommonUtil.sleepThread(PUBLISHED_MS);
+            await(() -> before != Machine.read(heard).asRec().at(uri("eval")).intValue(), "the next delivery");
             assertEquals(settled + 2, read(processor.analysis(), "eval"),
                     "a change something else makes is heard once, and both evaluations count, the delivery's too: " + processor.analysis());
-            assertEquals(read(processor.analysis(), "eval"),
-                    Machine.read(f("/usr/analyzer_observer")).asRec().at(uri("eval")).intValue() + 1,
-                    "the subscriber heard the analysis as it stood before its own delivery: " + Machine.read(f("/usr/analyzer_observer")));
+            assertEquals(read(processor.analysis(), "eval"), Machine.read(heard).asRec().at(uri("eval")).intValue() + 1,
+                    "the subscriber heard the analysis as it stood before its own delivery: " + Machine.read(heard));
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(settled + 2, read(processor.analysis(), "eval"), "and then nothing: " + processor.analysis());
         } finally {
             Machine.write(f("~/processor/analyzer/analysis").addQ(SUBQ), noobj());
+            Machine.write(heard, noobj());
             machine.pop();
+        }
+    }
+
+    /**
+     * THE MARK IS CARRIED INTO EVERY THREAD THE EXECUTOR STARTS, a pooled one included, and nowhere else: each task sees
+     * the mark of the thread that started it, so a pooled thread reused after an observer's task is left unmarked.
+     */
+    @Test
+    void shouldCarryTheObserverMarkIntoEveryThreadItStarts() throws Exception {
+        for (int i = 0; i < 24; i++) {
+            final boolean mark = 0 == i % 2;
+            final AtomicReference<Boolean> seen = new AtomicReference<>();
+            final CountDownLatch done = new CountDownLatch(1);
+            Analyzer.OBSERVING.set(mark);
+            try {
+                ThreadExecutor.instance().execute(() -> {
+                    seen.set(Analyzer.OBSERVING.get());
+                    done.countDown();
+                });
+            } finally {
+                Analyzer.OBSERVING.set(false);
+            }
+            assertTrue(done.await(5, TimeUnit.SECONDS), "task " + i + " ran");
+            assertEquals(mark, seen.get(), "task " + i + " saw the mark of the thread that started it");
         }
     }
 

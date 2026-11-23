@@ -470,11 +470,18 @@ public final class wsServer extends Listener {
                     // session's handler came after the program, or never. It counts on the wire of the machine whose
                     // route it took. The whole answer is then a READ at that route in this socket's analyzer: timed
                     // from here, and counted with its latency once the answer has been given.
-                    Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_RECV, 1L);
-                    QProc.Layer.read(this, session.rec().wire(), () -> {
-                        session.rec().onMessage(conn, message);
-                        return noobj();
-                    });
+                    // A REPLY TO AN OBSERVER'S ROUND TRIP over this connection is the observer's work, as a client's is
+                    final boolean outer = Analyzer.OBSERVING.get();
+                    Analyzer.OBSERVING.set(outer || WebSocketObj.observed(session.rec()));
+                    try {
+                        Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_RECV, 1L);
+                        QProc.Layer.read(this, session.rec().wire(), () -> {
+                            session.rec().onMessage(conn, message);
+                            return noobj();
+                        });
+                    } finally {
+                        Analyzer.OBSERVING.set(outer);
+                    }
                 });
         } finally {
             // THE HANG-UP'S INTERRUPT ENDS WITH THE EVALUATION: the worker serves the socket's other connections, and
