@@ -116,6 +116,24 @@ public abstract class Listener extends MRec implements Addressable, Closeable {
     }
 
     /**
+     * THE Q-PROCS A SERVER'S CONFIG DECLARES ARE ITS OWN (Marko, 2026-11-23): {@code ws_server::[…, q=>[analq::[…]]]}
+     * puts each on this listener, one with a pattern this listener already speaks taking that one's place, so a server
+     * states its analq's cap as any space does. A server that declares none keeps the analq it was built with. A socket
+     * another machine already holds is that one listener, so a config that joins it declares on it too.
+     */
+    public Listener declare(final Rec config) {
+        final Obj q = config.at(uri(QPROC));
+        if (q.isLst())
+            q.asLst().elements().forEach(each -> {
+                if (each instanceof QProc proc) {
+                    this.qs().lstValue().removeIf(held -> held instanceof QProc h && h.pattern().equals(proc.pattern()));
+                    this.addQ(proc);
+                }
+            });
+        return this;
+    }
+
+    /**
      * the service uri the socket is bound to, {@code scheme://host:port}
      */
     public fURI origin() {

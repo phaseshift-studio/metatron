@@ -27,9 +27,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
@@ -54,6 +57,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.Tokens.RUN;
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -62,6 +66,8 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_ISA_TID;
@@ -112,6 +118,21 @@ public class wsServerTest extends AbstractMetatronTest {
 
     private static Rec mtron(final String route) {
         return rec(uri(route), uri(WS_MTRON_HANDLER_TID.toString()));
+    }
+
+    /**
+     * A SERVER TAKES THE ANALQ ITS CONFIG DECLARES (Marko, 2026-11-23): {@code q=>[analq::[read=>counter::T]]} on a
+     * ws_server replaces the analq the server is built with, so the server's cap is the one stated, as a space's is.
+     */
+    @Test
+    void testAServerTakesTheAnalqItsConfigDeclares() {
+        final QProc declared = QCollection.analQ(rec(uri("read"), T(Analysis.COUNTER_TID)));
+        final Listener server = (Listener) wsServer.WS_SERVER_TYPE.constructor().apply(
+                rec(uri(ORIGIN), uri(this.socket), uri(ROUTE), mtron("/mtron"), uri(QPROC), lst(List.of(declared))));
+        final List<Obj> analqs = server.qs().lstValue().stream()
+                .filter(q -> q instanceof QProc proc && proc.pattern().equals(QCollection.ANALQ_PATTERN)).toList();
+        assertEquals(1, analqs.size(), "one analq: " + analqs);
+        assertSame(declared, analqs.getFirst(), "the declared one, in place of the one the server is built with");
     }
 
     @Test

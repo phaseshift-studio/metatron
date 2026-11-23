@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -37,6 +38,33 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * q-proc, changing a setting) changes that space — no second copy in a store beside the index.
  */
 public class MemorySpaceMountTest extends AbstractMetatronTest {
+
+    /**
+     * MEMORY IS A SPACE WHOSE ADDRESSES ARE ITS SPACES (Marko, 2026-11-23). With {@code q => [analq::[=>]]} at the memory,
+     * a space asks to be measured at its mount address, every access memory routes to it counts there, and the space
+     * itself declares nothing. The spaces answer at {@code /memory/space/+?analq}, and memory's totals at
+     * {@code /memory/#?analq}.
+     */
+    @Test
+    void testMemoryMeasuresTheSpacesItRoutesTo() {
+        Machine.evaluate("memspace::[pattern=>/logs/#]@/memory/space/logs");
+        Machine.evaluate("/memory/q -> [analq::[=>]]");
+        try {
+            final Obj asked = Machine.evaluate("/memory/space/logs?analq -> analysis::[read=>counter::T,write=>counter::T]");
+            assertFalse(asked.isFail(), "a space asks at its mount address: " + asked);
+            Machine.evaluate("/logs/a -> 1");
+            Machine.read(f("/logs/a"));
+            Machine.read(f("/logs/b"));
+            final Obj logs = Machine.read(f("/memory/space/logs?analq"));
+            assertEquals(2L, logs.asRec().at(uri("read")).intValue(), "every read memory routed to the space counts at its address: " + logs);
+            assertEquals(1L, logs.asRec().at(uri("write")).intValue(), "and every write: " + logs);
+            final Obj spaces = Machine.read(f("/memory/space/+?analq"));
+            assertEquals(2L, spaces.asRec().at(uri("logs")).asRec().at(uri("read")).intValue(), "the spaces answer at /memory/space/+: " + spaces);
+            assertFalse(Machine.read(f("/memory/#?analq")).asRec().at(uri("read/count")).isNoObj(), "and memory's totals at /memory/#");
+        } finally {
+            Machine.evaluate("/memory/q -> noobj");
+        }
+    }
 
     /**
      * The console flow: mount a space under the memory's index, write a q-proc at its {@code q}, then use it. The

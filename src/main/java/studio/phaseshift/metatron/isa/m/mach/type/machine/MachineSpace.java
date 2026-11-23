@@ -164,6 +164,9 @@ public final class MachineSpace extends memSpace {
         if (NETWORK.equals(part) && this.below(vid) && !this.analyzes(vid))
             // the network IS a space now: its own read applies the layer, so bracketing here would double the hooks
             return this.owner.network().read(vid);
+        // MEMORY'S OWN ?analq answers for the spaces it routes to (/memory/space/<s>?analq), never the store's
+        if (MEMORY.equals(part) && vid.hasQ(QCollection.ANALQ))
+            return QProc.Layer.read(this.owner.memory(), vid, () -> noobj());
         // ~/sys, and a query on the machine or a component, are the store's: the component itself is no doc
         if (SYS.equals(part) || vid.hasQ())
             return super.read(vid);
@@ -215,6 +218,9 @@ public final class MachineSpace extends memSpace {
         // member refused (BasicNetwork); the component's own address is the store's, as every component's is
         if (NETWORK.equals(part) && this.below(vid) && !analyzes)
             return this.owner.network().write(vid, obj);
+        // MEMORY'S OWN ?analq takes the requests for the spaces it routes to: /memory/space/<s>?analq -> analysis::[…]
+        if (MEMORY.equals(part) && vid.hasQ(QCollection.ANALQ))
+            return QProc.Layer.write(this.owner.memory(), vid, obj, () -> obj);
         // AN ANALYZER IS WRITTEN IN PLACE: the analyzer IS its holder's meters, so a write at it declares its settings
         // (step, profile) field by field, and a write below it sets the one field. Its holder is a component's
         // (<vid>/<component>/analyzer) or held deeper (a profiled evaluation's, <vid>/processor/computer/<n>/analyzer),

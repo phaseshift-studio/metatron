@@ -229,7 +229,7 @@ public final class mqttServer extends Listener {
         if (!host.isUri())
             throw MTronException.of("an mqtt_server serves a socket: host=><mqtt://host:port> required, got %s", host);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec());
+        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec()).declare(config);
     }
 
     /**

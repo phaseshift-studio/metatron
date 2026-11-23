@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
@@ -236,6 +237,26 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
      * The machine is asked with {@code at}, <b>never</b> {@code read}: a read would come straight back here and
      * a root read would re-enter itself.
      */
+    /**
+     * AN ACCESS THIS MEMORY HANDS TO THE SPACE THAT COVERS IT passes through this memory's own q-procs (Marko,
+     * 2026-11-23): memory is a space whose addresses are its spaces, so its {@code ?analq} measures each space it routes
+     * to, the access counted at the space's address (its mount, else its pattern's root). A memory that declares no
+     * q-procs pays one check. An access that carries a query is the space's own metadata traffic, and passes straight
+     * through.
+     */
+    default Obj through(final Space space, final fURI vid) {
+        return vid.hasQ() ? space.read(vid)
+                : QProc.Layer.read(this, null != space.vid() ? space.vid() : space.pattern().retractPattern(), () -> space.read(vid));
+    }
+
+    /**
+     * a write this memory hands to the space that covers it, through this memory's own q-procs: see {@link #through(Space, fURI)}
+     */
+    default Obj through(final Space space, final fURI vid, final Obj obj) {
+        return vid.hasQ() ? space.write(vid, obj)
+                : QProc.Layer.write(this, null != space.vid() ? space.vid() : space.pattern().retractPattern(), obj, () -> space.write(vid, obj));
+    }
+
     default Obj readAbsolute(final fURI vid) {
         // findSpace, not getSpaceFor: the machine's own keys are the fallback, not a space, and resolving them is
         // this method's job — getSpaceFor must never return the machine cast to a Space (Machine is a Rec).
@@ -243,7 +264,7 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
         // A COVERING SPACE'S ANSWER IS FINAL: falling through on its noobj walked a branch pattern into the machine rec
         // with Rec.at, which does not honor a pattern there, and answered every computer for an empty fail stack
         if (null != space)
-            return space.read(vid);
+            return this.through(space, vid);
         final Machine machine = this.machine();
         if (null != machine) {
             final Obj key = machine.at(uri(rootRelative(vid)));
@@ -292,7 +313,7 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
     default Obj writeAbsolute(final fURI vid, final Obj obj) {
         final Space space = this.findSpace(vid);
         if (null != space)
-            return space.write(vid, obj);
+            return this.through(space, vid, obj);
         final Machine machine = this.machine();
         if (null != machine) {
             final Obj key = machine.at(uri(rootRelative(vid)));

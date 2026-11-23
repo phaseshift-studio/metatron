@@ -150,7 +150,7 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
         // An ADDRESS walks the levels' spaces, nearest first, and falls through to the enclosing level.
         final Space space = this.findSpace(vid);
         if (null != space) {
-            final Obj result = space.read(vid);
+            final Obj result = this.through(space, vid);
             if (!result.isNoObj())
                 return result;
             // the nearest level declared the vid but answered noobj — the enclosing level may still have it.
@@ -172,7 +172,7 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
         if (!isAddress(vid))
             return this.own().write(vid, obj);
         final Space space = this.findSpace(vid);
-        return null != space ? space.write(vid, obj) : this.own().write(vid, obj);
+        return null != space ? this.through(space, vid, obj) : this.own().write(vid, obj);
     }
 
     // ======================== redirect to current, else previous ========================

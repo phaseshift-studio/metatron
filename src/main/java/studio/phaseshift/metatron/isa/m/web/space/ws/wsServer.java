@@ -311,7 +311,7 @@ public final class wsServer extends Listener {
         if (!origin.isUri())
             throw MTronException.of("a ws_server serves a socket: origin=><ws://origin:port> required, got %s", origin);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec());
+        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec()).declare(config);
     }
 
     /**
