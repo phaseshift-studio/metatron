@@ -424,6 +424,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-structures.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>Ring Theoretic Distributed Structures</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-structures.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-structures.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -708,7 +717,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:22/17/41/36/817?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:22/20/03/43/684?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -727,7 +736,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:22/17/41/36/817?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:22/20/03/43/684?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -820,7 +829,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
           rhs=&gt;!λawait(){&lt;j&gt;},
           lhs=&gt;noobj,
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:22/17/41/21/496?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:22/20/03/28/446?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;},
           result=&gt;noobj]@/sys/thread/main
 mtron&gt; */sys/thread/main?docq
@@ -829,7 +838,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:22/17/41/21/496?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:22/20/03/28/446?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
