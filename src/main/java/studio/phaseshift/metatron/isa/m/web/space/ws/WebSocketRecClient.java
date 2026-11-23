@@ -240,15 +240,16 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
 
     private void received(final ScopedValue.CallableOp<Obj, RuntimeException> read) {
         // A REPLY TO AN OBSERVER'S ROUND TRIP IS THE OBSERVER'S WORK (WebSocketObj.observed): this is the socket library's
-        // thread, which no executor marked, so the trip's mark is put on it while the frame is counted, read and handed on
-        final boolean outer = Analyzer.OBSERVING.get();
-        Analyzer.OBSERVING.set(outer || WebSocketObj.observed(this.wsclient));
+        // thread, which no executor marked, so while such a trip is outstanding the frame is counted, read and handed on
+        // under Analyzer.REPLY -- this thread's alone, so what the frame starts runs unmarked
+        final boolean outer = Analyzer.REPLY.get();
+        Analyzer.REPLY.set(outer || WebSocketObj.observed(this.wsclient));
         try {
             // THE FRAME IS COUNTED AS IT ARRIVES, before the read: a protocol client evaluates a request while it reads it
             Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_RECV, 1L);
             this.wsclient.onMessage(this, this.answersRequests ? read.call() : ScopedValue.where(Obj.Helper.SELF_VID, true).call(read));
         } finally {
-            Analyzer.OBSERVING.set(outer);
+            Analyzer.REPLY.set(outer);
         }
     }
 

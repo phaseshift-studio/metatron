@@ -339,10 +339,12 @@ compiler's typer and the processor's tracer. Every metric in metatron follows th
    else makes once, a delivery behind its own cost, which a pull reads now. `?subq` is untouched: a subscriber that
    writes what it subscribes to wrote its own loop. A reply to an observer's round trip is the observer's work too: it
    arrives on the socket library's own thread, which no executor marked, so the trip's waiter records the mark and,
-   while one is outstanding on a socket, a frame arriving there is counted and handled marked (an unrelated frame in
-   that window is counted, and announced with the next change). A request another machine sends is that machine's
-   work, so two machines whose subscribers push to each other, or a machine that dials itself, still trade at most one
-   publication per step each.
+   while one is outstanding on a socket, every frame arriving there is counted, read and handed on under
+   `Analyzer.REPLY`, a mark of that thread alone: an unrelated frame in that window is announced with the next change,
+   and what it starts runs unmarked. A reply that arrives after its trip's deadline is no longer the observer's and
+   announces, so a peer slower than the deadline costs one publication per deadline. A request another machine sends
+   is that machine's work, so two machines whose subscribers push to each other, or a machine that dials itself, still
+   trade at most one publication per step each.
 6. **Export is a serializer** over `analysis::T`, as mapped above — not a second collection path.
 7. **Events are not meters.** A record of individual occurrences (`WireTrace`'s exchanges) is a bounded ring a human
    reads; the counts behind it are the producer's meters, counted at the same tap.
@@ -400,7 +402,7 @@ records into `Analyzer.PROFILE`.
 
 | component | probe | kind | where it is counted |
 |---|---|---|---|
-| network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`; a frame as it arrives, before it is read or run (`wsServer.evaluate` for a server's session, `WebSocketRecClient.readFrame` for a client) |
+| network | `wire/sent`, `wire/recv` | counter | `WebSocketObj.send`; a frame as it arrives, before it is read or run (`wsServer.evaluate` for a server's session, `WebSocketRecClient.received` for a client) |
 | network | `peer` | gauge, sampled when read | `BasicNetwork`, registered with each analyzer the level is given: the peers it holds |
 | processor | `eval`, `time` | counter, timer | `BasicSwarmComputer`'s run: counted as it starts, timed to its end, nested evaluations included |
 | processor | `fail` | counter | `BasicSwarmComputer`, each uncaught fail a run halts with, beside its filing in the computer's stack |

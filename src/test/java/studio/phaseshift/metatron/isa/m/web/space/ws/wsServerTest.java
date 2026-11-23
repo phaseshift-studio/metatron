@@ -40,6 +40,9 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.LinkedHashMap;
 import java.util.concurrent.BlockingQueue;
@@ -524,20 +527,27 @@ public class wsServerTest extends AbstractMetatronTest {
         final Network network = root.network();
         Network.Helper.connect(network, this.socket.extend("child"), WS_CLIENT_TID);
         final AtomicInteger heard = new AtomicInteger();
+        final List<Obj> answers = Collections.synchronizedList(new ArrayList<>());
         try {
             checkEquality(LOG, jnt(2), network.submit(this.socket, ObjmtronSerializer.parse("1.plus(1)")), true);
-            CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
             Machine.write(f("/network/analyzer/analysis").addQ(SUBQ), instLambda((pub, inst) -> {
                 heard.incrementAndGet();
-                network.submit(this.socket, ObjmtronSerializer.parse("1.plus(2)"));
+                answers.add(network.submit(this.socket, ObjmtronSerializer.parse("1.plus(2)")));
                 return noobj();
             }));
             Analyzer.Helper.incr(network.analyzer(), f("observer/kick"), 1L);
-            CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
-            final int settled = heard.get();
-            assertTrue(settled >= 1, "the change was heard, and the subscriber made its round trip");
-            CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
-            assertEquals(settled, heard.get(), "and its reply announced nothing, so the network went quiet");
+            // QUIET IS A COUNT THAT HOLDS FOR A WHOLE WINDOW once the trip was answered: a late delivery only moves it,
+            // and a reply that announced its own trip would never let it hold
+            final long deadline = System.currentTimeMillis() + 10_000L;
+            int settled = -1;
+            while (-1 == settled && System.currentTimeMillis() < deadline) {
+                final int seen = heard.get();
+                CommonUtil.sleepThread(4 * BasicAnalyzer.DEFAULT_STEP);
+                if (!answers.isEmpty() && seen == heard.get())
+                    settled = seen;
+            }
+            assertTrue(settled >= 1, "the network went quiet after the subscriber's round trip: heard " + heard.get() + ", answers " + answers);
+            checkEquality(LOG, jnt(3), answers.getFirst(), true);
         } finally {
             Machine.write(f("/network/analyzer/analysis").addQ(SUBQ), noobj());
             network.drop(this.socket);

@@ -225,10 +225,11 @@ public interface WebSocketObj extends Rec, Closeable {
 
     /**
      * WHETHER AN OBSERVER'S ROUND TRIP IS OUTSTANDING ON {@code socket}. A frame arrives on the socket library's own
-     * thread, which no executor marked, and which reply it carries is known only once it is read: while such a trip is
-     * outstanding, a frame is counted, read and handed on as the observer's work, so the reply never announces the
-     * trip that asked for it. A frame that is no reply, arriving in that window, is counted all the same and announced
-     * with the next change.
+     * thread, which no executor marked, and which frame it is is known only once it is read: while such a trip is
+     * outstanding, every frame is counted, read and handed on under {@code Analyzer.REPLY}, so the trip's reply never
+     * announces the trip that asked for it. A frame that is no reply, arriving in that window, is announced with the
+     * next change, and what it starts runs unmarked. A reply that arrives after its trip gave up (its deadline) is no
+     * longer the observer's, and announces.
      */
     static boolean observed(final WebSocketObj socket) {
         final Map<fURI, Waiter> waiters = WAITERS.get(socket);

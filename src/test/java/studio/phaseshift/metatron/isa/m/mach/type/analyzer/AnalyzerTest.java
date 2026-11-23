@@ -53,6 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.function.LongSupplier;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -107,6 +108,23 @@ public class AnalyzerTest extends AbstractMetatronTest {
         while (!done.getAsBoolean()) {
             assertTrue(System.currentTimeMillis() < deadline, "timed out waiting for " + what);
             CommonUtil.sleepThread(10L);
+        }
+    }
+
+    /**
+     * the count once it holds for two steps, a few seconds at most: quiet is a count that stops moving, which a late
+     * publication only delays and a loop never reaches
+     */
+    private static long quiet(final LongSupplier count, final String what) {
+        final long deadline = System.currentTimeMillis() + 10_000L;
+        long before = count.getAsLong();
+        while (true) {
+            CommonUtil.sleepThread(2 * BasicAnalyzer.DEFAULT_STEP);
+            final long now = count.getAsLong();
+            if (now == before)
+                return now;
+            assertTrue(System.currentTimeMillis() < deadline, what + " never went quiet: " + before + " -> " + now);
+            before = now;
         }
     }
 
@@ -893,7 +911,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
             ObjmtronSerializer.parse("~/processor/analyzer/analysis?subq -> sub::[code=>>>1.to(/usr/analyzer_observer)]").apply();
             // the subscription's own evaluation is a change; its delivery is counted as it starts, before its write lands
             await(() -> !Machine.read(heard).isNoObj(), "the first delivery");
-            final long settled = read(processor.analysis(), "eval");
+            final long settled = quiet(() -> read(processor.analysis(), "eval"), "the processor's eval");
             final int computers = machine.processor().computers().jvm().size();
             CommonUtil.sleepThread(PUBLISHED_MS);
             assertEquals(settled, read(processor.analysis(), "eval"),
@@ -921,14 +939,18 @@ public class AnalyzerTest extends AbstractMetatronTest {
      */
     @Test
     void shouldCarryTheObserverMarkIntoEveryThreadItStarts() throws Exception {
+        int reused = 0;
+        Thread marked = null;
         for (int i = 0; i < 24; i++) {
             final boolean mark = 0 == i % 2;
             final AtomicReference<Boolean> seen = new AtomicReference<>();
+            final AtomicReference<Thread> ran = new AtomicReference<>();
             final CountDownLatch done = new CountDownLatch(1);
             Analyzer.OBSERVING.set(mark);
             try {
                 ThreadExecutor.instance().execute(() -> {
                     seen.set(Analyzer.OBSERVING.get());
+                    ran.set(Thread.currentThread());
                     done.countDown();
                 });
             } finally {
@@ -936,7 +958,12 @@ public class AnalyzerTest extends AbstractMetatronTest {
             }
             assertTrue(done.await(5, TimeUnit.SECONDS), "task " + i + " ran");
             assertEquals(mark, seen.get(), "task " + i + " saw the mark of the thread that started it");
+            if (mark)
+                marked = ran.get();
+            else if (ran.get() == marked)
+                reused++;
         }
+        assertTrue(reused > 0, "a pooled thread that ran a marked task ran an unmarked one after it, so the reset was tried");
     }
 
     /**

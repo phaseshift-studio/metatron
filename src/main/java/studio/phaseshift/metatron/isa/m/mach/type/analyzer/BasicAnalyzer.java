@@ -289,7 +289,7 @@ public class BasicAnalyzer extends MRec implements Analyzer {
     private Analyzer changed() {
         // an observer's work is counted above and announced never (OBSERVING): the loop it would close is the
         // publication's own delivery measured, published, delivered again
-        if (null == this.component || !Machine.loaded() || OBSERVING.get() || !this.pending.compareAndSet(false, true))
+        if (null == this.component || !Machine.loaded() || OBSERVING.get() || REPLY.get() || !this.pending.compareAndSet(false, true))
             return this;
         final Machine machine = Machine.current();
         if (null == machine.vid()) {

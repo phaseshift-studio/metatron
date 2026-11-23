@@ -471,8 +471,9 @@ public final class wsServer extends Listener {
                     // route it took. The whole answer is then a READ at that route in this socket's analyzer: timed
                     // from here, and counted with its latency once the answer has been given.
                     // A REPLY TO AN OBSERVER'S ROUND TRIP over this connection is the observer's work, as a client's is
-                    final boolean outer = Analyzer.OBSERVING.get();
-                    Analyzer.OBSERVING.set(outer || WebSocketObj.observed(session.rec()));
+                    // (Analyzer.REPLY: this thread's alone, never carried into what the frame starts)
+                    final boolean outer = Analyzer.REPLY.get();
+                    Analyzer.REPLY.set(outer || WebSocketObj.observed(session.rec()));
                     try {
                         Analyzer.Helper.incr(Machine.current().network().analyzer(), Network.WIRE_RECV, 1L);
                         QProc.Layer.read(this, session.rec().wire(), () -> {
@@ -480,7 +481,7 @@ public final class wsServer extends Listener {
                             return noobj();
                         });
                     } finally {
-                        Analyzer.OBSERVING.set(outer);
+                        Analyzer.REPLY.set(outer);
                     }
                 });
         } finally {

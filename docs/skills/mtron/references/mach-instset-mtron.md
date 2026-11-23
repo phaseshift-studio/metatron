@@ -264,8 +264,8 @@ machine's components, a cluster's machines).
 A subscriber's own work is counted but never published: a code subscriber (`~/processor/analyzer/analysis?subq ->
 sub::[code=>…]`) is evaluated on each delivery, and that evaluation, with the reply to any round trip it makes, counts
 in the analysis without scheduling another publication, so each outside change is heard once. A request another
-machine sends is not this one's observer work: two machines whose subscribers push to each other still trade one
-publication per step.
+machine sends is not this one's observer work: two machines whose subscribers push to each other still trade at most
+one publication per step, and a reply that misses its round trip's deadline announces.
 
 **Off is `noobj`.** `~/processor/analyzer -> noobj` removes the analyzer, so nothing records into it (its address then
 reads `noobj`), and a rec written there later — `~/processor/analyzer -> [profile=>true]` — installs a new one whose
