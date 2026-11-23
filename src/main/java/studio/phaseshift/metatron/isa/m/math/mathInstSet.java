@@ -1203,7 +1203,7 @@ public class mathInstSet extends AbstractInstSet {
                         // stream fell to lst's sum, whose seed is the empty lst, so the sum of no complex numbers answered [,]
                         // where the complex zero, [0.0,0.0], is the identity a seeded fold answers over nothing. Each member
                         // weighs its copies, as every sum does.
-                        /*InstBuilder.build().tid(SUM_INST_TID, "the complex sum: \\(\\sum_i z_i\\), from the complex zero \\(0 + 0i\\)")
+                        InstBuilder.build().tid(SUM_INST_TID, "the complex sum: \\(\\sum_i z_i\\), from the complex zero \\(0 + 0i\\)")
                                 .dom(CMPLX_TID.maybeSome(), "zero or more complex numbers")
                                 .rng(CMPLX_TID, "the complex sum")
                                 .argLst()
@@ -1213,7 +1213,7 @@ public class mathInstSet extends AbstractInstSet {
                                         real(a.asLst().at(1).asReal().realValue() + b.c().max() * b.asLst().at(1).asReal().realValue()))).c(cInt::one)))
                                 .example("{cmplx::[1.0,2.0],cmplx::[3.0,4.0]}.sum()   [-- cmplx::[4.0,6.0] --]")
                                 .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
-                                .create(),*/
+                                .create(),
                         InstBuilder.build().tid(ONE_INST_TID, "the multiplicative identity: \\(1 = 1 + 0i\\)")
                                 .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
                                 .rng(CMPLX_TID, "the complex one \\(1 + 0i\\)")
