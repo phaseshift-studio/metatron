@@ -409,7 +409,9 @@ public class machInstSet extends AbstractInstSet {
                                         uri(ANALYSIS).maybe().asUri(), ALL_TYPE,
                                         uri(STEP).maybe(), INT_TYPE,
                                         uri(PROFILE).maybe(), BOOL_TYPE,
-                                        uri("mute").maybe().asUri(), ALL_TYPE), Map.of(
+                                        uri("mute").maybe().asUri(), ALL_TYPE,
+                                        uri("cap").maybe().asUri(), ALL_TYPE,
+                                        uri("request").maybe().asUri(), ALL_TYPE), Map.of(
                                         uri(ANALYSIS).maybe(), "the analysis::T the component has measured, built from its meters each time it is read",
                                         uri("mute").maybe(), "the probes muted (written noobj at analysis/<probe>), a lst of uris read as they stand; an analyzer built from another's rec, as a pushed machine's is, starts with its mutes",
                                         uri("cap").maybe(), "an analq's analyzer only: the cap its space declared, analq::[event=>meter::T, max=>int::T], the widest request an address may make",

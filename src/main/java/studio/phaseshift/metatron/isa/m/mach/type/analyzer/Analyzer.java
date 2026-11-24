@@ -139,6 +139,13 @@ public interface Analyzer extends Rec {
     Analyzer mute(fURI probe, boolean muted);
 
     /**
+     * DROP WHAT {@code probe} AND ITS SUBTREE COUNTED, mutes untouched: the probe counts again from zero at its next
+     * recording, as whatever kind of meter that recording makes. A sampled gauge stays, since nothing would register it
+     * again.
+     */
+    Analyzer reset(fURI probe);
+
+    /**
      * THE FIRST CLAIM HOLDS IT: whether {@code owner} is the one that holds this analyzer at its own address. Only the
      * first owner to claim it is, and that one again: a profiled evaluation's nested computers record into their run's
      * analyzer, which only the outermost — the first minted under it — holds at {@code ~/processor/computer/<n>/analyzer}.

@@ -235,7 +235,9 @@ public interface QProc extends Rec {
          */
         public static boolean checkQProcs(final Addressable source, final fURI vid) {
             if (vid.hasQ()) {
-                final List<String> qSpace = source.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
+                // an entry that is no q-proc is skipped, as qProcs skips it
+                final List<String> qSpace = source.qs().lstValue().stream().filter(q -> q instanceof QProc)
+                        .map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
                 queries(vid).forEach(k -> {
                     if (!qSpace.contains(k))
                         throw MTronException.of("no %s query processor attached to %s", k, source.pattern());

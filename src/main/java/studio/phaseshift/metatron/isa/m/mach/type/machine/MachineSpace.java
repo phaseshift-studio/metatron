@@ -263,8 +263,8 @@ public final class MachineSpace extends memSpace {
                 return noobj();
             }
             final Set<fURI> meters = Set.of(Analysis.COUNTER_TID, Analysis.GAUGE_TID, Analysis.TIMER_TID);
-            if ((analysis && 1 == field.size()) || (!field.isEmpty() && Analyzer.MUTE.equals(uri(field.getFirst())))) {
-                LOG.warn("an analyzer's analysis and mutes are derived, not written (mute a probe at analysis/<probe>): %s refused", vid);
+            if ((analysis && 1 == field.size()) || (!field.isEmpty() && Set.of(Analyzer.MUTE, uri("cap"), uri("request")).contains(uri(field.getFirst())))) {
+                LOG.warn("an analyzer's analysis, mutes, cap and requests are derived, not written (mute a probe at analysis/<probe>; ask at <addr>?analq): %s refused", vid);
                 return noobj();
             }
             if (field.isEmpty() && !obj.isRec() && !obj.isNoObj()) {

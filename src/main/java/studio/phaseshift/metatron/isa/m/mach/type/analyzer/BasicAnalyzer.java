@@ -221,7 +221,13 @@ public class BasicAnalyzer extends MRec implements Analyzer {
         // gate as the mute landed can leave a count behind, and a probe written back counts from zero. A lift that lifts
         // nothing drops nothing. A sampled gauge stays registered, hidden while muted, because nothing registers it again
         if (muted || before.stream().anyMatch(path -> path.hasPrefix(probe)))
-            this.meters.entrySet().removeIf(meter -> meter.getKey().hasPrefix(probe) && null == meter.getValue().sample());
+            this.reset(probe);
+        return this;
+    }
+
+    @Override
+    public Analyzer reset(final fURI probe) {
+        this.meters.entrySet().removeIf(meter -> meter.getKey().hasPrefix(probe) && null == meter.getValue().sample());
         return this;
     }
 

@@ -292,7 +292,9 @@ answers `analysis::[read=>counter::12]`. The request is the type of its answer: 
 - **The cap.** The space's `analq::[…]` is the widest request it allows, e.g. `q => [analq::[read=>timer::T, max=>100]]`.
   A request must fit inside it (counter <= timer); one that does not, or an address past `max`, gets a `fail::T`.
 - **Defaults.** An empty cap allows every event as a timer, and `analysis::[=>]` takes the whole cap.
-- **Withdrawing.** `noobj` withdraws a request and drops its readings.
+- **Withdrawing.** `noobj` withdraws a request; readings no standing request still covers are reset.
+- **Overlaps.** The most specific pattern governs an address (`+` before `#`), and a concrete request holds its `max`
+  slot from the start. The cap and the requests are read in the analyzer (`cap`, `request`).
 - **Wider reads.** `*/t/+?analq` reads the children, and `*/t/#?analq` the space's totals.
 
 **Memory is a space of spaces.** With `/memory/q -> [analq::[=>]]`, a space asks at its mount

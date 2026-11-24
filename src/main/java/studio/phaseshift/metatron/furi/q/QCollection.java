@@ -641,7 +641,8 @@ public final class QCollection {
         // the cap is read where the analyzer is, beside the requests it governs
         analyzer.jvm().put(ANALQ_CAP, cap);
         // address (or pattern) => event => kind, and the addresses that hold a slot of max
-        final Map<fURI, Map<String, fURI>> requests = new ConcurrentHashMap<>();
+        // kept in address order, so which request governs an address never rests on hash order
+        final Map<fURI, Map<String, fURI>> requests = new java.util.concurrent.ConcurrentSkipListMap<>(Comparator.comparing(fURI::toString));
         final Set<fURI> measured = ConcurrentHashMap.newKeySet();
         // AN ADDRESS'S READINGS nest under addr/<its path>. One whose path names an event (…/read) would put a child where
         // its parent's reading is, and a wildcard access names no address: both count in the totals alone
@@ -653,27 +654,54 @@ public final class QCollection {
             final Map<String, fURI> own = requests.get(at);
             return null != own ? own : requests.entrySet().stream()
                     .filter(entry -> entry.getKey().hasPattern() && at.test(entry.getKey()))
-                    .max(Comparator.comparingInt(entry -> entry.getKey().segments().size()))
+                    .max(Comparator.<Map.Entry<fURI, Map<String, fURI>>>comparingInt(entry -> entry.getKey().segments().size())
+                            .thenComparingInt(entry -> (int) entry.getKey().segments().stream().filter(segment -> !"+".equals(segment) && !"#".equals(segment)).count())
+                            .thenComparingInt(entry -> entry.getKey().segments().contains("#") ? 0 : 1))
                     .map(Map.Entry::getValue).orElse(null);
         };
-        // what one address measured goes: a concrete prefix, so no pattern is ever muted
-        final java.util.function.Consumer<fURI> drop = at -> analyzer.mute(readings.apply(at), true).mute(readings.apply(at), false);
+        // WHAT EACH EVENT AT AN ADDRESS WAS MEASURED AS, so a reading is always the type its governing request asks for:
+        // an event whose kind changed, or that no request asks for any more, is reset -- exactly that event's probe, so
+        // an address nested below it and the user's own mutes are untouched
+        final Map<fURI, fURI> recorded = new ConcurrentHashMap<>();
+        final java.util.function.Consumer<fURI> align = at -> {
+            final Map<String, fURI> governing = asked.apply(at);
+            for (final String event : ANALQ_EVENTS) {
+                final fURI probe = readings.apply(at).extend(event);
+                final fURI was = recorded.get(probe);
+                if (null != was && (null == governing || !was.equals(governing.get(event)))) {
+                    recorded.remove(probe);
+                    analyzer.reset(probe);
+                }
+            }
+        };
         // one event at one address, measured as it asked: a counter counts it, a timer times it too
         final TriConsumer<fURI, String, Long> measure = (vid, event, nanos) -> {
+            if (requests.isEmpty())
+                return;
             final fURI at = vid.qLess();
             if (!measurable.test(at))
                 return;
             final Map<String, fURI> request = asked.apply(at);
-            if (null == request || !request.containsKey(event))
+            final fURI meter = null == request ? null : request.get(event);
+            // a timer needs a duration: a source that runs its own q-proc sequence (mqttSpace, an instset) gives none
+            if (null == meter || (Analysis.TIMER_TID.equals(meter) && nanos < 0L))
                 return;
             if (!measured.contains(at)) {
-                if (measured.size() >= max)
-                    return;
-                measured.add(at);
+                // a slot is taken under the lock a withdrawal takes, and only while a request still covers the address
+                synchronized (measured) {
+                    if (!measured.contains(at)) {
+                        if (measured.size() >= max || null == asked.apply(at))
+                            return;
+                        measured.add(at);
+                    }
+                }
             }
             final fURI probe = readings.apply(at).extend(event);
-            if (Analysis.TIMER_TID.equals(request.get(event)))
-                Analyzer.Helper.record(analyzer, probe, Math.max(0L, nanos));
+            final fURI was = recorded.put(probe, meter);
+            if (null != was && !was.equals(meter))
+                analyzer.reset(probe);
+            if (Analysis.TIMER_TID.equals(meter))
+                Analyzer.Helper.record(analyzer, probe, nanos);
             else
                 Analyzer.Helper.incr(analyzer, probe, 1L);
         };
@@ -714,11 +742,16 @@ public final class QCollection {
                     if (obj.isNoObj()) {
                         // WITHDRAWN: the request goes, and so does what no standing request still covers. Answered with an
                         // analysis, never noobj, so the write ends here: nothing is stored at <addr>?analq or broadcast
-                        requests.remove(at);
-                        for (final fURI address : List.copyOf(measured)) {
-                            if ((address.equals(at) || (at.hasPattern() && address.test(at))) && null == asked.apply(address)) {
-                                measured.remove(address);
-                                drop.accept(address);
+                        synchronized (measured) {
+                            requests.remove(at);
+                            for (final fURI address : List.copyOf(measured)) {
+                                if (address.equals(at) || (at.hasPattern() && address.test(at))) {
+                                    // what no request covers any more frees its slot; what one still covers keeps only
+                                    // the readings it asks for
+                                    if (null == asked.apply(address))
+                                        measured.remove(address);
+                                    align.accept(address);
+                                }
                             }
                         }
                         publish.run();
@@ -739,15 +772,17 @@ public final class QCollection {
                             return fail(MTronException.of("%s asks for %s=>%s, which its space's analq allows as %s", at, event, entry.getValue(), null == most ? "nothing" : T(most)));
                         request.put(event, want);
                     }
-                    if (!at.hasPattern() && !measured.contains(at) && measured.size() >= max)
-                        return fail(MTronException.of("%s cannot be measured: its space measures at most %s addresses", at, max));
-                    // a concrete request holds its slot from the start; one asked again is measured afresh, its readings
-                    // the type it now asks for
-                    final Map<String, fURI> before = requests.put(at, request);
-                    if (!at.hasPattern()) {
-                        measured.add(at);
-                        if (null != before)
-                            drop.accept(at);
+                    synchronized (measured) {
+                        if (!at.hasPattern() && !measured.contains(at) && measured.size() >= max)
+                            return fail(MTronException.of("%s cannot be measured: its space measures at most %s addresses", at, max));
+                        // a concrete request holds its slot from the start, and every address it now governs keeps only
+                        // readings of the kinds it asks for
+                        requests.put(at, request);
+                        if (!at.hasPattern())
+                            measured.add(at);
+                        for (final fURI address : List.copyOf(measured))
+                            if (address.equals(at) || (at.hasPattern() && address.test(at)))
+                                align.accept(address);
                     }
                     publish.run();
                     return obj;

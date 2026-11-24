@@ -270,4 +270,56 @@ public interface AnalQTest extends QProcTest {
             space.write(a, noobj());
         }
     }
+
+    /**
+     * A READING IS ALWAYS THE TYPE ITS GOVERNING REQUEST ASKS FOR, and nothing else's (a second review, 2026-11-23).
+     * <ul>
+     *   <li>Withdrawing an address keeps the readings of one nested below it.</li>
+     *   <li>A pattern asked again with a new kind resets the event it changed.</li>
+     *   <li>Of two patterns covering an address, the more specific governs ({@code +} before {@code #}).</li>
+     *   <li>A {@code +} read with nothing measured below answers an empty analysis, never the data.</li>
+     *   <li>The cap and the requests are read in the analyzer's rec.</li>
+     * </ul>
+     */
+    @Test
+    default void testAnalQReadingsFollowTheirGoverningRequest() {
+        final Space space = this.analQSpace();
+        final fURI root = this.analQBaseURI().retract(1).extend("analq_govern");
+        final fURI a = root.extend("a");
+        final fURI nested = a.extend("x");
+        final fURI kinds = root.extend("k");
+        final fURI overlap = root.extend("o");
+        try {
+            space.write(a.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID)));
+            space.write(nested.addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID)));
+            space.read(a);
+            space.read(nested);
+            space.read(nested);
+            space.write(a.addQ(ANALQ), noobj());
+            assertEquals(2L, space.read(nested.addQ(ANALQ)).asRec().at(uri("read")).intValue(), "withdrawing an address keeps one nested below it");
+            space.write(kinds.extend("#").addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID)));
+            space.read(kinds.extend("a"));
+            space.write(kinds.extend("#").addQ(ANALQ), rec(uri("read"), T(Analysis.TIMER_TID)));
+            space.read(kinds.extend("a"));
+            final Obj changed = space.read(kinds.extend("+").addQ(ANALQ));
+            assertEquals(1L, changed.asRec().at(uri("a")).asRec().at(uri("read/count")).intValue(), "a pattern asked anew resets the kind it changed: " + changed);
+            space.write(overlap.extend("#").addQ(ANALQ), rec(uri("read"), T(Analysis.COUNTER_TID)));
+            space.write(overlap.extend("+").addQ(ANALQ), rec(uri("miss"), T(Analysis.COUNTER_TID)));
+            space.read(overlap.extend("a"));
+            final Obj governed = space.read(overlap.extend("+").addQ(ANALQ));
+            assertEquals(1L, governed.asRec().at(uri("a")).asRec().at(uri("miss")).intValue(), "+ is more specific than #, and governs: " + governed);
+            assertTrue(governed.asRec().at(uri("a")).asRec().at(uri("read")).isNoObj(), "so # does not count a's read: " + governed);
+            space.write(root.extend("plain").extend("v"), jnt(9));
+            final Obj empty = space.read(root.extend("plain").extend("+").addQ(ANALQ));
+            assertTrue(empty.isRec() && empty.asRec().isEmpty(), "a + read with nothing measured answers an empty analysis, never the data: " + empty);
+            assertTrue(space.analq().at(uri("cap")).isRec(), "the cap is read in the analyzer");
+            assertFalse(space.analq().at(uri("request")).asRec().at(uri(nested)).isNoObj(), "and so are the requests: " + space.analq().at(uri("request")));
+        } finally {
+            space.write(nested.addQ(ANALQ), noobj());
+            space.write(kinds.extend("#").addQ(ANALQ), noobj());
+            space.write(overlap.extend("#").addQ(ANALQ), noobj());
+            space.write(overlap.extend("+").addQ(ANALQ), noobj());
+            space.write(root.extend("plain").extend("v"), noobj());
+        }
+    }
 }

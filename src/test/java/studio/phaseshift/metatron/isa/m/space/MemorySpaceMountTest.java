@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -63,6 +64,14 @@ public class MemorySpaceMountTest extends AbstractMetatronTest {
             Machine.evaluate("/memory/q -> noobj");
         }
         assertEquals(1L, Machine.read(f("/carea/a")).intValue(), "and it is repaired by writing it again");
+        Machine.evaluate("/memory/q -> [5,analq::[=>]]");
+        try {
+            assertEquals(1L, Machine.read(f("/carea/a")).intValue(), "a stray entry in the list breaks no access either");
+            assertInstanceOf(Analyzer.class, Machine.read(f("/memory/analyzer")), "nor the analq beside it");
+            assertTrue(Machine.read(f("/memory/space/carea?analq")).isRec(), "nor a query its q-procs answer");
+        } finally {
+            Machine.evaluate("/memory/q -> noobj");
+        }
     }
 
     /**
@@ -100,6 +109,12 @@ public class MemorySpaceMountTest extends AbstractMetatronTest {
             Machine.write(f("/memory/analyzer/step"), jnt(100));
             assertEquals(100L, memory.atDirect(uri("step")).intValue(), "a setting written at it lands in the analq's analyzer");
             assertNull(Machine.current().memory().analyzer(), "and installs no analyzer of memory's own beside it");
+            assertTrue(Machine.write(f("/memory/analyzer"), rec(uri("step"), jnt(5))).isNoObj(), "nor does a rec written at it");
+            Machine.write(f("/memory/analyzer/request"), noobj());
+            assertFalse(memory.atDirect(uri("request")).isNoObj(), "the requests are derived, never written over: " + memory);
+            assertNull(Machine.current().memory().analyzer(), "which would shadow the analq's analyzer");
+            Machine.write(f("/memory/space/logs/analyzer/step"), jnt(7));
+            assertEquals(7L, mounted.analq().atDirect(uri("step")).intValue(), "a setting at a space's analyzer lands in its analq's, never as data");
         } finally {
             Machine.evaluate("/memory/q -> noobj");
         }

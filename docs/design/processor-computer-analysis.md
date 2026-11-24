@@ -394,10 +394,15 @@ records into `Analyzer.PROFILE`.
   - **The space's `analq::[…]` is its cap**, the widest request it allows (`analq::[read=>timer::T, max=>100]`). A
     request fits when each event it asks for is one the cap names, measured no more finely (counter <= timer).
   - **Defaults.** An empty cap allows every event as a timer, and an empty request takes the whole cap.
-  - **Refusals and withdrawal.** A request beyond the cap, or an address past `max`, gets a `fail::T`. noobj withdraws
-    a request and drops its readings.
+  - **Refusals and withdrawal.** A request beyond the cap, or an address past `max`, gets a `fail::T`. A concrete
+    request holds its `max` slot from the start, and a cap that states no event (`analq::[max=>100]`) allows every event
+    as a timer. noobj withdraws a request, answered with an empty analysis: what no standing request still covers is
+    reset, event by event, and a nested address keeps its own.
   - **The address is the scope.** A pattern request (`abc/#?analq`) measures each address it covers, each on its own.
-    The readings nest under `addr/<path>` in the analyzer, and the requests are held in its rec (`request`).
+    The readings nest under `addr/<path>` in the analyzer. The most specific pattern governs an address (more
+    segments, then more concrete ones, `+` before `#`), and a reading is always the kind its governing request asks for:
+    an event whose kind changes counts again from zero. The cap and the requests are held in the analyzer's rec (`cap`,
+    `request`).
   - **Reads.** An address that asked answers its own readings, `<addr>/+?analq` its children's. Any other `?analq`
     read answers the space's whole analysis, as every one did before.
 - **Memory is a space whose addresses are its spaces.** Every access memory hands to a covering space passes through

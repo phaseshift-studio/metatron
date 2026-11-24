@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.List;
+
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -76,7 +78,10 @@ public interface Addressable {
      * performs on itself by calling its own {@code read}/{@code write} directly.
      */
     default Lst qs() {
-        return this instanceof Rec rec ? rec.at(uri(QPROC)).orElse(lst0()) : lst0();
+        // a q that is no list -- one q-proc written without its brackets -- is read as the list it should have been, so a
+        // slip in it cannot break every access that reads it
+        final Obj q = this instanceof Rec rec ? rec.at(uri(QPROC)) : lst0();
+        return q.isLst() ? q.asLst() : q instanceof QProc ? lst(List.of(q)) : lst0();
     }
 
     /**
@@ -101,7 +106,8 @@ public interface Addressable {
      * declares ANY q-proc at all, and a source that declares none answers false for every query.
      */
     default boolean hasQ(final fURI qPattern) {
-        return this.qs().lstValue().stream().anyMatch(q -> q.<QProc>as().pattern().test(qPattern));
+        // an entry that is no q-proc is skipped, as QProc.Helper.qProcs skips it
+        return this.qs().lstValue().stream().anyMatch(q -> q instanceof QProc proc && proc.pattern().test(qPattern));
     }
 
     /**
