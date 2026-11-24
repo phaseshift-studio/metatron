@@ -26,6 +26,7 @@ BIN = Path(__file__).resolve().parent.parent
 SCRIPT = BIN / 'hunk-revert-check'
 sys.path.insert(0, str(BIN))
 from lib.java_lexer import IMPORT_LINE, lex  # noqa: E402
+from lib.test_runs import MOST_CLASSES  # noqa: E402
 
 TESTS = '-Dtest=LighthouseTest,ReefTest,BuoyTest,CompassTest,WindlassTest,YardarmTest,YawlTest,ZephyrTest'
 
@@ -588,11 +589,12 @@ class HunkRevertCheckTest(unittest.TestCase):
         r = self.harbor.check()
         self.assertEqual(r.returncode, 2)
         self.assertIn('name the classes to run', r.stderr)
-        forty = ','.join(f'Gull{k:02d}Test' for k in range(40))
-        r = self.harbor.check(f'-Dtest={forty},Gull40Test')
+        limit = ','.join(f'Gull{k:02d}Test' for k in range(MOST_CLASSES))
+        r = self.harbor.check(f'-Dtest={limit},Gull{MOST_CLASSES:02d}Test')
         self.assertEqual(r.returncode, 2)
-        self.assertIn('41 classes: a revert check runs them once per hunk, so it takes 40 at most', r.stderr)
-        self.assertEqual(self.harbor.check('--list', f'-Dtest={forty}').returncode, 0)  # 40 is allowed
+        self.assertIn(f'{MOST_CLASSES + 1} classes: a revert check runs them once per hunk, so it takes {MOST_CLASSES} '
+                      f'at most', r.stderr)
+        self.assertEqual(self.harbor.check('--list', f'-Dtest={limit}').returncode, 0)  # the limit itself passes
         self.assertEqual(self.harbor.runs(), [])
 
     def test_refuses_the_main_checkout_the_base_branch_a_dirty_tree_and_unknown_hunks(self):
@@ -647,7 +649,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertTrue(r.stdout.startswith('bin/hunk-revert-check — revert each behavior hunk'), r.stdout[:80])
         self.assertIn('Exit: 0 when every behavior hunk is red', r.stdout)
-        self.assertIn('40 at most', r.stdout)  # MOST_CLASSES's value, from bin/lib/test_runs.py
+        self.assertIn(f'{MOST_CLASSES} at most', r.stdout)  # the limit's value, from bin/lib/test_runs.py
 
     def test_failures_no_line_names_still_make_a_hunk_red(self):
         r = self.harbor.check('--hunk', '1', TESTS, mode='unnamed-failure')

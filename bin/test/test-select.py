@@ -3,7 +3,8 @@
 
 Two parts. A throwaway repository whose src/test holds every shape of user the selector must find (or must not:
 longer identifiers, a file name inside a longer one, a base class or a helper that names the change only in a
-comment, a class whose only annotation is no test annotation). And rows on this repository's own tree: the three
+comment, a class whose only annotation is no test annotation, a class or interface with tests named after an @ in
+a string). And rows on this repository's own tree: the three
 incidents the selector exists for (PeerNode's users reach MariaDBMultiServerSingleSpaceTest through PeerCluster
 and an abstract base; mParser.m_furi is called by fURITest; fsSpace is mounted by llmInstSetTest, sysInstSetTest
 and ObjZipSerializerTest), the classes whose tests carry a composed annotation, and the test-class rule over every
@@ -97,6 +98,8 @@ HARBOR = {
     TEST_JAVA + 'LongerNameTest.java':
         'class LongerNameTest { BeaconLight a; Object myBeacon, Beacon_2, $Beacon; @Test void t() {} }',
     TEST_JAVA + 'FlagsTest.java': 'class FlagsTest { Beacon b; @TestReport void notATest() {} }',  # no test method
+    # a class or an interface named after an @ is no annotation: only an annotation type makes a test annotation
+    TEST_JAVA + 'LogTest.java': 'class LogTest { Beacon b; String vids = "1@KeelTest 2@Mooring"; void entry() {} }',
     TEST_JAVA + 'TestReport.java':  # an annotation that carries no test annotation: FlagsTest stays no test
         '@Retention(RetentionPolicy.RUNTIME)\npublic @interface TestReport { }',
     TEST_JAVA + 'AbstractCommentedTest.java': '/** unlike {@link Beacon}, nothing here shines */\n'
@@ -147,17 +150,19 @@ class SyntheticHarborTest(unittest.TestCase):
                               text=True, timeout=120)
 
     def test_every_shape_of_user_and_no_lookalike(self):
-        r = self.select('Beacon')
+        r = self.select('--explain', 'Beacon')
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(selected(r.stdout), SELECTED_FOR_BEACON)
-        for trail in ('Lantern (followed)', 'Wick (followed)', 'Logbook (followed)',
-                      'AbstractHarborTest (abstract: 3 test subclasses)', 'Mooring (abstract: 1 test subclass)',
-                      '  chart.csv: ChartTest\n', '  Lantern: LanternTest, Wick (followed)\n',
-                      '  Logbook: CaptainTest\n'):
-            self.assertIn(trail, r.stderr)
+        for chain in ('LanternTest <- Lantern <- Beacon', 'WickTest <- Wick <- Lantern <- Beacon',  # helpers followed
+                      'CaptainTest <- Logbook <- Beacon',  # an annotation followed
+                      'PierTest <- AbstractHarborTest <- Beacon', 'BollardTest <- Mooring <- Beacon',  # subclasses
+                      'ChartTest <- chart.csv <- Beacon',  # a resource followed by its file name
+                      'ScratchTest <- EchoTest.java <- Beacon'):  # a .java under resources is data, followed too
+            self.assertIn(f'  {chain}\n', r.stderr)
         self.assertNotIn('flag.bin', r.stderr)
-        self.assertIn('  EchoTest.java: ScratchTest\n', r.stderr)  # a .java under resources is data, followed by name
-        self.assertIn('FlagsTest (followed)', r.stderr)  # a test's name, but no test method: a helper
+        unused = next(line for line in r.stderr.splitlines() if line.startswith('  followed, with no users:'))
+        for helper in ('FlagsTest', 'LogTest'):  # a test's name, but no test method: followed as helpers
+            self.assertIn(helper, unused)
 
     def test_a_file_a_class_and_a_member_name_the_same_users(self):
         by_file = self.select('src/main/java/org/harbor/Beacon.java')

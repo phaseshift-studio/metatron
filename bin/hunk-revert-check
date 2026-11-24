@@ -34,9 +34,10 @@ Steps:
   4. Detaches HEAD at the tip. For each hunk it builds a scratch WIP commit (the tip with that hunk alone
      reverted, made with `git apply --cached -R` on a temporary index), moves HEAD to it with `git reset --keep`,
      runs the classes, and resets to the tip. The branch ref never moves, and only the hunk's file changes. When
-     the lines a revert brings back name a class whose import the branch removed from that file (and imported from
-     nowhere else), that import line is put back too, so a deleted method compiles back; and the two halves of a swap
-     split over two hunks revert together.
+     the lines a revert brings back name a class whose import the branch removed from that file, that import line is
+     put back too, unless the branch imports the name anew, so a deleted method compiles back. And an import that
+     changed in two hunks (a swap, or a line moved to another place) reverts as one: when this revert takes one
+     half, the old line comes back and the new one goes.
   5. Re-attaches the branch and prints one line per hunk:
        red     a test that passed on the baseline failed: the hunk is tested (the failing tests are named)
        green   no test went red: nothing in these classes notices the hunk (expected for a hunk that only

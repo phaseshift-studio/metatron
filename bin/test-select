@@ -186,6 +186,7 @@ def main(argv: list[str]) -> int:
     trail: list[str] = []
     boot_users: set[str] = set()
     unused: list[str] = []  # followed names that nothing uses
+    primary = {name for name, _ in queue}  # the names the inputs give; any other was followed to
     while queue:
         name, source = queue.pop(0)
         if name in searched:
@@ -194,6 +195,7 @@ def main(argv: list[str]) -> int:
         # a file name is not the tail of a longer one (boot.mtron in docker.boot.mtron); an identifier may follow a dot
         token = re.compile(('(?<![\\w$.-])' if '.' in name else '(?<![\\w$])') + re.escape(name) + '(?![\\w$-])')
         said = []
+        via = name if name == source else f'{name} <- {source}'  # how a user found here was reached
         for p in (p for p, (text, code) in files.items()
                   if token.search(text if p in by_path and by_path[p].test else code)):
             rel = p.relative_to(root).as_posix()
@@ -203,7 +205,7 @@ def main(argv: list[str]) -> int:
                 for cls in sorted(picked):
                     selected.setdefault(cls, ' <- '.join(dict.fromkeys([cls, c.name, name, source])))
                 if not c.test and not c.abstract:
-                    queue.append((c.name, f'{name} <- {source}'))
+                    queue.append((c.name, via))
                 if c.name != name or c.test:  # a class's own file is its definition, not a user
                     subclasses = plural(len(picked), 'test subclass')
                     said.append(c.name + ('' if c.test else f' (abstract: {subclasses})' if c.abstract
@@ -211,12 +213,12 @@ def main(argv: list[str]) -> int:
             elif p.name != name:  # a file that names itself is not its own user
                 if rel.startswith('boot/'):
                     boot_users.add(rel)
-                queue.append((p.name, f'{name} <- {source}'))
+                queue.append((p.name, via))
                 said.append(f'{rel} (followed)')
         if said:
             trail.append(f'  {name}: ' + ', '.join(said[:12]) + (f' and {len(said) - 12} more' if len(said) > 12
                                                                  else ''))
-        elif source in inputs:
+        elif name in primary:
             trail.append(f'  {name}: no users')
         else:
             unused.append(name)
