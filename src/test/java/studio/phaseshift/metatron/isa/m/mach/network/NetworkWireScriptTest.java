@@ -403,6 +403,31 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     }
 
     /**
+     * A BARE MOVE TO A PEER STILL SHIPS A PROGRAM (Marko's console, 2026-11-24: {@code move(//0)} failed). A compiled
+     * move with no lhs and no tail is the cut with nothing to run, and the program a cut ships goes as
+     * {@code reply(program, tag)}: an empty one wrapped so, {@code reply(,<tag>)}, is no program the peer can parse. It
+     * ships {@code start()}, which the peer answers with nothing. Here {@code a} compiles the bare move to {@code b} (a
+     * lone move is compiled by a console, or by the machine a tail lands in, never by a test's one-instruction apply);
+     * the lhs alone ships as its start, and a tail as the cut its move compiles to.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[NETWORK_CLEAR]",
+            "[WS_SERVER a]",
+            "[WS_SERVER b]",
+            "[CONNECT {{a}}/mtron {{ws_client}}]",
+            "[CONNECT {{b}}/mtron {{ws_client}}]",
+            "move(<{{a}}/mtron>).move(<{{b}}/mtron>) % noobj           [-- nothing to run at b: it is shipped start() and answers nothing --]",
+            "5.move(<{{a}}/mtron>).move(<{{b}}/mtron>) % 5             [-- the lhs alone ships as start(5) --]",
+            "5.move(<{{a}}/mtron>).move(<{{b}}/mtron>).plus(1) % 6     [-- a tail ships as the cut its move compiles to --]",
+            "[DISCONNECT {{a}}]",
+            "[DISCONNECT {{b}}]",
+            "[AWAIT_PEERS 0]"
+    })
+    public void testABareMoveToAPeerShipsAProgram() {
+    }
+
+    /**
      * ALIASING AT THE BOUNDARY: localhost and 127.0.0.1 are the SAME service (ensure-peered collapses
      * loopback aliases — one socket, not two), and a disconnect-reconnect cycle mints a FRESH reach that works.
      */

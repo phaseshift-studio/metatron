@@ -1246,9 +1246,13 @@ public class machInstSet extends AbstractInstSet {
                                     // own profile() or explain() run there, where a shipped move(</path>).tail would be cut
                                     // again by the peer, the stretch ending before them. Nothing to start from is no start
                                     // (a seeded lane ships its own start(part), and the hop budget stated on it, as
-                                    // written), and nothing to run ships the lhs alone. THE BUDGET RIDES ON THE SHIPPED
-                                    // CUT'S TARGET, which the peer's cut hands on to the tail it compiles
-                                    final List<Inst> insts = new ArrayList<>(lhs.isNoObj() ? List.of() : start_(lhs).insts());
+                                    // written), and nothing to run ships the lhs alone. NOTHING AT ALL STILL SHIPS A
+                                    // PROGRAM, start(), which the peer answers with nothing: the program goes wrapped as
+                                    // reply(program, tag), and an empty one, reply(,<tag>), is no program the peer can
+                                    // parse (move(//0) at a console). THE BUDGET RIDES ON THE SHIPPED CUT'S TARGET, which
+                                    // the peer's cut hands on to the tail it compiles
+                                    final List<Inst> insts = new ArrayList<>(!lhs.isNoObj() ? start_(lhs).insts()
+                                            : tail.isEmpty() ? List.of(instB(START_INST_TID, lst())) : List.of());
                                     final fURI landing = 0 < place.segmentLength() ? f().path(place.path()) : ROOT_MACHINE_VID;
                                     if (!tail.isEmpty())
                                         insts.add(instB(CUT_INST_TID, lst(uri(null == hop ? landing : landing.q(HOP, hop)),
