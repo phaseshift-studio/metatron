@@ -1507,6 +1507,7 @@ function resolveEndpoint(name, endpoint) {
    then connected and shown. */
 const instances = new Map();   // name -> iframe
 let homeName = null;           // the machine the parent's page-panel shows
+let currentName = null;        // the machine currently visible (red/yellow)
 
 function frameTop() {
     const bar = $("#servers");
@@ -1526,6 +1527,7 @@ function openInstance(name, endpoint) {
 }
 
 function showInstance(name) {
+    currentName = name;
     const panel = document.getElementById("page-panel");
     if (panel) panel.hidden = (name !== homeName);
     instances.forEach((iframe, n) => {
@@ -1534,10 +1536,32 @@ function showInstance(name) {
         iframe.style.top = top + "px";
         iframe.style.height = (window.innerHeight - top) + "px";
     });
-    /* a newly-connected machine's tab becomes live */
+    restyleTabs();
+}
+
+/* restyle every server tab: the visible machine is current, the connected rest
+   are live, everything else is greyed. covers the nested menu entries too. */
+function restyleTabs() {
     const bar = $("#servers");
-    if (bar) Array.from(bar.children).forEach((tab) => {
-        tab.classList.toggle("live", tab.dataset.name === homeName || instances.has(tab.dataset.name));
+    if (!bar) return;
+    bar.querySelectorAll(".server-tab[data-name]").forEach((tab) => {
+        const n = tab.dataset.name;
+        tab.classList.toggle("current", n === currentName);
+        tab.classList.toggle("live", n !== currentName && (n === homeName || instances.has(n)));
+    });
+    bar.querySelectorAll(".server-summary").forEach((summary) => {
+        const menu = summary.parentElement ? summary.parentElement.querySelector(".server-menu") : null;
+        const entries = menu ? menu.querySelectorAll(".server-tab[data-name]") : [];
+        let hasCurrent = false;
+        let currentAuthority = null;
+        let hasLive = false;
+        entries.forEach((e) => {
+            if (e.dataset.name === currentName) { hasCurrent = true; currentAuthority = e.dataset.name; }
+            else if (e.dataset.name === homeName || instances.has(e.dataset.name)) hasLive = true;
+        });
+        summary.classList.toggle("current", hasCurrent);
+        summary.classList.toggle("live", !hasCurrent && hasLive);
+        summary.textContent = (hasCurrent && currentAuthority ? currentAuthority : (summary.dataset.host || "group")) + " ▾";
     });
 }
 
@@ -1549,28 +1573,91 @@ async function loadServers() {
         const roster = await localRead("application/json", "/network/roster");
         machines = roster && roster.machine && typeof roster.machine === "object" ? roster.machine : {};
     } catch (ignored) { }
-    const activeHost = (() => {
-        try { return new URL(wsBase, location.href).hostname; } catch (ignored) { return host; }
+    const active = (() => {
+        try { return new URL(wsBase, location.href); } catch (ignored) { return null; }
     })();
+    const homeAuthority = active ? active.hostname + (active.port ? ":" + active.port : "") : null;
+    if (homeAuthority) {
+        homeName = homeAuthority;
+        if (currentName == null) currentName = homeAuthority;
+    }
 
-    bar.textContent = "";
+    const tabButton = (authority, endpoint, after) => {
+        const isCurrent = authority === currentName;
+        const isLive = !isCurrent && (authority === homeName || instances.has(authority));
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "server-tab" + (isCurrent ? " current" : isLive ? " live" : "");
+        b.dataset.name = authority;
+        b.textContent = authority;
+        b.title = isCurrent ? authority + " · this instance" : (isLive ? "view " + authority : "connect to " + authority + " · " + endpoint);
+        b.addEventListener("click", () => {
+            if (after) after();
+            if (authority === homeName) showInstance(authority);
+            else openInstance(authority, endpoint);
+        });
+        return b;
+    };
+
+    /* collect authorities, grouped by host */
+    const groups = new Map();   // host -> [{authority, endpoint}]
+    const seen = new Set();
     Object.keys(machines).sort().forEach((name) => {
         const machine = machines[name] && typeof machines[name] === "object" ? machines[name] : {};
-        const ws = machine.mtron && typeof machine.mtron === "object" ? machine.mtron.ws : null;
-        if (!ws) return;   // only a machine with a ws endpoint is an instance
-        const endpoint = resolveEndpoint(name, String(ws));
-        let isHome = false;
-        try { isHome = new URL(endpoint, location.href).hostname === activeHost; } catch (ignored) { }
-        if (isHome) homeName = name;
-        const tab = document.createElement("button");
-        tab.type = "button";
-        tab.className = "server-tab" + (isHome || instances.has(name) ? " live" : "");
-        tab.dataset.name = name;
-        tab.textContent = name;
-        tab.title = isHome ? name + " · this instance" : (instances.has(name) ? "view " + name : "connect to " + name + " · " + endpoint);
-        tab.addEventListener("click", () => (isHome ? showInstance(name) : openInstance(name, endpoint)));
-        bar.appendChild(tab);
+        const mtron = machine.mtron && typeof machine.mtron === "object" ? machine.mtron : {};
+        const wsList = Array.isArray(mtron.ws) ? mtron.ws : (mtron.ws ? [mtron.ws] : []);
+        wsList.forEach((ws) => {
+            const endpoint = resolveEndpoint(name, String(ws));
+            let url;
+            try { url = new URL(endpoint, location.href); } catch (ignored) { return; }
+            const port = url.port || "";
+            /* one authority per (host:port) — the same port over several
+               interfaces collapses to one entry */
+            const authority = name + (port ? ":" + port : "");
+            if (seen.has(authority)) return;
+            seen.add(authority);
+            if (!groups.has(name)) groups.set(name, []);
+            groups.get(name).push({authority, endpoint});
+        });
     });
+    /* the page's own instance is always present, even if the roster omits it */
+    if (homeAuthority && !seen.has(homeAuthority)) {
+        const host = active ? active.hostname : homeAuthority;
+        if (!groups.has(host)) groups.set(host, []);
+        groups.get(host).push({authority: homeAuthority, endpoint: wsBase});
+    }
+
+    bar.textContent = "";
+    Array.from(groups.keys()).sort().forEach((host) => {
+        const list = groups.get(host);
+        if (list.length === 1) {
+            bar.appendChild(tabButton(list[0].authority, list[0].endpoint));
+            return;
+        }
+        /* a host with several authorities: a button that opens a menu of host:port */
+        const group = document.createElement("div");
+        group.className = "server-group";
+        const summary = document.createElement("button");
+        summary.type = "button";
+        summary.className = "server-tab server-summary";
+        summary.dataset.host = host;
+        summary.textContent = host + " ▾";
+        summary.title = list.length + " servers on " + host;
+        const menu = document.createElement("div");
+        menu.className = "server-menu";
+        menu.hidden = true;
+        list.forEach((e) => menu.appendChild(tabButton(e.authority, e.endpoint, () => { menu.hidden = true; })));
+        summary.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            const wasOpen = !menu.hidden;
+            bar.querySelectorAll(".server-menu").forEach((m) => { m.hidden = true; });
+            menu.hidden = wasOpen;
+        });
+        group.appendChild(summary);
+        group.appendChild(menu);
+        bar.appendChild(group);
+    });
+    restyleTabs();
 }
 
 let refreshing = false;
@@ -1661,6 +1748,13 @@ window.addEventListener("resize", () => {
         iframe.style.top = top + "px";
         iframe.style.height = (window.innerHeight - top) + "px";
     });
+});
+document.addEventListener("click", (ev) => {
+    /* close any open server menu when clicking outside its group */
+    if (!ev.target.closest(".server-group")) {
+        const bar = $("#servers");
+        if (bar) bar.querySelectorAll(".server-menu").forEach((m) => { m.hidden = true; });
+    }
 });
 
 /* the page itself is the splash_page card: [panel][mtron][json].

@@ -124,7 +124,7 @@ code {
     display: flex;
     gap: .3rem;
     padding: .45rem 0 0;
-    overflow-x: auto;
+    overflow: visible;
 }
 
 .server-tab {
@@ -151,6 +151,57 @@ code {
     color: var(--fg);
     border-color: var(--red);
     background: rgba(151, 2, 7, .14);
+}
+
+/* the current connection: full red, yellow text */
+.server-tab.current {
+    color: var(--fg);
+    border-color: var(--red);
+    background: rgba(151, 2, 7, .25);
+    font-weight: 600;
+}
+
+.server-tab.current:hover {
+    color: var(--fg);
+    border-color: var(--red-hi);
+}
+
+/* a host with several authorities: a group whose summary opens a menu of host:port */
+.server-group {
+    position: relative;
+    display: inline-block;
+}
+
+.server-summary {
+    list-style: none;
+    cursor: pointer;
+}
+.server-summary::-webkit-details-marker {
+    display: none;
+}
+
+.server-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+    background: #0d1117;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    min-width: 100%;
+}
+
+.server-menu[hidden] {
+    display: none;
+}
+
+.server-menu .server-tab {
+    width: 100%;
+    text-align: left;
 }
 
 /* a remote instance: a full-page iframe below the parent's tab strip */
