@@ -235,6 +235,33 @@ public class MoveSeamsTest extends AbstractMetatronTest {
     }
 
     /**
+     * A SPAN WALKS UP A TREE OF MACHINES AND A POINT MULTIPLIES (Marko, 2026-11-24): from /walk/up/top,
+     * {@code {2}move(<..>)} lands two levels up, each step resolved from where the last one landed, and a point is
+     * the value's, so a fold in the tail counts it. Each row: the expression % its answer % where the caller lands.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.{2}move(<..>).plus(1)     % 6    % /walk",
+            "5.move{3}(<..>).plus(1)     % {3}6 % /walk/up",
+            "5.move{3}(<..>).count()     % 3    % /walk/up",
+            "5.{2}move{3}(<..>).plus(1)  % {3}6 % /walk",
+    }, delimiter = '%')
+    void aSpanWalksAndAPointMultiplies(final String mtron, final String answer, final String landed) {
+        final Machine before = Machine.current();
+        Machine.current().push(f("walk"));
+        Machine.current().push(f("up"));
+        Machine.current().push(f("top"));
+        try {
+            assertEquals(ObjmtronSerializer.parse(answer.trim()), Machine.evaluate(mtron.trim()));
+            assertEquals(f(landed.trim()), Machine.current().vid().resolve(), "the walk lands where its span says");
+        } finally {
+            Machine.current(before);
+            for (final String frame : new String[]{"/walk/up/top", "/walk/up", "/walk"})
+                Machine.Helper.evalAt(f(frame), () -> Machine.current().pop());
+        }
+    }
+
+    /**
      * POSITIVE HALF, the control: with a peer dialed at the origin, the same host-bearing move ships and answers.
      */
     @Test

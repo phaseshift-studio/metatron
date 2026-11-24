@@ -1343,8 +1343,19 @@ public class machInstSet extends AbstractInstSet {
                 if (MOVE_INST_TID.equals(inst.tid().basePath()) && (inst.arg(0).isNoObj() || inst.arg(0).isUri())) {
                     final fURI written = inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue();
                     final fURI target = Machine.Helper.align(Machine.current(), written);
-                    if (target.isAddressed() || (!last && !HERE.equals(target))) {
+                    // A SPAN WALKS AND A POINT MULTIPLIES (Marko, 2026-11-24: {3}move(<..>) walks up a tree of
+                    // machines). A move in this server's tree that carries either stays a move, which runs its own
+                    // span, each step from where the last one landed, and its own point; the tail follows it as a push's
+                    // does. A host target is absolute, so a span on it is idempotent and the one cut is the walk
+                    final boolean walks = !inst.tid().b().isOne() || !inst.tid().d().isOne();
+                    if (target.isAddressed() || (!last && !HERE.equals(target) && !walks)) {
                         final Obj where = !inst.arg(0).isNoObj() && target.equals(written) ? inst.arg(0) : uri(target);
+                        // the value passes through a move unchanged, so a host move's point is the lhs's: it rides on
+                        // the instruction before the move, and the tail's folds count it (5.move{3}(<//h>).count() is 3)
+                        if (!inst.tid().d().isOne() && !cut.isEmpty()) {
+                            final Inst before = cut.getLast();
+                            cut.set(cut.size() - 1, before.d(before.tid().d().mult(inst.tid().d())).asInst());
+                        }
                         cut.add(instB(CUT_INST_TID, lst(where, tail)));
                         cut.addAll(home);
                         return code(cut);

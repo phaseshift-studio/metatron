@@ -312,6 +312,26 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     }
 
     /**
+     * A SPAN WALKS AND A POINT MULTIPLIES (Marko, 2026-11-24: {@code {3}move(<..>)} walks up a tree of machines). A move
+     * in this server's tree that carries either stays a move, followed by {@code cut(<~>, tail)}; a host target is
+     * absolute, so its span is idempotent, and its point rides on the instruction before it. The rule is applied twice,
+     * as the fixpoint applies it. Each row: the chain % what the nomadic extractor leaves.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.{2}move(<..>).plus(1)                    % start(5).{2}move(<..>).cut(<~>,plus(1))",
+            "5.move{3}(<a>).plus(1)                     % start(5).move{3}(<a>).cut(<~>,plus(1))",
+            "5.move{3}(<loop://sibling:8555>).plus(1)   % start{3}(5).cut(<loop://sibling:8555>,plus(1))",
+            "5.{2}move(<loop://sibling:8555>).plus(1)   % start(5).cut(<loop://sibling:8555>,plus(1))",
+    }, delimiter = '%')
+    void testASpanWalksAndAPointMultiplies(final String mtron, final String extracted) {
+        final Inst rule = rule("nomadic_extract");
+        final Code once = rule.apply(ObjmtronSerializer.parse(mtron.trim()).asCode()).asCode();
+        checkEquality(LOG, ObjmtronSerializer.parse(extracted.trim()).asCode(), once, true);
+        checkEquality(LOG, once, rule.apply(once).asCode(), true);
+    }
+
+    /**
      * law_shard plans the fold before a cut, and the cut follows with its tail as written.
      */
     @Test

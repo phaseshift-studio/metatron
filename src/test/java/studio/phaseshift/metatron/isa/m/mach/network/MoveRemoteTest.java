@@ -142,6 +142,21 @@ public class MoveRemoteTest extends AbstractMetatronTest {
     }
 
     /**
+     * A HOST MOVE'S POINT IS THE VALUE'S: the value passes through a move unchanged, so the point rides on the lhs the
+     * cut ships, and a fold in the tail counts it; a span on a host is idempotent, the target being absolute. Each
+     * row: the expression % its answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.move{3}(<//self>).plus(1)  % {3}6",
+            "5.move{3}(<//self>).count()  % 3",
+            "5.{2}move(<//self>).plus(1)  % 6",
+    }, delimiter = '%')
+    void testAHostMoveCarriesItsPoint(final String mtron, final String answer) {
+        checkCodeParseApply(LOG, mtron.trim(), answer.trim());
+    }
+
+    /**
      * A CHAIN RESOLVED BEFORE IT IS COMPILED IS CUT ALL THE SAME (the console resolved a line first): the extractor
      * matches the move by its base path, and the resolved tid's range and domain do not hide it.
      */
