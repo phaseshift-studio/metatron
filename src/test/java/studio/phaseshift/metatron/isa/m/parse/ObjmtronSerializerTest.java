@@ -200,7 +200,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
     /// rewritten often, and each time it can drop one without a single test failing: the 11-12 fix restored an
     /// instruction's span, the point stayed dropped, and law_shard's lanes, which reach their peers as text, ran
     /// unpointed for five days. Every row below, as every row this class writes, runs through idem(): every writer read
-    /// back by every reader, the read obj EQUAL and node for node the same (nodes(): base path, span, point and vid),
+    /// back by every reader, the read obj EQUAL and node for node the same (nodes(): whole tid, span, point and vid),
     /// and the text a fixpoint. A coefficient lost anywhere in the tree fails at the node it was lost at, even if
     /// equality were ever loosened.
     /// /////////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,9 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
      * of a lst type.
      */
     @ParameterizedTest
-    @CsvSource(quoteCharacter = '`', value = {
+    // THE DELIMITER IS NOT THE COMMA: a lst row ([{2}3,4]) split on ',' reached the method as the unclosed [{2}3, a parse
+    // fail, and a fail round-trips as itself, so the row was green and tested nothing
+    @CsvSource(delimiter = '%', quoteCharacter = '`', value = {
             "{3}5",
             "{-1}5",
             "{?}3",
@@ -312,7 +314,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             for (final Function<String, Obj> reader : readers(obj)) {
                 final Obj back = reader.apply(text);
                 checkEquality(LOG, obj, back, true);
-                assertEquals(expected, nodes(back), () -> "every node keeps its base path, span, point and vid: " + text);
+                assertEquals(expected, nodes(back), () -> "every node keeps its tid, span, point and vid: " + text);
                 for (final Function<Obj, String> rewriter : writers)
                     assertEquals(rewriter.apply(obj), rewriter.apply(back), () -> "the text is a fixpoint: " + text);
             }
@@ -329,8 +331,9 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
     }
 
     /**
-     * EVERY NODE AS THE WIRE MUST KEEP IT: its base path, span, point and vid, depth first through a code's instructions,
-     * an instruction's arguments, a rec's keys and values, a lst's entries and a stream's members.
+     * EVERY NODE AS THE WIRE MUST KEEP IT: its whole tid (base path, coefficients, query and a type's own brackets), its
+     * span and point, and its vid, depth first through a code's instructions, an instruction's arguments, a rec's keys
+     * and values, a lst's entries and a stream's members.
      */
     private static List<String> nodes(final Obj obj) {
         final List<String> nodes = new ArrayList<>();
@@ -343,7 +346,9 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             nodes.add("noobj");
             return;
         }
-        nodes.add((null == obj.tid() ? "tid=null" : obj.tid().basePath() + "{b=" + obj.tid().b() + ",d=" + obj.tid().d() + "}")
+        // THE WHOLE TID, not its base path: basePath() drops a type's own brackets, so a lst type's slot mass
+        // (lst[{2}int]) and slot run (lst[int{2}]) fingerprinted alike, as a bare lst
+        nodes.add((null == obj.tid() ? "tid=null" : obj.tid() + "{b=" + obj.tid().b() + ",d=" + obj.tid().d() + "}")
                 + (obj.hasVID() ? "@" + obj.vid() : ""));
         if (obj.isCode())
             obj.asCode().insts().forEach(inst -> nodes(inst, nodes));

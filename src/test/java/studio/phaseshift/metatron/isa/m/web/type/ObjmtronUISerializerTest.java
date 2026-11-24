@@ -520,14 +520,25 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
 
     /**
      * THE DISPLAY SERIALIZER KEEPS THE POINT TOO, after the name and before the query: the console drew
-     * {@code plus{3}(34)} as {@code plus(34)}, so a lane's pointed program looked unpointed wherever it was shown.
+     * {@code plus{3}(34)} as {@code plus(34)}, so a lane's pointed program looked unpointed wherever it was shown. It
+     * holds its own copy of the point rule, so its rows are the plain battery's: a point alone, negative and ranged, on
+     * an instruction with no arguments, under a span, beside a query, and inside a branch and a rec.
      */
-    @Test
-    public void testAPointedInstructionShowsItsPoint() {
-        final Obj code = ObjmtronSerializer.parse("start(1).{2}plus{3}(34).plus{3}?hop=0(34)").asCode();
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start(1).plus{3}(34)                       % plus{3}(34)",
+            "start(1).plus{-1}(34)                      % plus{-1}(34)",
+            "start(1).plus{?}(2)                        % plus{?}(2)",
+            "start(5).id{3}()                           % id{3}()",
+            "start(1).{2}plus{3}(34)                    % {2}plus{3}(34)",
+            "start(1).plus{3}?hop=0(34)                 % plus{3}?hop=0(34)",
+            "start(5).branch(plus{2}(34),mult{3}(2))    % mult{3}(2)",
+            "start([a=>plus{2}(34)])                    % plus{2}(34)",
+    }, delimiter = '%')
+    public void testAPointedInstructionShowsItsPoint(final String source, final String shown) {
+        final Obj code = ObjmtronSerializer.parse(source).asCode();
         final String written = ObjmtronUISerializer.blackWhite().write(code);
         this.LOG.debug("a pointed chain => %s", new Object[]{written});
-        Assertions.assertTrue(written.contains("{2}plus{3}(34)"), written);
-        Assertions.assertTrue(written.contains("plus{3}?hop=0(34)"), written);
+        Assertions.assertTrue(written.contains(shown.trim()), written);
     }
 }
