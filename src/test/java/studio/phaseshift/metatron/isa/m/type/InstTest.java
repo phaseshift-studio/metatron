@@ -25,13 +25,13 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.GenericBinder;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
@@ -617,17 +617,18 @@ public class InstTest extends AbstractObjTest {
         }
     }
 
-        @Training(
+    @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
             input = "{{{@TestData}}}; {{{code}}}",
             output = "{{{expected}}}")
     @ParameterizedTest
-    @TestData(value = {"|inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }@band"})
+    @TestData(value = {"|inst?int{?}<=int(_,?int::T.else(15)){ is(and(gte(*0),lte(*1))) }@band"})
     @CsvSource(value = {
             "3.band(2,8)                                  % 3",
             "10.band(2,8)                                 % noobj",
             "5.band(-10,10)                               % 5",
-            "10.band(2)                                   % <ERROR>",
+            "10.band(2)                                   % 10",
+            "20.band(2)                                   % noobj",
             "10.band(2,+1)                                % 10",
             "\"abc\".band?int{?}<=int(2,8)                % <ERROR>",
             "\"abc\".band(2,8)                            % <ERROR>"
@@ -636,7 +637,7 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-        @Training(
+    @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
             input = "{{{@TestData}}}; {{{code}}}",
             output = "{{{expected}}}")
@@ -674,7 +675,7 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-        @Training(
+    @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
             input = "{{{@TestData}}}; {{{code}}}",
             output = "{{{expected}}}")
@@ -694,7 +695,7 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-        @Training(
+    @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
             input = "{{{@TestData}}}; {{{code}}}",
             output = "{{{expected}}}")
@@ -714,7 +715,7 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-        @Training(
+    @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
             input = "{{{@TestData}}}; {{{code}}}",
             output = "{{{expected}}}")
@@ -732,7 +733,7 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-        @Training(
+    @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
             input = "{{{@TestData}}}; {{{code}}}",
             output = "{{{expected}}}")
@@ -841,7 +842,7 @@ public class InstTest extends AbstractObjTest {
      * {@code delta} unbound and making the body's {@code *delta} read nothing. Both spellings, and the keyed one,
      * must answer the same.
      */
-        @Training(
+    @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
             input = "{{{@TestData}}}; {{{code}}}",
             output = "{{{expected}}}")

@@ -14,6 +14,15 @@
 #   metatron-build:25   the build/test image (dist/docker/Dockerfile.build: maven + JDK 25
 #                       + patchelf + python3)   ->  `metatron-docker build image`
 #
+# Options (apply to any verb):
+#   --repo <path>   build a DIFFERENT checkout for this one invocation -- the usual case is
+#                   a git worktree, which lives outside the tree the daemon's default host
+#                   path names. Accepts the path as seen here (/workspace/.worktrees/x) or on
+#                   the host (/home/killswitch/software/metatron/.worktrees/x); both REPO and
+#                   METATRON_HOST_REPO move together, so the -v mounts land on the worktree:
+#                     bin/metatron-docker --repo .worktrees/timeout-alarm build test
+#
+#
 # Usage:
 #   bin/metatron-docker                               # run boot/docker.boot.mtron (disposable)
 #   bin/metatron-docker run agent-ide.boot.mtron "[log=>debug]"
@@ -54,6 +63,7 @@
 set -eu
 
 cd "$(dirname "$(readlink -f "$0")")/.."
+SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 REPO="$(pwd)"
 
 # Two paths, because they are not the same thing inside a dev container. REPO is where THIS
@@ -77,6 +87,37 @@ if [ -z "$HOST_REPO" ]; then
     HOST_REPO="$(awk -v t="$REPO" '$5 == t && $4 ~ /^\// { print $4; exit }' /proc/self/mountinfo 2>/dev/null)"
 fi
 [ -n "$HOST_REPO" ] || HOST_REPO="$REPO"
+
+# ---------- --repo <path>: build a different checkout for this invocation ----------
+# A git worktree lives OUTSIDE the tree that HOST_REPO names, so pointing only at the host
+# path is not enough: REPO (the build context, the local mkdir) must move with it. Accept
+# either spelling and move both.
+case "${1-}" in
+    --repo)
+        [ $# -ge 2 ] || { echo "bin/metatron-docker: --repo needs a path" >&2; exit 2; }
+        REPO_TARGET="$2"; shift 2 ;;
+    --repo=*)
+        REPO_TARGET="${1#--repo=}"; shift ;;
+    *)  REPO_TARGET="" ;;
+esac
+if [ -n "${REPO_TARGET:-}" ]; then
+    # a relative path would otherwise reach -v as a RELATIVE host path, which the daemon
+    # cannot resolve: make it absolute against the caller's cwd first.
+    case "$REPO_TARGET" in
+        /*) ;;
+        *)  REPO_TARGET="$PWD/$REPO_TARGET" ;;
+    esac
+    case "$REPO_TARGET" in
+        "$REPO"/*)      HOST_REPO="$HOST_REPO${REPO_TARGET#"$REPO"}"; REPO="$REPO_TARGET" ;;
+        "$HOST_REPO"/*) REPO="$REPO${REPO_TARGET#"$HOST_REPO"}"; HOST_REPO="$REPO_TARGET" ;;
+        *)              REPO="$REPO_TARGET"; HOST_REPO="$REPO_TARGET" ;;
+    esac
+    [ -d "$REPO" ] || { echo "bin/metatron-docker: --repo path not found: $REPO_TARGET" >&2; exit 2; }
+    export METATRON_HOST_REPO="$HOST_REPO"
+    echo "==> repo: $REPO  (host path for -v: $HOST_REPO)" >&2
+    # relative operations (mvn, docker build context) follow the chosen checkout
+    [ "$(pwd)" = "$REPO" ] || cd "$REPO"
+fi
 
 # A deployment may provide the docker CLI off-PATH (this one keeps it in the host-shared
 # /opt/dsh-tools/bin so it survives container recreates). Put it on PATH for this process.
@@ -392,7 +433,7 @@ cmd_build() {
 # ---------- dispatch ----------
 
 usage() {
-    awk 'NR>1 && /^set -eu/ {exit} NR>1 {sub(/^# ?/, ""); print}' "$0"
+    awk 'NR>1 && /^set -eu/ {exit} NR>1 {sub(/^# ?/, ""); print}' "$SELF"
 }
 
 # ---------- optional remote delegation ----------

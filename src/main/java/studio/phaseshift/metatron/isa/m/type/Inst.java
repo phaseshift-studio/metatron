@@ -345,22 +345,24 @@ public interface Inst extends Call {
                 // time after), which is the double apply the mtron frame handler documents
                 base.equals(AUTO_FROM_INST_TID) ||
                 base.equals(AUTO_AT_INST_TID) ||
+                // higher order instructions are intended to have code that operates on lhs structures.
+                // thus, their args should not pre-process the structure (their args should operate in the inst body)
                 base.equals(MAP_INST_TID) ||
-                base.equals(SELECT_INST_TID) ||
-                //base.equals(FILTER_INST_TID) ||
-                base.equals(FORK_INST_TID) ||
-                // base.equals(THREAD_INST_TID) ||
+                base.equals(FILTER_INST_TID) ||
                 base.equals(ORDER_INST_TID) ||
                 base.equals(KMERGE_INST_TID) ||
-                // sup and inf take order's projection: "what are you taking the sup on?" (Marko, 2026-11-22)
+                base.equals(ISA_INST_TID) ||
+                // args are projections and should operate in the inst body.
                 base.equals(SUP_INST_TID) ||
                 base.equals(INF_INST_TID) ||
-                base.equals(AS_INST_TID) ||
-                base.equals(WITHIN_INST_TID) ||
-                base.equals(ISA_INST_TID) ||
-                base.equals(SORTA_INST_TID) ||
+                base.equals(SELECT_INST_TID) ||
+                base.equals(FORK_INST_TID) ||
                 base.equals(UPDATE_INST_TID) ||
                 base.equals(GROUP_INST_TID) ||
+                ////////////////
+                base.equals(AS_INST_TID) ||
+                base.equals(WITHIN_INST_TID) ||
+                base.equals(SORTA_INST_TID) ||
                 base.equals(REPEAT_INST_TID) ||
                 base.equals(TIMEOUT_INST_TID) ||
                 base.equals(BRANCH_INST_TID) ||
@@ -930,6 +932,8 @@ public interface Inst extends Call {
             if (lhs.type().equals(rhs.type()))
                 return Optional.of((O) lhs);
             else {
+                if (!lhs.baseTypeID().equals(rhs.baseTypeID()))
+                    return Optional.empty();
                 try {
                     return Optional.of((O) lhs.as(rhs.type()));
                 } catch (final Exception e) {
@@ -939,7 +943,7 @@ public interface Inst extends Call {
         }
 
         public static <O extends Obj> O alignRHSType(final O lhs, final Obj rhs) {
-            return (O) (lhs.type().equals(rhs.type()) ? rhs : rhs.as(lhs.type()));
+            return (O) (lhs.type().equals(rhs.type()) ? rhs : lhs.baseTypeID().equals(rhs.baseTypeID()) ? rhs.as(lhs.type()) : noobj());
 
 
         }

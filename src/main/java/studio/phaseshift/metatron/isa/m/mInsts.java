@@ -44,6 +44,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
@@ -1246,6 +1248,33 @@ public final class mInsts {
      */
     public static Set<Inst> objs_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build()
+                        .tid(NOT_INST_TID)
+                        .dom(ALL, "any obj")
+                        .rng(BOOL_TID, "the negated truth value of the arg")
+                        .argLst(T(ALL.maybe()), "the obj to negate")
+                        .desc("a negation function \\(f(x) \\mapsto x'\\): true if the arg obj is falsy")
+                        .body((lhs, inst) -> bool(!inst.arg(0).booleanCheck()))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build()
+                        .tid(EQ_INST_TID)
+                        .dom(A, "any objs")
+                        .rng(BOOL_TID, "true if lhs equals rhs")
+                        .argLst(T(A), "the rhs obj")
+                        .desc("an equality function \\[ f(\\mathtt{lhs}) = \\left\\{ \\begin{aligned} \\mathtt{true} & \\quad \\text{if } \\mathtt{lhs} = \\mathtt{arg}_0 \\\\ \\mathtt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]")
+                        .body((lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_FALSE))
+                        .law(Law.pure, Law.commutative)
+                        .create(),
+                InstBuilder.build()
+                        .tid(NEQ_INST_TID)
+                        .dom(A, "any objs")
+                        .rng(BOOL_TID, "true if lhs does not equal rhs")
+                        .argLst(T(A), "the rhs obj")
+                        .desc("an inequality function \\[ f(\\mathtt{lhs}) = \\left\\{ \\begin{aligned} \\mathtt{true} & \\quad \\text{if } \\mathtt{lhs} \\neq \\mathtt{arg}_0 \\\\ \\mathtt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]")
+                        .body((lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE))
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build()
                         .tid(ID_INST_TID)
                         .dom(A, "the lhs obj to pass to the rhs")
