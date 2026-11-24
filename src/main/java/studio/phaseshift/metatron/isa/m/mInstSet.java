@@ -22,6 +22,9 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Bsp;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Env;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Topology;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -192,6 +195,10 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REVERSE_INST_TID = M_ISA_INST_TID.extend("reverse");
     public static final fURI CLOSE_INST_TID = M_ISA_INST_TID.extend("close");
     public static final fURI REPEAT_INST_TID = M_ISA_INST_TID.extend("repeat");
+    /**
+     * Every database instset's rewrites, {@code /m/db/<kind>/inst/rewrite}: the distribution rules run after them all.
+     */
+    private static final String DB_REWRITES = "[/m/db/+/inst/rewrite]";
     public static final fURI LOOP_INST_TID = M_ISA_INST_TID.extend("loop");
     public static final fURI PATH_INST_TID = M_ISA_INST_TID.extend("path");
     public static final fURI AT_INST_TID = M_ISA_INST_TID.extend("at");
@@ -1620,7 +1627,54 @@ public class mInstSet extends AbstractInstSet {
                                         return out;
                                     }).collect(CommonUtil.ListCollector.single()));
                                 })
-                                .create())
+                                .create(),
+                        // THE DISTRIBUTION RULES ARE /m's (Marko, 2026-11-24), as every local rule has been since
+                        // 2026-11-12: a peer that never imported /m/math/cat had no law_shard, so a lane it was sent
+                        // with hop budget left ran flat and the tree never branched. Dialing a peer is the opt-in
+                        // (peers are explicit), so a machine that dials nothing pays nothing. Both run after every
+                        // database pushdown (?pre=[/m/db/+/inst/rewrite]: a fold pushed into its store is no fold to
+                        // deal) and, in /m's own rank, after the local laws (0) and before the capture rules (1000).
+                        //
+                        // the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
+                        // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a
+                        // monoidic, commutative fold -- r itself (sum, prod), the fold its derivation names
+                        // (count -> sum, order(s) -> kmerge(s)), or pointwise for a keyed group. The seed bulk is
+                        // factored over the machine's dialed peers, the elementwise (floatable) run is replicated
+                        // per factor with a local partial reduce, and the combiner is applied once more at home:
+                        //
+                        //   {1,2,3}.plus(2).sum()
+                        //     |->  branch(<a> => start({1,3}).plus(2).sum?hop=0(),
+                        //                 <b> => start({2}).plus(2).sum?hop=0()).sum()
+                        //
+                        // branch keys each part by the place it runs (<~> home, a peer's authority); a remote lane
+                        // ships its program uncompiled to its place's eval, every lane runs on its own virtual
+                        // thread, and the branch gathers the partials for the combiner. A peer with hop budget left
+                        // re-plans its part over its own peers (the tree).
+                        //
+                        // POLICY: the guard requires dialed peers and a hop budget (the plan's tree placement, or
+                        // ?hop=n on the chain; ?hop=0 opts a fold out), so on a lone machine the rule is the identity
+                        // and the default schedule is unchanged. Whether a NETWORKED machine should auto-distribute
+                        // every eligible chain at compile time, or only via an explicit >>law_shard edge, is policy.
+                        // THE SUPERSTEP (Marko, 2026-11-22): a whole-frontier repeat whose code is pure and floatable
+                        // deals its frontier over the dialed peers every pass -- the loop stays home, each pass a
+                        // branch that parts the frontier by the branch's own rule and merges the lanes before the
+                        // next pass (lock-step BSP):
+                        //
+                        //   x.repeat?<=A{*}(code=>out(),until=>loop()?>4)
+                        //     |->  x.repeat?<=A{*}(code=>branch?<=A{*}&split=part(<//p> => out()?hop=0,
+                        //                                                         <//q> => out()?hop=0),
+                        //                          until=>loop()?>4)
+                        //
+                        // its own rule, not a cut in law_shard's plan (Marko): only the dialed peers take a share,
+                        // never the roster
+                        docWrap(InstSet.Helper.rewriter(
+                                        M_ISA_REWRITE_TID.extend("law_bsp").q(PRE, DB_REWRITES).q(ZINDEX, 500),
+                                        code -> Bsp.apply(code, Env.snapshot())),
+                                "the superstep: a whole-frontier repeat (repeat?<=A{*}) whose code is pure and floatable deals its frontier over the dialed peers every pass -- \\(\\mathrm{repeat}^{\\{*\\}}(f) \\leadsto \\mathrm{repeat}^{\\{*\\}}(\\mathrm{branch}^{\\{*\\}}_{\\mathrm{part}}(p_1 \\Rightarrow f, \\ldots, p_n \\Rightarrow f))\\): the loop stays home and each pass is a branch that parts the frontier over the peers (lock-step BSP)"),
+                        docWrap(InstSet.Helper.rewriter(
+                                        M_ISA_REWRITE_TID.extend("law_shard").q(PRE, DB_REWRITES).q(ZINDEX, 500),
+                                        code -> PlanInterpreter.lower(PlanInterpreter.SHARD_PLAN, code)),
+                                "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the dialed peers, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\), \\(\\mathrm{group}([k \\Rightarrow h])\\) pointwise through \\(\\Sigma\\) then \\(\\mathrm{combiner}(h)\\) per key, and \\(\\mathrm{mean}\\) through itself after its lift \\(\\ell\\), each lane answering its mean weighted by its count -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto \\mathrm{branch}(a \\Rightarrow \\{1,3\\}.f.\\mathrm{count},\\ b \\Rightarrow \\{2\\}.f.\\mathrm{count}).\\Sigma\\)"))
 
                 /*uri(SUGAR), lst(sugars().stream()
                         .map(s -> rec(

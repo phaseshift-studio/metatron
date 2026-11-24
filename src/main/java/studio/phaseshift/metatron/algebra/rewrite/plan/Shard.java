@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MOVE_INST_TID;
 import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
@@ -96,6 +97,22 @@ public final class Shard {
         // layout holds nothing left to plan.
         if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
             return code;
+        // A MOVE HANDS THE REST OF THE CHAIN TO ANOTHER MACHINE, which re-plans it on arrival over its own peers (the
+        // quine rule), so this machine plans only what runs here: the stretch before the first move. Planned here,
+        // the tail would ship over peers the target never dialed (reach is not inherited), or deal out a run that is
+        // not this machine's to run.
+        final int moved = IntStream.range(0, code.insts().size())
+                .filter(i -> MOVE_INST_TID.equals(code.insts().get(i).tid().basePath())).findFirst().orElse(-1);
+        if (0 == moved)
+            return code;
+        if (0 < moved) {
+            final Code here = apply(plan, code(code.insts().subList(0, moved)), env);
+            if (here.insts().equals(code.insts().subList(0, moved)))
+                return code;
+            final List<Inst> relocated = new ArrayList<>(here.insts());
+            relocated.addAll(code.insts().subList(moved, code.insts().size()));
+            return code(relocated);
+        }
         // A LONE MACHINE DOES NOT FAN OUT -- unless the decision states its own place set, whose HOME lane is the lanes
         // case (?place=[{4}local]: a peerless machine shards), or names a machine it knows (//host). PEERS ARE
         // EXPLICIT (Marko, 2026-11-23): the roster is knowledge, not reach, so a machine nothing dialed is never a

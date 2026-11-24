@@ -55,9 +55,8 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
     @Test
     void testAnOfflinePeerIsNoShardTarget() throws Exception {
         // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
-        // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
+        // law_shard is /m's (Marko, 2026-11-24), so the category is not mounted; /m/math declares the folds
         InstSet.importInstSet(f("/m/math"));
-        InstSet.importInstSet(f("/m/math/cat"));
         InstSet.importInstSet(WEB_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));

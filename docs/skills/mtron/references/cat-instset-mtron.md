@@ -268,8 +268,8 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `branch_collapse` (/m)   | the additive op of the code ring's theory (`branch`)                                        | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
 | `branch_inline` (/m)     | the additive op of the code ring's theory, with a single member                             | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
 | `map_float` (/m)         | a value or a type argument whose point is exact                                             | $\mathrm{map}(x\{c\}) \leadsto \mathrm{map}\{c\}(x)$ — the point floats off the argument, so `branch(int::T,int::T)` compiles to `map{2}(int::T)`                                                                        |
-| `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a dialed peer      | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
-| `law_bsp`                | a whole-frontier `repeat?<=A{*}` whose code is pure and floatable, + a dialed peer          | each pass deals the frontier over the dialed peers and merges home (entry N's superstep)                                                                                                                                                            |
+| `law_shard` (/m)         | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a dialed peer      | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
+| `law_bsp` (/m)           | a whole-frontier `repeat?<=A{*}` whose code is pure and floatable, + a dialed peer          | each pass deals the frontier over the dialed peers and merges home (entry N's superstep)                                                                                                                                                            |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
@@ -565,18 +565,20 @@ the quine rule, the payload is a program the receiver re-plans on compile, never
 shapes are deferred to later phases, and **no cut-less plan is registered in the rewrite table yet** — every
 registered rewrite has a `cut` — so `bind` is currently unexercised by the default rules.
 
-**A distribution plan requires peers.** `law_shard` is live only over a non-empty peer roster: its guard reads the
-machine's dialed peers, and with no peer it matches nothing, so `lower` is the identity. A `ws_client` dials and
-self-registers a `peer::T` into the network; that registration is the condition that turns the rule live:
+**A distribution plan requires peers.** `law_shard` (a rule of `/m`, the category imported or not) is live only over
+dialed peers: its guard reads the machine's dialed peers, and with no peer it matches nothing, so `lower` is the
+identity. `spawn` forks a node on this host, another machine as far as the network is concerned, and a `ws_client`
+dialed at it self-registers a `peer::T` into the network; that registration is the condition that turns the rule live.
+A dial back to this machine's own listener registers a `peer::T` too, but a machine is never its own peer, so that one
+turns nothing live:
 
 ```mtron_pre
-ws_client::[host=>ws://localhost:8555/mtron]
+0.spawn(<//localhost/peer>,<//peer>).-<[host=>_].as(ws_client::T)>>host
 */network
 ```
 
-`*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
-`machine::T`
-now holding that `peer::T`, the `path::T` lists `law_shard` among its out-edges.
+`*~/network` reads back the current machine's network block — the dialed `peer::T` at the spawned node's address.
+With the `machine::T` now holding that `peer::T`, the `path::T` lists `law_shard` among its out-edges.
 
 ```mtron_pre
 [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]

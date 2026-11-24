@@ -177,8 +177,9 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     protected static void startPeers(final Protocol over) throws Exception {
         protocol = over;
         // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
-        // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
-        // (BootLoader.load mounts only /m, /sys, /m/mach). Import its parent (/m/math) first, then it.
+        // law_shard is /m's (Marko, 2026-11-24), but the rows' path::T ([as(cat:path::T)]) is catInstSet's, which
+        // the standard test boot does not mount (BootLoader.load mounts only /m, /sys, /m/mach). Import its parent
+        // (/m/math) first, then it.
         InstSet.importInstSet(MATH_ISA_TID);
         InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());

@@ -770,6 +770,23 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(size, value.asRec().jvm().size(), "rec q-value '%s' should carry the expected number of pairs".formatted(key));
     }
 
+    /**
+     * A {@code [{+}uri::T]} query value reads back as the fURIs it names via {@code qValue(..., List.class)}, and one
+     * uri written bare as a list of one: a rewrite's {@code ?pre} and {@code ?post} families (Marko, 2026-11-24), which
+     * survive the tid's own round trip, patterns included. Each row: the tid % the key % the fURIs, comma-separated.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/m/inst/rewrite/law_shard?pre=[/m/db/+/inst/rewrite]             % pre  % /m/db/+/inst/rewrite",
+            "/m/inst/rewrite/x?post=[/m/inst/rewrite,/m/math/geo/inst/rewrite] % post % /m/inst/rewrite,/m/math/geo/inst/rewrite",
+            "/m/inst/rewrite/x?pre=/m/db/tble/inst/rewrite&zindex=5           % pre  % /m/db/tble/inst/rewrite",
+    }, delimiter = '%')
+    public void testQueryParamUriListValue(final String furi, final String key, final String expected) {
+        final List<fURI> value = idem(furi.trim()).qValue(key.trim(), List.class);
+        assertEquals(Arrays.stream(expected.trim().split(",")).map(fURI.Singleton::f).toList(), value,
+                "q-value '%s' reads back as the fURIs it names".formatted(key.trim()));
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

@@ -54,8 +54,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 /**
  * THE REWRITE POOL, ONE RULE AT A TIME — each rewrite of the machine's pool ({@code Machine.current().instset().rewrites()}),
  * found by its name and applied once to a chain, exactly as the compiler's rewriter applies it: no plan and no plan
- * interpreter in between. /m's rules (the unit, inverse and derivation laws, the law, form and plain rows, the branch
- * factor) and the category's (branch_collapse, branch_inline and law_shard, which are moving to /m) all run here.
+ * interpreter in between. /m's rules all run here: the unit, inverse and derivation laws, the law, form and plain rows,
+ * the branch normal forms (branch_factor, branch_collapse, branch_inline), and since 2026-11-24 the distribution rules.
  * <p>
  * The cases are PlanBuilderTest's rewrite cases, carried from the plans to the pool: its emitted-code snapshot, and its
  * hop-budget cases, read off the code law_shard emits rather than off the plan. PlanBuilderTest's other cases test the
@@ -71,7 +71,7 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
     private static final fURI LOOP_PEER = f("loop://localhost:8555");
 
     public mInstSetRewriteTest() {
-        // the category's rules are still the category's: it is mounted per test beside /m, so its rules join the pool
+        // the category is mounted per test beside /m, as it always was; every rule this class reads is /m's
         super(catInstSet::new);
     }
 

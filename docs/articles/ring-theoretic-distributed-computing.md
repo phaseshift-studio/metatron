@@ -117,8 +117,8 @@ by place. The examples in this article run over two places. `harvest`, an instru
 [`drstynx.boot.mtron`](../skills/drstynx/assets/drstynx.boot.mtron), spawns a sibling JVM on this machine for each
 integer it is given, boots it from the file it is handed, and dials each one as a `ws_client` peer. Here every peer
 boots `boot/space/grph/peer.boot.mtron`, which mounts the modern graph at `g:`, so the graph walk of *Loops of Cuts*
-has the same graph on every machine. The category instset, which holds `law_shard` and `law_bsp`, and this machine's
-own copy of the graph are imported out of view.
+has the same graph on every machine. The math and category instsets and this machine's own copy of the graph are
+imported out of view; `law_shard` and `law_bsp` are rules of the base instset `/m`, so every machine has them.
 
 ```mtron_pre
 [HIDDEN]import(/m/math,math)
