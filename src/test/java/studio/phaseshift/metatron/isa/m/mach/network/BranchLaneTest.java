@@ -302,8 +302,9 @@ public class BranchLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * A WAIT LONGER THAN A THREAD'S OWN DEFAULT (five seconds) IS THE CUT'S: a lane's thread waits as long as its cut may
-     * run, so a place that answers in six seconds answers a lane that waits ten, shipped or home, keyed or moved.
+     * A WAIT LONGER THAN A THREAD'S OWN DEFAULT (five seconds) IS THE CUT'S: a lane's thread waits as long as any of its
+     * cuts may run, so a place that answers in six seconds answers a lane that waits ten, shipped or home, keyed or
+     * moved, and a home lane that moves after its head.
      */
     @Test
     public void testALongWaitIsTheCuts() {
@@ -315,6 +316,7 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slower?timeout=10> => plus(1))", "2");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move?timeout=10(<loop://slower>).plus(1),plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=10(<~> => sleep(second::6.0))", "1");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?<=int{*}&split=part(plus(1).move?timeout=10(<loop://slower>).plus(1))", "3");
         } finally {
             Machine.current().network().drop(f("loop://slower"));
         }
