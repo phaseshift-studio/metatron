@@ -295,9 +295,8 @@ public final class PlaceResolver {
      * No dedupe: two dials of one service are two lanes, which is what the pre-resolver filter chain answered and what
      * the emitter's stride expects.
      * <p>
-     * A MACHINE IS NEVER ITS OWN PEER: a dial that reaches one of this machine's own listen authorities (its wildcard
-     * bind dialed back, or a loopback alias of it, {@link Network.Helper#sameService}) is the machine itself. A lane
-     * shipped there is a round trip to itself, and a tree would plan that lane into itself again.
+     * A MACHINE IS NEVER ITS OWN PEER ({@link Network.Helper#reachesSelf}): a dial that reaches one of this machine's
+     * own listen authorities (its wildcard bind dialed back, or a loopback alias of it) is the machine itself.
      */
     private static List<fURI> dialed(final Env env, final Placement requires) {
         return env.peers().values()
@@ -305,7 +304,7 @@ public final class PlaceResolver {
                 .filter(peer -> serves(peer, requires))
                 .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
-                .filter(origin -> env.authorities().stream().noneMatch(own -> Network.Helper.sameService(own, origin)))
+                .filter(origin -> !Network.Helper.reachesSelf(origin, env.authorities()))
                 .toList();
     }
 
@@ -356,6 +355,9 @@ public final class PlaceResolver {
                         .filter(transport -> null != transport.scheme())
                         .filter(transport -> Signatures.resolves(transport.scheme()))
                         .filter(transport -> dials.stream().noneMatch(dial -> Network.Helper.sameService(dial, transport)))
+                        // NOR BY NAME: a machine bound to one interface files its own row, so naming its host would
+                        // read its own service back as a transport that no dial claims
+                        .filter(transport -> !Network.Helper.reachesSelf(transport, env.authorities()))
                         .forEach(transports::add));
         return transports.stream()
                 .map(fURI::basePath)

@@ -410,17 +410,27 @@ public final class PeerCluster implements AutoCloseable {
             for (int i = 1; i <= this.size(); i++)
                 Machine.current().network().drop(f("ws://localhost:" + this.port(i)));
         this.dialed = false;
-        for (final Process process : this.processes) {
-            process.destroy();
-            try {
-                if (!process.waitFor(5, TimeUnit.SECONDS))
-                    process.destroyForcibly();
-            } catch (final InterruptedException e) {
-                Thread.currentThread().interrupt();
-                process.destroyForcibly();
-            }
-        }
+        this.processes.forEach(PeerCluster::reap);
         this.processes.clear();
+    }
+
+    /**
+     * STOP the i-th peer's process and leave its dial up: the far side goes away under a live link, so the peer stays
+     * listed while it is redialed. That is an outage, not a hang-up; {@link #close()} still hangs up every dial.
+     */
+    public void stop(final int oneBased) {
+        reap(this.processes.get(oneBased - 1));
+    }
+
+    private static void reap(final Process process) {
+        process.destroy();
+        try {
+            if (!process.waitFor(5, TimeUnit.SECONDS))
+                process.destroyForcibly();
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            process.destroyForcibly();
+        }
     }
 
     // ========================================================================

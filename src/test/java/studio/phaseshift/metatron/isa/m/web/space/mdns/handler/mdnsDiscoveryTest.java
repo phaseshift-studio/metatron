@@ -74,7 +74,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       {@code authority} field holding this machine's own authorities, four times over, and that fails the
  *       moment a field is added to the value without being added to the type</li>
  *   <li><b>this machine is a row in the table too</b> — the handler writes itself into {@code roster/machine}
- *       rather than onto itself, so a consumer reads ONE consolidated index and never searches per-protocol</li>
+ *       rather than onto itself, so a consumer reads ONE consolidated index and never searches per-protocol; a
+ *       wildcard or loopback bind files no row, being no address anyone dials</li>
  *   <li><b>no row ever duplicates</b> — {@code listen()} announces every authority on every responder, so
  *       anything written inside that loop arrives once per interface</li>
  *   <li><b>a heard machine lands under its own key</b> as {@code <machine> => [<protocol> => [<transport> =>
@@ -403,9 +404,10 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
      */
     @Test
     public void testABackendsLoginIsNeverAnnounced() throws SocketException {
-        // THE CONTROL LISTENS ON A ROUTABLE ADDRESS: this machine's own row files no wildcard or loopback surface (no
-        // address anyone dials), so the endpoint the roster must carry binds where mdns announces, the first up,
-        // non-loopback IPv4 (mdnsDiscovery.localAddresses)
+        // THE CONTROL LISTENS ON A ROUTABLE ADDRESS when there is one: this machine's own row files no wildcard or
+        // loopback surface (no address anyone dials), so the endpoint the roster must carry binds where mdns announces,
+        // the first up, non-loopback IPv4 (mdnsDiscovery.localAddresses). Without one, the wildcard still answers the
+        // announced set and the TXT records, which need no multicast, and only the roster half is skipped
         final String routable = NetworkInterface.networkInterfaces()
                 .filter(iface -> {
                     try {
@@ -418,8 +420,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
                 .filter(address -> address instanceof Inet4Address)
                 .map(InetAddress::getHostAddress)
                 .findFirst().orElse(null);
-        assumeTrue(null != routable, "no routable interface here — mdns is inert");
-        final fURI listening = f("").scheme(WS).host(routable).port(generatePort());
+        final fURI listening = f("").scheme(WS).host(null == routable ? "0.0.0.0" : routable).port(generatePort());
         final fURI endpoint = listening.extend(f("/mtron"));
         final fURI backend = f("/memory/space/mdns-backend");
         // patterned as the boot's are: a <vid>/# pattern would retract onto the vid, and the cache a web space
@@ -438,6 +439,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
                     .forEach(entry -> assertFalse(leaks(entry), "no TXT entry carries the backend: " + entry)));
             // THE ROSTER is filed after the initial sweep, and status turns true at the first responder: the own row
             // is awaited, never assumed to be there the moment the handler is live
+            assumeTrue(null != routable, "no routable interface here — this machine files no own row");
             assumeTrue(awaitStatus(handler, true, 20000L), "no multicast-capable interface here — mdns is inert");
             for (final long until = System.currentTimeMillis() + 5000L;
                  !machineRows().contains(endpoint.toString()) && System.currentTimeMillis() < until; )
@@ -463,6 +465,8 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             "ws://0.0.0.0:8555/mtron     % 0",
             "ws://127.0.0.1:8555/mtron   % 0",
             "ws://localhost:8555/mtron   % 0",
+            "ws://[::]:8555/mtron        % 0",
+            "ws://[0:0:0:0:0:0:0:0]:8555/mtron % 0",
             "ws://203.0.113.7:8555/mtron % 1",
     }, delimiter = '%')
     void testAWildcardOrLoopbackSurfaceFilesNoOwnRow(final String surface, final int rows) {

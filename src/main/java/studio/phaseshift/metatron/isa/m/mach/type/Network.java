@@ -1082,6 +1082,17 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         }
 
         /**
+         * A MACHINE IS NEVER ITS OWN PEER: an address that reaches one of this machine's own listen {@code authorities}
+         * ({@link #authorities()}) — its bind dialed back as written, or by a loopback alias of it
+         * ({@link #sameService}) — is the machine itself. A lane shipped there is a round trip home, and a tree would
+         * plan that lane into itself again. Not caught: an interface address of this machine dialed behind a wildcard
+         * bind ({@code ws://203.0.113.7:8555} against {@code ws://0.0.0.0:8555}), which spells no loopback.
+         */
+        public static boolean reachesSelf(final fURI address, final Collection<fURI> authorities) {
+            return authorities.stream().anyMatch(own -> sameService(own, address));
+        }
+
+        /**
          * WHETHER A MACHINE ADDRESS NAMES A TRANSPORT OF ITS HOST. An address names a host, and every transport that
          * reaches the host is that place: the port is not a selector, so {@code //ginger:9999} is ginger. An address
          * with a scheme and a port is one service instead, and an aligned alias is exactly that: harvest spawns its

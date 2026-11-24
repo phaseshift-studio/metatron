@@ -19,17 +19,19 @@
 package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
+import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.web.space.ws.AbstractWebSocketServerIntegrationTest;
 import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,22 +41,29 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
 /**
- * {@code law_shard} availability needs no forked peer process — a {@code ws_client} self-dial against a
- * co-mounted {@code ws_server} mints the {@code /network/peer} the guard reads, and then {@code law_shard} must
- * be a live out-edge of the shardable chain's {@code path::T}. This is the manual console demo, automated.
+ * {@code law_shard} IS LIVE OVER A PEER, AND A MACHINE IS NEVER ITS OWN. A {@code ws_client} dialed back at this
+ * machine's own co-mounted {@code ws_server} mints a {@code /network/peer}, but that peer is the machine itself
+ * ({@link Network.Helper#reachesSelf}): it is no reach ({@link Places#reachable()}) and no shard target, so
+ * {@code law_shard} is not a live out-edge of the shardable chain's {@code path::T}. A dial to another machine (a
+ * {@code loop} transport stands in for one) makes it live. The real listener is the point: a machine's authorities are
+ * its sockets, and this is the self-dial the console demo makes.
  */
 //@Isolated
 //@Execution(ExecutionMode.SAME_THREAD)
 public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegrationTest {
 
+    /**
+     * another machine, at a transport that dials nothing
+     */
+    private static final fURI SIBLING = f("loop://sibling:8555");
+
     @Override
     protected Listener createWSServer() {
         return wsServer.of(rec(
                 uri(NAME), uri("law-shard-peer-test"),
-                uri(ORIGIN), uri("ws://localhost:" + generatePort()),
+                uri(ORIGIN), uri(f("").scheme(WS).host("localhost").port(generatePort())),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
     }
 
@@ -66,15 +75,32 @@ public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegra
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
+        final Network network = Machine.current().network();
+        final fURI self = f("").scheme(WS).host("localhost").port(this.wsPort);
+        try {
+            // a self-dial mints a /network/peer, the trigger law_shard's guard reads, and that peer is no reach
+            Network.Helper.connect(network, self.extend(f("/mtron")), WS_CLIENT_TID);
+            assertFalse(network.peers().jvm().isEmpty(), "a self-dial mints a /network/peer");
+            assertTrue(Places.reachable().isNoObj(), () -> "a machine is never its own reach: " + Places.reachable());
+            assertFalse(shardable(), () -> "a machine is never its own peer, so law_shard is not live: " + path());
+            // a dial to another machine is the reach law_shard needs
+            Network.Helper.connect(network, SIBLING);
+            assertTrue(shardable(), () -> "law_shard is available as a rewrite when a peer is present: " + path());
+        } finally {
+            network.drop(SIBLING);
+            network.drop(self);
+        }
+    }
 
-        // a ws_client self-dial mints a /network/peer — the exact trigger law_shard's guard reads
-        Network.Helper.connect(Machine.current().network(), f("ws://localhost:" + this.wsPort + "/mtron"), WS_CLIENT_TID);
-        assertFalse(Machine.current().network().peers().jvm().isEmpty(), "a self-dial mints a /network/peer");
+    /**
+     * {@code start({1,2,3,4}).plus(1).sum()} lifted to {@code path::T}, whose out-edges are the live rewrites
+     */
+    private static Obj path() {
+        return catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()"));
+    }
 
-        // start({1,2,3,4}).plus(1).sum() lifted to path::T exposes law_shard as a live out-edge
-        final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()");
-        final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
-        assertTrue(path.isRec() && path.asRec().has(uri("law_shard")),
-                "law_shard is available as a rewrite when a peer is present: " + path);
+    private static boolean shardable() {
+        final Obj path = path();
+        return path.isRec() && path.asRec().has(uri("law_shard"));
     }
 }

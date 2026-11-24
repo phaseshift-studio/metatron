@@ -131,19 +131,21 @@ The place set, as a value: a **list** is a set of designators, a **rec** carries
 coefficient is that designator's **demand** (how many lanes it takes — a share is a lane, so demand is both data weight
 and concurrency). Repetition is multiplicity: `[//ginger,//ginger,//booger]` is ginger twice.
 
-| designator           | resolves through                                             |
-|----------------------|--------------------------------------------------------------|
-| `local`              | this frame's own place (the addressless `eval()`)            |
-| `peer`               | the **dialed** set (host-bearing, online, `serves`-positive) |
-| `#`                  | every reachable place the other entries did not name         |
-| `//host[:port]`      | the roster's place (a redirect); the port is not a selector  |
-| `//alias`            | a `~/network/prefix` name; a row's port names one transport  |
-| `scheme://host:port` | one authority, as written                                    |
+| designator           | resolves through                                                                 |
+|----------------------|----------------------------------------------------------------------------------|
+| `local`              | this frame's own place (the addressless `eval()`)                                |
+| `peer`               | the **dialed** set (host-bearing, online, `serves`-positive), never this machine |
+| `#`                  | every reachable place the other entries did not name                             |
+| `//host[:port]`      | the roster's place (a redirect); the port is not a selector                      |
+| `//alias`            | a `~/network/prefix` name; a row's port names one transport                      |
+| `scheme://host:port` | one authority, as written                                                        |
 
 `?place=[local,peer]` is S (the master takes a share); `[{4}local]` is four home lanes on a peerless machine, still a
 fan-out (it demands the off-machine merge's laws); `local=>0` is the explicit exclusion. Exclusion is omission.
 A **roster** machine is *knowledge*, not reach: it is a fan-out target only when the author names it (`//host`) —
-`peer` is the **dialed** set. A declared-but-undialed machine alone leaves `law_shard` the identity.
+`peer` is the **dialed** set. A declared-but-undialed machine alone leaves `law_shard` the identity. **A machine is
+never its own peer**: a dial back to one of its own listen authorities (its wildcard bind, or a loopback alias of it) is
+no place, through `peer`, `#` or `//host`, and neither is its own address in the roster.
 
 ### `?split` — what counts as one share
 
@@ -724,8 +726,11 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's
-   insts). A **declared** (roster) machine is knowledge, not reach — name it (`//host`) to ship there. An outage
-   *shrinks* the fan-out; it never poisons the reduction.
+   insts). A dial back to this machine is no target (`Network.Helper.reachesSelf`): a machine is never its own peer.
+   A **declared** (roster) machine is knowledge, not reach — name it (`//host`) to ship there. An outage *shrinks* the
+   fan-out; it never poisons the reduction. A lane re-plans where it lands only if that machine has the rule:
+   `law_shard` lives in `/m/math/cat`, so a peer that never imported it runs every lane it is sent flat, whatever its
+   `?hop`.
 
 ## see also
 

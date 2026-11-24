@@ -151,6 +151,8 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
             "ws://0.0.0.0:19193 % ws://localhost:19193/x % true  % localhost and 0.0.0.0 are one service",
             "ws://0.0.0.0:19193 % ws://127.0.0.1:19193/x % true  % and so is 127.0.0.1",
             "ws://0.0.0.0:19193 % ws://[::1]:19193/x     % true  % and the IPv6 loopback",
+            "ws://[::]:19193    % ws://localhost:19193/x % true  % and the IPv6 wildcard bind",
+            "ws://[0:0:0:0:0:0:0:0]:19193 % ws://127.0.0.1:19193/x % true % spelled uncompressed, as a socket reports it",
             "ws://0.0.0.0:19193 % ws://localhost:19194/x % false % a different port is a different service",
             "ws://0.0.0.0:19193 % ws://elsewhere:19193/x % false % and a different host certainly is",
     }, delimiter = '%')

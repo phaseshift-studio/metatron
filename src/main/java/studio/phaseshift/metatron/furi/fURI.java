@@ -1488,10 +1488,11 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
         /**
          * THE LOOPBACK SPELLINGS: one socket, many names. A socket reports IPv6 loopback uncompressed (and
-         * {@code fURI.hostOf} brackets it), so both spellings are here.
+         * {@code fURI.hostOf} brackets it), so both spellings are here. The wildcard binds are too, IPv4's and IPv6's:
+         * a dial back to one reaches this machine as a loopback does.
          */
         private static final Set<String> LOOPBACK_HOSTS = Set.of("0.0.0.0", "127.0.0.1", "localhost", "::1", "[::1]",
-                "0:0:0:0:0:0:0:1", "[0:0:0:0:0:0:0:1]");
+                "0:0:0:0:0:0:0:1", "[0:0:0:0:0:0:0:1]", "::", "[::]", "0:0:0:0:0:0:0:0", "[0:0:0:0:0:0:0:0]");
 
         /**
          * Whether a bare host string names loopback — the check {@link fURI#isLoopbackHost()} delegates to.

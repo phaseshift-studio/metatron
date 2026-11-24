@@ -20,30 +20,22 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
-import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
 
 /**
@@ -51,8 +43,8 @@ import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
  * redialed, but it is no shard target: a part shipped down it would come back {@code not connected} and poison the
  * reduction. So an outage shrinks the fan-out, and the fold completes on what is left — here, at home.
  * <p>
- * The peer is this JVM's own machine behind a real websocket (the {@code LawShardPeerAvailabilityTest} self-dial),
- * so the outage is the server stopping.
+ * The peer is another machine, a forked VM ({@link PeerCluster}), since a machine is never its own peer, and the outage
+ * is its process stopping with the dial left up.
  */
 //@Isolated
 //@Execution(ExecutionMode.SAME_THREAD)
@@ -61,7 +53,7 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
     private static final String FOLD = "{1,2,3,4}.plus(1).sum()";
 
     @Test
-    void testAnOfflinePeerIsNoShardTarget() throws InterruptedException {
+    void testAnOfflinePeerIsNoShardTarget() throws Exception {
         // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         InstSet.importInstSet(f("/m/math"));
@@ -69,20 +61,13 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
         InstSet.importInstSet(WEB_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
-        final int port = generatePort();
-        final fURI service = f("ws://localhost:" + port);
-        final Listener server = wsServer.of(rec(
-                uri(NAME), uri("law-shard-offline-peer"),
-                uri(ORIGIN), uri(service),
-                uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
-        ));
-        CommonUtil.sleepThread(300);
-        try {
-            Network.Helper.connect(Machine.current().network(), service.extend("mtron"), WS_CLIENT_TID);
+        try (final PeerCluster cluster = PeerCluster.of(1).start()) {
+            cluster.dial();
+            final fURI service = cluster.dialURI(1).origin();
             final DistributedSweep.Layout across = this.planned();
             assertFalse(across.lanes().isEmpty(),
                     "an online peer is a shard target, so the fold is planned across it: " + across.emitted());
-            CommonUtil.close(server);
+            cluster.stop(1);
             this.awaitOffline(service);
             assertEquals(1L, Machine.current().network().peers().elements().count(),
                     "the offline peer is still listed: it is being redialed");
@@ -92,9 +77,6 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
             assertTrue(home.lanes().isEmpty() && !home.ops().contains(BRANCH_INST_TID),
                     "an offline peer is no target, so the fold is planned at home: " + home.emitted());
             checkCodeParseApply(LOG, FOLD, "14");
-        } finally {
-            Machine.current().network().drop(service);
-            CommonUtil.close(server);
         }
     }
 

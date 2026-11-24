@@ -58,8 +58,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * DISCOVERY OVER mDNS — announces the MTRON ENDPOINTS this machine answers on to the local network (a listener's
  * origin extended by each route whose handler speaks mtron — an {@code mtron::T} carried by the socket's scheme, or
  * metatron's mcp server carried by {@code mcp}; never a backend it dials out to: see {@link #surfaces()}), and writes
- * what it hears, and what it announces, into the roster's machine table:
- * {@code /network/roster/machine/<host>/<protocol>/<transport>}.
+ * what it hears, and what it announces at an address ({@link #ownRow}: never its wildcard or loopback bind), into the
+ * roster's machine table: {@code /network/roster/machine/<host>/<protocol>/<transport>}.
  * It serves no bytes: a peer list is its whole product, which is why it feeds the roster rather than answering an
  * address.
  * <p>
@@ -267,49 +267,6 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * GROW A PUBLISHED FIELD BY ONE: noobj → mono → objs. There is no zero- or one-element objs, so a field with
-     * nothing in it is simply absent, one interface answers the uri itself, and several answer a bag — which is
-     * why these are values rather than Calls over a Java list kept in step with them.
-     */
-    /**
-     * THIS MACHINE IN THE ONE MACHINE TABLE. {@code roster/machine} is the consolidated index of every machine
-     * any discovery protocol knows about, THIS ONE INCLUDED — so where an endpoint was learned is nobody's
-     * business, and a consumer generating peers reads one table instead of searching across per-protocol
-     * listings.
-     * <p>
-     * Only ENDPOINTS go in it. The interfaces a responder bound are not endpoints — a bare {@code 192.168.1.61}
-     * has no scheme and no port, so nothing can be dialed at it and no peer can be made from it. They are
-     * visible where they belong, in the {@code listening} log line, and nowhere else.
-     * <p>
-     * Filed through {@link #roster} once per surface (by {@link #listen}'s baseline and {@link #reconcile}), never
-     * once per responder that announces it.
-     */
-    private fURI exposed() {
-        // NO TRAILING DOT. DNS writes a fully-qualified name with the root dot and JmDNS hands back
-        // "<host>.local.", but roster keys are matched by TEXT -- so a machine learned from an announcement
-        // (dotted) and the same machine learned from an authority (undotted) would be two rows for one box.
-        // One convention, and it is the one a human types.
-        return f(this.hostName + ".local");
-    }
-
-    /**
-     * THE MACHINE A SURFACE IS FILED UNDER. Every surface is an endpoint on a listener of this machine — a backend's
-     * host, such as a broker at {@code mqtt://other.local:1883}, is never one (see
-     * {@link Network.Helper#authorities()}) — but not every surface spells this machine's name.
-     * <p>
-     * A wildcard or loopback bind IS this machine: {@code 0.0.0.0} means every local address, so it keys to
-     * {@link #exposed()}. A bind to one interface keys by the host it names, which is the only machine identity the
-     * uri carries — an address rather than a name when that is all it has.
-     */
-    private fURI machineOf(final fURI authority) {
-        final String host = authority.host();
-        return null == host || host.isBlank() || "0.0.0.0".equals(host) || "::".equals(host)
-                || "localhost".equals(host) || "127.0.0.1".equals(host)
-                ? this.exposed()
-                : f(host);
-    }
-
-    /**
      * THE NAME THE BOX ANSWERS TO, as mDNS means it: the host label alone, no domain. A host named
      * {@code <label>.home.arpa} and one named {@code <label>} both announce as {@code <label>}, which is what
      * {@code .local.} is appended to.
@@ -391,18 +348,27 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * THIS MACHINE'S OWN ROW for one surface, {@code [machine=>[<host>=>[mtron=>[<transport>=><surface>]]]]}, or no row
-     * when the surface's host is the bind wildcard or a loopback ({@link fURI#isLoopbackHost()}). Neither is an address:
-     * {@code 0.0.0.0} has to be resolved to the interfaces behind it ({@link #localAddresses()}), and a reader that dials
-     * every roster address would reach this machine as its own peer. Other machines learn the surface at the interface
-     * addresses the responders announce. Filing no row is filing nothing, so the retire of such a surface takes nothing
-     * back.
+     * THIS MACHINE IN THE ONE MACHINE TABLE. {@code roster/machine} is the consolidated index of every machine any
+     * discovery protocol knows about, this one included, so where an endpoint was learned is nobody's business, and a
+     * consumer generating peers reads one table instead of searching across per-protocol listings. Only ENDPOINTS go in
+     * it: the interfaces a responder bound are not endpoints (a bare {@code 203.0.113.7} has no scheme and no port, so
+     * nothing can be dialed at it), and they are visible where they belong, in the {@code listening} log line.
+     * <p>
+     * THIS MACHINE'S OWN ROW for one surface, {@code [machine=>[<host>=>[mtron=>[<transport>=><surface>]]]]}, keyed by
+     * the host the bind names (an address rather than a name when that is all the uri carries), filed through
+     * {@link #roster} once per surface (by {@link #listen}'s baseline and {@link #reconcile}), never once per responder
+     * that announces it. NO ROW when the surface's host is the bind wildcard, a loopback ({@link fURI#isLoopbackHost()})
+     * or absent. None of them is an address: {@code 0.0.0.0} has to be resolved to the interfaces behind it
+     * ({@link #localAddresses()}), and a reader that dials every roster address would reach this machine as its own
+     * peer. Other machines learn the surface at the interface addresses the responders announce. Filing no row is
+     * filing nothing, so the retire of such a surface takes nothing back.
      * <p>
      * VISIBLE FOR TESTING, like {@link #roster}.
      */
     List<Obj> ownRow(final fURI surface, final fURI transport) {
-        return surface.isLoopbackHost() ? List.of() : List.of(rec(uri(MACHINE), rec(uri(this.machineOf(surface)),
-                rec(uri(MTRON), rec(uri(transport), uri(surface.toString()))))));
+        final String host = surface.host();
+        return null == host || host.isBlank() || surface.isLoopbackHost() ? List.of() : List.of(rec(uri(MACHINE),
+                rec(uri(f(host)), rec(uri(MTRON), rec(uri(transport), uri(surface.toString()))))));
     }
 
     /**

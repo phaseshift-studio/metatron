@@ -149,9 +149,10 @@ public final class Places {
     /**
      * The places this machine can distribute code to — its dialed peers, one place per distinct host. {@code noobj}
      * when nothing is dialed (a distribution rule has no reach). The origin is deliberately NOT here: it is where the
-     * code starts, not where it can go.
+     * code starts, not where it can go — and a dial back to it is no reach either ({@link Network.Helper#reachesSelf}).
      */
     public static Obj reachable() {
+        final Set<fURI> mine = Network.Helper.authorities();
         final Set<String> hosts = new LinkedHashSet<>();
         // the peer map (realized) alone: the authorities this machine actually dialed (a dialed peer carries a host).
         // The roster is knowledge, not reach: peers are explicit (Marko, 2026-11-23), so a machine nothing dialed is no
@@ -161,6 +162,7 @@ public final class Places {
                 .filter(peer -> peer.asRec().has(uri(HOST)))
                 .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
+                .filter(origin -> !Network.Helper.reachesSelf(origin, mine))
                 .map(fURI::host)
                 .filter(Objects::nonNull)
                 .forEach(hosts::add);

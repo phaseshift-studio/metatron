@@ -223,7 +223,7 @@ public class PlaceResolverTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "peer         % ws://localhost:1111{1}, loop://ginger:8555{1}",
+            "peer         % ws://localhost:1111{1}, loop://nutmeg:8555{1}",
             "//localhost  % ws://localhost:1111{1}",
     }, delimiter = '%')
     public void testThisMachineIsNeverItsOwnPeer(final String written, final String expected) {
@@ -231,8 +231,27 @@ public class PlaceResolverTest extends AbstractMetatronTest {
                         peer(f("ws://0.0.0.0:8555"), true, true, EVAL_INST_TID),
                         peer(f("ws://localhost:8555"), true, true, EVAL_INST_TID),
                         peer(f("ws://localhost:1111"), true, true, EVAL_INST_TID),
-                        peer(SERVANT, true, true, EVAL_INST_TID)))),
+                        peer(SECOND, true, true, EVAL_INST_TID)))),
                 "resolving " + written);
+    }
+
+    /**
+     * NOR IS IT A PLACE BY NAME. A machine bound to one interface files its own row, and a roster can list this machine's
+     * service under a loopback name, so naming the host reads this machine's own transport back with no dial to claim
+     * it. That transport is home, never a lane, while a sibling on the same host stays a place. Nothing is dialed here:
+     * this machine listens on the wildcard and on mantis, and each row names a host % its resolution.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "//localhost % ws://localhost:1111/mtron{1}",
+            "//mantis    % loop://mantis:1111/mtron{1}",
+    }, delimiter = '%')
+    public void testThisMachineIsNoPlaceByName(final String written, final String expected) {
+        final Rec roster = rec(
+                uri("localhost"), objs(uri("ws://localhost:8555/mtron"), uri("ws://localhost:1111/mtron")),
+                uri("mantis"), objs(uri("loop://mantis:8555/mtron"), uri("loop://mantis:1111/mtron")));
+        assertEquals(expected.trim(), rendered(PlaceResolver.resolve(places(written),
+                env(Set.of(f("ws://0.0.0.0:8555"), MINE), roster))), "resolving " + written);
     }
 
     /**
