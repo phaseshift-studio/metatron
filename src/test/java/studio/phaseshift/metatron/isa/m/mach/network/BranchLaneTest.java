@@ -350,6 +350,23 @@ public class BranchLaneTest extends AbstractMetatronTest {
     }
 
     /**
+     * A LANE THE BRANCH GAVE UP ON IS STOPPED: a lane with no timed cut is waited the thread's own five seconds, and one
+     * that runs longer fails the branch and is stopped before its write, where the same lane in time writes.
+     */
+    @Test
+    public void testALaneTheBranchGaveUpOnIsStopped() {
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "3.branch?<=int{*}&split=part(sleep(second::7.0).to(</branch/given_up>))", "<ERROR>");
+            CommonUtil.sleepThread(3000);
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*</branch/given_up>", "noobj");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "4.branch?<=int{*}&split=part(sleep(second::1.0).to(</branch/given_up>))", "4");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*</branch/given_up>", "4");
+        } finally {
+            Machine.write(f("/branch/given_up"), noobj());
+        }
+    }
+
+    /**
      * A DEAL'S LANES ARE NEVER SUMMED OR FACTORED: under {@code ?split=part} each lane takes its own share, so two equal
      * lanes are two shares, never one lane with their summed point, and a head they share stays in each, as run ahead
      * of the deal it would change what each lane is dealt (a filter moves members between lanes). Each row: the
