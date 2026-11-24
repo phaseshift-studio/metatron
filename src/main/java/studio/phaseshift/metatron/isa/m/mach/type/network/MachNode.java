@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -36,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * One peer mtron instance, in its own OS process — the production twin of the test harness's {@code PeerNode}.
  * Forked by {@link PeerSpawn} for a loopback authority, it boots a VM, mounts the authority's namespace as a store,
- * serves that store over {@code mtron_ws}, and blocks until the parent reaps it.
+ * serves that store over {@code mtron_ws}, and blocks until the parent reaps it or exits ({@link #PARENT}).
  * <p>
  * A separate process is the point: it has its own {@code Router}, its own spaces, its own serializer state, and
  * only a socket to the parent — which is exactly what makes an authority-routed read or write a real distributed
@@ -55,6 +56,12 @@ public final class MachNode {
     /** printed once the node is serving, so {@link PeerSpawn} can stop polling */
     public static final String READY = "MACH_READY";
 
+    /**
+     * the system property naming the pid of the process this node lives no longer than: {@link PeerSpawn} sets it to
+     * its own pid when it forks the node
+     */
+    public static final String PARENT = "metatron.node.parent";
+
     /** the mtron_ws endpoint every node serves, and the route its roster address carries for the dial */
     public static final String MTRON_ROUTE = "/mtron";
 
@@ -63,6 +70,19 @@ public final class MachNode {
     }
 
     public static void main(final String[] args) throws Exception {
+        // A NODE LIVES NO LONGER THAN ITS PARENT. The parent reaps its nodes when a frame pops or the machine closes,
+        // but a parent that dies without reaping (a hard kill, a crash, a restart) leaves nothing to destroy this
+        // process, which would go on serving its port and announcing itself. The parent names itself by pid, so a
+        // parent already gone when the node starts is no parent at all, never the process this one was handed to.
+        final String parent = System.getProperty(PARENT);
+        if (null != parent)
+            ProcessHandle.of(Long.parseLong(parent))
+                    .map(ProcessHandle::onExit)
+                    .orElse(CompletableFuture.completedFuture(null))
+                    .thenRun(() -> {
+                        trace("node: parent %s exited, so this node exits", parent);
+                        System.exit(0);
+                    });
         final int port = Integer.parseInt(args[0]);
         final String root = args[1];
         // THE PEER'S OWN BOOT FILE, when the parent named one: the sets, spaces and processors it declares are this
@@ -102,7 +122,8 @@ public final class MachNode {
         trace("node: serving ws://0.0.0.0:%d%s", port, MTRON_ROUTE);
         System.out.println(READY + " " + port);
         System.out.flush();
-        // park: the node serves until the parent destroys the process, which runs BootLoader's shutdown hook
+        // park: the node serves until the parent destroys the process or exits (the watch at the top of main), either
+        // of which runs BootLoader's shutdown hook
         Thread.currentThread().join();
     }
 

@@ -46,7 +46,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * SPAWNING A PEER: when an authority is still on this physical machine, the mtron instance that answers it is a real
  * OS process — forked here, declared in the {@code /network/roster} roster, and reaped with the machine that holds its
- * connection ({@link #reap}, from {@code pop()} and {@code close()}).
+ * connection ({@link #reap}, from {@code pop()} and {@code close()}). A node also exits with the process that forked
+ * it ({@link MachNode#PARENT}), so a parent that dies unreaped (a hard kill, a crash, a restart) leaves no node behind.
  * <p>
  * THE MECHANISM HAS NO INSTRUCTION YET. It was the process half of a frame that stood in the peer and shipped every
  * code application made in it; that frame is gone (code reaches a peer by being shipped there in a {@code law_shard}
@@ -126,7 +127,7 @@ public final class PeerSpawn {
             long pid = -1;
             if (here) {
 
-                final Process process = fork(authority, log, boot);
+                final Process process = fork(authority, log, boot, ProcessHandle.current().pid());
                 pid = process.pid();
                 FORKED.put(key, new Forked(process, log));
                 awaitReady(process, log, authority);
@@ -236,7 +237,11 @@ public final class PeerSpawn {
     // the process
     // ========================================================================
 
-    private static Process fork(final fURI authority, final Path log, final fURI boot) throws IOException {
+    /**
+     * @param parent the pid of the process the node lives no longer than ({@link MachNode#PARENT}): this one when
+     *               {@link #spawn} forks, a stand-in when a test plays the parent
+     */
+    static Process fork(final fURI authority, final Path log, final fURI boot, final long parent) throws IOException {
         final List<String> command = new ArrayList<>();
         command.add(Paths.get(System.getProperty("java.home"), "bin", "java").toString());
         // inherit only the VM flags the child cannot boot without — the parent's full arg list can carry agents
@@ -244,6 +249,7 @@ public final class PeerSpawn {
             if (arg.startsWith("--add-opens") || arg.startsWith("--add-modules")
                     || arg.startsWith("--enable-native-access") || arg.startsWith("--sun-misc-unsafe-memory-access"))
                 command.add(arg);
+        command.add("-D" + MachNode.PARENT + "=" + parent);
         command.add("-cp");
         command.add(System.getProperty("java.class.path"));
         command.add(MachNode.class.getName());
@@ -262,7 +268,7 @@ public final class PeerSpawn {
                 .start();
     }
 
-    private static void awaitReady(final Process process, final Path log, final fURI authority) {
+    static void awaitReady(final Process process, final Path log, final fURI authority) {
         final long deadline = System.currentTimeMillis() + READY_TIMEOUT_MS;
         while (System.currentTimeMillis() < deadline) {
             if (!process.isAlive())
