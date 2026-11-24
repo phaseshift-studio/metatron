@@ -249,7 +249,8 @@ public class BranchLaneTest extends AbstractMetatronTest {
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[{3}//left](move(<loop://left>).count(),count())                                       % {5,1}",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[{**}//left](move(<loop://left>).count(),count())                                      % <ERROR>",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=halves(move(<loop://left>).count(),count())                                            % <ERROR>",
-            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={0}part> => count(),<loop://right?split=part> => count())                % <ERROR>",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split={0}part(move(<loop://left>).count(),count())                                           % <ERROR>",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).count(),count())                                              % {2}3",
             "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(),<loop://right?split=part> => count())                   % {2}3",
             "{1,2,3,4,5,6}.branch?<=int{*}(<~?split={2}part> => move(<loop://left>).count(),<loop://right?split=part> => count())      % {4,2}",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}//left:9000](move(<loop://left>).count(),count())                                  % {4,2}",
@@ -270,8 +271,8 @@ public class BranchLaneTest extends AbstractMetatronTest {
 
     /**
      * AN AUTHORITY NAMES THE ONE SERVICE IT SPELLS, exactly its origin, as ?place reads one: keys at two ports of one host
-     * desugar to the bias [{2}loop://left], which names the portless lane alone, so the deal is the keys' 2:1, where a
-     * reading of the authority by its host would name both lanes, 2:2.
+     * desugar to the bias [{3}loop://left], which names the portless lane alone, so the deal is the keys' 3:1, {5,1},
+     * where a reading of the authority by its host would name both lanes, 3:3, {2}3.
      */
     @Test
     public void testAnAuthorityNamesItsOneService() {
@@ -279,12 +280,39 @@ public class BranchLaneTest extends AbstractMetatronTest {
         dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         dial("loop://left:9000", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         try {
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={2}part> => count(),"
-                    + "<loop://left:9000?split=part> => count())", "{4,2}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={3}part> => count(),"
+                    + "<loop://left:9000?split=part> => count())", "{5,1}");
         } finally {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://left:9000"));
         }
+    }
+
+    /**
+     * A DEMAND WITH NO LEAST COUNT IS REFUSED BY NAME: {@code {**}} names no share, and the refusal says so, where an
+     * unchecked read of its least count threw a NullPointerException, which an {@code <ERROR>} row cannot tell apart.
+     */
+    @Test
+    public void testAnUnboundedDemandIsRefusedByName() {
+        final BiFunction<Obj, Inst, Obj> run = (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
+        dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
+        try {
+            final Obj answer = Machine.Helper.evalAt(Machine.current(), () -> Machine.parse(
+                    "{1,2,3,4,5,6}.branch?<=int{*}&split=[{**}//left](move(<loop://left>).count(),count())").apply(noobj()));
+            AbstractMetatronTest.checkEquality(LOG, bool(true),
+                    bool(answer.stream().anyMatch(obj -> obj.isFail() && obj.toString().contains("a lane's share is one or more"))), true);
+        } finally {
+            Machine.current().network().drop(f("loop://left"));
+        }
+    }
+
+    /**
+     * A LAYOUT ITS LANES REFUSE STILL COMPILES: a split the branch cannot perform is refused where the branch runs, so
+     * the compiler, which reads a layout's lanes to leave its home lanes as written, compiles the chain as it stands.
+     */
+    @Test
+    public void testARefusedLayoutStillCompiles() {
+        AbstractMetatronTest.checkCodeRewrite(LOG, "{1,2,3}.branch?<=int{*}&split=halves(count(),count())", "start().branch()", null, true);
     }
 
     /**
@@ -377,6 +405,8 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slower?timeout=10> => plus(1))", "2");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move?timeout=10(<loop://slower>).plus(1),plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=10(<~> => sleep(second::6.0))", "1");
+            // a home key whose program starts with a timed move keeps that time on the cut that keeps it home
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => move?timeout=10(<loop://slower>).plus(1),<loop://slower?timeout=10> => plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=10> => sleep(second::6.0),<loop://slower?timeout=10> => plus(1))", "{1,2}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?<=int{*}&split=part(plus(1).move?timeout=10(<loop://slower>).plus(1))", "3");
         } finally {

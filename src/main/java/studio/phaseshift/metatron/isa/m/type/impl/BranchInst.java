@@ -151,15 +151,18 @@ public class BranchInst extends MInst {
                         ? PlaceResolver.resolve(PlaceSet.of(uri(key.qLess())), Env.snapshot()).stream().map(PlaceResolver.ResolvedPlace::authority).toList()
                         : Collections.singletonList(home(key) ? null : key.qLess());
                 // a home program that itself starts with a move or a cut would read as a lane at that place once its key
-                // is gone, so a cut that stays keeps it home, as it times a home key's program
+                // is gone, so a cut that stays keeps it home, as it times a home key's program, and it keeps the head's
+                // ?timeout when the key states none, so the lane's thread still waits as long as the head may run
                 final boolean leaves = !program.isEmpty() && (MOVE_INST_TID.equals(program.getFirst().tid().basePath())
                         || CUT_INST_TID.equals(program.getFirst().tid().basePath()));
+                final fURI stay = !leaves || null != key.q(TIMEOUT) || !program.getFirst().tid().hasQ(TIMEOUT) ? cut
+                        : CUT_INST_TID.q(TIMEOUT, program.getFirst().tid().q(TIMEOUT));
                 return places.stream().map(at -> {
                     // the hop budget the key states rides with its place
                     final fURI place = null == at || null == key.q(HOP) ? at : at.q(HOP, key.q(HOP));
                     return new Lane(place, program, share(split, place),
                             null != place ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
-                                    : null == key.q(TIMEOUT) && !leaves ? tail : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
+                                    : null == key.q(TIMEOUT) && !leaves ? tail : instB(stay, lst(uri(fURI.Singleton.f("~")), tail)));
                 });
             }).toList();
             // A BRANCH DEALS ITS LHS OR COPIES IT (Marko, 2026-11-24: mixed copy and part keys are refused, "default")

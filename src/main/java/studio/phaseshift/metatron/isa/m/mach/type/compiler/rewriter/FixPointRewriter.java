@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -141,7 +142,7 @@ public class FixPointRewriter extends AbstractRewriter {
             List<BranchInst.Lane> lanes;
             try {
                 lanes = BranchInst.isLayout(inst) && !inst.args().isRec() ? BranchInst.lanes(inst) : null;
-            } catch (final RuntimeException e) {
+            } catch (final MTronException e) {
                 lanes = null;
             }
             final List<Obj> built = new ArrayList<>(args.size());

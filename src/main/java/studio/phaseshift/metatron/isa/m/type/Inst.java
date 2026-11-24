@@ -876,7 +876,14 @@ public interface Inst extends Call {
          * nor looks inside it.
          */
         public static boolean hasRemoteLane(final Inst inst) {
-            return BRANCH_INST_TID.equals(inst.tid().basePath()) && BranchInst.lanes(inst).stream().anyMatch(lane -> !lane.home());
+            if (!BRANCH_INST_TID.equals(inst.tid().basePath()))
+                return false;
+            // a branch its lanes refuse (a split it cannot perform) is no lone home lane to inline: it refuses where it runs
+            try {
+                return BranchInst.lanes(inst).stream().anyMatch(lane -> !lane.home());
+            } catch (final MTronException e) {
+                return true;
+            }
         }
 
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {
