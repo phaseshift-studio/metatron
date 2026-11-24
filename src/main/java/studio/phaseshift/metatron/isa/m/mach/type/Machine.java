@@ -179,7 +179,7 @@ public interface Machine extends Rec, AutoCloseable {
         // must not run for an address the network does not claim — otherwise the network's subq would capture a
         // purely local `?subq` registration that belongs to the space covering it.
         final Network network = machine.network();
-        final Obj dispatched = null == name.host()
+        final Obj dispatched = !name.hasHost()
                 ? noobj()
                 : QProc.Layer.read(network, name, () -> network.read(name));
         if (!dispatched.isNoObj())
@@ -251,7 +251,7 @@ public interface Machine extends Rec, AutoCloseable {
         // the same layer as read, under the same host gate: a write the network's q-procs answer (a `?subq`
         // registration) never reaches the wire, and the write's own answer is the network's reply
         final Network network = machine.network();
-        final Obj dispatched = null == name.host()
+        final Obj dispatched = !name.hasHost()
                 ? noobj()
                 : QProc.Layer.write(network, name, obj, () -> network.write(name, obj));
         if (!dispatched.isNoObj())

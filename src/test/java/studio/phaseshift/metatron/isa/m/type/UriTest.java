@@ -243,6 +243,9 @@ public class UriTest extends AbstractAlgebraTest {
             "<http://m.com/a/b/c/>{-1}   % <http://m.com/c/b/a/>",
             "<http://m.com/>{-1}         % <http://m.com/>",
             "<test:a/b/c>{-1}            % <test:c/b/a>",
+            // an empty authority is an authority: file:/// keeps its root in front, as a host does
+            "<file:///a/b/c>{-1}         % <file:///c/b/a>",
+            "<file:///a/b/c/>{-1}        % <file:///c/b/a/>",
             // no converse: a parent step the fold keeps names no step to undo, and a span with no positive counterpart
             "<../a>.count()              % 1",
             "<../a>{-1}                  % <ERROR>",
@@ -338,6 +341,10 @@ public class UriTest extends AbstractAlgebraTest {
             "<a://b.com:123/c/d?x=1&y=2>.port(666)                     % <a://b.com:666/c/d?x=1&y=2>",
             "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>host              % <b.com>",
             "<a://b.com:123/c/d?x=1&y=2>.host(<abc.org>)               % <a://abc.org:123/c/d?x=1&y=2>",
+            // an empty authority's host is the empty uri in both views; a path with no authority has none
+            "<file:///a/b>.as(rec::T)>>host                            % <>",
+            "<file:///a/b>.host()                                      % <>",
+            "<a/b>.host()                                              % noobj",
             "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q                 % [x=>1,y=>2]",
             "{23,56}<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q          % {23,56}[x=>1,y=>2]",
             // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",

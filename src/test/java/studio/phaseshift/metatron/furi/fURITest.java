@@ -111,6 +111,67 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(fb, f(fa.subdomain()));
     }
 
+    /**
+     * AN EMPTY AUTHORITY IS AN AUTHORITY (Marko, 2026-11-24): {@code file:///a/b/c} is the scheme file, an empty
+     * authority and the path /a/b/c (RFC 3986), not the path ///a/b/c. The authority prints its {@code //}, reads back
+     * as itself, and names no host, so the uri is prefixed and addressed to no machine. A root-only path drops its
+     * {@code /} under an authority, empty or named alike. Each row: the uri % its host % its path % how it prints.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', nullValues = "null", value = {
+            "file:///a/b/c                % ''    % /a/b/c               % file:///a/b/c",
+            "file:///a/b/c/               % ''    % /a/b/c/              % file:///a/b/c/",
+            "unix:///var/run/docker.sock  % ''    % /var/run/docker.sock % unix:///var/run/docker.sock",
+            "file:///a?x=1                % ''    % /a                   % file:///a?x=1",
+            "file:///${p}                 % ''    % /${p}                % file:///${p}",
+            "file://                      % ''    % ''                   % file://",
+            "file:///                     % ''    % ''                   % file://",
+            "http://m.com/                % m.com % ''                   % http://m.com",
+    })
+    public void testAnEmptyAuthorityIsAnAuthority(final String furi, final String host, final String path, final String printed) {
+        final fURI uri = f(furi);
+        assertEquals(host, uri.host());
+        assertEquals(!host.isEmpty(), uri.hasHost(), "only a named host is a host");
+        assertEquals(host.isEmpty(), uri.isPrefixed(), "a scheme and no named host");
+        assertEquals(path, uri.pathString());
+        assertEquals(printed, uri.toString());
+        assertEquals(uri, f(printed), "it reads back as itself");
+    }
+
+    /**
+     * ONLY A / OR THE END AFTER A SCHEME'S {@code ://} OPENS AN EMPTY AUTHORITY: every other spelling keeps the reading
+     * it had, so a socket origin with no host ({@code ws://:8555}) is no origin, and a schemeless {@code ///} is a path.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "file://?x=1",
+            "file://:80/a",
+            "ws://:8555",
+            "file://[a,b]",
+            "///a/b/c",
+            "////",
+    })
+    public void testOnlyASlashOpensAnEmptyAuthority(final String furi) {
+        assertNull(f(furi).host());
+    }
+
+    /**
+     * AN EMPTY AUTHORITY UNDER THE OPERATIONS: its path stays absolute when extended or prepended (a lost root would
+     * print file://a, a named host), it localizes to its path, it has no spelling without its scheme, and it names no
+     * host, so it matches a pattern with none, as fs:///etc/hosts must reach the fs:# mounts.
+     */
+    @Test
+    public void anEmptyAuthorityUnderTheOperations() {
+        assertEquals("file:///a", f("file://").extend("a").toString());
+        assertEquals("file:///x/a", f("file:///a").prepend("x").toString());
+        assertEquals(f("/a/b/c"), f("file:///a/b/c").localize());
+        assertEquals(f("/a"), f("file:///a").scheme(null));
+        assertTrue(f("fs:///etc/hosts").test(f("fs:#")), "an empty authority matches a pattern with no host");
+        assertTrue(f("file:///a").test(f("file:#")), "an empty authority matches a pattern with no host");
+        assertFalse(f("file://box/a").test(f("file:#")), "a named host does not");
+        assertEquals("file://box/a/b/c", f("file:///a/b/c").host("box").toString());
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "http://www.abc.com:123/a/b/c       | http/www/abc/com/123/a/b/c",

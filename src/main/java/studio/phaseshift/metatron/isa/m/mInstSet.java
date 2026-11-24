@@ -2111,7 +2111,7 @@ public class mInstSet extends AbstractInstSet {
      */
     private static String placeName(final Obj key) {
         final fURI written = key.uriValue().resolve().qLess();
-        return null == written.host() ? "//" + LOCAL : Network.Helper.placeName(Machine.current().network(), written);
+        return !written.hasHost() ? "//" + LOCAL : Network.Helper.placeName(Machine.current().network(), written);
     }
 
     private static Obj machineIdentity() {

@@ -239,7 +239,7 @@ public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
      * the authority standing at it. An address with no host is nobody's wire and declines untouched.
      */
     private Obj reach(final fURI vid, final Supplier<Obj> authority, final Function<Listener, Obj> local) {
-        if (null == vid.host())
+        if (!vid.hasHost())
             return authority.get();
         final Listener listener = Network.Helper.listenerFor(vid.origin());
         // A QUERY THE SOCKET DECLARES IS THE SOCKET'S TO ANSWER, before any peer is asked: *<origin>/#?analq asks THIS

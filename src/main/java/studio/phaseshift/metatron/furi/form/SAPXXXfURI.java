@@ -30,7 +30,9 @@ public class SAPXXXfURI extends SXPXXXfURI {
 
     public SAPXXXfURI(final String scheme, final String host, final int port, final List<String> path) {
         super(scheme, path);
-        this.host = null != host && host.isEmpty() ? null : host;
+        // an empty host is kept under a scheme: it is the empty authority of file:///a/b/c, which prints its // and
+        // names no machine. With no scheme it has no spelling (///a reads as a path), so it is no host
+        this.host = null != host && host.isEmpty() && null == scheme ? null : host;
         this.port = null == this.host ? -1 : port;
     }
 

@@ -473,7 +473,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // PRESENCE IS ADDRESSED BY KEY. A wire address WITH a route names REACH (one peer surface); a socket is named
         // by its key ({@code ws/localhost/8555}), which is exactly what {@code unlisten} and a listener's own close
         // pass. A bare origin is REACH too: it hangs up the service's dials and leaves the socket serving.
-        final java.util.function.Predicate<Rel> namedListener = kv -> null == address.host() && named.test(kv);
+        final java.util.function.Predicate<Rel> namedListener = kv -> !address.hasHost() && named.test(kv);
         // EACH MEMBER LEAVES THROUGH THE LEVEL'S OWN DOOR, at its key's path, so a member's deletion is one act however
         // it is asked for: the entry leaves first and what it held is released after (Helper.release) -- clear, then
         // close, since closing a link is its owner's hang-up and a hang-up retracts, which would come back here.
@@ -559,7 +559,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // to local memory instead of the peer (measured: the loop peer's reads fell through). An
         // undeclared host still answers noobj below, so index-mounted web spaces keep catching their
         // own patterns on the fall-through exactly as before.
-        if (null == vid.host())
+        if (!vid.hasHost())
             return noobj();
         final fURI origin = vid.path(List.of());
         // DISPATCH LADDER: the peer's native `from` override first (a read-only client), then `eval` (the lowering —
@@ -585,7 +585,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
     @Override
     default Obj write(final fURI vid, final Obj obj) {
         // host-gated, exactly as read -- see the note there; a fail is not shippable data, so it stays local
-        if (null == vid.host() || obj.isFail())
+        if (!vid.hasHost() || obj.isFail())
             return noobj();
         final fURI origin = vid.origin();
         final Obj target = this.overrideOf(origin, TO_INST_TID);
@@ -914,7 +914,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
          * route that surface, a bare origin every surface of the service.
          */
         static java.util.function.Predicate<Rel> naming(final fURI address) {
-            if (null == address.host())
+            if (!address.hasHost())
                 return kv -> kv.first().uriValue().equals(address);
             final boolean surface = address.path().stream().anyMatch(segment -> !segment.isEmpty());
             if (surface) {
@@ -1310,7 +1310,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             if (!spelled.isUri())
                 return resolved;
             final fURI address = Machine.Helper.align(machine, spelled.uriValue());
-            if (null == address.host())
+            if (!address.hasHost())
                 return resolved;
             final fURI origin = address.path(List.of());
             final Obj override = reach(machine, origin, base);

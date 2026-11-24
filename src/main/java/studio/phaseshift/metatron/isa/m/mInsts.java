@@ -714,7 +714,7 @@ public final class mInsts {
                 InstBuilder.build().tid(HOST_INST_TID, "the host of the lhs uri")
                         .dom(URI_TID, "the uri to read").rng(URI_TID.maybe(), "the host of the lhs uri")
                         .argLst()
-                        .body((lhs, inst) -> lhs.uriValue().hasHost() ? uri(lhs.uriValue().host()) : noobj())
+                        .body((lhs, inst) -> null != lhs.uriValue().host() ? uri(lhs.uriValue().host()) : noobj())
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(HOST_INST_TID, "set the host of the lhs uri")

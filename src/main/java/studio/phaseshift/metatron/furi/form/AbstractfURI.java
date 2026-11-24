@@ -603,7 +603,8 @@ public abstract class AbstractfURI implements fURI {
             return false;
         if (Objects.equals(rhs.host(), "#"))
             return true;
-        if (!Objects.equals(this.host(), rhs.host()) && !Objects.equals(rhs.host(), "+"))
+        // an empty authority names no host, so it matches a pattern with none (fs:///etc/hosts reaches fs:#), and back
+        if (!Objects.equals(this.hasHost() ? this.host() : null, rhs.hasHost() ? rhs.host() : null) && !Objects.equals(rhs.host(), "+"))
             return false;
         if (!(rhs.port() == -1) || !Objects.equals(rhs.host(), "+"))
             if (this.port() != -1 && (rhs.port() == -1 || (rhs.port() != 0 && this.port() != rhs.port())))
@@ -645,7 +646,8 @@ public abstract class AbstractfURI implements fURI {
             return this;
         final List<String> newPath = new ArrayList<>();
         final List<String> prefix = Arrays.asList(segment.split("/"));
-        if ((segment.startsWith("/") && !this.pathString().startsWith("/")) || this.hasHost())
+        // an authority's path is absolute, an empty one's too (file:///a prepended with x is file:///x/a)
+        if ((segment.startsWith("/") && !this.pathString().startsWith("/")) || null != this.host())
             newPath.add("");
         newPath.addAll(prefix);
         //   if (segment.endsWith("/"))
@@ -678,7 +680,7 @@ public abstract class AbstractfURI implements fURI {
             f = fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.d(), this.poly(), qs, this.templates());
         } else
             f = fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.d(), this.poly(), this.qMap(), this.templates());
-        return f.hasHost() ? f.asAbsolute() : f;
+        return null != f.host() ? f.asAbsolute() : f;
     }
 
     @Override

@@ -66,8 +66,8 @@ have actually cost someone an afternoon.
 | `tid`           | the type constraining it (the same value's tid is `int`)                                               |
 | `origin`        | a service's full address: `scheme://host:port`. The unit peers are keyed by and dialed at              |
 | `authority`     | `host:port` — an origin without the scheme. `hasAuthority()` demands **both** host and port            |
-| `host`          | the host alone. The wire's gate: an address with a host is *someone else's to answer* (`Network.read`) |
-| `isPrefixed()`  | scheme, no host — the vocabulary's slot (`math:cos`)                                                   |
+| `host`          | the host alone. The wire's gate: an address with a host is *someone else's to answer* (`Network.read`). An empty authority (`file:///a`, printed with its `//`) has none |
+| `isPrefixed()`  | scheme, no host — the vocabulary's slot (`math:cos`), and an empty authority (`file:///a`)              |
 | `isAddressed()` | just `hasHost()` — says nothing about ports or schemes                                                 |
 | `isHosted()`    | host, **no scheme, no port** — the network name slot (`//ginger/a`)                                    |
 | `noobj`         | the empty answer. A read that matches nothing returns it; a write of it is the universal close         |

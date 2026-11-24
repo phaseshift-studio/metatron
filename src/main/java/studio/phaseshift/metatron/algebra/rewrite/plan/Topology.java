@@ -294,7 +294,7 @@ public final class Topology {
      */
     private static String place(final fURI key, final String home, final String host) {
         final fURI written = key.resolve().qLess();
-        if (null == written.host())
+        if (!written.hasHost())
             return home;
         final fURI place = null != host && written.isLoopbackHost() ? written.host(host) : written;
         return Network.Helper.placeName(Machine.current().network(), place);
@@ -392,7 +392,7 @@ public final class Topology {
             if (theirs.get(l).isRec()) {
                 // the lane's machine planned its subtree, so a loopback address in it is on that machine's host
                 final fURI at = addresses.get(l).isUri() ? addresses.get(l).uriValue().resolve().qLess() : null;
-                final String inner = null == at || null == at.host() || at.isLoopbackHost() ? host : at.host();
+                final String inner = null == at || !at.hasHost() || at.isLoopbackHost() ? host : at.host();
                 final Block child = block(theirs.get(l).asRec().at(uri(FLOW)).asLst(), places.get(l), inner);
                 blocks.add(new Block(IntStream.range(0, child.rows().size())
                         .mapToObj(r -> (r == child.main() ? entry : indent) + child.rows().get(r)).toList(),

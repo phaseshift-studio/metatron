@@ -325,7 +325,7 @@ public final class PlaceResolver {
         // the place its origin names. An unbound name is answered unchanged, and then matches nothing.
         final fURI aligned = Machine.Helper.align(Machine.current(), address);
         final String host = aligned.host();
-        if (null == host)
+        if (!aligned.hasHost())
             return List.of();
         // the peer map (realized): the authorities this machine actually dialed to that host, if it serves the route.
         // A DIALED PEER, NOT EVERY PEER — the same `host` marker dialed() keeps: an accepted inbound session serves

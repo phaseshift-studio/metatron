@@ -285,7 +285,7 @@ public class BranchInst extends MInst {
                     case ANY -> true;
                     case ADDRESS, AUTHORITY -> {
                         final fURI named = Machine.Helper.align(Machine.current(), designator.uri());
-                        yield null != at && null != named.host() && named.host().equals(at.host()) && Network.Helper.names(named, at);
+                        yield null != at && named.hasHost() && named.host().equals(at.host()) && Network.Helper.names(named, at);
                     }
                 }).toList())
                 .filter(named -> !named.isEmpty())

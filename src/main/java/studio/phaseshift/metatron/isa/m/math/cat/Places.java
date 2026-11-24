@@ -95,7 +95,7 @@ public final class Places {
      * transport ({@link Network.Helper#names}).
      */
     private static Lst authorities(final fURI machine) {
-        if (null == machine || null == machine.host())
+        if (null == machine || !machine.hasHost())
             return lst();
         final String host = machine.host();
         final Network network = Machine.current().network();
@@ -138,7 +138,7 @@ public final class Places {
         if (authorities.isEmpty())
             return noobj();
         final String host = authorities.getFirst().host();
-        if (null == host)
+        if (!authorities.getFirst().hasHost())
             return noobj();
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(OBJ), uri("//" + host));

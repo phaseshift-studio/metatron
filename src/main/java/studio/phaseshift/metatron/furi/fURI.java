@@ -468,8 +468,14 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     fURI host(final String host);
 
+    /**
+     * Whether the furi names a host. An empty authority ({@code file:///a/b/c}) is an authority with no host: its
+     * {@link #host()} is the empty string, which this answers false, so the uri is addressed to no machine.
+     *
+     * @return whether the host is present and not empty
+     */
     default boolean hasHost() {
-        return this.host() != null;
+        return null != this.host() && !this.host().isEmpty();
     }
 
     /**
@@ -1397,9 +1403,10 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
          * at zero, and a negative n the converse taken n times. The converse reverses the path alone and reads its
          * value, not its spelling: each term of the uri's branches, its dot segments folded ({@code a/x/../b/c}
          * reverses as {@code a/b/c} does, and so does a branch's {@code {x/../b,c}}), reversed, and the terms summed
-         * again ({@code <a/{b/c,d}>{-1}} is {@code {c/b,d}/a}). A scheme and a host stay where they are, so a uri with
-         * a host keeps its root in front ({@code http://m.com/a/b/c} and {@code http://m.com/c/b/a} are each other's
-         * converse), while a path with no host moves its root to the far end ({@code /a/b/c} is {@code c/b/a/}). A
+         * again ({@code <a/{b/c,d}>{-1}} is {@code {c/b,d}/a}). A scheme and an authority stay where they are, so a uri
+         * with an authority keeps its root in front ({@code http://m.com/a/b/c} and {@code http://m.com/c/b/a} are each
+         * other's converse, as are {@code file:///a/b/c} and {@code file:///c/b/a}, whose authority is empty), while a
+         * path with no authority moves its root to the far end ({@code /a/b/c} is {@code c/b/a/}). A
          * parent step the fold keeps ({@code ../a}) has no converse, as it does not name the step it undoes. The
          * converse is no inverse: {@code <a/b>} followed by {@code <a/b>{-1}} is {@code a/b/b/a}.
          */
@@ -1411,7 +1418,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
             final fURI base = n > 0 ? path : sum(path.resolve().branches().map(fURI::resolve).map(term -> {
                 if (term.path().contains(".."))
                     throw MTronException.of("%s has no converse: its parent step (..) does not name the step it undoes", term);
-                if (!term.hasHost())
+                if (null == term.host())
                     return term.path(term.path().reversed());
                 return term.segments().isEmpty() ? term : term.segments(term.segments().reversed());
             }));
@@ -1567,10 +1574,15 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // path reads plain text in possessive runs: the engine recurses once per loop iteration, so one character per
         // iteration overflows the stack on a long branch (a stream of overloads sums to one element per signature).
         private static final String SPAN_PREFIX = "(\\{(?<span>" + COEFFICIENT_BODY + ")}(?=/|[^/{}?&\\[\\]:]+(?:$|[\\[{?])))?";
+        // AN EMPTY AUTHORITY IS AN AUTHORITY (Marko, 2026-11-24): file:///a/b/c is the scheme file, an empty authority and
+        // the path /a/b/c (RFC 3986), so the host reads empty, not the path ///a/b/c. It reads empty only between a
+        // scheme's :// and a / or the end (the lookaround), so a schemeless //// stays a path, and ws://:8555,
+        // file://?x and file://[a,b] keep their readings. An empty host names no machine: hasHost() is false, and the
+        // uri still prints its //
         public static final Pattern FURI_PATTERN = Pattern.compile(
                 SPAN_PREFIX +
                         "((?<scheme>(?!\\{)[^:/.]+):)?" +
-                        "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
+                        "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+|(?<=://)(?=/|$))(:(?<port>\\d+))?))?" +
                         "(?<path>(?:[^?\\[{&]++|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]++|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
                         "(\\[(?<poly>[^]]+)])?" +
                         "(\\{(?<coefficient>" + COEFFICIENT_BODY + ")})?" +
@@ -1588,7 +1600,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         public static final Pattern FURI_TEMPLATE_PATTERN = Pattern.compile(
                 SPAN_PREFIX +
                         "((?<scheme>\\$\\{[^}]+}|[^:/.]+):)?" +
-                        "(//((?<host>\\$\\{[^}]+}|" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
+                        "(//((?<host>\\$\\{[^}]+}|" + IP_LITERAL + "|[^?\\[&<>:/]+|(?<=://)(?=/|$))(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
                         "(?<path>([^?\\[&{]|\\$\\{[^}]+})+)?" +
                         "(\\[(?<poly>[^]]+)])?" +
                         "((?<!\\$)\\{(?<coefficient>[^}\\]]+)})?" +

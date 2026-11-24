@@ -217,7 +217,7 @@ public class catInstSet extends AbstractInstSet {
                     // one is the `//host:port` its cut's target names. The port is the place: two services on one host
                     // are two places, not one place twice
                     final fURI place = lane.place();
-                    lanes.merge(null == place || null == place.host() ? uri(LOCAL) : uri(f().host(place.host()).port(place.port())),
+                    lanes.merge(null == place || !place.hasHost() ? uri(LOCAL) : uri(f().host(place.host()).port(place.port())),
                             0 < lane.weight() ? lane.weight() : 1L, Long::sum);
                 }));
         if (lanes.isEmpty())
