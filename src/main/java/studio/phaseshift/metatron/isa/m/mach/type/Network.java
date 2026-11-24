@@ -1082,6 +1082,17 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         }
 
         /**
+         * WHETHER A MACHINE ADDRESS NAMES A TRANSPORT OF ITS HOST. An address names a host, and every transport that
+         * reaches the host is that place: the port is not a selector, so {@code //ginger:9999} is ginger. An address
+         * with a scheme and a port is one service instead, and an aligned alias is exactly that: harvest spawns its
+         * peers on one host and names each in the prefix table ({@code //0 => ws://localhost:1111}), where the host
+         * alone would name every one of them. An alias whose row states no port names the host.
+         */
+        public static boolean names(final fURI address, final fURI transport) {
+            return !address.hasScheme() || !address.hasPort() || sameService(address, transport);
+        }
+
+        /**
          * Does a WILDCARD origin cover a service — {@code http://#} every http origin, {@code http://+:8777} any
          * host's 8777? A literal origin covers nothing: it is {@link #sameService}'s to match.
          */

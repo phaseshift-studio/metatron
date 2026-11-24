@@ -309,8 +309,8 @@ public final class PlaceResolver {
      * tables for that host, deduped by transport and sorted (the canonical order {@code Places} gives an authority
      * set). The <em>host</em> is the selector: a path in the designator names no frame and the port names no socket
      * ({@code //ginger:9999} resolves through ginger's transports), so a place is an authority, never a frame path.
-     * An alias is the exception: when the prefix table maps it to an authority that states a port
-     * ({@code //0 => ws://localhost:1111}), the place is that one transport.
+     * An alias is the exception ({@link Network.Helper#names}): when the prefix table maps it to an authority that
+     * states a port ({@code //0 => ws://localhost:1111}), the place is that one transport.
      * <p>
      * The two tables are gated by the half of liveness each one can answer: a dialed peer by {@link PlaceResolver#serves}
      * (there is a client to ask), a roster row by {@link Signatures#resolves} (there is none — the declared half of the
@@ -323,11 +323,6 @@ public final class PlaceResolver {
         final String host = aligned.host();
         if (null == host)
             return List.of();
-        // AN ALIAS WHOSE ROW STATES A PORT NAMES THAT TRANSPORT. harvest spawns its peers on one host and names each in
-        // the prefix table (//0 => ws://localhost:1111, //1 => ws://localhost:1112), so the host alone would hand //0
-        // every peer on it. Only the table's port selects: alignment takes a written //host:9999 literally, so that
-        // spelling is still the host.
-        final fURI named = aligned.equals(address) || !aligned.hasPort() ? null : origin(aligned);
         final List<fURI> transports = new ArrayList<>();
         // the roster (known): the addresses discovery announced for the host, each admitted only if it can be dialed
         env.machines().elements()
@@ -353,7 +348,8 @@ public final class PlaceResolver {
                 .forEach(transports::add);
         return transports.stream()
                 .map(fURI::basePath)
-                .filter(transport -> null == named || named.equals(origin(transport)))
+                // an aligned alias whose row states a port is that one transport, the rule Places reads too
+                .filter(transport -> Network.Helper.names(aligned, transport))
                 .distinct()
                 .sorted(Comparator.comparing(fURI::toString))
                 .toList();

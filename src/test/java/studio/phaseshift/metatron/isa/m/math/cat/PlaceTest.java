@@ -125,6 +125,26 @@ public class PlaceTest extends AbstractInstSetTest {
     }
 
     /**
+     * An alias whose prefix row states a port is that one transport, while the host names every transport on it.
+     * harvest spawns its peers on one host and names each in the prefix table ({@code //0 => ws://localhost:1111}), so
+     * {@code place(<//0>)} is one peer, as {@code ?place=[//0]} is (PlaceResolver reads the same rule).
+     */
+    @Test
+    public void testAnAliasWithAPortIsOneTransport() {
+        Network.Helper.connect(Machine.current().network(), f("loop://pair:1111"));
+        Network.Helper.connect(Machine.current().network(), f("loop://pair:1112"));
+        Machine.current().network().registerPrefix(f("//p0"), f("loop://pair:1111"));
+        try {
+            final Place aliased = (Place) Places.place(uri("//p0"));
+            assertEquals(List.of(f("loop://pair:1111")), aliased.authorities());
+            assertEquals(1, aliased.linkedTo().stream().count(), "the alias's one dial is its edge: " + aliased.linkedTo());
+            assertEquals(List.of(f("loop://pair:1111"), f("loop://pair:1112")), ((Place) Places.place(uri("//pair"))).authorities());
+        } finally {
+            Machine.current().network().unregisterPrefix(f("//p0"));
+        }
+    }
+
+    /**
      * An unknown host (no roster row, no dial) is not a place.
      */
     @Test

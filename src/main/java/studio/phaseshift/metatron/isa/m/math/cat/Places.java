@@ -90,7 +90,8 @@ public final class Places {
      * The transports that reach a machine — the union of the two tables: the roster's {@code machine} row (the
      * addresses discovery announced, if any) and the peer map (the authorities this machine actually dialed to that
      * host). A machine known only by a dial is still a place: the dial *is* one of its transports. Deduped by
-     * {@link fURI#basePath()} and sorted — a transport set has no order.
+     * {@link fURI#basePath()} and sorted — a transport set has no order. An aligned alias whose prefix row states a
+     * port keeps only that transport ({@link Network.Helper#names}).
      */
     private static Lst authorities(final fURI machine) {
         if (null == machine || null == machine.host())
@@ -112,6 +113,8 @@ public final class Places {
                 .forEach(transports::add);
         final List<Obj> uris = transports.stream()
                 .map(fURI::basePath)
+                // an aligned alias whose row states a port is that one transport, the rule PlaceResolver reads too
+                .filter(transport -> Network.Helper.names(machine, transport))
                 .distinct()
                 .sorted(Comparator.comparing(fURI::toString))
                 .map(a -> (Obj) uri(a))

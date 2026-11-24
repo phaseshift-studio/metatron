@@ -212,9 +212,9 @@ public class PlaceResolverTest extends AbstractMetatronTest {
      * ({@code //0 => ws://localhost:1111}, {@code //1 => ws://localhost:1112}), so reading only the aligned host would
      * hand {@code //0} every peer on it. A prefix row that states a port names that transport; a written
      * {@code //host:port} is taken literally by the alignment, so it stays the host (the port is not a selector there),
-     * and an alias whose transport is down names nothing. Each row: the place set % its resolution, with {@code //p0},
-     * {@code //p1} and {@code //pdown} bound in the current machine's prefix table ({@code ~/network/prefix}) for the
-     * row.
+     * an alias whose row states no port names the host, and an alias whose transport is down names nothing. Each row:
+     * the place set % its resolution, with {@code //p0}, {@code //p1}, {@code //pdown} and {@code //pq} bound in the
+     * current machine's prefix table ({@code ~/network/prefix}) for the row.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -222,11 +222,14 @@ public class PlaceResolverTest extends AbstractMetatronTest {
             "//p1              % loop://pair:1112{1}",
             "'[//p0,//p1]'     % loop://pair:1111{1}, loop://pair:1112{1}",
             "//pdown           % ",
+            "//pq              % loop://pair:1111{1}, loop://pair:1112{1}",
             "//pair            % loop://pair:1111{1}, loop://pair:1112{1}",
             "//pair:1111       % loop://pair:1111{1}, loop://pair:1112{1}",
     }, delimiter = '%')
     public void testAnAliasNamesItsAuthority(final String written, final String expected) {
-        final Map<fURI, fURI> aliases = Map.of(f("//p0"), PAIR_0, f("//p1"), PAIR_1, f("//pdown"), PAIR_DOWN);
+        // //pq's row states no port: it names the host, so every transport on it is the place
+        final Map<fURI, fURI> aliases = Map.of(f("//p0"), PAIR_0, f("//p1"), PAIR_1, f("//pdown"), PAIR_DOWN,
+                f("//pq"), f("loop://pair"));
         aliases.forEach(Machine.current().network()::registerPrefix);
         try {
             assertEquals(null == expected ? "" : expected.trim(),
