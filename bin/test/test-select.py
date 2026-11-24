@@ -187,6 +187,8 @@ class SyntheticHarborTest(unittest.TestCase):
         self.assertEqual(selected(r.stdout), {'TideSpaceTest', 'TideStringTest', 'HarborBootTest'})
         self.assertIn('boot files that use them: boot/harbor.boot.mtron', r.stderr)
         self.assertIn('  harbor.boot.mtron: HarborBootTest\n', r.stderr)  # the boot file names itself: not a user
+        # a file user's label: the other producer of "(followed)", beside a helper class's
+        self.assertIn('  tidespace: TideStringTest, boot/harbor.boot.mtron (followed)\n', r.stderr)
         self.assertEqual(selected(self.select('Beacon').stdout) & {'TideStringTest'}, set())  # PascalCase: no spelling
 
     def test_an_mtron_file_is_searched_by_the_names_it_defines(self):
@@ -227,9 +229,13 @@ class SyntheticHarborTest(unittest.TestCase):
         self.assertIn('WickTest <- Wick <- Lantern <- Beacon', r.stderr)
         self.assertIn('TrenchTest <- AbstractHarborTest <- Beacon', r.stderr)
         self.assertNotIn('wide radius', r.stderr)
+        first = ', '.join(f'Gull{k:02d}Test' for k in range(12))  # a trail line shows a name's first 12 users
         for k in range(MOST_CLASSES + 1):
             (self.repo / TEST_JAVA / f'Gull{k:02d}Test.java').write_text(
                 f'class Gull{k:02d}Test {{ Gull gull; @Test void t() {{}} }}')
+            if k in (11, 12):  # where the cut starts: 12 users show whole, a 13th is counted
+                tail = ' and 1 more' if k == 12 else ''
+                self.assertIn(f'  Gull: {first}{tail}\n', self.select('Gull').stderr)
             if k == MOST_CLASSES - 1:  # the limit itself is not wide
                 r = self.select('Gull')
                 self.assertEqual(len(selected(r.stdout)), MOST_CLASSES)
@@ -237,6 +243,7 @@ class SyntheticHarborTest(unittest.TestCase):
         r = self.select('Gull')
         self.assertEqual(len(selected(r.stdout)), MOST_CLASSES + 1)
         self.assertIn(f'{MOST_CLASSES + 1} test classes: a wide radius', r.stderr)
+        self.assertIn(f'  Gull: {first} and {MOST_CLASSES + 1 - 12} more\n', r.stderr)
 
 
 class RecordedIncidentsTest(unittest.TestCase):
