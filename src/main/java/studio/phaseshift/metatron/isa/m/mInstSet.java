@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Bsp;
-import studio.phaseshift.metatron.algebra.rewrite.plan.Env;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Topology;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -195,10 +194,6 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REVERSE_INST_TID = M_ISA_INST_TID.extend("reverse");
     public static final fURI CLOSE_INST_TID = M_ISA_INST_TID.extend("close");
     public static final fURI REPEAT_INST_TID = M_ISA_INST_TID.extend("repeat");
-    /**
-     * Every database instset's rewrites, {@code /m/db/<kind>/inst/rewrite}: the distribution rules run after them all.
-     */
-    private static final String DB_REWRITES = "[/m/db/+/inst/rewrite]";
     public static final fURI LOOP_INST_TID = M_ISA_INST_TID.extend("loop");
     public static final fURI PATH_INST_TID = M_ISA_INST_TID.extend("path");
     public static final fURI AT_INST_TID = M_ISA_INST_TID.extend("at");
@@ -1631,7 +1626,9 @@ public class mInstSet extends AbstractInstSet {
                         // THE DISTRIBUTION RULES ARE /m's (Marko, 2026-11-24), as every local rule has been since
                         // 2026-11-12: a peer that never imported /m/math/cat had no law_shard, so a lane it was sent
                         // with hop budget left ran flat and the tree never branched. Dialing a peer is the opt-in
-                        // (peers are explicit), so a machine that dials nothing pays nothing. Both run after every
+                        // (peers are explicit): a machine that dials nothing and states no place set pays one look at
+                        // its peer map for law_shard, and one scan for a whole-frontier repeat for law_bsp, before
+                        // either takes a snapshot of its network. Both run after every
                         // database pushdown (?pre=[/m/db/+/inst/rewrite]: a fold pushed into its store is no fold to
                         // deal) and, in /m's own rank, after the local laws (0) and before the capture rules (1000).
                         //
@@ -1669,11 +1666,13 @@ public class mInstSet extends AbstractInstSet {
                         // never the roster
                         docWrap(InstSet.Helper.rewriter(
                                         M_ISA_REWRITE_TID.extend("law_bsp").q(PRE, DB_REWRITES).q(ZINDEX, 500),
-                                        code -> Bsp.apply(code, Env.snapshot())),
+                                        code -> Bsp.apply(code)),
                                 "the superstep: a whole-frontier repeat (repeat?<=A{*}) whose code is pure and floatable deals its frontier over the dialed peers every pass -- \\(\\mathrm{repeat}^{\\{*\\}}(f) \\leadsto \\mathrm{repeat}^{\\{*\\}}(\\mathrm{branch}^{\\{*\\}}_{\\mathrm{part}}(p_1 \\Rightarrow f, \\ldots, p_n \\Rightarrow f))\\): the loop stays home and each pass is a branch that parts the frontier over the peers (lock-step BSP)"),
                         docWrap(InstSet.Helper.rewriter(
                                         M_ISA_REWRITE_TID.extend("law_shard").q(PRE, DB_REWRITES).q(ZINDEX, 500),
-                                        code -> PlanInterpreter.lower(PlanInterpreter.SHARD_PLAN, code)),
+                                        code -> Machine.current().network().peers().isEmpty()
+                                                && code.insts().stream().noneMatch(inst -> inst.tid().hasQ(PLACE))
+                                                ? code : PlanInterpreter.lower(PlanInterpreter.SHARD_PLAN, code)),
                                 "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the dialed peers, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\), \\(\\mathrm{group}([k \\Rightarrow h])\\) pointwise through \\(\\Sigma\\) then \\(\\mathrm{combiner}(h)\\) per key, and \\(\\mathrm{mean}\\) through itself after its lift \\(\\ell\\), each lane answering its mean weighted by its count -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto \\mathrm{branch}(a \\Rightarrow \\{1,3\\}.f.\\mathrm{count},\\ b \\Rightarrow \\{2\\}.f.\\mathrm{count}).\\Sigma\\)"))
 
                 /*uri(SUGAR), lst(sugars().stream()
@@ -1813,6 +1812,12 @@ public class mInstSet extends AbstractInstSet {
      */
     private static final fURI INT_CMP_TID = GT_INST_TID.plus(LT_INST_TID).plus(GTE_INST_TID)
             .plus(LTE_INST_TID).plus(EQ_INST_TID).plus(NEQ_INST_TID);
+
+    /**
+     * Every database instset's rewrites, {@code /m/db/+/inst/rewrite}: the distribution rules run after them all, so
+     * their {@code ?pre} is this one family, written as the {@code [{+}uri::T]} it reads back as.
+     */
+    private static final List<fURI> DB_REWRITES = List.of(DB_ISA_TID.extend("+").extend(INST).extend(REWRITE));
 
     /**
      * Lift a repeat's until/emit predicate out of its filter wrapper when it is {@code is(cmp(int))} (or

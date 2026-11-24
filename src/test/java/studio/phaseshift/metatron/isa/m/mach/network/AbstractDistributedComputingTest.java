@@ -140,8 +140,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>The cluster is a small DIAL GRAPH, not a star, because a tree follows it (row E): this machine dials peers 1 and 2,
  * and they dial each other and peer 3, which dials no one. A place handed a lane with budget left re-plans it over the
  * peers IT dialed, so peers 1 and 2 are interior nodes wherever a budget of two or more lands them, and peer 3 is a leaf
- * whatever it is handed. Every peer mounts the category, or law_shard would not be in its rewrite pool. A row that
- * states no budget plans one level (the star), so every lane it ships is a leaf.
+ * whatever it is handed. No peer mounts the category: law_shard is /m's, so a bare peer re-plans what it is handed,
+ * and the tree rows prove it. A row that states no budget plans one level (the star), so every lane it ships is a
+ * leaf.
  *
  * <p>Type checking is on for this suite, the boot default (every check but code_resolve). A planned branch states what
  * its lanes answer, the contract of the cut or of the run's last instruction once per lane, in generics and never
@@ -184,9 +185,8 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
-        // every peer mounts the category too: a lane with budget left is re-planned where it lands only if law_shard is
-        // in that machine's rewrite pool
-        cluster = PeerCluster.of(3).seed("import(/m/math)", "import(/m/math/cat)").start();
+        // no peer mounts the category: law_shard is /m's, so a lane with budget left is re-planned wherever it lands
+        cluster = PeerCluster.of(3).seed("import(/m/math)").start();
         // THE DIAL GRAPH THE TREE FOLLOWS (row E): peers 1 and 2 dial each other and peer 3, which dials no one. A dial
         // is construction, so it happens THERE: a peer is sent the client rec as a value, and constructing it there
         // dials from that peer and indexes the client as its own. Code naming the client type does not travel (this

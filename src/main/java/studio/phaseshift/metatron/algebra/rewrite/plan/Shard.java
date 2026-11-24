@@ -35,6 +35,9 @@ import java.util.stream.IntStream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MOVE_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.POP_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PUSH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.ROOT_MACHINE_VID;
 import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
@@ -86,6 +89,26 @@ public final class Shard {
     }
 
     /**
+     * WHERE THE CHAIN LEAVES THE FRAME BEING COMPILED: the index of its first {@code push}, {@code pop} or {@code move}
+     * that hands the rest to another machine, or -1 when it never does. The one move that stays is {@code move(</.>)}
+     * compiled at the root: the re-home a cut's payload opens with on arrival ({@code start(lhs).move(</.>).<tail>},
+     * machInstSet's cut), which lands where it already is, so its tail is that machine's to plan. Every other move,
+     * {@code <..>} at the root included, is read as written and leaves.
+     */
+    public static int departure(final List<Inst> insts, final Env env) {
+        for (int i = 0; i < insts.size(); i++) {
+            final Inst inst = insts.get(i);
+            final fURI op = inst.tid().basePath();
+            if (PUSH_INST_TID.equals(op) || POP_INST_TID.equals(op))
+                return i;
+            if (MOVE_INST_TID.equals(op)
+                    && !(env.root() && inst.arg(0).isUri() && ROOT_MACHINE_VID.equals(inst.arg(0).uriValue())))
+                return i;
+        }
+        return -1;
+    }
+
+    /**
      * The one body (§12.1): {@code apply(plan, env) = locate → resolve → emit}, over one immutable {@link Env}
      * snapshot — nothing inside reads the machine. The chain is walked cut by cut, and each cut's run is emitted
      * ({@link #emit}) or left as written.
@@ -97,20 +120,19 @@ public final class Shard {
         // layout holds nothing left to plan.
         if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
             return code;
-        // A MOVE HANDS THE REST OF THE CHAIN TO ANOTHER MACHINE, which re-plans it on arrival over its own peers (the
-        // quine rule), so this machine plans only what runs here: the stretch before the first move. Planned here,
-        // the tail would ship over peers the target never dialed (reach is not inherited), or deal out a run that is
-        // not this machine's to run.
-        final int moved = IntStream.range(0, code.insts().size())
-                .filter(i -> MOVE_INST_TID.equals(code.insts().get(i).tid().basePath())).findFirst().orElse(-1);
-        if (0 == moved)
+        // A FRAME CHANGE HANDS THE REST OF THE CHAIN TO ANOTHER MACHINE, which re-plans it on arrival over its own
+        // peers (the quine rule), so this machine plans only the stretch before the first one (departure). Planned
+        // here, the tail would ship over peers the target never dialed (reach is not inherited), or deal out a run that
+        // is not this machine's to run.
+        final int departs = departure(code.insts(), env);
+        if (0 == departs)
             return code;
-        if (0 < moved) {
-            final Code here = apply(plan, code(code.insts().subList(0, moved)), env);
-            if (here.insts().equals(code.insts().subList(0, moved)))
+        if (0 < departs) {
+            final Code here = apply(plan, code(code.insts().subList(0, departs)), env);
+            if (here.insts().equals(code.insts().subList(0, departs)))
                 return code;
             final List<Inst> relocated = new ArrayList<>(here.insts());
-            relocated.addAll(code.insts().subList(moved, code.insts().size()));
+            relocated.addAll(code.insts().subList(departs, code.insts().size()));
             return code(relocated);
         }
         // A LONE MACHINE DOES NOT FAN OUT -- unless the decision states its own place set, whose HOME lane is the lanes

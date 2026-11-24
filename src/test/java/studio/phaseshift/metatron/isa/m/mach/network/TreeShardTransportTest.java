@@ -73,8 +73,8 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
         // the state belongs to the compiler stage, so it is set AFTER the compiler is installed
-        // every peer mounts the category, so law_shard can fire wherever a part lands
-        cluster = PeerCluster.of(3).seed(PeerCluster.DEFAULT_SEED_MATRIX, "import(/m/math)", "import(/m/math/cat)").start();
+        // no peer mounts the category: law_shard is /m's, so a part re-plans wherever it lands on a bare peer
+        cluster = PeerCluster.of(3).seed(PeerCluster.DEFAULT_SEED_MATRIX, "import(/m/math)").start();
         // THE MIDDLE OF THE TREE: peer 1 dials peers 2 and 3. A dial is construction, so it has to happen THERE. The
         // literal is parsed here, and this VM imports /m/web, so the parse builds (and dials) a client here too; what
         // ships is its data, ws_client::[host=>…], and peer 1 builds and dials its own from it.

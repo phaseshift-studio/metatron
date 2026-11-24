@@ -35,7 +35,7 @@ menu, fix the five pieces a row names:
 |--------------------------------|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `machine::T`                   | `~/`                  | the topology. `push`/`pop` is a call stack; a child machine is a subproblem; a *mini-cluster* is a child machine + the peers its network declares + the URI space they share. The authority is the boundary — an address names work this machine owns or work a peer owns.                                                                                                                          |
 | `network::T`                   | `~/network`           | the reach. `roster` is what the system **knows** (connectionless endpoints); `peer` is what **this** machine has **dialed**. Knowledge is inherited, reach is not. A `peer::T` carries a `host` (where to dial it back) — the marker that makes it a fan-out target; an inbound accept has none and never receives a shard.                                                                         |
-| `rewriter::T`                  | `~/compiler/rewriter` | the stage. The compiler's first atomic pass lowers `code::T → code::T` to a fixpoint over the machine's **rewrite pool** (`instset().rewrites()`); `fixpoint_rewriter::[max=>N]` is one such stage. A distribution rule is one rule of that pool, applied in place — every rule lives in `/m`, `law_shard` and `law_bsp` included, the pass applies them in the order they declare (`?pre`/`?post` families, then `?zindex`; `Rewriter.Helper.sort`), and every emitted layout is itself re-planned where it lands. |
+| `rewriter::T`                  | `~/compiler/rewriter` | the stage. The compiler's first atomic pass lowers `code::T → code::T` to a fixpoint over the machine's **rewrite pool** (`instset().rewrites()`); `fixpoint_rewriter::[max=>N]` is one such stage. A distribution rule is one rule of that pool, applied in place — `law_shard` and `law_bsp` live in `/m` beside its local laws, every instset's rules run in the order they declare (`?pre`/`?post` families, then `?zindex`; `Rewriter.Helper.sort`), and every emitted layout is itself re-planned where it lands. |
 | `instset::T`                   | `/m/math/cat`         | the declaration surface. `object::T` holds a type's structural theories; `morphism::T` holds an inst's process laws, `form`, `class`, and `analysis`; `path::T` lifts *code* to a vertex whose out-edges are the live rewrite rules, each a `plan::T`. `lower(plan::T)` and `bind(plan::T)` are the two applications.                                                                               |
 | `law::T`, `plan::T`, `path::T` | —                     | the engine. A `plan::T` assembles `[name, cut, where]` (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the `law::T` declarations — never named, always computed.                                                                                                                                        |
 
@@ -713,7 +713,7 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    .hop(1, cInt.ANY()).split(Partition.stream())` over `tree(1, seed.partition(), pre.withoutSeed(), at)`.
    `create()` validates the axes' obligations and writes no derived `shape`/`target`.
 4. **Register it.** A rewrite in `mInstSet`'s `REWRITE` list,
-   `/m/inst/rewrite/law_shard?pre=[/m/db/+/inst/rewrite]&zindex=500`, lowers the plan
+   `/m/inst/rewrite/law_shard?zindex=500&pre=[/m/db/+/inst/rewrite]`, lowers the plan
    (`code -> PlanInterpreter.lower(plan, code)`), so the compiler's rewriter applies it after every database pushdown
    and, in `/m`'s own rank, after the local laws and before the capture rules, and `path::T` draws it as an out-edge
    wherever it moves the code. Every machine has it, the category imported or not.
@@ -725,9 +725,12 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    when it runs (a stated dom coefficient pages the shipment); and the **run partition** when the seed is one obj and
    the run carries a closed span range or a point (see *the run partition*). The lane's first instruction states the
    restated budget (`?hop=0` at a leaf).
-   A `move` ends what this machine plans: the chain is planned up to its first `move`, and the `move` and everything
-   after it stay as written, for the machine it lands on to re-plan over its own peers (reach is not inherited, so a
-   tail planned here would ship over peers the target never dialed).
+   A frame change ends what this machine plans (`Shard.departure`): the chain is planned up to its first `push`, `pop`
+   or `move` away, and that instruction and everything after it stay as written, for the machine it lands on to
+   re-plan over its own peers (reach is not inherited, so a tail planned here would ship over peers the target never
+   dialed). The one `move` that stays is the re-home a cut's payload opens with on arrival, `move(</.>)` compiled at
+   the root, so a program moved to another machine is planned there, over that machine's peers. `law_bsp` deals only
+   the same stretch.
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's

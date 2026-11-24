@@ -1040,10 +1040,9 @@ public abstract class AbstractfURI implements fURI {
         else if (Boolean.class.isAssignableFrom(valueClass))
             return (T) Boolean.valueOf(this.qMap().get(key));
         else if (List.class.isAssignableFrom(valueClass)) {
-            // a [{+}uri::T] (one uri may be written bare): the fURIs it names, so ?pre=[/m/db/+/inst/rewrite] reads
-            // as a list of prefixes (Marko, 2026-11-24)
-            final Obj value = ObjmtronSerializer.parse(this.qMap().get(key));
-            return (T) (value.isLst() ? value.asLst().<Obj>elements() : Stream.of(value))
+            // a [{+}uri::T]: the fURIs it names, so ?pre=[/m/db/+/inst/rewrite] reads as a list of prefixes (Marko,
+            // 2026-11-24)
+            return (T) ObjmtronSerializer.parse(this.qMap().get(key)).asLst().<Obj>elements()
                     .map(Obj::uriValue)
                     .toList();
         } else

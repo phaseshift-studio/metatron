@@ -151,7 +151,7 @@ public interface Rewriter extends Component {
          * So {@code law_shard?pre=[/m/db/+/inst/rewrite]} lets every database pushdown shape the chain before it is
          * distributed, whatever zindex a pushdown states, and a rule its own grouping ranks after law_shard (a capture
          * rule at 1000) still waits for it. With no {@code ?pre} or {@code ?post} anywhere the order is the zindex sort
-         * it always was. A prefix may be a pattern, as that one is, and one prefix may be written bare.
+         * it always was. A prefix may be a pattern, as that one is.
          * <p>
          * THE DECLARATIONS NEED NOT FORM A POSET: Y may wait for X's grouping while X waits for Y's. A declaration that
          * lies on such a cycle contradicts another, so the declarations along every cycle are void and zindex ranks
@@ -182,8 +182,10 @@ public interface Rewriter extends Component {
             }
             final boolean[][] declared = new boolean[n][n];
             for (int i = 0; i < n; i++) {
-                final List<fURI> pre = families(rules.get(i), PRE);
-                final List<fURI> post = families(rules.get(i), POST);
+                final List<fURI> pre =
+                        Objects.requireNonNullElse(rules.get(i).tid().qValue(PRE, List.class), List.of());
+                final List<fURI> post =
+                        Objects.requireNonNullElse(rules.get(i).tid().qValue(POST, List.class), List.of());
                 for (int j = 0; j < n; j++) {
                     if (folder[i].equals(folder[j]))
                         continue;
@@ -223,14 +225,6 @@ public interface Rewriter extends Component {
                         ready.add(j);
             }
             return List.copyOf(ordered);
-        }
-
-        /**
-         * The families a rule names in {@code ?pre} or {@code ?post}, a {@code [{+}uri::T]}.
-         */
-        private static List<fURI> families(final Inst rule, final String key) {
-            final List<fURI> declared = rule.tid().qValue(key, List.class);
-            return null == declared ? List.of() : declared;
         }
 
         /**

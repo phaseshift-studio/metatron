@@ -35,15 +35,16 @@ import static studio.phaseshift.metatron.Tokens.ZINDEX;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
- * The rule order of {@code fixpoint_rewriter::T}, and the cache that remembers it.
+ * The pass order every rewriter applies its rules in ({@link Rewriter.Helper#sort}), and the cache that remembers it.
  * <p>
- * Two different claims are pinned here. The first is the ORDER itself: an ANALYSIS rule captures the code before
- * its marker and replaces the chain, so it must run after the rewriting it reports on — and the sort that
- * arranges it is STABLE, so registration order survives within each group. The second is that the order is
- * REMEMBERED rather than re-derived: the same rules must answer the same list (one sort, not one per code value),
- * while anything that makes the rules different — a different rule, or the same rules in a different order — must
- * answer afresh. That last one is the property a cache breaks quietly, because a stale order looks exactly like a
- * fresh one until an analysis rule swallows a chain it should have reported.
+ * Two different claims are pinned here. The first is the ORDER itself, as the rules declare it: {@code ?zindex} ranks a
+ * rule within its instset's grouping and registration breaks ties, so an ANALYSIS rule, which captures the code before
+ * its marker and replaces the chain, runs after the rewriting it reports on; {@code ?pre} and {@code ?post} order a
+ * rule against other groupings' families; and a declaration on a cycle is void, never a grouping's own rank. The second
+ * is that the order is REMEMBERED rather than re-derived: the same rules must answer the same list (one sort, not one
+ * per code value), while anything that makes the rules different — a different rule, or the same rules in a different
+ * order — must answer afresh. That last one is the property a cache breaks quietly, because a stale order looks exactly
+ * like a fresh one until an analysis rule swallows a chain it should have reported.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -62,11 +63,9 @@ public class RewriterSortTest extends AbstractMetatronTest {
      * {@code [{+}uri::T]}, and its rank in its own folder ({@code ?zindex}).
      */
     private static Inst rule(final String tid, final String pre, final String post, final int zindex) {
-        fURI declared = f(tid).q(ZINDEX, zindex);
-        if (null != pre)
-            declared = declared.q(PRE, pre);
-        if (null != post)
-            declared = declared.q(POST, post);
+        final fURI ranked = f(tid).q(ZINDEX, zindex);
+        final fURI waits = null == pre ? ranked : ranked.q(PRE, pre);
+        final fURI declared = null == post ? waits : waits.q(POST, post);
         return InstSet.Helper.rewriter(declared, code -> code);
     }
 
@@ -255,5 +254,19 @@ public class RewriterSortTest extends AbstractMetatronTest {
         final Inst y = rule("/m/y/inst/rewrite/y", "[/m/x/inst/rewrite]", null, 100);
         assertIterableEquals(List.of(y, w, x), Rewriter.Helper.sort(rules(w, x, y)),
                 "the cycle's declarations are void; X's wait for W is not");
+    }
+
+    /**
+     * A GROUPING'S RANK IS NEVER BROKEN, even by a declaration that contradicts it: Z waits for b and is waited for by
+     * a, but the grouping runs a (0) before b (10), so the two declarations close a cycle through that rank and are
+     * void. Z then ranks by its zindex between them.
+     */
+    @Test
+    void shouldNeverBreakAGroupingsRankForADeclaration() {
+        final Inst a = rule("/f1/inst/rewrite/a", null, null, 0);
+        final Inst b = rule("/f1/inst/rewrite/b", null, null, 10);
+        final Inst z = rule("/f2/inst/rewrite/z", "[/f1/inst/rewrite/b]", "[/f1/inst/rewrite/a]", 5);
+        assertIterableEquals(List.of(a, z, b), Rewriter.Helper.sort(rules(a, b, z)),
+                "a runs before b as its grouping ranks them, so z's contradicting declarations are void");
     }
 }
