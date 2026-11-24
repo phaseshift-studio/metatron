@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -249,20 +250,26 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
         final ObjByteBufferSerializer bytes = ObjByteBufferSerializer.singleton();
         assertEquals(new String(bytes.write(empty.one()).array()), new String(bytes.write(empty).array()),
                 "and so does the byte serializer");
+        // ITS TEXT READS BACK AS THE UNIT, equal in the ring and not in Java: the instruction id{c}(), where Java built an
+        // empty MCode. The byte serializer's unit was </m/inst/id?args>(), which did not parse
+        checkEquality(LOG, ObjmtronSerializer.parse("id{3}()"), bytes.read(bytes.write(empty.c(cInt.of(3L)))), true);
+        checkEquality(LOG, ObjmtronSerializer.parse("[program=>id()]"), bytes.read(bytes.write(holder)), true);
     }
 
     /**
-     * THE BYTE SERIALIZER WRITES A CODE AS ITS TYPE AND ITS BARE CHAIN, the {@code |[…]|} brackets gone from the grammar
-     * (Marko, 2026-11-24). Its text still does not read back, with the brackets or without them: an instruction is
-     * written {@code <tid>(…)}, and a tid carrying {@code ?args=[…]} does not parse inside the angle brackets.
+     * THE BYTE SERIALIZER WRITES A CODE AS ITS BARE CHAIN, the {@code |[…]|} brackets gone from the grammar (Marko,
+     * 2026-11-24), and each instruction's head as the mtron serializer writes it, so the text reads back as the code.
+     * It wrote the code's type before the chain and each instruction as {@code <tid>(…)}, and neither parses: the
+     * parser reads {@code /m/code::/m/inst/start} as a uri typed {@code /m/code}, and a tid carrying {@code ?args=[…]}
+     * does not parse inside the angle brackets. Its arguments keep this serializer's typed values ({@code </m/int>::1}).
+     * The strict rows are {@code ObjByteBufferSerializerTest.testAProgramReadsBackAsItself}.
      */
     @Test
     public void testTheByteSerializerWritesACodeWithoutBrackets() {
         final ObjByteBufferSerializer bytes = ObjByteBufferSerializer.singleton();
         final Code program = ObjmtronSerializer.parse("start(1).plus(2)").asCode();
-        assertEquals("/m/code::</m/inst/start?args=[/m/int]>(</m/int>::1).</m/inst/plus?args=[/m/int]>(</m/int>::2)",
-                new String(bytes.write(program).array()));
-        assertTrue(bytes.read(bytes.write(program)).isFail(), "the text does not read back until its instructions do");
+        assertEquals("/m/inst/start(</m/int>::1)./m/inst/plus(</m/int>::2)", new String(bytes.write(program).array()));
+        checkEquality(LOG, program, bytes.read(bytes.write(program)), true);
     }
 
     /**

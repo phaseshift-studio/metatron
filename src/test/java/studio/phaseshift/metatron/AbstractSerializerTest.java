@@ -25,10 +25,13 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -256,5 +259,40 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
      * ({@code ObjmtronSerializerTest}) runs every writer against every reader, as {@code fURITest.idem} does for uris.
      */
     protected void idem(final Obj obj) {
+    }
+
+    /**
+     * EVERY NODE AS THE WIRE MUST KEEP IT: its whole tid (base path, coefficients, query and a type's own brackets), its
+     * span and point, and its vid, depth first through a code's instructions, an instruction's arguments, a rec's keys
+     * and values, a lst's entries and a stream's members.
+     */
+    protected static List<String> nodes(final Obj obj) {
+        final List<String> nodes = new ArrayList<>();
+        nodes(obj, nodes);
+        return nodes;
+    }
+
+    private static void nodes(final Obj obj, final List<String> nodes) {
+        if (obj.isNoObj()) {
+            nodes.add("noobj");
+            return;
+        }
+        // THE WHOLE TID, not its base path: basePath() drops a type's own brackets, so a lst type's slot mass
+        // (lst[{2}int]) and slot run (lst[int{2}]) fingerprinted alike, as a bare lst
+        nodes.add((null == obj.tid() ? "tid=null" : obj.tid() + "{b=" + obj.tid().b() + ",d=" + obj.tid().d() + "}")
+                + (obj.hasVID() ? "@" + obj.vid() : ""));
+        if (obj.isCode())
+            obj.asCode().insts().forEach(inst -> nodes(inst, nodes));
+        else if (obj.isInst())
+            nodes(obj.asInst().args(), nodes);
+        else if (obj.isRec())
+            obj.asRec().<Rel>elements().forEach(kv -> {
+                nodes(kv.first(), nodes);
+                nodes(kv.second(), nodes);
+            });
+        else if (obj.isLst())
+            obj.asLst().<Obj>elements().forEach(entry -> nodes(entry, nodes));
+        else if (obj.isObjs())
+            obj.stream().forEach(member -> nodes(member, nodes));
     }
 }

@@ -29,8 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.CODE_TID;
-
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -72,7 +70,11 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
     }
 
     private String handleIds(final Obj obj, final String objString) {
-        return ("<" + obj.tid() + ">" + (obj.isInst() ? "" : "::") + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
+        // AN INSTRUCTION'S HEAD IS WRITTEN AS THE MTRON SERIALIZER WRITES IT ({span}name{point}?typing&query), without the
+        // tid's args=[...] signature, which the parser mints again from the arguments. Written whole, <tid>(...), the head
+        // did not parse once a tid carried that signature (</m/inst/plus?args=[/m/int]>), so no instruction read back
+        final String head = obj.isInst() ? ObjmtronSerializer.single().generateInstHead(new StringBuilder(), obj.asInst()).toString() : "<" + obj.tid() + ">::";
+        return (head + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
     }
 
     @Override
@@ -144,8 +146,13 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeInst(final Inst inst) {
+        // A KEYED ARGUMENT IS WRITTEN <name>=>value, as the parser reads it: its key is a name, a bare fURI
+        // (mParser.m_inst_arg_key), so a typed key, </m/uri>::<a>=>v, typed the whole pair as a uri (a rel, not a uri::T)
+        // and failed, and a rel value, </m/rel>::k=>v, read back as a positional rel, a lst of rels for the rec
         final String internal = inst.args().elements()
-                .map(o -> new String(this.write(o).array()))
+                .map(o -> inst.args().isRec()
+                        ? "<" + o.asRel().first().uriValue() + ">=>" + new String(this.write(o.asRel().second()).array())
+                        : new String(this.write(o).array()))
                 .reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(handleIds(inst, "(" +
                 (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")).getBytes());
@@ -159,8 +166,10 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
         // remainder to slice
         if (code.jvm().isEmpty())
             return this.write(code.one().c(code.c()));
+        // A CODE IS ITS BARE CHAIN, as the mtron serializer writes it: the parser reads /m/code::/m/inst/start(...) as the
+        // uri /m/inst/start typed /m/code, which is not a code::T, and fails at the first column
         final String internal = IteratorUtil.stream(code.insts()).map(i -> new String(this.writeInst(i).array())).reduce(".", (a, b) -> a + b + ".");
-        return ByteBuffer.wrap((CODE_TID.toString() + "::" + internal.substring(1, internal.length() - 1)).getBytes());
+        return ByteBuffer.wrap(internal.substring(1, internal.length() - 1).getBytes());
     }
 
     @Override

@@ -108,7 +108,7 @@ Concurrent, not remote — but the same monad is the work unit in both cases.
 | serializer                               | used for                                  | witness                                 |
 |------------------------------------------|-------------------------------------------|-----------------------------------------|
 | `ObjmtronSerializer`                     | mtron text — the default frame body       | `ObjmtronSerializer.java`               |
-| `ObjByteBufferSerializer`                | compact binary                            | `ObjByteBufferSerializer.java`          |
+| `ObjByteBufferSerializer`                | mtron text with every value typed         | `ObjByteBufferSerializer.java`          |
 | `ObjJavaSerializer`                      | Java object graph                         | `ObjJavaSerializer.java`                |
 | `ObjJSONSerializer`                      | JSON                                      | `isa/web/parser/ObjJSONSerializer.java` |
 | `ObjSQLSerializer` / `ObjYAMLSerializer` | SQL rows / YAML                           | `isa/mach/io/type/`                     |
