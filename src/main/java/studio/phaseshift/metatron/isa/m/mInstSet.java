@@ -1291,8 +1291,8 @@ public class mInstSet extends AbstractInstSet {
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
-                                // A POSITIONAL SPLIT IS NO ONE-TERM SUM EITHER: a lane's move point is its weight, the share
-                                // the deal consumes (BranchInst#lanes), which an inlined member would run as copies
+                                // A POSITIONAL SPLIT IS NO ONE-TERM SUM EITHER: it deals the lhs by the bias its ?split states
+                                // (BranchInst#share), which an inlined member would not read
                                 if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)
                                         && (inst.args().isRec() || !inst.tid().hasQ(SPLIT))) {
                                     final Obj lone = inst.args().isRec() ? BranchInst.lanes(inst).getFirst().member() : inst.arg(0);

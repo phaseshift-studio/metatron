@@ -1040,7 +1040,8 @@ public class machInstSet extends AbstractInstSet {
                                         there rather than failing. Followed by more of the chain, a move compiles to the
                                         cut that runs it there, which keeps the move's ?timeout=n and its target's ?hop
                                         budget. Heading a branch member, a move to a written place other than ~ or . is
-                                        a lane, and under branch?split=part its point is the lane's share.""")
+                                        a lane, and its point is copies of what the lane answers (its share of a dealt
+                                        lhs is the bias its branch's ?split states).""")
                                 .example("move(<..>)          [-- up: the parent machine, without closing this one --]")
                                 .example("move()              [-- the same instruction --]")
                                 .example("move(<../b>)        [-- across, to the sibling b --]")

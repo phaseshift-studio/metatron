@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -330,9 +331,9 @@ public final class Shard {
         // PRIMITIVE: each lane runs the floatable run (its share of a span range projected onto it) and a local partial
         // reduce where its cut carries it, so one partial per lane travels home, where the master recombines them
         // through the combiner. A LANE IS A MOVE (Law.nomadic, stage 2), emitted as the cut it compiles to, so a
-        // profiled lane's profile() stays the place's: a remote lane's budget rides on its cut's target and its weight
-        // is the cut's point (Marko, 2026-11-24: "move() point coefficient is branch weight"); a home lane gets no move,
-        // so no weight, and its budget goes on its head
+        // profiled lane's profile() stays the place's: a remote lane's budget rides on its cut's target, and a home lane
+        // gets no move, its budget on its head. A LANE'S SHARE IS THE BRANCH'S BIAS, never a point on its cut, which
+        // would be copies of its answer (Marko, 2026-11-24: "cut{2}() will duplicate data")
         final int stop = 0 > cut ? runEnd : cut;
         final List<Obj> routes = new ArrayList<>();
         for (int r = 0; r < lanes; r++) {
@@ -356,12 +357,9 @@ public final class Shard {
             if (profiling)
                 lane.add(instB(PROFILE_INST_TID, lst()));
             final fURI place = keys.get(r).getKey();
-            final int weight = keys.get(r).getValue();
-            final cInt share = runAxis || copy || 1 == weight ? null : cInt.of(weight);
             final boolean home = BranchInst.home(place);
             stampHop(lane, home ? budget : null);
-            routes.add(home ? code(lane).tryToInst() : instB(null == share ? CUT_INST_TID : CUT_INST_TID.d(share),
-                    lst(uri(place.q(HOP, budget)), code(lane).tryToInst())));
+            routes.add(home ? code(lane).tryToInst() : instB(CUT_INST_TID, lst(uri(place.q(HOP, budget)), code(lane).tryToInst())));
         }
         // lanes seeded with a literal take nothing, so the branch is the initial form; otherwise the branch takes the bag
         // whole (a {*} dom over the carrier flowing into the run) and deals it by its keys -- or, under the run axis,
@@ -379,8 +377,17 @@ public final class Shard {
         // a lst select declares no element type, and its own contract would state a bare lst the combiner cannot bind
         final Inst answers = profiling ? null : chain.contracts().get(0 <= cut ? cut : runEnd - 1);
         final fURI lane = null == answers || !answers.tid().hasRng() ? null : answers.rng().typeId();
+        // THE BIAS ON THE BRANCH (Marko, 2026-11-24: "?split= is bias and stays on branch"): a peer's n shares are its
+        // demand in the place set the branch splits by, {n}//host:port (the address form, which a query value can hold,
+        // where a bracketed scheme cannot), read per lane (BranchInst#share), and each home lane is local's one share.
+        // Shares of one apiece are an even part
         final fURI branch = literal && runAxis ? BRANCH_INST_TID.dom(dom)
-                : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY : PART);
+                : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY
+                : keys.stream().allMatch(key -> 1 == key.getValue()) ? PART
+                : ObjmtronSerializer.single().write(lst(places.entrySet().stream()
+                .map(place -> BranchInst.home(place.getKey()) ? (Obj) uri(LOCAL)
+                        : uri(fURI.Singleton.f().host(place.getKey().host()).port(place.getKey().port())).c(cInt.of(place.getValue())))
+                .toList())));
         final List<Inst> master = new ArrayList<>();
         if (!literal)
             master.addAll(insts.subList(from, runIndex));

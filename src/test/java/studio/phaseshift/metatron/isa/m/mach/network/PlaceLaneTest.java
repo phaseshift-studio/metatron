@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -61,7 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  * <p><b>The oracle is the law, not the layout.</b> Every row that emits also asserts the value, because a place axis
  * is result-preserving (Thm 19): {@code distribute(c) ≡ c}. The lane <em>structure</em> is the other half — a home
  * lane has no move (the lane at distance zero), a peer's lane is the cut its move to the peer compiles to, and a peer
- * with demand n is one lane weighted n, the point on its cut.
+ * with demand n is one lane whose share n the branch's bias states ({@code ?split=[{n}<peer>,…]}).
  *
  * <p><b>Hermetic where it can be.</b> The {@code local} rows resolve against a synthetic {@link Env} — the seam C4
  * opened — because a test VM has no listening authority, so {@code Places.self()} is {@code noobj} unless the env
@@ -187,6 +188,10 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         assertEquals(List.of(GINGER, BOOGER), layout.routes(), "one lane per place: " + emitted);
         assertEquals(List.of("{2}part", "part"), layout.lanes().stream().map(DistributedSweep.Lane::split).toList(),
                 "ginger takes two shares and booger one: " + emitted);
+        // THE SHARES ARE THE BRANCH'S BIAS, never a point on a lane's cut, which would be copies of its answer
+        final Inst branch = emitted.insts().stream().filter(BranchInst::isLayout).findFirst().orElseThrow();
+        assertEquals(List.of(true, true), branch.args().<Obj>elements().map(lane -> lane.tid().d().isOne()).toList(),
+                "no lane's cut is pointed: " + emitted);
         checkEquality(LOG, jnt(expected),
                 evaluate(emitted).clone().selfVID(null), true);
     }

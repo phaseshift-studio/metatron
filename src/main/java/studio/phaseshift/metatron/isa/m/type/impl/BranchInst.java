@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlaceSet;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -35,10 +36,11 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
@@ -66,11 +68,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     barrier a DISTRIBUTION REWRITE states on the branch it emits, never the instruction's own default.</li>
  *     <li>A LAYOUT routes its lanes ({@link #lanes}): a member headed by a move, or the cut it compiles to, runs where
  *     that cut carries it, a path to that local machine, a host to that peer, every machine change on the one
- *     mechanism, and a member headed by neither is a home lane; under {@code ?split=part} the branch deals its lhs
- *     by the lanes' weights, the point on a lane's move and one share for a home lane ({@link #weight},
- *     {@link #deal}). A KEYED call is read as the lanes it means, {@code <p> => program} the lane
- *     {@code cut(<p>, program)}, a lane keyed {@code <~>} a home lane (timed by a cut that stays), and a key's
- *     {@code ?split={w}part} its weight.</li>
+ *     mechanism, and a member headed by neither is a home lane. {@code ?split=part} deals the lhs evenly over the
+ *     lanes, and a place set, {@code ?split=[{2}//a,//b]}, deals it by the BIAS it states, each lane the demand of the
+ *     designator naming its place ({@link #share}, {@link #deal}); a lane's point is copies of what it answers. A KEYED
+ *     call is read as the lanes it means, {@code <p> => program} the lane {@code cut(<p>, program)}, a lane keyed
+ *     {@code <~>} a home lane (timed by a cut that stays), and a key's {@code ?split={w}part} its share.</li>
  *     <li>EVERY LANE IS A {@code virtual::T}, submitted before any is awaited, so the lanes overlap and the branch
  *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await). A lane's
  *     {@code ?timeout} is its cut's to keep ({@link #lane}).</li>
@@ -102,8 +104,8 @@ public class BranchInst extends MInst {
 
     /**
      * ONE LANE, as the branch runs it and as every reader of a layout reads it (Law.nomadic, stage 2): the place it
-     * runs at ({@code null} at home), the program it runs there, its weight (a share of the lhs under
-     * {@code ?split=part}, else {@code 0}: the whole lhs) and the member the branch runs on the lane's thread.
+     * runs at ({@code null} at home), the program it runs there, its weight (its share of the lhs when the branch deals
+     * it, {@link #share}, else {@code 0}: the whole lhs) and the member the branch runs on the lane's thread.
      */
     public record Lane(fURI place, List<Inst> program, long weight, Obj member) {
 
@@ -122,15 +124,14 @@ public class BranchInst extends MInst {
 
     /**
      * THE BRANCH'S LANES, in order (Marko, 2026-11-24): a lane is a MEMBER HEADED BY A MOVE, or the cut a move
-     * compiles to, so its place is the cut's target, the program is the cut's tail, and its weight is the point on its
-     * move ("move() point coefficient is branch weight"), the share it is dealt when the branch splits
-     * {@code ?split=part}: {@code move{2}(<//1>)} is two shares. A member headed by neither is a HOME LANE, which gets no
-     * move and so carries no weight: it takes one share, and every point it states is its own, as written (a home
-     * place that takes several shares is as many home lanes). A move whose target is computed when it runs names no
-     * place yet, so its member reads as a home lane, as a cut to {@code <~>} (a stay, which a timed home member is) does.
-     * A KEYED branch is read as the lanes it means: each key {@code <p>} the lane {@code cut(<p>, program)}, its weight
-     * its {@code ?split}, and its {@code ?timeout} (the key's, else the branch's) the cut's; a home key's program is
-     * timed by a cut that stays, {@code cut(<~>, program)}, as every timeout is a cut's.
+     * compiles to, so its place is the cut's target and the program is the cut's tail. A member headed by neither is a
+     * HOME LANE, and so is one whose move's target is computed when it runs (it names no place yet), as is a cut to
+     * {@code <~>} (a stay, which a timed home member is). A lane's WEIGHT is its share of the lhs ({@link #share}): the
+     * bias the branch's {@code ?split} states for the lane's place, never a point, which is copies of what the lane
+     * answers ("cut{2}() will duplicate data"). A KEYED branch is read as the lanes it means: each key {@code <p>} the
+     * lane {@code cut(<p>, program)}, its share its {@code ?split}, and its {@code ?timeout} (the key's, else the
+     * branch's) the cut's; a home key's program is timed by a cut that stays, {@code cut(<~>, program)}, as every
+     * timeout is a cut's.
      */
     public static List<Lane> lanes(final Inst branch) {
         if (branch.args().isRec())
@@ -141,11 +142,11 @@ public class BranchInst extends MInst {
                 final fURI place = null == key.q(HOP) ? key.qLess() : key.qLess().q(HOP, key.q(HOP));
                 final fURI cut = null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT));
                 final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
-                return new Lane(home(key) ? null : place, program, weight(key.q(SPLIT)),
+                return new Lane(home(key) ? null : place, program, share(key.q(SPLIT), home(key) ? null : place),
                         !home(key) ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
                                 : null == key.q(TIMEOUT) ? code(program) : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
             }).toList();
-        final boolean part = 0 < weight(branch.tid().q(SPLIT));
+        final String split = branch.tid().q(SPLIT);
         return branch.args().<Obj>elements().filter(member -> !uri(LHS).equals(member)).map(member -> {
             final List<Inst> insts = program(member);
             final Inst head = insts.isEmpty() ? null : insts.getFirst();
@@ -156,15 +157,9 @@ public class BranchInst extends MInst {
                     : MOVE_INST_TID.equals(base) && head.arg(0).isNoObj() ? fURI.Singleton.f("..")
                     : null;
             final boolean lane = null != place && !home(place);
-            // the point on a lane's move is its share, consumed by the deal: the lane runs its part once
-            final long weight = !part ? 0L : !lane || null == head.tid().d() ? 1L : head.tid().d().min();
-            if (part && 1L > weight)
-                throw MTronException.of("a lane's weight is a share of the lhs, one or more: %s in %s", member, branch);
-            final Obj run = !part || !lane || null == head.tid().d() || head.tid().d().isOne() ? member
-                    : code(Stream.concat(Stream.of(instB(head.tid().d(null), head.args())), insts.stream().skip(1)).toList());
             return new Lane(lane ? place : null,
                     null == place ? insts : CUT_INST_TID.equals(base) ? program(head.arg(1)) : insts.subList(1, insts.size()),
-                    weight, run);
+                    share(split, lane ? place : null), member);
         }).toList();
     }
 
@@ -233,21 +228,51 @@ public class BranchInst extends MInst {
     }
 
     /**
-     * THE SPLIT a branch or a key marks itself with (Marko, 2026-11-05): {@code part} shares the lhs with the other
-     * lanes by their weights ({@code {w}part}, one when unstated, as the element count is rarely known), while
-     * {@code copy}, or no split, hands every lane the whole lhs: weight zero. Any other value is refused, never read as
-     * a copy — a misspelled part would hand every lane the whole lhs and double-count its fold.
+     * A LANE'S SHARE of the lhs under the split its branch (or its key) states, for the lane at {@code place}
+     * ({@code null} at home). {@code copy}, or no split, hands every lane the whole lhs: a share of zero. {@code part}
+     * deals the lhs evenly, one share each ({@code {w}part}, w apiece, as a key marks itself). A PLACE SET IS THE BIAS
+     * (Marko, 2026-11-24: "?split= is bias and stays on branch as a query param as its a concept relative to all lanes
+     * of the branch"): {@code ?split=[{2}//a,//b]} deals each lane the demand of the designator that names its place,
+     * PER LANE ("treat each lane as if they are unique"), so two lanes at //a take two shares apiece. {@code local}
+     * names a home lane, an address or an authority a lane at its host (at its port too, and its scheme, when the
+     * designator states them), {@code peer} a lane at any host and {@code #} any lane; the most specific naming wins,
+     * its demands summed, and a lane no designator names takes one share. A point is never a share: it is copies of what
+     * its lane answers. Any other split is refused, never read as a copy (a misspelled part would hand every lane the
+     * whole lhs and double-count its fold), and so is a share below one.
      */
-    protected static long weight(final String split) {
+    protected static long share(final String split, final fURI place) {
         if (null == split)
             return 0L;
         // the object grammar reads the leading coefficient ({4}part), as it reads ?hop={2}4
-        final Obj share = ObjmtronSerializer.parse(split);
-        if (share.isUri() && PART.equals(share.uriValue().name()))
-            return share.c().min();
-        if (share.isUri() && COPY.equals(share.uriValue().name()))
+        final Obj value = ObjmtronSerializer.parse(split);
+        if (value.isUri() && COPY.equals(value.uriValue().name()))
             return 0L;
-        throw MTronException.of("?%s=%s is not a split a branch performs: %s or %s", SPLIT, split, PART, COPY);
+        if (!value.isLst() && !value.isRec() && !(value.isUri() && PART.equals(value.uriValue().name())))
+            throw MTronException.of("?%s=%s is not a split a branch performs: %s, %s or a place set", SPLIT, split, PART, COPY);
+        final fURI at = null == place ? null : Machine.Helper.align(Machine.current(), place);
+        final Predicate<PlaceSet.Designator> names = designator -> switch (designator.form()) {
+            case LOCAL -> null == at;
+            case PEER -> null != at && at.hasHost();
+            case ANY -> true;
+            case ADDRESS, AUTHORITY -> {
+                final fURI named = Machine.Helper.align(Machine.current(), designator.uri());
+                yield null != at && at.hasHost() && named.host().equals(at.host())
+                        && (!named.hasPort() || named.port() == at.port())
+                        && (!named.hasScheme() || named.scheme().equals(at.scheme()));
+            }
+        };
+        final long share = value.isUri() ? value.c().min()
+                : List.of(EnumSet.of(PlaceSet.Form.LOCAL, PlaceSet.Form.ADDRESS, PlaceSet.Form.AUTHORITY),
+                        EnumSet.of(PlaceSet.Form.PEER), EnumSet.of(PlaceSet.Form.ANY)).stream()
+                .map(forms -> PlaceSet.of(value).designators().stream()
+                        .filter(designator -> forms.contains(designator.form()) && names.test(designator)).toList())
+                .filter(named -> !named.isEmpty())
+                .findFirst()
+                .map(named -> named.stream().mapToLong(designator -> designator.demand().min()).sum())
+                .orElse(1L);
+        if (1L > share)
+            throw MTronException.of("a lane's share is one or more: ?%s=%s gives %s", SPLIT, split, null == place ? LOCAL : place);
+        return share;
     }
 
     /**

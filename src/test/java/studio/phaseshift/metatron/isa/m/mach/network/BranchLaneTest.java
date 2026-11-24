@@ -217,17 +217,29 @@ public class BranchLaneTest extends AbstractMetatronTest {
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
                     + "<loop://right?split={2}part> => count(), <loop://left> => count())", "{2,4,6}");
-            // A LANE'S WEIGHT IS THE POINT ON ITS MOVE (Marko, 2026-11-24: "move() point coefficient is branch weight"):
-            // the deal is the branch's, and the weight is a share, never copies of what the lane answers. A home member
-            // has no move, so it takes one share, and its own point is copies of what it answers
+            // A LANE'S SHARE IS THE BRANCH'S BIAS (Marko, 2026-11-24: "?split= is bias and stays on branch"): a place set
+            // deals each lane the demand of the designator naming its place, per lane; local names a home lane, and a
+            // lane no designator names takes one share
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[//left,{2}//right]("
+                    + "move(<loop://left>).count(), move(<loop://right>).count())", "{2,4}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}//left]("
+                    + "move(<loop://left>).count(), count())", "{4,2}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}local,//left]("
+                    + "count(), move(<loop://left>).count())", "{4,2}");
+            // ... and a designator repeated is its demand summed, the brace-free spelling of the same bias
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[//right,//right]("
+                    + "move(<loop://left>).count(), move(<loop://right>).count())", "{2,4}");
+            // ... "per lane. treat each lane as if they are unique": two lanes at one place take its demand apiece, 2:2:1
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6,7,8,9,10}.branch?<=int{*}&split=[{2}//left,//right]("
+                    + "move(<loop://left>).count(), move(<loop://left>).count(), move(<loop://right>).count())", "{4,4,2}");
+            // A POINT IS COPIES, NEVER A SHARE ("cut{2}() will duplicate data"): an even part deals 1:1, and the lane's
+            // point doubles what it answers, at a place or at home
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).count(), "
-                    + "move{2}(<loop://right>).count())", "{2,4}");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move{2}(<loop://left>).count(), "
-                    + "count())", "{4,2}");
+                    + "move{2}(<loop://right>).count())", "{3}3");
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).sum(), "
                     + "count{2}())", "{9,{2}3}");
-            // a share is one or more: a lane's move pointed below one is refused, never dealt
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move{-1}(<loop://left>).count(), "
+            // a split the branch does not perform is refused, never read as a copy
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=halves(move(<loop://left>).count(), "
                     + "count())", "<ERROR>");
         } finally {
             Machine.current().network().drop(f("loop://left"));

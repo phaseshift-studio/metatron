@@ -1404,10 +1404,12 @@ public final class mInsts {
                                 its own virtual::T, so the lanes run concurrently. a member with no move is a home lane.
                                 a keyed call is read as its lanes: `place => program` is the lane cut(<place>, program),
                                 and <~> or <.> a home lane.
-                                branch?split=part deals the lhs by the lanes' weights: the point on a lane's move
-                                (move{2}(<place>) takes two shares), one share for a home lane, or a key's ?split={w}part,
-                                where an unmarked key (or ?split=copy) gets the whole lhs. without part every lane gets
-                                the whole lhs. ?timeout=n is a cut's: move?timeout=n(<place>) waits n seconds for its
+                                branch?split=part deals the lhs evenly over the lanes. branch?split=[{2}//a,//b] deals
+                                it by the bias that place set states: each lane, per lane, the demand of the designator
+                                naming its place (local a home lane, peer any host, # any lane), one share where none
+                                does. a key's ?split={w}part is its share, and an unmarked key (or ?split=copy) gets the
+                                whole lhs. without a split every lane gets the whole lhs. a lane's point is copies of
+                                what it answers, never a share. ?timeout=n is a cut's: move?timeout=n(<place>) waits n seconds for its
                                 lane, and branch?timeout=n is every lane's that states none (a key's own overrides it).
                                 arguments are blocked, so a call is not computed here.
                                 """)

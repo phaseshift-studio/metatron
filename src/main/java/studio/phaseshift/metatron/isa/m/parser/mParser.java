@@ -198,7 +198,9 @@ public class mParser {
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-+:*";
     private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". @";
     private static final String QMAP_VALUE_CHARS = FULL_FURI_CHARS + "\"\\'";
-    private static final String QMAP_POLY_VALUE_CHARS = QMAP_VALUE_CHARS + ">,=";
+    // a bracketed value is a set, and a set's members may be counted: a branch's bias ?split=[{2}//a,//b] (Marko,
+    // 2026-11-24), as a place set writes a demand. A bracketed uri (<scheme://…>) stays out: the query is the uri's own
+    private static final String QMAP_POLY_VALUE_CHARS = QMAP_VALUE_CHARS + ">,={}";
 
     static {
         LABELS.add(EXPECTED_OBJ);
