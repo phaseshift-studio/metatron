@@ -36,8 +36,8 @@ How:
      under src/test/resources, a boot file) is searched for in turn by its own name.
 
 Prints `-Dtest=A,B,...` on stdout and how each class was reached on stderr; exits 1, printing nothing on stdout,
-when no test class uses the change (an empty -Dtest= would run the whole suite). A list longer than 40 classes is
-flagged, and bin/hunk-revert-check refuses one: agents' test runs are targeted classes, never the full suite
+when no test class uses the change (an empty -Dtest= would run the whole suite). A list longer than MOST_CLASSES
+classes is flagged, and bin/hunk-revert-check refuses one: agents' test runs are targeted classes, never the full suite
 (Marko's rule), so name the gating classes with Marko.
 """
 import argparse
@@ -132,7 +132,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument('inputs', nargs='*')
     args = parser.parse_args(argv)
     if args.help:
-        print(__doc__)
+        print(__doc__.replace('MOST_CLASSES', str(MOST_CLASSES)))
         return 0
     root = Path(git('rev-parse', '--show-toplevel').strip())
     inputs = args.inputs or changed_files(args.base)

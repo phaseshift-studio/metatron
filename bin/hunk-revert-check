@@ -12,9 +12,9 @@ Usage:
   bin/hunk-revert-check --hunk 2,5 -Dtest=AnalyzerTest       # only hunks 2 and 5 (the numbers --list prints)
 
 Options:
-  -Dtest=<A,B>    the classes to run (or plain arguments: A B): class names, each with an optional #method, 40 at
-                  most. An empty entry, a wildcard, a path or a trailing # is refused, since each runs more than was
-                  named; so is a longer list, which is the suite's work rather than a targeted check
+  -Dtest=<A,B>    the classes to run (or plain arguments: A B): class names, each with an optional #method,
+                  MOST_CLASSES at most. An empty entry, a wildcard, a path or a trailing # is refused, since each
+                  runs more than was named; so is a longer list, which is the suite's work rather than a targeted check
   --base <ref>    the base (default: main); the hunks are `git diff <base>...HEAD -- src/main`
   -U <n>          context lines per hunk (default: 3, git's); -U0 splits a hunk at every unchanged line
   --hunk <i,j>    check only these hunks
@@ -205,14 +205,14 @@ def classify(hunks: list[Hunk], base: str, tip: str) -> None:
     # an import change that points a name the file still uses at another class changes what that name means
     for path in {h.path for h in hunks if h.skip == 'imports only'}:
         lines = [line for h in hunks if h.path == path for line in h.lines[1:]]
-        before = {imported(line).rsplit('.', 1)[-1]: imported(line) for line in lines if line.startswith('-')}
-        after = {imported(line).rsplit('.', 1)[-1]: imported(line) for line in lines if line.startswith('+')}
+        before = {imported_name(line): imported(line) for line in lines if line.startswith('-')}
+        after = {imported_name(line): imported(line) for line in lines if line.startswith('+')}
         used = '\n'.join(line.text for line in lines_at(tip, path) if not IMPORT_LINE.match(line.text))
         repointed = {name for name in before.keys() & after.keys() - {''} if before[name] != after[name]
                      and re.search(r'(?<![\w$])' + re.escape(name) + r'(?![\w$])', used)}
         for h in hunks:
             if h.path == path and h.skip == 'imports only' and any(
-                    imported(line).rsplit('.', 1)[-1] in repointed for line in h.lines[1:] if line[:1] in ('-', '+')):
+                    imported_name(line) in repointed for line in h.lines[1:] if line[:1] in ('-', '+')):
                 h.skip = ''
 
 
@@ -272,28 +272,32 @@ def imported(line: str) -> str:
     return m[1] if m else ''
 
 
+def imported_name(line: str) -> str:
+    """The simple name a diff line imports (Consumer), or ''."""
+    return imported(line).rsplit('.', 1)[-1]
+
+
 def imports_back(hunk: Hunk, hunks: list[Hunk]) -> list[tuple[int, list[str]]]:
     """The import lines this revert needs from the file's other hunks, each such hunk narrowed to just those lines.
     Put back: a removed import that the lines this revert restores name, unless the branch imports that name anew;
-    and the other half of a swap split over two hunks, so the old import comes back and the new one goes."""
-    def name(line: str) -> str:
-        return imported(line).rsplit('.', 1)[-1]
-
+    and the other half of an import that changed in two hunks (a swap, or a line moved to another place), so the
+    old line comes back and the new one goes."""
     restored = ''.join(line[1:] for line in hunk.lines[1:] if line.startswith('-'))
-    anew = {name(line) for h in hunks if h.path == hunk.path for line in h.lines[1:] if line.startswith('+')} - {''}
-    mine = {line[0] + name(line): imported(line) for line in hunk.lines[1:] if line[:1] in ('-', '+') and name(line)}
+    anew = {imported_name(line) for h in hunks if h.path == hunk.path for line in h.lines[1:]
+            if line.startswith('+')} - {''}
+    mine = {line[:1] + imported_name(line) for line in hunk.lines[1:] if line[:1] in ('-', '+') and imported_name(line)}
     narrowed = []
     for other in (h for h in hunks if h.path == hunk.path and h is not hunk):
         body, back, gone = [], 0, 0
         for line in other.lines[1:]:
-            sign, n = line[:1], name(line)
-            swapped = bool(n) and mine.get(('+' if sign == '-' else '-') + n, imported(line)) != imported(line)
-            if sign == '-' and n and (swapped or n not in anew and re.search(
+            sign, n = line[:1], imported_name(line)
+            paired = bool(n) and ('+' if sign == '-' else '-') + n in mine  # this revert takes the other half
+            if sign == '-' and n and (paired or n not in anew and re.search(
                     r'(?<![\w$])' + re.escape(n) + r'(?![\w$])', restored)):
                 body.append(line)  # put back
                 back += 1
-            elif sign == '+' and swapped:
-                body.append(line)  # the new half of a swap whose old half this revert puts back
+            elif sign == '+' and paired:
+                body.append(line)  # the new half of a change whose old half this revert puts back
                 gone += 1
             elif sign == '+':
                 body.append(' ' + line[1:])  # what the tip has stays
@@ -422,7 +426,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument('classes', nargs='*')
     args = parser.parse_args([a for a in argv if not a.startswith('-Dtest=')])
     if args.help:
-        print(__doc__)
+        print(__doc__.replace('MOST_CLASSES', str(MOST_CLASSES)))
         return 0
     os.chdir(git('rev-parse', '--show-toplevel'))
     root = Path.cwd()

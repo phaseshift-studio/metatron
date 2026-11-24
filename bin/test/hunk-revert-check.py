@@ -27,7 +27,7 @@ SCRIPT = BIN / 'hunk-revert-check'
 sys.path.insert(0, str(BIN))
 from lib.java_lexer import IMPORT_LINE, lex  # noqa: E402
 
-TESTS = '-Dtest=LighthouseTest,ReefTest,BuoyTest,CompassTest,WindlassTest,YardarmTest,YawlTest'
+TESTS = '-Dtest=LighthouseTest,ReefTest,BuoyTest,CompassTest,WindlassTest,YardarmTest,YawlTest,ZephyrTest'
 
 BASE = {
     '.gitignore': '.*\n!.gitignore\n',  # as in the repository: .docker-target/ (the check's logs) is ignored
@@ -202,6 +202,26 @@ BASE = {
             }
         }
         ''',
+    'src/main/java/org/harbor/Zephyr.java': '''\
+        package org.harbor;
+
+        import java.util.List;
+        import org.harbor.geo.Grid;
+        import org.harbor.geo.Latitude;
+        import org.harbor.geo.Pole;
+        import org.harbor.geo.Rhumb;
+        import org.harbor.geo.Sextant;
+        import org.harbor.geo.Sounding;
+        import org.harbor.geo.Tack;
+        import org.harbor.geo.Thole;
+
+        public class Zephyr {
+
+            public List<String> masts() {
+                return List.of("main", "mizzen");
+            }
+        }
+        ''',
     'src/main/java/org/harbor/Zodiac.java': '''\
         package org.harbor;
 
@@ -245,6 +265,13 @@ FEATURE = {  # path -> (old, new) on the feature branch; old None = a new file
                                            'import java.util.function.Consumer;\n', '',
                                            '\n    public static void coil(final Consumer<List<String>> sink) {\n'
                                            '        sink.accept(List.of("clove"));\n    }\n', ''),
+    # the same import moved to the end of its block, into the hunk that changes masts(): reverting that hunk takes
+    # the moved line out, so the line at the old place has to come back with it
+    'src/main/java/org/harbor/Zephyr.java': ('import java.util.List;\nimport org.harbor.geo.Grid;',
+                                            'import org.harbor.geo.Grid;',
+                                            'import org.harbor.geo.Thole;\n',
+                                            'import org.harbor.geo.Thole;\nimport java.util.List;\n',
+                                            '"mizzen"', '"jigger"'),
     'src/main/java/org/harbor/Zodiac.java': ('import java.util.List;\nimport java.util.Map;',  # the imports reordered
                                              'import java.util.Map;\nimport java.util.List;'),
     'src/main/resources/harbor/signals.txt': ('flare\n', 'flare\nhorn\n'),
@@ -308,10 +335,11 @@ if MODE == 'no-summary' or MODE == 'silent-revert' and reverting:
     finish(1)
 print('[INFO] Nothing to compile - all classes are up to date.' if MODE == 'stale' else
       '[INFO] Compiling 9 source files with javac [debug release 25] to target/classes')
-rope, yardarm, yawl = (src(f'java/org/harbor/{name}.java') for name in ('Rope', 'Yardarm', 'Yawl'))
+rope, yardarm, yawl, zephyr = (src(f'java/org/harbor/{name}.java') for name in ('Rope', 'Yardarm', 'Yawl', 'Zephyr'))
 if ('Depth.of()' in src('java/org/harbor/Reef.java') and not src('java/org/harbor/Depth.java')
         or any('Consumer<' in text and 'import java.util.function.Consumer;' not in text for text in (rope, yawl))
-        or rope.count('Point;') > 1 or yardarm.count('Point;') != 1 or yawl.count('Point;') != 1):
+        or rope.count('Point;') > 1 or yardarm.count('Point;') != 1 or yawl.count('Point;') != 1
+        or 'import java.util.List;' not in zephyr):
     print('[ERROR] COMPILATION ERROR : ')
     print('[ERROR] /work/src/main/java/org/harbor/Reef.java:[6,16] cannot find symbol')
     print('[INFO] BUILD FAILURE')
@@ -326,6 +354,7 @@ TESTS = {
     'WindlassTest': {'testDrum': lambda: 'import org.harbor.geo.Point;' in src('java/org/harbor/Windlass.java')},
     'YardarmTest': {'testPost': lambda: 'import org.harbor.geo.Point;' in src('java/org/harbor/Yardarm.java')},
     'YawlTest': {'testDrum': lambda: 'import org.harbor.geo.Point;' in src('java/org/harbor/Yawl.java')},
+    'ZephyrTest': {'testMasts': lambda: '"jigger"' in src('java/org/harbor/Zephyr.java')},
 }
 ELAPSED = os.environ.get('FAKE_RUNNER_ELAPSED', '0.03')
 named = [t for a in args if a.startswith('-Dtest=') for t in a[len('-Dtest='):].split(',')]
@@ -446,18 +475,20 @@ class HunkRevertCheckTest(unittest.TestCase):
             'Reef.java': 'behavior', 'Signal.java': 'behavior', 'Rope.java': 'skip (imports only)',
             'Windlass.java': 'behavior',  # an import swap whose name drum() still uses
             'Zodiac.java': 'skip (imports only)',  # the same imports reordered: no name points elsewhere
+            'Zephyr.java': 'skip (imports only)',  # the moved import's old place; its new place rides with masts()
             'Tide.java': 'skip (comments or whitespace only)',
             'notes.txt': 'skip (blank lines only)', 'signals.txt': 'behavior',
         }
         for name, status in expected.items():
             found = lines_with(r.stdout, '/' + name + ':')
-            two = name in ('Rope.java', 'Yardarm.java', 'Yawl.java')
+            two = name in ('Rope.java', 'Yardarm.java', 'Yawl.java', 'Zephyr.java')
             self.assertEqual(len(found), 2 if two else 1, (name, r.stdout))
             self.assertIn(status, found[0])
         self.assertIn('behavior', lines_with(r.stdout, '/Rope.java:')[1])  # the deleted coil()
         for name in ('Yardarm.java', 'Yawl.java'):  # each side of the split swap; the swap hunk and the deleted coil()
             self.assertEqual([line.split()[1] for line in lines_with(r.stdout, name)], ['behavior', 'behavior'])
-        self.assertIn('14 behavior hunks of main...feature under src/main (5 skipped, 1 files without hunks)', r.stdout)
+        self.assertEqual([line.split()[1] for line in lines_with(r.stdout, 'Zephyr.java')], ['skip', 'behavior'])
+        self.assertIn('15 behavior hunks of main...feature under src/main (6 skipped, 1 files without hunks)', r.stdout)
         # the changed line, past the hunk's leading context
         self.assertIn('Lighthouse.java:9 ', lines_with(r.stdout, 'Lighthouse.java')[0])
         self.assertIn('no hunks (binary or mode only)', lines_with(r.stdout, 'flag.bin')[0])
@@ -482,7 +513,8 @@ class HunkRevertCheckTest(unittest.TestCase):
         yardarm, yawl = lines_with(r.stdout, 'Yardarm.java:')[:2], lines_with(r.stdout, 'Yawl.java:')[:2]
         self.assertEqual([line.split()[0] for line in yardarm], ['red', 'red'])  # each half reverts with its partner
         self.assertEqual([line.split()[0] for line in yawl], ['red', 'green'])  # coil() takes back its Consumer import
-        self.assertIn('14 hunks checked: 7 red, 6 green, 1 no run', r.stdout)
+        self.assertEqual(lines_with(r.stdout, 'Zephyr.java:')[0].split()[0], 'red')  # List comes back to its old place
+        self.assertIn('15 hunks checked: 8 red, 6 green, 1 no run', r.stdout)
         report = r.stdout.split('no test went red for:')[1]
         for name in ('Buoy.java', 'Depth.java', 'Flare.java', 'Rope.java', 'Signal.java', 'signals.txt'):
             self.assertIn(name, report)
@@ -494,7 +526,7 @@ class HunkRevertCheckTest(unittest.TestCase):
     def test_each_run_sees_the_tip_with_one_hunk_reverted_on_a_scratch_commit(self):
         self.harbor.check(TESTS)
         runs = self.harbor.runs()
-        self.assertEqual(len(runs), 15)  # the baseline and 14 behavior hunks
+        self.assertEqual(len(runs), 16)  # the baseline and 15 behavior hunks
         baseline, hunks = runs[0], runs[1:]
         self.assertEqual((baseline['branch'], baseline['head'], baseline['changed']),
                          ('refs/heads/feature', self.harbor.tip, []))
@@ -512,7 +544,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertEqual([run['changed'][0].rsplit('/', 1)[1] for run in hunks],
                          ['Buoy.java', 'Compass.java', 'Depth.java', 'Flare.java', 'Lighthouse.java', 'Reef.java',
                           'Rope.java', 'Signal.java', 'Windlass.java', 'Yardarm.java', 'Yardarm.java', 'Yawl.java',
-                          'Yawl.java', 'signals.txt'])
+                          'Yawl.java', 'Zephyr.java', 'signals.txt'])
         rope = next(run for run in hunks if run['changed'][0].endswith('Rope.java'))['rope_imports']
         self.assertIn('import java.util.function.Consumer;', rope)  # coil() compiles back
         self.assertNotIn('import java.util.Map;', rope)  # removed in the same hunk, but coil() never names it
@@ -615,6 +647,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertTrue(r.stdout.startswith('bin/hunk-revert-check — revert each behavior hunk'), r.stdout[:80])
         self.assertIn('Exit: 0 when every behavior hunk is red', r.stdout)
+        self.assertIn('40 at most', r.stdout)  # MOST_CLASSES's value, from bin/lib/test_runs.py
 
     def test_failures_no_line_names_still_make_a_hunk_red(self):
         r = self.harbor.check('--hunk', '1', TESTS, mode='unnamed-failure')
@@ -631,7 +664,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.harbor.assert_restored(self)
 
     def test_the_fork_timeout_follows_the_time_the_baseline_classes_took(self):
-        for elapsed, timeout in (('50', '1750'), ('100', '2700')):  # 7 classes: 5x350 s; 5x700 s is past the ceiling
+        for elapsed, timeout in (('50', '2000'), ('100', '2700')):  # 8 classes: 5x400 s; 5x800 s is past the ceiling
             self.harbor.env['FAKE_RUNNER_ELAPSED'] = elapsed
             self.harbor.check('--hunk', '1', TESTS)
             self.assertIn(f'-Dsurefire.timeout={timeout}', self.harbor.runs()[-1]['args'])
@@ -651,7 +684,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         r = self.harbor.check(TESTS)
         self.assertEqual(r.returncode, 2)
         self.assertIn(f'another check (pid {os.getpid()}) is running', r.stderr)
-        self.assertEqual(len(self.harbor.runs()), 15)  # the refused check ran nothing
+        self.assertEqual(len(self.harbor.runs()), 16)  # the refused check ran nothing
 
     def test_an_edit_during_a_run_stops_the_check_and_keeps_the_edit(self):
         r = self.harbor.check(TESTS, mode='edit')

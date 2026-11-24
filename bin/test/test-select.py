@@ -3,9 +3,11 @@
 
 Two parts. A throwaway repository whose src/test holds every shape of user the selector must find (or must not:
 longer identifiers, a file name inside a longer one, a base class or a helper that names the change only in a
-comment). And the three incidents the selector exists for, checked against this repository's own tree: PeerNode's
-users reach MariaDBMultiServerSingleSpaceTest through PeerCluster and an abstract base; mParser.m_furi is called
-by fURITest; fsSpace is mounted by llmInstSetTest, sysInstSetTest and ObjZipSerializerTest. Needs git and python3.
+comment, a class whose only annotation is no test annotation). And rows on this repository's own tree: the three
+incidents the selector exists for (PeerNode's users reach MariaDBMultiServerSingleSpaceTest through PeerCluster
+and an abstract base; mParser.m_furi is called by fURITest; fsSpace is mounted by llmInstSetTest, sysInstSetTest
+and ObjZipSerializerTest), the classes whose tests carry a composed annotation, and the test-class rule over every
+class it could misjudge. Needs git and python3.
 
     python3 bin/test/test-select.py
 """
@@ -21,6 +23,9 @@ from pathlib import Path
 BIN = Path(__file__).resolve().parent.parent
 REPO = BIN.parent
 SCRIPT = BIN / 'test-select'
+sys.path.insert(0, str(BIN))
+from lib.java_lexer import lex  # noqa: E402
+from lib.test_runs import MOST_CLASSES  # noqa: E402
 
 TEST_JAVA = 'src/test/java/org/harbor/'
 HARBOR = {
@@ -92,6 +97,8 @@ HARBOR = {
     TEST_JAVA + 'LongerNameTest.java':
         'class LongerNameTest { BeaconLight a; Object myBeacon, Beacon_2, $Beacon; @Test void t() {} }',
     TEST_JAVA + 'FlagsTest.java': 'class FlagsTest { Beacon b; @TestReport void notATest() {} }',  # no test method
+    TEST_JAVA + 'TestReport.java':  # an annotation that carries no test annotation: FlagsTest stays no test
+        '@Retention(RetentionPolicy.RUNTIME)\npublic @interface TestReport { }',
     TEST_JAVA + 'AbstractCommentedTest.java': '/** unlike {@link Beacon}, nothing here shines */\n'
                                               'public abstract class AbstractCommentedTest { }',
     TEST_JAVA + 'QuietTest.java': 'public class QuietTest extends AbstractCommentedTest { @Test void t() {} }',
@@ -191,6 +198,7 @@ class SyntheticHarborTest(unittest.TestCase):
         r = self.select('--help')
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertTrue(r.stdout.startswith('bin/test-select — the test classes that use'), r.stdout[:80])
+        self.assertIn(f'longer than {MOST_CLASSES}\nclasses is flagged', r.stdout)  # the limit's value, from one place
 
     def test_no_user_prints_nothing_and_fails(self):
         r = self.select('Lighthouse')
@@ -204,16 +212,21 @@ class SyntheticHarborTest(unittest.TestCase):
         self.assertIn('WickTest <- Wick <- Lantern <- Beacon', r.stderr)
         self.assertIn('TrenchTest <- AbstractHarborTest <- Beacon', r.stderr)
         self.assertNotIn('wide radius', r.stderr)
-        for k in range(41):
+        for k in range(MOST_CLASSES + 1):
             (self.repo / TEST_JAVA / f'Gull{k:02d}Test.java').write_text(
                 f'class Gull{k:02d}Test {{ Gull gull; @Test void t() {{}} }}')
+            if k == MOST_CLASSES - 1:  # the limit itself is not wide
+                r = self.select('Gull')
+                self.assertEqual(len(selected(r.stdout)), MOST_CLASSES)
+                self.assertNotIn('wide radius', r.stderr)
         r = self.select('Gull')
-        self.assertEqual(len(selected(r.stdout)), 41)
-        self.assertIn('41 test classes: a wide radius', r.stderr)
+        self.assertEqual(len(selected(r.stdout)), MOST_CLASSES + 1)
+        self.assertIn(f'{MOST_CLASSES + 1} test classes: a wide radius', r.stderr)
 
 
 class RecordedIncidentsTest(unittest.TestCase):
-    """The incidents of observations 0020 and 0033, on this repository's tree."""
+    """On this repository's tree: the incidents of observations 0020 and 0033, the classes whose tests carry a
+    composed annotation, and the test-class rule over every class it could misjudge."""
 
     def select(self, *args: str) -> set[str]:
         r = subprocess.run([sys.executable, str(SCRIPT), *args], cwd=REPO, capture_output=True, text=True,
@@ -232,15 +245,18 @@ class RecordedIncidentsTest(unittest.TestCase):
         self.assertEqual(self.select('StatefulParametrizedTest') & scripted, scripted)
 
     def test_every_runnable_test_class_on_this_tree_is_a_test(self):
-        # the classes the rule can misjudge: test-named, with no JUnit test annotation in their own file. Each one
-        # judged a test selects itself (its file names it), so a name missing from the list is one the rule rejects
+        # the classes the rule can misjudge: test-named, with no JUnit test annotation in their own code, read as the
+        # rule reads it (comments out). Each one judged a test selects itself (its file names it), so a name missing
+        # from the list is one the rule rejects
         sources = REPO / 'src' / 'test' / 'java'
         named = {p.stem: p for p in sources.rglob('*.java')
                  if re.fullmatch(r'Test\w*|\w*(Test|Tests|TestCase)', p.stem)}
         at_risk = {name: p for name, p in named.items() if not re.search(
-            r'@(Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)\b', p.read_text())}
+            r'@(Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)\b',
+            '\n'.join(line.text for line in lex(p.read_text())))}
         self.assertGreater(len(named), 300)  # the population was read, not an empty tree
         self.assertIn('MachineIsolationScriptTest', at_risk)  # a composed annotation's users are among them
+        self.assertIn('tbleInstSetTest', at_risk)  # its @ParameterizedTest is commented out; its tests are inherited
         rejected = set(at_risk) - self.select(*sorted(at_risk))
         cannot_run = {name for name in rejected if re.search(
             r'\b(abstract\s+class|interface|@interface)\s+' + name + r'\b', at_risk[name].read_text())}
