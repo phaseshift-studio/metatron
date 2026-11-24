@@ -127,10 +127,14 @@ public class PlaceTest extends AbstractInstSetTest {
     /**
      * An alias whose prefix row states a port is that one transport, while the host names every transport on it.
      * harvest spawns its peers on one host and names each in the prefix table ({@code //0 => ws://localhost:1111}), so
-     * {@code place(<//0>)} is one peer, as {@code ?place=[//0]} is (PlaceResolver reads the same rule).
+     * {@code place(<//0>)} is one peer, as {@code ?place=[//0]} is (PlaceResolver reads the same rule). The roster lists
+     * the host's services at their mtron route, as a spawn files them: a dialed service is its dial, never a second
+     * transport, and the one address nothing dialed is a transport of the host.
      */
     @Test
     public void testAnAliasWithAPortIsOneTransport() {
+        Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(uri("pair"),
+                rec(uri(MTRON), rec(uri("loop"), objs(uri("loop://pair:1111/mtron"), uri("loop://pair:1114/mtron")))))))));
         Network.Helper.connect(Machine.current().network(), f("loop://pair:1111"));
         Network.Helper.connect(Machine.current().network(), f("loop://pair:1112"));
         Machine.current().network().registerPrefix(f("//p0"), f("loop://pair:1111"));
@@ -138,7 +142,8 @@ public class PlaceTest extends AbstractInstSetTest {
             final Place aliased = (Place) Places.place(uri("//p0"));
             assertEquals(List.of(f("loop://pair:1111")), aliased.authorities());
             assertEquals(1, aliased.linkedTo().stream().count(), "the alias's one dial is its edge: " + aliased.linkedTo());
-            assertEquals(List.of(f("loop://pair:1111"), f("loop://pair:1112")), ((Place) Places.place(uri("//pair"))).authorities());
+            assertEquals(List.of(f("loop://pair:1111"), f("loop://pair:1112"), f("loop://pair:1114/mtron")),
+                    ((Place) Places.place(uri("//pair"))).authorities());
         } finally {
             Machine.current().network().unregisterPrefix(f("//p0"));
         }

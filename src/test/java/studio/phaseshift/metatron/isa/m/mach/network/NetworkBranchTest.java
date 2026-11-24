@@ -37,6 +37,8 @@ import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -170,6 +172,33 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     }
 
     /**
+     * TWO SPAWNS ON ONE HOST SHARE ITS ROW: the roster keys a machine by its host ({@code machine => <host> => …}), so
+     * peers spawned on one machine are one row whose mtron transport lists both addresses, and the pop that reaps one
+     * takes back only its own.
+     */
+    @Test
+    public void testTwoSpawnsOnOneHostShareItsRow() {
+        final Obj declared = Machine.read(Network.ROOT_ROSTER);
+        final fURI kept = f("").scheme(WS).host("203.0.113.9").port(generatePort());
+        final fURI reaped = f("").scheme(WS).host("203.0.113.9").port(generatePort());
+        try {
+            PeerSpawn.spawn(kept.extend(f("/spawned")));
+            final Machine child = Machine.current().push(f("spawn_pair"));
+            try {
+                PeerSpawn.spawn(reaped.extend(f("/spawned")));
+                assertEquals(Set.of(PeerSpawn.address(kept), PeerSpawn.address(reaped)),
+                        listed(kept).stream().map(Obj::uriValue).collect(Collectors.toSet()), "one row, both addresses");
+                offline(PeerSpawn.address(reaped));
+            } finally {
+                child.pop();
+            }
+            checkEquality(LOG, uri(PeerSpawn.address(kept)), listed(kept), true);
+        } finally {
+            Machine.write(Network.ROOT_ROSTER, declared);
+        }
+    }
+
+    /**
      * A TAKE-BACK INTO A WIPED TABLE IS SKIPPED: the machine table written noobj after the spawn holds no count of it,
      * so the pop's undeclare takes nothing back, and the origin declared again is listed — where a take-back into the
      * absent level would leave a sign the new declaration cancels.
@@ -240,11 +269,11 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     }
 
     /**
-     * what the scheme-keyed view lists for one origin key, by uri text
+     * what the scheme-keyed view lists for an origin's host, the key every roster row is filed under
      */
     private static Obj listed(final fURI origin) {
         return Machine.current().network().machines().jvm().entrySet().stream()
-                .filter(entry -> entry.getKey().isUri() && origin.toString().equals(entry.getKey().uriValue().toString()))
+                .filter(entry -> entry.getKey().isUri() && origin.host().equals(entry.getKey().uriValue().toString()))
                 .map(Map.Entry::getValue).findFirst().orElse(noobj());
     }
 

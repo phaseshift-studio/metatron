@@ -90,27 +90,31 @@ public final class Places {
      * The transports that reach a machine — the union of the two tables: the roster's {@code machine} row (the
      * addresses discovery announced, if any) and the peer map (the authorities this machine actually dialed to that
      * host). A machine known only by a dial is still a place: the dial *is* one of its transports. Deduped by
-     * {@link fURI#basePath()} and sorted — a transport set has no order. An aligned alias whose prefix row states a
-     * port keeps only that transport ({@link Network.Helper#names}).
+     * {@link fURI#basePath()} and sorted — a transport set has no order. A roster address whose service a dial reaches
+     * is that dial, never a second transport, and an aligned alias whose prefix row states a port keeps only that
+     * transport ({@link Network.Helper#names}).
      */
     private static Lst authorities(final fURI machine) {
         if (null == machine || null == machine.host())
             return lst();
         final String host = machine.host();
         final Network network = Machine.current().network();
-        final List<fURI> transports = new ArrayList<>();
-        // the roster (known): a discovered row's addresses
-        network.machines().elements()
-                .filter(kv -> kv.first().isUri() && host.equals(kv.first().uriValue().toString()))
-                .map(Rel::second)
-                .forEach(value -> value.stream().filter(Obj::isUri).map(Obj::uriValue).forEach(transports::add));
         // the peer map (realized): the authorities this machine dialed to that host
-        network.peers().values()
+        final List<fURI> dials = network.peers().values()
                 .filter(Obj::isRec)
                 .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
                 .filter(origin -> host.equals(origin.host()))
-                .forEach(transports::add);
+                .toList();
+        final List<fURI> transports = new ArrayList<>(dials);
+        // the roster (known): a discovered row's addresses, but a service a dial reaches is the dial (a spawn files its
+        // peer's mtron route beside the origin the peer is dialed at, as PlaceResolver reads it too)
+        network.machines().elements()
+                .filter(kv -> kv.first().isUri() && host.equals(kv.first().uriValue().toString()))
+                .map(Rel::second)
+                .forEach(value -> value.stream().filter(Obj::isUri).map(Obj::uriValue)
+                        .filter(transport -> dials.stream().noneMatch(dial -> Network.Helper.sameService(dial, transport)))
+                        .forEach(transports::add));
         final List<Obj> uris = transports.stream()
                 .map(fURI::basePath)
                 // an aligned alias whose row states a port is that one transport, the rule PlaceResolver reads too

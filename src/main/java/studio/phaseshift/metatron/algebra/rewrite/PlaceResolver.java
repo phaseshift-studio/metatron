@@ -306,8 +306,8 @@ public final class PlaceResolver {
 
     /**
      * {@code //host[:port]} — the addressing redirect, read as {@code Places.place} reads it: the union of the two
-     * tables for that host, deduped by transport and sorted (the canonical order {@code Places} gives an authority
-     * set). The <em>host</em> is the selector: a path in the designator names no frame and the port names no socket
+     * tables for that host, a roster address whose service a dial reaches dropped for the dial, deduped by transport
+     * and sorted (the canonical order {@code Places} gives an authority set). The <em>host</em> is the selector: a path in the designator names no frame and the port names no socket
      * ({@code //ginger:9999} resolves through ginger's transports), so a place is an authority, never a frame path.
      * An alias is the exception ({@link Network.Helper#names}): when the prefix table maps it to an authority that
      * states a port ({@code //0 => ws://localhost:1111}), the place is that one transport.
@@ -323,8 +323,21 @@ public final class PlaceResolver {
         final String host = aligned.host();
         if (null == host)
             return List.of();
-        final List<fURI> transports = new ArrayList<>();
-        // the roster (known): the addresses discovery announced for the host, each admitted only if it can be dialed
+        // the peer map (realized): the authorities this machine actually dialed to that host, if it serves the route.
+        // A DIALED PEER, NOT EVERY PEER — the same `host` marker dialed() keeps: an accepted inbound session serves
+        // everything a shard needs (PlaceResolver.serves says yes), but it has no host to dial back to, so its origin is an
+        // ephemeral port nothing answers at.
+        final List<fURI> dials = env.peers().values()
+                .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
+                .filter(peer -> serves(peer, requires))
+                .map(Network.Helper::originOf)
+                .filter(Objects::nonNull)
+                .filter(origin -> host.equals(origin.host()))
+                .toList();
+        final List<fURI> transports = new ArrayList<>(dials);
+        // the roster (known): the addresses discovery announced for the host, each admitted only if it can be dialed.
+        // A SERVICE A DIAL REACHES IS THE DIAL: a spawn files its peer's mtron route (ws://localhost:1111/mtron) beside
+        // the origin the peer is dialed at, and the two are one place, never two lanes
         env.machines().elements()
                 .filter(kv -> kv.first().isUri() && host.equals(kv.first().uriValue().toString()))
                 .map(Rel::second)
@@ -334,18 +347,8 @@ public final class PlaceResolver {
                         // a transport with no scheme names no dialer at all, so it is no place to ship to
                         .filter(transport -> null != transport.scheme())
                         .filter(transport -> Signatures.resolves(transport.scheme()))
+                        .filter(transport -> dials.stream().noneMatch(dial -> Network.Helper.sameService(dial, transport)))
                         .forEach(transports::add));
-        // the peer map (realized): the authorities this machine actually dialed to that host, if it serves the route.
-        // A DIALED PEER, NOT EVERY PEER — the same `host` marker dialed() keeps: an accepted inbound session serves
-        // everything a shard needs (PlaceResolver.serves says yes), but it has no host to dial back to, so its origin is an
-        // ephemeral port nothing answers at.
-        env.peers().values()
-                .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
-                .filter(peer -> serves(peer, requires))
-                .map(Network.Helper::originOf)
-                .filter(Objects::nonNull)
-                .filter(origin -> host.equals(origin.host()))
-                .forEach(transports::add);
         return transports.stream()
                 .map(fURI::basePath)
                 // an aligned alias whose row states a port is that one transport, the rule Places reads too

@@ -129,6 +129,13 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     private static final fURI PAIR_DOWN = f("loop://pair:1113");
 
     /**
+     * The pair host's roster row, as a spawn files it: the two dialed services at their mtron route, and one service
+     * nothing dialed. A dial is the transport of the service it reaches, so only the undialed address adds a place.
+     */
+    private static final Rec PAIR_ROSTER = rec(uri("pair"),
+            objs(uri("loop://pair:1111/mtron"), uri("loop://pair:1112/mtron"), uri("loop://pair:1114/mtron")));
+
+    /**
      * A roster row for a machine this one knows and has not dialed: nutmeg, at its one transport.
      */
     private static final Rec ROSTER = rec(uri("nutmeg"), objs(uri(SECOND)));
@@ -212,7 +219,9 @@ public class PlaceResolverTest extends AbstractMetatronTest {
      * ({@code //0 => ws://localhost:1111}, {@code //1 => ws://localhost:1112}), so reading only the aligned host would
      * hand {@code //0} every peer on it. A prefix row that states a port names that transport; a written
      * {@code //host:port} is taken literally by the alignment, so it stays the host (the port is not a selector there),
-     * an alias whose row states no port names the host, and an alias whose transport is down names nothing. Each row:
+     * an alias whose row states no port names the host, and an alias whose transport is down names nothing. The roster
+     * lists the dialed services again at their mtron route, as a spawn files them: a dial is its service's transport,
+     * so no service is a place twice, and the one address nothing dialed is a place when the host is named. Each row:
      * the place set % its resolution, with {@code //p0}, {@code //p1}, {@code //pdown} and {@code //pq} bound in the
      * current machine's prefix table ({@code ~/network/prefix}) for the row.
      */
@@ -222,9 +231,9 @@ public class PlaceResolverTest extends AbstractMetatronTest {
             "//p1              % loop://pair:1112{1}",
             "'[//p0,//p1]'     % loop://pair:1111{1}, loop://pair:1112{1}",
             "//pdown           % ",
-            "//pq              % loop://pair:1111{1}, loop://pair:1112{1}",
-            "//pair            % loop://pair:1111{1}, loop://pair:1112{1}",
-            "//pair:1111       % loop://pair:1111{1}, loop://pair:1112{1}",
+            "//pq              % loop://pair:1111{1}, loop://pair:1112{1}, loop://pair:1114/mtron{1}",
+            "//pair            % loop://pair:1111{1}, loop://pair:1112{1}, loop://pair:1114/mtron{1}",
+            "//pair:1111       % loop://pair:1111{1}, loop://pair:1112{1}, loop://pair:1114/mtron{1}",
     }, delimiter = '%')
     public void testAnAliasNamesItsAuthority(final String written, final String expected) {
         // //pq's row states no port: it names the host, so every transport on it is the place
@@ -233,7 +242,7 @@ public class PlaceResolverTest extends AbstractMetatronTest {
         aliases.forEach(Machine.current().network()::registerPrefix);
         try {
             assertEquals(null == expected ? "" : expected.trim(),
-                    rendered(PlaceResolver.resolve(places(written), env(Set.of(MINE), ROSTER,
+                    rendered(PlaceResolver.resolve(places(written), env(Set.of(MINE), PAIR_ROSTER,
                             peer(PAIR_0, true, true, EVAL_INST_TID),
                             peer(PAIR_1, true, true, EVAL_INST_TID),
                             peer(PAIR_DOWN, true, false, EVAL_INST_TID)))),

@@ -204,15 +204,16 @@ public final class PeerSpawn {
 
     private static void declare(final fURI key, final fURI address) {
         // ADDED AS THE RING ADDS IT, and taken back the same way (undeclare): the roster keeps a count beside every
-        // other filer. The key is the peer's origin (ws://localhost:PORT), a rec key and no path segment. A spawned node
-        // is an mtron node carried by its address's own scheme ([mtron => [ws => …]]; a remote authority's wss or http
+        // other filer. The key is the peer's HOST, as every roster row's is (machine => <host> => …): peers spawned on
+        // one machine are one row, their addresses summed under the transport that carries them. A spawned node is an
+        // mtron node carried by its address's own scheme ([mtron => [ws => …]]; a remote authority's wss or http
         // alike, a forked one is ws, which resolve() holds it to), so the scheme-keyed view lists it and undeclare's
         // test of that view holds for every scheme. Under the roster's own
         // address, the monitor every roster writer holds (mdnsDiscovery too), so neither drops the other's row between
         // its read and its write.
         synchronized (Network.ROOT_ROSTER) {
             Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
-                    .plus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(address.scheme()), uri(address)))))));
+                    .plus(rec(uri(MACHINE), rec(uri(key.host()), rec(uri(MTRON), rec(uri(address.scheme()), uri(address)))))));
         }
         DECLARED.add(key);
     }
@@ -220,11 +221,14 @@ public final class PeerSpawn {
     private static void undeclare(final fURI key) {
         synchronized (Network.ROOT_ROSTER) {
             // TAKE BACK ONLY WHAT IS STILL LISTED: a table wiped since holds no count of it, and a take-back there would
-            // leave a sign that the next declaration of the origin cancels
-            if (Machine.current().network().machines().jvm().keySet().stream()
-                    .anyMatch(listed -> listed.isUri() && key.toString().equals(listed.uriValue().toString())))
+            // leave a sign that the next declaration of the origin cancels. The host's row may list other peers too, so
+            // the test is this peer's address under it
+            if (Machine.current().network().machines().jvm().entrySet().stream()
+                    .filter(row -> row.getKey().isUri() && key.host().equals(row.getKey().uriValue().toString()))
+                    .flatMap(row -> row.getValue().stream())
+                    .anyMatch(listed -> listed.isUri() && address(key).toString().equals(listed.uriValue().toString())))
                 Machine.write(Network.ROOT_ROSTER, Machine.read(Network.ROOT_ROSTER).orElse(rec0()).asRec()
-                        .minus(rec(uri(MACHINE), rec(uri(key), rec(uri(MTRON), rec(uri(address(key).scheme()), uri(address(key))))))));
+                        .minus(rec(uri(MACHINE), rec(uri(key.host()), rec(uri(MTRON), rec(uri(address(key).scheme()), uri(address(key))))))));
         }
     }
 
