@@ -47,11 +47,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.ToDoubleBiFunction;
-import java.util.function.ToLongBiFunction;
-import java.util.function.ToLongFunction;
+import java.util.function.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -918,7 +914,6 @@ public class mInstSet extends AbstractInstSet {
                         //  Objs.ObjsType.insts().stream(),
                         SpaceType.insts().stream(),
                         ObjType.insts().stream(),
-                        NoObj.NoObjType.insts().stream(),
                         Obj.Helper.isaInsts().stream(),
                         Stream.of(docWrap(instC(M_ISA_INST_TID.extend("save").dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.save()),
                                         "persist the lhs obj at its own vid — a no-op when the lhs has no vid",
@@ -1651,7 +1646,8 @@ public class mInstSet extends AbstractInstSet {
      * stream's multiplicity is c_out's business, not c_dom's. This is the single source of truth for the
      * instruction table, shared by explain()'s table and the ExplainTool widget.
      */
-    public record ExplainTypes(Type dom, Type rng, cInt cDom, cInt cRng) {}
+    public record ExplainTypes(Type dom, Type rng, cInt cDom, cInt cRng) {
+    }
 
     public static ExplainTypes explainTypes(final Inst i) {
         // only a positional (local) branch applies its own rule; a keyed branch is a route table the plan

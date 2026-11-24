@@ -159,6 +159,18 @@ public class mInstSetTest extends AbstractInstSetTest {
         assertTrue(serialized.contains("{'z','a','x','d','j'}"), "seed should survive serialization, got: " + serialized);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start({1,2,3})                                                                  % {1,2,3}",
+            "start({1})                                                                      % 1",
+            "start(1)                                                                        % 1",
+            "start(1,2,3)                                                                    % {1,2,3}",
+            "start(1,{4}2,3,3,3)                                                             % {1,{4}2,{3}3}",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testStart(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -1500,7 +1512,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             // else_after_count_rewrite tests
             "{1,2,3}.count().else(0)                % {1,2,3}.count()              % 3",
             "{1,2,3}.count().else(999)              % {1,2,3}.count()              % 3",
-            
+
             // split_collapse_rewrite tests (ring-theoretic branch collapsing)
             "{1}-<[plus(3),plus(3)]>-               % {1}.plus{2}(3)                % int{2}::4",
             "{1}-<[plus(2),plus(2),plus(2)]>-       % {1}.plus{3}(2)                % int{3}::3",

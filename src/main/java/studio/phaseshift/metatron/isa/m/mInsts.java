@@ -1248,6 +1248,14 @@ public final class mInsts {
      */
     public static Set<Inst> objs_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(START_INST_TID)
+                        .dom(fURI.Singleton.NOOBJ, "noobj")
+                        .rng(A.any(), "initial objs")
+                        .argLst(T(A.any()), "initial objs")
+                        .desc("the initial function f()->x")
+                        .body((lhs, inst) -> objs(inst.args().values()))
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build()
                         .tid(NOT_INST_TID)
                         .dom(ALL, "any obj")

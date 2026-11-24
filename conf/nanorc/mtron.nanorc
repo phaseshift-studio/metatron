@@ -90,11 +90,6 @@ color yellow start="\"\"\"" end="\"\"\""
 color bright-black "<[^>]>"
 ### bads
 color red "<\?>"
-### comments
-color bright-black start="\[--" end="--]"
-color bright-black start="\[==" end="==]"
-
-
 ### X=> match marker vs identifiers ending in X (e.g. PREFIX=>)
 # The red "X=>" marker above is meant for type-match positions printed at a
 # boundary (indented diagnostics, [X=>Y]).  An identifier whose name ends in
@@ -103,3 +98,6 @@ color bright-black start="\[==" end="==]"
 # cyan here (arrow restored to the sugar color right after).
 color cyan "[[:alnum:]_]+X=>"
 color magenta "=>"
+### comments
+color bright-black start="\[--" end="--]"
+color bright-black start="\[==" end="==]"

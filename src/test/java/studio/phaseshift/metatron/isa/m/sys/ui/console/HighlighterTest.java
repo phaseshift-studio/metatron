@@ -298,4 +298,19 @@ public class HighlighterTest extends AbstractMetatronTest {
                 "serialization + Graphitty keeps the fence color (the standard result path): "
                         + rendered.replace("\u001B", "\\e"));
     }
+
+    /**
+     * A branch {@code {b,c}} serializes to {@code { + {{b}}b{{/b}} + , + {{b}}c{{/b}} + }}, so its
+     * opening brace sits right against the {@code {{b}}} tag ({@code {{{b}}}).  The tag mask must
+     * not swallow the brace: the leftmost {@code {{}} of {@code {{{b}}} used to match, masking the
+     * brace so the nanorc never saw it and it came out blue instead of the structural green.
+     */
+    @Test
+    void testSerializedBranchBraceIsNotBlue() {
+        final studio.phaseshift.metatron.isa.m.type.Obj obj =
+                studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse("[{b,c}]");
+        final String rendered = Highlighter.format(obj);
+        assertFalse(rendered.contains("\u001B[34m{"),
+                "the branch's opening brace is green, not blue: " + rendered.replace("\u001B", "\\e"));
+    }
 }

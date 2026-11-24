@@ -116,11 +116,11 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
         assertEquals(91, rules.size());
         assertEquals(3, rules.stream().filter(r -> null != r.start()).count());
         // the design principle comment says so: assume everything is a uri — the first rule paints
-        // the whole line blue, and the last rule is the final repaint
+        // the whole line blue, and the comment regions sit last so they repaint every token inside
         assertEquals(List.of("blue"), rules.get(0).styles());
         assertEquals(".*", rules.get(0).regex());
-        assertEquals(List.of("magenta"), rules.get(rules.size() - 1).styles());
-        assertEquals("=>", rules.get(rules.size() - 1).regex());
+        assertEquals(List.of("bright-black"), rules.get(rules.size() - 1).styles());
+        assertEquals("\\[==", rules.get(rules.size() - 1).start());
         // every regex the file declares — the dead one included — is a java regex jline can compile
         for (final NanorcToHljs.Rule rule : rules) {
             final String regex = null == rule.start() ? rule.regex() : rule.start() + rule.end();
@@ -181,12 +181,12 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             assertTrue(subset.contains("(?!^mtron>)"));
             // BOTH arrays resolve in the reversed (later-wins) order — the subset lost its reversal
             // once and the int rule beat the green 0x inside every result body
-            assertTrue(subset.trim().startsWith("{ className: 'mtron-nanorc-magenta', begin: /=>/"));
-            assertTrue(full.trim().startsWith("{ className: 'mtron-nanorc-magenta', begin: /=>/"));
-            // reversed: the LAST nanorc rule (magenta =>) is the FIRST browser mode — nano's
-            // later-wins becomes highlight.js's first-mode-wins
+            assertTrue(subset.trim().startsWith("{ className: 'mtron-nanorc-bright-black', begin: /\\[==/, end: /==]/ }"));
+            assertTrue(full.trim().startsWith("{ className: 'mtron-nanorc-bright-black', begin: /\\[==/, end: /==]/ }"));
+            // reversed: the LAST nanorc rule (the [== comment region) is the FIRST browser mode —
+            // nano's later-wins becomes highlight.js's first-mode-wins
             assertTrue(js.contains("const MTRON_RULES = [\n"
-                    + "                { className: 'mtron-nanorc-magenta', begin: /=>/, relevance: 0 },"));
+                    + "                { className: 'mtron-nanorc-bright-black', begin: /\\[==/, end: /==]/ },"));
             // the posix class expanded to what the browser engine has, and no java leftovers
             assertTrue(js.contains("[A-Za-z0-9_]+X=>"));
             assertFalse(js.contains("[[:alnum:]]"));
@@ -251,6 +251,7 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             "'nat::29@/usr/marko/age'",
             "'noobj'",
             "'[-- comment --]'",
+            "'[-- a=>d --]'",
             "'\"\"\"[== multi ==]\"\"\"'",
             "'0x2A => 42'",
             "'\"str\" and ''str'''",
@@ -343,6 +344,7 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             "'PREFIXX=>' % 'cyan 0 9'",
             "'X=>' % 'red 0 3'",
             "'[-- comment --]' % 'bright-black 0 15'",
+            "'[-- a=>d --]' % 'bright-black 0 12'",
             "'a/b/c' % 'blue 0 5'",
             "'int::T' % 'blue 0 3;magenta 3 6'",
             "'a=>1' % 'cyan 0 1;magenta 1 3;yellow 3 4'",

@@ -47,7 +47,9 @@ import java.util.regex.Pattern;
 public class Highlighter implements org.jline.reader.Highlighter {
 
     private final SyntaxHighlighter syntaxHighlighter;
-    private final Pattern GRAPHITTY_PATTERN = Pattern.compile("\\{\\{.*?}}");
+    // (?!\{) keeps the leftmost {{ of a serialized objs brace + tag ("{{{") from matching: the
+    // objs "{" must stay visible so the nanorc paints it green, not be masked into the tag as blue.
+    private final Pattern GRAPHITTY_PATTERN = Pattern.compile("\\{\\{(?!\\{).*?}}");
     private final Graphitty graphitty;
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf/nanorc"),                               // application-wide settings
