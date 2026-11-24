@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -234,7 +235,10 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             "start([a=>start(1).plus(34).plus{3}(34)])    % plus{3}(34)",
     }, delimiter = '%')
     void testAnInstructionKeepsEveryCoefficientAcrossTheWire(final String source, final String written) {
-        final Code code = ObjmtronSerializer.parse(source).asCode();
+        final Obj parsed = ObjmtronSerializer.parse(source);
+        // A PROGRAM IS A CALL: a one-instruction program (start([a=>...])) parses to the instruction itself, not a code
+        assertTrue(parsed.isCall() && !parsed.isNoObj(), () -> "the row parsed as " + parsed + ", not a program: " + source);
+        final Code code = parsed.asCode();
         final String wire = ObjmtronSerializer.single().write(code);
         LOG.debug("testing {{b}}%s{{/b}} on the wire as {{b}}%s{{/b}}", source, wire);
         if (null != written)
@@ -269,7 +273,12 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             "lst[int{2}]::T",
     })
     void testAValueKeepsEveryCoefficientAcrossTheWire(final String literal) {
-        final Obj value = ObjmtronSerializer.parse(literal).apply();
+        // THE OBJ IS WHAT READING THE ROW GIVES, as ObjmtronSerializerPurityTest reads its rows (1f14fff4a): applying
+        // the parse runs a type as a filter on nothing, so the three type rows were noobj and idem compared noobj with
+        // noobj. A row that names something must not evaluate to nothing, or to a fail.
+        final Obj value = ObjmtronSerializer.single().read(literal);
+        assertFalse(value.isFail() || (value.isNoObj() && !ObjmtronSerializer.parse(literal).isNoObj()),
+                () -> "the row read as " + value + ", so its round trip tests nothing: " + literal);
         final String wire = ObjmtronSerializer.single().write(value);
         LOG.debug("testing {{b}}%s{{/b}} on the wire as {{b}}%s{{/b}}", literal, wire);
         idem(value);
@@ -300,18 +309,32 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
     /**
      * IDEMPOTENT ON THE WIRE — {@code fURITest.idem}, for objs, run on every row this class writes, the inherited corpus
      * included. Every writer of mtron text ({@code write()}, and {@code toString()}, which the string-keyed paths take)
-     * is read back by every reader (the grammar, and for a value the wire's own evaluating {@code read()}; a code is a
-     * program, and reading it as a value would run it). Each read must be the obj, equal and node for node the same
-     * ({@link #nodes}), and each writer must write the read obj exactly as it wrote the obj. So by induction any chain
-     * of writers and readers, of any length and in any order, is the identity, on the obj and on its text.
+     * is read back by every reader of its kind (the grammar, and for a type or a value also the wire's own
+     * {@code read()}; a call is a program, read back by the grammar and never run). Each read must be the obj, equal
+     * and node for node the same ({@link #nodes}), and each writer must write the read obj exactly as it wrote the obj.
+     * So by induction any chain of writers and readers, of any length and in any order, is the identity, on the obj
+     * and on its text.
      */
     @Override
     protected void idem(final Obj obj) {
         final List<String> expected = nodes(obj);
         final List<Function<Obj, String>> writers = List.of(ObjmtronSerializer.single()::write, Obj::toString);
+        // THE READERS BY KIND, each read back in the obj's own kind. A call is a program: the grammar reads it back and
+        // nothing runs it, a code as a code (a one-instruction program parses to the bare instruction) and a bare
+        // instruction as itself. A type is read as itself, by the grammar and by the wire's read(); applying its parse
+        // would run it as a filter on nothing and answer noobj. Any other value is the applied parse and the wire's read().
+        final List<Function<String, Obj>> readers;
+        if (obj.isCode())
+            readers = List.of(text -> ObjmtronSerializer.parse(text).asCode());
+        else if (obj.isCall())
+            readers = List.of(ObjmtronSerializer::parse);
+        else if (obj.isType())
+            readers = List.of(ObjmtronSerializer::parse, ObjmtronSerializer.single()::read);
+        else
+            readers = List.of(text -> ObjmtronSerializer.parse(text).apply(), ObjmtronSerializer.single()::read);
         for (final Function<Obj, String> writer : writers) {
             final String text = writer.apply(obj);
-            for (final Function<String, Obj> reader : readers(obj)) {
+            for (final Function<String, Obj> reader : readers) {
                 final Obj back = reader.apply(text);
                 checkEquality(LOG, obj, back, true);
                 assertEquals(expected, nodes(back), () -> "every node keeps its tid, span, point and vid: " + text);
@@ -319,15 +342,6 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
                     assertEquals(rewriter.apply(obj), rewriter.apply(back), () -> "the text is a fixpoint: " + text);
             }
         }
-    }
-
-    /**
-     * The readers a text is read back by: the grammar, and for a value the wire's own evaluating {@code read()}.
-     */
-    private static List<Function<String, Obj>> readers(final Obj obj) {
-        if (obj.isCode())
-            return List.of(text -> ObjmtronSerializer.parse(text).asCode());
-        return List.of(text -> ObjmtronSerializer.parse(text).apply(), ObjmtronSerializer.single()::read);
     }
 
     /**
