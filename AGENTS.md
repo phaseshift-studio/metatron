@@ -381,7 +381,8 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
   keep the first/last n segments and `retract(n)`/`pretract(n)` drop the last/first n; all four keep the scheme, the
   host and the leading `/`, so a key sliced with `pretract` still carries its `test:`. `asNode()`/`asBranch()` strip
   or add the trailing `/`, `asRelative()`/`asAbsolute()` the leading one. `hasPrefix(f)` is a segment prefix (a pattern
-  prefix bimatches), and `removePrefix(f)` answers the bare relative remainder, so call it behind a `hasPrefix` check.
+  prefix bimatches). `removePrefix(f)` matches a plain prefix by string, so `/a` strips `/ab/c` to `b/c`, and on a miss
+  it answers the fURI unchanged: call it only behind a `hasPrefix` check.
 - the empty path is a trap: `head(0)` and a full `retract` leave an empty path, which counts as absolute, stays empty
   under `asBranch()` and `asAbsolute()`, and reads as the relative `+` once extended. Root a slice with
   `Space.Helper.root(...)` instead.
@@ -411,7 +412,7 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
    `AbstractMetatronTest`; use `@SkipInheritedTests` for selective skipping
 5. **Docker**: Image built & published to GHCR via `.github/workflows/docker.yml` (not part of the Maven build).
 6. **mtron files**: name a new `.mtron` file `<name>.<usage>.mtron` (`drstynx.boot.mtron`, `default.splash.mtron`,
-   `mach.instset.mtron`). Existing files keep their names until Marko migrates them, so a neighbouring file's name is
+   `mach.instset.mtron`). Existing files keep their names until Marko migrates them, so a neighboring file's name is
    not an example.
 
 ---
@@ -442,8 +443,8 @@ named under Absolute Rules also blocks edits to the build output.
   reference. Every example in a skill doc must pass the docs pipeline (`bin/metatron-docker build docs <file.md>`);
   `fail::` lines in the processed output are broken examples.
 * A change that alters what an existing example PRINTS is due the same check as a change to its text: before you
-  call a feature done, run the docs' examples of it through the pipeline. An inherited exclusion that leaves one of
-  them printing the old output is unfinished work to raise with Marko, not a note.
+  call a feature done, run the docs' examples of it through the pipeline. A special case kept from the code you
+  replaced that leaves one of them printing the old output is unfinished work to raise with Marko, not a note.
 * Create or rewrite `.md` docs only when asked, or when the change is mechanical (a new class in a package map).
 
 Which reference to update for which class, and how: [docs/agents/skill-docs.md](docs/agents/skill-docs.md).

@@ -568,7 +568,8 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 ?int::T    [-- check if type is int --]
 ```
 
-`?x` is `isa(x)`. Only `?=`, `?>` and `?<` are filter sugar (`?>5` is `is(gt(5))`), so `int::T[?gt(5)]` asks
+`?x` is `isa(x)`. The comparison prefixes are filter sugar, `is(…)` around their instruction: `?=`, `?!=`, `?>`,
+`?>=`, `?<`, `?<=`, and `?~` for `is(sorta(…))` (`?>5` is `is(gt(5))`; `??` alone is `sorta`). So `int::T[?gt(5)]` asks
 whether an obj is an instance of the instruction `gt(5)`, and the filter is `int::T[?>5]`. A rec after `?` is a
 structural type matched open-world: `?[name=>'marko']` passes any rec that holds that field, whatever else it holds,
 and a field's value can itself be a predicate (`?[age=>?>30]`).

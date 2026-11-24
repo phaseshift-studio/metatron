@@ -172,7 +172,7 @@ children's partials, and every leaf runs the slave's. Because A computes the com
 **Realized (v1).** `law_shard`'s fan-out decision states the axes — `.place(PlaceSet.peer()).hop(1, cInt.ANY())
 .split(Partition.stream())` — and the budget is `?hop=height{arity}`: the height, and as a leading coefficient the
 **arity**, how many children one node may fan out to (`[h,1]` is the chain, the pair form because a coefficient of one
-normalizes away). A peer re-plans the part it is handed because applying a code compiles it (`Machine.applyCode`), so
+normalizes away). A peer re-plans the part it is handed because applying a code compiles it (`Machine.evaluate`), so
 the rule fires again where the part lands; at a height of zero the part is a leaf, and a zero arity is the identity.
 
 ```

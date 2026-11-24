@@ -96,13 +96,14 @@ A uri's form is also its scope, so the form decides where a write lands:
 
 | form                       | scope                                                                      |
 |----------------------------|----------------------------------------------------------------------------|
-| `ws://host:8555/a/b`       | across machines                                                            |
+| `ws://host:8555/a/b`       | across physical machines, through a dialed peer                            |
 | `/a/b`                     | the machines of one JVM, where a mounted space indexes the path            |
 | `a/b`                      | the machine's variable stack, shared by its threads                        |
 | `inst(a/b=>int::T){...}`   | an instruction's argument uri: local to the thread that applies it         |
 
 The writes above land because the first example mounted a `memspace` at `/a/#`. An absolute write needs a space that
-indexes its path; a relative write (`a -> 5`) always lands on the variable stack.
+indexes its path, and so does a write to a uri with a scheme or a host (`mydb:people/1`). A plain relative write
+(`a -> 5`) lands on the variable stack, while `~/a` first resolves to an absolute uri under the machine's own vid.
 
 ## mtron crud cheat-sheet
 

@@ -235,9 +235,9 @@ of round trips a lane's share costs, not how the index set was split.
 ## the menu
 
 The centerpiece: every pattern, the law that makes it sound, and what it does; then the mtron each one rewrites.
-A ▶ play button plays the pattern's recorded cast. What is implemented is a ✅ in the taxonomy tree below, the one
-place that says so; a pattern can be done before it has a cast. The key letters index the menu: in prose for a
-reader, name the pattern and keep its letter in parentheses, as in *the run partition (V)*.
+A ▶ play button plays the pattern's recorded cast. What is implemented is a ✅ in the taxonomy tree below, which the
+legend dates; a pattern can be done before it has a cast. The key letters index the menu: in prose for a reader, name
+the pattern and keep its letter in parentheses, as in *the generative run (V)*.
 
 | key   | play                                                                                                 | pattern                     | law                                                                                                                                | description                                                                                       |
 |-------|------------------------------------------------------------------------------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
@@ -370,8 +370,8 @@ The four top branches read the two axes of `docs/design/distributed-patterns-thr
 - **composite & substrate** builds on the rest: `N` iterates a dealt superstep (`law_bsp`), `R` writes results to a spatial
   address, `M` decomposes into O / A / G over three index splits, `I` lowers the plan's axes to a layout.
 
-Implemented is a ✅ (green) in this tree, and only here; white = the law holds, the lowering is unwritten. A ▶ in the
-menu plays a recorded cast, which a done pattern may not have yet.
+Implemented is a ✅ (green) in this tree, dated in the legend above; white = the law holds, the lowering is unwritten.
+A ▶ in the menu plays a recorded cast, which a done pattern may not have yet.
 
 ## the implemented layouts, spelled out
 
@@ -457,8 +457,10 @@ on p_1:    branch?<={0}&split=part(<p_2> => start?hop={2}0({1,3,5,7}).plus(1).su
 The axis resolves per run, in chain order — the first statement among the run's own instructions wins, else the axis
 the run before it resolved, else the plan's tree route (default height 1, the star). A statement governs from where it
 stands onward: `start?hop=0(…)` keeps a whole chain home, while `?hop=0` on the last fold keeps only that run home. The
-`?place` and `?split` axes resolve the same way. A peer re-plans its part because applying a code compiles it
-(`Machine.evaluate(lhs, code)` prepends `start(lhs)` and runs the compiler). The lane restates the form, never the number (see *?hop*): `{2}2 ⇒ {2}1 ⇒ 0`. A chain (`[h,1]`)
+`?place` and `?split` axes resolve the same way. A peer re-plans its part because applying a code compiles it:
+`Machine.evaluate(lhs, code)` runs a code of more than one instruction through the machine's compiler, and a shipped
+lane arrives as such a code, `start?hop=…(part)` followed by its run. The lane restates the form, never the number
+(see *?hop*): `{2}2 ⇒ {2}1 ⇒ 0`. A chain (`[h,1]`)
 hands the whole part to one child, so the tree is a line.
 `?hops` is the deprecated pre-singular spelling of the same key: it is read for one cycle, `?hop` wins at the same
 position (both keys on one instruction), and the earliest statement wins across positions.
