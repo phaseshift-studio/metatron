@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,6 +68,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         final String text = ObjmtronSerializer.single().write(addressed);
         LOG.debug("an addressed uri on the wire: %s", text);
         checkEquality(LOG, addressed, ObjmtronSerializer.single().read(text), true);
+        idem(addressed);
     }
 
     /**
@@ -88,6 +90,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         final Obj read = ObjmtronSerializer.single().read(text);
         assertEquals(f("abc"), read.vid(), "the vid comes back outside the brackets");
         checkEquality(LOG, addressed, read, true);
+        idem(addressed);
     }
 
     /**
@@ -109,6 +112,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         final Obj written = ObjmtronSerializer.parse(expected).apply();
         checkEquality(LOG, uri(f(value)), written, true);
         checkEquality(LOG, uri(f(value)), ObjmtronSerializer.single().read(ObjmtronSerializer.single().write(uri(f(value)))), true);
+        idem(uri(f(value)));
     }
 
     /**
@@ -150,6 +154,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         LOG.debug("testing {{b}}%s{{/b}} serialized to {{b}}%s{{/b}}", literal, wire);
         assertEquals(parsed, ObjmtronSerializer.single().read(wire),
                 () -> "wire form '" + wire + "' did not read back as the value it wrote");
+        idem(parsed);
     }
 
     /**
@@ -166,6 +171,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         LOG.debug("a mixed-quote string on the wire: %s", wire);
         assertEquals(value, ObjmtronSerializer.single().read(wire),
                 () -> "wire form '" + wire + "' did not read back as the value it wrote");
+        idem(value);
     }
 
     /**
@@ -183,6 +189,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         // READ IS THE WIRE'S OWN READER: a code expression is applied, so the round trip is the parser's code (the
         // text is a program, and reading it as a value would run it).
         checkEquality(LOG, code, ObjmtronSerializer.parse(wire).asCode(), true);
+        idem(code);
     }
 
     /// /////////////////////////////////////////////////////////////////////////////////////
@@ -192,9 +199,10 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
     /// op{c} on an instruction), and a SPAN, its extent (x{n} on a value, {n}op on an instruction). The writer is
     /// rewritten often, and each time it can drop one without a single test failing: the 11-12 fix restored an
     /// instruction's span, the point stayed dropped, and law_shard's lanes, which reach their peers as text, ran
-    /// unpointed for five days. Every row below is a round trip twice over: the text read back EQUALS what was written,
-    /// and every node of the tree keeps its base path, span, point and vid (nodes()), so a coefficient lost anywhere in
-    /// the tree fails at the node it was lost at, even if equality were ever loosened.
+    /// unpointed for five days. Every row below, as every row this class writes, runs through idem(): every writer read
+    /// back by every reader, the read obj EQUAL and node for node the same (nodes(): base path, span, point and vid),
+    /// and the text a fixpoint. A coefficient lost anywhere in the tree fails at the node it was lost at, even if
+    /// equality were ever loosened.
     /// /////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -231,9 +239,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         LOG.debug("testing {{b}}%s{{/b}} on the wire as {{b}}%s{{/b}}", source, wire);
         if (null != written)
             assertTrue(wire.contains(written.trim()), () -> "the coefficient is written as " + written.trim() + ": " + wire);
-        final Code back = ObjmtronSerializer.parse(wire).asCode();
-        checkEquality(LOG, code, back, true);
-        assertEquals(nodes(code), nodes(back), () -> "every node keeps its base path, span, point and vid: " + wire);
+        idem(code);
     }
 
     /**
@@ -264,9 +270,7 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         final Obj value = ObjmtronSerializer.parse(literal).apply();
         final String wire = ObjmtronSerializer.single().write(value);
         LOG.debug("testing {{b}}%s{{/b}} on the wire as {{b}}%s{{/b}}", literal, wire);
-        final Obj back = ObjmtronSerializer.single().read(wire);
-        checkEquality(LOG, value, back, true);
-        assertEquals(nodes(value), nodes(back), () -> "every node keeps its base path, span, point and vid: " + wire);
+        idem(value);
     }
 
     /**
@@ -288,9 +292,40 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         final String wire = ObjmtronSerializer.single().write(layout);
         LOG.debug("a pointed layout on the wire: %s", wire);
         assertTrue(wire.contains("plus{2}(34)") && wire.contains("plus{3}(34)"), () -> "every lane's points are written: " + wire);
-        final Code back = ObjmtronSerializer.parse(wire).asCode();
-        checkEquality(LOG, layout, back, true);
-        assertEquals(nodes(layout), nodes(back), () -> "every node keeps its base path, span, point and vid: " + wire);
+        idem(layout);
+    }
+
+    /**
+     * IDEMPOTENT ON THE WIRE — {@code fURITest.idem}, for objs, run on every row this class writes, the inherited corpus
+     * included. Every writer of mtron text ({@code write()}, and {@code toString()}, which the string-keyed paths take)
+     * is read back by every reader (the grammar, and for a value the wire's own evaluating {@code read()}; a code is a
+     * program, and reading it as a value would run it). Each read must be the obj, equal and node for node the same
+     * ({@link #nodes}), and each writer must write the read obj exactly as it wrote the obj. So by induction any chain
+     * of writers and readers, of any length and in any order, is the identity, on the obj and on its text.
+     */
+    @Override
+    protected void idem(final Obj obj) {
+        final List<String> expected = nodes(obj);
+        final List<Function<Obj, String>> writers = List.of(ObjmtronSerializer.single()::write, Obj::toString);
+        for (final Function<Obj, String> writer : writers) {
+            final String text = writer.apply(obj);
+            for (final Function<String, Obj> reader : readers(obj)) {
+                final Obj back = reader.apply(text);
+                checkEquality(LOG, obj, back, true);
+                assertEquals(expected, nodes(back), () -> "every node keeps its base path, span, point and vid: " + text);
+                for (final Function<Obj, String> rewriter : writers)
+                    assertEquals(rewriter.apply(obj), rewriter.apply(back), () -> "the text is a fixpoint: " + text);
+            }
+        }
+    }
+
+    /**
+     * The readers a text is read back by: the grammar, and for a value the wire's own evaluating {@code read()}.
+     */
+    private static List<Function<String, Obj>> readers(final Obj obj) {
+        if (obj.isCode())
+            return List.of(text -> ObjmtronSerializer.parse(text).asCode());
+        return List.of(text -> ObjmtronSerializer.parse(text).apply(), ObjmtronSerializer.single()::read);
     }
 
     /**
@@ -308,7 +343,8 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             nodes.add("noobj");
             return;
         }
-        nodes.add(obj.tid().basePath() + "{b=" + obj.tid().b() + ",d=" + obj.tid().d() + "}" + (obj.hasVID() ? "@" + obj.vid() : ""));
+        nodes.add((null == obj.tid() ? "tid=null" : obj.tid().basePath() + "{b=" + obj.tid().b() + ",d=" + obj.tid().d() + "}")
+                + (obj.hasVID() ? "@" + obj.vid() : ""));
         if (obj.isCode())
             obj.asCode().insts().forEach(inst -> nodes(inst, nodes));
         else if (obj.isInst())

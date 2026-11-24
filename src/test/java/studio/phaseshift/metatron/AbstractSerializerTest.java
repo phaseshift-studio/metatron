@@ -244,9 +244,17 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
             } else {
                 assertEquals(obj, obj2);
                 assertEquals(obj.type(), obj2.type());
+                this.idem(obj);
             }
 
         }
 
+    }
+
+    /**
+     * A SERIALIZER'S OWN CLOSURE over every corpus row it round-trips: none by default. The mtron serializer's
+     * ({@code ObjmtronSerializerTest}) runs every writer against every reader, as {@code fURITest.idem} does for uris.
+     */
+    protected void idem(final Obj obj) {
     }
 }
