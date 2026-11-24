@@ -159,10 +159,20 @@ class SyntheticHarborTest(unittest.TestCase):
                       'ChartTest <- chart.csv <- Beacon',  # a resource followed by its file name
                       'ScratchTest <- EchoTest.java <- Beacon'):  # a .java under resources is data, followed too
             self.assertIn(f'  {chain}\n', r.stderr)
+        for line in ('  Lantern: LanternTest, Wick (followed)', '  Logbook: CaptainTest', '  chart.csv: ChartTest',
+                     '  EchoTest.java: ScratchTest'):  # a followed name's own trail line: a user or two, never cut
+            self.assertIn(line + '\n', r.stderr)
         self.assertNotIn('flag.bin', r.stderr)
-        unused = next(line for line in r.stderr.splitlines() if line.startswith('  followed, with no users:'))
+        unused = next((line for line in r.stderr.splitlines() if line.startswith('  followed, with no users:')), '')
         for helper in ('FlagsTest', 'LogTest'):  # a test's name, but no test method: followed as helpers
-            self.assertIn(helper, unused)
+            self.assertIn(helper, unused, r.stderr)
+
+    def test_the_trail_labels_each_user(self):  # inputs narrow enough that their trail line is never cut
+        for name, line in (('flash', 'Lantern (followed), MemberTest, Mooring (abstract: 1 test subclass)'),
+                           ('beacon', 'AbstractHarborTest (abstract: 3 test subclasses)'),
+                           ('AbstractHarborTest', 'AbstractDeepHarborTest (abstract: 1 test subclass), '
+                                                  'HarborCheck (followed, 1 test subclass), PierTest')):
+            self.assertIn(f'  {name}: {line}\n', self.select(name).stderr)
 
     def test_a_file_a_class_and_a_member_name_the_same_users(self):
         by_file = self.select('src/main/java/org/harbor/Beacon.java')
