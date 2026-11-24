@@ -38,6 +38,8 @@ import javax.jmdns.ServiceInfo;
 import javax.jmdns.impl.ServiceInfoImpl;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -400,8 +402,24 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
      * without it, a handler that announced nothing at all would pass.
      */
     @Test
-    public void testABackendsLoginIsNeverAnnounced() {
-        final fURI listening = f("ws://0.0.0.0:" + generatePort());
+    public void testABackendsLoginIsNeverAnnounced() throws SocketException {
+        // THE CONTROL LISTENS ON A ROUTABLE ADDRESS: this machine's own row files no wildcard or loopback surface (no
+        // address anyone dials), so the endpoint the roster must carry binds where mdns announces, the first up,
+        // non-loopback IPv4 (mdnsDiscovery.localAddresses)
+        final String routable = NetworkInterface.networkInterfaces()
+                .filter(iface -> {
+                    try {
+                        return iface.isUp() && !iface.isLoopback();
+                    } catch (final SocketException e) {
+                        return false;
+                    }
+                })
+                .flatMap(NetworkInterface::inetAddresses)
+                .filter(address -> address instanceof Inet4Address)
+                .map(InetAddress::getHostAddress)
+                .findFirst().orElse(null);
+        assumeTrue(null != routable, "no routable interface here — mdns is inert");
+        final fURI listening = f("").scheme(WS).host(routable).port(generatePort());
         final fURI endpoint = listening.extend(f("/mtron"));
         final fURI backend = f("/memory/space/mdns-backend");
         // patterned as the boot's are: a <vid>/# pattern would retract onto the vid, and the cache a web space
@@ -431,6 +449,28 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
             handler.close();
             Machine.current().memory().removeSpace(backend);
             listener.close();
+        }
+    }
+
+    /**
+     * A WILDCARD OR LOOPBACK SURFACE FILES NO OWN ROW. {@code 0.0.0.0} is a bind, not an address, and a loopback is this
+     * machine; filed in its own row, either is what a reader dialing every roster address
+     * ({@code *~/network/roster/machine/+/mtron/ws.-<[host=>_].as(ws_client::T)}) dials as this machine's own peer. Each
+     * row: the surface % the rows its own row files.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws://0.0.0.0:8555/mtron     % 0",
+            "ws://127.0.0.1:8555/mtron   % 0",
+            "ws://localhost:8555/mtron   % 0",
+            "ws://203.0.113.7:8555/mtron % 1",
+    }, delimiter = '%')
+    void testAWildcardOrLoopbackSurfaceFilesNoOwnRow(final String surface, final int rows) {
+        final mdnsDiscovery handler = handler();
+        try {
+            assertEquals(rows, handler.ownRow(f(surface.trim()), f(WS)).size(), "the own row of " + surface);
+        } finally {
+            handler.close();
         }
     }
 

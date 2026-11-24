@@ -294,6 +294,10 @@ public final class PlaceResolver {
      * <p>
      * No dedupe: two dials of one service are two lanes, which is what the pre-resolver filter chain answered and what
      * the emitter's stride expects.
+     * <p>
+     * A MACHINE IS NEVER ITS OWN PEER: a dial that reaches one of this machine's own listen authorities (its wildcard
+     * bind dialed back, or a loopback alias of it, {@link Network.Helper#sameService}) is the machine itself. A lane
+     * shipped there is a round trip to itself, and a tree would plan that lane into itself again.
      */
     private static List<fURI> dialed(final Env env, final Placement requires) {
         return env.peers().values()
@@ -301,6 +305,7 @@ public final class PlaceResolver {
                 .filter(peer -> serves(peer, requires))
                 .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
+                .filter(origin -> env.authorities().stream().noneMatch(own -> Network.Helper.sameService(own, origin)))
                 .toList();
     }
 

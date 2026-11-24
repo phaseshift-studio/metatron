@@ -373,8 +373,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
         // reconciliation loop below keeps both true as spaces and services come and go for the VM's whole life
         surfaces().forEach((surface, transport) -> {
             this.announced.put(surface.toString(), transport);
-            this.roster(surface.toString(), List.of(rec(uri(MACHINE), rec(uri(this.machineOf(surface)),
-                    rec(uri(MTRON), rec(uri(transport), uri(surface.toString())))))));
+            this.roster(surface.toString(), this.ownRow(surface, transport));
         });
         while (!this.closed) {
             try {
@@ -392,6 +391,21 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
+     * THIS MACHINE'S OWN ROW for one surface, {@code [machine=>[<host>=>[mtron=>[<transport>=><surface>]]]]}, or no row
+     * when the surface's host is the bind wildcard or a loopback ({@link fURI#isLoopbackHost()}). Neither is an address:
+     * {@code 0.0.0.0} has to be resolved to the interfaces behind it ({@link #localAddresses()}), and a reader that dials
+     * every roster address would reach this machine as its own peer. Other machines learn the surface at the interface
+     * addresses the responders announce. Filing no row is filing nothing, so the retire of such a surface takes nothing
+     * back.
+     * <p>
+     * VISIBLE FOR TESTING, like {@link #roster}.
+     */
+    List<Obj> ownRow(final fURI surface, final fURI transport) {
+        return surface.isLoopbackHost() ? List.of() : List.of(rec(uri(MACHINE), rec(uri(this.machineOf(surface)),
+                rec(uri(MTRON), rec(uri(transport), uri(surface.toString()))))));
+    }
+
+    /**
      * Re-read the live surfaces and reconcile the announced set against them: announce what is new, retire what is
      * gone. Runs AS the owning machine — the mDNS callbacks stand in no machine of their own.
      */
@@ -405,8 +419,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
                 if (null == this.announced.putIfAbsent(surface.toString(), transport)) {
                     this.responders.forEach(mdns -> this.announce(mdns, service, surface, transport));
                     // THIS MACHINE'S OWN ROW, filed once per surface — never once per responder that announces it
-                    this.roster(surface.toString(), List.of(rec(uri(MACHINE), rec(uri(this.machineOf(surface)),
-                            rec(uri(MTRON), rec(uri(transport), uri(surface.toString())))))));
+                    this.roster(surface.toString(), this.ownRow(surface, transport));
                 }
             });
             final List<Map.Entry<String, fURI>> gone = List.copyOf(this.announced.entrySet()).stream()

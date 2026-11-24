@@ -216,6 +216,26 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     }
 
     /**
+     * A MACHINE IS NEVER ITS OWN PEER. This machine listens on the wildcard ({@code ws://0.0.0.0:8555}); a dial back to
+     * it, spelled as the wildcard or as a loopback alias, is the machine itself and no place, while a sibling on this
+     * host at another port and another machine are peers as before, through the peer enum and by name alike. Each row:
+     * the place set % its resolution.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "peer         % ws://localhost:1111{1}, loop://ginger:8555{1}",
+            "//localhost  % ws://localhost:1111{1}",
+    }, delimiter = '%')
+    public void testThisMachineIsNeverItsOwnPeer(final String written, final String expected) {
+        assertEquals(expected.trim(), rendered(PlaceResolver.resolve(places(written), env(Set.of(f("ws://0.0.0.0:8555")), ROSTER,
+                        peer(f("ws://0.0.0.0:8555"), true, true, EVAL_INST_TID),
+                        peer(f("ws://localhost:8555"), true, true, EVAL_INST_TID),
+                        peer(f("ws://localhost:1111"), true, true, EVAL_INST_TID),
+                        peer(SERVANT, true, true, EVAL_INST_TID)))),
+                "resolving " + written);
+    }
+
+    /**
      * AN ALIAS NAMES ITS AUTHORITY. harvest spawns its peers on one host and names each in the network's prefix table
      * ({@code //0 => ws://localhost:1111}, {@code //1 => ws://localhost:1112}), so reading only the aligned host would
      * hand {@code //0} every peer on it. A prefix row that states a port names that transport; a written
