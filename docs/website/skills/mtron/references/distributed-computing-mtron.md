@@ -6,7 +6,7 @@ description: |
   declared theories and process laws on `object::T` / `morphism::T`, `Law.Helper`'s *computed* combiner, and the
   `plan::T` vocabulary (`cut` / `where` / spans) built by `PlanBuilder`, applied by `PlanInterpreter`, and emitted by
   `Shard` — the body of the `law_shard` rule in the machine's rewrite pool (`instset().rewrites()`; the local law
-  rules are /m's, `law_shard` and `law_bsp` are `catRewrite`'s; `law_bsp`, the superstep of entry N, is `Bsp`).
+  rules are /m's, and so are `law_shard` and `law_bsp` since 2026-11-24; `law_bsp`, the superstep of entry N, is `Bsp`).
   One row per pattern (A–W): its algebraic law (the latex), the mtron
   you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif).
   A play button marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented
@@ -35,7 +35,7 @@ menu, fix the five pieces a row names:
 |--------------------------------|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `machine::T`                   | `~/`                  | the topology. `push`/`pop` is a call stack; a child machine is a subproblem; a *mini-cluster* is a child machine + the peers its network declares + the URI space they share. The authority is the boundary — an address names work this machine owns or work a peer owns.                                                                                                                          |
 | `network::T`                   | `~/network`           | the reach. `roster` is what the system **knows** (connectionless endpoints); `peer` is what **this** machine has **dialed**. Knowledge is inherited, reach is not. A `peer::T` carries a `host` (where to dial it back) — the marker that makes it a fan-out target; an inbound accept has none and never receives a shard.                                                                         |
-| `rewriter::T`                  | `~/compiler/rewriter` | the stage. The compiler's first atomic pass lowers `code::T → code::T` to a fixpoint over the machine's **rewrite pool** (`instset().rewrites()`); `fixpoint_rewriter::[max=>N]` is one such stage. A distribution rule is one rule of that pool, applied in place — the local law rules live in `/m`, `law_shard` is `catRewrite`'s, and every emitted layout is itself re-planned where it lands. |
+| `rewriter::T`                  | `~/compiler/rewriter` | the stage. The compiler's first atomic pass lowers `code::T → code::T` to a fixpoint over the machine's **rewrite pool** (`instset().rewrites()`); `fixpoint_rewriter::[max=>N]` is one such stage. A distribution rule is one rule of that pool, applied in place — `law_shard` and `law_bsp` live in `/m` beside its local laws, every instset's rules run in the order they declare (`?pre`/`?post` families, then `?zindex`; `Rewriter.Helper.sort`), and every emitted layout is itself re-planned where it lands. |
 | `instset::T`                   | `/m/math/cat`         | the declaration surface. `object::T` holds a type's structural theories; `morphism::T` holds an inst's process laws, `form`, `class`, and `analysis`; `path::T` lifts *code* to a vertex whose out-edges are the live rewrite rules, each a `plan::T`. `lower(plan::T)` and `bind(plan::T)` are the two applications.                                                                               |
 | `law::T`, `plan::T`, `path::T` | —                     | the engine. A `plan::T` assembles `[name, cut, where]` (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the `law::T` declarations — never named, always computed.                                                                                                                                        |
 
@@ -131,18 +131,21 @@ The place set, as a value: a **list** is a set of designators, a **rec** carries
 coefficient is that designator's **demand** (how many lanes it takes — a share is a lane, so demand is both data weight
 and concurrency). Repetition is multiplicity: `[//ginger,//ginger,//booger]` is ginger twice.
 
-| designator           | resolves through                                             |
-|----------------------|--------------------------------------------------------------|
-| `local`              | this frame's own place (the addressless `eval()`)            |
-| `peer`               | the **dialed** set (host-bearing, online, `serves`-positive) |
-| `#`                  | every reachable place the other entries did not name         |
-| `//host[:port]`      | the roster's place (a redirect)                              |
-| `scheme://host:port` | one authority, as written                                    |
+| designator           | resolves through                                                                 |
+|----------------------|----------------------------------------------------------------------------------|
+| `local`              | this frame's own place (the addressless `eval()`)                                |
+| `peer`               | the **dialed** set (host-bearing, online, `serves`-positive), never this machine |
+| `#`                  | every reachable place the other entries did not name                             |
+| `//host[:port]`      | the roster's place (a redirect); the port is not a selector                      |
+| `//alias`            | a `~/network/prefix` name; a row's port names one transport                      |
+| `scheme://host:port` | one authority, as written                                                        |
 
 `?place=[local,peer]` is S (the master takes a share); `[{4}local]` is four home lanes on a peerless machine, still a
 fan-out (it demands the off-machine merge's laws); `local=>0` is the explicit exclusion. Exclusion is omission.
 A **roster** machine is *knowledge*, not reach: it is a fan-out target only when the author names it (`//host`) —
-`peer` is the **dialed** set. A declared-but-undialed machine alone leaves `law_shard` the identity.
+`peer` is the **dialed** set. A declared-but-undialed machine alone leaves `law_shard` the identity. **A machine is
+never its own peer**: a dial back to one of its own listen authorities (its wildcard bind, or a loopback alias of it) is
+no place, through `peer`, `#` or `//host`, and neither is its own address in the roster.
 
 ### `?split` — what counts as one share
 
@@ -570,7 +573,7 @@ is emitted, and the rest, bulked, are the next frontier. For a floatable code th
 right distributivity; they part when a pass holds a fold, which meets one member per monad but the whole frontier per
 superstep: `{1,2,3}.repeat(code=>sum(),until=>loop()?>0)` is `{1,2,3}`, the `?<=int{*}` form is `6`.
 
-`law_bsp` (`Bsp`, registered in `catRewrite` before `law_shard`) deals a superstep's code over the dialed peers:
+`law_bsp` (`Bsp`, registered in `mInstSet` before `law_shard`) deals a superstep's code over the dialed peers:
 
 ```mtron
 x.repeat?<=A{*}(code=>f, until=>p)
@@ -636,7 +639,7 @@ bulked member keeps its count across a remote lane (`test_N_a_bulked_member_keep
 `move()` relocates the *frame of reference* — the machine the code runs in — rather than moving data. It is the
 machine ring's serial `·` (`move` points the machine pointer at an existing machine, and the value flows through
 unchanged), so it is the one distributed pattern that is **not a fold**: no reducer, no combiner, no `Law.Helper`, no
-`plan::T`. A hand-crafted `rewriter` rule (`extractMove`) tails the code at the first remote move, ships the tail to
+`plan::T`. A hand-crafted `rewriter` rule (`extractNomadic`) cuts the code at its first move, push or pop and ships a remote tail to
 that authority via `eval`, and stops. The receiving machine re-compiles the shipped tail, finds the next move, and
 tails-and-ships again — the one dumb step propagates *fractally*, machine to machine, without the origin ever
 re-entering the loop; it does not propagate by local recursion — each machine re-compiles the shipped tail, so the
@@ -709,9 +712,11 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    `<combiner>.<tail>`, no SEED span — a tail, never a lane), and the fan-out is `.place(PlaceSet.peer())
    .hop(1, cInt.ANY()).split(Partition.stream())` over `tree(1, seed.partition(), pre.withoutSeed(), at)`.
    `create()` validates the axes' obligations and writes no derived `shape`/`target`.
-4. **Register it.** A rewrite in `catRewrite.rules()`, wired into `catInstSet`'s `REWRITE` key, lowers the plan
-   (`code -> PlanInterpreter.lower(plan, code)`), so the compiler's rewriter applies it, and `path::T` draws it as an
-   out-edge wherever it moves the code.
+4. **Register it.** A rewrite in `mInstSet`'s `REWRITE` list,
+   `/m/inst/rewrite/law_shard?zindex=500&pre=[/m/db/+/inst/rewrite]`, lowers the plan
+   (`code -> PlanInterpreter.lower(plan, code)`), so the compiler's rewriter applies it after every database pushdown
+   and, in `/m`'s own rank, after the local laws and before the capture rules, and `path::T` draws it as an out-edge
+   wherever it moves the code. Every machine has it, the category imported or not.
 5. **The emitter lowers it.** `Shard.apply` — the body `PlanInterpreter` delegates to — walks the chain cut by cut,
    `[initial, {+}[{*}home, {*}floatable, blocked(reducer ∧ laws)], {*}tail]`. Each cut is a fold that recombines, the
    floatable run before it (never reaching back past the cut before) ships, and what lies between stays home. Each run
@@ -720,11 +725,24 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    when it runs (a stated dom coefficient pages the shipment); and the **run partition** when the seed is one obj and
    the run carries a closed span range or a point (see *the run partition*). The lane's first instruction states the
    restated budget (`?hop=0` at a leaf).
+   A machine change is never compiled past (`Law.nomadic`, Marko 2026-11-24): `move`, `push`, `pop` and `cut` change
+   `Machine.current()`, and the nomadic extractor (machInstSet's `nomadic_extract`, ranked ahead of every other
+   instruction set's rules) cuts the chain at the first of them. A move becomes `cut(<target>, tail)` and a push or a
+   pop is followed by `cut(<~>, tail)`, so `law_shard` and `law_bsp` plan only what runs here, and the tail is
+   compiled by the machine it lands in, over that machine's own peers (reach is not inherited). A cut into this
+   server's machine tree switches the current machine and compiles the tail there; a cut to a host ships the program,
+   and the receiver's own extractor cuts the `move(</path>)` it arrives with. `explain()` and `profile()` are the
+   return home: the tail ends before them, so `1.move(<a>).plus(1).explain()` compiles to
+   `1.cut(<a>, plus(1)).explain()`, explained here with nothing run, and a profile times the cut here, every run
+   starting from home.
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's
-   insts). A **declared** (roster) machine is knowledge, not reach — name it (`//host`) to ship there. An outage
-   *shrinks* the fan-out; it never poisons the reduction.
+   insts). A dial back to this machine is no target (`Network.Helper.reachesSelf`): a machine is never its own peer.
+   A **declared** (roster) machine is knowledge, not reach — name it (`//host`) to ship there. An outage *shrinks* the
+   fan-out; it never poisons the reduction. Every machine has the rule, so a lane sent with hop budget left re-plans
+   where it lands, over that machine's own dialed peers (until 2026-11-24 the rule was the category's, and a peer that
+   never imported `/m/math/cat` ran every lane it was sent flat).
 
 ## see also
 

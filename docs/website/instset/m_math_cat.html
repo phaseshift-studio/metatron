@@ -528,15 +528,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">categorical realization of types and insts as objects and morphisms</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">7</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">rewrites</span></div><div class="instset-stat"><span class="instset-stat-n">5</span><span class="instset-stat-l">defined elsewhere</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">7</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">5</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 23, 2026</span>
+            <span class="instset-built">built November 24, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
     <div class="container-xxl">
-        <nav class="instset-subnav-inner" aria-label="sections"><a class="instset-subnav-link" href="#types" data-target="types">types</a><a class="instset-subnav-link" href="#instructions" data-target="instructions">insts</a><a class="instset-subnav-link" href="#defined" data-target="defined">external definition</a><a class="instset-subnav-link" href="#rewrites" data-target="rewrites">rewrites</a></nav>
+        <nav class="instset-subnav-inner" aria-label="sections"><a class="instset-subnav-link" href="#types" data-target="types">types</a><a class="instset-subnav-link" href="#instructions" data-target="instructions">insts</a><a class="instset-subnav-link" href="#defined" data-target="defined">external definition</a></nav>
     </div>
 </div><div class="container-xxl">
     <div class="instset-accordion-wrapper">
@@ -552,8 +552,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/math/cat::[pattern=&gt;/m/math/cat/#,
-              q=&gt;[
+                        <pre><code>/m/math/cat::[q=&gt;[
                docq::[
                 pattern=&gt;docq,
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -565,17 +564,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                 obj=&gt;/m/instset::[q=&gt;[,]]]],
-              inst=&gt;[
-               lower?path&lt;=path(plan::T){&lt;j&gt;},
-               bind?path&lt;=path(plan::T){&lt;j&gt;},
-               as?morphism&lt;=#(morphism::T){&lt;j&gt;},
-               as?object&lt;=#(object::T){&lt;j&gt;},
-               as?path&lt;=#(path::T){&lt;j&gt;},
-               as?abstraction&lt;=#(abstraction::T){&lt;j&gt;},
-               as?place&lt;=#(place::T){&lt;j&gt;}],
-              rewrite=&gt;[
-               /m/math/cat/inst/rewrite/law_bsp?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}],
+              pattern=&gt;/m/math/cat/#,
               type=&gt;[
                rec[obj]::T[?[
                 obj=&gt;&lt;#&gt;::T,
@@ -600,7 +589,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 {?}src=&gt;!*/m/math/cat/category/object,
                 {?}trgt=&gt;!*/m/math/cat/category/object,
                 {?}analysis=&gt;rec::T,
-                {?}law=&gt;[uri{+}::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+                {?}law=&gt;[uri{+}::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,nomadic,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
                 {?}class=&gt;[rec{+}::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
                 {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism,
                category::T[?[
@@ -618,7 +607,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                  {?}result=&gt;&lt;#&gt;::T,
                  {?}cut=&gt;[
                   {?}form=&gt;uri::T,
-                  {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+                  {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,nomadic,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
                   {?}role=&gt;uri::T],
                  {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                                 {?}target=&gt;&lt;#&gt;::T,
@@ -640,7 +629,16 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 {?}source=&gt;uri::T,
                 {?}linked_to=&gt;[rec::T],
                 {?}linked_from=&gt;[rec::T],
-                {?}status=&gt;uri::T]][ctor?place&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/place]]@/m/math/cat</code></pre>
+                {?}status=&gt;uri::T]][ctor?place&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/place],
+              inst=&gt;[
+               lower?path&lt;=path(plan::T){&lt;j&gt;},
+               bind?path&lt;=path(plan::T){&lt;j&gt;},
+               as?morphism&lt;=#(morphism::T){&lt;j&gt;},
+               as?object&lt;=#(object::T){&lt;j&gt;},
+               as?path&lt;=#(path::T){&lt;j&gt;},
+               as?abstraction&lt;=#(abstraction::T){&lt;j&gt;},
+               as?place&lt;=#(place::T){&lt;j&gt;}],
+              rewrite=&gt;[,]]@/m/math/cat</code></pre>
                     </div>
                 </div>
             </div>
@@ -687,15 +685,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">as</span>
     <span class="pill-label badge bg-info ms-2">D</span>
-</a></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__math__cat__inst__rewrite__law_bsp" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">law_bsp</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__math__cat__inst__rewrite__law_shard" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">law_shard</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a></div>
 </div></div>
     </div>
@@ -778,7 +767,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               {?}src=&gt;!*/m/math/cat/category/object,
               {?}trgt=&gt;!*/m/math/cat/category/object,
               {?}analysis=&gt;rec::T,
-              {?}law=&gt;[uri{+}::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+              {?}law=&gt;[uri{+}::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,nomadic,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
               {?}class=&gt;[rec{+}::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
               {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism</code></pre></div>
     
@@ -845,7 +834,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}result=&gt;&lt;#&gt;::T,
                {?}cut=&gt;[
                 {?}form=&gt;uri::T,
-                {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+                {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,nomadic,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
                 {?}role=&gt;uri::T],
                {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                               {?}target=&gt;&lt;#&gt;::T,
@@ -862,13 +851,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> code as a categorical path incident to iso-semantic rewritten forms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
+  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
+  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
   <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
   <a href="#uri{?}::T" class="text-light">uri{?}::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\) of the machine's rewrite pool, keyed by the rule's name and holding its \(\mathrm{name}\) and its \(\mathrm{result}\), the vertex \(r(p)\); a rule is live on \(p\) iff \(r(p) 
 eq p\), so a normal form has no edge"" class="text-info">&quot;one out-edge per live rewrite \(r\) of the machine&#39;s rewrite pool, keyed by the rule&#39;s name and holding its \(\mathrm{name}\) and its \(\mathrm{result}\), the vertex \(r(p)\); a rule is live on \(p\) iff \(r(p) 
 eq p\), so a normal form has no edge&quot;</a>
-  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
-  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__place">
@@ -958,39 +947,6 @@ eq p\), so a normal form has no edge&quot;</a>
         are stored in the corresponding instruction set.
     </p>
     /m/math/cat
-</div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">2</span></h3>
-    <div class="card mb-3" id="__m__math__cat__inst__rewrite__law_bsp">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">law_bsp</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/math/cat/inst/rewrite/law_bsp?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/law_bsp?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the superstep: a whole-frontier repeat (repeat?&lt;=A{*}) whose code is pure and floatable deals its frontier over the dialed peers every pass -- \(\mathrm{repeat}^{\{*\}}(f) \leadsto \mathrm{repeat}^{\{*\}}(\mathrm{branch}^{\{*\}}_{\mathrm{part}}(p_1 \Rightarrow f, \ldots, p_n \Rightarrow f))\): the loop stays home and each pass is a branch that parts the frontier over the peers (lock-step BSP)
-conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__math__cat__inst__rewrite__law_shard">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">law_shard</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/math/cat/inst/rewrite/law_shard?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the distribution kernel \((a+b) \cdot r = (a \cdot r + b \cdot r) \cdot \mathrm{combiner}(r)\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer&#39;s combiner -- computed, never declared: \(\Sigma\) and \(\Pi\) recombine through themselves, \(\mathrm{count}\) through \(\Sigma\), \(\mathrm{order}(s)\) through \(\mathrm{kmerge}(s)\), \(\mathrm{group}([k \Rightarrow h])\) pointwise through \(\Sigma\) then \(\mathrm{combiner}(h)\) per key, and \(\mathrm{mean}\) through itself after its lift \(\ell\), each lane answering its mean weighted by its count -- \(\{1,2,3\}.f.\mathrm{count} \leadsto \mathrm{branch}(a \Rightarrow \{1,3\}.f.\mathrm{count},\ b \Rightarrow \{2\}.f.\mathrm{count}).\Sigma\)
-conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
-</div>
-</div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">

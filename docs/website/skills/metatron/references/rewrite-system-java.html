@@ -563,8 +563,8 @@ Code.resolve(lhs)                       [Code.java:98]
 instruction set's union, <code>Machine.current().instset().rewrites()</code> (the default of <code>Rewriter.rewrites()</code>): its own
 level first, then the instruction sets it imported, then the enclosing machine's, each rewrite once by its tid, so a
 nearer level SHADOWS the same tid. The default compiler stage, <code>fixpoint_rewriter::T</code>, applies the pool in order to a
-fixpoint (<code>FixPointRewriter.apply</code>):</p>
-<pre><code class="language-java">for (final Inst r : orderedRules(this.rewrites())) {     // analysis rules last, registration order otherwise
+fixpoint (<code>FixPointRewriter.apply</code>), in the order the rules declare (<code>Rewriter.Helper.sort</code>, memoized per rule set):</p>
+<pre><code class="language-java">for (final Inst r : Rewriter.Helper.sort(this.rewrites())) {   // ?pre/?post families, then ?zindex, then registration
     final Obj rewritten = r.apply(code);
     if (rewritten.isCode())
         code = rewritten.asCode();
@@ -601,8 +601,23 @@ obj flowing in:</p>
 *~/instset/rewrite/law_absorbing.active().to(~/instset/rewrite/law_absorbing)      on again: the override goes
 ~/instset/rewrite/law_absorbing -&gt; noobj                                           on again, the same way
 </code></pre>
-<p>An instruction set's own path walks its rec: what no table holds is the rec's, so <code>*/m/math/cat/rewrite</code> answers what
-<code>*/m/math/cat&gt;&gt;rewrite</code> does, the set's live rewrites.</p>
+<p>An instruction set's own path walks its rec: what no table holds is the rec's, so <code>*/m/rewrite</code> answers what
+<code>*/m&gt;&gt;rewrite</code> does, the set's live rewrites.</p>
+<h4>The pass order a rule declares</h4>
+<p>Every rewrite is <code>&lt;instset&gt;/inst/rewrite/&lt;name&gt;</code>, and its grouping is that folder. A rule places itself in the pass on
+its tid (Marko, 2026-11-24), and <code>Rewriter.Helper.sort</code> is the one place the order is computed:</p>
+<ul>
+<li><code>?zindex=n</code> ranks it within its grouping (unset is 0, bigger is later, registration order among equals), and that
+rank is never broken.</li>
+<li><code>?pre=[{+}uri::T]</code>: every rule of another grouping whose tid has one of the prefixes runs before it;
+<code>?post=[{+}uri::T]</code>: after it. A prefix may be a pattern (<code>/m/db/+/inst/rewrite</code>, every database instset's rules).</li>
+<li>What the declarations leave unordered goes by zindex, then registration, across groupings too.</li>
+</ul>
+<p>The nomadic extractor (<code>/m/mach/inst/rewrite/nomadic_extract?post=[/m]</code>) runs ahead of every other instruction
+set's rules: code is never compiled past an instruction that changes the current machine (<code>Law.nomadic</code>).</p>
+<p>The declarations need not form a poset: a declaration on a cycle is void, and zindex ranks the cycle's rules. The
+distribution rules show the form: <code>/m/inst/rewrite/law_shard?zindex=500&amp;pre=[/m/db/+/inst/rewrite]</code> runs after every
+database pushdown and, in <code>/m</code>'s rank, after the local laws and before the capture rules (<code>?zindex=1000</code>).</p>
 <h3>Rewrite styles</h3>
 <h4>1. <code>Rewriter.search().match().rewrite()</code> — fixed-window pattern replacement</h4>
 <p>Matches a concrete sequence of instruction TIDs against a sliding window, then replaces the matched slice with a new

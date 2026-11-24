@@ -26,12 +26,12 @@ mtron> feature=>[
      feature=>[
            tool_feature::[tool=>[!*eval...
             ^
-     unclosed triple-quote — missing closing '"""']
+     unexpected '=']
 mtron> ]
 ==>fail::[parse error at line 1, col 1:
      ]
      ^
-     unclosed triple-quote — missing closing '"""']
+     unexpected ']']
 ```
 ## References
 

@@ -279,6 +279,7 @@ mtron> |plus?int<=int(int::T).as(morphism::T)>>law
 | `floatable`               | the coefficient commutes through the stream ring's parallel/serial structure                                                                                                                                                                                                                                                                                                             |
 | `blocked`                 | cannot float past a barrier — a reduce anchors the coefficient                                                                                                                                                                                                                                                                                                                           |
 | `pure`                    | no effect: the result depends on the lhs and args alone (never inferred)                                                                                                                                                                                                                                                                                                                 |
+| `nomadic`                 | changes the current machine (`move`, `push`, `pop`, `cut`): the rest of the chain is compiled where it lands, never here                                                                                                                                                                                                                                                                 |
 | `partial`                 | pass-through-or-drop $\{0,1\}$ — the optional (maybe) lift of a value                                                                                                                                                                                                                                                                                                                    |
 | `kleene`                  | the reflexive-transitive iterate $a^{*}$ — a Kleene closure                                                                                                                                                                                                                                                                                                                              |
 | `prime`                   | atomic — no nontrivial factorization                                                                                                                                                                                                                                                                                                                                                     |
@@ -317,11 +318,12 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `branch_collapse` (/m)   | the additive op of the code ring's theory (`branch`)                                        | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
 | `branch_inline` (/m)     | the additive op of the code ring's theory, with a single member                             | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
 | `map_float` (/m)         | a value or a type argument whose point is exact                                             | $\mathrm{map}(x\{c\}) \leadsto \mathrm{map}\{c\}(x)$ — the point floats off the argument, so `branch(int::T,int::T)` compiles to `map{2}(int::T)`                                                                        |
-| `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
-| `law_bsp`                | a whole-frontier `repeat?<=A{*}` whose code is pure and floatable, + a dialed peer          | each pass deals the frontier over the dialed peers and merges home (entry N's superstep)                                                                                                                                                            |
+| `law_shard` (/m)         | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a dialed peer      | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
+| `law_bsp` (/m)           | a whole-frontier `repeat?<=A{*}` whose code is pure and floatable, + a dialed peer          | each pass deals the frontier over the dialed peers and merges home (entry N's superstep)                                                                                                                                                            |
 
-**Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
-`monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
+**Most declared laws carry no rule.** Six of them back a rule directly — `involution`, `idempotent`, `absorbing`,
+`monoidic`, `poset`, and `nomadic` (/m/mach's `nomadic_extract`, which cuts a chain at its first machine change) —
+and `floatable` and `blocked` do not drive a rule of their own but constrain where a
 distribution plan may anchor (its spans). `pure` constrains every rule that moves, drops or replicates code: only a
 declared-pure instruction is swallowed by `law_absorbing`, replicated into `law_shard`'s floatable run, or dealt by `law_bsp`, and an
 instruction that does not declare it is effectful (`to`, `print`, `side` stay where they are). The remaining labels
@@ -599,7 +601,7 @@ switched off with `inactive()` draws none.
 | field   | description                                                                                                                                                                                                                                                                                                      |
 |---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `obj`   | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj`                                                                     |
-| `where` | (optional) the α **place-class word** — the places the code can be distributed TO (its declared roster machines and dialed peers) as a list of `place::T`; the surface a placement guard reads, the location twin of `obj`'s instruction word. Absent with no reach, and `law_shard` is then not a live morphism |
+| `where` | (optional) the α **place-class word** — the places the code can be distributed TO (its dialed peers, never this machine itself; a machine the roster only knows is no reach) as a list of `place::T`; the surface a placement guard reads, the location twin of `obj`'s instruction word. Absent with no reach, and `law_shard` is then not a live morphism |
 
 The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per
 instruction,
@@ -698,32 +700,24 @@ the quine rule, the payload is a program the receiver re-plans on compile, never
 shapes are deferred to later phases, and **no cut-less plan is registered in the rewrite table yet** — every
 registered rewrite has a `cut` — so `bind` is currently unexercised by the default rules.
 
-**A distribution plan requires peers.** `law_shard` is live only over a non-empty peer roster: its guard reads the
-machine's dialed peers, and with no peer it matches nothing, so `lower` is the identity. A `ws_client` dials and
-self-registers a `peer::T` into the network; that registration is the condition that turns the rule live:
+**A distribution plan requires peers.** `law_shard` (a rule of `/m`, the category imported or not) is live only over
+dialed peers: its guard reads the machine's dialed peers, and with no peer it matches nothing, so `lower` is the
+identity. `spawn` forks a node on this host, another machine as far as the network is concerned, and a `ws_client`
+dialed at it self-registers a `peer::T` into the network; that registration is the condition that turns the rule live.
+A dial back to this machine's own listener registers a `peer::T` too, but a machine is never its own peer, so that one
+turns nothing live:
 
 ```mtron
-mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>ws_client::[host=>ws://localhost:8555/mtron,
-               send=>λ(){<j>},
-               send_recv=>λ(){<j>},
-               inst=>[
-                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-                /m/inst/from=>*uri::T,
-                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-               status=>!λstatus?bool<=(){<j>},
-               close=>λ(){<j>},
-               on_message=>print('received ${_}')]
+mtron> 0.spawn(<//localhost/peer>,<//peer>).-<[host=>_].as(ws_client::T)>>host
+==>fail::[unable to locate inst-f int::T => /m/mach/inst/spawn(//localhost/peer,//peer)@<1>]
 mtron> */network
 ```
-`*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
-`machine::T`
-now holding that `peer::T`, the `path::T` lists `law_shard` among its out-edges.
+`*~/network` reads back the current machine's network block — the dialed `peer::T` at the spawned node's address.
+With the `machine::T` now holding that `peer::T`, the `path::T` lists `law_shard` among its out-edges.
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
-           law_shard=>plan::[name=>law_shard,result=>!λ(#{*}::T){<j>}]]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum()]]
 ```
 `law_shard` is Theorem 19 of the stream-ring algebra ([Stream Ring Theory](../../../articles/stream-ring-theory.html)):
 monoidic reducers are **semi-right distributive**,
@@ -745,16 +739,14 @@ form a tree. Every rewrite of the machine's pool is an edge, so the rewrite tabl
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[>>law_shard>>result]
-==>[path::[obj=>branch?int{*}<={0}&split=part(ws://localhost:8555=>/m/inst/start?hop=0({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum()).sum(),
-           where=>[[span=>at]=>[//localhost:8555=>1]]]]
+==>[noobj]
 ```
 A keyed fold distributes the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the
 partial recs and `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[>>law_shard>>result]
-==>[path::[obj=>branch?rec{*}<={0}&split=part(ws://localhost:8555=>/m/inst/start?hop=0({1,2,3,4,5,6})./m/inst/group([/m/inst/mod(3)=>/m/inst/sum()])).sum?rec<=rec{*}().select([id()=>sum()]),
-           where=>[[span=>at]=>[//localhost:8555=>1]]]]
+==>[noobj]
 ```
 ### may / must — the fiber modality
 
@@ -790,11 +782,6 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 
 ```mtron
 mtron> <//localhost>.as(place::T)
-==>place::[obj=>//localhost,
-           authority=>[ws://localhost:8555],
-           linked_to=>!λ(){<j>},
-           linked_from=>!λ(){<j>},
-           status=>!λ(){<j>}]
 ```
 | field         | what it is                                                                                                                                 |
 |---------------|--------------------------------------------------------------------------------------------------------------------------------------------|
@@ -877,7 +864,7 @@ Three location fields, three questions — easy to conflate because two share th
 |----------|------------------|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
 | `origin` | `path::T`        | `Places.self()` at lift                                                                        | where the code **starts** — this machine's listeners (`//0.0.0.0`); absent → not placeable |
 | `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `branch`'s keys  |
-| `where`  | `abstraction::T` | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — roster ∪ dialed peers (the α place-class word)                       |
+| `where`  | `abstraction::T` | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — dialed peers (the α place-class word)                                |
 
 `Places.reachable()` deliberately excludes the origin — it is where the code starts, not where it can go. The
 `path::T.where` is the *realized* placement (the shard actually shipped); the `abstraction::T.where` is the *reach* a

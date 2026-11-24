@@ -117,6 +117,6 @@ Five rules, each true before this worked, make it work:
 Two consequences come with it:
 
 - A rewrite rule is data. A rec of `pattern => change` can be stored, shipped, and documented. The compiler's Java
-  rewrites (the move extractor, the law folds) are this shape compiled.
+  rewrites (the nomadic extractor, the law folds) are this shape compiled.
 - A name on a typed hole is also a type of the machine: `int::T@a` defines `a::T` in the machine's root frame. Threads
   that rewrite at once each work in a machine of their own (`push`, then `pop`), where those types live and die.

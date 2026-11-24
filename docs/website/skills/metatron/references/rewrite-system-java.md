@@ -48,10 +48,10 @@ Rewrites are registered in an `InstSet` under the `uri(REWRITE)` key during `set
 instruction set's union, `Machine.current().instset().rewrites()` (the default of `Rewriter.rewrites()`): its own
 level first, then the instruction sets it imported, then the enclosing machine's, each rewrite once by its tid, so a
 nearer level SHADOWS the same tid. The default compiler stage, `fixpoint_rewriter::T`, applies the pool in order to a
-fixpoint (`FixPointRewriter.apply`):
+fixpoint (`FixPointRewriter.apply`), in the order the rules declare (`Rewriter.Helper.sort`, memoized per rule set):
 
 ```java
-for (final Inst r : orderedRules(this.rewrites())) {     // analysis rules last, registration order otherwise
+for (final Inst r : Rewriter.Helper.sort(this.rewrites())) {   // ?pre/?post families, then ?zindex, then registration
     final Obj rewritten = r.apply(code);
     if (rewritten.isCode())
         code = rewritten.asCode();
@@ -98,8 +98,26 @@ obj flowing in:
 ~/instset/rewrite/law_absorbing -> noobj                                           on again, the same way
 ```
 
-An instruction set's own path walks its rec: what no table holds is the rec's, so `*/m/math/cat/rewrite` answers what
-`*/m/math/cat>>rewrite` does, the set's live rewrites.
+An instruction set's own path walks its rec: what no table holds is the rec's, so `*/m/rewrite` answers what
+`*/m>>rewrite` does, the set's live rewrites.
+
+### The pass order a rule declares
+
+Every rewrite is `<instset>/inst/rewrite/<name>`, and its grouping is that folder. A rule places itself in the pass on
+its tid (Marko, 2026-11-24), and `Rewriter.Helper.sort` is the one place the order is computed:
+
+- `?zindex=n` ranks it within its grouping (unset is 0, bigger is later, registration order among equals), and that
+  rank is never broken.
+- `?pre=[{+}uri::T]`: every rule of another grouping whose tid has one of the prefixes runs before it;
+  `?post=[{+}uri::T]`: after it. A prefix may be a pattern (`/m/db/+/inst/rewrite`, every database instset's rules).
+- What the declarations leave unordered goes by zindex, then registration, across groupings too.
+
+The nomadic extractor (`/m/mach/inst/rewrite/nomadic_extract?post=[/m]`) runs ahead of every other instruction
+set's rules: code is never compiled past an instruction that changes the current machine (`Law.nomadic`).
+
+The declarations need not form a poset: a declaration on a cycle is void, and zindex ranks the cycle's rules. The
+distribution rules show the form: `/m/inst/rewrite/law_shard?zindex=500&pre=[/m/db/+/inst/rewrite]` runs after every
+database pushdown and, in `/m`'s rank, after the local laws and before the capture rules (`?zindex=1000`).
 
 ## Rewrite styles
 

@@ -531,7 +531,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">41</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">10</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 23, 2026</span>
+            <span class="instset-built">built November 24, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -626,7 +626,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}result=&gt;&lt;#&gt;::T,
                {?}cut=&gt;[
                 {?}form=&gt;uri::T,
-                {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+                {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,nomadic,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
                 {?}role=&gt;uri::T],
                {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                               {?}target=&gt;&lt;#&gt;::T,
@@ -753,7 +753,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;},
               spawn?uri&lt;=#{*}(uri::T,uri::T,uri::T){&lt;j&gt;},
               reply?block(#{*}::T,uri::T){&lt;j&gt;}],
-             rewrite=&gt;[/m/mach/inst/rewrite/move_extract?code{?}&lt;=code(){&lt;j&gt;}]]@/m/mach</code></pre>
+             rewrite=&gt;[/m/mach/inst/rewrite/nomadic_extract?code{?}&lt;=code&amp;post=[/m](){&lt;j&gt;}]]@/m/mach</code></pre>
                     </div>
                 </div>
             </div>
@@ -923,8 +923,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__rewrite__move_extract" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">move_extract</span>
+    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__rewrite__nomadic_extract" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">nomadic_extract</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a></div>
 </div></div>
@@ -968,12 +968,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a component&#39;s statistics, at ~/&lt;component&gt;/analyzer: its analysis (what it has measured, derived as it is read), the step it publishes that analysis at to ~/+/analyzer/analysis?subq subscribers, and whether the component&#39;s costly instrumentation is on. The producer records in java, where the thing it counts happens, and never through a write. Off is noobj: written at the analyzer, it removes it (a rec written later installs a new one); written at analysis/&lt;probe&gt;, it mutes that probe and its subtree, and any other value written there lifts the mute.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}profile" class="text-light">{?}profile</a> <span class="text-light">=&gt;</span> <a href="#"whether the component's costly instrumentation is on (default false): the processor's per-monad timings"" class="text-info">&quot;whether the component&#39;s costly instrumentation is on (default false): the processor&#39;s per-monad timings&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}request" class="text-light">{?}request</a> <span class="text-light">=&gt;</span> <a href="#"an analq's analyzer only: the addresses that asked to be measured, each => the analysis::[event=>meter::T] it asked for; their readings are under analysis__addr__<path>"" class="text-info">&lt;path&gt;&quot;</a>
+  <a href="#{?}profile" class="text-light">{?}profile</a> <span class="text-light">=&gt;</span> <a href="#"whether the component's costly instrumentation is on (default false): the processor's per-monad timings"" class="text-info">&quot;whether the component&#39;s costly instrumentation is on (default false): the processor&#39;s per-monad timings&quot;</a>
   <a href="#{?}step" class="text-light">{?}step</a> <span class="text-light">=&gt;</span> <a href="#'the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step'" class="text-info">&#39;the milliseconds a publication waits to gather the changes behind it (default 250): a subscriber hears at most one analysis per step&#39;</a>
   <a href="#{?}cap" class="text-light">{?}cap</a> <span class="text-light">=&gt;</span> <a href="#"an analq's analyzer only: the cap its space declared, analq::[event=>meter::T, max=>int::T], the widest request an address may make"" class="text-info">&quot;an analq&#39;s analyzer only: the cap its space declared, analq::[event=&gt;meter::T, max=&gt;int::T], the widest request an address may make&quot;</a>
   <a href="#{?}analysis" class="text-light">{?}analysis</a> <span class="text-light">=&gt;</span> <a href="#'the analysis::T the component has measured, built from its meters each time it is read'" class="text-info">&#39;the analysis::T the component has measured, built from its meters each time it is read&#39;</a>
   <a href="#{?}mute" class="text-light">{?}mute</a> <span class="text-light">=&gt;</span> <a href="#"the probes muted (written noobj at analysis__<probe>), a lst of uris read as they stand; an analyzer built from another's rec, as a pushed machine's is, starts with its mutes"" class="text-info">&lt;probe&gt;), a lst of uris read as they stand; an analyzer built from another&#39;s rec, as a pushed machine&#39;s is, starts with its mutes&quot;</a>
-  <a href="#{?}request" class="text-light">{?}request</a> <span class="text-light">=&gt;</span> <a href="#"an analq's analyzer only: the addresses that asked to be measured, each => the analysis::[event=>meter::T] it asked for; their readings are under analysis__addr__<path>"" class="text-info">&lt;path&gt;&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1237,10 +1237,10 @@ the local read.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
   <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
   <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
-  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1621,7 +1621,7 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
          {?}result=&gt;&lt;#&gt;::T,
          {?}cut=&gt;[
           {?}form=&gt;uri::T,
-          {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
+          {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,nomadic,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,causal,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
           {?}role=&gt;uri::T],
          {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                         {?}target=&gt;&lt;#&gt;::T,
@@ -1636,10 +1636,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
-  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
@@ -1748,10 +1748,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> the swarm processor&#39;s computer: monads move along the instruction chain independently, a barrier gathers them, and the halted monads are the result</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache__halted" class="text-light">halted</a> <span class="text-light">=&gt;</span> <a href="#'the monads that halted, the result (inst0 x obj)'" class="text-info">&#39;the monads that halted, the result (inst0 x obj)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the three monad streams that are the state of the computation'" class="text-info">&#39;the three monad streams that are the state of the computation&#39;</a>
+  <a href="#{?}cache__halted" class="text-light">halted</a> <span class="text-light">=&gt;</span> <a href="#'the monads that halted, the result (inst0 x obj)'" class="text-info">&#39;the monads that halted, the result (inst0 x obj)&#39;</a>
   <a href="#{?}cache__barrier" class="text-light">barrier</a> <span class="text-light">=&gt;</span> <a href="#'the ordered barriers of the code, a lst[monad]'" class="text-info">&#39;the ordered barriers of the code, a lst[monad]&#39;</a>
   <a href="#{?}cache__run" class="text-light">run</a> <span class="text-light">=&gt;</span> <a href="#'the monads still computing (inst x obj)'" class="text-info">&#39;the monads still computing (inst x obj)&#39;</a>
-  <a href="#{?}cache" class="text-light">{?}cache</a> <span class="text-light">=&gt;</span> <a href="#'the three monad streams that are the state of the computation'" class="text-info">&#39;the three monad streams that are the state of the computation&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__swarm_processor">
@@ -1803,10 +1803,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a distribution of durations, in nanoseconds: how many were observed and their total, least and greatest</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#count" class="text-light">count</a> <span class="text-light">=&gt;</span> <a href="#'how many durations were observed'" class="text-info">&#39;how many durations were observed&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the shortest, in nanoseconds'" class="text-info">&#39;the shortest, in nanoseconds&#39;</a>
+  <a href="#count" class="text-light">count</a> <span class="text-light">=&gt;</span> <a href="#'how many durations were observed'" class="text-info">&#39;how many durations were observed&#39;</a>
   <a href="#total" class="text-light">total</a> <span class="text-light">=&gt;</span> <a href="#'their sum, in nanoseconds (total__count is the mean)'" class="text-info">count is the mean)&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the longest, in nanoseconds'" class="text-info">&#39;the longest, in nanoseconds&#39;</a>
-  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the shortest, in nanoseconds'" class="text-info">&#39;the shortest, in nanoseconds&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor__tracer">
@@ -1906,24 +1906,31 @@ remove stages accordingly for increased performance.
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__cut-doc-0-tab').click();document.getElementById('__m__mach__inst__cut-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-nomadic">nomadic<span class="chip-tip"><span class="chip-tip-name">nomadic</span><span class="chip-tip-desc">the machine axis: applying it changes the current machine, so what follows it runs — and is compiled — in another machine, a compilation boundary no stage crosses. move, push, pop and cut declare it</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> ship a chain to a peer and retrieve the result of its remote evaluation.
-the move-extractor splits the chain at the
-first move whose target names a host, and the cut carries the resolved origin and
-the tail — `5.move(&lt;//worker/a&gt;).plus(1)` becomes
-`5.cut(&lt;//worker/a&gt;, |plus(1))` — so the shipped program is the lhs, the move
-to the tail&#39;s place in the peer, and the tail, evaluated through the peer&#39;s
-`eval` and gathered back as one lane. A cut never runs locally: an origin with no
-peer dialed is a failure.</p>
+    <p class="mb-0 text-light"> run the rest of a chain in another machine, compiled by that machine. The
+nomadic extractor cuts a chain at its first instruction that changes the
+current machine (Law.nomadic: move, push, pop, and a cut itself), and the tail
+is never compiled by the machine that cut it. A target in this server&#39;s machine
+tree switches the current machine there, as a move does, and that machine
+compiles and runs the tail: `5.move(&lt;a&gt;).plus(1)` becomes
+`5.cut(&lt;a&gt;, plus(1))`, and `~` stays in the machine a push or a pop made
+current. A target that names a host ships the program to that server — the
+lhs, the move to the tail&#39;s place in it, and the tail — through its `eval`,
+gathered back as one lane; a host with no peer dialed is a failure. The tail
+ends at `explain()` and `profile()`, the return home: they stay after the cut
+and analyze it where the expression began.</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the value the shipped tail starts from: it is the lhs that the cut program was cut off of" class="text-info">the value the shipped tail starts from: it is the lhs that the cut program was cut off of</a> <span class="text-light">=&gt;</span> <a href="#whatever the shipped tail answers at the peer — the one scattered lane, merged" class="text-success">whatever the shipped tail answers at the peer — the one scattered lane, merged</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the value the tail starts from: it is the lhs that the cut program was cut off of" class="text-info">the value the tail starts from: it is the lhs that the cut program was cut off of</a> <span class="text-light">=&gt;</span> <a href="#whatever the tail answers where it lands — at a peer, the one scattered lane, merged" class="text-success">whatever the tail answers where it lands — at a peer, the one scattered lane, merged</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">5.move(&lt;//worker&gt;).plus(1)    [-- compiles to 5.cut(&lt;//worker&gt;, |plus(1)) --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">5.move(&lt;a&gt;).plus(1)           [-- compiles to 5.cut(&lt;a&gt;, plus(1)): /a compiles plus(1) --]
+push(b).plus(1)               [-- compiles to push(b).cut(&lt;~&gt;, plus(1)): /b compiles plus(1) --]
+5.move(&lt;//worker&gt;).plus(1)    [-- compiles to 5.cut(&lt;//worker&gt;, plus(1)): the worker compiles it --]
+5.move(&lt;a&gt;).plus(1).explain() [-- compiles to 5.cut(&lt;a&gt;, plus(1)).explain(): explained here, nothing runs --]</code></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__move">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1935,7 +1942,7 @@ peer dialed is a failure.</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__move-doc-0-tab').click();document.getElementById('__m__mach__inst__move-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">move?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-nomadic">nomadic<span class="chip-tip"><span class="chip-tip-name">nomadic</span><span class="chip-tip-desc">the machine axis: applying it changes the current machine, so what follows it runs — and is compiled — in another machine, a compilation boundary no stage crosses. move, push, pop and cut declare it</span></span></span></div>
 </div>
 </div>
     
@@ -1990,7 +1997,7 @@ between.</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__pop-doc-0-tab').click();document.getElementById('__m__mach__inst__pop-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pop?A{*}&lt;=A{?}(#{?}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-nomadic">nomadic<span class="chip-tip"><span class="chip-tip-name">nomadic</span><span class="chip-tip-desc">the machine axis: applying it changes the current machine, so what follows it runs — and is compiled — in another machine, a compilation boundary no stage crosses. move, push, pop and cut declare it</span></span></span></div>
 </div>
 </div>
     
@@ -2024,7 +2031,7 @@ pop()               [-- at the root: refused, reset metatron instead --]</code><
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__push-doc-0-tab').click();document.getElementById('__m__mach__inst__push-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">push?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-nomadic">nomadic<span class="chip-tip"><span class="chip-tip-name">nomadic</span><span class="chip-tip-desc">the machine axis: applying it changes the current machine, so what follows it runs — and is compiled — in another machine, a compilation boundary no stage crosses. move, push, pop and cut declare it</span></span></span></div>
 </div>
 </div>
     
@@ -2192,17 +2199,17 @@ timeout&#39;s alarm runs the time out at once.</p>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
     <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">1</span></h3>
-    <div class="card mb-3" id="__m__mach__inst__rewrite__move_extract">
+    <div class="card mb-3" id="__m__mach__inst__rewrite__nomadic_extract">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-warning fw-bold">move_extract</span>
+            <span class="code text-warning fw-bold">nomadic_extract</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/mach/inst/rewrite/move_extract?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
+        <small class="text-muted code">/m/mach/inst/rewrite/nomadic_extract?rng=/m/code{?}&amp;dom=/m/code&amp;args&amp;post=[/m]</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/mach/inst/rewrite/move_extract?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/mach/inst/rewrite/nomadic_extract?code{?}&lt;=code&amp;post=[/m](){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the move-extractor: a move(&lt;authority&gt;) with a tail ships the tail, so the compiler packages it as the move&#39;s blocked-code argument — move(//host/xyz).c().d() becomes move(//host/xyz, |c().d())
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the nomadic extractor: code is never compiled past an instruction that changes the current machine (Law.nomadic: move, push, pop, cut), so the chain is cut there and the tail is compiled where it lands — a().move(&lt;t&gt;).c().d() becomes a().cut(&lt;t&gt;, c().d()), push(b).c() becomes push(b).cut(&lt;~&gt;, c()) — ahead of every other instruction set&#39;s rules. explain() and profile() are the return home: the tail ends before them, so a().move(&lt;t&gt;).c().explain() becomes a().cut(&lt;t&gt;, c()).explain()
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>

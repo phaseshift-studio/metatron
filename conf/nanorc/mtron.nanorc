@@ -99,5 +99,5 @@ color red "<\?>"
 color cyan "[[:alnum:]_]+X=>"
 color magenta "=>"
 ### comments
-color bright-black start="\[--" end="--]"
-color bright-black start="\[==" end="==]"
+color bright-black start="\[-- " end=" --]"
+color bright-black start="\[== " end=" ==]"

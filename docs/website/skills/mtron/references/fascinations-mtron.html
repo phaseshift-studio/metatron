@@ -621,7 +621,7 @@ which evaluates it.</li>
 <p>Two consequences come with it:</p>
 <ul>
 <li>A rewrite rule is data. A rec of <code>pattern =&gt; change</code> can be stored, shipped, and documented. The compiler's Java
-rewrites (the move extractor, the law folds) are this shape compiled.</li>
+rewrites (the nomadic extractor, the law folds) are this shape compiled.</li>
 <li>A name on a typed hole is also a type of the machine: <code>int::T@a</code> defines <code>a::T</code> in the machine's root frame. Threads
 that rewrite at once each work in a machine of their own (<code>push</code>, then <code>pop</code>), where those types live and die.</li>
 </ul>

@@ -523,7 +523,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">distributed-computing</h1>
-        <small>The distributed-computing pattern menu for metatron — distribution is a theorem, not a feature. The stream-ring laws (Thm 5 / 6 / 16 / 17 / 19) decide *which* fold can ship, and the /m/math/cat machinery realizes it: the declared theories and process laws on object::T / morphism::T, Law.Helper's *computed* combiner, and the plan::T vocabulary (cut / where / spans) built by PlanBuilder, applied by PlanInterpreter, and emitted by Shard — the body of the law_shard rule in the machine's rewrite pool (instset().rewrites(); the local law rules are /m's, law_shard and law_bsp are catRewrite's; law_bsp, the superstep of entry N, is Bsp). One row per pattern (A–W): its algebraic law (the latex), the mtron you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif). A play button marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented below with the seed partition it complements. TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's entries (A–W); when wiring a plan::T / PlanBuilder / PlanInterpreter / Shard / Law.Helper combiner.</small><br/>
+        <small>The distributed-computing pattern menu for metatron — distribution is a theorem, not a feature. The stream-ring laws (Thm 5 / 6 / 16 / 17 / 19) decide *which* fold can ship, and the /m/math/cat machinery realizes it: the declared theories and process laws on object::T / morphism::T, Law.Helper's *computed* combiner, and the plan::T vocabulary (cut / where / spans) built by PlanBuilder, applied by PlanInterpreter, and emitted by Shard — the body of the law_shard rule in the machine's rewrite pool (instset().rewrites(); the local law rules are /m's, and so are law_shard and law_bsp since 2026-11-24; law_bsp, the superstep of entry N, is Bsp). One row per pattern (A–W): its algebraic law (the latex), the mtron you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif). A play button marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented below with the seed partition it complements. TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's entries (A–W); when wiring a plan::T / PlanBuilder / PlanInterpreter / Shard / Law.Helper combiner.</small><br/>
         <a href="distributed-computing-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>distributed-computing-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -545,7 +545,7 @@ menu, fix the five pieces a row names:</p>
 <tbody>
 <tr><td><code>machine::T</code></td><td><code>~/</code></td><td>the topology. <code>push</code>/<code>pop</code> is a call stack; a child machine is a subproblem; a <em>mini-cluster</em> is a child machine + the peers its network declares + the URI space they share. The authority is the boundary — an address names work this machine owns or work a peer owns.</td></tr>
 <tr><td><code>network::T</code></td><td><code>~/network</code></td><td>the reach. <code>roster</code> is what the system <strong>knows</strong> (connectionless endpoints); <code>peer</code> is what <strong>this</strong> machine has <strong>dialed</strong>. Knowledge is inherited, reach is not. A <code>peer::T</code> carries a <code>host</code> (where to dial it back) — the marker that makes it a fan-out target; an inbound accept has none and never receives a shard.</td></tr>
-<tr><td><code>rewriter::T</code></td><td><code>~/compiler/rewriter</code></td><td>the stage. The compiler's first atomic pass lowers <code>code::T → code::T</code> to a fixpoint over the machine's <strong>rewrite pool</strong> (<code>instset().rewrites()</code>); <code>fixpoint_rewriter::[max=&gt;N]</code> is one such stage. A distribution rule is one rule of that pool, applied in place — the local law rules live in <code>/m</code>, <code>law_shard</code> is <code>catRewrite</code>'s, and every emitted layout is itself re-planned where it lands.</td></tr>
+<tr><td><code>rewriter::T</code></td><td><code>~/compiler/rewriter</code></td><td>the stage. The compiler's first atomic pass lowers <code>code::T → code::T</code> to a fixpoint over the machine's <strong>rewrite pool</strong> (<code>instset().rewrites()</code>); <code>fixpoint_rewriter::[max=&gt;N]</code> is one such stage. A distribution rule is one rule of that pool, applied in place — <code>law_shard</code> and <code>law_bsp</code> live in <code>/m</code> beside its local laws, every instset's rules run in the order they declare (<code>?pre</code>/<code>?post</code> families, then <code>?zindex</code>; <code>Rewriter.Helper.sort</code>), and every emitted layout is itself re-planned where it lands.</td></tr>
 <tr><td><code>instset::T</code></td><td><code>/m/math/cat</code></td><td>the declaration surface. <code>object::T</code> holds a type's structural theories; <code>morphism::T</code> holds an inst's process laws, <code>form</code>, <code>class</code>, and <code>analysis</code>; <code>path::T</code> lifts <em>code</em> to a vertex whose out-edges are the live rewrite rules, each a <code>plan::T</code>. <code>lower(plan::T)</code> and <code>bind(plan::T)</code> are the two applications.</td></tr>
 <tr><td><code>law::T</code>, <code>plan::T</code>, <code>path::T</code></td><td>—</td><td>the engine. A <code>plan::T</code> assembles <code>[name, cut, where]</code> (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the <code>law::T</code> declarations — never named, always computed.</td></tr>
 </tbody>
@@ -645,16 +645,19 @@ and concurrency). Repetition is multiplicity: <code>[//ginger,//ginger,//booger]
 </thead>
 <tbody>
 <tr><td><code>local</code></td><td>this frame's own place (the addressless <code>eval()</code>)</td></tr>
-<tr><td><code>peer</code></td><td>the <strong>dialed</strong> set (host-bearing, online, <code>serves</code>-positive)</td></tr>
+<tr><td><code>peer</code></td><td>the <strong>dialed</strong> set (host-bearing, online, <code>serves</code>-positive), never this machine</td></tr>
 <tr><td><code>#</code></td><td>every reachable place the other entries did not name</td></tr>
-<tr><td><code>//host[:port]</code></td><td>the roster's place (a redirect)</td></tr>
+<tr><td><code>//host[:port]</code></td><td>the roster's place (a redirect); the port is not a selector</td></tr>
+<tr><td><code>//alias</code></td><td>a <code>~/network/prefix</code> name; a row's port names one transport</td></tr>
 <tr><td><code>scheme://host:port</code></td><td>one authority, as written</td></tr>
 </tbody>
 </table>
 <p><code>?place=[local,peer]</code> is S (the master takes a share); <code>[{4}local]</code> is four home lanes on a peerless machine, still a
 fan-out (it demands the off-machine merge's laws); <code>local=&gt;0</code> is the explicit exclusion. Exclusion is omission.
 A <strong>roster</strong> machine is <em>knowledge</em>, not reach: it is a fan-out target only when the author names it (<code>//host</code>) —
-<code>peer</code> is the <strong>dialed</strong> set. A declared-but-undialed machine alone leaves <code>law_shard</code> the identity.</p>
+<code>peer</code> is the <strong>dialed</strong> set. A declared-but-undialed machine alone leaves <code>law_shard</code> the identity. <strong>A machine is
+never its own peer</strong>: a dial back to one of its own listen authorities (its wildcard bind, or a loopback alias of it) is
+no place, through <code>peer</code>, <code>#</code> or <code>//host</code>, and neither is its own address in the roster.</p>
 <h4><code>?split</code> — what counts as one share</h4>
 <table>
 <thead>
@@ -1041,7 +1044,7 @@ by every member; <code>until</code>, <code>emit</code> and <code>esc</code> are 
 is emitted, and the rest, bulked, are the next frontier. For a floatable code the two readings answer the same, by
 right distributivity; they part when a pass holds a fold, which meets one member per monad but the whole frontier per
 superstep: <code>{1,2,3}.repeat(code=&gt;sum(),until=&gt;loop()?&gt;0)</code> is <code>{1,2,3}</code>, the <code>?&lt;=int{*}</code> form is <code>6</code>.</p>
-<p><code>law_bsp</code> (<code>Bsp</code>, registered in <code>catRewrite</code> before <code>law_shard</code>) deals a superstep's code over the dialed peers:</p>
+<p><code>law_bsp</code> (<code>Bsp</code>, registered in <code>mInstSet</code> before <code>law_shard</code>) deals a superstep's code over the dialed peers:</p>
 <pre><code class="language-mtron">x.repeat?&lt;=A{*}(code=&gt;f, until=&gt;p)
   ⇝  x.repeat?&lt;=A{*}(code=&gt;branch?&lt;=A{*}&amp;split=part(&lt;p_1&gt; =&gt; f?hop=h-1, …, &lt;p_k&gt; =&gt; f?hop=h-1), until=&gt;p)
 </code></pre>
@@ -1101,7 +1104,7 @@ bulked member keeps its count across a remote lane (<code>test_N_a_bulked_member
 <p><code>move()</code> relocates the <em>frame of reference</em> — the machine the code runs in — rather than moving data. It is the
 machine ring's serial <code>·</code> (<code>move</code> points the machine pointer at an existing machine, and the value flows through
 unchanged), so it is the one distributed pattern that is <strong>not a fold</strong>: no reducer, no combiner, no <code>Law.Helper</code>, no
-<code>plan::T</code>. A hand-crafted <code>rewriter</code> rule (<code>extractMove</code>) tails the code at the first remote move, ships the tail to
+<code>plan::T</code>. A hand-crafted <code>rewriter</code> rule (<code>extractNomadic</code>) cuts the code at its first move, push or pop and ships a remote tail to
 that authority via <code>eval</code>, and stops. The receiving machine re-compiles the shipped tail, finds the next move, and
 tails-and-ships again — the one dumb step propagates <em>fractally</em>, machine to machine, without the origin ever
 re-entering the loop; it does not propagate by local recursion — each machine re-compiles the shipped tail, so the
@@ -1162,9 +1165,11 @@ state each decision's three axes before the <code>where</code> they describe: th
 <code>.place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())</code> over <code>local(at, post)</code> (the home
 <code>&lt;combiner&gt;.&lt;tail&gt;</code>, no SEED span — a tail, never a lane), and the fan-out is <code>.place(PlaceSet.peer()) .hop(1, cInt.ANY()).split(Partition.stream())</code> over <code>tree(1, seed.partition(), pre.withoutSeed(), at)</code>.
 <code>create()</code> validates the axes' obligations and writes no derived <code>shape</code>/<code>target</code>.</li>
-<li><strong>Register it.</strong> A rewrite in <code>catRewrite.rules()</code>, wired into <code>catInstSet</code>'s <code>REWRITE</code> key, lowers the plan
-(<code>code -&gt; PlanInterpreter.lower(plan, code)</code>), so the compiler's rewriter applies it, and <code>path::T</code> draws it as an
-out-edge wherever it moves the code.</li>
+<li><strong>Register it.</strong> A rewrite in <code>mInstSet</code>'s <code>REWRITE</code> list,
+<code>/m/inst/rewrite/law_shard?zindex=500&amp;pre=[/m/db/+/inst/rewrite]</code>, lowers the plan
+(<code>code -&gt; PlanInterpreter.lower(plan, code)</code>), so the compiler's rewriter applies it after every database pushdown
+and, in <code>/m</code>'s own rank, after the local laws and before the capture rules, and <code>path::T</code> draws it as an out-edge
+wherever it moves the code. Every machine has it, the category imported or not.</li>
 <li><strong>The emitter lowers it.</strong> <code>Shard.apply</code> — the body <code>PlanInterpreter</code> delegates to — walks the chain cut by cut,
 <code>[initial, {+}[{*}home, {*}floatable, blocked(reducer ∧ laws)], {*}tail]</code>. Each cut is a fold that recombines, the
 floatable run before it (never reaching back past the cut before) ships, and what lies between stays home. Each run
@@ -1172,12 +1177,25 @@ emits one branch keyed by place: seeded lanes under <code>branch?&lt;={0}</code>
 <code>&lt;prefix&gt;.branch?&lt;=T{*}&amp;split=part(&lt;p_i&gt; =&gt; &lt;run&gt;.&lt;fold&gt;, …).&lt;combiner&gt;</code> for a computed bag, which the branch deals
 when it runs (a stated dom coefficient pages the shipment); and the <strong>run partition</strong> when the seed is one obj and
 the run carries a closed span range or a point (see <em>the run partition</em>). The lane's first instruction states the
-restated budget (<code>?hop=0</code> at a leaf).</li>
+restated budget (<code>?hop=0</code> at a leaf).
+A machine change is never compiled past (<code>Law.nomadic</code>, Marko 2026-11-24): <code>move</code>, <code>push</code>, <code>pop</code> and <code>cut</code> change
+<code>Machine.current()</code>, and the nomadic extractor (machInstSet's <code>nomadic_extract</code>, ranked ahead of every other
+instruction set's rules) cuts the chain at the first of them. A move becomes <code>cut(&lt;target&gt;, tail)</code> and a push or a
+pop is followed by <code>cut(&lt;~&gt;, tail)</code>, so <code>law_shard</code> and <code>law_bsp</code> plan only what runs here, and the tail is
+compiled by the machine it lands in, over that machine's own peers (reach is not inherited). A cut into this
+server's machine tree switches the current machine and compiles the tail there; a cut to a host ships the program,
+and the receiver's own extractor cuts the <code>move(&lt;/path&gt;)</code> it arrives with. <code>explain()</code> and <code>profile()</code> are the
+return home: the tail ends before them, so <code>1.move(&lt;a&gt;).plus(1).explain()</code> compiles to
+<code>1.cut(&lt;a&gt;, plus(1)).explain()</code>, explained here with nothing run, and a profile times the cut here, every run
+starting from home.</li>
 <li><strong>Liveness gates it.</strong> The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
 place set), and only to targets that <code>serve</code> the route (<code>PlaceResolver.serves</code>: online, and the client overrides the
 placement's
-insts). A <strong>declared</strong> (roster) machine is knowledge, not reach — name it (<code>//host</code>) to ship there. An outage
-<em>shrinks</em> the fan-out; it never poisons the reduction.</li>
+insts). A dial back to this machine is no target (<code>Network.Helper.reachesSelf</code>): a machine is never its own peer.
+A <strong>declared</strong> (roster) machine is knowledge, not reach — name it (<code>//host</code>) to ship there. An outage <em>shrinks</em> the
+fan-out; it never poisons the reduction. Every machine has the rule, so a lane sent with hop budget left re-plans
+where it lands, over that machine's own dialed peers (until 2026-11-24 the rule was the category's, and a peer that
+never imported <code>/m/math/cat</code> ran every lane it was sent flat).</li>
 </ol>
 <h3>see also</h3>
 <ul>

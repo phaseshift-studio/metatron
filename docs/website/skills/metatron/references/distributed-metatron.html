@@ -572,7 +572,7 @@ isa/mach/io/type/*Serializer.java             ← what actually goes on the wire
 <tr><td><code>~/network/listener</code></td><td>bound sockets: origin → listener::T (a machine's presence)</td><td><code>Network.java:199</code></td></tr>
 <tr><td><code>~/network/prefix</code></td><td>the NAMES a peer goes by: <code>//ginger =&gt; origin</code>, stored <code>ginger =&gt; origin</code></td><td><code>Network.java</code> (<code>alignPrefix</code>)</td></tr>
 <tr><td><code>~/instset/prefix</code></td><td>the NAMES a vocabulary goes by: scheme → vid (<code>import(/m/math, math)</code>)</td><td><code>AbstractInstSet.java</code></td></tr>
-<tr><td><code>Machine.Helper.align</code></td><td>the ONE canonicalization door: read, write and the move-extractor all ask it</td><td><code>Machine.java</code></td></tr>
+<tr><td><code>Machine.Helper.align</code></td><td>the ONE canonicalization door: read, write and the nomadic extractor ask it</td><td><code>Machine.java</code></td></tr>
 <tr><td><code>Network.Helper.authorities()</code></td><td>the origins this VM answers on (its listeners)</td><td><code>Network.java:695</code></td></tr>
 <tr><td><code>fURI.origin()</code> / <code>authority()</code> / <code>localize()</code></td><td><code>scheme://host:port</code>; <code>host:port</code>; strip scheme+origin, keep path</td><td><code>fURI.java:215</code>, <code>:319</code>, <code>:353</code></td></tr>
 </tbody>
@@ -657,8 +657,8 @@ typed by the transport inst's rng. The value is correct; only the coefficient di
 <li><strong>A NAME IS RESOLVED ONCE, BEFORE ANY DISPATCH, AND TRAVELS RESOLVED.</strong> <code>math:cos</code> and <code>//ginger/a</code> are
 canonicalized at the gatekeeper (<code>Machine.Helper.align</code>), each component answering for the slot it owns — the ISA for
 a scheme, the network for an authority — so the slots cannot collide and no dispatch below ever sees a spelling. The
-compiler's move-extractor asks the same door, so the tail shipped to a peer carries the resolved origin: a name is
-the caller's, and the far side has never heard of it.</li>
+compiler's nomadic extractor asks the same door, so the tail shipped to a peer carries the resolved origin: a name
+is the caller's, and the far side has never heard of it.</li>
 <li><strong>A multiplicity of dereferences is a program, not data.</strong> <code>{*A,*B}</code> holds unapplied <code>from</code> insts (<code>.explain()</code>
 reports <code>rng=&gt;from</code>), so arithmetic applies element-wise to instructions. Chaining works: <code>*A.plus(*B)</code>.</li>
 <li><strong>Evaluating one has a lasting side effect</strong>: it re-types the dereferenced vids to <code>*</code>, so later reads of those
