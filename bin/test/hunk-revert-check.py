@@ -27,7 +27,7 @@ SCRIPT = BIN / 'hunk-revert-check'
 sys.path.insert(0, str(BIN))
 from lib.java_lexer import IMPORT_LINE, lex  # noqa: E402
 
-TESTS = '-Dtest=LighthouseTest,ReefTest,BuoyTest,CompassTest'
+TESTS = '-Dtest=LighthouseTest,ReefTest,BuoyTest,CompassTest,WindlassTest'
 
 BASE = {
     '.gitignore': '.*\n!.gitignore\n',  # as in the repository: .docker-target/ (the check's logs) is ignored
@@ -147,6 +147,18 @@ BASE = {
             }
         }
         ''',
+    'src/main/java/org/harbor/Windlass.java': '''\
+        package org.harbor;
+
+        import java.awt.Point;
+
+        public class Windlass {
+
+            public Object drum() {
+                return new Point();
+            }
+        }
+        ''',
     'src/main/resources/harbor/signals.txt': 'beam\nflare\n',
     'src/main/resources/harbor/notes.txt': 'low tide at dawn\n',
 }
@@ -166,6 +178,8 @@ FEATURE = {  # path -> (old, new) on the feature branch; old None = a new file
                                            'import java.util.function.Consumer;\n', '', 'import java.util.Map;\n', '',
                                            '\n    public static void coil(final Consumer<List<Point>> sink) {\n'
                                            '        sink.accept(List.of(new Point()));\n    }\n', ''),
+    'src/main/java/org/harbor/Windlass.java': ('import java.awt.Point;',  # a swap whose name drum() still uses
+                                               'import org.harbor.geo.Point;'),
     'src/main/resources/harbor/signals.txt': ('flare\n', 'flare\nhorn\n'),
     'src/main/resources/harbor/notes.txt': ('dawn\n', 'dawn\n\n'),
 }
@@ -202,7 +216,8 @@ def src(path):
 
 record.update(head=git('rev-parse', 'HEAD'), branch=git('symbolic-ref', '-q', 'HEAD'),
               parent=git('rev-parse', 'HEAD^'), changed=git('diff', '--name-only', 'feature').split(),
-              rope_imports=[line for line in src('java/org/harbor/Rope.java').splitlines() if line.startswith('import')])
+              rope_imports=[line for line in src('java/org/harbor/Rope.java').splitlines()
+                            if line.startswith('import')])
 earlier = LOG.read_text().count('\n') if LOG.exists() else 0
 
 
@@ -220,7 +235,8 @@ if MODE == 'edit' and 'return 10;' in src('java/org/harbor/Buoy.java'):
     with open('src/main/java/org/harbor/Buoy.java', 'a') as f:
         f.write("// the keeper's note\n")
 print('[INFO] Scanning for projects...')
-if MODE == 'no-summary':
+reverting = not record['branch']  # HEAD is detached only while a revert runs
+if MODE == 'no-summary' or MODE == 'silent-revert' and reverting:
     print('[INFO] BUILD FAILURE')
     finish(1)
 print('[INFO] Nothing to compile - all classes are up to date.' if MODE == 'stale' else
@@ -239,7 +255,9 @@ TESTS = {
     'BuoyTest': {'testFloats': lambda: True},
     'CompassTest': {'testNorth': lambda: 'return 360;' in src('java/org/harbor/Compass.java')},
     'TideTest': {'testTurns': lambda: True},
+    'WindlassTest': {'testDrum': lambda: 'import org.harbor.geo.Point;' in src('java/org/harbor/Windlass.java')},
 }
+ELAPSED = os.environ.get('FAKE_RUNNER_ELAPSED', '0.03')
 named = [t for a in args if a.startswith('-Dtest=') for t in a[len('-Dtest='):].split(',')]
 ran = [] if MODE == 'zero' else [c for c in named if c in TESTS] + (['TideTest'] if MODE == 'extra-class' else [])
 if MODE == 'silent-buoy' and 'return 10;' in src('java/org/harbor/Buoy.java'):
@@ -251,15 +269,18 @@ for cls in ran:
     failures += len(failed)
     if failed:
         print(f'[ERROR] Tests run: {len(TESTS[cls])}, Failures: {len(failed)}, Errors: 0, Skipped: 0, '
-              f'Time elapsed: 0.04 s <<< FAILURE! -- in org.harbor.{cls}')
+              f'Time elapsed: {ELAPSED} s <<< FAILURE! -- in org.harbor.{cls}')
         for name in failed:
             print(f'[ERROR] org.harbor.{cls}.{name} -- Time elapsed: 0.01 s <<< FAILURE!')
             print('org.opentest4j.AssertionFailedError: expected: <true> but was: <false>')
     else:
-        print(f'[INFO] Tests run: {len(TESTS[cls])}, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.03 s '
+        print(f'[INFO] Tests run: {len(TESTS[cls])}, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: {ELAPSED} s '
               f'-- in org.harbor.{cls}')
-if MODE == 'timeout-buoy' and 'return 10;' in src('java/org/harbor/Buoy.java'):
+if (MODE == 'timeout-buoy' and 'return 10;' in src('java/org/harbor/Buoy.java')
+        or MODE == 'baseline-fork' and not reverting):
     print('[ERROR] There was a timeout in the fork')
+if MODE == 'unnamed-failure' and 'return 10;' in src('java/org/harbor/Buoy.java'):
+    failures += 1  # counted in the summary, named on no line
 print('[INFO] Results:')
 print(f'[{"ERROR" if failures else "INFO"}] Tests run: {total}, Failures: {failures}, Errors: 0, Skipped: 0')
 print('[INFO] BUILD ' + ('FAILURE' if failures else 'SUCCESS'))
@@ -353,6 +374,7 @@ class HunkRevertCheckTest(unittest.TestCase):
             'Buoy.java': 'behavior', 'Chart.java': 'skip (imports only)', 'Compass.java': 'behavior',
             'Depth.java': 'behavior', 'Flare.java': 'behavior', 'Lighthouse.java': 'behavior',
             'Reef.java': 'behavior', 'Signal.java': 'behavior', 'Rope.java': 'skip (imports only)',
+            'Windlass.java': 'behavior',  # an import swap whose name drum() still uses
             'Tide.java': 'skip (comments or whitespace only)',
             'notes.txt': 'skip (blank lines only)', 'signals.txt': 'behavior',
         }
@@ -361,7 +383,7 @@ class HunkRevertCheckTest(unittest.TestCase):
             self.assertEqual(len(found), 2 if name == 'Rope.java' else 1, (name, r.stdout))
             self.assertIn(status, found[0])
         self.assertIn('behavior', lines_with(r.stdout, '/Rope.java:')[1])  # the deleted coil()
-        self.assertIn('9 behavior hunks of main...feature under src/main (4 skipped, 1 files without hunks)', r.stdout)
+        self.assertIn('10 behavior hunks of main...feature under src/main (4 skipped, 1 files without hunks)', r.stdout)
         # the changed line, past the hunk's leading context
         self.assertIn('Lighthouse.java:9 ', lines_with(r.stdout, 'Lighthouse.java')[0])
         self.assertIn('no hunks (binary or mode only)', lines_with(r.stdout, 'flag.bin')[0])
@@ -374,18 +396,20 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         status = {name: lines_with(r.stdout, '/' + name + ':')[0].split()[0]
                   for name in ('Buoy.java', 'Compass.java', 'Depth.java', 'Flare.java', 'Lighthouse.java',
-                               'Reef.java', 'Rope.java', 'Signal.java', 'signals.txt')}
+                               'Reef.java', 'Rope.java', 'Signal.java', 'Windlass.java', 'signals.txt')}
         self.assertEqual(status, {'Buoy.java': 'green', 'Compass.java': 'red', 'Depth.java': 'no',
                                   'Flare.java': 'green', 'Lighthouse.java': 'red', 'Reef.java': 'red',
-                                  'Rope.java': 'green', 'Signal.java': 'green', 'signals.txt': 'green'})
+                                  'Rope.java': 'green', 'Signal.java': 'green', 'Windlass.java': 'red',
+                                  'signals.txt': 'green'})
         self.assertIn('LighthouseTest.testBeam', lines_with(r.stdout, 'Lighthouse.java:')[0])
         self.assertIn('ReefTest.testDepth(String)[1]', lines_with(r.stdout, 'Reef.java:')[0])
         self.assertIn('does not compile', lines_with(r.stdout, 'Depth.java:')[0])
-        self.assertIn('9 hunks checked: 3 red, 5 green, 1 no run', r.stdout)
+        self.assertIn('WindlassTest.testDrum', lines_with(r.stdout, 'Windlass.java:')[0])
+        self.assertIn('10 hunks checked: 4 red, 5 green, 1 no run', r.stdout)
         report = r.stdout.split('no test went red for:')[1]
         for name in ('Buoy.java', 'Depth.java', 'Flare.java', 'Rope.java', 'Signal.java', 'signals.txt'):
             self.assertIn(name, report)
-        for name in ('Lighthouse.java', 'Reef.java', 'Compass.java'):
+        for name in ('Lighthouse.java', 'Reef.java', 'Compass.java', 'Windlass.java'):
             self.assertNotIn(name, report)
         self.harbor.assert_restored(self)
         self.assertEqual(self.harbor.git(self.harbor.wt, 'rev-list', '--count', 'main..feature'), '1')
@@ -393,7 +417,7 @@ class HunkRevertCheckTest(unittest.TestCase):
     def test_each_run_sees_the_tip_with_one_hunk_reverted_on_a_scratch_commit(self):
         self.harbor.check(TESTS)
         runs = self.harbor.runs()
-        self.assertEqual(len(runs), 10)  # the baseline and 9 behavior hunks
+        self.assertEqual(len(runs), 11)  # the baseline and 10 behavior hunks
         baseline, hunks = runs[0], runs[1:]
         self.assertEqual((baseline['branch'], baseline['head'], baseline['changed']),
                          ('refs/heads/feature', self.harbor.tip, []))
@@ -410,7 +434,7 @@ class HunkRevertCheckTest(unittest.TestCase):
             self.assertLessEqual(earlier['end'], later['start'])
         self.assertEqual([run['changed'][0].rsplit('/', 1)[1] for run in hunks],
                          ['Buoy.java', 'Compass.java', 'Depth.java', 'Flare.java', 'Lighthouse.java', 'Reef.java',
-                          'Rope.java', 'Signal.java', 'signals.txt'])
+                          'Rope.java', 'Signal.java', 'Windlass.java', 'signals.txt'])
         rope = next(run for run in hunks if run['changed'][0].endswith('Rope.java'))['rope_imports']
         self.assertIn('import java.util.function.Consumer;', rope)  # coil() compiles back
         self.assertNotIn('import java.util.Map;', rope)  # removed in the same hunk, but coil() never names it
@@ -454,6 +478,11 @@ class HunkRevertCheckTest(unittest.TestCase):
         r = self.harbor.check()
         self.assertEqual(r.returncode, 2)
         self.assertIn('name the classes to run', r.stderr)
+        forty = ','.join(f'Gull{k:02d}Test' for k in range(40))
+        r = self.harbor.check(f'-Dtest={forty},Gull40Test')
+        self.assertEqual(r.returncode, 2)
+        self.assertIn('41 classes: a revert check runs them once per hunk, so it takes 40 at most', r.stderr)
+        self.assertNotIn('41 classes', self.harbor.check('--list', f'-Dtest={forty}').stderr)
         self.assertEqual(self.harbor.runs(), [])
 
     def test_refuses_the_main_checkout_the_base_branch_a_dirty_tree_and_unknown_hunks(self):
@@ -503,6 +532,30 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertIn('did not report: BuoyTest', lines_with(r.stdout, 'Buoy.java:')[0])
         self.harbor.assert_restored(self)
 
+    def test_failures_no_line_names_still_make_a_hunk_red(self):
+        r = self.harbor.check('--hunk', '1', TESTS, mode='unnamed-failure')
+        self.assertEqual(lines_with(r.stdout, 'Buoy.java:')[0].split()[0], 'red', r.stdout + r.stderr)
+        self.assertIn('more failures than the baseline, not attributed to a test', r.stdout)
+
+    def test_a_baseline_fork_death_stops_and_a_revert_run_without_a_summary_is_no_run(self):
+        r = self.harbor.check(TESTS, mode='baseline-fork')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn('a test fork timed out or died in the baseline', r.stderr)
+        r = self.harbor.check('--hunk', '1', TESTS, mode='silent-revert')
+        self.assertEqual(lines_with(r.stdout, 'Buoy.java:')[0].split()[0], 'no', r.stdout + r.stderr)
+        self.assertIn('no `Tests run:` summary', lines_with(r.stdout, 'Buoy.java:')[0])
+        self.harbor.assert_restored(self)
+
+    def test_the_fork_timeout_follows_the_time_the_baseline_classes_took(self):
+        for elapsed, timeout in (('100', '2500'), ('200', '2700')):  # 5 classes: 5x500 s; 5x1000 s is past the ceiling
+            self.harbor.env['FAKE_RUNNER_ELAPSED'] = elapsed
+            self.harbor.check('--hunk', '1', TESTS)
+            self.assertIn(f'-Dsurefire.timeout={timeout}', self.harbor.runs()[-1]['args'])
+        self.harbor.check('--hunk', '1', '--timeout', '900', TESTS)
+        baseline, revert = self.harbor.runs()[-2:]
+        self.assertIn('-Dsurefire.timeout=900', baseline['args'])
+        self.assertIn('-Dsurefire.timeout=900', revert['args'])
+
     def test_a_lock_from_a_finished_check_is_cleared_and_a_live_one_refuses(self):
         finished = subprocess.Popen(['true'])
         finished.wait()
@@ -514,7 +567,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         r = self.harbor.check(TESTS)
         self.assertEqual(r.returncode, 2)
         self.assertIn(f'another check (pid {os.getpid()}) is running', r.stderr)
-        self.assertEqual(len(self.harbor.runs()), 10)  # the refused check ran nothing
+        self.assertEqual(len(self.harbor.runs()), 11)  # the refused check ran nothing
 
     def test_an_edit_during_a_run_stops_the_check_and_keeps_the_edit(self):
         r = self.harbor.check(TESTS, mode='edit')
@@ -528,6 +581,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertIn("the keeper's note", (wt / 'src/main/java/org/harbor/Buoy.java').read_text())
         again = self.harbor.check(TESTS)
         self.assertEqual(again.returncode, 2)
+        self.assertIn('save any edit in the tree', again.stderr)  # before the checkout that would discard it
         self.assertIn('git checkout -f feature', again.stderr)
 
     def test_an_interrupt_restores_the_branch(self):

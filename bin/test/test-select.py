@@ -26,27 +26,33 @@ HARBOR = {
     'src/main/java/org/harbor/Beacon.java':
         'package org.harbor;\npublic class Beacon { public static int flash(int n) { return n; } }\n',
     'src/main/java/org/harbor/tideSpace.java': 'package org.harbor;\npublic class tideSpace { }\n',
-    'src/main/mtron/harbor/harbor.mtron': 'sound -> |sound?int<=int(){_.plus(1)};\ninst?int<=int(){_.mult(2)}@chime\n',
+    'src/main/mtron/harbor/harbor.mtron': 'sound -> |sound?int<=int(){_.plus(1)};\ninst?int<=int(){_.mult(2)}@chime;\n'
+                                          '[knots => |inst?int<=int(){_.mult(3)}];\nfathom?int<=int(){_.mult(6)};\n',
     'src/test/resources/harbor/chart.csv': 'Beacon(1) % 1\n',
+    'src/test/resources/scratch/EchoTest.java': 'class EchoTest { Beacon b; @Test void t() {} }',  # data, not a class
     'boot/harbor.boot.mtron':
         '[-- boot/harbor.boot.mtron: the harbor --]\ntidespace::[pattern=>tide:#]@~/memory/space/tide;\n',
     'docs/beacon.md': '# the beacon\n',
     # users the selector must find
     TEST_JAVA + 'RowTest.java':
-        'class RowTest { @CsvSource(delimiter = \'%\', value = {"Beacon(3) % 3"}) void t() {} }',
-    TEST_JAVA + 'QuoteTest.java': 'class QuoteTest { String row = "x.as(\'Beacon\')"; }',
-    TEST_JAVA + 'PercentTest.java': 'class PercentTest { String row = "%Beacon%"; }',
-    TEST_JAVA + 'MemberTest.java': 'class MemberTest { int x = org.harbor.Beacon.flash(1); }',
-    TEST_JAVA + 'DriftTest.java': 'class DriftTest {\n    // the drift follows Beacon\'s light\n}',
-    TEST_JAVA + 'TestLamp.java': 'class TestLamp { Beacon b; }',  # surefire's other test names
-    TEST_JAVA + 'MastTests.java': 'class MastTests { Beacon b; }',
-    TEST_JAVA + 'RiggingTestCase.java': 'class RiggingTestCase { Beacon b; }',
-    TEST_JAVA + 'KeelTest.java': 'public class KeelTest { Beacon b; }',
+        'class RowTest { @ParameterizedTest @CsvSource(delimiter = \'%\', value = {"Beacon(3) % 3"}) void t() {} }',
+    TEST_JAVA + 'QuoteTest.java': 'class QuoteTest { String row = "x.as(\'Beacon\')"; @Test void t() {} }',
+    TEST_JAVA + 'PercentTest.java': 'class PercentTest { String row = "%Beacon%"; @Test void t() {} }',
+    TEST_JAVA + 'MemberTest.java': 'class MemberTest { int x = org.harbor.Beacon.flash(1); @Test void t() {} }',
+    TEST_JAVA + 'DriftTest.java':
+        'class DriftTest {\n    // the drift follows Beacon\'s light\n    @Test void t() {}\n}',
+    TEST_JAVA + 'TestLamp.java': 'class TestLamp { Beacon b; @Test void t() {} }',  # surefire's other test names
+    TEST_JAVA + 'MastTests.java': 'class MastTests { Beacon b; @RepeatedTest(2) void t() {} }',
+    TEST_JAVA + 'RiggingTestCase.java': 'class RiggingTestCase { Beacon b; @TestFactory Object t() { return null; } }',
+    TEST_JAVA + 'KeelTest.java': 'public class KeelTest { Beacon b; @Test void t() {} }',
     TEST_JAVA + 'DeepKeelTest.java': 'public class DeepKeelTest extends KeelTest { }',
     TEST_JAVA + 'AbstractHarborTest.java': textwrap.dedent('''\
         /** the harbor's base: every test below runs with a beacon */
         public abstract class AbstractHarborTest<T extends Comparable<T>> {
             protected final Beacon beacon = new Beacon();
+
+            @Test
+            void moors() {}
         }'''),
     TEST_JAVA + 'PierTest.java': 'public class PierTest extends AbstractHarborTest<String> { }',
     TEST_JAVA + 'AbstractDeepHarborTest.java':
@@ -55,35 +61,44 @@ HARBOR = {
         'public final class TrenchTest extends org.harbor.AbstractDeepHarborTest<Integer> { }',
     TEST_JAVA + 'HarborCheck.java': 'public class HarborCheck extends AbstractHarborTest<String> { }',
     TEST_JAVA + 'HarborCheckTest.java': 'public class HarborCheckTest extends HarborCheck { }',
-    TEST_JAVA + 'Mooring.java': 'public interface Mooring { default int tie() { return Beacon.flash(2); } }',
+    TEST_JAVA + 'Mooring.java': 'public interface Mooring { @Test default void tie() { Beacon.flash(2); } }',
     TEST_JAVA + 'BollardTest.java': 'public class BollardTest implements java.io.Serializable, Mooring { }',
     TEST_JAVA + 'Lantern.java': 'final class Lantern { int lit() { return Beacon.flash(3); } }',
-    TEST_JAVA + 'LanternTest.java': 'class LanternTest { Lantern lantern; }',
+    TEST_JAVA + 'LanternTest.java': 'class LanternTest { Lantern lantern; @Test void t() {} }',
     TEST_JAVA + 'Wick.java': 'final class Wick { Lantern lantern; }',
-    TEST_JAVA + 'WickTest.java': 'class WickTest { Wick wick; }',
+    TEST_JAVA + 'WickTest.java': 'class WickTest { Wick wick; @Test void t() {} }',
     TEST_JAVA + 'Logbook.java': 'public @interface Logbook { Class<?> value() default Beacon.class; }',
-    TEST_JAVA + 'CaptainTest.java': '@Logbook\nclass CaptainTest { }',
-    TEST_JAVA + 'ChartTest.java': 'class ChartTest { String data = "harbor/chart.csv"; }',
-    TEST_JAVA + 'HarborBootTest.java': 'class HarborBootTest { String boot = "boot/harbor.boot.mtron"; }',
-    TEST_JAVA + 'TideSpaceTest.java': 'class TideSpaceTest { Object space = tideSpace.of(); }',
-    TEST_JAVA + 'TideStringTest.java': 'class TideStringTest { String row = "tidespace::[pattern=>tide:#]"; }',
-    TEST_JAVA + 'SoundTest.java': 'class SoundTest { String row = "3.sound() % 4"; }',
-    TEST_JAVA + 'ChimeTest.java': 'class ChimeTest { String row = "chime(2) % 4"; }',
-    TEST_JAVA + 'HarborMtronTest.java': 'class HarborMtronTest { String file = "harbor/harbor.mtron"; }',
-    TEST_JAVA + 'KelpTest.java': 'class KelpTest { Kelp kelp; }',
+    TEST_JAVA + 'CaptainTest.java': '@Logbook\nclass CaptainTest { @Test void t() {} }',
+    TEST_JAVA + 'ChartTest.java': 'class ChartTest { String data = "harbor/chart.csv"; @Test void t() {} }',
+    TEST_JAVA + 'ScratchTest.java': 'class ScratchTest { String data = "scratch/EchoTest.java"; @Test void t() {} }',
+    TEST_JAVA + 'HarborBootTest.java':
+        'class HarborBootTest { String boot = "boot/harbor.boot.mtron"; @Test void t() {} }',
+    TEST_JAVA + 'TideSpaceTest.java': 'class TideSpaceTest { Object space = tideSpace.of(); @Test void t() {} }',
+    TEST_JAVA + 'TideStringTest.java':
+        'class TideStringTest { String row = "tidespace::[pattern=>tide:#]"; @Test void t() {} }',
+    TEST_JAVA + 'SoundTest.java': 'class SoundTest { String row = "3.sound() % 4"; @Test void t() {} }',
+    TEST_JAVA + 'ChimeTest.java': 'class ChimeTest { String row = "chime(2) % 4"; @Test void t() {} }',
+    TEST_JAVA + 'KnotsTest.java': 'class KnotsTest { String row = "2.knots() % 6"; @Test void t() {} }',
+    TEST_JAVA + 'FathomTest.java': 'class FathomTest { String row = "fathom(1) % 6"; @Test void t() {} }',
+    TEST_JAVA + 'HarborMtronTest.java':
+        'class HarborMtronTest { String file = "harbor/harbor.mtron"; @Test void t() {} }',
+    TEST_JAVA + 'KelpTest.java': 'class KelpTest { Kelp kelp; @Test void t() {} }',
     # names the selector must not take for users
-    TEST_JAVA + 'LongerNameTest.java': 'class LongerNameTest { BeaconLight a; Object myBeacon, Beacon_2, $Beacon; }',
+    TEST_JAVA + 'LongerNameTest.java':
+        'class LongerNameTest { BeaconLight a; Object myBeacon, Beacon_2, $Beacon; @Test void t() {} }',
+    TEST_JAVA + 'FlagsTest.java': 'class FlagsTest { Beacon b; @TestReport void notATest() {} }',  # no test method
     TEST_JAVA + 'AbstractCommentedTest.java': '/** unlike {@link Beacon}, nothing here shines */\n'
                                               'public abstract class AbstractCommentedTest { }',
-    TEST_JAVA + 'QuietTest.java': 'public class QuietTest extends AbstractCommentedTest { }',
+    TEST_JAVA + 'QuietTest.java': 'public class QuietTest extends AbstractCommentedTest { @Test void t() {} }',
     TEST_JAVA + 'Gangway.java': '/** a gangway, lit like {@link Beacon} */\nfinal class Gangway { }',
-    TEST_JAVA + 'GangwayTest.java': 'class GangwayTest { Gangway gangway; }',
-    TEST_JAVA + 'NauticalTest.java': 'class NauticalTest { String data = "harbor/nautical.chart.csv"; }',
+    TEST_JAVA + 'GangwayTest.java': 'class GangwayTest { Gangway gangway; @Test void t() {} }',
+    TEST_JAVA + 'NauticalTest.java':
+        'class NauticalTest { String data = "harbor/nautical.chart.csv"; @Test void t() {} }',
 }
 SELECTED_FOR_BEACON = {'RowTest', 'QuoteTest', 'PercentTest', 'MemberTest', 'DriftTest', 'KeelTest', 'DeepKeelTest',
                        'TestLamp', 'MastTests', 'RiggingTestCase',
                        'PierTest', 'TrenchTest', 'HarborCheckTest', 'BollardTest', 'LanternTest', 'WickTest',
-                       'CaptainTest', 'ChartTest'}
+                       'CaptainTest', 'ChartTest', 'ScratchTest'}
 
 
 def selected(stdout: str) -> set[str]:
@@ -129,6 +144,8 @@ class SyntheticHarborTest(unittest.TestCase):
                       '  Logbook: CaptainTest\n'):
             self.assertIn(trail, r.stderr)
         self.assertNotIn('flag.bin', r.stderr)
+        self.assertIn('  EchoTest.java: ScratchTest\n', r.stderr)  # a .java under resources is data, followed by name
+        self.assertIn('FlagsTest (followed)', r.stderr)  # a test's name, but no test method: a helper
 
     def test_a_file_a_class_and_a_member_name_the_same_users(self):
         by_file = self.select('src/main/java/org/harbor/Beacon.java')
@@ -147,7 +164,7 @@ class SyntheticHarborTest(unittest.TestCase):
 
     def test_an_mtron_file_is_searched_by_the_names_it_defines(self):
         r = self.select('src/main/mtron/harbor/harbor.mtron')
-        self.assertEqual(selected(r.stdout), {'SoundTest', 'ChimeTest', 'HarborMtronTest'})
+        self.assertEqual(selected(r.stdout), {'SoundTest', 'ChimeTest', 'HarborMtronTest', 'KnotsTest', 'FathomTest'})
         self.assertNotIn('  inst:', r.stderr)
 
     def test_the_default_is_the_branch_against_main_with_the_working_tree(self):
@@ -162,7 +179,7 @@ class SyntheticHarborTest(unittest.TestCase):
         r = self.select()
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(selected(r.stdout), SELECTED_FOR_BEACON | {'SoundTest', 'ChimeTest', 'HarborMtronTest',
-                                                                    'KelpTest'})
+                                                                    'KnotsTest', 'FathomTest', 'KelpTest'})
         self.assertIn('names of 3 inputs (1 outside src/ and boot/ ignored: docs/beacon.md)', r.stderr)
 
     def test_no_user_prints_nothing_and_fails(self):
@@ -178,7 +195,8 @@ class SyntheticHarborTest(unittest.TestCase):
         self.assertIn('TrenchTest <- AbstractHarborTest <- Beacon', r.stderr)
         self.assertNotIn('wide radius', r.stderr)
         for k in range(41):
-            (self.repo / TEST_JAVA / f'Gull{k:02d}Test.java').write_text(f'class Gull{k:02d}Test {{ Gull gull; }}')
+            (self.repo / TEST_JAVA / f'Gull{k:02d}Test.java').write_text(
+                f'class Gull{k:02d}Test {{ Gull gull; @Test void t() {{}} }}')
         r = self.select('Gull')
         self.assertEqual(len(selected(r.stdout)), 41)
         self.assertIn('41 test classes: a wide radius', r.stderr)

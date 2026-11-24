@@ -1,39 +1,44 @@
 #!/usr/bin/env python3
-# bin/test-select — the test classes that use what a change touched, as a -Dtest= list.
-#
-# A change's blast radius is its users, not the package it sits in: a shared test boot, the bare-uri parser and a
-# space's read semantics each broke test classes nobody ran. This finds the users by search instead of by judgement.
-#
-# Usage:
-#   bin/test-select                          # what the branch changed against main: commits, working tree, new files
-#   bin/test-select PeerNode                 # a class
-#   bin/test-select mParser.m_furi           # a member: its bare name is searched (m_furi)
-#   bin/test-select src/main/java/.../fsSpace.java boot/peer.mtron     # files
-#   bin/hunk-revert-check $(bin/test-select)                           # stdout is only the -Dtest= argument
-#
-# Options:
-#   --base <ref>   the base of the default diff (default: main)
-#   --explain      print, for every class, the chain that selected it
-#
-# How:
-#   1. Names to search. A .java file gives its class name, plus the name in lowercase when the class name starts in
-#      lowercase (fsSpace -> fsspace: a space's mtron type is spelled that way). A .mtron file gives its file name
-#      and the names it defines (`name -> |...`, `name => |...`, `name?rng<=dom(...)`, `...@name`). Any other file
-#      under src/ or boot/ gives its file name; files elsewhere are ignored. A symbol gives itself; Class.member
-#      gives the member.
-#   2. Users. Every file under src/test and every boot/**/*.mtron that holds a name as a bare token: identifier
-#      boundaries only, no syntax anchors, because a leading dot or a quote delimiter hides users
-#      (`is(matches(int::T[]))`, a %-delimited CSV row). Strings count, since mtron lives in them. A comment counts
-#      in a concrete test class, where it names what the test depends on (MarkdownHtmlAsInstTest's notes on how
-#      fsSpace reads a file), but not in a helper, an annotation or a base class: following a {@link} there pulls
-#      in classes that never run the change.
-#   3. Classes. A user that is a concrete test class (surefire's names: Test*, *Test, *Tests, *TestCase) is
-#      selected with its test subclasses; an abstract class or an interface gives its concrete test subclasses; any
-#      other user (a helper such as PeerCluster, a resource, a boot file) is searched for in turn by its own name.
-#
-# Prints `-Dtest=A,B,...` on stdout and how each class was reached on stderr; exits 1, printing nothing on stdout,
-# when no test class uses the change (an empty -Dtest= would run the whole suite). A list longer than 40 classes is
-# flagged: AGENTS.md's rule is targeted classes, never the full suite, so name the gating classes with Marko.
+"""bin/test-select — the test classes that use what a change touched, as a -Dtest= list.
+
+A change's blast radius is its users, not the package it sits in: a shared test boot, the bare-uri parser and a
+space's read semantics each broke test classes nobody ran. This finds the users by search instead of by judgement.
+
+Usage:
+  bin/test-select                          # what the branch changed against main: commits, working tree, new files
+  bin/test-select PeerNode                 # a class
+  bin/test-select mParser.m_furi           # a member: its bare name is searched (m_furi)
+  bin/test-select src/main/java/.../fsSpace.java boot/peer.mtron     # files
+  bin/hunk-revert-check $(bin/test-select)                           # stdout is only the -Dtest= argument
+
+Options:
+  --base <ref>   the base of the default diff (default: main)
+  --explain      print, for every class, the chain that selected it
+
+How:
+  1. Names to search. A .java file gives its class name, plus the name in lowercase when the class name starts in
+     lowercase (fsSpace -> fsspace: a space's mtron type is spelled that way). A .mtron file gives its file name
+     and the names it defines (`name -> |...`, `name => |...`, `name?rng<=dom(...)`, `...@name`). Any other file
+     under src/ or boot/ gives its file name; files elsewhere are ignored. A symbol gives itself; Class.member
+     gives the member.
+  2. Users. Every file under src/test and every boot/**/*.mtron that holds a name as a bare token: identifier
+     boundaries only, no syntax anchors, because a leading dot or a quote delimiter hides users
+     (`is(matches(int::T[]))`, a %-delimited CSV row). Strings count, since mtron lives in them. A comment counts
+     in a concrete test class, where it names what the test depends on (MarkdownHtmlAsInstTest's notes on how
+     fsSpace reads a file), but not in a helper, an annotation or a base class: following a {@link} there pulls
+     in classes that never run the change.
+  3. Classes. A test class is a concrete class under src/test/java with surefire's name (Test*, *Test, *Tests,
+     *TestCase) and a test method (@Test, @ParameterizedTest, @RepeatedTest, @TestFactory, @TestTemplate) of its
+     own or from a class or interface above it: TestCategory, a holder of @Tag names, is no test. A user that is
+     a test class is selected with its test subclasses; an abstract class or an interface gives its concrete test
+     subclasses; any other user (a helper such as PeerCluster, a resource, a .java file under src/test/resources,
+     a boot file) is searched for in turn by its own name.
+
+Prints `-Dtest=A,B,...` on stdout and how each class was reached on stderr; exits 1, printing nothing on stdout,
+when no test class uses the change (an empty -Dtest= would run the whole suite). A list longer than 40 classes is
+flagged, and bin/hunk-revert-check refuses one: agents' test runs are targeted classes, never the full suite
+(Marko's rule), so name the gating classes with Marko.
+"""
 import argparse
 import re
 import subprocess
@@ -44,6 +49,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.java_lexer import lex  # noqa: E402
 
 TEST_NAME = re.compile(r'Test\w*|\w*(Test|Tests|TestCase)')
+TEST_METHOD = re.compile(r'@(?:Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)\b')
 FILE_NAME = re.compile(r'\.(java|mtron|xml|json|csv|txt|properties|yaml|yml|md|sql|html|py)$')
 DECLARATION = r'((?:\b(?:public|protected|private|abstract|final|sealed|non-sealed|static|strictfp)\s+)*)' \
               r'(class|@\s*interface|interface|enum|record)\s+{name}\b([^{{]*)\{{'
@@ -72,7 +78,8 @@ class JavaClass:
                         for part in re.findall(r'\b(?:extends|implements)\s+(.*?)(?=\b(?:implements|permits)\b|$)',
                                                header, re.S)
                         for name in part.split(',') if name.strip()}
-        self.test = self.kind == 'class' and not self.abstract and bool(TEST_NAME.fullmatch(self.name))
+        self.own_tests = bool(TEST_METHOD.search(code))
+        self.test = False  # a concrete class, a test's name, tests own or inherited: set once every class is read
 
 
 def plural(n: int, noun: str) -> str:
@@ -123,9 +130,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument('inputs', nargs='*')
     args = parser.parse_args(argv)
     if args.help:
-        lines = Path(__file__).read_text(encoding='utf-8').splitlines()[1:]
-        print('\n'.join(re.sub(r'^# ?', '', line) for line in lines[:next(k for k, l in enumerate(lines)
-                                                                            if not l.startswith('#'))]))
+        print(__doc__)
         return 0
     root = Path(git('rev-parse', '--show-toplevel').strip())
     inputs = args.inputs or changed_files(args.base)
@@ -142,11 +147,22 @@ def main(argv: list[str]) -> int:
         if b'\0' not in raw[:8192]:
             text = raw.decode('utf-8', errors='replace')
             files[p] = (text, '\n'.join(line.text for line in lex(text)) if p.suffix == '.java' else text)
-    classes = {p.stem: JavaClass(p, code) for p, (_, code) in files.items() if p.suffix == '.java'}
+    sources = root / 'src' / 'test' / 'java'  # a .java file anywhere else under src/test is data, not a class
+    by_path = {p: JavaClass(p, code) for p, (_, code) in files.items()
+               if p.suffix == '.java' and p.is_relative_to(sources)}
+    classes = {c.name: c for c in by_path.values()}
     children: dict[str, set[str]] = {}
     for c in classes.values():
         for parent in c.parents:
             children.setdefault(parent, set()).add(c.name)
+
+    def has_tests(c: JavaClass, seen: set[str]) -> bool:
+        return c.own_tests or any(has_tests(classes[parent], seen | {c.name}) for parent in c.parents
+                                  if parent in classes and parent not in seen)
+
+    for c in classes.values():
+        c.test = (c.kind == 'class' and not c.abstract and bool(TEST_NAME.fullmatch(c.name))
+                  and has_tests(c, {c.name}))
 
     def test_descendants(name: str, seen: set[str]) -> set[str]:
         found = set()
@@ -170,10 +186,10 @@ def main(argv: list[str]) -> int:
         token = re.compile(('(?<![\\w$.-])' if '.' in name else '(?<![\\w$])') + re.escape(name) + '(?![\\w$-])')
         said = []
         for p in (p for p, (text, code) in files.items()
-                  if token.search(text if p.suffix == '.java' and classes[p.stem].test else code)):
+                  if token.search(text if p in by_path and by_path[p].test else code)):
             rel = p.relative_to(root).as_posix()
-            if p.suffix == '.java' and p.stem in classes:
-                c = classes[p.stem]
+            if p in by_path:
+                c = by_path[p]
                 picked = ({c.name} if c.test else set()) | test_descendants(c.name, {c.name})
                 for cls in sorted(picked):
                     selected.setdefault(cls, ' <- '.join(dict.fromkeys([cls, c.name, name, source])))
@@ -207,9 +223,10 @@ def main(argv: list[str]) -> int:
     if not selected:
         print('test-select: no test class uses these names', file=sys.stderr)
         return 1
-    print(plural(len(selected), 'test class') + (f': a wide radius (over {WIDE}); AGENTS.md runs targeted classes, '
-                                                 f'never the full suite, so name the gating classes with Marko'
-                                                 if len(selected) > WIDE else ''), file=sys.stderr)
+    print(plural(len(selected), 'test class') + (f': a wide radius (over {WIDE}), which bin/hunk-revert-check refuses; '
+                                                 f'agents run targeted classes, never the full suite, so name the '
+                                                 f'gating classes with Marko' if len(selected) > WIDE else ''),
+          file=sys.stderr)
     print('-Dtest=' + ','.join(sorted(selected)))
     return 0
 

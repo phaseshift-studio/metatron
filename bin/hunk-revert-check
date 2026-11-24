@@ -1,52 +1,56 @@
 #!/usr/bin/env python3
-# bin/hunk-revert-check — revert each behavior hunk of a branch alone, run the named test classes, and report every
-# hunk no test turned red.
-#
-# New tests that are red on the parent commit can still leave part of a change untested: some test must go red
-# when one hunk alone is reverted, or nothing checks that hunk. This runs that check for every hunk.
-#
-# Usage:
-#   bin/hunk-revert-check -Dtest=AnalyzerTest,wsServerTest    # every behavior hunk of main...HEAD under src/main
-#   bin/hunk-revert-check $(bin/test-select)                   # bin/test-select prints the -Dtest= argument
-#   bin/hunk-revert-check --list                               # the hunks and how each is classified; runs nothing
-#   bin/hunk-revert-check --hunk 2,5 -Dtest=AnalyzerTest       # only hunks 2 and 5 (the numbers --list prints)
-#
-# Options:
-#   -Dtest=<A,B>    the classes to run (or plain arguments: A B). Class names, each with an optional #method. An
-#                   empty entry, a wildcard, a path or a trailing # is refused: each runs more than was named
-#   --base <ref>    the base (default: main); the hunks are `git diff <base>...HEAD -- src/main`
-#   -U <n>          context lines per hunk (default: 3, git's); -U0 splits a hunk at every unchanged line
-#   --hunk <i,j>    check only these hunks
-#   --timeout <s>   surefire's fork timeout in a revert run (default: 5x the baseline run, within 300..2700)
-#   --runner <cmd>  the build command line (default: bin/metatron-docker), run as `<cmd> build test -Dtest=...`
-#
-# Steps:
-#   1. Refuses unless it runs in a worktree (not the main checkout), on a branch other than the base, with no
-#      uncommitted change to a tracked file and no other check running in the same worktree.
-#   2. Splits the diff into hunks. A hunk that changes only comments, whitespace or imports (java, read with
-#      bin/lib/java_lexer.py) or only blank lines (any other file) is skipped; --list shows each skip and why.
-#   3. Baseline: runs the classes once on the branch tip. It needs `Tests run:` above 0, a report from every named
-#      class and none from an unnamed one: a filter that fell back to the whole suite stops the check.
-#   4. Detaches HEAD at the tip. For each hunk it builds a scratch WIP commit (the tip with that hunk alone
-#      reverted, made with `git apply --cached -R` on a temporary index), moves HEAD to it with `git reset --keep`,
-#      runs the classes, and resets to the tip. The branch ref never moves, and only the hunk's file changes. When
-#      the lines a revert brings back name a class whose import the branch removed from that file (and imported from
-#      nowhere else), that import line is put back too, so a deleted method compiles back.
-#   5. Re-attaches the branch and prints one line per hunk:
-#        red     a test that passed on the baseline failed: the hunk is tested (the failing tests are named)
-#        green   no test went red: nothing in these classes notices the hunk (expected for a hunk that only
-#                deletes code nothing calls: putting it back changes no behavior)
-#        no run  the revert did not compile alone, a test fork timed out or died, the reverted file was not
-#                recompiled, or a class did not report: not shown tested
-#
-# Exit: 0 when every behavior hunk is red; 1 when any is green or no run; 2 when a precondition is refused; 3 when
-# the baseline did not run. Each run's full output is kept under .docker-target/hunk-revert-check/<time>/.
-#
-# AGENTS.md's build rules hold: runs go one at a time through bin/metatron-docker (routed as configured:
-# METATRON_BUILD_REMOTE, bin/test/metatron-remote.env), targeted classes only, and the results come from the
-# `Tests run:` summary and the per-test failure lines, never from the exit code. Leave the tree alone while it runs.
-# Interrupted (ctrl-c, SIGTERM), it restores the branch, but a remote build it started may still be running: check
-# `bin/metatron-remote status` before the next run.
+"""bin/hunk-revert-check — revert each behavior hunk of a branch alone, run the named test classes, and report every
+hunk no test turned red.
+
+New tests that are red on the parent commit can still leave part of a change untested: some test must go red when
+one hunk alone is reverted, or nothing checks that hunk. This runs that check for every hunk.
+
+Usage:
+  bin/hunk-revert-check -Dtest=AnalyzerTest,wsServerTest    # every behavior hunk of main...HEAD under src/main
+  bin/hunk-revert-check $(bin/test-select)                   # bin/test-select prints the -Dtest= argument
+  bin/hunk-revert-check --list                               # the hunks and how each is classified; runs nothing
+  bin/hunk-revert-check --hunk 2,5 -Dtest=AnalyzerTest       # only hunks 2 and 5 (the numbers --list prints)
+
+Options:
+  -Dtest=<A,B>    the classes to run (or plain arguments: A B): class names, each with an optional #method, 40 at
+                  most. An empty entry, a wildcard, a path or a trailing # is refused, since each runs more than was
+                  named; so is a longer list, which is the suite's work rather than a targeted check
+  --base <ref>    the base (default: main); the hunks are `git diff <base>...HEAD -- src/main`
+  -U <n>          context lines per hunk (default: 3, git's); -U0 splits a hunk at every unchanged line
+  --hunk <i,j>    check only these hunks
+  --timeout <s>   surefire's fork timeout in every run (default: the pom's in the baseline; in a revert run, 5x the
+                  time the baseline's classes took, within 300..2700)
+  --runner <cmd>  the build command line (default: bin/metatron-docker), run as `<cmd> build test -Dtest=...`
+
+Steps:
+  1. Refuses unless it runs in a worktree (not the main checkout), on a branch other than the base, with no
+     uncommitted change to a tracked file and no other check running in the same worktree.
+  2. Splits the diff into hunks. A hunk that changes only comments, whitespace or imports (java, read with
+     bin/lib/java_lexer.py) or only blank lines (any other file) is skipped; --list shows each skip and why. An
+     import change that points a name the file still uses at another class is behavior, not skipped.
+  3. Baseline: runs the classes once on the branch tip. It needs `Tests run:` above 0, a report from every named
+     class and none from an unnamed one: a filter that fell back to the whole suite stops the check.
+  4. Detaches HEAD at the tip. For each hunk it builds a scratch WIP commit (the tip with that hunk alone
+     reverted, made with `git apply --cached -R` on a temporary index), moves HEAD to it with `git reset --keep`,
+     runs the classes, and resets to the tip. The branch ref never moves, and only the hunk's file changes. When
+     the lines a revert brings back name a class whose import the branch removed from that file (and imported from
+     nowhere else), that import line is put back too, so a deleted method compiles back.
+  5. Re-attaches the branch and prints one line per hunk:
+       red     a test that passed on the baseline failed: the hunk is tested (the failing tests are named)
+       green   no test went red: nothing in these classes notices the hunk (expected for a hunk that only
+               deletes code nothing calls: putting it back changes no behavior)
+       no run  the revert did not compile alone, a test fork timed out or died, the reverted file was not
+               recompiled, or a class did not report: not shown tested
+
+Exit: 0 when every behavior hunk is red; 1 when any is green or no run; 2 when a precondition is refused; 3 when
+the baseline did not run. Each run's full output is kept under .docker-target/hunk-revert-check/<time>/.
+
+Builds go through bin/metatron-docker (routed as configured: METATRON_BUILD_REMOTE, bin/test/metatron-remote.env),
+and results come from the `Tests run:` summary and the per-test failure lines, never the exit code (AGENTS.md, Build
+& Test). Runs go one at a time, on targeted classes, never the full suite (Marko's rule for agents' test runs). Leave
+the tree alone while it runs. Interrupted (ctrl-c, SIGTERM), it restores the branch, but a remote build it started
+may still be running: check `bin/metatron-remote status` before the next run.
+"""
 import argparse
 import os
 import re
@@ -67,12 +71,13 @@ TEST_ENTRY = re.compile(r'[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*(#[\w$*+]+)?')
 HUNK_HEADER = re.compile(r'@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)')
 ANSI = re.compile(r'\x1b\[[0-9;?]*[A-Za-z]')
 TOTAL = re.compile(r'^\[\w+\] Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+)\s*$', re.M)
-CLASS_REPORTED = re.compile(
-    r'Tests run: \d+, Failures: \d+, Errors: \d+, Skipped: \d+, Time elapsed: .* -- in ([\w.$]+)\s*$', re.M)
+CLASS_REPORTED = re.compile(  # each reporting class: (seconds, fully qualified name)
+    r'Tests run: \d+, Failures: \d+, Errors: \d+, Skipped: \d+, Time elapsed: ([\d.]+) s\b.* -- in ([\w.$]+)\s*$', re.M)
 TEST_FAILED = re.compile(r'^\[ERROR\] (?!Tests run:)(\S.*?) -- Time elapsed: .*<<< (?:FAILURE|ERROR)!\s*$', re.M)
 FORK_DIED = re.compile(r'timeout in the fork|forked VM terminated|error in the forked process', re.I)
 MAIN_COMPILED = re.compile(r'Compiling \d+ source files? .*\bto target/classes\b')
 TIMEOUT_FLOOR, TIMEOUT_CEILING = 300, 2700  # seconds; 2700 is the pom's surefire.timeout
+MOST_CLASSES = 40  # a revert check runs its classes once per hunk: a longer list is the suite's work
 
 
 class Stop(Exception):
@@ -101,7 +106,8 @@ class Hunk:
 @dataclass
 class Run:
     log: Path
-    seconds: float
+    seconds: float  # the whole run: sync, compile and tests
+    test_seconds: float  # the time its classes took, as surefire reports each one
     total: tuple[int, int, int, int] | None  # tests, failures, errors, skipped; None without a summary
     classes: set[str]  # the simple names of the classes that reported
     failed: set[str]  # the failing tests, named as surefire prints them
@@ -118,12 +124,6 @@ def git(*args: str, env: dict | None = None, check: bool = True, strip: bool = T
     return r.stdout.strip() if strip else r.stdout
 
 
-def usage() -> str:
-    lines = Path(__file__).read_text(encoding='utf-8').splitlines()[1:]
-    return '\n'.join(re.sub(r'^# ?', '', line) for line in lines[:next(k for k, l in enumerate(lines)
-                                                                        if not l.startswith('#'))])
-
-
 def named_tests(entries: list[str]) -> list[str]:
     named: list[str] = []
     for entry in entries:
@@ -135,10 +135,6 @@ def named_tests(entries: list[str]) -> list[str]:
             if test not in named:
                 named.append(test)
     return named
-
-
-def simple_class(test: str) -> str:
-    return test.split('#')[0].rsplit('.', 1)[-1]
 
 
 def file_path(header: list[str]) -> str:
@@ -204,14 +200,27 @@ def classify(hunks: list[Hunk], base: str, tip: str) -> None:
             h.skip = 'comments or whitespace only'
         elif code(old, imports=False) == code(new, imports=False):
             h.skip = 'imports only'
+    # an import change that points a name the file still uses at another class changes what that name means
+    for path in {h.path for h in hunks if h.skip == 'imports only'}:
+        lines = [line for h in hunks if h.path == path for line in h.lines[1:]]
+        before = {imported(line).rsplit('.', 1)[-1]: imported(line) for line in lines if line.startswith('-')}
+        after = {imported(line).rsplit('.', 1)[-1]: imported(line) for line in lines if line.startswith('+')}
+        used = '\n'.join(line.text for line in lines_at(tip, path) if not IMPORT_LINE.match(line.text))
+        repointed = {name for name in before.keys() & after.keys() - {''} if before[name] != after[name]
+                     and re.search(r'(?<![\w$])' + re.escape(name) + r'(?![\w$])', used)}
+        for h in hunks:
+            if h.path == path and h.skip == 'imports only' and any(
+                    imported(line).rsplit('.', 1)[-1] in repointed for line in h.lines[1:] if line[:1] in ('-', '+')):
+                h.skip = ''
 
 
 def parse_run(text: str, log: Path, seconds: float) -> Run:
     text = ANSI.sub('', text)
     totals = TOTAL.findall(text)
-    return Run(log, seconds,
+    reported = CLASS_REPORTED.findall(text)
+    return Run(log, seconds, sum(float(elapsed) for elapsed, _ in reported),
                tuple(int(v) for v in totals[-1]) if totals else None,
-               {fqcn.rsplit('.', 1)[-1].split('$')[0] for fqcn in CLASS_REPORTED.findall(text)},
+               {fqcn.rsplit('.', 1)[-1].split('$')[0] for _, fqcn in reported},
                set(TEST_FAILED.findall(text)),
                'COMPILATION ERROR' in text,
                bool(FORK_DIED.search(text)),
@@ -255,8 +264,9 @@ def judge(run: Run, baseline: Run, hunk: Hunk) -> tuple[str, str]:
     return 'green', 'no test went red'
 
 
-def imported_name(line: str) -> str:
-    m = re.match(r'[-+ ]\s*import\s+(?:static\s+)?[\w$.]*?([\w$]+)\s*;', line)
+def imported(line: str) -> str:
+    """What a diff line imports (java.util.function.Consumer), or ''."""
+    m = re.match(r'[-+ ]\s*import\s+(?:static\s+)?([\w$.]+)\s*;', line)
     return m[1] if m else ''
 
 
@@ -264,16 +274,16 @@ def imports_back(hunk: Hunk, hunks: list[Hunk]) -> list[tuple[int, list[str]]]:
     """The same file's import-only hunks, each narrowed to putting back the removed imports that the lines this
     revert restores name, unless the branch imports that name anew (a swap: putting it back would clash)."""
     restored = ''.join(line[1:] for line in hunk.lines[1:] if line.startswith('-'))
-    imported = {imported_name(line) for h in hunks if h.path == hunk.path for line in h.lines[1:]
-                if line.startswith('+')} - {''}
+    anew = {imported(line).rsplit('.', 1)[-1] for h in hunks if h.path == hunk.path for line in h.lines[1:]
+            if line.startswith('+')} - {''}
     narrowed = []
     for other in (h for h in hunks if h.path == hunk.path and h.skip == 'imports only'):
         body, back = [], 0
         for line in other.lines[1:]:
-            name = imported_name(line) if line.startswith('-') else ''
+            name = imported(line).rsplit('.', 1)[-1] if line.startswith('-') else ''
             if not line.startswith('-'):
                 body.append(' ' + line[1:] if line.startswith('+') else line)  # what the tip has stays
-            elif name and name not in imported and re.search(r'(?<![\w$])' + re.escape(name) + r'(?![\w$])',
+            elif name and name not in anew and re.search(r'(?<![\w$])' + re.escape(name) + r'(?![\w$])',
                                                               restored):
                 body.append(line)
                 back += 1
@@ -345,7 +355,7 @@ def alive(pid: int) -> bool:
 
 
 def baseline_problem(baseline: Run, named: list[str]) -> tuple[int, str] | None:
-    expected = {simple_class(t) for t in named}
+    expected = {t.split('#')[0].rsplit('.', 1)[-1] for t in named}
     if baseline.total is None:
         return 3, 'the baseline printed no `Tests run:` summary' + (' (a compilation error)' if baseline.compile_error
                                                                      else '')
@@ -373,8 +383,9 @@ def preflight(base: str) -> tuple[str, str, Path]:
         if pid > 0 and alive(pid):
             raise Stop(f'another check (pid {pid}) is running in this worktree ({lock})')
         if not branch:
-            raise Stop(f'an earlier check left HEAD detached: restore with `git checkout -f '
-                       f'{words[1] if len(words) > 1 else "<your branch>"}`, then remove {lock}')
+            raise Stop(f'an earlier check left HEAD detached at a scratch commit: save any edit in the tree '
+                       f'(`git status`), then `git checkout -f {words[1] if len(words) > 1 else "<your branch>"}` '
+                       f'and remove {lock}')
         lock.unlink()
     if not branch:
         raise Stop('HEAD is detached: check out your branch first')
@@ -399,11 +410,14 @@ def main(argv: list[str]) -> int:
     parser.add_argument('classes', nargs='*')
     args = parser.parse_args([a for a in argv if not a.startswith('-Dtest=')])
     if args.help:
-        print(usage())
+        print(__doc__)
         return 0
     os.chdir(git('rev-parse', '--show-toplevel'))
     root = Path.cwd()
     named = named_tests(entries + args.classes)
+    if len(named) > MOST_CLASSES:
+        raise Stop(f'{len(named)} classes: a revert check runs them once per hunk, so it takes {MOST_CLASSES} at most. '
+                   f'name the classes that gate the change (ask Marko when unsure)')
     if not args.list:
         if not named:
             raise Stop('name the classes to run: -Dtest=A,B (bin/test-select prints such a list)')
@@ -458,7 +472,7 @@ def main(argv: list[str]) -> int:
         if baseline.failed:
             print(f'baseline: {len(baseline.failed)} tests already fail; a hunk is red only through other tests: '
                   + ', '.join(short(t) for t in sorted(baseline.failed)), flush=True)
-        timeout = args.timeout or min(TIMEOUT_CEILING, max(TIMEOUT_FLOOR, round(5 * baseline.seconds)))
+        timeout = args.timeout or min(TIMEOUT_CEILING, max(TIMEOUT_FLOOR, round(5 * baseline.test_seconds)))
         git('checkout', '-q', '--detach')
         for h in chosen:
             wip = scratch_commit(h, imports_back(h, hunks), tip, logdir, args.context == 0)
