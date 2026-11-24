@@ -1117,18 +1117,22 @@ public class machInstSet extends AbstractInstSet {
                                         ALL_TYPE, "the tail, as code: it picks up where the chain was cut, and is compiled where it lands")
                                 .desc("""
                                         run the rest of a chain in another machine, compiled by that machine. The
-                                        nomadic extractor cuts a chain at its first instruction that changes the current
-                                        machine (Law.nomadic: move, push, pop), and the tail is never compiled by the
-                                        machine that cut it. A target in this server's machine tree switches the current
-                                        machine there, as a move does, and that machine compiles and runs the tail:
-                                        `5.move(<a>).plus(1)` becomes `5.cut(<a>, plus(1))`, and `~` stays in the
-                                        machine a push or a pop made current. A target that names a host ships the
-                                        program to that server — the lhs, the move to the tail's place in it, and the
-                                        tail — through its `eval`, gathered back as one lane; a host with no peer dialed
-                                        is a failure.""")
+                                        nomadic extractor cuts a chain at its first instruction that changes the
+                                        current machine (Law.nomadic: move, push, pop, and a cut itself), and the tail
+                                        is never compiled by the machine that cut it. A target in this server's machine
+                                        tree switches the current machine there, as a move does, and that machine
+                                        compiles and runs the tail: `5.move(<a>).plus(1)` becomes
+                                        `5.cut(<a>, plus(1))`, and `~` stays in the machine a push or a pop made
+                                        current. A target that names a host ships the program to that server — the
+                                        lhs, the move to the tail's place in it, and the tail — through its `eval`,
+                                        gathered back as one lane; a host with no peer dialed is a failure. The tail
+                                        ends at `explain()` and `profile()`, the return home: they stay after the cut
+                                        and analyze it where the expression began.""")
+                                .law(Law.nomadic)
                                 .example("5.move(<a>).plus(1)           [-- compiles to 5.cut(<a>, plus(1)): /a compiles plus(1) --]")
                                 .example("push(b).plus(1)               [-- compiles to push(b).cut(<~>, plus(1)): /b compiles plus(1) --]")
                                 .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut(<//worker>, plus(1)): the worker compiles it --]")
+                                .example("5.move(<a>).plus(1).explain() [-- compiles to 5.cut(<a>, plus(1)).explain(): explained here, nothing runs --]")
                                 .body((lhs, inst) -> {
                                     // A CUT INTO THIS SERVER'S MACHINE TREE: the current machine moves there, as a move
                                     // does (it persists), and the tail is compiled and run by THAT machine — its
@@ -1253,7 +1257,7 @@ public class machInstSet extends AbstractInstSet {
                                         MACH_INST_TID.extend(REWRITE).extend("nomadic_extract")
                                                 .q(POST, List.of(M_ISA_TID)),
                                         Helper::extractNomadic),
-                                "the nomadic extractor: code is never compiled past an instruction that changes the current machine (Law.nomadic: move, push, pop), so the chain is cut there and the tail is compiled where it lands — a().move(<t>).c().d() becomes a().cut(<t>, c().d()), push(b).c() becomes push(b).cut(<~>, c()) — ahead of every other instruction set's rules")
+                                "the nomadic extractor: code is never compiled past an instruction that changes the current machine (Law.nomadic: move, push, pop, cut), so the chain is cut there and the tail is compiled where it lands — a().move(<t>).c().d() becomes a().cut(<t>, c().d()), push(b).c() becomes push(b).cut(<~>, c()) — ahead of every other instruction set's rules. explain() and profile() are the return home: the tail ends before them, so a().move(<t>).c().explain() becomes a().cut(<t>, c()).explain()")
                 )));
         docWrap(this, "the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor");
         super.setup();
@@ -1272,9 +1276,9 @@ public class machInstSet extends AbstractInstSet {
 
         /**
          * THE NOMADIC EXTRACTOR (Marko, 2026-11-24): code is never compiled past an instruction that changes
-         * {@code Machine.current()} ({@link Law#nomadic}: move, push, pop). A metatron server runs a stack of machines,
-         * each with its own compiler, spaces, instruction set and processor, so the rest of a chain after such an
-         * instruction is cut off as written, and the machine it lands in compiles it.
+         * {@code Machine.current()} ({@link Law#nomadic}: move, push, pop, cut). A metatron server runs a stack of
+         * machines, each with its own compiler, spaces, instruction set and processor, so the rest of a chain after
+         * such an instruction is cut off as written, and the machine it lands in compiles it.
          * <ul>
          *   <li>A MOVE IS THE CUT: {@code a().move(<target>).c().d()} becomes {@code a().cut(<target>, c().d())}. A
          *       target in this server's machine tree switches the current machine there, as a move does, and that
@@ -1283,7 +1287,11 @@ public class machInstSet extends AbstractInstSet {
          *       path and the tail is compiled there.</li>
          *   <li>A PUSH OR A POP KEEPS ITS INSTRUCTION, which mints or discards the machine, and the tail follows as
          *       {@code cut(<~>, tail)}: compiled in whichever machine the push or the pop made current. So does a move
-         *       to {@code ~} (it is {@code stay()}) and a move whose target is computed when it runs.</li>
+         *       to {@code ~} (it is {@code stay()}), a move whose target is computed when it runs, and a cut written
+         *       with more of the chain after it.</li>
+         *   <li>THE TAIL ENDS AT HOME: {@code explain()} and {@code profile()} stay after the cut and analyze the chain
+         *       where the expression began ({@link #isHome}), so {@code 1.move(<a>).plus(1).explain()} becomes
+         *       {@code 1.cut(<a>, plus(1)).explain()}.</li>
          * </ul>
          * A nomadic instruction that ends the chain has no tail and is left as written, except a move to a host: the
          * move instruction re-homes a thread inside this server and never leaves it, so only a cut reaches a peer, and
@@ -1313,14 +1321,22 @@ public class machInstSet extends AbstractInstSet {
                 final Inst inst = insts.get(i);
                 if (!nomadic.contains(inst.tid().basePath()))
                     continue;
-                final boolean last = i + 1 == insts.size();
-                // a push or a pop already followed by its cut was extracted on an earlier pass: the tail is the cut's
-                if (i + 2 == insts.size() && CUT_INST_TID.equals(insts.get(i + 1).tid().basePath()))
+                // THE STRETCH ENDS AT HOME: the remote part runs up to the first explain() or profile(), which stay
+                // after the cut and run here
+                int end = i + 1;
+                while (end < insts.size() && !isHome(insts.get(end)))
+                    end++;
+                final List<Inst> home = insts.subList(end, insts.size());
+                final boolean last = i + 1 == end;
+                // an instruction already followed by its cut was extracted on an earlier pass: the stretch is the cut's
+                if (i + 2 == end && CUT_INST_TID.equals(insts.get(i + 1).tid().basePath()))
                     return code;
                 final List<Inst> cut = new ArrayList<>(insts.subList(0, i));
                 // a tail of one instruction is that instruction, as the parser reads cut(<a>, plus(1)); no tail is the
                 // empty code, which the cut ships as nothing to run
-                final Obj tail = last ? code(new ArrayList<>()) : code(new ArrayList<>(insts.subList(i + 1, insts.size()))).tryToInst();
+                final Obj tail = last
+                        ? code(new ArrayList<>())
+                        : code(new ArrayList<>(insts.subList(i + 1, end))).tryToInst();
                 // a move whose target is written: to a host it is always the cut, and to another place in this server's
                 // tree it is the cut when a tail follows. A move to ~ stays a move, as stay() is (it re-binds and
                 // publishes), and so does a move whose target is computed when it runs (move(_), move(*~/where))
@@ -1330,6 +1346,7 @@ public class machInstSet extends AbstractInstSet {
                     if (target.isAddressed() || (!last && !HERE.equals(target))) {
                         final Obj where = !inst.arg(0).isNoObj() && target.equals(written) ? inst.arg(0) : uri(target);
                         cut.add(instB(CUT_INST_TID, lst(where, tail)));
+                        cut.addAll(home);
                         return code(cut);
                     }
                 }
@@ -1337,9 +1354,23 @@ public class machInstSet extends AbstractInstSet {
                     return code;
                 cut.add(inst);
                 cut.add(instB(CUT_INST_TID, lst(uri(HERE), tail)));
+                cut.addAll(home);
                 return code(cut);
             }
             return code;
+        }
+
+        /**
+         * THE RETURN HOME (Marko, 2026-11-24): {@code explain()} and {@code profile()}, and the bare
+         * {@code profile_collate()} a distribution plan ends a profiled run with, analyze the chain before them where
+         * the expression began. A remote stretch ends at them: {@code 1.move(<a>).plus(1).explain()} is
+         * {@code 1.cut(<a>, plus(1)).explain()}, which explains the cut here and runs nothing, and a profile times
+         * the cut here, each run starting from home.
+         */
+        private static boolean isHome(final Inst inst) {
+            final fURI base = inst.tid().basePath();
+            return EXPLAIN_INST_TID.equals(base) || PROFILE_INST_TID.equals(base)
+                    || (PROFILE_COLLATE_TID.equals(base) && inst.args().isEmpty());
         }
 
         /**

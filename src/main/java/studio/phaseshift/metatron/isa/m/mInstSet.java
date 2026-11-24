@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
@@ -2125,9 +2126,15 @@ public class mInstSet extends AbstractInstSet {
         // selfJVM), so the timed loop must rewrite a fresh copy each iteration — the snapshot
         // is what makes the original 7 → 3 reduction measurable.
         final List<Inst> originalInsts = code.insts();
+        // A PROFILE REHOMES ITS EXPRESSION (Marko, 2026-11-24: explain() and profile() are the return home): each run
+        // starts where the profile stands and comes back to it, so a machine change in the profiled chain (a cut into
+        // this server's tree persists, as a move does) neither starts the next run elsewhere nor leaves the caller
+        // there
+        final Machine home = Machine.current();
+        final MachinePerspective.Step published = MachinePerspective.last();
         // warm the resolver + type graph so the timed runs are steady-state
         try {
-            MCode.of(new ArrayList<>(originalInsts)).resolve(noobj()).apply(noobj());
+            Machine.Helper.evalAt(home, () -> MCode.of(new ArrayList<>(originalInsts)).resolve(noobj()).apply(noobj()));
         } catch (final Throwable ignored) {
             // cold-start semi-resolution may throw; the timed loop below will surface a real failure
         }
@@ -2152,7 +2159,7 @@ public class mInstSet extends AbstractInstSet {
                 final Code resolved = Machine.current().compiler().resolver().apply(noobj(), rewritten);
                 final long r1 = System.nanoTime();
                 final long a0 = System.nanoTime();
-                answer.set(resolved.apply(noobj()));
+                answer.set(Machine.Helper.evalAt(home, () -> resolved.apply(noobj())));
                 final long a1 = System.nanoTime();
                 rewriteMin = Math.min(rewriteMin, rw1 - rw0);
                 rewriteMax = Math.max(rewriteMax, rw1 - rw0);
@@ -2165,6 +2172,9 @@ public class mInstSet extends AbstractInstSet {
             }
         } finally {
             Analyzer.PROFILE.set(outer);
+            // the bar shows where the caller stands: a run that moved published its landing, and the expression is home
+            if (published != MachinePerspective.last())
+                MachinePerspective.publish(home);
         }
         final Code rewritten = lastRewritten.get();
         final Code resolved = lastResolved.get();

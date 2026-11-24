@@ -352,6 +352,11 @@ public interface Inst extends Call {
                 // time after), which is the double apply the mtron frame handler documents
                 base.equals(AUTO_FROM_INST_TID) ||
                 base.equals(AUTO_AT_INST_TID) ||
+                // a profile's minted instruction carries the program it times as its argument and runs it itself, at
+                // home (profileTable): applied here, the program ran once more, untimed and unscoped, and a machine
+                // change in it left the caller in another machine
+                base.equals(PROFILE_ANALYSIS_TID) ||
+                base.equals(PROFILE_COLLATE_TID) ||
                 // higher order instructions are intended to have code that operates on lhs structures.
                 // thus, their args should not pre-process the structure (their args should operate in the inst body)
                 base.equals(MAP_INST_TID) ||

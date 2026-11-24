@@ -725,13 +725,16 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    when it runs (a stated dom coefficient pages the shipment); and the **run partition** when the seed is one obj and
    the run carries a closed span range or a point (see *the run partition*). The lane's first instruction states the
    restated budget (`?hop=0` at a leaf).
-   A machine change is never compiled past (`Law.nomadic`, Marko 2026-11-24): `move`, `push` and `pop` change
+   A machine change is never compiled past (`Law.nomadic`, Marko 2026-11-24): `move`, `push`, `pop` and `cut` change
    `Machine.current()`, and the nomadic extractor (machInstSet's `nomadic_extract`, ranked ahead of every other
    instruction set's rules) cuts the chain at the first of them. A move becomes `cut(<target>, tail)` and a push or a
    pop is followed by `cut(<~>, tail)`, so `law_shard` and `law_bsp` plan only what runs here, and the tail is
    compiled by the machine it lands in, over that machine's own peers (reach is not inherited). A cut into this
    server's machine tree switches the current machine and compiles the tail there; a cut to a host ships the program,
-   and the receiver's own extractor cuts the `move(</path>)` it arrives with.
+   and the receiver's own extractor cuts the `move(</path>)` it arrives with. `explain()` and `profile()` are the
+   return home: the tail ends before them, so `1.move(<a>).plus(1).explain()` compiles to
+   `1.cut(<a>, plus(1)).explain()`, explained here with nothing run, and a profile times the cut here, every run
+   starting from home.
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's

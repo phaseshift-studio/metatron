@@ -114,7 +114,9 @@ public enum Law {
      * the machine axis (Marko, 2026-11-24): applying it changes {@code Machine.current()}, so what follows it runs in
      * another machine, with that machine's compiler, spaces, instruction set and processor. It is a compilation
      * boundary: no stage of this machine compiles past it, and the rest of the chain is cut off as written and compiled
-     * where it lands ({@code nomadic_extract}). {@code move}, {@code push} and {@code pop} declare it
+     * where it lands ({@code nomadic_extract}). {@code move}, {@code push}, {@code pop} and {@code cut} declare it.
+     * The cut-off stretch ends at {@code explain()} and {@code profile()}, the return home: they stay after the cut and
+     * analyze the chain where the expression began
      */
     nomadic,
     /**

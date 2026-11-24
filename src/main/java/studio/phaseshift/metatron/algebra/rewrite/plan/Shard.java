@@ -96,6 +96,20 @@ public final class Shard {
     }
 
     /**
+     * WHERE THIS MACHINE'S PLAN ENDS: the first instruction that changes the current machine ({@link Law#nomadic}:
+     * move, push, pop, cut), or -1. The nomadic extractor leaves a cut last, or before the explain() or profile() that
+     * analyze the chain at home (Marko, 2026-11-24), so a cut can stand inside a run this rule would ship, and copied
+     * into lanes its machine change would run at every peer.
+     */
+    public static int departure(final List<Inst> insts) {
+        final List<fURI> nomadic = Law.Helper.claimants(Law.nomadic).stream().map(term -> term.tid().basePath()).toList();
+        for (int i = 0; i < insts.size(); i++)
+            if (nomadic.contains(insts.get(i).tid().basePath()))
+                return i;
+        return -1;
+    }
+
+    /**
      * The one body (§12.1): {@code apply(plan, env) = locate → resolve → emit}, over one immutable {@link Env}
      * snapshot — nothing inside reads the machine. The chain is walked cut by cut, and each cut's run is emitted
      * ({@link #emit}) or left as written.
@@ -107,8 +121,21 @@ public final class Shard {
         // layout holds nothing left to plan.
         if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
             return code;
-        // a lone machine does not fan out (lone). A machine change never reaches this rule: the nomadic extractor cut
-        // the chain there before any rule ran, so the tail is the cut's argument, compiled where it lands
+        // A MACHINE CHANGE ENDS WHAT IS PLANNED HERE (departure): the tail is the cut's argument, compiled where it
+        // lands, and the cut and the explain() or profile() after it stay as written. This machine plans the stretch
+        // before it
+        final int departs = departure(code.insts());
+        if (0 == departs)
+            return code;
+        if (0 < departs) {
+            final Code here = apply(plan, code(new ArrayList<>(code.insts().subList(0, departs))), env);
+            if (here.insts().equals(code.insts().subList(0, departs)))
+                return code;
+            final List<Inst> relocated = new ArrayList<>(here.insts());
+            relocated.addAll(code.insts().subList(departs, code.insts().size()));
+            return code(relocated);
+        }
+        // a lone machine does not fan out (lone)
         if (lone(env.peers(), code))
             return code;
         final List<Inst> insts = code.insts();

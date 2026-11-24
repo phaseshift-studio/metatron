@@ -252,6 +252,51 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE RETURN HOME (Marko, 2026-11-24): {@code explain()} and {@code profile()} end the stretch a machine change
+     * cuts off and stay after the cut, so they analyze it where the expression began. A cut is nomadic itself, so a
+     * chain written past one is cut again. The rule is applied twice, as the fixpoint applies it, and leaves its own
+     * output alone. Each row: the chain % what the nomadic extractor leaves.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.move(<a>).plus(1).explain()       % start(5).cut(<a>,plus(1)).explain()",
+            "5.move(<a>).plus(1).profile()       % start(5).cut(<a>,plus(1)).profile()",
+            "5.move(<a>).plus(1).explain()>>format % start(5).cut(<a>,plus(1)).explain()>>format",
+            "5.push(<a>).plus(1).explain()       % start(5).push(<a>).cut(<~>,plus(1)).explain()",
+            "5.move(<a>).explain()               % start(5).move(<a>).explain()",
+            "5.cut(<a>,plus(1)).mult(2)          % start(5).cut(<a>,plus(1)).cut(<~>,mult(2))",
+            "5.cut(<a>,plus(1)).explain()        % start(5).cut(<a>,plus(1)).explain()",
+    }, delimiter = '%')
+    void testExplainAndProfileAreTheReturnHome(final String mtron, final String extracted) {
+        final Inst rule = rule("nomadic_extract");
+        final Code once = rule.apply(ObjmtronSerializer.parse(mtron.trim()).asCode()).asCode();
+        checkEquality(LOG, ObjmtronSerializer.parse(extracted.trim()).asCode(), once, true);
+        checkEquality(LOG, once, rule.apply(once).asCode(), true);
+    }
+
+    /**
+     * A MACHINE CHANGE ENDS WHAT IS PLANNED HERE: a cut before a profile() stays in the chain, and law_shard plans only
+     * the stretch before it, so the cut is never copied into a lane (a profiled run is otherwise planned up to the
+     * profile, and each lane would run the machine change at its peer). Each row: the chain % whether the stretch
+     * before the cut is planned.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4}.plus(1).sum().move(<..>).plus(1).profile() % true",
+            "5.move(<a>).plus(1).profile()                         % false",
+    }, delimiter = '%')
+    void testLawShardPlansOnlyUpToACut(final String mtron, final boolean plansBefore) {
+        Network.Helper.connect(Machine.current().network(), SIBLING);
+        final Code extracted = rule("nomadic_extract").apply(ObjmtronSerializer.parse(mtron.trim()).asCode()).asCode();
+        final Code planned = rule("law_shard").apply(extracted).asCode();
+        final int cut = indexOf(planned, CUT_INST_TID);
+        // the cut and what follows it are as the extractor left them
+        checkEquality(LOG, code(extracted.insts().subList(indexOf(extracted, CUT_INST_TID), extracted.insts().size())),
+                code(planned.insts().subList(cut, planned.insts().size())), true);
+        checkEquality(LOG, bool(plansBefore), branches(planned.insts().subList(0, cut)), true);
+    }
+
+    /**
      * law_shard plans the fold before a cut, and the cut follows with its tail as written.
      */
     @Test

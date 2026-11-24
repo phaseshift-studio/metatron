@@ -210,6 +210,31 @@ public class MoveSeamsTest extends AbstractMetatronTest {
     }
 
     /**
+     * EXPLAIN AND PROFILE ARE THE RETURN HOME (Marko, 2026-11-24): the stretch a machine change cuts off ends before
+     * them, so an explain runs nothing (no machine is pushed, no move is made) and a profile times each run from where
+     * the expression began. Either way the caller ends where it stood. Each row: the expression.
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "5.move(<persist>).plus(1).explain()",
+            "5.push(<rehome>).plus(1).explain()",
+            "5.move(<persist>).plus(1).profile()",
+    })
+    void explainAndProfileAreTheReturnHome(final String mtron) {
+        final Machine before = Machine.current();
+        Machine.current().push(f("persist"));
+        Machine.current(before);
+        try {
+            final Obj answer = Machine.evaluate(mtron.trim());
+            assertFalse(answer.isFail(), "analyzed at home: " + answer);
+            assertEquals(before.vid().resolve(), Machine.current().vid().resolve(), "the caller ends where it stood");
+        } finally {
+            Machine.current(before);
+            Machine.Helper.evalAt(f("/persist"), () -> Machine.current().pop());
+        }
+    }
+
+    /**
      * POSITIVE HALF, the control: with a peer dialed at the origin, the same host-bearing move ships and answers.
      */
     @Test
