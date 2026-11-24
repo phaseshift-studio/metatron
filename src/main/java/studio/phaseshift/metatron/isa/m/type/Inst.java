@@ -869,15 +869,14 @@ public interface Inst extends Call {
         }
 
         /**
-         * Whether {@code inst} is a branch with a lane keyed anywhere but this machine: a peer (a host) or another local
-         * machine (a path, {@code </abc>}); only {@code <~>} and {@code <.>} name the machine the code runs on. That lane
-         * is compiled and run where its key points, so a rewrite here neither inlines it nor looks inside it.
+         * Whether {@code inst} is a branch with a lane anywhere but this machine (BranchInst#lanes): a member headed by a
+         * move, or the cut it compiles to, or a key, naming a peer (a host) or another local machine (a path,
+         * {@code </abc>}); only {@code <~>} and {@code <.>} name the machine the code runs on. That lane is compiled and
+         * run where its cut carries it, and the branch's merge is a return home, so a rewrite here neither inlines it
+         * nor looks inside it.
          */
         public static boolean hasRemoteLane(final Inst inst) {
-            return BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()
-                    && inst.args().asRec().recValue().keySet().stream()
-                    .filter(Obj::isUri)
-                    .anyMatch(key -> !BranchInst.home(key.uriValue()));
+            return BRANCH_INST_TID.equals(inst.tid().basePath()) && BranchInst.lanes(inst).stream().anyMatch(lane -> !lane.home());
         }
 
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {

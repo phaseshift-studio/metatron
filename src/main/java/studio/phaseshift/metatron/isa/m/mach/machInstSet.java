@@ -51,6 +51,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -70,6 +71,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -1138,11 +1140,33 @@ public class machInstSet extends AbstractInstSet {
                                 .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut(<//worker>, plus(1)): the worker compiles it --]")
                                 .example("5.move(<a>).plus(1).explain() [-- compiles to 5.cut(<a>, plus(1)).explain(): explained here, nothing runs --]")
                                 .body((lhs, inst) -> {
+                                    // A CUT TIMES ITS RUN (Marko, 2026-11-24: all timeout logic lives in the cut, and a
+                                    // move's ?timeout, as a branch's, compiles onto it). The run goes on a virtual::T that
+                                    // waits at most ?timeout whole seconds for it, held as the time it is (second::n), as
+                                    // a q value cannot carry a typed time yet; a local cut's landing is this thread's, so
+                                    // it persists its move as an untimed cut does
+                                    final String timeout = inst.tid().q(TIMEOUT);
+                                    if (null != timeout) {
+                                        final Obj seconds = Helper.seconds(timeout);
+                                        final Inst untimed = instB(inst.tid().removeQ(TIMEOUT), inst.args());
+                                        final VirtualThread run = new VirtualThread(mutableMap(
+                                                uri(CODE), instLambda((l, i) -> untimed.apply(lhs)), uri(TIMEOUT), seconds),
+                                                MACH_VIRTUAL_THREAD_TID, null);
+                                        run.apply(noobj());
+                                        final Obj answer = run.at(uri(RHS));
+                                        if (null != run.landedPerspective())
+                                            Machine.current(run.landedPerspective());
+                                        return answer;
+                                    }
+                                    // THE TARGET'S QUERY IS NOT THE PLACE: its ?hop is the budget of what the cut compiles
+                                    // or ships (Marko, 2026-11-24: law_shard states a remote lane's on its move's target),
+                                    // stated on the head, where the landing machine's planner reads a budget
+                                    final fURI target = inst.arg(0).uriValue().qLess();
+                                    final String hop = inst.arg(0).uriValue().q(HOP);
                                     // A CUT INTO THIS SERVER'S MACHINE TREE: the current machine moves there, as a move
                                     // does (it persists), and the tail is compiled and run by THAT machine — its
                                     // compiler, its instruction set, its peers — never by the one that cut it. `~`
                                     // stays where it is: the machine a push or a pop just made current
-                                    final fURI target = inst.arg(0).uriValue();
                                     if (!target.isAddressed()) {
                                         if (!HERE.equals(target))
                                             MachinePerspective.publish(Machine.current().move(target));
@@ -1151,7 +1175,8 @@ public class machInstSet extends AbstractInstSet {
                                         // Machine.evaluate would resolve and apply without the rewrites (a lone move
                                         // to a host is the cut that reaches it). A monad rides in unchanged
                                         final Machine landed = Machine.current();
-                                        final Code tail = Code.wrapStart(lhs, code(new ArrayList<>(inst.arg(1).asCall().insts())));
+                                        final Code tail = code(Helper.budgeted(Code.wrapStart(lhs,
+                                                code(new ArrayList<>(inst.arg(1).asCall().insts()))).insts(), hop));
                                         return landed.processor().apply(landed.compiler().apply(tail).asCode())
                                                 .apply(lhs.isMonad() ? lhs : noobj());
                                     }
@@ -1202,10 +1227,12 @@ public class machInstSet extends AbstractInstSet {
                                     // own profile() or explain() run there, where a shipped move(</path>).tail would be cut
                                     // again by the peer, the stretch ending before them. Nothing to start from is no start
                                     // (a seeded lane ships its own start(part), and the hop budget stated on it, as
-                                    // written), and nothing to run ships the lhs alone
+                                    // written), and nothing to run ships the lhs alone. THE BUDGET RIDES ON THE SHIPPED
+                                    // CUT'S TARGET, which the peer's cut hands on to the tail it compiles
                                     final List<Inst> insts = new ArrayList<>(lhs.isNoObj() ? List.of() : start_(lhs).insts());
+                                    final fURI landing = 0 < place.segmentLength() ? f().path(place.path()) : ROOT_MACHINE_VID;
                                     if (!tail.isEmpty())
-                                        insts.add(instB(CUT_INST_TID, lst(uri(0 < place.segmentLength() ? f().path(place.path()) : ROOT_MACHINE_VID),
+                                        insts.add(instB(CUT_INST_TID, lst(uri(null == hop ? landing : landing.q(HOP, hop)),
                                                 code(new ArrayList<>(tail)).tryToInst())));
                                     // THE CUT ANSWERS WHAT THE PEER ANSWERS, so the scatter runs here. Handed back
                                     // unrun, the code ran only where a processor iterated it (Code.iterator() applies);
@@ -1357,11 +1384,23 @@ public class machInstSet extends AbstractInstSet {
          * frames and thread away and back), while a cut into this server's tree re-homes the running thread and
          * persists, as a move does. The COMPILATION boundary is every machine change.
          */
-        static Code extractNomadic(final Code code) {
-            final List<Inst> insts = code.insts();
+        static Code extractNomadic(final Code source) {
             final List<fURI> nomadic = Law.Helper.claimants(Law.nomadic).stream()
                     .map(term -> term.tid().basePath())
                     .toList();
+            // A BRANCH'S TIMEOUT IS ITS LANES' (Marko, 2026-11-24: "branch?timeout compiles to branch(cut?timeout,
+            // cut?timeout)"): the branch states it for the writer's convenience, and each lane's cut keeps it, so all of
+            // the timing is the cut's. Every branch before the first machine change is this machine's to compile
+            final List<Inst> insts = new ArrayList<>(source.insts());
+            boolean timed = false;
+            for (int i = 0; i < insts.size() && !nomadic.contains(insts.get(i).tid().basePath()); i++) {
+                final Inst branch = insts.get(i);
+                if (BRANCH_INST_TID.equals(branch.tid().basePath()) && branch.tid().hasQ(TIMEOUT) && !branch.args().isRec()) {
+                    insts.set(i, timed(branch));
+                    timed = true;
+                }
+            }
+            final Code code = timed ? code(insts) : source;
             for (int i = 0; i < insts.size(); i++) {
                 final Inst inst = insts.get(i);
                 if (!nomadic.contains(inst.tid().basePath()))
@@ -1396,24 +1435,79 @@ public class machInstSet extends AbstractInstSet {
                     if (target.isAddressed() || (!last && !HERE.equals(target) && !walks)) {
                         final Obj where = !inst.arg(0).isNoObj() && target.equals(written) ? inst.arg(0) : uri(target);
                         // the value passes through a move unchanged, so a host move's point is the lhs's: it rides on
-                        // the instruction before the move, and the tail's folds count it (5.move{3}(<//h>).count() is 3)
+                        // the instruction before the move, and the tail's folds count it (5.move{3}(<//h>).count() is 3).
+                        // WITH NOTHING BEFORE IT the point stays on the cut, a branch member's head, where the branch
+                        // reads a lane's weight (Marko, 2026-11-24: "move() point coefficient is branch weight"); and
+                        // the move's ?timeout is its cut's to keep
+                        final Inst moved = instB(timeout(CUT_INST_TID, inst), lst(where, tail));
                         if (!inst.tid().d().isOne() && !cut.isEmpty()) {
                             final Inst before = cut.getLast();
                             cut.set(cut.size() - 1, before.d(before.tid().d().mult(inst.tid().d())).asInst());
                         }
-                        cut.add(instB(CUT_INST_TID, lst(where, tail)));
+                        cut.add(inst.tid().d().isOne() || !cut.isEmpty() ? moved : moved.d(inst.tid().d()).asInst());
                         cut.addAll(home);
                         return code(cut);
                     }
                 }
                 if (last)
                     return code;
-                cut.add(inst);
-                cut.add(instB(CUT_INST_TID, lst(uri(HERE), tail)));
+                // a move that stays a move hands its ?timeout to the cut after it, which times the tail
+                cut.add(inst.tid().hasQ(TIMEOUT) ? instB(inst.tid().removeQ(TIMEOUT), inst.args()) : inst);
+                cut.add(instB(timeout(CUT_INST_TID, inst), lst(uri(HERE), tail)));
                 cut.addAll(home);
                 return code(cut);
             }
             return code;
+        }
+
+        /**
+         * The cut's tid with the move's {@code ?timeout}, when the move states one.
+         */
+        private static fURI timeout(final fURI cut, final Inst move) {
+            return move.tid().hasQ(TIMEOUT) ? cut.q(TIMEOUT, move.tid().q(TIMEOUT)) : cut;
+        }
+
+        /**
+         * A branch whose {@code ?timeout} its lanes carry: each member headed by a move or a cut that states no
+         * {@code ?timeout} of its own takes the branch's, and the branch states none. A home member has no cut to
+         * time, as a home lane has no move.
+         */
+        private static Inst timed(final Inst branch) {
+            final String timeout = branch.tid().q(TIMEOUT);
+            return instB(branch.tid().removeQ(TIMEOUT), lst(branch.args().<Obj>elements().map(member -> {
+                final List<Inst> insts = member.isCall() ? member.asCall().insts() : List.of();
+                final Inst head = insts.isEmpty() ? null : insts.getFirst();
+                if (null == head || head.tid().hasQ(TIMEOUT) || !(CUT_INST_TID.equals(head.tid().basePath())
+                        || MOVE_INST_TID.equals(head.tid().basePath())))
+                    return member;
+                final List<Inst> lane = new ArrayList<>(insts);
+                lane.set(0, instB(head.tid().q(TIMEOUT, timeout), head.args()));
+                return member.isInst() ? (Obj) lane.getFirst() : code(lane);
+            }).toList()));
+        }
+
+        /**
+         * A {@code ?timeout} as the time it is, {@code second::n}: whole seconds, as a q value cannot carry a typed time
+         * yet (Marko, 2026-11-05). Anything else is refused before anything runs.
+         */
+        public static Obj seconds(final String timeout) {
+            final Obj seconds = ObjmtronSerializer.parse(timeout);
+            if (!seconds.isInt())
+                throw MTronException.of("?%s=%s is not a whole number of seconds", TIMEOUT, timeout);
+            return real(seconds.intValue().doubleValue(), MATH_SECOND_TID, null);
+        }
+
+        /**
+         * A CUT'S BUDGET ON THE HEAD of the program it compiles or ships: {@code ?hop} stated on the first instruction,
+         * where a planner reads a run's budget ({@code Shard.hopAxis}: the earliest wins), as law_shard states a home
+         * lane's. No budget, or no instruction, leaves the program as it is.
+         */
+        public static List<Inst> budgeted(final List<Inst> insts, final String hop) {
+            if (null == hop || insts.isEmpty())
+                return insts;
+            final List<Inst> budgeted = new ArrayList<>(insts);
+            budgeted.set(0, instB(insts.getFirst().tid().q(HOP, hop), insts.getFirst().args()));
+            return budgeted;
         }
 
         /**

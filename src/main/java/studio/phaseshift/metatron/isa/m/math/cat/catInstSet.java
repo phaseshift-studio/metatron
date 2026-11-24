@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Arrays;
@@ -37,7 +37,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -209,19 +208,17 @@ public class catInstSet extends AbstractInstSet {
     static Obj realizedWhere(final Code emitted) {
         final Map<Obj, Long> lanes = new LinkedHashMap<>();
         emitted.insts().stream()
-                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
+                .filter(BranchInst::isLayout)
                 .findFirst()
-                .ifPresent(branch -> branch.args().asRec().elements().forEach(lane -> {
-                    final fURI key = lane.first().uriValue();
-                    // the key's own weight, else the branch's: the branch's query is every key's default
-                    // (BranchInst#routes), and a {n}part share is n of the place's shares (BranchInst#weight)
-                    final String split = key.hasQ(SPLIT) ? key.q(SPLIT) : branch.tid().q(SPLIT);
-                    final Obj share = null == split ? noobj() : ObjmtronSerializer.parse(split);
-                    // the home key is the LOCAL place; a shipped one is the `//host:port` its authority names. The port
-                    // is the place: two services on one host are two places, not one place twice
-                    lanes.merge(null == key.host() ? uri(LOCAL)
-                                    : uri("//" + key.host() + (key.hasPort() ? ":" + key.port() : "")),
-                            share.isUri() && PART.equals(share.uriValue().name()) ? share.c().min() : 1L, Long::sum);
+                .ifPresent(branch -> BranchInst.lanes(branch).forEach(lane -> {
+                    // a lane's weight is its share of the place's shares (BranchInst#lanes: the point on its head, or a
+                    // key's {n}part); a lane of weight zero, a copy, is one. The home lane is the LOCAL place; a shipped
+                    // one is the `//host:port` its cut's target names. The port is the place: two services on one host
+                    // are two places, not one place twice
+                    final fURI place = lane.place();
+                    lanes.merge(null == place || null == place.host() ? uri(LOCAL)
+                                    : uri("//" + place.host() + (place.hasPort() ? ":" + place.port() : "")),
+                            0 < lane.weight() ? lane.weight() : 1L, Long::sum);
                 }));
         if (lanes.isEmpty())
             return noobj();

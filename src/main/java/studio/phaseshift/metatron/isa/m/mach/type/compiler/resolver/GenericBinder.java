@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.ArrayList;
@@ -109,9 +110,11 @@ public class GenericBinder extends MRec implements Binder {
             // since a call argument is computed before the inst runs — the type of what the call computes, any number of
             // it: start(5.plus(1)) answers an int, not a code, and start({1,2,3}.plus(1)) three of them (a call's rng is
             // per input, so its count is unknown here). Under ?block the arguments ride raw, so the call itself is what
-            // it answers. A KEYED initial inst answers what its lanes answer — a branch of seeded lanes,
-            // branch?<={0}(<p> => start(…)…) — which no single argument states, so its declared range stands
-            bound = !bound.isInitial() || !bound.args().isLst() ? bound
+            // it answers. A LAYOUT answers what its lanes answer — a branch of seeded lanes, keyed
+            // (branch?<={0}(<p> => start(…)…)) or headed by the cuts their moves compile to
+            // (branch?<={0}(cut(<p>, start(…)…), …), or a deal, BranchInst#isLayout, read off the call, whose query
+            // the contract takes only below) — which no single argument states, so its declared range stands
+            bound = !bound.isInitial() || !bound.args().isLst() || BranchInst.isLayout(userInst) ? bound
                     : bound.rng(bound.arg(0).isObjCall() && !userInst.isBlocking()
                     ? T(bound.arg(0).rng().typeId().maybeSome())
                     : bound.arg(0).type());

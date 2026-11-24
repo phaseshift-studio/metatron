@@ -28,8 +28,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -44,6 +42,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 /**
  * The emitter's equivalence obligation (§12.5): a {@code law_shard} lowered over a loop peer — the local transport,
@@ -179,13 +178,14 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
     void testLanesStayRawWhenTheMasterCompiles(final String source) {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse(source).asCode()).asCode();
-        final List<Obj> lanes = compiled.insts().stream()
-                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
-                .flatMap(inst -> inst.args().asRec().elements().map(Rel::second))
+        // a lane is the cut its move compiles to, its program the cut's tail, or a key's program (BranchInst#lanes)
+        final List<BranchInst.Lane> lanes = compiled.insts().stream()
+                .filter(BranchInst::isLayout)
+                .flatMap(inst -> BranchInst.lanes(inst).stream())
                 .toList();
         assertFalse(lanes.isEmpty(), "the master branches: " + compiled);
-        for (final Obj lane : lanes)
-            assertTrue(lane.asCall().insts().stream().noneMatch(Inst::hasf),
+        for (final BranchInst.Lane lane : lanes)
+            assertTrue(lane.program().stream().noneMatch(Inst::hasf),
                     "a lane is compiled where it runs, never by the master: " + lane + " in " + compiled);
     }
 

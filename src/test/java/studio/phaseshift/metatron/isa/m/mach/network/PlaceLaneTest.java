@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import java.util.List;
 import java.util.Set;
@@ -720,11 +721,11 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * The indices of the keyed branches an emitted chain holds — one per run that shipped.
+     * The indices of the layouts an emitted chain holds — one per run that shipped (BranchInst#isLayout).
      */
     private static List<Integer> branches(final Code emitted) {
         return IntStream.range(0, emitted.insts().size())
-                .filter(i -> BRANCH_INST_TID.equals(emitted.insts().get(i).tid().basePath()) && emitted.insts().get(i).args().isRec())
+                .filter(i -> BranchInst.isLayout(emitted.insts().get(i)))
                 .boxed().toList();
     }
 

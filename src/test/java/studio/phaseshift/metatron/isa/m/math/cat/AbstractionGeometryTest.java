@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -197,8 +198,8 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
                 java.util.Set.of(f("loop://mantis:8555")));
         final Code emitted = PlanInterpreter.apply(PlanInterpreter.SHARD_PLAN,
                 ObjmtronSerializer.parse("start?place=[local,peer]({1,2,3,4,5,6}).plus(1).sum()").asCode(), env);
-        assertEquals(f("~"), emitted.insts().getFirst().args().asRec().elements().toList().getFirst().first().uriValue(),
-                "the home lane's key is <~>: " + emitted);
+        // the home lane is the lane with no place: no move, as a home lane gets none (BranchInst#lanes)
+        assertTrue(BranchInst.lanes(emitted.insts().getFirst()).getFirst().home(), "the home lane runs here: " + emitted);
         final Obj lifted = catInstSet.realized(emitted);
         assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a home lane writes a realized where: " + lifted);
         final Obj places = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());

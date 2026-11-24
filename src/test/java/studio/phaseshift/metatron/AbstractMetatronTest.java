@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -55,6 +56,9 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
+import static studio.phaseshift.metatron.Tokens.HOP;
 
 /**
  * Base for every VM-booting test. The class-level {@link Timeout} caps each inherited test method at five minutes, so a
@@ -677,10 +681,11 @@ public abstract class AbstractMetatronTest {
             try {
                 if (checkTIDs) {
                     assertFalse(secondStage.insts().isEmpty(), "call must not be empty");
-                    assertEquals(secondStage.insts().size(), compilation.insts().size(), "code must be the same size");
-                    for (int i = 0; i < compilation.insts().size(); i++) {
+                    final Call compiled = lane(compilation, secondStage);
+                    assertEquals(secondStage.insts().size(), compiled.insts().size(), "code must be the same size");
+                    for (int i = 0; i < compiled.insts().size(); i++) {
                         final Inst secondStageInst = secondStage.insts().get(i);
-                        final Inst compilationInst = compilation.insts().get(i);
+                        final Inst compilationInst = compiled.insts().get(i);
                         assertEquals(secondStageInst.tid().basePath(), compilationInst.tid().basePath(), "inst tids must match");
                         if (!secondStageInst.args().isEmpty()) { // if test specifies args, then recurse checking args
                             assertEquals(secondStageInst.args().count(), compilationInst.args().count(), "inst args must be the same size");
@@ -708,6 +713,20 @@ public abstract class AbstractMetatronTest {
                 Machine.current(before);
             }
         }
+    }
+
+    /**
+     * A LANE IS THE CUT ITS MOVE COMPILES TO (Law.nomadic, stage 2): a lane the plan ships is one cut, its place the
+     * target, its budget the target's {@code ?hop}, its program the tail. A row names a lane by its program's
+     * instructions, as it always did, so a cut met where the row names none is read as the program its place compiles:
+     * the tail, the budget handed to its head as the cut hands it, rewritten again (a tree's next level shows).
+     */
+    private static Call lane(final Call compilation, final Call expected) {
+        if (1 != compilation.insts().size() || !CUT_INST_TID.equals(compilation.insts().getFirst().tid().basePath())
+                || CUT_INST_TID.equals(expected.insts().getFirst().tid().basePath()))
+            return compilation;
+        final Inst cut = compilation.insts().getFirst();
+        return code(machInstSet.Helper.budgeted(cut.arg(1).asCall().insts(), cut.arg(0).uriValue().q(HOP))).rewrite().tryToInst();
     }
 
     /**

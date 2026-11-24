@@ -32,8 +32,8 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -280,11 +280,12 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
                 .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("law_shard emitted no branch for " + chain));
-        final List<String> folds = branch.args().asRec().<Rel>elements()
-                .map(lane -> lane.second().asCode().insts().getFirst().tid().q(HOP))
+        // a remote lane is the cut its move compiles to, its budget on the cut's target; a home lane's is on its head
+        final List<String> folds = BranchInst.lanes(branch).stream()
+                .map(lane -> lane.home() ? lane.program().getFirst().tid().q(HOP) : lane.place().q(HOP))
                 .toList();
         assertFalse(folds.isEmpty(), "the branch has lanes: " + branch);
-        assertEquals(Collections.nCopies(folds.size(), budget), folds, "every lane's head restates the budget: " + branch);
+        assertEquals(Collections.nCopies(folds.size(), budget), folds, "every lane restates the budget: " + branch);
     }
 
     /**

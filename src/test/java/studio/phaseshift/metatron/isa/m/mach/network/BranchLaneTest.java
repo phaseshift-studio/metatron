@@ -182,6 +182,29 @@ public class BranchLaneTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * A MEMBER HEADED BY A MOVE IS A LANE (Marko, 2026-11-24): it runs on its own thread from the machine the branch
+     * stands in, as a keyed lane does, so two of them meet at their places, and a home member beside them runs too.
+     */
+    @Test
+    public void testMovedMembersRunConcurrently() {
+        final CountDownLatch meeting = new CountDownLatch(2);
+        final BiFunction<Obj, Inst, Obj> meet = (lhs, inst) -> {
+            meeting.countDown();
+            return MTronException.wrap(() -> meeting.await(5, TimeUnit.SECONDS))
+                    ? Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()))
+                    : str("the lanes ran one after another");
+        };
+        dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, meet)));
+        dial("loop://right", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, meet)));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move(<loop://left>).plus(1),move(<loop://right>).plus(2),plus(3)).sum()", "9");
+        } finally {
+            Machine.current().network().drop(f("loop://left"));
+            Machine.current().network().drop(f("loop://right"));
+        }
+    }
+
     @Test
     public void testMarkedLanesShipOnlyTheirShare() {
         // each place counts what reached it: the marked keys split the six by weight (one and two), the unmarked key
@@ -192,6 +215,15 @@ public class BranchLaneTest extends AbstractMetatronTest {
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
                     + "<loop://right?split={2}part> => count(), <loop://left> => count())", "{2,4,6}");
+            // A LANE'S WEIGHT IS THE POINT ON ITS MOVE (Marko, 2026-11-24: "move() point coefficient is branch weight"):
+            // the deal is the branch's, and a home member is weighted by its head's point; the weight is a share, never
+            // copies of what the lane answers
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).count(), "
+                    + "move{2}(<loop://right>).count())", "{2,4}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move{2}(<loop://left>).count(), "
+                    + "count())", "{4,2}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).sum(), "
+                    + "count{2}())", "{5,4}");
         } finally {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://right"));
@@ -220,6 +252,10 @@ public class BranchLaneTest extends AbstractMetatronTest {
             // chain the stretch after a move ends before it, the return home
             Machine.Helper.evalAt(Machine.current(), () -> Machine.parse("1.branch(<loop://probe> => plus(1).explain())").apply(noobj()));
             AbstractMetatronTest.checkEquality(LOG, Machine.parse("start(1).cut(</.>,plus(1).explain())"), shipped.get(), true);
+            // A LANE'S BUDGET RIDES ON ITS CUT'S TARGET (Marko, 2026-11-24), shipped on the cut the place runs, which
+            // hands it to the head of the tail it compiles
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move(<loop://probe?hop=0>).plus(1))", "2");
+            AbstractMetatronTest.checkEquality(LOG, Machine.parse("start(1).cut(</.?hop=0>,plus(1))"), shipped.get(), true);
         } finally {
             Machine.current().network().drop(f("loop://probe"));
         }
@@ -240,6 +276,14 @@ public class BranchLaneTest extends AbstractMetatronTest {
             // a timeout on the branch itself is every key's, and a key's own overrides it
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(<loop://slow> => plus(1))", "<ERROR>");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(<loop://slow?timeout=2> => plus(1))", "2");
+            // THE CUT HOLDS THE TIMEOUT (Marko, 2026-11-24): a move's compiles onto its cut, branch or no branch; a
+            // branch's is copied onto each lane's cut, a lane's own winning; and a wait longer than a thread's own
+            // default (five seconds) is the cut's, which the lane's thread does not cut short
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=1(<loop://slow>).plus(1)", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=2(<loop://slow>).plus(1)", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(move(<loop://slow>).plus(1))", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(move?timeout=2(<loop://slow>).plus(1))", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=soon(<loop://slow>).plus(1)", "<ERROR>");
         } finally {
             Machine.current().network().drop(f("loop://slow"));
         }

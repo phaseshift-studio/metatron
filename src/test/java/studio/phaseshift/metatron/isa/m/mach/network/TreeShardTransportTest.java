@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -300,15 +301,15 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
                 .filter(inst -> REPEAT_INST_TID.equals(inst.tid().basePath())).findFirst().orElseThrow();
         final Inst branch = repeat.arg(f(CODE), 1).asCall().insts().getFirst();
         assertEquals(BRANCH_INST_TID, branch.tid().basePath(), "the pass is a branch: " + master);
-        final List<Rel> lanes = branch.args().asRec().<Rel>elements().toList();
+        final List<BranchInst.Lane> lanes = BranchInst.lanes(branch);
         assertEquals(cluster.size(), lanes.size(), "one lane per peer this machine holds: " + master);
-        lanes.forEach(lane -> assertEquals("1", lane.second().asCall().insts().getFirst().tid().q(HOP),
-                "each lane carries a level left: " + lane));
+        // a lane is the cut its move compiles to, its budget on the cut's target (Marko, 2026-11-24)
+        lanes.forEach(lane -> assertEquals("1", lane.place().q(HOP), "each lane carries a level left: " + lane));
         // what a lane does at peer 1: handed its part with a level left, it plans the part over peers 2 and 3 (an
         // even fan of two, its four members dealt two and two)
         checkCodeParseApply(LOG, "branch?<={0}(<" + endpoint(1) + "> => start({1,2,3,4}).plus?hop=1(1))"
                 + ".explain()>>ext/topology/format.has('[{]4[}]──┤').count()", "1");
-        checkCodeRewrite(LOG, source, "start().repeat(branch(plus(),plus(),plus()),loop().is())",
+        checkCodeRewrite(LOG, source, "start().repeat(branch(cut(),cut(),cut()),loop().is())",
                 "{5,6,7,8,9,10,11,12}", true);
     }
 

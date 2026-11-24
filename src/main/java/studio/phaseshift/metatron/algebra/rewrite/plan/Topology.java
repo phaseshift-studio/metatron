@@ -39,8 +39,8 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -139,18 +139,15 @@ public final class Topology {
             cInt firsts = cInt.ZERO();
             cInt lasts = cInt.ZERO();
             cInt first = null;
-            for (final Rel route : BranchInst.routes(insts.get(i)).<Rel>elements().toList()) {
-                final List<Inst> program = route.second().isCall()
-                        ? route.second().asCall().insts()
-                        : List.of((Inst) map_(route.second()).tryToInst());
-                final boolean seeded = !program.isEmpty() && START_INST_TID.equals(program.getFirst().tid().basePath());
-                final String split = route.first().uriValue().q(SPLIT);
+            for (final BranchInst.Lane lane : BranchInst.lanes(insts.get(i))) {
+                final List<Inst> program = lane.program();
+                final boolean seeded = lane.seeded();
                 final List<Inst> laneContracts = Rewriter.Helper.contracts(code(program));
                 // a seeded lane's share is its start; a lane dealt a computed bag is dealt it when the branch runs, so
-                // each member reaches it at most once ({n} times {?}), and a copy takes the whole bag
+                // each member reaches it at most once ({n} times {?}), and a copy (a lane of weight zero) takes the bag
                 cInt s = seeded ? null
                         : null == c ? cInt.MAYBESOME()
-                        : null == split || split.endsWith(COPY) ? c
+                        : 0 == lane.weight() ? c
                         : c.mult(c.maybe());
                 final List<cInt> stages = new ArrayList<>();
                 if (!seeded)
@@ -161,9 +158,9 @@ public final class Topology {
                 first = null == first ? stages.getFirst() : first;
                 firsts = firsts.plus(stages.getFirst());
                 lasts = lasts.plus(stages.getLast());
-                fan.add(rec(uri(PLACE), uri(route.first().uriValue().resolve().qLess()),
+                fan.add(rec(uri(PLACE), uri(lane.home() ? f("~") : lane.place().resolve().qLess()),
                         uri(STAGE), lst(stages.stream().map(t -> (Obj) label(t)).toList()),
-                        uri(TOPOLOGY), seeded ? theirs(route.first().uriValue(), program) : noobj()));
+                        uri(TOPOLOGY), seeded ? theirs(lane) : noobj()));
             }
             // a head branch's seed: lanes that all start from one seed hold it once (a copy, or the run axis, whose
             // lanes split a span's exponent), and lanes that start from parts of it sum to it
@@ -189,30 +186,39 @@ public final class Topology {
 
     /**
      * A LANE WITH LEVELS LEFT RE-PLANS WHERE IT RUNS (BranchInst#lane), so the machine it runs in explains it, by its
-     * own compiler and network: a peer is sent the lane's code with {@code explain()>>ext/topology/flow} through the
-     * network's eval ({@link Network#submit}) and answers the flow, and a place on this machine explains the lane in
-     * the machine it names. Only a leaf in the form the planner stamps it is left alone (Shard#stampHop: a point on the
-     * head and no other budget), since every run of it inherits that point. The planner reads any other lane's budgets
+     * own compiler and network: the lane's code with {@code explain()>>ext/topology/flow} goes there through the cut
+     * that carries the lane, a peer's eval or a machine of this server's tree, which answers the flow; a home lane is
+     * explained here. Only a leaf in the form the planner stamps it is left alone (Shard#stampHop: a point on its cut's
+     * target or its head, and no other budget), since every run of it inherits that point. The planner reads any other lane's budgets
      * run by run (Shard#apply), at cuts only that machine types, so any other lane is asked, and its machine answers
      * what it plans. Only a lane that starts from its own part is asked (the caller's test): one dealt a bag the branch
      * computes is planned only when the bag arrives, and explain runs nothing. A refusal is kept as its message: a
      * peer's, a path that names no machine, and a head budget that cannot be read, this machine's own diagnosis (the
      * planner there declines it, the rewriter keeps the code as written, and the lane runs unplanned).
      */
-    private static Obj theirs(final fURI key, final List<Inst> program) {
+    private static Obj theirs(final BranchInst.Lane lane) {
+        final List<Inst> program = lane.program();
         try {
-            final Hop head = Shard.hopAxis(List.of(program.getFirst()), null);
-            if (null != head && (head.isPoint() || head.arity().isZero()) && program.stream().skip(1)
+            // a planned remote lane's budget rides on its cut's target (Marko, 2026-11-24); any other lane states its own
+            // on its head, a home lane's and a hand-written one's alike
+            final boolean targeted = !lane.home() && lane.place().hasQ(HOP);
+            final Hop head = targeted ? Shard.hopAxis(lane.place(), HOP) : Shard.hopAxis(List.of(program.getFirst()), null);
+            if (null != head && (head.isPoint() || head.arity().isZero()) && program.stream().skip(targeted ? 0 : 1)
                     .noneMatch(inst -> inst.tid().hasQ(HOP) || inst.tid().hasQ(Placement.HOP_ALIAS)))
                 return noobj();
-            final fURI place = key.resolve().qLess();
-            if (null == place.host())
-                return Machine.Helper.evalAt(Machine.current().fetch(key.qLess()),
-                        () -> explain(code(program).rewrite().resolve(noobj())));
+            if (lane.home())
+                return explain(code(program).rewrite().resolve(noobj()));
+            // a peer nothing dialed explains nothing: the drawing is no move, which would refuse it
+            if (lane.place().isAddressed() && !Network.Helper.reachable(Machine.current(), lane.place().origin()))
+                return noobj();
+            // THE PLACE IS ASKED THROUGH THE CUT that carries the lane there (Law.nomadic, stage 2): the lane's code and
+            // explain()>>ext/topology/flow, compiled and explained where it lands, its budget handed on by the cut. A cut
+            // into this server's tree persists its move, so the caller is put back
             final List<Inst> asked = new ArrayList<>(program);
             asked.add(instB(EXPLAIN_INST_TID, lst()));
             asked.add(instB(RSHIFT_INST_TID, lst(uri(f(EXT).extend(TOPOLOGY).extend(FLOW)))));
-            final Obj flow = Machine.current().network().submit(place, code(asked));
+            final Obj flow = Machine.Helper.evalAt(Machine.current(), () -> instB(CUT_INST_TID,
+                    lst(uri(Machine.Helper.align(Machine.current(), lane.place())), code(asked))).apply(noobj()));
             return flow.isLst() ? topology(flow.asLst()) : flow.isFail() ? str(flow.toString()) : noobj();
         } catch (final MTronException e) {
             return str(e.getMessage());
@@ -221,7 +227,7 @@ public final class Topology {
 
     private static boolean fans(final Inst inst) {
         // by its address, not its class: a branch inside a repeat's (blocked) code is never bound to a BranchInst
-        return (inst instanceof BranchInst || BRANCH_INST_TID.equals(inst.tid().basePath())) && inst.args().isRec();
+        return BranchInst.isLayout(inst);
     }
 
     /**

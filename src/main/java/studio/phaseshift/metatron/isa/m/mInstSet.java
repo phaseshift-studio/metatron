@@ -1284,7 +1284,10 @@ public class mInstSet extends AbstractInstSet {
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
-                                if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)) {
+                                // A POSITIONAL DEAL IS NO ONE-TERM SUM EITHER: its member's head point is its weight, the
+                                // share the deal consumes (BranchInst#lanes), which an inlined member would run as copies
+                                if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)
+                                        && (inst.args().isRec() || !inst.tid().hasQ(SPLIT))) {
                                     final Obj lone = inst.args().isRec() ? inst.args().asRec().recValue().values().iterator().next() : inst.arg(0);
                                     final cInt c = inst.c();
                                     final Obj member;
@@ -1704,9 +1707,10 @@ public class mInstSet extends AbstractInstSet {
     }
 
     public static ExplainTypes explainTypes(final Inst i) {
-        // only a positional (local) branch applies its own rule; a keyed branch is a route table the plan
-        // rewriter types, and its rng is the compiler's (the topology extension owns the distributed count)
-        if (!i.tid().basePath().equals(BRANCH_INST_TID) || !i.args().isLst())
+        // only a local branch applies its own rule; a layout (BranchInst#isLayout: lanes headed by cuts, a deal, keys)
+        // is a route table the plan rewriter types, and its rng is the compiler's (the topology extension owns the
+        // distributed count)
+        if (!i.tid().basePath().equals(BRANCH_INST_TID) || !i.args().isLst() || studio.phaseshift.metatron.isa.m.type.impl.BranchInst.isLayout(i))
             return new ExplainTypes(i.dom(), i.rng(), i.dom().c(), i.rng().c());
         final cInt grain = i.dom().c().isMaybe() ? cInt.ONE() : i.dom().c();
         final List<Obj> programs = i.args().values().filter(b -> !b.isNoObj()).toList();
@@ -1984,17 +1988,17 @@ public class mInstSet extends AbstractInstSet {
                     // THE PLACES: each report the last timed run gathered, NAMED AS THE TOPOLOGY NAMES ITS LANE (Marko,
                     // 2026-11-22: "booger//633589 ... align it with //<prefix> or ws://<host>:<port>"): by the address
                     // the master dealt the lane to, read through this machine's names (//0), else //host:port, and
-                    // //local for a lane at home. The keyed lanes answer in route order, one report each
-                    // (BranchInst#route), so report i is route i's. A run whose reports do not line up with its routes
+                    // //local for a lane at home. The lanes answer in their order, one report each
+                    // (BranchInst#route), so report i is lane i's. A run whose reports do not line up with its routes
                     // keys them by the machine that made them, as does a name two lanes share (several lanes at home):
                     // a report is never dropped for a collision. A report that names no machine (one made in a machine
                     // without a vid) is the local one by construction.
                     final List<Obj> reports = gathered.get().stream().filter(Obj::isRec).toList();
                     final List<Obj> keys = run.insts().stream()
-                            .filter(i -> BRANCH_INST_TID.equals(i.tid().basePath()) && i.args().isRec())
+                            .filter(studio.phaseshift.metatron.isa.m.type.impl.BranchInst::isLayout)
                             .findFirst()
-                            .map(branch -> studio.phaseshift.metatron.isa.m.type.impl.BranchInst.routes(branch)
-                                    .<Rel>elements().map(Rel::first).toList())
+                            .map(branch -> studio.phaseshift.metatron.isa.m.type.impl.BranchInst.lanes(branch).stream()
+                                    .map(lane -> (Obj) uri(lane.home() ? f("~") : lane.place())).toList())
                             .orElse(List.of());
                     final Map<Obj, Obj> places = new LinkedHashMap<>();
                     for (int r = 0; r < reports.size(); r++) {

@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -377,7 +378,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         // on its head, and no other instruction states one under either spelling
         final List<Inst> master = Machine.parse(code).asCode().rewrite().asCode().insts();
         final List<DistributedSweep.Lane> lanes = IntStream.range(0, master.size())
-                .filter(i -> BRANCH_INST_TID.equals(master.get(i).tid().basePath()) && master.get(i).args().isRec())
+                .filter(i -> BranchInst.isLayout(master.get(i)))
                 .mapToObj(i -> DistributedSweep.layout(code(master.subList(i, master.size()))).lanes())
                 .flatMap(List::stream)
                 .toList();

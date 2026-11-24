@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helpe
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -115,11 +116,11 @@ public final class Shard {
      * ({@link #emit}) or left as written.
      */
     public static Code apply(final Plan plan, final Code code, final Env env) {
-        // A CHAIN THAT ALREADY BRANCHES BY PLACE IS A LAYOUT, NOT A FOLD TO PLAN: its keyed branch routes its lanes where
-        // its keys point, and planning around it would wrap that branch in another. The fixpoint hands this rule every
-        // layout it emitted, so this is also where the shard's own output stops: one application plans every cut, so a
-        // layout holds nothing left to plan.
-        if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
+        // A CHAIN THAT ALREADY BRANCHES BY PLACE IS A LAYOUT, NOT A FOLD TO PLAN: its branch routes its lanes where their
+        // cuts carry them (BranchInst#isLayout), and planning around it would wrap that branch in another. The fixpoint
+        // hands this rule every layout it emitted, so this is also where the shard's own output stops: one application
+        // plans every cut, so a layout holds nothing left to plan.
+        if (code.insts().stream().anyMatch(BranchInst::isLayout))
             return code;
         // A MACHINE CHANGE ENDS WHAT IS PLANNED HERE (departure): the tail is the cut's argument, compiled where it
         // lands, and the cut and the explain() or profile() after it stay as written. This machine plans the stretch
@@ -319,11 +320,15 @@ public final class Shard {
         final List<List<Obj>> parts = literal && !runAxis
                 ? BranchInst.deal(head.arg(0), keys.stream().mapToLong(key -> copy ? 0L : key.getValue()).toArray())
                 : List.of();
-        // emit [prefix·]branch(place => [start(part)·]run·fold, …)·combiner — BRANCH IS THE ONE DISTRIBUTED PRIMITIVE:
-        // each lane runs the floatable run (its share of a span range projected onto it) and a local partial reduce where
-        // its key points, so one partial per lane travels home, where the master recombines them through the combiner.
+        // emit [prefix·]branch(cut(<place>, [start(part)·]run·fold), …)·combiner — BRANCH IS THE ONE DISTRIBUTED
+        // PRIMITIVE: each lane runs the floatable run (its share of a span range projected onto it) and a local partial
+        // reduce where its cut carries it, so one partial per lane travels home, where the master recombines them
+        // through the combiner. A LANE IS A MOVE (Law.nomadic, stage 2), emitted as the cut it compiles to, so a
+        // profiled lane's profile() stays the place's: a remote lane's budget rides on its cut's target and its weight
+        // is the cut's point (Marko, 2026-11-24: "move() point coefficient is branch weight"); a home lane gets no move,
+        // its budget and its weight on its head
         final int stop = 0 > cut ? runEnd : cut;
-        final Map<Obj, Obj> routes = new LinkedHashMap<>();
+        final List<Obj> routes = new ArrayList<>();
         for (int r = 0; r < lanes; r++) {
             final List<Inst> lane = new ArrayList<>();
             if (literal)
@@ -344,10 +349,15 @@ public final class Shard {
                 lane.add(raw(insts.get(cut + 1)));
             if (profiling)
                 lane.add(instB(PROFILE_INST_TID, lst()));
-            stampHop(lane, budget);
             final fURI place = keys.get(r).getKey();
             final int weight = keys.get(r).getValue();
-            routes.put(uri(runAxis || copy || 1 == weight ? place : place.q(SPLIT, "{" + weight + "}" + PART)), code(lane));
+            final cInt share = runAxis || copy || 1 == weight ? null : cInt.of(weight);
+            final boolean home = BranchInst.home(place);
+            stampHop(lane, home ? budget : null);
+            if (home && null != share)
+                lane.set(0, instB(lane.getFirst().tid().d(share), lane.getFirst().args()));
+            routes.add(home ? code(lane).tryToInst() : instB(null == share ? CUT_INST_TID : CUT_INST_TID.d(share),
+                    lst(uri(place.q(HOP, budget)), code(lane).tryToInst())));
         }
         // lanes seeded with a literal take nothing, so the branch is the initial form; otherwise the branch takes the bag
         // whole (a {*} dom over the carrier flowing into the run) and deals it by its keys -- or, under the run axis,
@@ -370,7 +380,7 @@ public final class Shard {
         final List<Inst> master = new ArrayList<>();
         if (!literal)
             master.addAll(insts.subList(from, runIndex));
-        master.add(instB(null == lane || fURI.Singleton.ALL.basePath().equals(lane.basePath()) ? branch : branch.rng(lane.maybeSome()), rec(routes)));
+        master.add(instB(null == lane || fURI.Singleton.ALL.basePath().equals(lane.basePath()) ? branch : branch.rng(lane.maybeSome()), lst(routes)));
         if (profiling) {
             // THE MASTER'S RUN IS TIMED AROUND ITS BRANCH, whichever axis the run factored (a seed's members, a span's
             // unrolls, a point's copies): the lanes answer reports, not partials, so no combiner runs, and a bare
@@ -641,7 +651,9 @@ public final class Shard {
      * first instruction the lane carries ({@code start(part)?hop=n}) — the metadata a human and a re-planning peer read
      * in the same place, and where the received lane's own {@link #hopAxis} finds it. Every copied instruction is
      * stripped of both spellings first: the root has already read the level above's budget, and a slave handed to a
-     * peer must not carry it (under either spelling, or the peer would re-plan with the root's height).
+     * peer must not carry it (under either spelling, or the peer would re-plan with the root's height). A REMOTE LANE'S
+     * BUDGET RIDES ON ITS CUT'S TARGET (Marko, 2026-11-24), which states it on the head of what it ships: its chain is
+     * only stripped, a {@code null} budget.
      */
     static void stampHop(final List<Inst> chain, final Obj budget) {
         if (chain.isEmpty())
@@ -649,7 +661,7 @@ public final class Shard {
         for (int i = 0; i < chain.size(); i++) {
             final Inst inst = chain.get(i);
             final fURI tid = inst.tid().removeQ(HOP).removeQ(Placement.HOP_ALIAS);
-            chain.set(i, inst.tid(0 == i ? tid.q(HOP, budget) : tid));
+            chain.set(i, inst.tid(0 == i && null != budget ? tid.q(HOP, budget) : tid));
         }
     }
 
@@ -669,7 +681,7 @@ public final class Shard {
     }
 
     @SuppressWarnings("unchecked")
-    private static Hop hopAxis(final fURI tid, final String key) {
+    static Hop hopAxis(final fURI tid, final String key) {
         // NOT THE STRICT READ: a zero coefficient is the hop's arity ({0}3 is the point, height 3), but a zero streams as
         // nothing, which the strict read refuses as an empty value. Hop.of refuses what it cannot read, noobj included
         final Obj value = tid.qValue(key, (Class<Obj>) (Class<?>) Lst.class);

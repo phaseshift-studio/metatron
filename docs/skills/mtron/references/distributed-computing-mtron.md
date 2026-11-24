@@ -270,7 +270,10 @@ the pattern and keep its letter in parentheses, as in *the generative run (V)*.
 Each pattern's **pre-write** motif, the mtron before the rewrite fires, and its **rewrite**, the emitted layout: one
 `branch` keyed by place (`s_i` a lane's program, `p_i` a peer, `part_i` the factor of the seed bulk the branch deals
 lane `i`). The names are placeholders and the rows are schemas, not literal runs; a cell in plain prose describes a motif no
-single expression shows.
+single expression shows. A lane is a move (`Law.nomadic`): the planner emits `<p_i> => s_i` as the cut its move compiles
+to, `cut(<p_i?hop=n>, s_i)`, its budget on the target and its weight the cut's point (`cut{2}(…)` is two shares under
+`?split=part`), and a home lane as its program alone, its budget on its head; the rows write the keyed spelling, which
+reads the same.
 
 | key   | pre-write                                                          | rewrite                                                                                            |
 |-------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|

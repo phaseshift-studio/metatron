@@ -30,9 +30,9 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -124,12 +124,13 @@ public class BspRuleTest extends AbstractMetatronTest {
         assertEquals(BRANCH_INST_TID, branch.tid().basePath(), "the code is a branch: " + branch);
         assertTrue(branch.isGather(), "the branch gathers each pass's frontier: " + branch);
         assertEquals(PART, branch.tid().q(SPLIT), "the branch parts the frontier: " + branch);
-        final List<Rel> lanes = branch.args().asRec().elements().toList();
+        final List<BranchInst.Lane> lanes = BranchInst.lanes(branch);
         assertEquals(2, lanes.size(), "one lane per dialed peer: " + lanes);
-        for (final Rel lane : lanes) {
-            final Inst head = lane.second().asCall().insts().getFirst();
+        for (final BranchInst.Lane lane : lanes) {
+            final Inst head = lane.program().getFirst();
             assertEquals(f(step.trim()), f(head.tid().name()), "each lane runs the code as written: " + lane);
-            assertEquals("0", head.tid().q(HOP), "each lane plans nothing further: " + lane);
+            // A LANE IS A MOVE (Marko, 2026-11-24): its budget rides on its cut's target, handed on to what it ships
+            assertEquals("0", lane.place().q(HOP), "each lane plans nothing further: " + lane);
         }
         assertEquals(repeatOf(before).arg(f(UNTIL), 2).toString(), repeat.arg(f(UNTIL), 2).toString(), "until stays home, as written");
     }
@@ -183,12 +184,11 @@ public class BspRuleTest extends AbstractMetatronTest {
         LOG.debug("law_bsp: %s  |->  %s", before, after);
         final Inst branch = repeatOf(after).arg(f(CODE), 1).asCall().insts().getFirst();
         assertEquals(BRANCH_INST_TID, branch.tid().basePath(), "the code is a branch: " + branch);
-        final List<Rel> routes = branch.args().asRec().elements().toList();
+        final List<BranchInst.Lane> routes = BranchInst.lanes(branch);
         assertEquals(lanes, routes.size(), "the arity caps the lanes: " + routes);
-        for (final Rel route : routes) {
-            final List<Inst> lane = route.second().asCall().insts();
-            assertEquals(budget.trim(), lane.getFirst().tid().q(HOP), "the lane's head states its budget: " + route);
-            assertTrue(lane.stream().skip(1).noneMatch(inst -> inst.tid().hasQ(HOP)), "only the head states one: " + route);
+        for (final BranchInst.Lane route : routes) {
+            assertEquals(budget.trim(), route.place().q(HOP), "the lane's cut states its budget on its target: " + route);
+            assertTrue(route.program().stream().noneMatch(inst -> inst.tid().hasQ(HOP)), "its program states none: " + route);
         }
     }
 

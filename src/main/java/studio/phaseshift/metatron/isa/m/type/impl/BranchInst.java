@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -36,11 +37,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_SECOND_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MOVE_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
@@ -49,7 +52,6 @@ import static studio.phaseshift.metatron.isa.m.type.Rec.rec_noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -61,13 +63,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     <li>An ORDERED call is the local branch: each member applied where the code stands. The dom coefficient is the
  *     shipment grain: {@code {?}} (the default) one obj per call; {@code {n}} a page; {@code {*}} the whole lhs — a
  *     barrier a DISTRIBUTION REWRITE states on the branch it emits, never the instruction's own default.</li>
- *     <li>A KEYED call routes: {@code place => program} runs the lhs through {@code move(<place>).program}, as the cut
- *     that move compiles to, which carries the lane where every machine change goes: a path to that local machine, a
- *     host to that peer, while a lane keyed {@code <~>} runs here with no move ({@link #lane}). The key may mark itself
- *     {@code ?split={w}part} to take a weighted share of the lhs ({@link #weight}, {@link #deal}).</li>
+ *     <li>A LAYOUT routes its lanes ({@link #lanes}): a member headed by a move, or the cut it compiles to, runs where
+ *     that cut carries it, a path to that local machine, a host to that peer, every machine change on the one
+ *     mechanism; and under {@code ?split=part} the branch deals its lhs by the lanes' weights, the point on each head
+ *     ({@link #weight}, {@link #deal}). A KEYED call is read as the lanes it means, {@code <p> => program} the lane
+ *     {@code cut(<p>, program)}, a lane keyed {@code <~>} running here with no cut, and a key's {@code ?split={w}part}
+ *     its weight.</li>
  *     <li>EVERY LANE IS A {@code virtual::T}, submitted before any is awaited, so the lanes overlap and the branch
- *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await), within the key's
- *     {@code ?timeout} ({@link #thread}).</li>
+ *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await). A lane's
+ *     {@code ?timeout} is its cut's to keep ({@link #lane}).</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -95,13 +99,86 @@ public class BranchInst extends MInst {
     }
 
     /**
-     * THE BODY: route the lhs through the branches. Every keyed lane is submitted on its own {@code virtual::T}
-     * before any is awaited, and a marked key dealt nothing runs nothing. A SEEDED lane — a program that starts from
-     * its own {@code start(...)} — takes none of the lhs: it was dealt its part when it was planned, so its split
-     * records that share rather than asking for one, and a branch of seeded lanes alone needs no lhs at all.
+     * ONE LANE, as the branch runs it and as every reader of a layout reads it (Law.nomadic, stage 2): the place it
+     * runs at ({@code null} at home), the program it runs there, its weight (a share of the lhs under
+     * {@code ?split=part}, else {@code 0}: the whole lhs) and the member the branch runs on the lane's thread.
+     */
+    public record Lane(fURI place, List<Inst> program, long weight, Obj member) {
+
+        public boolean home() {
+            return null == this.place;
+        }
+
+        /**
+         * Whether the program starts from its own seed, a {@code start(...)}, rather than from the part of the lhs the
+         * branch deals it.
+         */
+        public boolean seeded() {
+            return !this.program.isEmpty() && START_INST_TID.equals(this.program.getFirst().tid().basePath());
+        }
+    }
+
+    /**
+     * THE BRANCH'S LANES, in order (Marko, 2026-11-24): a lane is a MEMBER HEADED BY A MOVE, or the cut a move
+     * compiles to, so its place is the cut's target, the program is the cut's tail, and its weight is the point on its
+     * head, the share it is dealt when the branch splits {@code ?split=part}: {@code move{2}(<//1>)} is two shares. A
+     * member headed by neither is a home lane, its program the member, its weight its head's point too. Under a copy the
+     * head's point is the member's own, as written. A KEYED branch is read as the lanes it means: each key
+     * {@code <p>} the lane {@code cut(<p>, program)} (no cut for a home key), its weight its {@code ?split} and its
+     * {@code ?timeout} the cut's, the branch's query the default of every key's.
+     */
+    public static List<Lane> lanes(final Inst branch) {
+        if (branch.args().isRec())
+            return routes(branch).<Rel>elements().map(route -> {
+                final fURI key = route.first().uriValue();
+                final List<Inst> program = program(route.second());
+                // the key's place is its path, aligned as a move's target, and the hop budget it states rides with it;
+                // THE CUT HOLDS THE TIMEOUT (Marko, 2026-11-24): the key's, else the branch's, is the lane's cut's
+                final fURI place = null == key.q(HOP) ? key.qLess() : key.qLess().q(HOP, key.q(HOP));
+                return new Lane(home(key) ? null : place, program, weight(key.q(SPLIT)), home(key) ? code(program)
+                        : instB(null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT)), lst(
+                        uri(Machine.Helper.align(Machine.current(), place)),
+                        program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst())));
+            }).toList();
+        final boolean part = 0 < weight(branch.tid().q(SPLIT));
+        return branch.args().<Obj>elements().filter(member -> !uri(LHS).equals(member)).map(member -> {
+            final List<Inst> insts = program(member);
+            final Inst head = insts.isEmpty() ? null : insts.getFirst();
+            final fURI base = null == head ? null : head.tid().basePath();
+            final fURI place = CUT_INST_TID.equals(base) ? head.arg(0).uriValue()
+                    : MOVE_INST_TID.equals(base) ? (head.arg(0).isUri() ? head.arg(0).uriValue() : fURI.Singleton.f(".."))
+                    : null;
+            // the point on the head is the lane's share, consumed by the deal: the lane runs its part once
+            final long weight = !part ? 0L : null == head || null == head.tid().d() ? 1L : head.tid().d().min();
+            final Obj run = !part || null == head || null == head.tid().d() || head.tid().d().isOne() ? member
+                    : code(Stream.concat(Stream.of(instB(head.tid().d(null), head.args())), insts.stream().skip(1)).toList());
+            return new Lane(null == place || home(place) ? null : place,
+                    CUT_INST_TID.equals(base) ? program(head.arg(1)) : null == place ? insts : insts.subList(1, insts.size()),
+                    weight, run);
+        }).toList();
+    }
+
+    /**
+     * Whether a branch is a LAYOUT: it routes its lanes (a key, a lane headed by a move or a cut) or deals its lhs
+     * ({@code ?split}), so a planner does not plan around it and a rewrite does not inline it.
+     */
+    public static boolean isLayout(final Inst inst) {
+        return BRANCH_INST_TID.equals(inst.tid().basePath())
+                && (inst.args().isRec() || inst.tid().hasQ(SPLIT) || lanes(inst).stream().anyMatch(lane -> !lane.home()));
+    }
+
+    private static List<Inst> program(final Obj member) {
+        return member.isCall() ? member.asCall().insts() : List.of((Inst) map_(member).tryToInst());
+    }
+
+    /**
+     * THE BODY: route the lhs through the branches. Every lane is submitted on its own {@code virtual::T} before any
+     * is awaited, and a lane dealt nothing runs nothing. A SEEDED lane — a program that starts from its own
+     * {@code start(...)} — takes none of the lhs: it was dealt its part when it was planned, so its weight records that
+     * share rather than asking for one, and a branch of seeded lanes alone needs no lhs at all.
      */
     public Obj route(final Obj lhs) {
-        if (!this.args().isRec()) {
+        if (!isLayout(this)) {
             // the member's own application already carries its multiplicity (an inst's coefficient, or a code's
             // head-inst coefficient); the branch contributes its lhs. UNDER A BATCHING GRAIN ({n} a page, {*} the whole
             // lhs) the lhs is a bag, and a member runs over it as a lane does, start(bag).member: the start streams the
@@ -116,36 +193,24 @@ public class BranchInst extends MInst {
                     ? start_(lhs).addInsts(o.isCall() ? o.asCall().insts() : List.of((Inst) map_(o).tryToInst())).apply(noobj())
                     : o.apply(lhs).c(c -> lhs.c().mult(c)))));
         }
-        final List<Rel> routes = routes(this).elements().toList();
-        final long[] weights = routes.stream()
-                .mapToLong(route -> seeded(route) ? 0L : this.weight(route.first().uriValue()))
-                .toArray();
+        final List<Lane> lanes = lanes(this);
+        final long[] weights = lanes.stream().mapToLong(lane -> lane.seeded() ? 0L : lane.weight()).toArray();
         final List<List<Obj>> parts = deal(lhs, weights);
-        final List<Obj> lanes = IntStream.range(0, routes.size())
-                .mapToObj(r -> 0 == weights[r] ? this.lane(routes.get(r), lhs)
+        final List<Obj> threads = IntStream.range(0, lanes.size())
+                .mapToObj(r -> 0 == weights[r] ? lane(lanes.get(r), lhs)
                         : parts.get(r).isEmpty() ? noobj()
-                        : this.lane(routes.get(r), objs(parts.get(r))))
+                        : lane(lanes.get(r), objs(parts.get(r))))
                 .toList();
-        return objs(lanes.stream().map(lane -> lane.isNoObj() ? lane : lane.asRec().at(uri(RHS))));
+        return objs(threads.stream().map(thread -> thread.isNoObj() ? thread : thread.asRec().at(uri(RHS))));
     }
 
     /**
-     * Whether a lane's program starts from its own seed, a {@code start(...)}, rather than from the part of the lhs
-     * the branch deals it.
+     * THE SPLIT a branch or a key marks itself with (Marko, 2026-11-05): {@code part} shares the lhs with the other
+     * lanes by their weights ({@code {w}part}, one when unstated, as the element count is rarely known), while
+     * {@code copy}, or no split, hands every lane the whole lhs: weight zero. Any other value is refused, never read as
+     * a copy — a misspelled part would hand every lane the whole lhs and double-count its fold.
      */
-    private static boolean seeded(final Rel route) {
-        return route.second().isCall() && !route.second().asCall().insts().isEmpty()
-                && START_INST_TID.equals(route.second().asCall().insts().getFirst().tid().basePath());
-    }
-
-    /**
-     * THE SPLIT a key marks itself with (Marko, 2026-11-05): {@code ?split={w}part} shares the lhs with the other
-     * marked keys by its weight {@code w} (one when unstated, as the element count is rarely known), while an unmarked
-     * key, or {@code ?split=copy}, gets the whole lhs: weight zero. Any other value is refused, never read as a copy —
-     * a misspelled part would hand every lane the whole lhs and double-count its fold.
-     */
-    protected long weight(final fURI key) {
-        final String split = key.q(SPLIT);
+    protected static long weight(final String split) {
         if (null == split)
             return 0L;
         // the object grammar reads the leading coefficient ({4}part), as it reads ?hop={2}4
@@ -178,34 +243,29 @@ public class BranchInst extends MInst {
     }
 
     /**
-     * ONE LANE: a {@code virtual::T} running the lane where its key points, submitted and not awaited (Marko,
-     * 2026-11-05). A KEYED LANE IS A MOVE (Law.nomadic, stage 2): {@code <p> => program} runs
-     * {@code start(input).cut(<p>, program)}, the cut {@code move(<p>).program} compiles to, so the cut routes it as it
-     * routes any move: a path is a machine of this server's tree ({@code <..>} its parent, {@code </.>} the root,
-     * {@code </abc>} from the root, {@code <abc>} a child), switched to and compiled there, and a host is a peer, which
-     * compiles what it is shipped. A path that names no machine is refused, as a move to it is. The start streams the
-     * input, so a {@code {*}} dom's bag reaches a {@code {1}} program member by member, and the input's coefficient
-     * rides the start. A SEEDED program starts from its own part, so it is the cut's whole tail, its head (and the hop
-     * budget stated there) shipped as written: {@code cut(<p>, start(part).program)}.
-     * <p>
-     * THE PROGRAM IS THE TAIL WHOLE: a lane's own {@code explain()} or {@code profile()} run where the lane runs (a
-     * profiled lane answers its place's report, which nests the place's own lanes), where the extractor would stop a
-     * chain's stretch before them, the return home. The target is aligned as the extractor aligns a move's.
+     * ONE LANE: a {@code virtual::T} running the lane's member, submitted and not awaited (Marko, 2026-11-05). A LANE IS
+     * A MOVE (Law.nomadic, stage 2): its member is headed by the cut its move compiles to ({@code <p> => program} is
+     * {@code cut(<p>, program)}), so the cut routes it as it routes any move: a path is a machine of this server's tree
+     * ({@code <..>} its parent, {@code </.>} the root, {@code </abc>} from the root, {@code <abc>} a child), switched to
+     * and compiled there, and a host is a peer, which compiles what it is shipped; and the cut times it, as it holds the
+     * lane's {@code ?timeout}. The member runs over {@code start(input)}, so a {@code {*}} dom's bag reaches a
+     * {@code {1}} program member by member and the input's coefficient rides the start; a SEEDED lane starts from its own
+     * part, so its member runs as it stands. A keyed lane's program is its cut's whole tail: its own {@code explain()}
+     * or {@code profile()} run where the lane runs (a profiled lane answers its place's report, which nests the place's
+     * own lanes), where the extractor would end a moved chain's stretch before them, the return home.
      * <p>
      * A HOME LANE GETS NO MOVE ({@link #home}): it runs in the machine the branch runs in. The lane's thread starts
      * where the caller stands, so a lane whose cut moves into another machine moves only its own thread: the caller is
      * never left anywhere else.
      */
-    protected Obj lane(final Rel route, final Obj input) {
-        final fURI key = route.first().uriValue();
-        final List<Inst> program = route.second().isCall()
-                ? route.second().asCall().insts()
-                : List.of((Inst) map_(route.second()).tryToInst());
-        // the key's own query (its split, its timeout) is the branch's to read, not part of the place
-        final List<Inst> lane = home(key) ? program : List.of(instB(CUT_INST_TID, lst(
-                uri(Machine.Helper.align(Machine.current(), key.qLess())),
-                program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst())));
-        return this.thread(seeded(route) ? code(lane) : start_(input).addInsts(lane), key).apply(noobj());
+    private static Obj lane(final Lane lane, final Obj input) {
+        final List<Inst> member = program(lane.member());
+        final Obj code = lane.seeded() ? code(member) : start_(input).addInsts(member);
+        // the lane's thread waits as long as its cut may run: the cut times the lane, and the branch's wait on the
+        // thread (its own default, else) must not cut the lane short
+        final String timeout = member.isEmpty() ? null : member.getFirst().tid().q(TIMEOUT);
+        return (null == timeout ? VirtualThread.virtual(code) : new VirtualThread(CommonUtil.mutableMap(uri(CODE), code,
+                uri(TIMEOUT), machInstSet.Helper.seconds(timeout)), MACH_VIRTUAL_THREAD_TID, null)).apply(noobj());
     }
 
     /**
@@ -217,19 +277,4 @@ public class BranchInst extends MInst {
         return fURI.Singleton.f("~").equals(place) || fURI.Singleton.f(".").equals(place);
     }
 
-    /**
-     * A LANE'S THREAD: a {@code virtual::T} running {@code code}. The key's {@code ?timeout} bounds the wait for its
-     * result in whole seconds, as a q value cannot carry a typed time yet (Marko, 2026-11-05); the thread holds it as the
-     * time it is ({@code second::n}). Without one, the thread's own default applies.
-     */
-    protected VirtualThread thread(final Obj code, final fURI key) {
-        final String timeout = key.q(TIMEOUT);
-        if (null == timeout)
-            return VirtualThread.virtual(code);
-        final Obj seconds = ObjmtronSerializer.parse(timeout);
-        if (!seconds.isInt())
-            throw MTronException.of("?%s=%s is not a whole number of seconds", TIMEOUT, timeout);
-        return new VirtualThread(CommonUtil.mutableMap(uri(CODE), code, uri(TIMEOUT),
-                real(seconds.intValue().doubleValue(), MATH_SECOND_TID, null)), MACH_VIRTUAL_THREAD_TID, null);
-    }
 }

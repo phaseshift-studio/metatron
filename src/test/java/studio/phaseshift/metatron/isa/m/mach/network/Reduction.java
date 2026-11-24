@@ -22,12 +22,14 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import java.util.List;
 
+import static studio.phaseshift.metatron.Tokens.HOP;
+import static studio.phaseshift.metatron.Tokens.PART;
 import static studio.phaseshift.metatron.Tokens.SPLIT;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 
 /**
@@ -72,59 +74,61 @@ public final class Reduction {
     }
 
     /**
-     * The keyed lanes of the fan-out {@code branch}, {@code place => program} in key order — or empty when the code
-     * carries no such branch.
+     * The fan-out {@code branch}, or null when the code carries none.
      * <p>
-     * THE FIRST KEYED BRANCH IS THE FAN-OUT read here. {@code PlanInterpreter.shard} emits one per cut whose run ships:
-     * at the head when the plan dealt a literal seed into the lanes
-     * ({@code branch?<={0}(<p> => start(part)…, …).<combiner>}), after the prefix that stays home when the bag is
-     * computed ({@code <prefix>.branch?<=T{*}&split=part(…).<combiner>}), and after each later cut's combiner. The plan never plans around a keyed branch, so a chain it declined holds none
-     * it emitted; a test reads a later branch by handing this reader the chain from that branch on.
+     * THE FIRST LAYOUT IS THE FAN-OUT read here ({@code BranchInst#isLayout}: a branch whose lanes are headed by the
+     * cuts their moves compile to, or that deals its lhs). {@code PlanInterpreter.shard} emits one per cut whose run
+     * ships: at the head when the plan dealt a literal seed into the lanes
+     * ({@code branch?<={0}(cut(<p>, start(part)…), …).<combiner>}), after the prefix that stays home when the bag is
+     * computed ({@code <prefix>.branch?<=T{*}&split=part(…).<combiner>}), and after each later cut's combiner. The plan
+     * never plans around a layout, so a chain it declined holds none it emitted; a test reads a later branch by handing
+     * this reader the chain from that branch on.
      */
-    private static List<Rel> lanes(final Code master) {
-        return master.insts().stream()
-                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
-                .findFirst()
-                .map(inst -> inst.args().asRec().elements().toList())
-                .orElse(List.of());
+    private static Inst branch(final Code master) {
+        return master.insts().stream().filter(BranchInst::isLayout).findFirst().orElse(null);
     }
 
     /**
-     * Each lane's split as its key states it, in key order — the key's own {@code ?split}, else the branch's, which is
-     * every key's default ({@code BranchInst#routes}): {@code part}, {@code {2}part}, {@code copy}. Empty when the code
-     * was not shard-planned.
+     * The fan-out's lanes, in their order ({@code BranchInst#lanes}), or empty when the code was not shard-planned.
+     */
+    private static List<BranchInst.Lane> lanes(final Code master) {
+        final Inst branch = branch(master);
+        return null == branch ? List.of() : BranchInst.lanes(branch);
+    }
+
+    /**
+     * Each lane's split as the layout states it, in lane order: {@code part} for a lane of weight one, {@code {2}part}
+     * for a weight of two (the point on its head), and the branch's own split for a lane of weight zero ({@code copy},
+     * or none). Empty when the code was not shard-planned.
      */
     public static List<String> splits(final Code master) {
-        final Inst branch = master.insts().stream()
-                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
-                .findFirst().orElse(null);
+        final Inst branch = branch(master);
         return null == branch ? List.of() : lanes(master).stream()
-                .map(lane -> lane.first().uriValue())
-                .map(key -> key.hasQ(SPLIT) ? key.q(SPLIT) : branch.tid().q(SPLIT))
+                .map(lane -> 0 == lane.weight() ? branch.tid().q(SPLIT) : 1 == lane.weight() ? PART : "{" + lane.weight() + "}" + PART)
                 .toList();
     }
 
     /**
-     * The code each lane RUNS, one per route and in the same order. A lane the plan seeded runs exactly its program,
-     * {@code start(part).<run>.<fold>}: the plan dealt it that part. A lane of a computed bag is dealt its part when the
-     * branch runs, so the plan names none, and its code is its program alone. Empty when the code was not
-     * shard-planned.
+     * The code each lane RUNS where it lands, one per lane and in the same order: the lane's program, with the budget
+     * its cut hands on stated on its head, as a place is shipped it (machInstSet.Helper#budgeted). A lane the plan
+     * seeded runs exactly its program, {@code start(part).<run>.<fold>}: the plan dealt it that part. A lane of a
+     * computed bag is dealt its part when the branch runs, so the plan names none, and its code is its program alone.
+     * Empty when the code was not shard-planned.
      */
     public static List<Code> slaves(final Code master) {
         return lanes(master).stream()
-                .map(lane -> (Code) code(lane.second().asCall().insts()))
+                .map(lane -> (Code) code(lane.home() ? lane.program() : machInstSet.Helper.budgeted(lane.program(), lane.place().q(HOP))))
                 .toList();
     }
 
     /**
-     * The routing targets in lane order: a lane's key, its query (the weight) aside. The home key {@code <~>} is a path,
-     * not a host — {@code null}, which makes that lane the local place; every other lane answers at its key's
-     * authority. Empty when the code was not shard-planned.
+     * The routing targets in lane order: a lane's place, its query (the budget) aside. The home lane is the local
+     * place — {@code null}, as is a lane to another machine of this server's tree; every other lane answers at its
+     * place's authority. Empty when the code was not shard-planned.
      */
     public static List<fURI> routes(final Code master) {
         return lanes(master).stream()
-                .map(lane -> lane.first().uriValue())
-                .map(key -> null == key.host() ? null : key.qLess())
+                .map(lane -> lane.home() || null == lane.place().host() ? null : lane.place().qLess())
                 .toList();
     }
 

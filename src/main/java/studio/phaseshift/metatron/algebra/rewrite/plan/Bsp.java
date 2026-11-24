@@ -32,10 +32,12 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REPEAT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -132,13 +134,14 @@ public final class Bsp {
             return null;
         final Obj budget = 1 == hop.height() ? jnt(0) : Hop.of(hop.height() - 1, hop.arity()).toObj();
         final long arity = null == hop.arity().max() ? Long.MAX_VALUE : hop.arity().max();
-        final Map<Obj, Obj> routes = new LinkedHashMap<>();
+        // A LANE IS A MOVE (Law.nomadic, stage 2), emitted as the cut it compiles to, its budget on the cut's target
+        final List<Obj> lanes = new ArrayList<>();
         for (final fURI peer : peers.subList(0, (int) Math.min(peers.size(), arity))) {
             final List<Inst> lane = new ArrayList<>(f.stream().map(Shard::raw).toList());
-            Shard.stampHop(lane, budget);
-            routes.put(uri(peer), code(lane));
+            Shard.stampHop(lane, null);
+            lanes.add(instB(CUT_INST_TID, lst(uri(peer.q(HOP, budget)), code(lane).tryToInst())));
         }
-        final Inst branch = instB(BRANCH_INST_TID.dom(InstSet.A.maybeSome()).q(SPLIT, PART), rec(routes));
+        final Inst branch = instB(BRANCH_INST_TID.dom(InstSet.A.maybeSome()).q(SPLIT, PART), lst(lanes));
         final Map<Obj, Obj> args = new LinkedHashMap<>(repeat.args().asRec().jvm());
         final Obj key = args.keySet().stream().filter(k -> k.isUri() && f(CODE).equals(k.uriValue())).findFirst().orElse(null);
         if (null == key)
