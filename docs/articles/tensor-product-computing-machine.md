@@ -167,8 +167,8 @@ therefore concern codes whose per-object instructions are linear.
 
 In metatron, `BasicSwarmComputer.resolve` makes one dead monad at each initial instruction. So `s.p`, which runs as
 `start(s).p`, begins with a dead monad that `start` turns into $s$. A dead monad that walks on is a zombie
-(`Monad.zombie`). `Processor.invoke` answers `noobj` for an empty input unless the instruction's domain admits zero,
-and `map` and `branch` declare the domain $\{?\}$, which does.
+(`Monad.zombie`). `Processor.Helper.invoke` answers `noobj` for an empty input unless the instruction's domain admits
+zero, and `map` and `branch` declare the domain $\{?\}$, which does.
 
 ::: **Proposition 2** (Bulking collects like terms). Two monads bulk exactly when they are one basis element
 $x \otimes j$, and bulking adds their points, $c\,(x \otimes j) + d\,(x \otimes j) = (c + d)\,(x \otimes j)$.
@@ -240,7 +240,7 @@ multiply along a chain [[2]](./span-and-point-coefficient-algebra.md): three lan
 In metatron, `StatefulMonad.next(obj)` returns `[obj, code.nextInst(inst), state, code]`: the data counter set to the
 instruction's output, and the program counter set to the code's next instruction. `BasicSwarmComputer.split` hands a
 bulked monad to its instruction unsplit when its object is one repeated value and the instruction takes one object at
-a time. `Processor.invoke` then applies the instruction to one copy and multiplies the count back, so the step is
+a time. `Processor.Helper.invoke` then applies the instruction to one copy and multiplies the count back, so the step is
 taken once, as Proposition 3 permits. A monad that holds a stream of distinct objects is split first.
 
 # Evaluation
@@ -299,7 +299,9 @@ the module.
 A *branch* is an instruction whose members are codes. When its members are codes of per-object instructions, it is
 per-object, and its action is the sum of its members' actions,
 $\rho\big(\mathrm{branch}(p_1, \ldots, p_n)\big) = \rho(p_1) + \cdots + \rho(p_n)$, the $+$ of $F$ acting on data. Its
-domain is $\{?\}$, so it is applied to the empty stream as well, and a branch of linear members is linear.
+domain is $\{?\}$, so it is applied to the empty stream as well, and a branch of linear members is linear. A branch
+feeds its members one object at a time, so a member that gathers folds each object alone: there is no nested reduce
+function (Proposition 1 of [[1]](./stream-ring-theory.md)).
 
 **Live proof.** The two members of a branch take 1 to 2 by different routes, and their monads meet as one basis
 element.
@@ -390,8 +392,9 @@ walk as its state, and each step extends the walk by the new data counter: $\sig
 :::
 
 The walk algebra is a free algebra again. It records everything, and two walks are equal only when they are the same
-word. A stateless monad is its quotient. A walk is the *mutation history* of [[1]](./stream-ring-theory.md), which each
-map extends by the object it consumed, $a'(x, \Delta) = (a(x), \Delta \uplus x)$, and which a reducer resets.
+word. A stateless monad is its quotient. A walk is a whole object thread of [[1]](./stream-ring-theory.md), its
+*mutation history* $\Delta$ followed by its datum: a map takes $(x, \Delta)$ to $(a(x), \Delta \uplus x)$, and a reducer
+resets the history. There a filter leaves the history as it is, where Definition 15 extends the walk at every step.
 
 ::: **Proposition 5** (A stateless monad is a walk of length one). Dropping the state, $x \otimes j \otimes \sigma
 \mapsto x \otimes j$, is a linear surjection of the stateful monad space onto the stateless one, and it commutes with
@@ -543,8 +546,8 @@ engineering bound that lies outside this algebra.
 # A Rosetta Stone
 
 The machine restates the stream ring theory of [[1]](./stream-ring-theory.md) in the language of modules, and metatron
-runs both. The table sets the three scripts side by side: an axiom or theorem of [1], the definition or result of this
-article that states it for the machine, and the name metatron gives it.
+runs both. The table sets the three scripts side by side: an axiom or theorem of stream ring theory, the definition or
+result of this article that states it for the machine, and the name metatron gives it.
 
 | Stream ring theory [[1]](./stream-ring-theory.md) | The $M \otimes_R N$ machine | metatron |
 |---|---|---|
@@ -553,27 +556,26 @@ article that states it for the machine, and the name metatron gives it.
 | the bulk axiom, $\langle cx, dx \rangle = \langle (c+d)x \rangle$ | bulking collects like terms (Prop. 2) | `MObjs.attemptBulk` |
 | $\langle 0x \rangle = \langle c\emptyset \rangle = \langle\rangle$ | $M = R[X]/(\mathtt{noobj})$, and a dead monad is $0$ (Prop. 1) | `noobj` |
 | the merge axiom, $\langle cx \rangle + \langle dy \rangle = \langle cx, dy \rangle$ | the addition of $M$ | the union of streams |
-| the apply axiom, $\langle cx \rangle da = \langle (c \cdot d)\,a(x) \rangle$ | the step, whose point rides through it (Def. 10, Prop. 3) | `Processor.invoke` |
+| the apply axiom, $\langle cx \rangle da = \langle (c \cdot d)\,a(x) \rangle$ | the step, whose point rides through it (Def. 10, Prop. 3) | `Processor.Helper.invoke` |
 | the split axiom, $\langle cx \rangle (da + eb) = \langle cx \rangle da + \langle cx \rangle eb$ | $x \cdot (w + w') = x \cdot w + x \cdot w'$ (Prop. 4) | `branch` |
-| the tail function, $? \to X$ (Def. 1) | an initial instruction, domain $\{0\}$ (Def. 8) | `start` |
-| the head function, $X \to\, ?$ (Def. 1) | the end $\dashv$, and the result (Defs. 6, 13) | the `noobj` instruction |
+| a stream's tail and head functions, which write and read it (Def. 1) | the instructions on either side of a stream: each writes the stream after it and reads the one before (Defs. 6, 8) | an instruction's `rng` and `dom` |
 | the function ring $\langle \mathcal{F}, +, \cdot \rangle$ (Theorem 3) | what the code ring $F = R\langle I_1 \rangle$ maps into (Def. 11) | `code::T` |
 | $\langle x \rangle a$, a stream before its function | a right module of data over code, $s \cdot p$ (Prop. 4) | `s.p` |
 | streams are atemporal (Theorem 5) | the step is linear, so bulking may come before or after it (Props. 2, 3) | any running order |
-| the floating coefficient, $ca = a \cdot c$ (Theorem 6) | bilinearity, $(cx) \otimes j = x \otimes (cj)$ (Def. 3) | a monad's count, read on its object or its instruction |
+| the floating coefficient, $ca = a \cdot c$ (Theorem 6) | bilinearity, $(cx) \otimes j = x \otimes (cj)$ (Def. 3) | `Inst.Form.isFloatable()` |
 | left and right factors over a non-commutative $\mathcal{C}$ (Corollary 2) | the balanced tensor product (Def. 4) | — |
 | the map, filter and flatmap rings | the per-object instructions, $f_i : X \to M$ (Def. 8) | `Inst.Form` |
-| the reduce near-ring, not right distributive (Lemma 1, Theorem 18) | the gathers, which lie outside $F$ (Defs. 8, 11) | `Inst.isGather` |
-| the barrier near-ring, $X^* \to Y^*$ | a gather, $G_b : M \to M$ (Def. 8) | `order()`, `group()` |
+| the reduce near-ring, not right distributive (Lemma 1, Theorem 18) | a gather whose range is one, outside $F$ (Defs. 8, 11) | `Inst.isReducing` |
+| the barrier near-ring, $X^* \to Y^*$ | a gather, $G_b : M \to M$ (Def. 8) | `Inst.isGather` |
 | a reducer drains the stream before it | the drain (Def. 18) | a barrier monad |
 | reduce functions are temporal (Theorem 16) | why a barrier waits (Theorem 3) | barriers drain when nothing runs |
-| coefficients do not float past a reducer (Theorem 17) | only the drains are non-linear (Theorem 4) | — |
+| coefficients do not float past a reducer (Theorem 17) | only the drains are non-linear (Theorem 4) | `Inst.Form.isBlocked()` |
 | monoidic reducers are semi-right distributive (Theorem 19) | a commutative-monoid fold is a homomorphism (Theorem 3) | `law_shard` |
-| there is no nested reducer (Proposition 1) | a branch is per-object when its members are (Evaluation) | members fold per object |
+| there is no nested reducer (Proposition 1) | a branch feeds its members one object at a time (Evaluation) | members fold per object |
 | an object thread, which a reducer resets (Def. 7) | a drained monad starts with an empty state (Def. 18) | the monad's `state` |
-| a mutation history, $(a(x), \Delta \uplus x)$ | a walk, $x_0 x_1 \cdots x_t \in R\langle X \rangle$ (Def. 15) | `path()`, to be reworked |
+| an object thread, a mutation history and its datum, $(a(x), \Delta \uplus x)$ | a walk, $x_0 x_1 \cdots x_t \in R\langle X \rangle$ (Def. 15) | `path()`, to be reworked |
 | a loop counter, $(x, i)$ | a state factor, $R[S]$ (Def. 14) | `state/loop` |
-| a sack, merged by an operator | a state that is a module, merged as monads bulk (open) | — |
+| a sack, merged by an operator | no tensor factor, as a point would pass into the state (open) | — |
 | repetition, $(\bar{a} + ab)^\infty$ | a loop, a sum of powers of the step (The Machine) | `repeat`, a `{*}` span |
 | matrix coefficients in $\mathbb{C}^{2 \times 2}$, bulking as interference | complex points with a coin, $\mathbb{C}[X] \otimes \mathbb{C}^2$ (Conclusion) | — |
 | Turing completeness (Theorem 25) | the machine with loops and state | — |
@@ -605,10 +607,10 @@ article that states it for the machine, and the name metatron gives it.
   other rings the same algebra weighs or interferes, and with complex points and unitary steps it is the quantum walk
   of [[6]](#references). [[1]](./stream-ring-theory.md) carries that walk's coin in a $\mathbb{C}^{2 \times 2}$
   coefficient, where bulking is interference.
-- Open, from the *sacks* of [[1]](./stream-ring-theory.md): a state merged by an operator as its objects bulk. A state
-  that is a module merges so, by linearity in its factor: $x \otimes j \otimes \sigma + x \otimes j \otimes \sigma'$
-  is $x \otimes j \otimes (\sigma + \sigma')$, a species between the walk, which never bulks across states, and the
-  stateless monad.
+- Open, from the *sacks* of [[1]](./stream-ring-theory.md): objects that bulk merge their sacks with an operator, each
+  keeping its coefficient apart from its sack. That is no tensor factor: in $M \otimes N \otimes A$ a point passes into
+  the state, $c\,(x \otimes j \otimes \sigma) = x \otimes j \otimes (c\sigma)$, which is right for a coin's amplitudes
+  and wrong for a sack. A sack merge keeps the count and the state apart: a species still to be stated.
 
 # References
 
