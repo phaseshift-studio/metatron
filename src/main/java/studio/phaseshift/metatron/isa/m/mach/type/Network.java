@@ -1082,6 +1082,22 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         }
 
         /**
+         * THE PLACE IN A PEER: an address's path past the surface its peer was dialed at, the peer found as every
+         * membership question finds it ({@link Network#peerOf}). A peer dialed at {@code ws://h:p/mtron} answers there
+         * (the route is its endpoint, never one of its machines), so {@code ws://h:p/mtron/a} is its machine {@code /a},
+         * as {@code ws://h:p/a} is, and the dial's own address names no machine in it: an empty path, the peer itself.
+         */
+        public static fURI placeIn(final Network network, final fURI address) {
+            final Obj peer = network.peerOf(address.origin());
+            final Obj dialed = peer.isRec() ? peer.asRec().<Obj>atDirect(uri(HOST)) : noobj();
+            final List<String> route = dialed.isUri() ? dialed.uriValue().segments() : List.of();
+            final List<String> path = address.segments();
+            return !route.isEmpty() && route.size() <= path.size() && route.equals(path.subList(0, route.size()))
+                    ? address.pretract(route.size())
+                    : address;
+        }
+
+        /**
          * A MACHINE IS NEVER ITS OWN PEER: an address that reaches one of this machine's own listen {@code authorities}
          * ({@link #authorities()}) — its bind dialed back as written, or by a loopback alias of it
          * ({@link #sameService}) — is the machine itself. A lane shipped there is a round trip home, and a tree would

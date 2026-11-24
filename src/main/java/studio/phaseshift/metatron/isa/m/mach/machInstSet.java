@@ -1124,8 +1124,12 @@ public class machInstSet extends AbstractInstSet {
                                         compiles and runs the tail: `5.move(<a>).plus(1)` becomes
                                         `5.cut(<a>, plus(1))`, and `~` stays in the machine a push or a pop made
                                         current. A target that names a host ships the program to that server — the
-                                        lhs, the move to the tail's place in it, and the tail — through its `eval`,
-                                        gathered back as one lane; a host with no peer dialed is a failure. The tail
+                                        lhs and the cut to the tail's place in it, its root when the target names no
+                                        machine past the surface the peer was dialed at — through its `eval`, gathered
+                                        back as one lane, except a tail that is one read or one write (`from(</x>)`,
+                                        `to(</x>)`) of one obj at the peer itself, which goes through the place's
+                                        door, so a client that runs no program is a place too; a host with no peer
+                                        dialed is a failure. The tail
                                         ends at `explain()` and `profile()`, the return home: they stay after the cut
                                         and analyze it where the expression began.""")
                                 .law(Law.nomadic)
@@ -1155,20 +1159,59 @@ public class machInstSet extends AbstractInstSet {
                                     // scatter's eval would resolve to the NATIVE eval — which evaluates locally — and the
                                     // authority would vanish without a word (`1.move(//abc)` answered 1). Answering the lhs
                                     // of a move is not a result: nothing was moved to and nothing was computed.
-                                    final fURI cutOrigin = inst.arg(0).uriValue().origin();
+                                    final fURI cutOrigin = target.origin();
+                                    final fURI place = Network.Helper.placeIn(Machine.current().network(), target);
+                                    // ONE READ OR ONE WRITE GOES THROUGH THE DOOR (Marko, 2026-11-23: the remote branch
+                                    // lane's door, which a keyed lane reaches as a move): a tail that is one from(</path>)
+                                    // or one to(</path>) of span one, at the peer itself, is that read or write, through
+                                    // the machine's own door (the client's from or to, else its eval), so a client that
+                                    // reads and writes but runs no program -- http_client::T, GET and POST -- is a place a
+                                    // move reaches. A machine in the peer is no door: its memory is its own, so a program
+                                    // ships. The address is the peer's own, a path and nothing more: another authority (an
+                                    // mqtt topic, a //name) is no address at this place, and a template is expanded only
+                                    // where a program runs. ONE OBJ IS ONE READ OR WRITE, its count back on the answer as an
+                                    // instruction of one obj puts it (Processor): {3}5.to(</x>) writes 5 and answers {3}5,
+                                    // and nothing reads once or writes nothing. Several objs are a read or a write apiece, a
+                                    // run, as any other span is ({2}from(</x>) multiplies each step's answer by its lhs's
+                                    // copies): those ship to the place's eval with every other program
+                                    final List<Inst> tail = inst.arg(1).asCall().insts();
+                                    final Inst only = 1 == tail.size() ? tail.getFirst() : null;
+                                    final fURI written = null != only && only.arg(0).isUri() ? only.arg(0).uriValue() : null;
+                                    if (null != written && 0 == place.segmentLength() && only.tid().b().isOne()
+                                            && written.isLocal() && written.isAbsolute() && !written.hasTemplates()
+                                            && (FROM_INST_TID.equals(only.tid().basePath()) || TO_INST_TID.equals(only.tid().basePath()))
+                                            && (lhs.isNoObj() || lhs.unique())
+                                            && (Network.Helper.reachable(Machine.current(), cutOrigin)
+                                            || Network.Helper.reach(Machine.current(), cutOrigin, only.tid().basePath()).isObjInst())) {
+                                        // the address homed at the place, its query kept (from(</x?docq>)). The door reads or
+                                        // writes once, and its point goes on the answer as any instruction's does
+                                        final fURI address = written.origin(target);
+                                        final Obj one = lhs.stream().findFirst().orElse(noobj());
+                                        return Inst.Helper.pointed(FROM_INST_TID.equals(only.tid().basePath())
+                                                        ? Machine.read(address)
+                                                        : Machine.write(address, one.isNoObj() ? one : one.c(cInt.ONE())),
+                                                (null == only.tid().d() ? cInt.ONE() : only.tid().d()).mult(one.isNoObj() ? cInt.ONE() : one.c()));
+                                    }
                                     // ONE DOOR, ONE REFUSAL: the same reachability question atPeer asks, and a failure that
                                     // names where the dial does live when an ancestor holds it (Network.Helper.unreachable).
                                     if (!Network.Helper.reachable(Machine.current(), cutOrigin))
-                                        throw Network.Helper.unreachable(Machine.current(),
-                                                inst.arg(0).uriValue(), cutOrigin);
-                                    final List<Inst> insts = new ArrayList<>(start_(lhs).insts());
-                                    insts.addAll(move_(uri(inst.arg(0).uriValue().path().isEmpty() ? ROOT_MACHINE_VID : f().path(inst.arg(0).uriValue().path()))).insts());
-                                    insts.addAll(inst.arg(1).asCall().insts());
+                                        throw Network.Helper.unreachable(Machine.current(), target, cutOrigin);
+                                    // THE PROGRAM SHIPS AS THE CUT ITS MOVE COMPILES TO THERE, cut(</path>, tail), the
+                                    // peer's root when the target names no machine in it, so the tail lands where the move
+                                    // names, whatever machine the peer's eval stands in, and is that machine's whole: its
+                                    // own profile() or explain() run there, where a shipped move(</path>).tail would be cut
+                                    // again by the peer, the stretch ending before them. Nothing to start from is no start
+                                    // (a seeded lane ships its own start(part), and the hop budget stated on it, as
+                                    // written), and nothing to run ships the lhs alone
+                                    final List<Inst> insts = new ArrayList<>(lhs.isNoObj() ? List.of() : start_(lhs).insts());
+                                    if (!tail.isEmpty())
+                                        insts.add(instB(CUT_INST_TID, lst(uri(0 < place.segmentLength() ? f().path(place.path()) : ROOT_MACHINE_VID),
+                                                code(new ArrayList<>(tail)).tryToInst())));
                                     // THE CUT ANSWERS WHAT THE PEER ANSWERS, so the scatter runs here. Handed back
                                     // unrun, the code ran only where a processor iterated it (Code.iterator() applies);
                                     // a cut applied as an inst, alone in an ordered branch's member, answered the
                                     // code itself, and the next inst failed to convert a code::T
-                                    return eval_(inst.arg(0).uriValue().origin()).apply(code(insts));
+                                    return eval_(cutOrigin).apply(code(insts));
                                 })
                                 .create(),
                         InstBuilder.build().tid(SPAWN_INST_TID)

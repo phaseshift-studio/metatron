@@ -441,9 +441,12 @@ merge that re-reads the multiplicity, so two `1`s in different shards merge into
 ### D — parallel fan-out (virtual-threaded lanes, max RTT)
 
 Every keyed lane of the branch is a `virtual::T`, submitted before any is awaited — each returns immediately and waits
-on its own thread, and the branch then awaits each lane through its `rhs`. The master pays **max RTT, not Σ RTT**. A remote lane ships its program through its place's `eval` (the client's mini-instset override),
-bound when the lane runs rather than when the plan is made, and the result hangs off `rhs` as a lazy `auto` over the
-future.
+on its own thread, and the branch then awaits each lane through its `rhs`. The master pays **max RTT, not Σ RTT**. A
+keyed lane is a move (`Law.nomadic`): `<p> => program` runs as the cut `move(<p>).program` compiles to, so the cut
+routes it, a remote lane shipping its program through its place's `eval` (the client's mini-instset override), bound
+when the lane runs rather than when the plan is made, and the result hangs off `rhs` as a lazy `auto` over the future.
+A lane that is one `from(</x>)` or one `to(</x>)` of one obj, at the peer itself, goes through the place's door
+instead, so a client that runs no program is a place too.
 
 ### E — tree reduction (`?hop=height{arity}`)
 
@@ -738,8 +741,9 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    instruction set's rules) cuts the chain at the first of them. A move becomes `cut(<target>, tail)` and a push or a
    pop is followed by `cut(<~>, tail)`, so `law_shard` and `law_bsp` plan only what runs here, and the tail is
    compiled by the machine it lands in, over that machine's own peers (reach is not inherited). A cut into this
-   server's machine tree switches the current machine and compiles the tail there; a cut to a host ships the program,
-   and the receiver's own extractor cuts the `move(</path>)` it arrives with. `explain()` and `profile()` are the
+   server's machine tree switches the current machine and compiles the tail there; a cut to a host ships the lhs and
+   the cut to the tail's place in that peer, `cut(</path>, tail)` (the peer's root when the target names no machine
+   past the surface it was dialed at), which the receiver runs as any cut. `explain()` and `profile()` are the
    return home: the tail ends before them, so `1.move(<a>).plus(1).explain()` compiles to
    `1.cut(<a>, plus(1)).explain()`, explained here with nothing run, and a profile times the cut here, every run
    starting from home.

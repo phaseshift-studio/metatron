@@ -1404,12 +1404,16 @@ public final class mInsts {
                                 passes it to every member — the barrier a DISTRIBUTION REWRITE states on the branch it
                                 emits.
                                 an ordered call is the local branch: each member applied at current machine.
-                                a keyed call routes: `place => program` evaluates the lhs through the program at that
-                                place. a path names a local machine (<~> or <.> this one, <..> its parent, </.> the root,
-                                </abc>, <~/abc>), whose compiler compiles the lane and whose processor runs it; a
-                                host-bearing key with no dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) needs
-                                only that verb at its place, so a client that reads and writes but runs no program serves
-                                it. every lane runs on its own virtual::T, so the lanes run concurrently. a key marked
+                                a keyed call routes: `place => program` evaluates the lhs through move(<place>).program,
+                                as the cut that move compiles to: a path names a local machine (<~> or <.> this one, run
+                                with no move, <..> its parent, </.> the root, </abc>, <abc> a child), whose compiler
+                                compiles the lane and whose processor runs it; a host names a peer, and the path past the
+                                surface it was dialed at names the machine in it the lane runs at; a host-bearing key with
+                                no dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) of
+                                one obj, at the peer itself, needs only that verb there, so a client that reads and writes
+                                but runs no program serves it. every lane runs on its own virtual::T, so the lanes run
+                                concurrently. an ordered member runs from the machine the branch stands in, and the merge
+                                returns there. a key marked
                                 ?split={w}part takes a share of the lhs by its weight w among the marked keys, and an
                                 unmarked key (or ?split=copy) gets the whole lhs. a key's ?timeout=n waits n seconds for
                                 its lane. a query on the branch itself (branch?timeout=24) is every key's default, and a

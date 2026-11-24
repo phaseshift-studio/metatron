@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.m.mach;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
@@ -48,6 +50,23 @@ public class BasicSwarmComputerTest extends AbstractMetatronTest {
         final Obj result = mach.apply(noobj());
         assertFalse(result.isNoObj(), "expected non-noobj result from 1+2");
         assertTrue(result.toString().contains("3"), "expected result to contain 3");
+    }
+
+    /**
+     * A CODE HEADED BY A FOLD, APPLIED TO NOTHING, FOLDS ONCE: the fold's barrier is where its stream gathers, so what
+     * started joins it, and the fold is never reached a second way (count().plus(1) answered {2}1). Each row: the code
+     * % its answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "count().plus(1)          % 1",
+            "sum().plus(1)            % 1",
+            "count().plus(1).count()  % 1",
+            "count().plus(1).plus(1)  % 2",
+            "{1,2}.count().plus(1)    % 3",
+    }, delimiter = '%')
+    public void testAFoldAtTheHeadFoldsOnce(final String code, final String answer) {
+        checkCodeParseApply(LOG, code.trim(), answer.trim());
     }
 
     // ======================== Opt-in path tracking ========================

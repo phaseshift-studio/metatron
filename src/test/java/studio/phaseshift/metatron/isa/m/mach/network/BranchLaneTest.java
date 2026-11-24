@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -46,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THR
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -91,6 +94,27 @@ public class BranchLaneTest extends AbstractMetatronTest {
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(<loop://shelf> => to(</branch/shelf>))", "7");
             AbstractMetatronTest.checkCodeParseApply(LOG, "0.branch(<loop://shelf> => from(</branch/shelf>))", "7");
+            // THE DOOR IS THE CUT'S (a keyed lane is a move): a move reaches the place the same way, branch or not
+            AbstractMetatronTest.checkCodeParseApply(LOG, "8.move(<loop://shelf>).to(</branch/shelf>)", "8");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.move(<loop://shelf>).from(</branch/shelf>)", "8");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.move(<loop://shelf>).from{2}(</branch/shelf>)", "{2}8");
+            // one read is one obj's: over several, each obj is a read of its own, a run the place cannot take
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2}.move(<loop://shelf>).from(</branch/shelf>)", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2}.branch?<=int{*}(<loop://shelf> => to(</branch/shelf>))", "<ERROR>");
+            // one obj of any count is one write, its count back on the answer, as an instruction of one obj puts it
+            AbstractMetatronTest.checkCodeParseApply(LOG, "5.move{3}(<loop://shelf>).to(</branch/shelf>)", "{3}5");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.move(<loop://shelf>).from(</branch/shelf>)", "5");
+            // nothing writes nothing: the place's value goes, as a write of nothing does at home
+            AbstractMetatronTest.checkCodeParseApply(LOG, "move(<loop://shelf>).to(</branch/shelf>)", "noobj");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.move(<loop://shelf>).from(</branch/shelf>)", "noobj");
+            // THE DOOR IS THE PEER'S OWN: another authority is no address at this place, and a machine in the peer runs
+            // the program it is shipped, which this place cannot; neither touches the shelf
+            AbstractMetatronTest.checkCodeParseApply(LOG, "6.move(<loop://shelf>).to(<loop://elsewhere/branch/shelf>)", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "6.move(<loop://shelf/branch_none>).to(</branch/shelf>)", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.move(<loop://shelf>).from(</branch/shelf>)", "noobj");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "8.move(<loop://shelf>).to(</branch/shelf>)", "8");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.branch(<loop://shelf> => from(</branch/shelf>))", "8");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "7.move(<loop://shelf>).to(</branch/shelf>)", "7");
             // A LANE'S POINT IS COPIES OF ITS ANSWER: the door reads or writes once, and the point goes on the answer
             AbstractMetatronTest.checkCodeParseApply(LOG, "0.branch(<loop://shelf> => from{3}(</branch/shelf>))", "{3}7");
             AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(<loop://shelf> => to{2}(</branch/shelf>))", "{2}7");
@@ -189,6 +213,13 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://probe> => plus(1))", "2");
             AbstractMetatronTest.checkEquality(LOG, uri(MACH_VIRTUAL_THREAD_TID), uri(lane.get().tid().basePath()), true);
             AbstractMetatronTest.checkEquality(LOG, bool(true), bool(shipped.get().isCode()), true);
+            // A KEYED LANE IS A MOVE, ALREADY CUT: the place is shipped what a move to it ships, the lhs and the cut to
+            // where in it the program runs (its root, as the key names no machine past the place's surface)
+            AbstractMetatronTest.checkEquality(LOG, Machine.parse("start(1).cut(</.>,plus(1))"), shipped.get(), true);
+            // ... and the program is the cut's tail whole: a lane's own explain() runs where the lane runs, where in a
+            // chain the stretch after a move ends before it, the return home
+            Machine.Helper.evalAt(Machine.current(), () -> Machine.parse("1.branch(<loop://probe> => plus(1).explain())").apply(noobj()));
+            AbstractMetatronTest.checkEquality(LOG, Machine.parse("start(1).cut(</.>,plus(1).explain())"), shipped.get(), true);
         } finally {
             Machine.current().network().drop(f("loop://probe"));
         }
@@ -246,6 +277,98 @@ public class BranchLaneTest extends AbstractMetatronTest {
         } finally {
             machine.pop();
             Machine.write(f("/branch/up"), noobj());
+        }
+    }
+
+    /**
+     * A HOST KEY'S PATH IS WHERE ITS LANE RUNS, past the surface its peer was dialed at: a keyed lane is a move, so
+     * {@code <loop://left/branch_far>} ships {@code move(</branch_far>)} ahead of the program and the place runs it in
+     * that machine, whose {@code ~} the lane writes, as {@code move(<loop://left/branch_far>)} does. A peer dialed at
+     * {@code loop://surf/mtron} answers there, its route an endpoint, never one of its machines, so a key or a move
+     * naming the dial lands where the place's eval runs it and {@code <loop://surf/mtron/branch_far>} is its
+     * {@code /branch_far}. The places here are this server (the loop client's eval runs what it is shipped at the root),
+     * so the lanes land in the pushed {@code /branch_far} or at the root.
+     */
+    @Test
+    public void testAHostKeysPathIsWhereItsLaneRuns() {
+        final BiFunction<Obj, Inst, Obj> run = (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
+        dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
+        dial("loop://surf/mtron", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
+        final Machine root = Machine.current();
+        final Machine far = root.push(f("branch_far"));
+        Machine.current(root);
+        // a peer whose eval stands in a machine of its own, as a ws peer stands in the machine that owns its route
+        dial("loop://deep", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID,
+                (lhs, inst) -> Network.Helper.boundary(far, () -> lhs.apply(noobj())))));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "9.branch(<loop://left/branch_far> => to(<~/branch/far>))", "9");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/far>", "noobj");
+            Machine.Helper.evalAt(far, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/far>", "9");
+                return noobj();
+            });
+            AbstractMetatronTest.checkCodeParseApply(LOG, "6.move(<loop://left/branch_far>).to(<~/branch/far>)", "6");
+            Machine.Helper.evalAt(far, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/far>", "6");
+                return noobj();
+            });
+            // A PEER IS ITS ROOT: a target that names no machine in the peer lands at its root, whatever machine the
+            // peer's eval stands in (this one's stands in /branch_far), as a move to it lands
+            AbstractMetatronTest.checkCodeParseApply(LOG, "7.move(<loop://deep>).to(<~/branch/deep>)", "7");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "8.branch(<loop://deep> => plus(0).to(<~/branch/deeper>))", "8");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/deep>", "7");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/deeper>", "8");
+            Machine.Helper.evalAt(far, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/deep>", "noobj");
+                return noobj();
+            });
+            // the dial's own address is the peer, not a machine in it named for its route
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.move(<loop://surf/mtron>).plus(1)", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://surf/mtron> => plus(1))", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "5.branch(<loop://surf/mtron/branch_far> => to(<~/branch/far>))", "5");
+            Machine.Helper.evalAt(far, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/far>", "5");
+                return noobj();
+            });
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/far>", "noobj");
+        } finally {
+            Machine.current().network().drop(f("loop://left"));
+            Machine.current().network().drop(f("loop://surf/mtron"));
+            Machine.current().network().drop(f("loop://deep"));
+            Machine.Helper.evalAt(far, () -> Machine.current().pop());
+            Machine.current(root);
+            Machine.write(f("/branch/far"), noobj());
+            Machine.write(f("/branch/deep"), noobj());
+            Machine.write(f("/branch/deeper"), noobj());
+        }
+    }
+
+    /**
+     * THE MERGE IS A RETURN HOME (Marko, 2026-11-24): a member that moves runs from the machine the branch stands in,
+     * and its cut persists only until the member is done, so the next member and whatever follows the branch read this
+     * machine's {@code ~}, where {@code where} is 1, never the {@code 2} of {@code /branch_away} the member moved to. A
+     * keyed lane runs on a thread of its own, which the caller never shares. Each row: the expression % its answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.branch(move(<branch_away>).plus(1),*<~/branch/where>)                  % {6,1}",
+            "5.branch(move(<branch_away>).plus(1),plus(2)).map(*<~/branch/where>)     % {2}1",
+            "5.branch(move(<branch_away>).map(*<~/branch/where>),*<~/branch/where>)   % {2,1}",
+            "5.branch?<=int{*}(move(<branch_away>).plus(1),*<~/branch/where>)         % {6,1}",
+            "5.branch(<branch_away> => *<~/branch/where>,<~> => *<~/branch/where>)    % {2,1}",
+    }, delimiter = '%')
+    public void testTheMergeIsAReturnHome(final String mtron, final String answer) {
+        final Machine root = Machine.current();
+        final Machine away = root.push(f("branch_away"));
+        Machine.current(root);
+        try {
+            Machine.write(f("/branch/where"), jnt(1));
+            Machine.Helper.evalAt(away, () -> Machine.write(f("~/branch/where"), jnt(2)));
+            AbstractMetatronTest.checkCodeParseApply(LOG, mtron.trim(), answer.trim());
+        } finally {
+            Machine.Helper.evalAt(away, () -> Machine.current().pop());
+            Machine.current(root);
+            Machine.write(f("/branch/where"), noobj());
         }
     }
 }

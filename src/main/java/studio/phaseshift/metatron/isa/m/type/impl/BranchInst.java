@@ -18,12 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -41,17 +38,16 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_SECOND_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.rec_noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -65,8 +61,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     <li>An ORDERED call is the local branch: each member applied where the code stands. The dom coefficient is the
  *     shipment grain: {@code {?}} (the default) one obj per call; {@code {n}} a page; {@code {*}} the whole lhs — a
  *     barrier a DISTRIBUTION REWRITE states on the branch it emits, never the instruction's own default.</li>
- *     <li>A KEYED call routes: {@code place => program} runs the lhs through the program at that place: a path at that
- *     local machine ({@code <~>} this one), a host at that peer ({@link #lane}). The key may mark itself
+ *     <li>A KEYED call routes: {@code place => program} runs the lhs through {@code move(<place>).program}, as the cut
+ *     that move compiles to, which carries the lane where every machine change goes: a path to that local machine, a
+ *     host to that peer, while a lane keyed {@code <~>} runs here with no move ({@link #lane}). The key may mark itself
  *     {@code ?split={w}part} to take a weighted share of the lhs ({@link #weight}, {@link #deal}).</li>
  *     <li>EVERY LANE IS A {@code virtual::T}, submitted before any is awaited, so the lanes overlap and the branch
  *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await), within the key's
@@ -104,16 +101,21 @@ public class BranchInst extends MInst {
      * records that share rather than asking for one, and a branch of seeded lanes alone needs no lhs at all.
      */
     public Obj route(final Obj lhs) {
-        if (!this.args().isRec())
+        if (!this.args().isRec()) {
             // the member's own application already carries its multiplicity (an inst's coefficient, or a code's
             // head-inst coefficient); the branch contributes its lhs. UNDER A BATCHING GRAIN ({n} a page, {*} the whole
             // lhs) the lhs is a bag, and a member runs over it as a lane does, start(bag).member: the start streams the
             // bag, so a map meets one obj at a time and a fold the whole bag, and the objs carry their own multiplicity.
             // Applied to the bag whole, a one-instruction member read it as one lhs (plus(1) against int{2}), and the
-            // bag's count multiplied what its objs already count ({3,2}.branch?<=int{*}(id()) was {{2}3,{2}2})
-            return objs(this.args().elements().map(o -> this.isBatching()
+            // bag's count multiplied what its objs already count ({3,2}.branch?<=int{*}(id()) was {{2}3,{2}2}).
+            // THE MERGE IS A RETURN HOME (Marko, 2026-11-24): a member runs on the caller's thread, and a cut into
+            // another machine persists there, as a move does, so each member runs from the machine the branch stands
+            // in and the caller is left there: the next member and the instruction after the branch start from home
+            final Machine home = Machine.current();
+            return objs(this.args().elements().map(o -> Machine.Helper.evalAt(home, () -> this.isBatching()
                     ? start_(lhs).addInsts(o.isCall() ? o.asCall().insts() : List.of((Inst) map_(o).tryToInst())).apply(noobj())
-                    : o.apply(lhs).c(c -> lhs.c().mult(c))));
+                    : o.apply(lhs).c(c -> lhs.c().mult(c)))));
+        }
         final List<Rel> routes = routes(this).elements().toList();
         final long[] weights = routes.stream()
                 .mapToLong(route -> seeded(route) ? 0L : this.weight(route.first().uriValue()))
@@ -177,17 +179,22 @@ public class BranchInst extends MInst {
 
     /**
      * ONE LANE: a {@code virtual::T} running the lane where its key points, submitted and not awaited (Marko,
-     * 2026-11-05). The lane is {@code start(input).program}, the code a remote lane ships. The start streams the input,
-     * so a {@code {*}} dom's bag reaches a {@code {1}} program member by member, and the input's coefficient rides the
-     * start. A seeded program already starts from its own part, so it runs as written.
-     * <ul>
-     *     <li>A PATH is a local MACHINE, resolved as {@code Machine.fetch} resolves it (Marko, 2026-11-05): {@code <~>} and
-     *     {@code <.>} this machine, {@code <..>} its parent, {@code </.>} the root, {@code </abc>} from the root and
-     *     {@code <~/abc>} from this one. The lane's thread is submitted from that machine's perspective, so its compiler
-     *     compiles the lane and its processor runs it. A path that names no machine is refused, and a path ending in
-     *     {@code /} is a branching uri, which reads relations rather than a machine.</li>
-     *     <li>A HOST is a peer ({@link #remote}).</li>
-     * </ul>
+     * 2026-11-05). A KEYED LANE IS A MOVE (Law.nomadic, stage 2): {@code <p> => program} runs
+     * {@code start(input).cut(<p>, program)}, the cut {@code move(<p>).program} compiles to, so the cut routes it as it
+     * routes any move: a path is a machine of this server's tree ({@code <..>} its parent, {@code </.>} the root,
+     * {@code </abc>} from the root, {@code <abc>} a child), switched to and compiled there, and a host is a peer, which
+     * compiles what it is shipped. A path that names no machine is refused, as a move to it is. The start streams the
+     * input, so a {@code {*}} dom's bag reaches a {@code {1}} program member by member, and the input's coefficient
+     * rides the start. A SEEDED program starts from its own part, so it is the cut's whole tail, its head (and the hop
+     * budget stated there) shipped as written: {@code cut(<p>, start(part).program)}.
+     * <p>
+     * THE PROGRAM IS THE TAIL WHOLE: a lane's own {@code explain()} or {@code profile()} run where the lane runs (a
+     * profiled lane answers its place's report, which nests the place's own lanes), where the extractor would stop a
+     * chain's stretch before them, the return home. The target is aligned as the extractor aligns a move's.
+     * <p>
+     * A HOME LANE GETS NO MOVE ({@link #home}): it runs in the machine the branch runs in. The lane's thread starts
+     * where the caller stands, so a lane whose cut moves into another machine moves only its own thread: the caller is
+     * never left anywhere else.
      */
     protected Obj lane(final Rel route, final Obj input) {
         final fURI key = route.first().uriValue();
@@ -195,12 +202,19 @@ public class BranchInst extends MInst {
                 ? route.second().asCall().insts()
                 : List.of((Inst) map_(route.second()).tryToInst());
         // the key's own query (its split, its timeout) is the branch's to read, not part of the place
-        final fURI place = key.resolve().qLess();
-        final Code code = seeded(route) ? code(program) : start_(input).addInsts(program);
-        if (null != place.host())
-            return this.remote(key, place, program, code, input);
-        return Machine.Helper.evalAt(Machine.current().fetch(key.qLess()),
-                () -> this.thread(code, key).apply(noobj()));
+        final List<Inst> lane = home(key) ? program : List.of(instB(CUT_INST_TID, lst(
+                uri(Machine.Helper.align(Machine.current(), key.qLess())),
+                program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst())));
+        return this.thread(seeded(route) ? code(lane) : start_(input).addInsts(lane), key).apply(noobj());
+    }
+
+    /**
+     * Whether a key names the machine the branch runs in: {@code <~>} or {@code <.>}, whatever its query. Every other
+     * place is another machine, even one that turns out to be this one ({@code </.>} at the root).
+     */
+    public static boolean home(final fURI key) {
+        final fURI place = key.qLess();
+        return fURI.Singleton.f("~").equals(place) || fURI.Singleton.f(".").equals(place);
     }
 
     /**
@@ -217,43 +231,5 @@ public class BranchInst extends MInst {
             throw MTronException.of("?%s=%s is not a whole number of seconds", TIMEOUT, timeout);
         return new VirtualThread(CommonUtil.mutableMap(uri(CODE), code, uri(TIMEOUT),
                 real(seconds.intValue().doubleValue(), MATH_SECOND_TID, null)), MACH_VIRTUAL_THREAD_TID, null);
-    }
-
-    /**
-     * A REMOTE LANE, through its place's peer::T: the client's mini-instset ({@link Network#overrideOf}) serves the
-     * verb the lane needs. A lane that is one {@code from(</path>)} or one {@code to(</path>)} of span one goes through
-     * the machine's own door to the place (its client's from/to, else its eval), its point put on the door's answer, so
-     * a client that reads and writes but runs no program — {@code http_client::T}, GET and POST — serves it. Any other
-     * program, a spanned read or write among them, ships to the place's eval as the lane's {@code code}, uncompiled, to
-     * be compiled there. A place that serves neither is unreachable.
-     */
-    protected Obj remote(final fURI key, final fURI place, final List<Inst> program, final Code code, final Obj input) {
-        final Network network = Machine.current().network();
-        final Inst only = 1 == program.size() ? program.getFirst() : null;
-        // A LONE FROM OR TO IS ONE READ OR WRITE ONLY AT A SPAN OF ONE: any other span is a run, and a run is no single
-        // door. {2}from(</x>) is not the one read, as each step multiplies its answer by its lhs's copies (the apply
-        // axiom): a value held as {3}7 reads back {9}7. A range ({0,1}from, a sum of its unrolls), a zero span (the
-        // identity) and a negative one (a converse) are runs too, so every span but one ships to the place's eval
-        final fURI verb = null != only
-                && (FROM_INST_TID.equals(only.tid().basePath()) || TO_INST_TID.equals(only.tid().basePath()))
-                && only.arg(0).isUri() && only.arg(0).uriValue().isAbsolute()
-                && only.tid().b().isOne()
-                ? only.tid().basePath()
-                : EVAL_INST_TID;
-        final Inst eval = network.overrideOf(place, EVAL_INST_TID);
-        if (!eval.isObjInst() && (EVAL_INST_TID.equals(verb) || !network.overrideOf(place, verb).isObjInst()))
-            throw Network.Helper.unreachable(Machine.current(), verb, place);
-        if (EVAL_INST_TID.equals(verb))
-            return this.thread(eval, key).apply(code);
-        // the lane's own address homed at the place, its query kept (from(</x?docq>)). The written value rides the
-        // lane's code, not the thread's lhs: a thread reads its lhs with at(), which fires an auto or dom-{0} inst
-        final fURI address = only.arg(0).uriValue().origin(place);
-        // THE LANE'S POINT IS COPIES OF ITS ANSWER (Marko, 2026-11-23): the door reads or writes once, so from{3}(</x>)
-        // answered the value once. Its point goes on the answer as any instruction's does, inside the lane's thread
-        final cInt point = null == only.tid().d() ? cInt.ONE() : only.tid().d();
-        return this.thread(instLambda((l, i) -> Inst.Helper.pointed(FROM_INST_TID.equals(verb)
-                        ? Machine.read(address)
-                        : Machine.write(address, input), point)), key)
-                .apply(noobj());
     }
 }

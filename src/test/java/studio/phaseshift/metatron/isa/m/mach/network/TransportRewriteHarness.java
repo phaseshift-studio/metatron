@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
@@ -54,10 +55,12 @@ public final class TransportRewriteHarness {
     }
 
     /**
-     * The seed a {@code start}-leading code runs from.
+     * The seed a {@code start}-leading code runs from. A program a lane ships that the cut to its place in the peer
+     * leads ({@code cut(</.>, start(part)…)}, a seeded lane's) runs from its tail's start.
      */
     public static List<Obj> seedOf(final Code code) {
-        return seedOf(code.insts().getFirst());
+        final Inst head = code.insts().getFirst();
+        return seedOf(CUT_INST_TID.equals(head.tid().basePath()) ? head.arg(1).asCall().insts().getFirst() : head);
     }
 
     /**

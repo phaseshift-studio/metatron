@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
@@ -876,8 +877,7 @@ public interface Inst extends Call {
             return BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()
                     && inst.args().asRec().recValue().keySet().stream()
                     .filter(Obj::isUri)
-                    .map(key -> key.uriValue().qLess())
-                    .anyMatch(path -> !fURI.Singleton.f("~").equals(path) && !fURI.Singleton.f(".").equals(path));
+                    .anyMatch(key -> !BranchInst.home(key.uriValue()));
         }
 
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {

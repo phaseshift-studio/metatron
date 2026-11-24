@@ -343,6 +343,12 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
         final Code code = this.resolve(this.at(LHS)).code();
         if (this.running().c().isZero()) {
             final Obj start = this.at(LHS);
+            // A HEAD THAT GATHERS IS APPLIED ONCE, HERE, to what started: resolve() minted its barrier as it does every
+            // gather's, and that barrier ran the head a second time, over nothing (count().plus(1) applied to nothing
+            // answered {2}1, and a code headed by a cut, a seeded lane, shipped its program twice). The monad seeded
+            // here is the head's application, so its barrier goes: the first, as the head is the first instruction
+            if (code.insts().getFirst().isGather())
+                this.barriers().<LinkedList<StatefulMonad>>jvmAs().removeFirst();
             this.running().append(statefulMonad(start.isMonad() ? start.asMonad().obj() : start, code.insts().getFirst(), start.isMonad() ? start.asMonad().state() : rec0(), code));
         }
 
