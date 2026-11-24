@@ -41,6 +41,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Executor;
 
 import java.util.Map;
 
@@ -1644,7 +1645,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         assertTrue(t.toString().contains("plus"), "the format should render the insts of the text table: " + t);
     }
 
-    @Training.SkipTraining(reason = "asserts the evaluated result's type vid after a manual resolve-then-compile-then-processor walk; the CSV column is a type vid, not the value the expression yields")
+    @Training.SkipTraining(reason = "asserts the evaluated result's type vid after the console's compile-then-processor walk; the CSV column is a type vid, not the value the expression yields")
     @ParameterizedTest
     @CsvSource(value = {
             "1.plus(2).explain()       % /m/inst/explain/explanation",
@@ -1653,10 +1654,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "map(1.plus(2).explain())  % /m/inst/explain/explanation",
     }, delimiter = '%')
     public void testAnalysisSurvivesTheProcessorWalk(final String code, final String expectedVID) {
-        // the console's path: resolve, compile, then run the compiled chain on the processor
-        final Obj resolved = Call.Helper.resolveInspection(noobj(), ObjmtronSerializer.parse(code), ignored -> {
+        // the console's path: compile (Executor.compile), then run the compiled chain on the processor
+        final Code compiled = Executor.compile(ObjmtronSerializer.parse(code).asCall().asCode(), ignored -> {
         });
-        final Code compiled = Machine.current().compiler().apply(resolved).asCode();
         // the processor walks a chain by position vid, so an un-numbered inst is a walk it cannot make
         for (final Inst inst : compiled.insts())
             assertNotNull(inst.vid(), "a compiled inst must carry its position vid: " + inst.tid() + " in " + code);

@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.BiPredicate;
 import java.util.stream.IntStream;
@@ -190,14 +189,6 @@ public interface Call extends Obj {
 
         public static List<Inst> getUnresolvedInsts(final Call call) {
             return call.insts().stream().filter(i -> !i.isResolved(true)).toList();
-        }
-
-        public static Call resolveInspection(final Obj lhs, final Call call, final Consumer<List<Inst>> consumer) {
-            final Call resolvedCall = call.resolve(lhs);
-            final List<Inst> unresolved = Helper.getUnresolvedInsts(resolvedCall);
-            if (!unresolved.isEmpty())
-                consumer.accept(unresolved);
-            return resolvedCall;
         }
 
         /**

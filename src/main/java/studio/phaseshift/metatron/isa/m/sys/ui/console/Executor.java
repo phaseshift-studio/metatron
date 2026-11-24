@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static studio.phaseshift.metatron.Tokens.DEBUG;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
@@ -61,6 +62,25 @@ public final class Executor {
 
     public Executor(final Console console) {
         this.console = console;
+    }
+
+    /**
+     * THE CONSOLE'S LINE IS COMPILED BEFORE ANYTHING READS ITS RESOLUTION, in the current machine, as every program
+     * is compiled (parse, rewrite, resolve, type: the ws eval's order). Resolved first, its resolution was read before
+     * the nomadic extractor cut it, so the instructions of a tail, which the machine it lands in resolves, were
+     * reported here as dynamic resolution (and refused under the typer's code_resolve check). What the compiler left
+     * unresolved is handed to {@code unresolved}, which is not called when nothing is.
+     *
+     * @param segment    one statement of the line, as written
+     * @param unresolved told which instructions run unresolved, to be resolved when they run
+     * @return the line as the current machine compiled it
+     */
+    public static Code compile(final Code segment, final Consumer<List<Inst>> unresolved) {
+        final Code compiled = Machine.current().compiler().apply(segment).asCode();
+        final List<Inst> open = Call.Helper.getUnresolvedInsts(compiled);
+        if (!open.isEmpty())
+            unresolved.accept(open);
+        return compiled;
     }
 
     /**
@@ -109,27 +129,21 @@ public final class Executor {
         for (final Code segment : segments) {
             try {
                 final Level startLevel = this.console.getStatus().getState();
-                // THE MACHINE COMPILES THE LINE BEFORE ANYTHING READS ITS RESOLUTION, as it compiles every program
-                // (parse → rewrite → resolve → type, the ws eval's order). Resolved first, the tail after a move, a
-                // push or a pop was bound to this machine before the nomadic extractor could cut it off, and a tail
-                // bound here keeps that binding where it lands. The inspection reads what the compiler left open.
-                // WHERE THE THREAD STANDS. Not the console's vid: that RESOLVES (to the root's machine), so
-                // accessMachine returns it and any fallback is dead code -- which is why seeding the fallback
-                // with Machine.current() changed nothing. A prompt line must run in the frame of reference, or
-                // a move cannot persist across lines: the console would keep asking where it started.
-                // (The pane binding is the OUTPUT side -- console.getActivePane().machine(mach) below -- so
-                // reading the perspective here does not steal it.)
-                final Machine machine = Machine.current();
-                final Code compiled = machine.compiler().apply(segment).asCode();
-                final List<Inst> unresolved = Call.Helper.getUnresolvedInsts(compiled);
-                if (!unresolved.isEmpty()) {
-                    if (Typer.Helper.codeResolve())
-                        throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
-                    this.console.getStatus().setState(Level.WARN);
-                    segment.logger().status(DEBUG, "{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
-                }
                 final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
                 if (this.console.input.isNoObj()) {
+                    // WHERE THE THREAD STANDS. Not the console's vid: that RESOLVES (to the root's machine), so
+                    // accessMachine returns it and any fallback is dead code -- which is why seeding the fallback
+                    // with Machine.current() changed nothing. A prompt line must run in the frame of reference, or
+                    // a move cannot persist across lines: the console would keep asking where it started.
+                    // (The pane binding is the OUTPUT side -- console.getActivePane().machine(mach) below -- so
+                    // reading the perspective here does not steal it.)
+                    final Machine machine = Machine.current();
+                    final Code compiled = compile(segment, unresolved -> {
+                        if (Typer.Helper.codeResolve())
+                            throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
+                        this.console.getStatus().setState(Level.WARN);
+                        segment.logger().status(DEBUG, "{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
+                    });
                     final Computer mach = machine.processor().apply(compiled);
                     //  final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     // persist in HALTED collection
@@ -156,7 +170,9 @@ public final class Executor {
                             Machine.current(worker.landedPerspective());
                     }
                 } else {
-                    computeResult.set(this.console.input.apply(compiled));
+                    // A REDIRECTED LINE IS ITS DESTINATION'S TO COMPILE: it is handed on as written, so nothing this
+                    // machine compiled (a cut aligned to its names, lanes planned over its peers) runs elsewhere
+                    computeResult.set(this.console.input.apply(segment));
                 }
                 computeResult.get().stream().forEach(this.console::printResult);
                 this.console.promptTraceForFails(computeResult.get());
