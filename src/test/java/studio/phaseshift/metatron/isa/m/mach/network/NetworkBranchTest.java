@@ -145,7 +145,7 @@ public class NetworkBranchTest extends AbstractMetatronTest {
 
     /**
      * A SPAWNED PEER IS FILED AS THE RING FILES IT, AND TAKEN BACK WITH ITS FRAME: a non-loopback authority forks
-     * nothing and is declared, its origin keying an mtron row the scheme-keyed view lists once however often it is
+     * nothing and is declared, its host keying an mtron row the scheme-keyed view lists once however often it is
      * asked for; the frame that holds a connection to it reaps it on pop, the row taken back, and the origin can be
      * declared again.
      */

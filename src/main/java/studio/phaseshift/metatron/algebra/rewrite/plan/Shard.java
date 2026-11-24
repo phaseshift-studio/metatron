@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Shard — the distribution rule's emitter, the one body behind {@code law_shard}. It lowers a plan onto a chain over one
- * immutable {@link Env} snapshot: guard on the live roster, match the chain shape, locate the multiplicity to factor,
+ * immutable {@link Env} snapshot: guard on the dialed peers, match the chain shape, locate the multiplicity to factor,
  * emit the keyed {@code branch} layout, and leave everything else where it stood.
  *
  * <p><b>Every cut plans the run before it.</b> A chain may fold more than once: {@code a.r.b.s} has two cuts, {@code r}
@@ -56,7 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * through its own branch, and its cut's combiner brings the computation home, where the next run starts (the run
  * between two cuts, {@link Span.Kind#BETWEEN}). One application plans every cut.
  *
- * <p><b>The partitions are one funnel.</b> A distribution factors an index set over the roster: the seed's point
+ * <p><b>The partitions are one funnel.</b> A distribution factors an index set over its places: the seed's point
  * ({@code d()} instances, the initial value's members), a run's span range ({@code b()} instances, the unrolls
  * {@code a^[m,n] = Σ a^k}) and a run instruction's point ({@code d()} copies, {@code a{p} = a + … + a}) are index sets,
  * and a lane's program is the chain with its share projected onto it — {@code start(part)} projects the members,
@@ -133,7 +133,7 @@ public final class Shard {
         Axes axes = new Axes(plan.where().stream()
                 .filter(placement -> Placement.Shape.TREE == placement.shape())
                 .map(Placement::hopAxis)
-                .findFirst().orElse(Hop.point()), route.split(), route.place(), false);
+                .findFirst().orElse(Hop.point()), route.split(), route.place());
         final List<Inst> master = new ArrayList<>(insts.size());
         boolean planned = false;
         int from = 0;
@@ -155,8 +155,7 @@ public final class Shard {
                     && keepsPrefix(insts.get(cut + 1)) && causalCombiner(typed.get(cut), chain.laws());
             final int end = 0 > cut ? runEnd(insts, typed, floats, run) : profiling ? insts.size() : absorbs ? cut + 2 : cut + 1;
             final List<Inst> own = insts.subList(from, end);
-            axes = new Axes(hopAxis(own, axes.hop()), split(own, axes.split()), place(own, axes.place()),
-                    axes.placed() || own.stream().anyMatch(inst -> inst.tid().hasQ(PLACE)));
+            axes = new Axes(hopAxis(own, axes.hop()), split(own, axes.split()), place(own, axes.place()));
             final List<Inst> emitted = emit(chain, from, cut, end, axes, profiling, absorbs);
             master.addAll(null == emitted ? own : emitted);
             planned |= null != emitted;
@@ -252,9 +251,6 @@ public final class Shard {
         final long members = runAxis ? range.count() : seed;
         if (2 > members)
             return null;
-        // THE CANDIDATES: the run's place set, and nothing else. The peer enum is the dialed set; a machine the roster
-        // knows is a candidate only when the place set names it (//host). Planning never dials.
-        final PlaceSet candidates = axes.place();
         // THE SHARES: the place set resolved against the snapshot, one entry per share, the HOME place's shares FIRST.
         // A literal seed clamps the shares; a computed bag's size is the branch's to know; the ARITY caps the window.
         // NO PEER WITHOUT A MEMBER (Marko, 2026-11-20: "don't use all peers if we don't need to"): a literal seed of n
@@ -262,7 +258,9 @@ public final class Shard {
         // The run axis and a copy hand every lane the whole seed and take one lane per place, so their window stays the
         // arity
         final int cap = (int) Math.min(members, Integer.MAX_VALUE);
-        final List<ResolvedPlace> shares = shares(resolve(chain.env(), chain.route(), candidates), cap,
+        // THE CANDIDATES are the run's place set, and nothing else: the peer enum is the dialed set, and a machine the
+        // roster knows is a candidate only when the place set names it (//host). Planning never dials.
+        final List<ResolvedPlace> shares = shares(resolve(chain.env(), chain.route(), axes.place()), cap,
                 runAxis || copy ? fanout : Math.min(fanout, cap));
         // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
         // here. Several home shares are the lanes case, a peerless machine sharding.
@@ -569,10 +567,9 @@ public final class Shard {
     }
 
     /**
-     * THE THREE AXES a run is planned under (§2–§4) — how far and how wide, what counts as one share, and where — and
-     * whether a place set was stated rather than read off the plan.
+     * THE THREE AXES a run is planned under (§2–§4) — how far and how wide, what counts as one share, and where.
      */
-    private record Axes(Hop hop, Partition split, PlaceSet place, boolean placed) {
+    private record Axes(Hop hop, Partition split, PlaceSet place) {
     }
 
     /**

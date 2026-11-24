@@ -252,7 +252,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
         final Obj abstraction = catInstSet.ABSTRACTION_TYPE.constructor().apply(code);
         checkEquality(LOG, noobj(), abstraction.asRec().at(uri(WHERE)), true);
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
-        assertFalse(path.asRec().has(uri("law_shard")), "a roster machine alone leaves law_shard the identity: " + path);
+        checkEquality(LOG, noobj(), path.asRec().at(uri("law_shard")), true);
     }
 
     /**

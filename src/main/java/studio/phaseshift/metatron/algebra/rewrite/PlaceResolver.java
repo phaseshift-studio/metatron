@@ -327,17 +327,20 @@ public final class PlaceResolver {
         // A DIALED PEER, NOT EVERY PEER — the same `host` marker dialed() keeps: an accepted inbound session serves
         // everything a shard needs (PlaceResolver.serves says yes), but it has no host to dial back to, so its origin is an
         // ephemeral port nothing answers at.
+        // Every such dial claims its service; only the dials that serve the route are places (dialed()).
         final List<fURI> dials = env.peers().values()
                 .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
-                .filter(peer -> serves(peer, requires))
                 .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
                 .filter(origin -> host.equals(origin.host()))
                 .toList();
-        final List<fURI> transports = new ArrayList<>(dials);
+        final List<fURI> transports = new ArrayList<>(dialed(env, requires).stream()
+                .filter(origin -> host.equals(origin.host()))
+                .toList());
         // the roster (known): the addresses discovery announced for the host, each admitted only if it can be dialed.
-        // A SERVICE A DIAL REACHES IS THE DIAL: a spawn files its peer's mtron route (ws://localhost:1111/mtron) beside
-        // the origin the peer is dialed at, and the two are one place, never two lanes
+        // A SERVICE A DIAL REACHES IS THE DIAL, live or down: a spawn files its peer's mtron route
+        // (ws://localhost:1111/mtron) beside the origin the peer is dialed at, and the two are one place, never two
+        // lanes; a down dial is no place, and the address filed for it must not bring it back
         env.machines().elements()
                 .filter(kv -> kv.first().isUri() && host.equals(kv.first().uriValue().toString()))
                 .map(Rel::second)

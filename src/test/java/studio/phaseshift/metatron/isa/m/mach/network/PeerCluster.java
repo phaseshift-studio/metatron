@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
@@ -285,20 +286,21 @@ public final class PeerCluster implements AutoCloseable {
     // ========================================================================
 
     /**
-     * Install the declared peer roster: one entry per peer, keyed by its authority, whose value names the ADDRESS
-     * it answers at — its mtron endpoint, route included, under {@code mtron/ws}: the protocol it speaks and the
-     * transport that carries it. Knowledge only: the roster says the machines exist, and
-     * {@link #dial()} is what makes them peers this VM talks to.
+     * Install the declared peer roster as a spawn files it: every peer runs on this host, so the roster holds one row,
+     * {@code localhost}, whose {@code mtron/ws} transport lists each peer's ADDRESS — its mtron endpoint, route
+     * included: the protocol it speaks and the transport that carries it. Knowledge only: the roster says the machines
+     * exist, and {@link #dial()} is what makes them peers this VM talks to.
      */
     public PeerCluster connect() {
-        final Map<Obj, Obj> roster = new LinkedHashMap<>();
+        final Obj[] addresses = new Obj[this.size()];
         for (int i = 1; i <= this.size(); i++)
-            roster.put(uri("ws://localhost:" + this.port(i)), rec(uri(MTRON), rec(uri(WS), uri(this.dialURI(i)))));
+            addresses[i - 1] = uri(this.dialURI(i));
         // INTO roster/machine: the roster is a container, and a flat write at its root lands where no reader
         // looks and takes the discovery registrations with it
-        Machine.write(f("~/network/roster"), rec(mutableMap(uri(MACHINE), rec(roster))));
-        LOG.warn("roster declared (%d peer(s)): %s", roster.size(),
-                roster.keySet().stream().map(Object::toString).reduce((a, b) -> a + ", " + b).orElse("<empty>"));
+        Machine.write(f("~/network/roster"), rec(mutableMap(uri(MACHINE),
+                rec(uri("localhost"), rec(uri(MTRON), rec(uri(WS), objs(addresses)))))));
+        LOG.warn("roster declared (%d peer(s)): %s", addresses.length,
+                Arrays.stream(addresses).map(Object::toString).reduce((a, b) -> a + ", " + b).orElse("<empty>"));
         return this;
     }
 

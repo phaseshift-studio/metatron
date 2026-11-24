@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
  * the rule engine's move from plans to rewrite-rule lambdas: the pool's {@code law_shard} and the interpreter are two
  * doors onto the same emitter.
  *
- * <p>The distribution (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer roster, walk the chain cut by
+ * <p>The distribution (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the dialed peers, walk the chain cut by
  * cut — {@code [seed, {+}[{*}home, {*}floatable, blocked cut], {*}tail]} — and at each cut emit the
  * {@code <home>.branch?dom=T{*}&split=part(<place> => <run>.<fold>, …).<combiner>} layout the processor runs. Each
  * combiner brings the computation home, where the next run ships again; the tail after the last cut stays home.
@@ -67,8 +67,8 @@ public final class PlanInterpreter {
             // is what keeps the plan's gather from becoming a lane.
             .place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())
             .where(Placement.local(Span.at(), Span.after()))
-            // THE FAN-OUT that factors the seed: the peer candidates (the dialed set, or the declared roster when
-            // nothing is dialed), one level deep, strided
+            // THE FAN-OUT that factors the seed: the peer candidates (the dialed set; a machine the roster only knows
+            // is a candidate only when a place set names it), one level deep, strided
             .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
             .where(Placement.tree(1, Span.seed().partition(), Span.before().floatable().withoutSeed(), Span.at()))
             .create();

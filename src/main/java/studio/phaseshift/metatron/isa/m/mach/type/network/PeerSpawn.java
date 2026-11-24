@@ -82,7 +82,8 @@ public final class PeerSpawn {
     private static final Map<fURI, Forked> FORKED = new ConcurrentHashMap<>();
 
     /**
-     * the roster keys THIS class declared, so a pop only retracts what a push introduced.
+     * the origins THIS class declared (each filed in the roster under its host), so a pop only retracts what a push
+     * introduced.
      */
     private static final Set<fURI> DECLARED = ConcurrentHashMap.newKeySet();
 

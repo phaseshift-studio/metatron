@@ -241,7 +241,38 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
         final Obj abstraction = catInstSet.ABSTRACTION_TYPE.constructor().apply(code);
         checkEquality(LOG, noobj(), abstraction.asRec().at(uri(WHERE)), true);
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
-        assertFalse(path.asRec().has(uri("law_shard")), "a roster machine alone leaves law_shard the identity: " + path);
+        checkEquality(LOG, noobj(), path.asRec().at(uri("law_shard")), true);
+    }
+
+    /**
+     * A FIRST RUN DOES NOT REACH THE ROSTER EITHER: a place set stated on a later cut lets the chain past the
+     * lone-machine guard, but the first run's place set is still the peer enum, the dialed set, so with nothing dialed
+     * it declines rather than plan onto a machine the roster only knows. The later run's {@code [peer]} declines too,
+     * so nothing ships.
+     */
+    @Test
+    public void testALaterPlaceSetDoesNotLetTheRosterIn() {
+        Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
+                uri("known.test"), rec(uri(MTRON), rec(uri(WS), uri("ws://known.test:8555"))))))));
+        final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum().{0,3}plus(1).sum?place=[peer]()").asCode();
+        final Obj lifted = catInstSet.realized(PlanInterpreter.lower(PlanInterpreter.SHARD_PLAN, code));
+        assertTrue(lifted.isCode(), "nothing dialed, so nothing ships, roster or not: " + lifted);
+    }
+
+    /**
+     * A ROSTER MACHINE IS A TARGET WHEN A PLACE SET NAMES IT: knowledge becomes a candidate exactly when the author
+     * writes it ({@code //host}), dialed or not, so the fold ships its one share to the machine's roster transport. The
+     * host is undotted because a bare {@code //host} in mtron ends at a dot; a dotted host is named through a prefix
+     * alias.
+     */
+    @Test
+    public void testANamedRosterMachineIsATarget() {
+        Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
+                uri("known"), rec(uri(MTRON), rec(uri(WS), uri("ws://known:8555"))))))));
+        final Obj lifted = catInstSet.realized(PlanInterpreter.lower(PlanInterpreter.SHARD_PLAN,
+                ObjmtronSerializer.parse("start?place=[//known]({1,2,3,4}).plus(1).sum()").asCode()));
+        final Obj demands = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
+        assertEquals("[//known:8555=>1]", demands.toString(), "the named machine takes the fold's one share: " + lifted);
     }
 
     /**

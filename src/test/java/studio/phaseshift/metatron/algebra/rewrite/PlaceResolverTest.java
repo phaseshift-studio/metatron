@@ -129,11 +129,12 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     private static final fURI PAIR_DOWN = f("loop://pair:1113");
 
     /**
-     * The pair host's roster row, as a spawn files it: the two dialed services at their mtron route, and one service
-     * nothing dialed. A dial is the transport of the service it reaches, so only the undialed address adds a place.
+     * The pair host's roster row, as a spawn files it: the two dialed services at their mtron route, the down peer's
+     * service, and one service nothing dialed. A dial is the transport of the service it reaches, live or down, so only
+     * the undialed address adds a place, and the down peer's row never brings it back.
      */
-    private static final Rec PAIR_ROSTER = rec(uri("pair"),
-            objs(uri("loop://pair:1111/mtron"), uri("loop://pair:1112/mtron"), uri("loop://pair:1114/mtron")));
+    private static final Rec PAIR_ROSTER = rec(uri("pair"), objs(uri("loop://pair:1111/mtron"),
+            uri("loop://pair:1112/mtron"), uri("loop://pair:1113/mtron"), uri("loop://pair:1114/mtron")));
 
     /**
      * A roster row for a machine this one knows and has not dialed: nutmeg, at its one transport.

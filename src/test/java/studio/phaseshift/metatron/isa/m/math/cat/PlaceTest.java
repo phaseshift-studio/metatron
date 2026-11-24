@@ -29,6 +29,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.HTTP;
+import static studio.phaseshift.metatron.Tokens.LOOP;
 import static studio.phaseshift.metatron.Tokens.MACHINE;
 import static studio.phaseshift.metatron.Tokens.MTRON;
 import static studio.phaseshift.metatron.Tokens.PEER;
@@ -134,7 +135,7 @@ public class PlaceTest extends AbstractInstSetTest {
     @Test
     public void testAnAliasWithAPortIsOneTransport() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(uri("pair"),
-                rec(uri(MTRON), rec(uri("loop"), objs(uri("loop://pair:1111/mtron"), uri("loop://pair:1114/mtron")))))))));
+                rec(uri(MTRON), rec(uri(LOOP), objs(uri("loop://pair:1111/mtron"), uri("loop://pair:1114/mtron")))))))));
         Network.Helper.connect(Machine.current().network(), f("loop://pair:1111"));
         Network.Helper.connect(Machine.current().network(), f("loop://pair:1112"));
         Machine.current().network().registerPrefix(f("//p0"), f("loop://pair:1111"));

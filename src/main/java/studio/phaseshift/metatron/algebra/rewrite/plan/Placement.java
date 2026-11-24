@@ -88,7 +88,7 @@ public class Placement extends MRec {
          */
         PEER(Law.monoidic, Law.commutative),
         /**
-         * fan out over the roster — order-free merge across a set
+         * fan out over the peers — order-free merge across a set
          */
         PEERS(Law.monoidic, Law.commutative),
         /**
@@ -108,7 +108,7 @@ public class Placement extends MRec {
          */
         CHAIN(Law.monoidic),
         /**
-         * fan-out over the roster's places — each hop bound by the origin
+         * fan-out over the peers' places — each hop bound by the origin
          */
         STAR(Law.monoidic, Law.commutative),
         /**

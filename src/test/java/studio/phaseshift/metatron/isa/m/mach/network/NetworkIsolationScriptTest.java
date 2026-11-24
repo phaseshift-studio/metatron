@@ -101,7 +101,7 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
             "*/m/networkProbe/machines % 0               [-- nothing declared: no known servers --]",
             "[CLUSTER 2 21001]                             [-- two server addresses, declared by the cluster --]",
             "[PROBE_MACHINES]",
-            "*/m/networkProbe/machines % 2              [-- the machine table's rows ARE the declared servers --]",
+            "*/m/networkProbe/machines % 1              [-- one machine: both servers run on localhost, one row lists both addresses --]",
             "[PROBE_PEER ws://localhost:21001/x]",
             "*/m/networkProbe/peer % 1                [-- declared, so a peer this frame may reach --]",
             "[CLUSTER_CLOSE]                               [-- and un-declaring removes them --]",
