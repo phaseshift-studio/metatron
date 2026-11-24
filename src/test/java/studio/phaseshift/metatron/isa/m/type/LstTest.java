@@ -415,6 +415,14 @@ public class LstTest extends AbstractAlgebraTest {
             "[a,b,c].merge()                                                     % {a,b,c}",
             "[,].merge()                                                         % {,}",
             "[[a,b],[c,d]].merge()                                               % {[a,b],[c,d]}",
+            // AN INDEX HOLDS ANY MASS (Marko, 2026-11-24: merge?A{*}<=lst[{**}A{*}]): the 5s interfere, constructively
+            // and destructively. Under {*}, zero to unbounded, the domain gate refused the negative point
+            "[{2}5,{3}5,7].merge()                                               % {{5}5,7}",
+            "[{2}5,{-2}5,7].merge()                                              % 7",
+            "[{2}5,{-2}5,7]>-                                                    % 7",
+            // the range stays A{*} (Marko, 2026-11-24, domain only), so a negative total is a range fail until stream
+            // doms take {**}: an A{**} range left the reducer after a merge unbound ([1,2,3]>-.sum() folded per obj)
+            // "[{-2}5].merge()                                                  % {-2}5",
     }, delimiter = '%')
     public void testMerge(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
