@@ -137,7 +137,13 @@ public class FixPointRewriter extends AbstractRewriter {
                 continue;
             }
             final List<Obj> args = inst.args().elements().toList();
-            final List<BranchInst.Lane> lanes = BranchInst.isLayout(inst) && !inst.args().isRec() ? BranchInst.lanes(inst) : null;
+            // a layout its lanes refuse (a split it cannot perform) is descended as written: it refuses where it runs
+            List<BranchInst.Lane> lanes;
+            try {
+                lanes = BranchInst.isLayout(inst) && !inst.args().isRec() ? BranchInst.lanes(inst) : null;
+            } catch (final RuntimeException e) {
+                lanes = null;
+            }
             final List<Obj> built = new ArrayList<>(args.size());
             boolean argChanged = false;
             for (int i = 0; i < args.size(); i++) {

@@ -1292,7 +1292,7 @@ public class mInstSet extends AbstractInstSet {
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
                                 // A POSITIONAL SPLIT IS NO ONE-TERM SUM EITHER: its lone lane runs on a thread of its own, and
-                                // its ?split is checked where it runs (BranchInst#share refuses one it cannot perform), both of
+                                // its ?split is checked where it runs (BranchInst#split refuses one it cannot perform), both of
                                 // which an inlined member would skip
                                 if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)
                                         && (inst.args().isRec() || !inst.tid().hasQ(SPLIT))) {

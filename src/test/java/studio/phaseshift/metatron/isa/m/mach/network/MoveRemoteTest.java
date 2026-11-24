@@ -99,6 +99,9 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             // A KEY IS SUGAR FOR ITS LANE (Law.nomadic, stage 3; Marko, 2026-11-24: "whole lane at p straight to cut"): a
             // keyed branch compiles to the cuts its keys name, each lane whole at its place, the keys gone
             "5.branch(<//self/a> => plus(1),<//self/b> => mult(2))                                                                    % start(5).branch(cut(<loop://self/a>,plus(1)),cut(<loop://self/b>,mult(2)))                                                % {6,10}",
+            // ... and the keys' splits become the branch's: an even part, or the bias naming each lane's place
+            "5.branch(<//self/a?split=part> => plus(1),<//self/b?split=part> => mult(2))                                              % start(5).branch?split=part(cut(<loop://self/a>,plus(1)),cut(<loop://self/b>,mult(2)))                                     % 6",
+            "5.branch(<~?split={2}part> => plus(1),<//self/b?split=part> => mult(2))                                                  % start(5).branch?split=[{2}local](plus(1),cut(<loop://self/b>,mult(2)))                                                     % 6",
             // THE CUT'S TARGET IS THE SENDER'S TO RESOLVE -- the one thing that IS aligned: `self:/a` (the ISA slot)
             // and `//self/a` (the network slot) are two spellings of one peer, and both ship as loop://self/a.
             "5.move(<self:/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",

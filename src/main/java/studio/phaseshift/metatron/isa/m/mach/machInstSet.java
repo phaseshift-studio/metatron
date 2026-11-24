@@ -1506,8 +1506,8 @@ public class machInstSet extends AbstractInstSet {
          * {@code <.>}) is its program, timed by a cut that stays when it states a timeout ({@link BranchInst#lanes}). The
          * keys' splits become the branch's: all copy (or none) is the whole lhs to every lane; all part is an even part
          * or, where the shares differ, the BIAS naming each lane's place, {@code {w}local} or its authority.
-         * Mixed copy and part keys are refused (Marko: "default"; {@link BranchInst#lanes} refuses them where the branch
-         * runs too). A branch the bias cannot state stays keyed, its keys' shares read where it runs: a key that is a
+         * Mixed copy and part keys are refused (Marko: "default"), where the branch runs ({@link BranchInst#lanes}); such a
+         * branch stays keyed here. A branch the bias cannot state stays keyed, its keys' shares read where it runs: a key that is a
          * designator itself ({@code peer}, {@code #}), which names its places only then; a share no designator names (a
          * machine path's, other than one); and two shares at one place, as a place's lanes take its demand apiece.
          */
@@ -1515,7 +1515,14 @@ public class machInstSet extends AbstractInstSet {
             if (BranchInst.routes(branch).<Rel>elements().map(route -> route.first().uriValue().qLess().toString())
                     .anyMatch(key -> PEER.equals(key) || HASH_FURI.toString().equals(key)))
                 return branch;
-            final List<BranchInst.Lane> lanes = BranchInst.lanes(branch);
+            // a branch its lanes refuse (mixed copy and part keys) stays keyed: it refuses where it runs, and only there,
+            // where a throw here would leave the whole chain as written, every later move uncut
+            final List<BranchInst.Lane> lanes;
+            try {
+                lanes = BranchInst.lanes(branch);
+            } catch (final MTronException e) {
+                return branch;
+            }
             final boolean part = lanes.stream().anyMatch(lane -> 0 < lane.weight());
             // the designator naming each lane's place in the bias, and the share it states: a lane of one share needs no
             // naming (an unnamed lane takes one), so a machine path, which no designator names, may only take one

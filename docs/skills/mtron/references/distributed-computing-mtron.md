@@ -273,7 +273,7 @@ Each pattern's **pre-write** motif, the mtron before the rewrite fires, and its 
 lane `i`). The names are placeholders and the rows are schemas, not literal runs; a cell in plain prose describes a motif no
 single expression shows. A lane is a move (`Law.nomadic`): the planner emits `<p_i> => s_i` as the cut its move compiles
 to, `cut(<p_i?hop=n>, s_i)`, its budget on the target, and a home lane as its program alone, its budget on its head.
-A lane's share is the bias on the branch, `?split=[local,{2}//p_1,//p_2]`, read per lane: a point on a cut would be
+A lane's share is the bias on the branch, `?split=[local,{2}ws://p_1:8555,ws://p_2:8555]`, read per lane: a point on a cut would be
 copies of its answer. The rows write the keyed spelling, which reads the same.
 
 | key   | pre-write                                                          | rewrite                                                                                            |
@@ -406,7 +406,7 @@ partials through the combiner: the chain **expands** into one lane per place and
   subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. After a cut the
   seed is computed, so the branch copies it to every lane (`branch?<=T{*}&split=copy(…)`). See *the run partition*.
 - Under the seed axis, a peer with n shares is one lane whose demand in the branch's bias is n
-  (`branch?split=[local,{n}//p_i](…)`, the keyed spelling's `?split={n}part`), and home's n shares are n home lanes,
+  (`branch?split=[local,{n}ws://p_i:8555](…)`, the peer named by its authority, the keyed spelling's `?split={n}part`), and home's n shares are n home lanes,
   `local` one share apiece; shares of one apiece are a plain `?split=part`. Under the run axis and `?split=copy`, each
   place is one lane, and a copy hands every lane the whole seed.
 - A lane ships raw. The master's compiler never binds a lane; each is compiled where it runs (server side for a host,

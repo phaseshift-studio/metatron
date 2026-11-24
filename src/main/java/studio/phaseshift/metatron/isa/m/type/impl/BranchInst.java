@@ -150,12 +150,16 @@ public class BranchInst extends MInst {
                 final List<fURI> places = PEER.equals(key.qLess().toString()) || HASH_FURI.equals(key.qLess())
                         ? PlaceResolver.resolve(PlaceSet.of(uri(key.qLess())), Env.snapshot()).stream().map(PlaceResolver.ResolvedPlace::authority).toList()
                         : Collections.singletonList(home(key) ? null : key.qLess());
+                // a home program that itself starts with a move or a cut would read as a lane at that place once its key
+                // is gone, so a cut that stays keeps it home, as it times a home key's program
+                final boolean leaves = !program.isEmpty() && (MOVE_INST_TID.equals(program.getFirst().tid().basePath())
+                        || CUT_INST_TID.equals(program.getFirst().tid().basePath()));
                 return places.stream().map(at -> {
                     // the hop budget the key states rides with its place
                     final fURI place = null == at || null == key.q(HOP) ? at : at.q(HOP, key.q(HOP));
                     return new Lane(place, program, share(split, place),
                             null != place ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
-                                    : null == key.q(TIMEOUT) ? code(program) : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
+                                    : null == key.q(TIMEOUT) && !leaves ? tail : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
                 });
             }).toList();
             // A BRANCH DEALS ITS LHS OR COPIES IT (Marko, 2026-11-24: mixed copy and part keys are refused, "default")
@@ -253,8 +257,9 @@ public class BranchInst extends MInst {
      */
     private static Obj split(final String split) {
         final Obj value = null == split ? noobj() : ObjmtronSerializer.parse(split);
-        if (!value.isNoObj() && !value.isLst() && !value.isRec()
-                && !(value.isUri() && (PART.equals(value.uriValue().name()) || COPY.equals(value.uriValue().name()))))
+        // a stated split that reads as nothing ({0}part) is no split either, never the copy no split is
+        if (null != split && (value.isNoObj() || (!value.isLst() && !value.isRec()
+                && !(value.isUri() && (PART.equals(value.uriValue().name()) || COPY.equals(value.uriValue().name()))))))
             throw MTronException.of("?%s=%s is not a split a branch performs: %s, %s or a place set", SPLIT, split, PART, COPY);
         return value;
     }
@@ -266,33 +271,37 @@ public class BranchInst extends MInst {
      * IS THE BIAS (Marko, 2026-11-24: "?split= is bias and stays on branch as a query param as its a concept relative to
      * all lanes of the branch"): {@code ?split=[{2}//a,//b]} deals each lane the demand of the designator that names its
      * place, PER LANE ("treat each lane as if they are unique"), so two lanes at //a take two shares apiece. A designator
-     * names a lane as {@code ?place} reads it: {@code local} a home lane, an address a lane at its host (its port no
-     * selector, but an authority's, or an alias's that states one, is: {@link Network.Helper#names}), {@code peer} a lane
-     * at any host and {@code #} any lane; the most specific naming wins ({@link PlaceResolver#specificity}), its demands
-     * summed, and a lane no designator names takes one share. A point is never a share: it is copies of what its lane
-     * answers. A share below one is refused, and so is a demand with no least count ({@code {**}}).
+     * names a lane as {@code ?place} reads it ({@link PlaceResolver}): {@code local} a home lane; an address a lane at
+     * its host, through its alias, its port no selector unless the alias states one ({@link Network.Helper#names}); an
+     * authority the one service it spells, exactly its origin; {@code peer} a lane at any host; and {@code #} any lane.
+     * The most specific naming wins ({@link PlaceResolver#specificity}), its demands summed, and a lane no designator
+     * names takes one share. A point is never a share: it is copies of what its lane answers. A share below one is
+     * refused, and so is a demand with no least count ({@code {**}}).
      */
     protected static long share(final Obj split, final fURI place) {
         if (split.isNoObj() || (split.isUri() && COPY.equals(split.uriValue().name())))
             return 0L;
         final fURI at = split.isUri() || null == place ? null : Machine.Helper.align(Machine.current(), place);
         final List<PlaceSet.Designator> bias = split.isUri() ? List.of() : PlaceSet.of(split).designators();
-        final Long share = split.isUri() ? split.c().min() : IntStream.range(0, 3).boxed()
+        final List<PlaceSet.Designator> named = IntStream.range(0, 3).boxed()
                 .map(pass -> bias.stream().filter(designator -> pass == PlaceResolver.specificity(designator.form())
                         && switch (designator.form()) {
                     case LOCAL -> null == place;
                     case PEER -> null != at && at.hasHost();
                     case ANY -> true;
-                    case ADDRESS, AUTHORITY -> {
-                        final fURI named = Machine.Helper.align(Machine.current(), designator.uri());
-                        yield null != at && named.hasHost() && named.host().equals(at.host()) && Network.Helper.names(named, at);
+                    case ADDRESS -> {
+                        final fURI address = Machine.Helper.align(Machine.current(), designator.uri());
+                        yield null != at && address.hasHost() && address.host().equals(at.host()) && Network.Helper.names(address, at);
                     }
+                    case AUTHORITY -> null != at && designator.uri().origin().equals(at.origin());
                 }).toList())
-                .filter(named -> !named.isEmpty())
+                .filter(designators -> !designators.isEmpty())
                 .findFirst()
-                .map(named -> named.stream().map(designator -> designator.demand().min())
-                        .reduce((a, b) -> null == a || null == b ? null : a + b).orElse(null))
-                .orElse(1L);
+                .orElse(List.of());
+        final Long share = split.isUri() ? split.c().min()
+                : named.isEmpty() ? Long.valueOf(1L)
+                : named.stream().anyMatch(designator -> null == designator.demand().min()) ? null
+                : Long.valueOf(named.stream().mapToLong(designator -> designator.demand().min()).sum());
         if (null == share || 1L > share)
             throw MTronException.of("a lane's share is one or more: %s gives %s", split, null == place ? LOCAL : place);
         return share;

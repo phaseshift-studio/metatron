@@ -217,7 +217,10 @@ public class BranchLaneTest extends AbstractMetatronTest {
      * demand, and a lane no designator names takes one share. A POINT IS COPIES, NEVER A SHARE ("cut{2}() will duplicate
      * data"). A share below one is refused, and so is a split the branch does not perform. A DESIGNATOR KEY names its
      * places when the branch runs: {@code <peer>} is a lane at each dialed peer, and {@code <#>} at each reachable place
-     * (this machine listens on nothing here, so # is the peers). Each row: the expression % its answer.
+     * (this machine listens on nothing here, so # is the peers). A home key whose program starts with a move stays home,
+     * an address names a lane at its host whatever port it states, a stated split that reads as nothing ({0}part) is
+     * refused, and a lone lane under a deal is dealt each obj its {?} grain hands it, keyed or not. Each row: the
+     * expression % its answer.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -246,6 +249,12 @@ public class BranchLaneTest extends AbstractMetatronTest {
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[{3}//left](move(<loop://left>).count(),count())                                       % {5,1}",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[{**}//left](move(<loop://left>).count(),count())                                      % <ERROR>",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=halves(move(<loop://left>).count(),count())                                            % <ERROR>",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={0}part> => count(),<loop://right?split=part> => count())                % <ERROR>",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(),<loop://right?split=part> => count())                   % {2}3",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<~?split={2}part> => move(<loop://left>).count(),<loop://right?split=part> => count())      % {4,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}//left:9000](move(<loop://left>).count(),count())                                  % {4,2}",
+            "{1,2,3,4}.branch?split=part(<~> => count())                                                                                % {4}1",
+            "{1,2,3,4}.branch?split=part(count())                                                                                       % {4}1",
     }, delimiter = '%')
     public void testEachLaneTakesItsShare(final String mtron, final String answer) {
         final BiFunction<Obj, Inst, Obj> run = (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
@@ -256,6 +265,25 @@ public class BranchLaneTest extends AbstractMetatronTest {
         } finally {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://right"));
+        }
+    }
+
+    /**
+     * AN AUTHORITY NAMES THE ONE SERVICE IT SPELLS, exactly its origin, as ?place reads one: keys at two ports of one host
+     * desugar to the bias [{2}loop://left], which names the portless lane alone, so the deal is the keys' 2:1, where a
+     * reading of the authority by its host would name both lanes, 2:2.
+     */
+    @Test
+    public void testAnAuthorityNamesItsOneService() {
+        final BiFunction<Obj, Inst, Obj> run = (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
+        dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
+        dial("loop://left:9000", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={2}part> => count(),"
+                    + "<loop://left:9000?split=part> => count())", "{4,2}");
+        } finally {
+            Machine.current().network().drop(f("loop://left"));
+            Machine.current().network().drop(f("loop://left:9000"));
         }
     }
 
