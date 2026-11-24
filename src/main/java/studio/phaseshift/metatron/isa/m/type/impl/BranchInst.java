@@ -221,22 +221,23 @@ public class BranchInst extends MInst {
 
     /**
      * A REMOTE LANE, through its place's peer::T: the client's mini-instset ({@link Network#overrideOf}) serves the
-     * verb the lane needs. A lane that is one {@code from(</path>)} or one {@code to(</path>)} goes through the
-     * machine's own door to the place (its client's from/to, else its eval), so a client that reads and writes but runs
-     * no program — {@code http_client::T}, GET and POST — serves it. Any other program ships to the place's eval as
-     * the lane's {@code code}, uncompiled, to be compiled there. A place that serves neither is unreachable.
+     * verb the lane needs. A lane that is one {@code from(</path>)} or one {@code to(</path>)} of span one goes through
+     * the machine's own door to the place (its client's from/to, else its eval), its point put on the door's answer, so
+     * a client that reads and writes but runs no program — {@code http_client::T}, GET and POST — serves it. Any other
+     * program, a spanned read or write among them, ships to the place's eval as the lane's {@code code}, uncompiled, to
+     * be compiled there. A place that serves neither is unreachable.
      */
     protected Obj remote(final fURI key, final fURI place, final List<Inst> program, final Code code, final Obj input) {
         final Network network = Machine.current().network();
         final Inst only = 1 == program.size() ? program.getFirst() : null;
-        // A LONE FROM OR TO IS ONE READ OR WRITE ONLY UNDER AN EXACT SPAN OF ONE OR MORE: both are idempotent, x·x = x, so
-        // {2}from(</x>) is the one read, while a span range ({0,1}from, a sum of its unrolls), a zero span (the identity)
-        // and a negative one (a converse) are no single door, and ship to the place's eval to run in full
-        final cInt span = null == only ? null : only.tid().b();
+        // A LONE FROM OR TO IS ONE READ OR WRITE ONLY AT A SPAN OF ONE: any other span is a run, and a run is no single
+        // door. {2}from(</x>) is not the one read, as each step multiplies its answer by its lhs's copies (the apply
+        // axiom): a value held as {3}7 reads back {9}7. A range ({0,1}from, a sum of its unrolls), a zero span (the
+        // identity) and a negative one (a converse) are runs too, so every span but one ships to the place's eval
         final fURI verb = null != only
                 && (FROM_INST_TID.equals(only.tid().basePath()) || TO_INST_TID.equals(only.tid().basePath()))
                 && only.arg(0).isUri() && only.arg(0).uriValue().isAbsolute()
-                && span.isExact() && null != span.min() && 1L <= span.min()
+                && only.tid().b().isOne()
                 ? only.tid().basePath()
                 : EVAL_INST_TID;
         final Inst eval = network.overrideOf(place, EVAL_INST_TID);

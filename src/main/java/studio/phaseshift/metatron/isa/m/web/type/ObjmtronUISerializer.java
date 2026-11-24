@@ -842,7 +842,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     public String writeInst(final Inst inst) {
         if (inst.isNoObj())
             return this.postWrite(super.writeInst(inst));
-        if (Obj.Helper.isAutoPointer(inst)) {
+        // A POINTER IS DRAWN AS ITS SUGAR ONLY WHEN THE SUGAR SAYS ALL OF IT: no span, no point, and an auto_at of one
+        // argument. Any other is drawn as the plain writer draws it, canonically, or the console showed {2}!*a as !*a
+        if (Obj.Helper.isAutoPointer(inst) && inst.tid().b().isOne() && (null == inst.tid().d() || inst.tid().d().isOne())
+                && (inst.isAutoFrom() || inst.arg(1).isNoObj())) {
             // the pointer's target (arg 0) is normally a vid; some auto-pointer forms carry a
             // non-vid expression there, and Obj.uriValue() throws on it.  Fall back to the
             // plain instruction rendering in that case rather than aborting the whole write.

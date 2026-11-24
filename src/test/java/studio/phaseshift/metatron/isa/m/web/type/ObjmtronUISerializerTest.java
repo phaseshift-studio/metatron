@@ -534,6 +534,8 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
             "start(1).plus{3}?hop=0(34)                 % plus{3}?hop=0(34)",
             "start(5).branch(plus{2}(34),mult{3}(2))    % mult{3}(2)",
             "start([a=>plus{2}(34)])                    % plus{2}(34)",
+            // a pointer drawn as its sugar only when the sugar says all of it
+            "start(1).{2}!*a                            % {2}",
     }, delimiter = '%')
     public void testAPointedInstructionShowsItsPoint(final String source, final String shown) {
         final Obj code = ObjmtronSerializer.parse(source).asCode();

@@ -467,9 +467,8 @@ public interface Type extends Obj {
                             (null == this.predicate() || one.test(predicate().apply(one))));
             if (!member)
                 return noobj();
-            // the point goes on as the processor puts an inst's point on its answer: a mono value's span stays its span
-            return point.isZero() ? noobj() : point.isOne() ? one : one.tid().b().isOne() || !one.isMono() ?
-                    one.c(c -> c.mult(point)) : one.d(one.tid().d().mult(point));
+            // the point goes on as the processor puts an inst's point on its answer (Inst.Helper.pointed)
+            return point.isZero() ? noobj() : Inst.Helper.pointed(one, point);
         }));
     }
 

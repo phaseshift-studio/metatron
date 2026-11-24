@@ -238,6 +238,11 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             "start(1).{2}*a                               % from(a)",
             "start(1).from{3}(a)                          % from{3}(a)",
             "start(1).{2}!*a                              %",
+            "start(1).auto_from{3}(a)                     %",
+            "start(1).{2}!@a                              %",
+            "start(1).auto_at{3}(a)                       %",
+            "start(1).{2}!a                               %",
+            "start(1).{2}from?int{+}<=(a)                 %",
     }, delimiter = '%')
     void testAnInstructionKeepsEveryCoefficientAcrossTheWire(final String source, final String written) {
         final Obj parsed = ObjmtronSerializer.parse(source);
