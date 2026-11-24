@@ -1138,7 +1138,14 @@ public class machInstSet extends AbstractInstSet {
                                     if (!target.isAddressed()) {
                                         if (!HERE.equals(target))
                                             MachinePerspective.publish(Machine.current().move(target));
-                                        return code(new ArrayList<>(inst.arg(1).asCall().insts())).apply(lhs);
+                                        // ALL OF THE TAIL, by the compiler and the processor of the machine it landed
+                                        // in, as Machine.evaluate runs a chain: a tail of one instruction too, which
+                                        // Machine.evaluate would resolve and apply without the rewrites (a lone move
+                                        // to a host is the cut that reaches it). A monad rides in unchanged
+                                        final Machine landed = Machine.current();
+                                        final Code tail = Code.wrapStart(lhs, code(new ArrayList<>(inst.arg(1).asCall().insts())));
+                                        return landed.processor().apply(landed.compiler().apply(tail).asCode())
+                                                .apply(lhs.isMonad() ? lhs : noobj());
                                     }
                                     // A CUT SHIPS TO A PEER, so the peer has to exist: with none dialed at the authority, the
                                     // scatter's eval would resolve to the NATIVE eval — which evaluates locally — and the
@@ -1275,9 +1282,13 @@ public class machInstSet extends AbstractInstSet {
          *       extractor cuts the {@code move(</path>)} the program arrives with, so the receiving thread moves to the
          *       path and the tail is compiled there.</li>
          *   <li>A PUSH OR A POP KEEPS ITS INSTRUCTION, which mints or discards the machine, and the tail follows as
-         *       {@code cut(<~>, tail)}: compiled in whichever machine the push or the pop made current.</li>
+         *       {@code cut(<~>, tail)}: compiled in whichever machine the push or the pop made current. So does a move
+         *       to {@code ~} (it is {@code stay()}) and a move whose target is computed when it runs.</li>
          * </ul>
-         * A nomadic instruction that ends the chain has no tail and is left as written. The extractor stops at the
+         * A nomadic instruction that ends the chain has no tail and is left as written, except a move to a host: the
+         * move instruction re-homes a thread inside this server and never leaves it, so only a cut reaches a peer, and
+         * that cut's tail is empty. An instruction is matched by its base path, because the chain may arrive resolved
+         * and a resolved tid carries its range and domain. The extractor stops at the
          * first cut and returns the rest verbatim: the tail is a program, re-planned where it lands, so a nested move
          * keeps its spelling and is resolved by the destination's own tables (aligning it here would bake this
          * machine's denotation into a program meant to be re-homed). It runs ahead of every other instruction set's
@@ -1296,27 +1307,36 @@ public class machInstSet extends AbstractInstSet {
         static Code extractNomadic(final Code code) {
             final List<Inst> insts = code.insts();
             final List<fURI> nomadic = Law.Helper.claimants(Law.nomadic).stream()
-                    .map(term -> Inst.Helper.operationTid(term.tid()))
+                    .map(term -> term.tid().basePath())
                     .toList();
-            for (int i = 0; i < insts.size() - 1; i++) {
+            for (int i = 0; i < insts.size(); i++) {
                 final Inst inst = insts.get(i);
-                if (!nomadic.contains(Inst.Helper.operationTid(inst.tid())))
+                if (!nomadic.contains(inst.tid().basePath()))
                     continue;
+                final boolean last = i + 1 == insts.size();
                 // a push or a pop already followed by its cut was extracted on an earlier pass: the tail is the cut's
                 if (i + 2 == insts.size() && CUT_INST_TID.equals(insts.get(i + 1).tid().basePath()))
                     return code;
                 final List<Inst> cut = new ArrayList<>(insts.subList(0, i));
-                // a tail of one instruction is that instruction, as the parser reads cut(<a>, plus(1))
-                final Obj tail = code(new ArrayList<>(insts.subList(i + 1, insts.size()))).tryToInst();
-                if (MOVE_INST_TID.equals(inst.tid().basePath())) {
+                // a tail of one instruction is that instruction, as the parser reads cut(<a>, plus(1)); no tail is the
+                // empty code, which the cut ships as nothing to run
+                final Obj tail = last ? code(new ArrayList<>()) : code(new ArrayList<>(insts.subList(i + 1, insts.size()))).tryToInst();
+                // a move whose target is written: to a host it is always the cut, and to another place in this server's
+                // tree it is the cut when a tail follows. A move to ~ stays a move, as stay() is (it re-binds and
+                // publishes), and so does a move whose target is computed when it runs (move(_), move(*~/where))
+                if (MOVE_INST_TID.equals(inst.tid().basePath()) && (inst.arg(0).isNoObj() || inst.arg(0).isUri())) {
                     final fURI written = inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue();
                     final fURI target = Machine.Helper.align(Machine.current(), written);
-                    final Obj where = !inst.arg(0).isNoObj() && target.equals(written) ? inst.arg(0) : uri(target);
-                    cut.add(instB(CUT_INST_TID, lst(where, tail)));
-                } else {
-                    cut.add(inst);
-                    cut.add(instB(CUT_INST_TID, lst(uri(HERE), tail)));
+                    if (target.isAddressed() || (!last && !HERE.equals(target))) {
+                        final Obj where = !inst.arg(0).isNoObj() && target.equals(written) ? inst.arg(0) : uri(target);
+                        cut.add(instB(CUT_INST_TID, lst(where, tail)));
+                        return code(cut);
+                    }
                 }
+                if (last)
+                    return code;
+                cut.add(inst);
+                cut.add(instB(CUT_INST_TID, lst(uri(HERE), tail)));
                 return code(cut);
             }
             return code;

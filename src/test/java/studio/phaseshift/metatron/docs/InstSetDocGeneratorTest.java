@@ -131,8 +131,8 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
      * The descriptions are checked over the whole enum, not a hand-written list, so a law added to
      * {@code Law} fails here rather than in a reader's face.
      * <p>
-     * Not every law IS an equation — the effect and coefficient laws ({@code pure}, {@code blocked},
-     * {@code floatable}, {@code partial}) state a property of the implementation or of the coefficient
+     * Not every law IS an equation — the effect and coefficient laws ({@code pure}, {@code nomadic},
+     * {@code blocked}, {@code floatable}, {@code partial}) state a property of the implementation or of the coefficient
      * algebra — so the LaTeX guarantee is that the equation-bearing majority carry it: prose for all, math for
      * the ones that can state one.
      */
@@ -144,8 +144,8 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
             assertFalse(doc.isEmpty(), "no tooltip for the declared law " + law);
             if (doc.contains("\\(") || doc.contains("\\[")) equations++;
         }
-        assertTrue(equations >= Law.values().length - 2,
-                "only the two laws that are not equations (`pure`, `blocked`) lack LaTeX — got "
+        assertTrue(equations >= Law.values().length - 3,
+                "only the three laws that are not equations (`pure`, `blocked`, `nomadic`) lack LaTeX — got "
                         + equations + " of " + Law.values().length);
     }
 

@@ -685,8 +685,8 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
 
     // ================================================================================================
     // T — reference frame migration. The odd one out: NOT a fold. move() relocates the frame of reference
-    // (the machine the code runs in), it is law-free, and it is realized by extractMove in the compiler,
-    // not by a plan -- the chain is cut at the first host-bearing move and the tail is shipped as a
+    // (the machine the code runs in), it is law-free, and it is realized by extractNomadic in the compiler,
+    // not by a plan -- the chain is cut at the first move, push or pop and the tail is shipped as a
     // PROGRAM (the quine rule), so the receiver re-plans it and the one dumb step propagates fractally.
     // Its emitted shape is therefore a cut, not a branch, which is why it gets its own
     // assertion rather than a row in the same table.

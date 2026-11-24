@@ -639,7 +639,7 @@ bulked member keeps its count across a remote lane (`test_N_a_bulked_member_keep
 `move()` relocates the *frame of reference* — the machine the code runs in — rather than moving data. It is the
 machine ring's serial `·` (`move` points the machine pointer at an existing machine, and the value flows through
 unchanged), so it is the one distributed pattern that is **not a fold**: no reducer, no combiner, no `Law.Helper`, no
-`plan::T`. A hand-crafted `rewriter` rule (`extractMove`) tails the code at the first remote move, ships the tail to
+`plan::T`. A hand-crafted `rewriter` rule (`extractNomadic`) cuts the code at its first move, push or pop and ships a remote tail to
 that authority via `eval`, and stops. The receiving machine re-compiles the shipped tail, finds the next move, and
 tails-and-ships again — the one dumb step propagates *fractally*, machine to machine, without the origin ever
 re-entering the loop; it does not propagate by local recursion — each machine re-compiles the shipped tail, so the

@@ -186,14 +186,21 @@ public class MoveSeamsTest extends AbstractMetatronTest {
     /**
      * A HOST-LESS MOVE IS NOT A BOUNDARY: it re-homes THIS thread and it persists past the expression. That is the
      * state a boundary ISOLATES (where the other half keeps it), which is why the distinction is worth a test at all.
+     * A move with a tail is the cut, which moves the thread as the move does and runs the tail where it landed. Each
+     * row: the expression % its answer.
      */
-    @Test
-    void aHostlessMoveRehomesAndPersists() {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.move(<persist>)                 % 5",
+            "5.move(<persist>).plus(1)         % 6",
+            "5.move(<persist>).plus(1).mult(2) % 12",
+    }, delimiter = '%')
+    void aHostlessMoveRehomesAndPersists(final String mtron, final int answer) {
         final Machine before = Machine.current();
         Machine.current().push(f("persist"));
         Machine.current(before);
         try {
-            assertEquals(jnt(5), Machine.evaluate("5.move(<persist>)"));
+            assertEquals(jnt(answer), Machine.evaluate(mtron.trim()));
             assertEquals(f("/persist"), Machine.current().vid().resolve(),
                     "a host-less move leaves the calling thread re-homed");
         } finally {

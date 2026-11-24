@@ -165,7 +165,7 @@ public interface Machine extends Rec, AutoCloseable {
         // resource as its aligned form (/m/ide/inst/command), and each component keys by the canonical
         // form -- network authority, memory's index, the instset tables -- so the gatekeeper aligns HERE,
         // once, and every dispatch below sees one name. ONE DOOR: Helper.align IS that alignment, which is
-        // why the compiler's move-extractor can canonicalize a spelling exactly as the runtime does -- a
+        // why the compiler's nomadic extractor can canonicalize a spelling exactly as the runtime does -- a
         // name resolved one way at compile time and another at run time would ship a tail nowhere.
         // The fallback to instruction memory does not align on its own, and a raw spelling can never match
         // tables keyed by full identity. a scheme-less vid passes through untouched: alignPrefix normalizes

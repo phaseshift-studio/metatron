@@ -20,20 +20,26 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.List;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
 /**
- * move(uri) with an authority is a scatter: the move-extractor packages the tail as the move's blocked-code
- * argument, the move ships {@code start(lhs).move(clipped).<tail>} through the peer's eval, and the reply scatters.
+ * move(uri) with an authority is a scatter: the nomadic extractor cuts the chain at the move into
+ * {@code cut(<uri>, tail)}, the cut ships {@code start(lhs).move(clipped).<tail>} through the peer's eval, and the
+ * reply scatters.
  * The loop peer is the identity client, so a shipped program evaluates against the local machine.
  * <p>
  * WHICH HALF RESOLVES WHAT — the distinction these rows exist to pin. Only the <b>cut's target</b> is this
@@ -101,6 +107,17 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             // saturates at the root, which is where every row starts -- checkCodeRewrite re-stands the caller's
             // machine before each evaluation, so no earlier row can leave the thread somewhere else.
             "5.move(<..>).plus(1)                                                                                                     % start(5).cut(<..>,plus(1))                                                                                               % 6",
+            // A BARE MOVE IS A MOVE UP, and the extractor runs before every other rule: the tail is as written
+            "5.move().plus(1)                                                                                                         % start(5).cut(<..>,plus(1))                                                                                               % 6",
+            "5.move(<a>).plus(0)                                                                                                      % start(5).cut(<a>,plus(0))                                                                                                % 5",
+            // THE CUT GATHERS ITS STREAM (dom A{*}), and a tail of one instruction maps over all of it
+            "{1,2,3}.move(<..>).plus(1)                                                                                               % start({1,2,3}).cut(<..>,plus(1))                                                                                         % {2,3,4}",
+            // THE TAIL IS COMPILED BY THE MACHINE IT LANDS IN: only /b's network calls loop://self `//only`, so the
+            // move inside the tail reaches the peer only because /b compiled it (the root would ship to a name it never
+            // declared). A tail of one instruction too: /b compiles move(<//only/c>) into the cut that reaches the peer,
+            // where run as it was written, a move instruction cannot leave this server
+            "5.move(<b>).move(<//only/c>).plus(1)                                                                                     % start(5).cut(<b>,move(<//only/c>).plus(1))                                                                               % 6",
+            "5.move(<b>).move(<//only/c>)                                                                                             % start(5).cut(<b>,move(<//only/c>))                                                                                       % 5",
     }, delimiter = '%')
     void testMoveRewrite(final String code, final String expected, final String expectedResult) {
         // REACH IS PER MACHINE, and every frame the shipped program STANDS IN needs the dial: the first move drops
@@ -110,6 +127,27 @@ public class MoveRemoteTest extends AbstractMetatronTest {
         // evalAt puts the thread back before the row runs.
         for (final String frame : List.of("/a", "/b", "/c"))
             Machine.Helper.evalAt(f(frame), () -> Network.Helper.connect(Machine.current().network(), f("loop://self")));
+        // A NAME ONLY /b DECLARED: a prefix row lands in its own level's table, so the root has no //only
+        Machine.Helper.evalAt(f("/b"), () -> Machine.current().network().registerPrefix(f("only"), f("loop://self")));
         checkCodeRewrite(LOG, code, expected, expectedResult, false);
+    }
+
+    /**
+     * A MOVE TO A HOST THAT ENDS THE CHAIN IS STILL A CUT: the move instruction never leaves this server, so the cut
+     * ships the lhs with nothing to run, and the peer answers it.
+     */
+    @Test
+    void testAMoveToAHostThatEndsTheChainShips() {
+        checkCodeParseApply(LOG, "5.move(<//self>)", "5");
+    }
+
+    /**
+     * A CHAIN RESOLVED BEFORE IT IS COMPILED IS CUT ALL THE SAME (the console resolved a line first): the extractor
+     * matches the move by its base path, and the resolved tid's range and domain do not hide it.
+     */
+    @Test
+    void testAResolvedChainStillShips() {
+        final Code resolved = ObjmtronSerializer.parse("5.move(<//self>).plus(1).mult(2)").asCode().resolve(noobj()).asCode();
+        checkEquality(LOG, jnt(12), Machine.evaluate(resolved), true);
     }
 }

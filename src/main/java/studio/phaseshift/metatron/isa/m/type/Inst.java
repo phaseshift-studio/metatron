@@ -322,9 +322,16 @@ public interface Inst extends Call {
         return null == this.jvm() ? noobj() : this.jvm().get2();
     }
 
+    /**
+     * Whether this instruction is bound to a body, and with {@code nested}, every instruction in its arguments too.
+     * A CUT'S TAIL IS NOT THIS MACHINE'S TO RESOLVE ({@code Law.nomadic}): it is the program the machine it lands in
+     * compiles, so a cut is resolved once it is bound itself.
+     */
     default boolean isResolved(final boolean nested) {
-        boolean resolved = this.hasf();
-        return (!nested || !resolved) ? resolved : this.<Inst>as().args().elements().allMatch(c -> c.isResolved(true));
+        final boolean resolved = this.hasf();
+        return !nested || !resolved || CUT_INST_TID.equals(this.tid().basePath())
+                ? resolved
+                : this.<Inst>as().args().elements().allMatch(c -> c.isResolved(true));
     }
 
     default boolean isBlocking() {

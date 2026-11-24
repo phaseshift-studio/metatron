@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.Bool;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.CODE;
 import static studio.phaseshift.metatron.Tokens.M_ISA_REWRITE_TID;
 import static studio.phaseshift.metatron.Tokens.PRE;
@@ -48,6 +50,7 @@ import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MOVE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.POP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PUSH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -159,6 +162,13 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
             "{1,2,3,4}.push(<a>).plus(1).sum()                                 % 2 % ~",
             "{1,2,3,4}.pop().plus(1).sum()                                     % 2 % ~",
             "{1,2,3}.move(<a>).repeat?<=int{*}(code=>plus(1),until=>loop()?>3) % 1 % a",
+            // a bare move is a move up
+            "{1,2,3,4}.move().plus(1).sum()                                    % 1 % ..",
+            // the extractor runs first: a tail no rule of this machine has touched
+            "5.move(<a>).plus(0)                                               % 1 % a",
+            // a move to ~ is stay(), and a target computed when the move runs is not known here: the move stays
+            "{1,2,3,4}.move(<~>).plus(1).sum()                                 % 2 % ~",
+            "{1,2,3,4}.move(_).plus(1).sum()                                   % 2 % ~",
     }, delimiter = '%')
     void testAMachineChangeCutsTheChainAsWritten(final String mtron, final int kept, final String target) {
         Network.Helper.connect(Machine.current().network(), SIBLING);
@@ -174,6 +184,71 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
         checkEquality(LOG, uri(target.trim()), cut.arg(0), true);
         final Code tail = code(written.insts().subList(nomadic + 1, written.insts().size()));
         checkEquality(LOG, tail.tryToInst(), cut.arg(1), true);
+    }
+
+    /**
+     * A RESOLVED CHAIN IS CUT AT THE SAME PLACE: the console resolved a line before compiling it, and a resolved tid
+     * carries its range and domain, so the extractor matches a nomadic instruction by its base path. Each row: the
+     * chain % its compiled form's instructions before the cut % the cut's target.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.move(<..>).plus(1).mult(2) % 1 % ..",
+            "5.push(<a>).plus(1).mult(2)  % 2 % ~",
+    }, delimiter = '%')
+    void testAResolvedChainIsCutAtTheSamePlace(final String mtron, final int kept, final String target) {
+        final Code resolved = ObjmtronSerializer.parse(mtron.trim()).asCode().resolve(noobj()).asCode();
+        // the console's input: the machine change is bound, and its tid carries the range and domain that hid it
+        final Inst nomadic = resolved.insts().stream()
+                .filter(inst -> NOMADIC.contains(inst.tid().basePath())).findFirst().orElseThrow();
+        assertTrue(nomadic.isResolved(false) && nomadic.hasDomOrRng(), "resolution binds the machine change: " + nomadic.tid());
+        final Code planned = Machine.current().compiler().rewriter().apply(resolved).asCode();
+        checkEquality(LOG, jnt(kept + 1), jnt(planned.insts().size()), true);
+        final Inst cut = planned.insts().get(kept);
+        checkEquality(LOG, uri(CUT_INST_TID), uri(cut.tid().basePath()), true);
+        checkEquality(LOG, uri(target.trim()), cut.arg(0), true);
+    }
+
+    /**
+     * A NOMADIC INSTRUCTION THAT ENDS THE CHAIN has no tail and stays as written, except a move to a host: the move
+     * instruction never leaves this server, so the move becomes a cut with nothing to run where it lands. Each row:
+     * the chain % whether it ends in a cut.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.move(<loop://sibling:8555>) % true",
+            "5.move(<..>)                  % false",
+            "5.move(<~>)                   % false",
+            "5.move(_)                     % false",
+            "5.push(<a>)                   % false",
+            "5.pop()                       % false",
+    }, delimiter = '%')
+    void testANomadicInstructionThatEndsTheChain(final String mtron, final boolean cuts) {
+        Network.Helper.connect(Machine.current().network(), SIBLING);
+        final Code written = ObjmtronSerializer.parse(mtron.trim()).asCode();
+        final Code planned = planned(mtron.trim());
+        checkEquality(LOG, jnt(written.insts().size()), jnt(planned.insts().size()), true);
+        final Inst last = planned.insts().getLast();
+        checkEquality(LOG, uri(cuts ? CUT_INST_TID : written.insts().getLast().tid().basePath()), uri(last.tid().basePath()), true);
+        if (cuts) {
+            checkEquality(LOG, uri(SIBLING), last.arg(0), true);
+            checkEquality(LOG, jnt(0), jnt(last.arg(1).asCall().insts().size()), true);
+        }
+    }
+
+    /**
+     * THE COMPILER LEAVES A CUT'S TAIL TO ITS TARGET: compiled here, the cut is bound and its tail is not, and the chain
+     * has nothing left open here (a cut's tail is not this machine's to resolve), so the console reports no dynamic
+     * resolution for a move.
+     */
+    @Test
+    void testTheCompilerLeavesACutsTailToItsTarget() {
+        final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse("{1,2,3,4}.move(<..>).plus(1).sum()")).asCode();
+        final Inst cut = compiled.insts().getLast();
+        checkEquality(LOG, uri(CUT_INST_TID), uri(cut.tid().basePath()), true);
+        checkEquality(LOG, bool(true), bool(cut.isResolved(false)), true);
+        checkEquality(LOG, bool(false), bool(cut.arg(1).isResolved(false)), true);
+        checkEquality(LOG, jnt(0), jnt(Call.Helper.getUnresolvedInsts(compiled).size()), true);
     }
 
     /**

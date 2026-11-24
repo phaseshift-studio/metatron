@@ -1480,6 +1480,7 @@ public class InstSetDocGenerator {
             Map.entry("floatable", "commutes through the stream ring's parallel/serial structure — the coefficient floats off \\(F \\backslash F_r\\)"),
             Map.entry("blocked", "cannot float past a barrier — a reduce anchors the coefficient in place"),
             Map.entry("pure", "the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred"),
+            Map.entry("nomadic", "the effect axis: the instruction changes the current machine (move, push, pop), so the rest of the chain is compiled by the machine it lands in, never here. Declared, never inferred"),
             Map.entry("action", "a monoid/group acting on a carrier — \\(f(gh)x = f(g)f(h)x\\)"),
             Map.entry("prime", "an atomic, indecomposable element — no \\(b, c\\) with \\(a = b \\cdot c\\) and neither a unit"),
             Map.entry("left_distributive", "distributes over \\(+\\) on the left — \\(a(b+c) = ab + ac\\)"),

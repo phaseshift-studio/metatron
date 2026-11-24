@@ -788,14 +788,21 @@ public class fURITest extends AbstractMetatronTest {
     }
 
     /**
-     * A bare uri is not a {@code [{+}uri::T]}: the read refuses it by key and address, where a cast would have failed
-     * without naming either (a rewrite's {@code ?pre} is read on every pass, so the message is the whole diagnosis).
+     * What is not a {@code [{+}uri::T]} is refused by key and address, where a cast would have failed without naming
+     * either (a rewrite's {@code ?pre} is read on every pass, so the message is the whole diagnosis): a bare uri, and
+     * a list holding anything but uris. Each row: the furi % the key.
      */
-    @Test
-    public void testQueryParamUriListValueRefusesABareUri() {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/m/inst/rewrite/x?pre=/m/db/tble/inst/rewrite % pre",
+            "/m/inst/rewrite/x?pre=[1]                     % pre",
+            "/m/inst/rewrite/x?post=[/m/db,2]              % post",
+    }, delimiter = '%')
+    public void testQueryParamUriListValueRefusesWhatIsNotAUriList(final String furi, final String key) {
         final MTronException refused = assertThrows(MTronException.class,
-                () -> idem("/m/inst/rewrite/x?pre=/m/db/tble/inst/rewrite").qValue("pre", List.class));
-        assertTrue(refused.getMessage().contains("?pre of /m/inst/rewrite/x is a [{+}uri::T]"), refused.getMessage());
+                () -> idem(furi.trim()).qValue(key.trim(), List.class));
+        assertTrue(refused.getMessage().contains("?%s of /m/inst/rewrite/x is a [{+}uri::T]".formatted(key.trim())),
+                refused.getMessage());
     }
 
 

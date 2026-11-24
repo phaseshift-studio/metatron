@@ -104,7 +104,7 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
      * THE WHOLE TAIL RIDES: a name resolves the ORIGIN and nothing else, so every segment after the name is the far
      * side's to serve — {@code //ginger/a/b/c} is {@code ws://ginger.local:8555/a/b/c}, never the origin's root.
      * <p>
-     * Asserted at {@link Machine.Helper#align} — the ONE door {@code read}, {@code write} and the move-extractor all
+     * Asserted at {@link Machine.Helper#align} — the ONE door {@code read}, {@code write} and the nomadic extractor all
      * ask — because alignment is pure: the far machine need not exist to prove what the spelling denotes.
      */
     @ParameterizedTest

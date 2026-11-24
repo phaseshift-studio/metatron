@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -108,26 +109,27 @@ public final class Executor {
         for (final Code segment : segments) {
             try {
                 final Level startLevel = this.console.getStatus().getState();
-                final Obj resolvedResult = Call.Helper.resolveInspection(noobj(), segment, unresolved -> {
-                    if (Typer.Helper.codeResolve()) {
+                // THE MACHINE COMPILES THE LINE BEFORE ANYTHING READS ITS RESOLUTION, as it compiles every program
+                // (parse → rewrite → resolve → type, the ws eval's order). Resolved first, the tail after a move, a
+                // push or a pop was bound to this machine before the nomadic extractor could cut it off, and a tail
+                // bound here keeps that binding where it lands. The inspection reads what the compiler left open.
+                // WHERE THE THREAD STANDS. Not the console's vid: that RESOLVES (to the root's machine), so
+                // accessMachine returns it and any fallback is dead code -- which is why seeding the fallback
+                // with Machine.current() changed nothing. A prompt line must run in the frame of reference, or
+                // a move cannot persist across lines: the console would keep asking where it started.
+                // (The pane binding is the OUTPUT side -- console.getActivePane().machine(mach) below -- so
+                // reading the perspective here does not steal it.)
+                final Machine machine = Machine.current();
+                final Code compiled = machine.compiler().apply(segment).asCode();
+                final List<Inst> unresolved = Call.Helper.getUnresolvedInsts(compiled);
+                if (!unresolved.isEmpty()) {
+                    if (Typer.Helper.codeResolve())
                         throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
-                    } else {
-                        this.console.getStatus().setState(Level.WARN);
-                        segment.logger().status(DEBUG, "{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
-                    }
-                });
+                    this.console.getStatus().setState(Level.WARN);
+                    segment.logger().status(DEBUG, "{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
+                }
                 final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
                 if (this.console.input.isNoObj()) {
-                    // funnel compilation through the machine's compiler (compile-once); the already-
-                    // resolved segment short-circuits, and the processor runs it without re-resolving.
-                    // WHERE THE THREAD STANDS. Not the console's vid: that RESOLVES (to the root's machine), so
-                    // accessMachine returns it and any fallback is dead code -- which is why seeding the fallback
-                    // with Machine.current() changed nothing. A prompt line must run in the frame of reference, or
-                    // a move cannot persist across lines: the console would keep asking where it started.
-                    // (The pane binding is the OUTPUT side -- console.getActivePane().machine(mach) below -- so
-                    // reading the perspective here does not steal it.)
-                    final Machine machine = Machine.current();
-                    final Code compiled = machine.compiler().apply(resolvedResult).asCode();
                     final Computer mach = machine.processor().apply(compiled);
                     //  final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     // persist in HALTED collection
@@ -154,7 +156,7 @@ public final class Executor {
                             Machine.current(worker.landedPerspective());
                     }
                 } else {
-                    computeResult.set(this.console.input.apply(resolvedResult));
+                    computeResult.set(this.console.input.apply(compiled));
                 }
                 computeResult.get().stream().forEach(this.console::printResult);
                 this.console.promptTraceForFails(computeResult.get());
