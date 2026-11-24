@@ -27,7 +27,7 @@ SCRIPT = BIN / 'hunk-revert-check'
 sys.path.insert(0, str(BIN))
 from lib.java_lexer import IMPORT_LINE, lex  # noqa: E402
 
-TESTS = '-Dtest=LighthouseTest,ReefTest,BuoyTest,CompassTest,WindlassTest'
+TESTS = '-Dtest=LighthouseTest,ReefTest,BuoyTest,CompassTest,WindlassTest,YardarmTest,YawlTest'
 
 BASE = {
     '.gitignore': '.*\n!.gitignore\n',  # as in the repository: .docker-target/ (the check's logs) is ignored
@@ -159,6 +159,62 @@ BASE = {
             }
         }
         ''',
+    'src/main/java/org/harbor/Yardarm.java': '''\
+        package org.harbor;
+
+        import org.harbor.geo.Grid;
+        import org.harbor.geo.Latitude;
+        import org.harbor.geo.Pole;
+        import org.harbor.geo.Rhumb;
+        import org.harbor.geo.Sextant;
+        import org.harbor.geo.Sounding;
+        import org.harbor.geo.Tack;
+        import org.harbor.geo.Thole;
+
+        import java.awt.Point;
+
+        public class Yardarm {
+
+            public Object post() {
+                return new Point();
+            }
+        }
+        ''',
+    'src/main/java/org/harbor/Yawl.java': '''\
+        package org.harbor;
+
+        import java.awt.Point;
+        import java.util.List;
+        import java.util.function.Consumer;
+
+        public class Yawl {
+
+            public Object drum() {
+                return new Point();
+            }
+
+            public int length() {
+                return 70;
+            }
+
+            public static void coil(final Consumer<List<String>> sink) {
+                sink.accept(List.of("clove"));
+            }
+        }
+        ''',
+    'src/main/java/org/harbor/Zodiac.java': '''\
+        package org.harbor;
+
+        import java.util.List;
+        import java.util.Map;
+
+        public class Zodiac {
+
+            public Map<String, List<String>> lines() {
+                return Map.of("bow", List.of("spring"));
+            }
+        }
+        ''',
     'src/main/resources/harbor/signals.txt': 'beam\nflare\n',
     'src/main/resources/harbor/notes.txt': 'low tide at dawn\n',
 }
@@ -180,6 +236,17 @@ FEATURE = {  # path -> (old, new) on the feature branch; old None = a new file
                                            '        sink.accept(List.of(new Point()));\n    }\n', ''),
     'src/main/java/org/harbor/Windlass.java': ('import java.awt.Point;',  # a swap whose name drum() still uses
                                                'import org.harbor.geo.Point;'),
+    # a swap split over two hunks: the new import sorts into the org block, seven lines above the old one
+    'src/main/java/org/harbor/Yardarm.java': ('import org.harbor.geo.Pole;',
+                                              'import org.harbor.geo.Point;\nimport org.harbor.geo.Pole;',
+                                              'import java.awt.Point;\n', ''),
+    # a used name swapped in the same hunk as an import that only the deleted coil() needed
+    'src/main/java/org/harbor/Yawl.java': ('import java.awt.Point;', 'import org.harbor.geo.Point;',
+                                           'import java.util.function.Consumer;\n', '',
+                                           '\n    public static void coil(final Consumer<List<String>> sink) {\n'
+                                           '        sink.accept(List.of("clove"));\n    }\n', ''),
+    'src/main/java/org/harbor/Zodiac.java': ('import java.util.List;\nimport java.util.Map;',  # the imports reordered
+                                             'import java.util.Map;\nimport java.util.List;'),
     'src/main/resources/harbor/signals.txt': ('flare\n', 'flare\nhorn\n'),
     'src/main/resources/harbor/notes.txt': ('dawn\n', 'dawn\n\n'),
 }
@@ -241,9 +308,10 @@ if MODE == 'no-summary' or MODE == 'silent-revert' and reverting:
     finish(1)
 print('[INFO] Nothing to compile - all classes are up to date.' if MODE == 'stale' else
       '[INFO] Compiling 9 source files with javac [debug release 25] to target/classes')
-rope = src('java/org/harbor/Rope.java')
+rope, yardarm, yawl = (src(f'java/org/harbor/{name}.java') for name in ('Rope', 'Yardarm', 'Yawl'))
 if ('Depth.of()' in src('java/org/harbor/Reef.java') and not src('java/org/harbor/Depth.java')
-        or 'Consumer<' in rope and 'import java.util.function.Consumer;' not in rope or rope.count('Point;') > 1):
+        or any('Consumer<' in text and 'import java.util.function.Consumer;' not in text for text in (rope, yawl))
+        or rope.count('Point;') > 1 or yardarm.count('Point;') != 1 or yawl.count('Point;') != 1):
     print('[ERROR] COMPILATION ERROR : ')
     print('[ERROR] /work/src/main/java/org/harbor/Reef.java:[6,16] cannot find symbol')
     print('[INFO] BUILD FAILURE')
@@ -256,6 +324,8 @@ TESTS = {
     'CompassTest': {'testNorth': lambda: 'return 360;' in src('java/org/harbor/Compass.java')},
     'TideTest': {'testTurns': lambda: True},
     'WindlassTest': {'testDrum': lambda: 'import org.harbor.geo.Point;' in src('java/org/harbor/Windlass.java')},
+    'YardarmTest': {'testPost': lambda: 'import org.harbor.geo.Point;' in src('java/org/harbor/Yardarm.java')},
+    'YawlTest': {'testDrum': lambda: 'import org.harbor.geo.Point;' in src('java/org/harbor/Yawl.java')},
 }
 ELAPSED = os.environ.get('FAKE_RUNNER_ELAPSED', '0.03')
 named = [t for a in args if a.startswith('-Dtest=') for t in a[len('-Dtest='):].split(',')]
@@ -375,15 +445,19 @@ class HunkRevertCheckTest(unittest.TestCase):
             'Depth.java': 'behavior', 'Flare.java': 'behavior', 'Lighthouse.java': 'behavior',
             'Reef.java': 'behavior', 'Signal.java': 'behavior', 'Rope.java': 'skip (imports only)',
             'Windlass.java': 'behavior',  # an import swap whose name drum() still uses
+            'Zodiac.java': 'skip (imports only)',  # the same imports reordered: no name points elsewhere
             'Tide.java': 'skip (comments or whitespace only)',
             'notes.txt': 'skip (blank lines only)', 'signals.txt': 'behavior',
         }
         for name, status in expected.items():
             found = lines_with(r.stdout, '/' + name + ':')
-            self.assertEqual(len(found), 2 if name == 'Rope.java' else 1, (name, r.stdout))
+            two = name in ('Rope.java', 'Yardarm.java', 'Yawl.java')
+            self.assertEqual(len(found), 2 if two else 1, (name, r.stdout))
             self.assertIn(status, found[0])
         self.assertIn('behavior', lines_with(r.stdout, '/Rope.java:')[1])  # the deleted coil()
-        self.assertIn('10 behavior hunks of main...feature under src/main (4 skipped, 1 files without hunks)', r.stdout)
+        for name in ('Yardarm.java', 'Yawl.java'):  # each side of the split swap; the swap hunk and the deleted coil()
+            self.assertEqual([line.split()[1] for line in lines_with(r.stdout, name)], ['behavior', 'behavior'])
+        self.assertIn('14 behavior hunks of main...feature under src/main (5 skipped, 1 files without hunks)', r.stdout)
         # the changed line, past the hunk's leading context
         self.assertIn('Lighthouse.java:9 ', lines_with(r.stdout, 'Lighthouse.java')[0])
         self.assertIn('no hunks (binary or mode only)', lines_with(r.stdout, 'flag.bin')[0])
@@ -405,7 +479,10 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertIn('ReefTest.testDepth(String)[1]', lines_with(r.stdout, 'Reef.java:')[0])
         self.assertIn('does not compile', lines_with(r.stdout, 'Depth.java:')[0])
         self.assertIn('WindlassTest.testDrum', lines_with(r.stdout, 'Windlass.java:')[0])
-        self.assertIn('10 hunks checked: 4 red, 5 green, 1 no run', r.stdout)
+        yardarm, yawl = lines_with(r.stdout, 'Yardarm.java:')[:2], lines_with(r.stdout, 'Yawl.java:')[:2]
+        self.assertEqual([line.split()[0] for line in yardarm], ['red', 'red'])  # each half reverts with its partner
+        self.assertEqual([line.split()[0] for line in yawl], ['red', 'green'])  # coil() takes back its Consumer import
+        self.assertIn('14 hunks checked: 7 red, 6 green, 1 no run', r.stdout)
         report = r.stdout.split('no test went red for:')[1]
         for name in ('Buoy.java', 'Depth.java', 'Flare.java', 'Rope.java', 'Signal.java', 'signals.txt'):
             self.assertIn(name, report)
@@ -417,7 +494,7 @@ class HunkRevertCheckTest(unittest.TestCase):
     def test_each_run_sees_the_tip_with_one_hunk_reverted_on_a_scratch_commit(self):
         self.harbor.check(TESTS)
         runs = self.harbor.runs()
-        self.assertEqual(len(runs), 11)  # the baseline and 10 behavior hunks
+        self.assertEqual(len(runs), 15)  # the baseline and 14 behavior hunks
         baseline, hunks = runs[0], runs[1:]
         self.assertEqual((baseline['branch'], baseline['head'], baseline['changed']),
                          ('refs/heads/feature', self.harbor.tip, []))
@@ -434,7 +511,8 @@ class HunkRevertCheckTest(unittest.TestCase):
             self.assertLessEqual(earlier['end'], later['start'])
         self.assertEqual([run['changed'][0].rsplit('/', 1)[1] for run in hunks],
                          ['Buoy.java', 'Compass.java', 'Depth.java', 'Flare.java', 'Lighthouse.java', 'Reef.java',
-                          'Rope.java', 'Signal.java', 'Windlass.java', 'signals.txt'])
+                          'Rope.java', 'Signal.java', 'Windlass.java', 'Yardarm.java', 'Yardarm.java', 'Yawl.java',
+                          'Yawl.java', 'signals.txt'])
         rope = next(run for run in hunks if run['changed'][0].endswith('Rope.java'))['rope_imports']
         self.assertIn('import java.util.function.Consumer;', rope)  # coil() compiles back
         self.assertNotIn('import java.util.Map;', rope)  # removed in the same hunk, but coil() never names it
@@ -482,7 +560,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         r = self.harbor.check(f'-Dtest={forty},Gull40Test')
         self.assertEqual(r.returncode, 2)
         self.assertIn('41 classes: a revert check runs them once per hunk, so it takes 40 at most', r.stderr)
-        self.assertNotIn('41 classes', self.harbor.check('--list', f'-Dtest={forty}').stderr)
+        self.assertEqual(self.harbor.check('--list', f'-Dtest={forty}').returncode, 0)  # 40 is allowed
         self.assertEqual(self.harbor.runs(), [])
 
     def test_refuses_the_main_checkout_the_base_branch_a_dirty_tree_and_unknown_hunks(self):
@@ -532,6 +610,12 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.assertIn('did not report: BuoyTest', lines_with(r.stdout, 'Buoy.java:')[0])
         self.harbor.assert_restored(self)
 
+    def test_help_prints_the_usage(self):
+        r = subprocess.run([sys.executable, str(SCRIPT), '--help'], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue(r.stdout.startswith('bin/hunk-revert-check — revert each behavior hunk'), r.stdout[:80])
+        self.assertIn('Exit: 0 when every behavior hunk is red', r.stdout)
+
     def test_failures_no_line_names_still_make_a_hunk_red(self):
         r = self.harbor.check('--hunk', '1', TESTS, mode='unnamed-failure')
         self.assertEqual(lines_with(r.stdout, 'Buoy.java:')[0].split()[0], 'red', r.stdout + r.stderr)
@@ -547,7 +631,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         self.harbor.assert_restored(self)
 
     def test_the_fork_timeout_follows_the_time_the_baseline_classes_took(self):
-        for elapsed, timeout in (('100', '2500'), ('200', '2700')):  # 5 classes: 5x500 s; 5x1000 s is past the ceiling
+        for elapsed, timeout in (('50', '1750'), ('100', '2700')):  # 7 classes: 5x350 s; 5x700 s is past the ceiling
             self.harbor.env['FAKE_RUNNER_ELAPSED'] = elapsed
             self.harbor.check('--hunk', '1', TESTS)
             self.assertIn(f'-Dsurefire.timeout={timeout}', self.harbor.runs()[-1]['args'])
@@ -567,7 +651,7 @@ class HunkRevertCheckTest(unittest.TestCase):
         r = self.harbor.check(TESTS)
         self.assertEqual(r.returncode, 2)
         self.assertIn(f'another check (pid {os.getpid()}) is running', r.stderr)
-        self.assertEqual(len(self.harbor.runs()), 11)  # the refused check ran nothing
+        self.assertEqual(len(self.harbor.runs()), 15)  # the refused check ran nothing
 
     def test_an_edit_during_a_run_stops_the_check_and_keeps_the_edit(self):
         r = self.harbor.check(TESTS, mode='edit')

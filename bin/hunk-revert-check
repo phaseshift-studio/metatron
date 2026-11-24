@@ -19,22 +19,24 @@ Options:
   -U <n>          context lines per hunk (default: 3, git's); -U0 splits a hunk at every unchanged line
   --hunk <i,j>    check only these hunks
   --timeout <s>   surefire's fork timeout in every run (default: the pom's in the baseline; in a revert run, 5x the
-                  time the baseline's classes took, within 300..2700)
+                  time the baseline's classes took, summed over its forks, within 300..2700)
   --runner <cmd>  the build command line (default: bin/metatron-docker), run as `<cmd> build test -Dtest=...`
 
 Steps:
   1. Refuses unless it runs in a worktree (not the main checkout), on a branch other than the base, with no
      uncommitted change to a tracked file and no other check running in the same worktree.
   2. Splits the diff into hunks. A hunk that changes only comments, whitespace or imports (java, read with
-     bin/lib/java_lexer.py) or only blank lines (any other file) is skipped; --list shows each skip and why. An
-     import change that points a name the file still uses at another class is behavior, not skipped.
+     bin/lib/java_lexer.py) or only blank lines (any other file) is skipped; --list shows each skip and why. A
+     swap of single-type imports that points a name the file still uses at another class is behavior; other import
+     changes (an import for new code, a wildcard) stay skipped.
   3. Baseline: runs the classes once on the branch tip. It needs `Tests run:` above 0, a report from every named
      class and none from an unnamed one: a filter that fell back to the whole suite stops the check.
   4. Detaches HEAD at the tip. For each hunk it builds a scratch WIP commit (the tip with that hunk alone
      reverted, made with `git apply --cached -R` on a temporary index), moves HEAD to it with `git reset --keep`,
      runs the classes, and resets to the tip. The branch ref never moves, and only the hunk's file changes. When
      the lines a revert brings back name a class whose import the branch removed from that file (and imported from
-     nowhere else), that import line is put back too, so a deleted method compiles back.
+     nowhere else), that import line is put back too, so a deleted method compiles back; and the two halves of a swap
+     split over two hunks revert together.
   5. Re-attaches the branch and prints one line per hunk:
        red     a test that passed on the baseline failed: the hunk is tested (the failing tests are named)
        green   no test went red: nothing in these classes notices the hunk (expected for a hunk that only
@@ -66,6 +68,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.java_lexer import IMPORT_LINE, lex  # noqa: E402
+from lib.test_runs import MOST_CLASSES  # noqa: E402
 
 TEST_ENTRY = re.compile(r'[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*(#[\w$*+]+)?')
 HUNK_HEADER = re.compile(r'@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)')
@@ -77,7 +80,6 @@ TEST_FAILED = re.compile(r'^\[ERROR\] (?!Tests run:)(\S.*?) -- Time elapsed: .*<
 FORK_DIED = re.compile(r'timeout in the fork|forked VM terminated|error in the forked process', re.I)
 MAIN_COMPILED = re.compile(r'Compiling \d+ source files? .*\bto target/classes\b')
 TIMEOUT_FLOOR, TIMEOUT_CEILING = 300, 2700  # seconds; 2700 is the pom's surefire.timeout
-MOST_CLASSES = 40  # a revert check runs its classes once per hunk: a longer list is the suite's work
 
 
 class Stop(Exception):
@@ -271,24 +273,34 @@ def imported(line: str) -> str:
 
 
 def imports_back(hunk: Hunk, hunks: list[Hunk]) -> list[tuple[int, list[str]]]:
-    """The same file's import-only hunks, each narrowed to putting back the removed imports that the lines this
-    revert restores name, unless the branch imports that name anew (a swap: putting it back would clash)."""
+    """The import lines this revert needs from the file's other hunks, each such hunk narrowed to just those lines.
+    Put back: a removed import that the lines this revert restores name, unless the branch imports that name anew;
+    and the other half of a swap split over two hunks, so the old import comes back and the new one goes."""
+    def name(line: str) -> str:
+        return imported(line).rsplit('.', 1)[-1]
+
     restored = ''.join(line[1:] for line in hunk.lines[1:] if line.startswith('-'))
-    anew = {imported(line).rsplit('.', 1)[-1] for h in hunks if h.path == hunk.path for line in h.lines[1:]
-            if line.startswith('+')} - {''}
+    anew = {name(line) for h in hunks if h.path == hunk.path for line in h.lines[1:] if line.startswith('+')} - {''}
+    mine = {line[0] + name(line): imported(line) for line in hunk.lines[1:] if line[:1] in ('-', '+') and name(line)}
     narrowed = []
-    for other in (h for h in hunks if h.path == hunk.path and h.skip == 'imports only'):
-        body, back = [], 0
+    for other in (h for h in hunks if h.path == hunk.path and h is not hunk):
+        body, back, gone = [], 0, 0
         for line in other.lines[1:]:
-            name = imported(line).rsplit('.', 1)[-1] if line.startswith('-') else ''
-            if not line.startswith('-'):
-                body.append(' ' + line[1:] if line.startswith('+') else line)  # what the tip has stays
-            elif name and name not in anew and re.search(r'(?<![\w$])' + re.escape(name) + r'(?![\w$])',
-                                                              restored):
-                body.append(line)
+            sign, n = line[:1], name(line)
+            swapped = bool(n) and mine.get(('+' if sign == '-' else '-') + n, imported(line)) != imported(line)
+            if sign == '-' and n and (swapped or n not in anew and re.search(
+                    r'(?<![\w$])' + re.escape(n) + r'(?![\w$])', restored)):
+                body.append(line)  # put back
                 back += 1
-        if back:
-            narrowed.append((other.number, [f'@@ -{other.old_start},{other.new_len + back} '
+            elif sign == '+' and swapped:
+                body.append(line)  # the new half of a swap whose old half this revert puts back
+                gone += 1
+            elif sign == '+':
+                body.append(' ' + line[1:])  # what the tip has stays
+            elif sign != '-':
+                body.append(line)
+        if back or gone:
+            narrowed.append((other.number, [f'@@ -{other.old_start},{other.new_len - gone + back} '
                                             f'+{other.new_start},{other.new_len} @@\n'] + body))
     return narrowed
 

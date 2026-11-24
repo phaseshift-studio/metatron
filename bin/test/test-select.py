@@ -10,6 +10,7 @@ by fURITest; fsSpace is mounted by llmInstSetTest, sysInstSetTest and ObjZipSeri
     python3 bin/test/test-select.py
 """
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -45,6 +46,10 @@ HARBOR = {
     TEST_JAVA + 'MastTests.java': 'class MastTests { Beacon b; @RepeatedTest(2) void t() {} }',
     TEST_JAVA + 'RiggingTestCase.java': 'class RiggingTestCase { Beacon b; @TestFactory Object t() { return null; } }',
     TEST_JAVA + 'KeelTest.java': 'public class KeelTest { Beacon b; @Test void t() {} }',
+    TEST_JAVA + 'Squall.java': '@TestTemplate\npublic @interface Squall { }',  # a composed test annotation
+    TEST_JAVA + 'Gust.java': '@Squall\npublic @interface Gust { }',  # composed from a composed one
+    TEST_JAVA + 'GaleTest.java': 'class GaleTest { Beacon b; @Squall void t() {} }',
+    TEST_JAVA + 'GustTest.java': 'class GustTest { Beacon b; @Gust void t() {} }',
     TEST_JAVA + 'DeepKeelTest.java': 'public class DeepKeelTest extends KeelTest { }',
     TEST_JAVA + 'AbstractHarborTest.java': textwrap.dedent('''\
         /** the harbor's base: every test below runs with a beacon */
@@ -98,7 +103,7 @@ HARBOR = {
 SELECTED_FOR_BEACON = {'RowTest', 'QuoteTest', 'PercentTest', 'MemberTest', 'DriftTest', 'KeelTest', 'DeepKeelTest',
                        'TestLamp', 'MastTests', 'RiggingTestCase',
                        'PierTest', 'TrenchTest', 'HarborCheckTest', 'BollardTest', 'LanternTest', 'WickTest',
-                       'CaptainTest', 'ChartTest', 'ScratchTest'}
+                       'CaptainTest', 'ChartTest', 'ScratchTest', 'GaleTest', 'GustTest'}
 
 
 def selected(stdout: str) -> set[str]:
@@ -182,6 +187,11 @@ class SyntheticHarborTest(unittest.TestCase):
                                                                     'KnotsTest', 'FathomTest', 'KelpTest'})
         self.assertIn('names of 3 inputs (1 outside src/ and boot/ ignored: docs/beacon.md)', r.stderr)
 
+    def test_help_prints_the_usage(self):
+        r = self.select('--help')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue(r.stdout.startswith('bin/test-select — the test classes that use'), r.stdout[:80])
+
     def test_no_user_prints_nothing_and_fails(self):
         r = self.select('Lighthouse')
         self.assertEqual(r.returncode, 1)
@@ -215,6 +225,27 @@ class RecordedIncidentsTest(unittest.TestCase):
         self.assertIn('MariaDBMultiServerSingleSpaceTest', self.select('PeerNode'))
         self.assertIn('MariaDBMultiServerSingleSpaceTest',
                       self.select('src/test/java/studio/phaseshift/metatron/isa/m/mach/network/PeerNode.java'))
+
+    def test_a_composed_test_annotation_makes_a_test_class(self):  # @StatefulParametrizedTest is a @TestTemplate
+        scripted = {'MachineComponentScriptTest', 'MachineIsolationScriptTest', 'InstSetIsolationScriptTest',
+                    'NetworkComponentScriptTest', 'SysIsolationScriptTest', 'MemoryScriptTest', 'ProcessorScriptTest'}
+        self.assertEqual(self.select('StatefulParametrizedTest') & scripted, scripted)
+
+    def test_every_runnable_test_class_on_this_tree_is_a_test(self):
+        # the classes the rule can misjudge: test-named, with no JUnit test annotation in their own file. Each one
+        # judged a test selects itself (its file names it), so a name missing from the list is one the rule rejects
+        sources = REPO / 'src' / 'test' / 'java'
+        named = {p.stem: p for p in sources.rglob('*.java')
+                 if re.fullmatch(r'Test\w*|\w*(Test|Tests|TestCase)', p.stem)}
+        at_risk = {name: p for name, p in named.items() if not re.search(
+            r'@(Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)\b', p.read_text())}
+        self.assertGreater(len(named), 300)  # the population was read, not an empty tree
+        self.assertIn('MachineIsolationScriptTest', at_risk)  # a composed annotation's users are among them
+        rejected = set(at_risk) - self.select(*sorted(at_risk))
+        cannot_run = {name for name in rejected if re.search(
+            r'\b(abstract\s+class|interface|@interface)\s+' + name + r'\b', at_risk[name].read_text())}
+        # TestCategory holds @Tag names; DcmntSpaceLLMMemoryIntegrationTest's extends clause is commented out
+        self.assertLessEqual(rejected - cannot_run, {'TestCategory', 'DcmntSpaceLLMMemoryIntegrationTest'})
 
     def test_the_bare_uri_parser_reaches_furi_test(self):
         self.assertIn('fURITest', self.select('mParser.m_furi'))

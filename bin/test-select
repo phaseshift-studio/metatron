@@ -28,11 +28,12 @@ How:
      fsSpace reads a file), but not in a helper, an annotation or a base class: following a {@link} there pulls
      in classes that never run the change.
   3. Classes. A test class is a concrete class under src/test/java with surefire's name (Test*, *Test, *Tests,
-     *TestCase) and a test method (@Test, @ParameterizedTest, @RepeatedTest, @TestFactory, @TestTemplate) of its
-     own or from a class or interface above it: TestCategory, a holder of @Tag names, is no test. A user that is
-     a test class is selected with its test subclasses; an abstract class or an interface gives its concrete test
-     subclasses; any other user (a helper such as PeerCluster, a resource, a .java file under src/test/resources,
-     a boot file) is searched for in turn by its own name.
+     *TestCase) and a test method of its own or from a class or interface above it. A test method carries JUnit's
+     @Test, @ParameterizedTest, @RepeatedTest, @TestFactory or @TestTemplate, or an annotation under src/test/java
+     that carries one (@StatefulParametrizedTest is a @TestTemplate). TestCategory, a holder of @Tag names, is no
+     test. A user that is a test class is selected with its test subclasses; an abstract class or an interface
+     gives its concrete test subclasses; any other user (a helper such as PeerCluster, a resource, a .java file
+     under src/test/resources, a boot file) is searched for in turn by its own name.
 
 Prints `-Dtest=A,B,...` on stdout and how each class was reached on stderr; exits 1, printing nothing on stdout,
 when no test class uses the change (an empty -Dtest= would run the whole suite). A list longer than 40 classes is
@@ -47,13 +48,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.java_lexer import lex  # noqa: E402
+from lib.test_runs import MOST_CLASSES  # noqa: E402
 
 TEST_NAME = re.compile(r'Test\w*|\w*(Test|Tests|TestCase)')
-TEST_METHOD = re.compile(r'@(?:Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)\b')
+TEST_ANNOTATIONS = {'Test', 'ParameterizedTest', 'RepeatedTest', 'TestFactory', 'TestTemplate'}  # JUnit's
 FILE_NAME = re.compile(r'\.(java|mtron|xml|json|csv|txt|properties|yaml|yml|md|sql|html|py)$')
 DECLARATION = r'((?:\b(?:public|protected|private|abstract|final|sealed|non-sealed|static|strictfp)\s+)*)' \
               r'(class|@\s*interface|interface|enum|record)\s+{name}\b([^{{]*)\{{'
-WIDE = 40
 MTRON_DEFINITIONS = [re.compile(p, re.M) for p in (
     r'^\s*([A-Za-z_]\w*)\s*->\s*\|',  # name -> |inst...
     r'\b([A-Za-z_]\w*)\s*=>\s*\|',  # name => |inst... (a rec of instructions)
@@ -78,7 +79,8 @@ class JavaClass:
                         for part in re.findall(r'\b(?:extends|implements)\s+(.*?)(?=\b(?:implements|permits)\b|$)',
                                                header, re.S)
                         for name in part.split(',') if name.strip()}
-        self.own_tests = bool(TEST_METHOD.search(code))
+        self.code = code
+        self.own_tests = False  # a test method here: set once every annotation type is read
         self.test = False  # a concrete class, a test's name, tests own or inherited: set once every class is read
 
 
@@ -156,6 +158,13 @@ def main(argv: list[str]) -> int:
         for parent in c.parents:
             children.setdefault(parent, set()).add(c.name)
 
+    marks = set(TEST_ANNOTATIONS)  # and every annotation type that carries one, to a fixed point
+    while composed := {c.name for c in classes.values() if c.kind == '@interface' and c.name not in marks
+                       and re.search(r'@(?:' + '|'.join(map(re.escape, marks)) + r')\b', c.code)}:
+        marks |= composed
+    for c in classes.values():
+        c.own_tests = bool(re.search(r'@(?:' + '|'.join(map(re.escape, marks)) + r')\b', c.code))
+
     def has_tests(c: JavaClass, seen: set[str]) -> bool:
         return c.own_tests or any(has_tests(classes[parent], seen | {c.name}) for parent in c.parents
                                   if parent in classes and parent not in seen)
@@ -223,10 +232,9 @@ def main(argv: list[str]) -> int:
     if not selected:
         print('test-select: no test class uses these names', file=sys.stderr)
         return 1
-    print(plural(len(selected), 'test class') + (f': a wide radius (over {WIDE}), which bin/hunk-revert-check refuses; '
-                                                 f'agents run targeted classes, never the full suite, so name the '
-                                                 f'gating classes with Marko' if len(selected) > WIDE else ''),
-          file=sys.stderr)
+    wide = (f': a wide radius (over {MOST_CLASSES}), which bin/hunk-revert-check refuses; agents run targeted '
+            f'classes, never the full suite, so name the gating classes with Marko')
+    print(plural(len(selected), 'test class') + (wide if len(selected) > MOST_CLASSES else ''), file=sys.stderr)
     print('-Dtest=' + ','.join(sorted(selected)))
     return 0
 
