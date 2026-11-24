@@ -34,7 +34,6 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import static studio.phaseshift.metatron.Tokens.DEBUG;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
@@ -62,25 +61,6 @@ public final class Executor {
 
     public Executor(final Console console) {
         this.console = console;
-    }
-
-    /**
-     * THE CONSOLE'S LINE IS COMPILED BEFORE ANYTHING READS ITS RESOLUTION, in the current machine, as every program
-     * is compiled (parse, rewrite, resolve, type: the ws eval's order). Resolved first, its resolution was read before
-     * the nomadic extractor cut it, so the instructions of a tail, which the machine it lands in resolves, were
-     * reported here as dynamic resolution (and refused under the typer's code_resolve check). What the compiler left
-     * unresolved is handed to {@code unresolved}, which is not called when nothing is.
-     *
-     * @param segment    one statement of the line, as written
-     * @param unresolved told which instructions run unresolved, to be resolved when they run
-     * @return the line as the current machine compiled it
-     */
-    public static Code compile(final Code segment, final Consumer<List<Inst>> unresolved) {
-        final Code compiled = Machine.current().compiler().apply(segment).asCode();
-        final List<Inst> open = Call.Helper.getUnresolvedInsts(compiled);
-        if (!open.isEmpty())
-            unresolved.accept(open);
-        return compiled;
     }
 
     /**
@@ -138,12 +118,16 @@ public final class Executor {
                     // (The pane binding is the OUTPUT side -- console.getActivePane().machine(mach) below -- so
                     // reading the perspective here does not steal it.)
                     final Machine machine = Machine.current();
-                    final Code compiled = compile(segment, unresolved -> {
+                    // THE LINE IS COMPILED BEFORE ANYTHING READS ITS RESOLUTION, as the ws eval compiles a program: read
+                    // first, a tail's instructions, the landing machine's to resolve, were reported here
+                    final Code compiled = machine.compiler().apply(segment).asCode();
+                    final List<Inst> unresolved = Call.Helper.getUnresolvedInsts(compiled);
+                    if (!unresolved.isEmpty()) {
                         if (Typer.Helper.codeResolve())
                             throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
                         this.console.getStatus().setState(Level.WARN);
                         segment.logger().status(DEBUG, "{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
-                    });
+                    }
                     final Computer mach = machine.processor().apply(compiled);
                     //  final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     // persist in HALTED collection

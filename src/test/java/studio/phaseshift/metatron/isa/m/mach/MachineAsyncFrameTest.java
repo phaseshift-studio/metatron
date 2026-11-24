@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
-import studio.phaseshift.metatron.isa.m.sys.ui.console.Executor;
 
 import java.util.List;
 
@@ -47,8 +46,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
  * the worker publishes where it landed ({@link AbstractThread#landedPerspective()}), which the session then
  * adopts. These tests pin that boundary.
  * <p>
- * Each line is driven exactly the way {@code console.Executor.execute} does — parse, compile ({@link Executor#compile}),
- * run on a worker, adopt the worker's landing — so a regression in the boundary shows up here as the wrong {@code ~}.
+ * Each line is driven exactly the way {@code console.Executor.execute} does — parse, compile, run on a worker, adopt
+ * the worker's landing — so a regression in the boundary shows up here as the wrong {@code ~}.
  */
 public class MachineAsyncFrameTest extends AbstractMetatronTest {
 
@@ -61,8 +60,7 @@ public class MachineAsyncFrameTest extends AbstractMetatronTest {
                 ? parsed.asCode()
                 : MCode.of(List.of(parsed.isInst() ? parsed.as() : MInst.instB(START_INST_TID, MLst.lst(parsed))));
         final Machine machine = Machine.current();
-        final Code compiled = Executor.compile(segment, unused -> {
-        });
+        final Code compiled = machine.compiler().apply(segment).asCode();
         final Computer mach = machine.processor().apply(compiled);
         final Obj result = mach.applyAsync().get();
         // the worker records its landing BEFORE the future completes (AbstractThread.complete), so get() returning

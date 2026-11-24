@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.CODE;
 import static studio.phaseshift.metatron.Tokens.M_ISA_REWRITE_TID;
 import static studio.phaseshift.metatron.Tokens.PRE;
@@ -201,7 +200,7 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
         // the console's input: the machine change is bound, and its tid carries the range and domain that hid it
         final Inst nomadic = resolved.insts().stream()
                 .filter(inst -> NOMADIC.contains(inst.tid().basePath())).findFirst().orElseThrow();
-        assertTrue(nomadic.isResolved(false) && nomadic.hasDomOrRng(), "resolution binds the machine change: " + nomadic.tid());
+        checkEquality(LOG, bool(true), bool(nomadic.isResolved(false) && nomadic.hasDomOrRng()), true);
         final Code planned = Machine.current().compiler().rewriter().apply(resolved).asCode();
         checkEquality(LOG, jnt(kept + 1), jnt(planned.insts().size()), true);
         final Inst cut = planned.insts().get(kept);
@@ -239,11 +238,16 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     /**
      * THE COMPILER LEAVES A CUT'S TAIL TO ITS TARGET: compiled here, the cut is bound and its tail is not, and the chain
      * has nothing left open here (a cut's tail is not this machine's to resolve), so the console reports no dynamic
-     * resolution for a move.
+     * resolution for a machine change. Each row: the line.
      */
-    @Test
-    void testTheCompilerLeavesACutsTailToItsTarget() {
-        final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse("{1,2,3,4}.move(<..>).plus(1).sum()")).asCode();
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4}.move(<..>).plus(1).sum()",
+            "5.push(<a>).plus(1).mult(2)",
+            "5.pop().plus(1).mult(2)",
+    }, delimiter = '%')
+    void testTheCompilerLeavesACutsTailToItsTarget(final String mtron) {
+        final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse(mtron.trim())).asCode();
         final Inst cut = compiled.insts().getLast();
         checkEquality(LOG, uri(CUT_INST_TID), uri(cut.tid().basePath()), true);
         checkEquality(LOG, bool(true), bool(cut.isResolved(false)), true);
@@ -297,18 +301,22 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     }
 
     /**
-     * NOTHING IS LEFT OPEN HERE FOR CODE THAT RUNS ELSEWHERE OR LATER: a blocking instruction applies its arguments
-     * itself (a cut's tail where it lands, a profile's program on each timed run), so the compiled line has no
-     * unresolved instruction and the console reports no dynamic resolution. Each row: the line.
+     * WHAT A COMPILED LINE LEAVES OPEN HERE, AND ONLY THAT (the console's dynamic-resolution report): a plus on a
+     * variable of no known type runs unresolved, while the same instructions as a move's tail are the landing
+     * machine's, and a blocking instruction applies its arguments itself (a cut's tail where it lands, a profile's
+     * program on each timed run). The console compiles a line before it reads this; read first, the move's tail was
+     * reported. Each row: the line % whether anything is left open.
      */
     @ParameterizedTest
-    @CsvSource({
-            "{1,2,3,4}.move(<..>).plus(1).sum()",
-            "1.plus(2).profile()",
-    })
-    void testACompiledLineLeavesNothingOpenHere(final String mtron) {
+    @CsvSource(value = {
+            "*abc.plus(2)                        % true",
+            "5.move(<..>).*abc.plus(2)           % false",
+            "{1,2,3,4}.move(<..>).plus(1).sum()  % false",
+            "1.plus(2).profile()                 % false",
+    }, delimiter = '%')
+    void testWhatACompiledLineLeavesOpenHere(final String mtron, final boolean open) {
         final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse(mtron.trim())).asCode();
-        checkEquality(LOG, jnt(0), jnt(Call.Helper.getUnresolvedInsts(compiled).size()), true);
+        checkEquality(LOG, bool(open), bool(!Call.Helper.getUnresolvedInsts(compiled).isEmpty()), true);
     }
 
     /**

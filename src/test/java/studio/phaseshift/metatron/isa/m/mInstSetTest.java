@@ -41,7 +41,6 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.Tuple;
-import studio.phaseshift.metatron.isa.m.sys.ui.console.Executor;
 
 import java.util.Map;
 
@@ -1654,9 +1653,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "map(1.plus(2).explain())  % /m/inst/explain/explanation",
     }, delimiter = '%')
     public void testAnalysisSurvivesTheProcessorWalk(final String code, final String expectedVID) {
-        // the console's path: compile (Executor.compile), then run the compiled chain on the processor
-        final Code compiled = Executor.compile(ObjmtronSerializer.parse(code).asCall().asCode(), ignored -> {
-        });
+        // the console's path: compile, then run the compiled chain on the processor
+        final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse(code)).asCode();
         // the processor walks a chain by position vid, so an un-numbered inst is a walk it cannot make
         for (final Inst inst : compiled.insts())
             assertNotNull(inst.vid(), "a compiled inst must carry its position vid: " + inst.tid() + " in " + code);
