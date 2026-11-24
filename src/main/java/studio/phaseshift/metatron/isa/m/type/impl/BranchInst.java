@@ -66,10 +66,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     barrier a DISTRIBUTION REWRITE states on the branch it emits, never the instruction's own default.</li>
  *     <li>A LAYOUT routes its lanes ({@link #lanes}): a member headed by a move, or the cut it compiles to, runs where
  *     that cut carries it, a path to that local machine, a host to that peer, every machine change on the one
- *     mechanism; and under {@code ?split=part} the branch deals its lhs by the lanes' weights, the point on each head
- *     ({@link #weight}, {@link #deal}). A KEYED call is read as the lanes it means, {@code <p> => program} the lane
- *     {@code cut(<p>, program)}, a lane keyed {@code <~>} running here with no cut, and a key's {@code ?split={w}part}
- *     its weight.</li>
+ *     mechanism, and a member headed by neither is a home lane; under {@code ?split=part} the branch deals its lhs
+ *     by the lanes' weights, the point on a lane's move and one share for a home lane ({@link #weight},
+ *     {@link #deal}). A KEYED call is read as the lanes it means, {@code <p> => program} the lane
+ *     {@code cut(<p>, program)}, a lane keyed {@code <~>} a home lane (timed by a cut that stays), and a key's
+ *     {@code ?split={w}part} its weight.</li>
  *     <li>EVERY LANE IS A {@code virtual::T}, submitted before any is awaited, so the lanes overlap and the branch
  *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await). A lane's
  *     {@code ?timeout} is its cut's to keep ({@link #lane}).</li>
@@ -149,8 +150,9 @@ public class BranchInst extends MInst {
             final List<Inst> insts = program(member);
             final Inst head = insts.isEmpty() ? null : insts.getFirst();
             final fURI base = null == head ? null : head.tid().basePath();
-            // move() is move(<..>); a target computed when the move or the cut runs names no place here
-            final fURI place = (CUT_INST_TID.equals(base) || MOVE_INST_TID.equals(base)) && head.arg(0).isUri() ? head.arg(0).uriValue()
+            // move() is move(<..>); a target computed when the move runs names no place here
+            final fURI place = CUT_INST_TID.equals(base) ? head.arg(0).uriValue()
+                    : MOVE_INST_TID.equals(base) && head.arg(0).isUri() ? head.arg(0).uriValue()
                     : MOVE_INST_TID.equals(base) && head.arg(0).isNoObj() ? fURI.Singleton.f("..")
                     : null;
             final boolean lane = null != place && !home(place);
@@ -167,12 +169,13 @@ public class BranchInst extends MInst {
     }
 
     /**
-     * Whether a branch is a LAYOUT: it routes its lanes (a key, a lane headed by a move or a cut) or deals its lhs
-     * ({@code ?split=part}), so a planner does not plan around it and a rewrite neither inlines it nor sums its members.
+     * Whether a branch is a LAYOUT: it routes its lanes (a key, a lane headed by a move or a cut) or splits its lhs
+     * ({@code ?split}, a deal or a copy), so a planner does not plan around it, a rewrite neither sums nor factors its
+     * members, and only a lone lane that runs here is inlined.
      */
     public static boolean isLayout(final Inst inst) {
         return BRANCH_INST_TID.equals(inst.tid().basePath())
-                && (inst.args().isRec() || 0 < weight(inst.tid().q(SPLIT)) || lanes(inst).stream().anyMatch(lane -> !lane.home()));
+                && (inst.args().isRec() || inst.tid().hasQ(SPLIT) || lanes(inst).stream().anyMatch(lane -> !lane.home()));
     }
 
     /**

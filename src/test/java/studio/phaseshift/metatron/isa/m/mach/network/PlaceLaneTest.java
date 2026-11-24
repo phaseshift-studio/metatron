@@ -56,7 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 /**
  * {@code ?place} AT THE EMITTER (C5 of {@code distributed-qparams-implementation.md}): the place set a fold states —
  * the plan's distributing set, overridden by a {@code ?place} on any instruction of the chain — resolved into
- * <em>lanes</em> of one branch, one per distinct place, the home place first.
+ * <em>lanes</em> of one branch, a peer's shares one lane and home's one lane apiece, the home place first.
  *
  * <p><b>The oracle is the law, not the layout.</b> Every row that emits also asserts the value, because a place axis
  * is result-preserving (Thm 19): {@code distribute(c) ≡ c}. The lane <em>structure</em> is the other half — a home
@@ -147,13 +147,26 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         final Code emitted = lower(alone(), "start?place=[local,local,local,local]({1,2,3,4,5,6,7,8})." + tail);
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
         assertEquals(4, layout.lanes().size(), "four home shares are four home lanes: " + emitted);
-        assertTrue(layout.lanes().stream().allMatch(DistributedSweep.Lane::local), "a peerless machine's lanes stay home: " + emitted);
+        assertEquals(List.of(true, true, true, true), layout.lanes().stream().map(DistributedSweep.Lane::local).toList(),
+                "a peerless machine's lanes stay home: " + emitted);
         assertEquals(List.of("part", "part", "part", "part"), layout.lanes().stream().map(DistributedSweep.Lane::split).toList(),
                 "each home lane takes one share: " + emitted);
         assertEquals(List.of(2, 2, 2, 2), layout.lanes().stream().map(lane -> lane.part().size()).toList(),
                 "the plan deals each two of the eight: " + emitted);
         checkEquality(LOG, jnt(expected),
                 evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * A COPY ON A PEERLESS MACHINE IS STILL A LAYOUT: its home shares are one lane holding the whole seed, which runs on
+     * a lane's thread as every lane of a split branch does. The value is the local fold's.
+     */
+    @Test
+    void testAPeerlessCopyIsStillALayout() {
+        final Code emitted = lower(alone(), "start?place=[local,local]({3,1,4,1,5}).sup?split=copy()");
+        assertEquals(List.of("copy"), DistributedSweep.layout(emitted).lanes().stream().map(DistributedSweep.Lane::split).toList(),
+                "one home lane copies the seed: " + emitted);
+        checkEquality(LOG, jnt(5), evaluate(emitted).clone().selfVID(null), true);
     }
 
     /**

@@ -305,10 +305,11 @@ public final class Shard {
         // THE FORM IS RESTATED, NEVER THE NUMBER: the lane's budget is the same arity with the height decremented and
         // the unstated arity keeps its spelling; below a height of one the leaf states the bare point, 0.
         final Obj budget = 1 == hop.height() ? jnt(0) : Hop.of(hop.height() - 1, hop.arity()).toObj();
-        // ONE LANE PER DISTINCT PLACE, in the lane order: the home place is <~>, a peer is its authority. Under the seed
-        // axis the n shares a peer takes are one lane weighted n, the point on its move, while home's n shares are n
-        // home lanes, as a home lane has no move to weigh; under the run axis and a copy a place is one lane, at most
-        // one per unroll or copy, its share chosen by WORK for a span (splitByCost) and evenly for a point.
+        // THE LANES, in the lane order, the home place's first: a peer is one lane at its authority, and so is home
+        // under the run axis and a copy. Under the seed axis the n shares a peer takes are one lane weighted n, the
+        // point on its move, while home's n shares are n home lanes, as a home lane has no move to weigh. Under the run
+        // axis a lane is at most one per unroll or copy, its share chosen by WORK for a span (splitByCost) and evenly
+        // for a point.
         final Map<fURI, Integer> places = new LinkedHashMap<>();
         shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
         final List<Map.Entry<fURI, Integer>> keys = places.entrySet().stream()

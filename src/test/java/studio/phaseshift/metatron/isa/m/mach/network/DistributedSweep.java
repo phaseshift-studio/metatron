@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
  * <pre>{@code
  * final Layout layout = DistributedSweep.layout(compiled);
  * layout.ops();              // [branch, sum] for a literal seed, [start, …prefix, branch, sum] for a computed one
- * layout.lanes().size();     // one per key: one per distinct place
+ * layout.lanes().size();     // one per lane: a peer's shares one lane, home's one lane apiece
  * layout.lane(0).split();    // its share: part, {2}part, copy
  * layout.lane(0).part();     // the slice the branch deals that lane
  * layout.lane(0).budget();   // its ?hop, as the lane states it

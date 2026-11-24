@@ -405,9 +405,9 @@ partials through the combiner: the chain **expands** into one lane per place and
 - **A run partition replicates the seed and narrows the exponent.** A seeded lane carries the whole seed and its own
   subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. After a cut the
   seed is computed, so the branch copies it to every lane (`branch?<=T{*}&split=copy(…)`). See *the run partition*.
-- A peer with n shares is one lane weighted n, the point on its cut (`cut{n}(<p_i?hop=h>, …)`, the keyed spelling's
-  `?split={n}part`); home's n shares are n home lanes, as a home lane has no move to weigh. `?split=copy` hands every
-  lane the whole seed.
+- Under the seed axis, a peer with n shares is one lane weighted n, the point on its cut (`cut{n}(<p_i?hop=h>, …)`,
+  the keyed spelling's `?split={n}part`), and home's n shares are n home lanes, as a home lane has no move to weigh.
+  Under the run axis and `?split=copy`, each place is one lane, and a copy hands every lane the whole seed.
 - A lane ships raw. The master's compiler never binds a lane; each is compiled where it runs (server side for a host,
   by that machine's compiler for a machine path).
 

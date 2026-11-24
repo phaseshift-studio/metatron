@@ -1291,8 +1291,8 @@ public class mInstSet extends AbstractInstSet {
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
-                                // A POSITIONAL DEAL IS NO ONE-TERM SUM EITHER: its member's head point is its weight, the
-                                // share the deal consumes (BranchInst#lanes), which an inlined member would run as copies
+                                // A POSITIONAL SPLIT IS NO ONE-TERM SUM EITHER: a lane's move point is its weight, the share
+                                // the deal consumes (BranchInst#lanes), which an inlined member would run as copies
                                 if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)
                                         && (inst.args().isRec() || !inst.tid().hasQ(SPLIT))) {
                                     final Obj lone = inst.args().isRec() ? BranchInst.lanes(inst).getFirst().member() : inst.arg(0);
@@ -1997,9 +1997,11 @@ public class mInstSet extends AbstractInstSet {
                     // the master dealt the lane to, read through this machine's names (//0), else //host:port, and
                     // //local for a lane at home. The lanes answer in their order, one report each
                     // (BranchInst#route), so report i is lane i's. A run whose reports do not line up with its routes
-                    // keys them by the machine that made them, as does a name two lanes share (several lanes at home):
-                    // a report is never dropped for a collision. A report that names no machine (one made in a machine
-                    // without a vid) is the local one by construction.
+                    // keys them by the machine that made them, as does a name two lanes share (two lanes at home). A
+                    // third report on one name and one machine (law_shard's third home lane) takes the second's key,
+                    // so it overwrites that report: not yet fixed, as a peerless shard collates no lane report at all
+                    // yet. A report that names no machine (one made in a machine without a vid) is the local one by
+                    // construction.
                     final List<Obj> reports = gathered.get().stream().filter(Obj::isRec).toList();
                     final List<Obj> keys = run.insts().stream()
                             .filter(BranchInst::isLayout)

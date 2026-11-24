@@ -291,11 +291,11 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=soon(<loop://slow>).plus(1)", "<ERROR>");
             // A HOME LANE HAS NO MOVE, so a cut that stays times it, a key's as a member's: it answers in time or fails
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=1> => sleep(second::3.0))", "<ERROR>");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=5> => sleep(second::1.0))", "1");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=5> => sleep(second::3.0))", "1");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(sleep(second::3.0))", "<ERROR>");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=5(sleep(second::1.0))", "1");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=5(sleep(second::3.0))", "1");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=2(sleep(second::3.0),move(<loop://slow>).plus(1))", "<ERROR>");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=2(sleep(second::1.0),move(<loop://slow>).plus(1))", "{1,2}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=5(sleep(second::3.0),move(<loop://slow>).plus(1))", "{1,2}");
         } finally {
             Machine.current().network().drop(f("loop://slow"));
         }
@@ -316,6 +316,7 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slower?timeout=10> => plus(1))", "2");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move?timeout=10(<loop://slower>).plus(1),plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=10(<~> => sleep(second::6.0))", "1");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=10> => sleep(second::6.0),<loop://slower?timeout=10> => plus(1))", "{1,2}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?<=int{*}&split=part(plus(1).move?timeout=10(<loop://slower>).plus(1))", "3");
         } finally {
             Machine.current().network().drop(f("loop://slower"));
@@ -334,15 +335,15 @@ public class BranchLaneTest extends AbstractMetatronTest {
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=1(<branch_late>).sleep(second::2.0).to(<~/branch/late>)", "<ERROR>");
             AbstractMetatronTest.checkEquality(LOG, uri(root.vid()), uri(Machine.current().vid()), true);
-            CommonUtil.sleepThread(2500);
+            CommonUtil.sleepThread(4000);
             Machine.Helper.evalAt(late, () -> {
                 AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/late>", "noobj");
                 return noobj();
             });
             // the same run given the time it needs writes, so the write above was stopped, not missed
-            AbstractMetatronTest.checkCodeParseApply(LOG, "2.move?timeout=5(<branch_late>).sleep(second::1.0).to(<~/branch/late>)", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=5(<branch_late>).sleep(second::2.0).to(<~/branch/late>)", "1");
             Machine.Helper.evalAt(late, () -> {
-                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/late>", "2");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/late>", "1");
                 return noobj();
             });
         } finally {
@@ -359,12 +360,27 @@ public class BranchLaneTest extends AbstractMetatronTest {
     public void testALaneTheBranchGaveUpOnIsStopped() {
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "3.branch?<=int{*}&split=part(sleep(second::7.0).to(</branch/given_up>))", "<ERROR>");
-            CommonUtil.sleepThread(3000);
+            CommonUtil.sleepThread(5000);
             AbstractMetatronTest.checkCodeParseApply(LOG, "*</branch/given_up>", "noobj");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "4.branch?<=int{*}&split=part(sleep(second::1.0).to(</branch/given_up>))", "4");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "*</branch/given_up>", "4");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "3.branch?<=int{*}&split=part&timeout=10(sleep(second::7.0).to(</branch/given_up>))", "3");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*</branch/given_up>", "3");
         } finally {
             Machine.write(f("/branch/given_up"), noobj());
+        }
+    }
+
+    /**
+     * A TARGET COMPUTED WHEN THE MOVE RUNS NAMES NO PLACE YET: a member headed by such a move is a home lane, so a deal
+     * hands it one share and its point is copies of what it answers. (A cut's target is a uri as written: a computed one
+     * is refused when the cut binds.)
+     */
+    @Test
+    public void testAComputedTargetIsAHomeLane() {
+        try {
+            Machine.write(f("/branch/to"), uri(f("~")));
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4}.branch?<=int{*}&split=part(move{2}(*<~/branch/to>).count(),count())", "{4,2}");
+        } finally {
+            Machine.write(f("/branch/to"), noobj());
         }
     }
 

@@ -1034,7 +1034,8 @@ public class machInstSet extends AbstractInstSet {
                                         against the current machine, and an address that walks past the root saturates
                                         there rather than failing. Followed by more of the chain, a move compiles to the
                                         cut that runs it there, which keeps the move's ?timeout=n and its target's ?hop
-                                        budget; heading a branch member, it is a lane, and its point the lane's weight.""")
+                                        budget. Heading a branch member, a move to a written place other than ~ or . is
+                                        a lane, and under branch?split=part its point is the lane's share.""")
                                 .example("move(<..>)          [-- up: the parent machine, without closing this one --]")
                                 .example("move()              [-- the same instruction --]")
                                 .example("move(<../b>)        [-- across, to the sibling b --]")
@@ -1138,9 +1139,10 @@ public class machInstSet extends AbstractInstSet {
                                         dialed is a failure. The tail
                                         ends at `explain()` and `profile()`, the return home: they stay after the cut
                                         and analyze it where the expression began. A cut holds every timeout:
-                                        cut?timeout=n waits n seconds for its run and stops it, failing, when it runs
-                                        longer, and a move's or a branch's ?timeout compiles onto its cut. The target's
-                                        ?hop is the budget of what the cut compiles or ships.""")
+                                        cut?timeout=n waits n seconds for its run and fails when it runs longer, stopping
+                                        the run's thread here (a shipped program's peer is not reached), and a move's or
+                                        a branch's ?timeout compiles onto its cut. The target's ?hop is the budget of
+                                        what the cut compiles or ships.""")
                                 .law(Law.nomadic)
                                 .example("5.move(<a>).plus(1)           [-- compiles to 5.cut(<a>, plus(1)): /a compiles plus(1) --]")
                                 .example("push(b).plus(1)               [-- compiles to push(b).cut(<~>, plus(1)): /b compiles plus(1) --]")
