@@ -9,7 +9,7 @@ description: |
   rules are /m's, and so are `law_shard` and `law_bsp` since 2026-11-24; `law_bsp`, the superstep of entry N, is `Bsp`).
   One row per pattern (A–W): its algebraic law (the latex), the mtron
   you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif).
-  A play button marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented
+  A play button plays a pattern's recorded cast; a ✅ in the taxonomy tree marks it implemented. A span range is a **second index set** (the *run partition*), documented
   below with the seed partition it complements.
   TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a
   distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's
@@ -159,8 +159,8 @@ An unreadable `?split` is refused loudly (the key and the text), never defaulted
 
 ### the run partition — a span range is an index set (menu entry V)
 
-`?split` partitions the **seed**; a span range partitions the **run** — menu entry **V**, the *generative run*. (`P`,
-"computed seeds", is its sibling over a generated *data* index space; V's index is the exponent.) A coefficient `{m,n}`
+`?split` partitions the **seed**; a span range partitions the **run** — menu entry **V**, the *generative run*. (Computed
+seeds (P) is its sibling over a generated *data* index space; the generative run's index is the exponent.) A coefficient `{m,n}`
 on an instruction is the sum of its unrolls, `a^[m,n] = a^m + … + a^n`, and the unrolls are independent terms — so when
 the seed is a singleton and the run carries a closed range, `law_shard` factors the **unroll index**: one lane per
 distinct place, each carrying the **whole** seed and the run with its span narrowed to that place's share (`{p_i,q_i}`,
@@ -235,7 +235,9 @@ of round trips a lane's share costs, not how the index set was split.
 ## the menu
 
 The centerpiece: every pattern, the law that makes it sound, and what it does; then the mtron each one rewrites.
-A ▶ play button = implemented today (it plays the pattern's cast); no play button = the law is sound but the lowering is not yet written.
+A ▶ play button plays the pattern's recorded cast. What is implemented is a ✅ in the taxonomy tree below, the one
+place that says so; a pattern can be done before it has a cast. The key letters index the menu: in prose for a
+reader, name the pattern and keep its letter in parentheses, as in *the run partition (V)*.
 
 | key   | play                                                                                                 | pattern                     | law                                                                                                                                | description                                                                                       |
 |-------|------------------------------------------------------------------------------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
@@ -296,7 +298,7 @@ single expression shows.
 | **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK     |
 | **W** | `{1,…,8}.complex_computation()`                                    | `branch?<={0}(<p_i> => start?hop=0(part_i).complex_computation(), …)`, and no combiner             |
 
-**Legend.** ▶ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
+**Legend.** The dates behind the tree's ✅ (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 — a
 **singleton** seed and a **closed** span range — and 2026-11-18 every cut plans its run; see *the run partition*). `P`
 is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated *data* space, while
@@ -368,7 +370,8 @@ The four top branches read the two axes of `docs/design/distributed-patterns-thr
 - **composite & substrate** builds on the rest: `N` iterates a dealt superstep (`law_bsp`), `R` writes results to a spatial
   address, `M` decomposes into O / A / G over three index splits, `I` lowers the plan's axes to a layout.
 
-Implemented is a ▶ play button in the table, a ✅ (green) in the tree; white = the law holds, the lowering is unwritten.
+Implemented is a ✅ (green) in this tree, and only here; white = the law holds, the lowering is unwritten. A ▶ in the
+menu plays a recorded cast, which a done pattern may not have yet.
 
 ## the implemented layouts, spelled out
 
@@ -455,7 +458,7 @@ The axis resolves per run, in chain order — the first statement among the run'
 the run before it resolved, else the plan's tree route (default height 1, the star). A statement governs from where it
 stands onward: `start?hop=0(…)` keeps a whole chain home, while `?hop=0` on the last fold keeps only that run home. The
 `?place` and `?split` axes resolve the same way. A peer re-plans its part because applying a code compiles it
-(`Machine.applyCode`). The lane restates the form, never the number (see *?hop*): `{2}2 ⇒ {2}1 ⇒ 0`. A chain (`[h,1]`)
+(`Machine.evaluate(lhs, code)` prepends `start(lhs)` and runs the compiler). The lane restates the form, never the number (see *?hop*): `{2}2 ⇒ {2}1 ⇒ 0`. A chain (`[h,1]`)
 hands the whole part to one child, so the tree is a line.
 `?hops` is the deprecated pre-singular spelling of the same key: it is read for one cycle, `?hop` wins at the same
 position (both keys on one instruction), and the earliest statement wins across positions.
@@ -682,6 +685,9 @@ it is handed is pure too, so `is(gt(4))` ships and `is(print(_).gt(4))` keeps th
 instruction is still bare when `law_shard` runs, before resolution, so it stays home until its peers can run it.
 
 ## how the entries compose
+
+This section composes the menu's keys, so it writes them as letters. Outside an index like this one, name the
+pattern and keep its letter in parentheses.
 
 - **E applies to every A-fold**, and to G, J, K and L: any combiner recombines at any interior node, and a K lane
   re-planned below the root absorbs its select again.

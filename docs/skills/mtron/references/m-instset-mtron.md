@@ -568,6 +568,16 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 ?int::T    [-- check if type is int --]
 ```
 
+`?x` is `isa(x)`. Only `?=`, `?>` and `?<` are filter sugar (`?>5` is `is(gt(5))`), so `int::T[?gt(5)]` asks
+whether an obj is an instance of the instruction `gt(5)`, and the filter is `int::T[?>5]`. A rec after `?` is a
+structural type matched open-world: `?[name=>'marko']` passes any rec that holds that field, whatever else it holds,
+and a field's value can itself be a predicate (`?[age=>?>30]`).
+
+```mtron_pre
+{3,6,9}.?>5                                [-- 6, 9: the filter sugar --]
+[name=>'marko',age=>29].?[name=>'marko']   [-- the rec: age is extra, and the match is open-world --]
+```
+
 ---
 
 ## 22. code pattern matching
@@ -674,6 +684,10 @@ nothing, so it defines no type. So:
 | `;`       | `end()`          | sequence separator       |
 | `?type`   | `isa(type)`      | type/condition check     |
 | `==`      | `select()`       | structural select        |
+
+A brace glued to a prefix sugar is that sugar's leading brace, as `{2}` is in `{2}plus(1)`: `{1,2}?>5` is
+`{1,2}is(gt(5))` with no lhs, while `{1,2}.?>5` filters the literal `{1,2}`. The stream sugars `-<`, `>-` and `-<|`
+are the exception: they read a glued brace as their lhs.
 
 ---
 
