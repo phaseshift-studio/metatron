@@ -401,8 +401,8 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(
             value = {"[a=>{[1,2,3],[2,3],[1,2,3]}] % [a=>{{2}[1,2,3],[2,3]}]", "{[1,2,3],[2,3],[1,2,3]}      % {{2}[1,2,3],[2,3]}",
-                    // a uri's own point is drawn inside its brackets (bare, a trailing {n} reads as the value's span),
-                    // the obj's coefficient before them
+                    // a uri's own point is drawn inside its brackets (in the notation a bare trailing {n} is a span's
+                    // place), the obj's coefficient before them
                     "/a/a/b{6}                    % </a/a/b{6}>",
                     "{2}a/b/c{3}                  % {2}<a/b/c{3}>",
                     "/a + /a                      % </a{2}>",

@@ -301,9 +301,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 // a value that leads with its span: bare, a leading {n} is the obj coefficient ({2}/a/b is two
                 // /a/b), and before a vid it is the point, so only <{2}/a/b> reads back as one uri spanning 2
                 !furi.b().isOne() ||
-                // a value whose path carries its own point (a sum's mass: /a + /a is </a{2}>): a value is
-                // {point}value{span}, so bare, a trailing {n} reads as its span; < > delineates the locus of the
-                // coefficient (Marko, 2026-11-24)
+                // a value whose path carries its own point (a sum's mass: /a + /a is </a{2}>): in the notation a value
+                // is {point}value{span}, so a bare trailing {n} is a span's place, and the point is written inside the
+                // brackets, which delineate the locus of the coefficient (Marko, 2026-11-24). The parser still reads a
+                // bare uri's trailing brace as its point (m_uri reads no value span), so both spellings read back alike
                 !furi.d().isOne() ||
                 CommonUtil.isInt(uriString.substring(0, 1)) ||
                 uriString.contains(" ") ||
@@ -704,7 +705,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append('{').append(name.b()).append('}');
         // ... and the point trails the name bare (int{3}::T), where a uri VALUE's own point is bracketed: only a name
         // that brackets for itself (a branch, a #) or carries a query keeps its point inside, the one place the type
-        // grammar reads it there (<a/{b,c}{3}>::T parses, <a/{b,c}>{3}::T does not)
+        // grammar reads it there (<a/{b,c}{3}>::T parses, <a/{b,c}>{3}::T does not; after a query a trailing {3}
+        // would read as the query value's point)
         final fURI unpointed = name.b(cInt.ONE()).d(cInt.ONE());
         if (name.d().isOne() || requiresQuoting(unpointed) || !unpointed.qMap().isEmpty())
             sb.append(this.writeUri(name.b(cInt.ONE()).toUri()));

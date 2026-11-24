@@ -296,11 +296,12 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
 
     /**
      * A URI'S OWN POINT IS WRITTEN INSIDE ITS BRACKETS (Marko, 2026-11-24: "< > is important here so you can delineate
-     * the locus of the coefficient"). A value is {point}value{span}, so bare, a trailing {n} reads as the value's span
-     * ({@code a/b/c{2}} would be {@code a/b/c/a/b/c}). The point a uri's path carries, a sum's mass among them
-     * ({@code /a + /a}), is written as the fURI writes it, inside {@code < >}, and the obj's coefficient stays before the
-     * brackets. The whole text is asserted: the bare spelling reads back as the same obj, so a round trip alone could
-     * not tell the two apart.
+     * the locus of the coefficient"). In the notation a value is {point}value{span}, so a bare trailing {n} is the place
+     * of a span (Marko reads {@code a/b/c{2}} as {@code a/b/c/a/b/c}), and the writer never puts a point there. The
+     * point a uri's path carries, a sum's mass among them ({@code /a + /a}), is written as the fURI writes it, inside
+     * {@code < >}, and the obj's coefficient stays before the brackets. The parser still reads a bare uri's trailing
+     * brace as its point, so the bare spelling reads back as the same obj and a round trip alone could not tell the two
+     * apart: the whole text is asserted.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', quoteCharacter = '`', value = {

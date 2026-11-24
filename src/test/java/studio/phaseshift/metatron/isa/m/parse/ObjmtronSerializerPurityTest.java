@@ -174,6 +174,8 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             // a name that brackets for itself keeps its point inside, the one place the grammar reads it there
             "<#{*}>::T          % <#{*}>::T",
             "<a/{b,c}{3}>::T    % <a/{b,c}{3}>::T",
+            // so does a name with a query: after it, a trailing {3} would read as the query value's point
+            "person{3}?role=admin::T % <person{3}?role=admin>::T",
     }, delimiter = '%')
     public void testATypeIsWrittenWithItsSpanBeforeIt(final String expr, final String expected) {
         final Obj type = ObjmtronSerializer.parse(expr);
