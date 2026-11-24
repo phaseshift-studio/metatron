@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
@@ -228,9 +229,14 @@ public class BranchInst extends MInst {
     protected Obj remote(final fURI key, final fURI place, final List<Inst> program, final Code code, final Obj input) {
         final Network network = Machine.current().network();
         final Inst only = 1 == program.size() ? program.getFirst() : null;
+        // A LONE FROM OR TO IS ONE READ OR WRITE ONLY UNDER AN EXACT SPAN OF ONE OR MORE: both are idempotent, x·x = x, so
+        // {2}from(</x>) is the one read, while a span range ({0,1}from, a sum of its unrolls), a zero span (the identity)
+        // and a negative one (a converse) are no single door, and ship to the place's eval to run in full
+        final cInt span = null == only ? null : only.tid().b();
         final fURI verb = null != only
                 && (FROM_INST_TID.equals(only.tid().basePath()) || TO_INST_TID.equals(only.tid().basePath()))
                 && only.arg(0).isUri() && only.arg(0).uriValue().isAbsolute()
+                && span.isExact() && null != span.min() && 1L <= span.min()
                 ? only.tid().basePath()
                 : EVAL_INST_TID;
         final Inst eval = network.overrideOf(place, EVAL_INST_TID);
@@ -241,9 +247,12 @@ public class BranchInst extends MInst {
         // the lane's own address homed at the place, its query kept (from(</x?docq>)). The written value rides the
         // lane's code, not the thread's lhs: a thread reads its lhs with at(), which fires an auto or dom-{0} inst
         final fURI address = only.arg(0).uriValue().origin(place);
-        return this.thread(instLambda((l, i) -> FROM_INST_TID.equals(verb)
+        // THE LANE'S POINT IS COPIES OF ITS ANSWER (Marko, 2026-11-23): the door reads or writes once, so from{3}(</x>)
+        // answered the value once. Its point goes on the answer as any instruction's does, inside the lane's thread
+        final cInt point = null == only.tid().d() ? cInt.ONE() : only.tid().d();
+        return this.thread(instLambda((l, i) -> Inst.Helper.pointed(FROM_INST_TID.equals(verb)
                         ? Machine.read(address)
-                        : Machine.write(address, input)), key)
+                        : Machine.write(address, input), point)), key)
                 .apply(noobj());
     }
 }

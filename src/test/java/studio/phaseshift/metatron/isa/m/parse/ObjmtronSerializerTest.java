@@ -233,6 +233,11 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             "start([a=>plus{2}(34)])                      % plus{2}(34)",
             "start([plus{2}(34),mult{3}(2)])              % mult{3}(2)",
             "start([a=>start(1).plus(34).plus{3}(34)])    % plus{3}(34)",
+            // A SUGAR CARRIES NO COEFFICIENT: *a stays *a, while a spanned or pointed deref is written canonically
+            "start(1).*a                                  % *a",
+            "start(1).{2}*a                               % from(a)",
+            "start(1).from{3}(a)                          % from{3}(a)",
+            "start(1).{2}!*a                              %",
     }, delimiter = '%')
     void testAnInstructionKeepsEveryCoefficientAcrossTheWire(final String source, final String written) {
         final Obj parsed = ObjmtronSerializer.parse(source);

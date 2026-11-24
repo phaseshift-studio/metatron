@@ -87,6 +87,13 @@ public class BranchLaneTest extends AbstractMetatronTest {
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(<loop://shelf> => to(</branch/shelf>))", "7");
             AbstractMetatronTest.checkCodeParseApply(LOG, "0.branch(<loop://shelf> => from(</branch/shelf>))", "7");
+            // A LANE'S POINT IS COPIES OF ITS ANSWER: the door reads or writes once, and the point goes on the answer
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.branch(<loop://shelf> => from{3}(</branch/shelf>))", "{3}7");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(<loop://shelf> => to{2}(</branch/shelf>))", "{2}7");
+            // a read is idempotent, so an exact span of two is the one read; a span range is a sum of unrolls, no single
+            // door, and this place runs no program
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.branch(<loop://shelf> => {2}from(</branch/shelf>))", "7");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "0.branch(<loop://shelf> => {0,1}from(</branch/shelf>))", "<ERROR>");
             // a program is more than a read or a write, and this place cannot run one
             AbstractMetatronTest.checkCodeParseApply(LOG, "5.branch(<loop://shelf> => plus(1))", "<ERROR>");
         } finally {

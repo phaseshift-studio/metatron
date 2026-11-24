@@ -482,19 +482,23 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append(this.writeNoObj(noobj()));
             return sb;
         }
+        // A SUGAR IS ITS INSTRUCTION WITH NO COEFFICIENT: *a, !*a, !@a and !a have no place to write a span or a point, so
+        // an instruction carrying either ({2}*a, from{3}(a)) is written canonically, {2}from(a), where the head writes
+        // both. Sugared, it read back as the bare instruction (the landing review of 6e7122f3d, Marko 2026-11-23)
+        final boolean sugar = null != inst.tid() && inst.tid().b().isOne() && (null == inst.tid().d() || inst.tid().d().isOne());
         if (null == inst.tid()) {
             sb.append("inst");
             this.renderInstArg(sb, depth + 1, inst.arg(0));
-        } else if (inst.tid().basePath().equals(AUTO_FROM_INST_TID)) {
+        } else if (sugar && inst.tid().basePath().equals(AUTO_FROM_INST_TID)) {
             sb.append("!*");
             this.renderInstArg(sb, depth + 1, inst.arg(0));
-        } else if (inst.tid().basePath().equals(AUTO_AT_INST_TID) && inst.arg(1).isNoObj()) {
+        } else if (sugar && inst.tid().basePath().equals(AUTO_AT_INST_TID) && inst.arg(1).isNoObj()) {
             sb.append("!@");
             this.renderInstArg(sb, depth + 1, inst.arg(0));
-        } else if (inst.tid().basePath().equals(AUTO_INST_TID)) {
+        } else if (sugar && inst.tid().basePath().equals(AUTO_INST_TID)) {
             sb.append("!");
             this.renderInstArg(sb, depth + 1, inst.arg(0));
-        } else if (inst.tid().basePath().equals(FROM_INST_TID)) {
+        } else if (sugar && inst.tid().basePath().equals(FROM_INST_TID)) {
             sb.append("*");
             // this was a bug in the serializer where coeffiicents for these sugar instructions were being dropped
             // that is not valid as a coefficient within the bounds of the defined coefficient is a legal instruction

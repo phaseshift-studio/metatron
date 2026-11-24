@@ -725,10 +725,18 @@ public interface Inst extends Call {
             }
             if (null == span.max() || 0L <= span.max())
                 lanes = walk(lhs, step, Math.max(0L, span.min()), span.max(), lanes);
-            // each kept run takes the point once, as the processor puts an inst's point on its answer: the span of a
-            // mono value, curled on its tid, stays its span (Processor.Helper.apply)
-            return objs(Stream.concat(limbo.stream(), point.isOne() ? lanes.stream() : lanes.stream().map(o ->
-                    o.tid().b().isOne() || !o.isMono() ? o.c(c -> c.mult(point)) : o.d(o.tid().d().mult(point)))));
+            // each kept run takes the point once, as the processor puts an inst's point on its answer
+            return objs(Stream.concat(limbo.stream(), pointed(lanes, point).stream()));
+        }
+
+        /**
+         * AN INSTRUCTION'S POINT ON ITS ANSWER: copies of each obj it answered, as the processor puts an inst's point on
+         * its answer (Processor.Helper.apply). The span of a mono value, curled on its tid, stays its span, so such a
+         * value takes the point on its own point. A point of one is the answer as it is.
+         */
+        public static Obj pointed(final Obj answer, final cInt point) {
+            return point.isOne() ? answer : objs(answer.stream().map(o ->
+                    o.tid().b().isOne() || !o.isMono() ? o.c(c -> c.mult(point)) : o.d(o.tid().d().mult(point))));
         }
 
         /**
