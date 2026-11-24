@@ -14,7 +14,6 @@ const metaContent = (name) => {
 const host = location.hostname || "localhost";
 const secure = location.protocol === "https:";
 const offline = location.protocol === "file:";
-const embed = params.get("embed") === "1";   // an iframe instance: no tab strip of its own
 const httpBase = params.get("http") ||
     (offline ? "http://" + host + ":8777" : location.origin);
 
@@ -51,73 +50,32 @@ function defaultPage() {
     return "mfs:boot/space/web/default.mtron";
 }
 
-let wsBase = params.get("ws") || metaContent("metatron:ws") ||
-    (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
-let wsUrl = codecUrl(wsBase);
-/* the app's own machine: the page object (layout) and the save live here, never
-   on the instance the ?ws names -- the shell and the data are separate things */
+/* this page's own machine: the roster is read here, and it is the machine the
+   "local" link returns to. everything else — the page object, the data, the
+   console — belongs to the instance a tab stands for. */
 const localBase = (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
 const localUrl = codecUrl(localBase);
-const onInstance = () => {
-    try {
-        return new URL(wsBase, location.href).host !== new URL(localBase, location.href).host;
-    } catch (ignored) {
-        return false;
-    }
-};
 
-/* re-render the page's cards against the (possibly new) instance — assigned by
-   the pageCard closure, where loadPage lives */
-let reloadActivePage = null;
-
-/* the instance switch is URL state: the app is the shell, ?ws is the data */
-function viewPeer(url) {
-    const at = new URL(location.href);
-    if (url) at.searchParams.set("ws", url);
-    else at.searchParams.delete("ws");
-    location.href = at.pathname + at.search + at.hash;
-}
-
-/* switch the app to another metatron machine IN PLACE: point the data plane at
-   its /mtron endpoint, drop the old connections + per-instance state, and
-   re-render the grid and console. no reload — the shell stays, the data moves. */
-async function switchInstance(endpoint) {
-    if (!endpoint) return;
-    wsBase = String(endpoint);
-    wsUrl = codecUrl(wsBase);
-    const url = new URL(location.href);
-    url.searchParams.set("ws", String(endpoint));
-    history.replaceState(null, "", url.pathname + url.search + url.hash);
-
-    /* drop the instance's connections and per-instance state */
-    try { if (socket) socket.close(); } catch (ignored) { }
-    socket = null;
-    chain = Promise.resolve();
-    readers.forEach((reader) => { try { if (reader.socket) reader.socket.close(); } catch (ignored) { } });
-    readers.clear();
-    pageFrame = null;
-    REFERENCES.length = 0;
-    renderReferences();
-
-    /* clear the instance's pinned cards and any open inspection */
-    const pinned = $("#pinned");
-    if (pinned) { pinned.textContent = ""; pinned.hidden = true; }
-    const popup = $("#popup");
-    if (popup && popup.open) popup.close();
-
-    /* re-render the console + the page's cards against the new machine */
-    welcome();
-    setDot($("#d-console"), "down");
-    $("#m-console").textContent = "closed";
-    renderIdentity();
-    loadServers();
-    if (reloadActivePage) reloadActivePage();
-}
+/* the machine the page boots on: ?ws= (or the meta tag), else this machine.
+   activating a tab rewrites ?ws=, so a reload reopens the same machine. */
+const bootBase = params.get("ws") || metaContent("metatron:ws") || localBase;
 
 const rootAddr = metaContent("metatron:root");
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+/* every instance wears its own copy of this page's <main>, cloned here — before
+   any console output or layout is rendered — so each starts from the same clean
+   page. only the active instance's copy is in the document, so ids stay unique
+   and $("#out") / $("#page-loaded") always resolve to the machine on screen; the
+   others keep theirs detached with their connections open. */
+const PAGE_PANEL = $("#page-panel");
+const PAGE_FOOTER = PAGE_PANEL.querySelector("footer");
+const MAIN_TEMPLATE = PAGE_PANEL.querySelector("main").cloneNode(true);
+
+/* the instance on screen; its <main> is the one in the document */
+let active = null;
 
 /* ── small utilities ───────────────────────────────────────────────────── */
 function withTimeout(ms) {
@@ -133,17 +91,6 @@ function setDot(el, state) {
 }
 
 const ms = (n) => n + " ms";
-
-function wsFor(path) {
-    try {
-        const url = new URL(wsUrl);
-        url.pathname = path;
-        url.search = "";   // a probe names a protocol, not mtron's codecs
-        return url.toString();
-    } catch (ignored) {
-        return wsUrl;
-    }
-}
 
 /* ── card span ──────────────────────────────────────────────────────────
    a splash_card's span is [col=>n,row=>n]; a field the page leaves out is
@@ -403,12 +350,13 @@ function retint(el) {
 
 function highlighterReady() {
     HL = window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron") ? window.hljs : null;
-    const note = $("#hl-note");
-    if (note) note.textContent = HL ? "syntax: mtron" : "syntax: plain";
-    if (HL) {
-        $$("#out .line").forEach(retint);
-        if (modalObjCard.views.mtron) renderObjCard(modalObjCard, modalHost);
-    }
+    /* the grammar arrived after some consoles had already printed: re-tint every
+       instance's output, not just the one on screen */
+    INSTANCES.forEach((instance) => {
+        if (instance.hlNote) instance.hlNote.textContent = HL ? "syntax: mtron" : "syntax: plain";
+        if (HL) $$(".line", instance.out).forEach(retint);
+    });
+    if (HL && modalObjCard.views.mtron) renderObjCard(modalObjCard, modalHost);
 }
 
 function loadScript(src) {
@@ -432,64 +380,11 @@ async function loadHighlighter() {
     }
 }
 
-/* ── console: one socket, one answer per frame, evaluated in order ─────── */
-const out = $("#out");
-
-function line(kind, text) {
-    const el = document.createElement("span");
-    el.className = "line " + kind;
-    paint(el, text, kind);
-    if (kind === "res")
-        annotateObjects(el, text, (obj) => openNested(obj));
-    out.appendChild(el);
-    while (out.childElementCount > 500) out.removeChild(out.firstElementChild);
-    out.scrollTop = out.scrollHeight;
-}
-
-function welcome() {
-    out.textContent = "";
-    line("sys", "metatron console — one message is one expression, evaluated on this machine");
-    line("sys", "same endpoint as bin/wsplus:  " + wsBase);
-    line("sys", "in application/x-mtron  ·  out application/x-mtron-ui (pretty)  ·  one frame in, one frame out");
-    line("sys", "try  *</memory/space>   or   !*boot/args");
-}
-
-welcome();
-
-let socket = null;
-let chain = Promise.resolve();
-
-function connect() {
-    if (socket && socket.readyState === WebSocket.OPEN) return Promise.resolve(socket);
-    if (socket && socket.readyState === WebSocket.CONNECTING) {
-        return new Promise((resolve, reject) => {
-            socket.addEventListener("open", () => resolve(socket), {once: true});
-            socket.addEventListener("error", () => reject(new Error("cannot reach " + wsUrl)), {once: true});
-        });
-    }
-    return new Promise((resolve, reject) => {
-        const ws = new WebSocket(wsUrl);
-        const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
-        ws.onopen = () => {
-            clearTimeout(timer);
-            socket = ws;
-            setDot($("#d-console"), "up");
-            $("#m-console").textContent = "connected";
-            resolve(ws);
-        };
-        ws.onerror = () => {
-            clearTimeout(timer);
-            setDot($("#d-console"), "bad");
-            $("#m-console").textContent = "not connected";
-            reject(new Error("cannot reach " + wsUrl));
-        };
-        ws.onclose = () => {
-            socket = null;
-            setDot($("#d-console"), "down");
-            $("#m-console").textContent = "closed";
-        };
-    });
-}
+/* ── console: one socket per instance, one answer per frame, in order ─────
+   every connected machine's console is live at once: its own socket, output,
+   history, references and machine frame. the ACTIVE instance's console is what
+   the module-level names below (line, run, evaluateThen) drive, so the page
+   code and the panels keep calling them unchanged. */
 
 /* a reply frame is text OR bytes: application/x-mtron comes back as a text frame, the UI
    (and other binary serializations) as a binary frame — bin/wsplus decodes bytes before it
@@ -501,143 +396,225 @@ async function frameText(data) {
     return String(data);
 }
 
-/* the machine frame the page is standing in; null means the root. every
-   evaluation is framed so the console and the panels act in the same machine. */
-let pageFrame = null;
-
-function framePrefix() {
-    return pageFrame ? "move(<" + pageFrame + ">)." : "";
-}
-
-function evaluate(expr) {
-    const framed = framePrefix() + String(expr == null ? "" : expr);
-    return connect().then((ws) => new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-            ws.removeEventListener("message", answer);
-            reject(new Error("no answer in 30 s"));
-        }, 30000);
-        const answer = async (ev) => {
-            clearTimeout(timer);
-            ws.removeEventListener("message", answer);
-            try {
-                resolve(await frameText(ev.data));
-            } catch (error) {
-                reject(error);
-            }
-        };
-        ws.addEventListener("message", answer);
-        ws.send(framed);
-    }));
-}
-
-function evaluateThen(expr) {
-    const pending = chain.then(() => evaluate(expr));
-    chain = pending.catch(() => {
-    });
-    return pending;
-}
-
-let localSocket = null;
-
-function connectLocal() {
-    if (localSocket && localSocket.readyState === WebSocket.OPEN) return Promise.resolve(localSocket);
-    return new Promise((resolve, reject) => {
-        const ws = new WebSocket(localUrl);
-        const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
-        ws.onopen = () => {
-            clearTimeout(timer);
-            localSocket = ws;
-            resolve(ws);
-        };
-        ws.onerror = () => {
-            clearTimeout(timer);
-            reject(new Error("cannot reach " + localUrl));
-        };
-        ws.onclose = () => {
-            localSocket = null;
-        };
-    });
-}
-
-function localEval(expr) {
-    return connectLocal().then((ws) => new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-            ws.removeEventListener("message", answer);
-            reject(new Error("no local answer in 30 s"));
-        }, 30000);
-        const answer = async (ev) => {
-            clearTimeout(timer);
-            ws.removeEventListener("message", answer);
-            try {
-                resolve(await frameText(ev.data));
-            } catch (error) {
-                reject(error);
-            }
-        };
-        ws.addEventListener("message", answer);
-        ws.send(String(expr == null ? "" : expr));
-    }));
-}
-
-function run(expr, echo) {
-    expr = String(expr || "").trim();
-    if (!expr) return Promise.resolve();
-    if (echo !== false) line("cmd", expr);
-    return evaluateThen(expr).then((result) => {
-        line("res", result);
-        reference(result, expr);
-        return result;
-    }).catch((error) => {
-        line("err", error && error.message ? error.message : String(error));
-    });
-}
-
-/* ── references: what the console just named ─────────────────────────────
-   a result's envelope carries its type (tid) and location (vid); the pill row
-   becomes those references, and clicking one reads the object's JSON form.
-   x-mtron is complete (the ui form clips), so this is the machine protocol. */
-const REFERENCES = [];
-
 function shortVid(vid) {
     if (!vid) return "(no vid)";
     return vid.length > 30 ? "…" + vid.slice(-27) : vid;
 }
 
-function reference(text, expr) {
-    const env = MtronEnvelope ? MtronEnvelope.parse(text) : null;
-    if (!env) return;
-    env.expr = expr ? String(expr).trim() : null;
-    if (!REFERENCES.some((r) => r.tid === env.tid && r.vid === env.vid)) {
-        REFERENCES.unshift(env);
-        if (REFERENCES.length > 8) REFERENCES.pop();
+function createConsole(instance) {
+    const out = instance.out;
+    const REPL = {
+        socket: null,
+        chain: Promise.resolve(),
+        /* the machine frame this console stands in; null means the root. every
+           evaluation is framed so the console and its panels act in one machine. */
+        frame: null,
+        references: [],
+        commands: [],
+        cursor: 0
+    };
+    /* history — persisted so a reload keeps the last few expressions; per
+       instance, so each machine's console remembers its own */
+    const historyKey = "metatron.console.history" + (instanceIsLocal(instance) ? "" : ":" + instance.name);
+    try {
+        REPL.commands = JSON.parse(localStorage.getItem(historyKey) || "[]");
+    } catch (ignored) {
+        REPL.commands = [];
     }
-    renderReferences();
+    REPL.cursor = REPL.commands.length;
+
+    function line(kind, text) {
+        const el = document.createElement("span");
+        el.className = "line " + kind;
+        paint(el, text, kind);
+        if (kind === "res")
+            annotateObjects(el, text, (obj) => openNested(obj));
+        out.appendChild(el);
+        while (out.childElementCount > 500) out.removeChild(out.firstElementChild);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function welcome() {
+        out.textContent = "";
+        line("sys", "metatron console — one message is one expression, evaluated on this machine");
+        line("sys", "same endpoint as bin/wsplus:  " + instance.wsBase);
+        line("sys", "in application/x-mtron  ·  out application/x-mtron-ui (pretty)  ·  one frame in, one frame out");
+        line("sys", "try  *</memory/space>   or   !*boot/args");
+    }
+
+    function connect() {
+        if (REPL.socket && REPL.socket.readyState === WebSocket.OPEN) return Promise.resolve(REPL.socket);
+        if (REPL.socket && REPL.socket.readyState === WebSocket.CONNECTING) {
+            return new Promise((resolve, reject) => {
+                REPL.socket.addEventListener("open", () => resolve(REPL.socket), {once: true});
+                REPL.socket.addEventListener("error", () => reject(new Error("cannot reach " + instance.wsUrl)), {once: true});
+            });
+        }
+        return new Promise((resolve, reject) => {
+            const ws = new WebSocket(instance.wsUrl);
+            const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
+            ws.onopen = () => {
+                clearTimeout(timer);
+                REPL.socket = ws;
+                setDot(instance.dConsole, "up");
+                instance.mConsole.textContent = "connected";
+                resolve(ws);
+            };
+            ws.onerror = () => {
+                clearTimeout(timer);
+                setDot(instance.dConsole, "bad");
+                instance.mConsole.textContent = "not connected";
+                reject(new Error("cannot reach " + instance.wsUrl));
+            };
+            ws.onclose = () => {
+                if (REPL.socket === ws) REPL.socket = null;
+                setDot(instance.dConsole, "down");
+                instance.mConsole.textContent = "closed";
+            };
+        });
+    }
+
+    function framePrefix() {
+        return REPL.frame ? "move(<" + REPL.frame + ">)." : "";
+    }
+
+    function evaluate(expr) {
+        const framed = framePrefix() + String(expr == null ? "" : expr);
+        return connect().then((ws) => new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                ws.removeEventListener("message", answer);
+                reject(new Error("no answer in 30 s"));
+            }, 30000);
+            const answer = async (ev) => {
+                clearTimeout(timer);
+                ws.removeEventListener("message", answer);
+                try {
+                    resolve(await frameText(ev.data));
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            ws.addEventListener("message", answer);
+            ws.send(framed);
+        }));
+    }
+
+    function evaluateThen(expr) {
+        const pending = REPL.chain.then(() => evaluate(expr));
+        REPL.chain = pending.catch(() => {
+        });
+        return pending;
+    }
+
+    /* ── references: what the console just named ──────────────────────────
+       a result's envelope carries its type (tid) and location (vid); the pill row
+       becomes those references, and clicking one reads the object's JSON form.
+       x-mtron is complete (the ui form clips), so this is the machine protocol. */
+    function renderReferences() {
+        const row = instance.chips;
+        if (!row) return;
+        row.textContent = "";
+        REPL.references.forEach((env) => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "chip ref";
+            const tid = document.createElement("span");
+            tid.className = "tid";
+            tid.textContent = env.shortTid || "value";
+            const vid = document.createElement("span");
+            vid.className = "vid";
+            vid.textContent = " · " + shortVid(env.vid);
+            chip.appendChild(tid);
+            chip.appendChild(vid);
+            chip.title = [env.tid, env.vid].filter(Boolean).join(" @ ");
+            chip.addEventListener("click", () => inspectReference(env));
+            row.appendChild(chip);
+        });
+    }
+
+    function reference(text, expr) {
+        const env = MtronEnvelope ? MtronEnvelope.parse(text) : null;
+        if (!env) return;
+        env.expr = expr ? String(expr).trim() : null;
+        if (!REPL.references.some((r) => r.tid === env.tid && r.vid === env.vid)) {
+            REPL.references.unshift(env);
+            if (REPL.references.length > 8) REPL.references.pop();
+        }
+        renderReferences();
+    }
+
+    function run(expr, echo) {
+        expr = String(expr || "").trim();
+        if (!expr) return Promise.resolve();
+        if (echo !== false) line("cmd", expr);
+        return evaluateThen(expr).then((result) => {
+            line("res", result);
+            reference(result, expr);
+            return result;
+        }).catch((error) => {
+            line("err", error && error.message ? error.message : String(error));
+        });
+    }
+
+    function remember(expr) {
+        expr = String(expr || "").trim();
+        if (!expr || REPL.commands[REPL.commands.length - 1] === expr) return;
+        REPL.commands.push(expr);
+        if (REPL.commands.length > 100) REPL.commands = REPL.commands.slice(-100);
+        REPL.cursor = REPL.commands.length;
+        try {
+            localStorage.setItem(historyKey, JSON.stringify(REPL.commands));
+        } catch (ignored) {
+        }
+    }
+
+    instance.replForm.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        const value = instance.expr.value;
+        instance.expr.value = "";
+        remember(value);
+        run(value);
+    });
+
+    instance.clearButton.addEventListener("click", () => {
+        welcome();
+        instance.expr.focus();
+    });
+
+    instance.expr.addEventListener("keydown", (ev) => {
+        if (ev.key === "ArrowUp") {
+            if (!REPL.commands.length) return;
+            ev.preventDefault();
+            REPL.cursor = Math.max(0, REPL.cursor - 1);
+            instance.expr.value = REPL.commands[REPL.cursor];
+            instance.expr.setSelectionRange(instance.expr.value.length, instance.expr.value.length);
+        } else if (ev.key === "ArrowDown") {
+            if (!REPL.commands.length) return;
+            ev.preventDefault();
+            REPL.cursor = Math.min(REPL.commands.length, REPL.cursor + 1);
+            instance.expr.value = REPL.cursor === REPL.commands.length ? "" : REPL.commands[REPL.cursor];
+        } else if (ev.key === "l" && (ev.ctrlKey || ev.metaKey)) {
+            ev.preventDefault();
+            welcome();
+        }
+    });
+
+    setDot(instance.dConsole, "down");
+    instance.mConsole.textContent = "not connected";
+    welcome();
+    return Object.assign(REPL, {line, welcome, connect, evaluate, evaluateThen, run, remember});
 }
 
-function renderReferences() {
-    const row = $(".chips");
-    row.textContent = "";
-    REFERENCES.forEach((env) => {
-        const chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "chip ref";
-        const tid = document.createElement("span");
-        tid.className = "tid";
-        tid.textContent = env.shortTid || "value";
-        const vid = document.createElement("span");
-        vid.className = "vid";
-        vid.textContent = " · " + shortVid(env.vid);
-        chip.appendChild(tid);
-        chip.appendChild(vid);
-        chip.title = [env.tid, env.vid].filter(Boolean).join(" @ ");
-        chip.addEventListener("click", () => inspectReference(env));
-        row.appendChild(chip);
-    });
-}
+/* the ACTIVE instance's console — the names the page code and the panels call */
+const line = (kind, text) => {
+    if (active) active.console.line(kind, text);
+};
+const evaluateThen = (expr) => active.console.evaluateThen(expr);
+const run = (expr, echo) => active.console.run(expr, echo);
 
 /* readers: one socket per output codec. x-mtron is the machine form, x-mtron-ui the
-   human form (clipped), json the structure. each keeps its own queue and cache. */
-const readers = new Map();
+   human form (clipped), json the structure. each keeps its own queue and cache —
+   per instance, so one cache per machine; the local pool serves only the roster. */
 const localReaders = new Map();
 
 function readerUrlFor(base, mime) {
@@ -709,9 +686,14 @@ function readVia(mime, vid, base, pool) {
     return run;
 }
 
-/* the instance's data */
+/* one instance's data */
+function readAsOn(instance, mime, vid) {
+    return readVia(mime, vid, instance.wsBase, instance.readers);
+}
+
+/* the active instance's data — the names the page code and the panels call */
 function readAs(mime, vid) {
-    return readVia(mime, vid, wsBase, readers);
+    return readAsOn(active, mime, vid);
 }
 
 /* the app's own page object */
@@ -719,21 +701,29 @@ function localRead(mime, vid) {
     return readVia(mime, vid, localBase, localReaders);
 }
 
+function readJsonOn(instance, vid) {
+    return readAsOn(instance, "application/json", vid);
+}
+
 function readJson(vid) {
-    return readAs("application/json", vid);
+    return readJsonOn(active, vid);
+}
+
+function readPrettyOn(instance, vid) {
+    return readAsOn(instance, "application/x-mtron-ui", vid)
+        .then((value) => typeof value === "string" ? value : String(value));
 }
 
 function readPretty(vid) {
-    return readAs("application/x-mtron-ui", vid)
-        .then((value) => typeof value === "string" ? value : String(value));
+    return readPrettyOn(active, vid);
 }
 
 /* evaluate an arbitrary expression on the JSON socket — a panel that needs a
    projection (a tree, a count) instead of one object's value. */
-function evalJson(expr) {
+function evalJsonOn(instance, expr) {
     const mime = "application/json";
-    const reader = readerFor(mime, readers);
-    const run = reader.chain.then(() => connectReader(mime, wsBase, readers)).then((socket) => new Promise((resolve, reject) => {
+    const reader = readerFor(mime, instance.readers);
+    const run = reader.chain.then(() => connectReader(mime, instance.wsBase, instance.readers)).then((socket) => new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
             socket.removeEventListener("message", answer);
             reject(new Error("no json answer in 15 s"));
@@ -756,6 +746,10 @@ function evalJson(expr) {
     return run;
 }
 
+function evalJson(expr) {
+    return evalJsonOn(active, expr);
+}
+
 /* ── the object card ──────────────────────────────────────────────────────
    one algorithm, two hosts: the dialog (expression line, copy, close) and a
    pinned card (title left, vid right, unpin). the card owns its views and
@@ -774,6 +768,13 @@ function emptyObjCard() {
 
 function objCardButton(host, tab) {
     return host.tabs.querySelector('[data-tab="' + tab + '"]');
+}
+
+/* a card reads from the instance that owns it: a page's cards from their own
+   machine (they may mount while another instance is active), the dialog's from
+   whichever machine is active when it opens. */
+function instOf(host) {
+    return (host && host.instance) || active;
 }
 
 function objCardDot(host, state) {
@@ -845,7 +846,7 @@ function ensurePretty(objCard, host) {
     objCard.prettyLoaded = true;
     setObjCardView(objCard, host, "mtron", "pretty-printing…", "sys");
     objCardDot(host, "busy");
-    readPretty(env.vid).then((text) => {
+    readPrettyOn(instOf(host), env.vid).then((text) => {
         objCardDot(host, "up");
         setObjCardView(objCard, host, "mtron", text, "res");
     }).catch(() => {
@@ -861,7 +862,7 @@ function ensureJson(objCard, host) {
     objCard.jsonLoaded = true;
     setObjCardView(objCard, host, "json", "reading " + env.vid + " as json…", "sys");
     objCardDot(host, "busy");
-    readJson(env.vid).then((value) => {
+    readJsonOn(instOf(host), env.vid).then((value) => {
         objCardDot(host, "up");
         if (value === null) setObjCardView(objCard, host, "json", "noobj", "sys");
         else if (typeof value === "string") setObjCardView(objCard, host, "json", value, "res");
@@ -887,29 +888,32 @@ function resolveObjPanel(tid) {
 function mountObjPanel(objCard, host, env) {
     const factory = objCard.objPanel;
     if (!factory) return;
+    /* the card's own machine: a page's cards mount against their instance even
+       when another instance is the active one at that moment */
+    const owner = instOf(host);
     setObjCardView(objCard, host, "panel", "panel…", "sys");
     const api = {
-        json: () => env.vid ? readJson(env.vid) : Promise.resolve(null),
-        pretty: () => env.vid ? readPretty(env.vid) : Promise.resolve(env.raw),
-        /* a panel that acts on the machine does it over this page's mtron socket */
-        eval: (expr) => evaluateThen(expr),
-        evalJson: (expr) => evalJson(expr),
-        read: (vid) => vid ? readJson(vid) : Promise.resolve(null),
-        view: (url) => viewPeer(url),
-        instance: wsBase,
-        mtron: (expr) => evalMtron(expr),
+        json: () => env.vid ? readJsonOn(owner, env.vid) : Promise.resolve(null),
+        pretty: () => env.vid ? readPrettyOn(owner, env.vid) : Promise.resolve(env.raw),
+        /* a panel that acts on the machine does it over that machine's mtron socket */
+        eval: (expr) => owner.console.evaluateThen(expr),
+        evalJson: (expr) => evalJsonOn(owner, expr),
+        read: (vid) => vid ? readJsonOn(owner, vid) : Promise.resolve(null),
+        view: (url) => activateEndpoint(url),
+        instance: owner.wsBase,
+        mtron: (expr) => evalMtronOn(owner, expr),
         open: (env) => inspectReference(env || {}),
         at: (text) => {
             if (host.at) host.at.textContent = text;
         },
         frame: (vid) => {
             const next = (!vid || vid === "/.") ? null : String(vid);
-            if (next !== pageFrame) {
-                pageFrame = next;
+            if (next !== owner.console.frame) {
+                owner.console.frame = next;
                 document.dispatchEvent(new CustomEvent("metatron:frame", {detail: next}));
             }
         },
-        currentFrame: () => pageFrame,
+        currentFrame: () => owner.console.frame,
         paint: (el, text, kind) => paint(el, text, kind),
         announce: (tools) => announceMcpTools(tools)
     };
@@ -1091,9 +1095,12 @@ function popupBack() {
     backObjCard(modalObjCard, modalHost);
 }
 
-/* one pinned card factory: the dialog's pin and a loaded page's cards both use it */
+/* one pinned card factory: the dialog's pin and a loaded page's cards both use it.
+   `opts.instance` names the machine the card reads from — a page's cards belong to
+   their own instance, the dialog's to whichever machine is active. */
 function mountPinnedObjCard(env, options) {
     const opts = options || {};
+    const owner = opts.instance || active;
     const root = document.createElement("article");
     root.className = "obj-card";
     root.dataset.tid = env.tid || "";
@@ -1113,6 +1120,7 @@ function mountPinnedObjCard(env, options) {
         '<div class="popup-out"></div>' +
         '<button type="button" class="obj-card-resize" title="drag to resize" aria-label="resize">◢</button>';
     const host = {
+        instance: owner,
         dialog: null,
         title: root.querySelector(".obj-card-title"),
         at: root.querySelector(".obj-card-vid"),
@@ -1146,7 +1154,7 @@ function mountPinnedObjCard(env, options) {
     inspectObjCard(objCard, host, env, {open: false});
     if (host.title) host.title.textContent = root.dataset.label;
     if (opts.view) objCardTabTo(objCard, host, opts.view);
-    const parent = opts.parent || $("#pinned");
+    const parent = opts.parent || owner.pinned;
     parent.appendChild(root);
     if (parent.id === "pinned") parent.hidden = false;
     if (opts.close && modalHost.dialog.open) modalHost.dialog.close();
@@ -1156,80 +1164,26 @@ function mountPinnedObjCard(env, options) {
 function pinObjCard() {
     const env = modalObjCard.env;
     if (!env) return;
-    const loaded = $("#page-loaded");
-    const target = loaded && !loaded.hidden ? loaded : $("#pinned");
+    const loaded = active.page.loadedGrid;
+    const target = loaded && !loaded.hidden ? loaded : active.pinned;
     mountPinnedObjCard(env, {
         label: env.shortTid,
         view: modalObjCard.tab || "panel",
         span: 1,
+        instance: active,
         parent: target,
         close: true
     });
 }
 
-const exprInput = $("#expr");
-
-$("#repl").addEventListener("submit", (ev) => {
-    ev.preventDefault();
-    const value = exprInput.value;
-    exprInput.value = "";
-    remember(value);
-    run(value);
-});
-
-$("#clear").addEventListener("click", () => {
-    welcome();
-    exprInput.focus();
-});
-
-/* history — persisted so a reload keeps the last few expressions */
-const HISTORY_KEY = "metatron.console.history";
-/* named `commands`, not `history`: a top-level let would shadow window.history,
-   and cleanActionParams() needs the real one */
-let commands = [];
-try {
-    commands = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-} catch (ignored) {
-    commands = [];
-}
-let cursor = commands.length;
-
-function remember(expr) {
-    expr = String(expr || "").trim();
-    if (!expr || commands[commands.length - 1] === expr) return;
-    commands.push(expr);
-    if (commands.length > 100) commands = commands.slice(-100);
-    cursor = commands.length;
-    try {
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(commands));
-    } catch (ignored) {
-    }
-}
-
-exprInput.addEventListener("keydown", (ev) => {
-    if (ev.key === "ArrowUp") {
-        if (!commands.length) return;
-        ev.preventDefault();
-        cursor = Math.max(0, cursor - 1);
-        exprInput.value = commands[cursor];
-        exprInput.setSelectionRange(exprInput.value.length, exprInput.value.length);
-    } else if (ev.key === "ArrowDown") {
-        if (!commands.length) return;
-        ev.preventDefault();
-        cursor = Math.min(commands.length, cursor + 1);
-        exprInput.value = cursor === commands.length ? "" : commands[cursor];
-    } else if (ev.key === "l" && (ev.ctrlKey || ev.metaKey)) {
-        ev.preventDefault();
-        welcome();
-    }
-});
-
+/* the console's input, output and history are per instance; only the keyboard
+   shortcut is the page's: "/" focuses whichever machine's console is on screen */
 document.addEventListener("keydown", (ev) => {
     const tag = (document.activeElement || {}).tagName || "";
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
-    if (ev.key === "/" && !typing) {
+    if (ev.key === "/" && !typing && active) {
         ev.preventDefault();
-        exprInput.focus();
+        active.expr.focus();
     }
 });
 
@@ -1346,16 +1300,17 @@ function cleanActionParams() {
 }
 
 function showPending(expr, at) {
-    const bar = $("#pending");
+    if (!active) return;
+    const bar = active.pending;
     bar.hidden = false;
-    $("#pending-expr").textContent = expr;
-    $("#pending-at").textContent = "→ at=" + (at || "web/console");
-    $("#pending-run").onclick = () => {
+    active.pendingExpr.textContent = expr;
+    active.pendingAt.textContent = "→ at=" + (at || "web/console");
+    bar.querySelector("#pending-run").onclick = () => {
         bar.hidden = true;
         cleanActionParams();
         act(expr, at);
     };
-    $("#pending-dismiss").onclick = () => {
+    bar.querySelector("#pending-dismiss").onclick = () => {
         bar.hidden = true;
         cleanActionParams();
     };
@@ -1386,7 +1341,7 @@ function humanBytes(n) {
     return n + "B";
 }
 
-function statChip(k, v) {
+function statChip(k, v, title) {
     const chip = document.createElement("span");
     chip.className = "stat";
     const key = document.createElement("span");
@@ -1397,43 +1352,55 @@ function statChip(k, v) {
     val.textContent = v;
     chip.appendChild(key);
     chip.appendChild(val);
+    if (title) chip.title = title;
     return chip;
 }
 
-function renderStats(s) {
+/* the stats strip is the ACTIVE machine's, not the page's own host: the `at` pill
+   names that machine (the authority its tab shows) and sys_stat() is read on it.
+   the numbers are cached per instance, so a switch repaints at once and the fresh
+   read lands a beat later. */
+function renderStats(s, instance) {
     const el = $("#topbar-stats");
-    if (!el || !s || !s.isRec || !s.isRec()) return;
-    const g = (key) => {
-        for (const [k, v] of s.js) if (k.toString() === key) return v;
-        return undefined;
-    };
-    const chips = [];
-    if (location.host) chips.push(statChip("at", location.host));
-    const memFree = statBytes(g("free_mem_phys"));
-    const memTotal = statBytes(g("total_mem_phys"));
-    const diskFree = statBytes(g("disk_free"));
-    const diskTotal = statBytes(g("disk_total"));
-    const cpu = statVal(g("cpu_load"));
-    const model = statVal(g("cpu_model"));
-    const cores = statVal(g("processor"));
-    if (Number.isFinite(memFree) && Number.isFinite(memTotal))
-        chips.push(statChip("mem", humanBytes(memFree) + " / " + humanBytes(memTotal)));
-    if (Number.isFinite(diskFree) && Number.isFinite(diskTotal))
-        chips.push(statChip("disk", humanBytes(diskFree) + " / " + humanBytes(diskTotal)));
-    if (cpu != null && cpu !== "")
-        chips.push(statChip("load", (typeof cpu === "number" ? Math.round(cpu) : cpu) + "%"));
-    if (model)
-        chips.push(statChip("cpu", (cores ? cores + " cores · " : "") + String(model).split(" w/ ")[0]));
+    if (!el || !instance) return;
+    const chips = [statChip("at", instance.name, instance.wsBase)];
+    const rec = s && typeof s.isRec === "function" && s.isRec() ? s : null;
+    if (rec) {
+        const g = (key) => {
+            for (const [k, v] of rec.js) if (k.toString() === key) return v;
+            return undefined;
+        };
+        const memFree = statBytes(g("free_mem_phys"));
+        const memTotal = statBytes(g("total_mem_phys"));
+        const diskFree = statBytes(g("disk_free"));
+        const diskTotal = statBytes(g("disk_total"));
+        const cpu = statVal(g("cpu_load"));
+        const model = statVal(g("cpu_model"));
+        const cores = statVal(g("processor"));
+        if (Number.isFinite(memFree) && Number.isFinite(memTotal))
+            chips.push(statChip("mem", humanBytes(memFree) + " / " + humanBytes(memTotal)));
+        if (Number.isFinite(diskFree) && Number.isFinite(diskTotal))
+            chips.push(statChip("disk", humanBytes(diskFree) + " / " + humanBytes(diskTotal)));
+        if (cpu != null && cpu !== "")
+            chips.push(statChip("load", (typeof cpu === "number" ? Math.round(cpu) : cpu) + "%"));
+        if (model)
+            chips.push(statChip("cpu", (cores ? cores + " cores · " : "") + String(model).split(" w/ ")[0]));
+    }
     el.replaceChildren(...chips);
+}
+
+/* repaint the strip from the active machine's cached numbers */
+function renderActiveStats() {
+    if (active) renderStats(active.stats, active);
 }
 
 /* evaluate one expression on the x-mtron (structural) socket — unit- and
    vid-preserving; the json codec drops tids/vids, so the stats strip and
    the panels that need the raw machine form read through here. */
-function evalMtron(expr) {
+function evalMtronOn(instance, expr) {
     const mime = "application/x-mtron";
-    const reader = readerFor(mime, readers);
-    const run = reader.chain.then(() => connectReader(mime, wsBase, readers)).then((socket) => new Promise((resolve) => {
+    const reader = readerFor(mime, instance.readers);
+    const run = reader.chain.then(() => connectReader(mime, instance.wsBase, instance.readers)).then((socket) => new Promise((resolve) => {
         const timer = setTimeout(() => {
             socket.removeEventListener("message", answer);
             resolve("");
@@ -1451,35 +1418,40 @@ function evalMtron(expr) {
     return run;
 }
 
+function evalMtron(expr) {
+    return evalMtronOn(active, expr);
+}
+
+/* sys_stat() on the ACTIVE machine: its numbers, read over its own socket */
 async function loadStats() {
+    if (!active) return;
+    const instance = active;
     try {
-        const raw = await evalMtron("sys_stat()");
+        const raw = await evalMtronOn(instance, "sys_stat()");
         if (!raw) return;
-        const parsed = MtronIO.read(String(raw));
-        renderStats(parsed);
+        instance.stats = MtronIO.read(String(raw));
+        if (instance === active) renderStats(instance.stats, instance);
     } catch (ignored) {
         /* stats are decorative — a failed read leaves the strip empty, never broken */
     }
 }
 
+/* the topbar's identity: the machine the active tab stands for */
 function renderIdentity() {
-    $("#ws-ep").textContent = wsBase;
-    $("#ws-ep").title = wsUrl;
+    if (!active) return;
+    active.wsEp.textContent = active.wsBase;
+    active.wsEp.title = active.wsUrl;
     const instanceEl = $("#instance");
     if (instanceEl) {
-        try {
-            instanceEl.textContent = new URL(wsBase, location.href).host;
-        } catch (ignored) {
-            instanceEl.textContent = "this machine";
-        }
-        instanceEl.title = wsUrl;
+        instanceEl.textContent = active.name || "this machine";
+        instanceEl.title = active.wsUrl;
     }
     const localEl = $("#instance-local");
     if (localEl) {
-        localEl.hidden = !onInstance();
+        localEl.hidden = instanceIsLocal(active);
         localEl.onclick = (ev) => {
             ev.preventDefault();
-            viewPeer("");
+            activateEndpoint("");
         };
     }
     const boot = metaContent("metatron:boot");
@@ -1500,68 +1472,176 @@ function resolveEndpoint(name, endpoint) {
     }
 }
 
-/* ── servers: the cluster's metatron machines, as tabs ────────────────────
-   read from the page's own machine's roster (/network/roster/machine/<name>,
-   each carrying its /mtron/ws endpoint). the home machine is the parent's own
-   view; every other machine is a live iframe instance — greyed until clicked,
-   then connected and shown. */
-const instances = new Map();   // name -> iframe
-let homeName = null;           // the machine the parent's page-panel shows
-let currentName = null;        // the machine currently visible (red/yellow)
+/* ── instances: one native view per connected metatron machine ────────────
+   the tab strip is the cluster: a greyed tab is a machine nobody opened yet, a
+   live one is an instance whose connections are open. every instance keeps its
+   own websocket(s), console, page object and <main>; only the active instance's
+   <main> is in the document, so ids stay unique and $("#out") keeps resolving to
+   the machine on screen. */
+const INSTANCES = new Map();   // authority -> instance
 
-function frameTop() {
-    const bar = $("#servers");
-    return bar ? Math.ceil(bar.getBoundingClientRect().bottom) : 0;
-}
-
-function openInstance(name, endpoint) {
-    if (!instances.has(name)) {
-        const iframe = document.createElement("iframe");
-        iframe.className = "instance-frame";
-        iframe.src = location.pathname + "?ws=" + encodeURIComponent(endpoint) + "&embed=1";
-        iframe.title = name;
-        document.body.appendChild(iframe);
-        instances.set(name, iframe);
+/* the authority a ws endpoint names: host:port (the roster's tab key) */
+function authorityOf(base) {
+    try {
+        return new URL(base, location.href).host || String(base);
+    } catch (ignored) {
+        return String(base);
     }
-    showInstance(name);
 }
 
-function showInstance(name) {
-    currentName = name;
-    const panel = document.getElementById("page-panel");
-    if (panel) panel.hidden = (name !== homeName);
-    instances.forEach((iframe, n) => {
-        iframe.hidden = (n !== name);
-        const top = frameTop();
-        iframe.style.top = top + "px";
-        iframe.style.height = (window.innerHeight - top) + "px";
+/* the machine this page is served from (the roster's reader)? */
+function instanceIsLocal(instance) {
+    return !!instance && authorityOf(instance.wsBase) === authorityOf(localBase);
+}
+
+/* one machine's whole view — its own <main>, console, readers and page object.
+   the console connects lazily, on the first read or expression. */
+function createInstance(name, endpoint) {
+    const base = String(endpoint);
+    const main = MAIN_TEMPLATE.cloneNode(true);
+    const instance = {
+        name: String(name || authorityOf(base)),
+        wsBase: base,
+        wsUrl: codecUrl(base),
+        readers: new Map(),
+        /* the last sys_stat() this machine answered — the strip repaints from it */
+        stats: null,
+        main: main,
+        /* DOM handles are cached per instance: detaching a <main> does not
+           invalidate a node reference, so they survive every attach/detach. */
+        out: main.querySelector("#out"),
+        expr: main.querySelector("#expr"),
+        replForm: main.querySelector("#repl"),
+        clearButton: main.querySelector("#clear"),
+        chips: main.querySelector(".chips"),
+        pending: main.querySelector("#pending"),
+        pendingExpr: main.querySelector("#pending-expr"),
+        pendingAt: main.querySelector("#pending-at"),
+        dConsole: main.querySelector("#d-console"),
+        mConsole: main.querySelector("#m-console"),
+        hlNote: main.querySelector("#hl-note"),
+        wsEp: main.querySelector("#ws-ep"),
+        loadedGrid: main.querySelector("#page-loaded"),
+        pinned: main.querySelector("#pinned")
+    };
+    main.dataset.instance = instance.name;
+    /* the static cards carry their span in data-col/data-row, and the example
+       chips are real action links — both are per <main>, so a clone needs them */
+    $$("[data-col]", main).forEach((el) => applySpan(el, el.dataset.col, el.dataset.row));
+    $$(".chips .chip", main).forEach((chip) => {
+        const expr = chip.dataset.expr || chip.textContent;
+        chip.replaceWith(actionLink(chip.textContent, expr, "web/console", "chip"));
     });
-    restyleTabs();
+    instance.console = createConsole(instance);
+    instance.page = createPage(instance);
+    /* the grammar is page-wide and may already be in: a fresh console says so */
+    if (instance.hlNote) instance.hlNote.textContent = HL ? "syntax: mtron" : (hlBase ? "syntax: loading" : "syntax: plain");
+    INSTANCES.set(instance.name, instance);
+    return instance;
 }
 
-/* restyle every server tab: the visible machine is current, the connected rest
-   are live, everything else is greyed. covers the nested menu entries too. */
+/* attach the instance's <main> (the previous one leaves the document) and make
+   it the active one: the shell's chrome, page view and title follow it */
+function activate(instance) {
+    if (!instance) return;
+    if (active === instance) {
+        syncChrome();
+        return;
+    }
+    PAGE_PANEL.replaceChildren(instance.main, PAGE_FOOTER);
+    active = instance;
+    syncChrome();
+    /* the stats strip is this machine's: its cached numbers now, a fresh read next */
+    renderActiveStats();
+    loadStats();
+    instance.page.show(instance.page.view);
+    restyleTabs();
+    pointAt(instance);
+}
+
+/* the shell's chrome — the identity line, the page vid, the save button, the
+   title — always describes the active instance */
+function syncChrome() {
+    if (!active) return;
+    renderIdentity();
+    active.page.sync();
+    document.title = active.page.docTitle || "metatron";
+}
+
+/* ?ws= is the instance the page is looking at: a switch is URL state, so a
+   reload reopens the same machine (the local machine is the unnamed default) */
+function pointAt(instance) {
+    try {
+        const url = new URL(location.href);
+        const named = url.searchParams.get("ws") || "";
+        const wanted = instanceIsLocal(instance) ? "" : instance.wsBase;
+        if (named === wanted) return;
+        if (wanted) url.searchParams.set("ws", wanted);
+        else url.searchParams.delete("ws");
+        history.replaceState(null, "", url.pathname + url.search + url.hash);
+    } catch (ignored) {
+    }
+}
+
+/* the same machine can be named by its roster authority or by an endpoint */
+function instanceFor(name, endpoint) {
+    const known = INSTANCES.get(String(name));
+    if (known) return known;
+    let same = null;
+    INSTANCES.forEach((instance) => {
+        if (!same && instance.wsBase === String(endpoint)) same = instance;
+    });
+    return same;
+}
+
+/* a greyed tab: open the machine natively — its own console, readers and page
+   object — and put it on screen. the console connects on its first use. */
+async function activateServer(name, endpoint) {
+    const known = instanceFor(name, endpoint);
+    if (known) {
+        activate(known);
+        return known;
+    }
+    const instance = createInstance(name, endpoint);
+    activate(instance);
+    try {
+        await instance.page.loadPage(instance.page.PAGE);
+    } catch (error) {
+        instance.console.line("err", "page load: " + (error && error.message ? error.message : error));
+    }
+    restyleTabs();
+    return instance;
+}
+
+/* the local link and a panel's api.view(url): the same native switch, no reload */
+function activateEndpoint(url) {
+    const base = url ? String(url) : localBase;
+    return activateServer(authorityOf(base), base);
+}
+
+/* restyle every server tab: the active machine is current, the open ones are
+   live, everything else is greyed. covers the nested menu entries too. */
 function restyleTabs() {
     const bar = $("#servers");
     if (!bar) return;
+    const current = active ? active.name : null;
     bar.querySelectorAll(".server-tab[data-name]").forEach((tab) => {
         const n = tab.dataset.name;
-        tab.classList.toggle("current", n === currentName);
-        tab.classList.toggle("live", n !== currentName && (n === homeName || instances.has(n)));
+        tab.classList.toggle("current", n === current);
+        tab.classList.toggle("live", n !== current && INSTANCES.has(n));
     });
     bar.querySelectorAll(".server-summary").forEach((summary) => {
         const menu = summary.parentElement ? summary.parentElement.querySelector(".server-menu") : null;
         const entries = menu ? menu.querySelectorAll(".server-tab[data-name]") : [];
         let hasCurrent = false;
-        let currentAuthority = null;
         let hasLive = false;
         entries.forEach((e) => {
-            if (e.dataset.name === currentName) { hasCurrent = true; currentAuthority = e.dataset.name; }
-            else if (e.dataset.name === homeName || instances.has(e.dataset.name)) hasLive = true;
+            if (e.dataset.name === current) hasCurrent = true;
+            else if (INSTANCES.has(e.dataset.name)) hasLive = true;
         });
         summary.classList.toggle("current", hasCurrent);
         summary.classList.toggle("live", !hasCurrent && hasLive);
-        summary.textContent = (hasCurrent && currentAuthority ? currentAuthority : (summary.dataset.host || "group")) + " ▾";
+        summary.textContent = (hasCurrent && current ? current : (summary.dataset.host || "group")) + " ▾";
     });
 }
 
@@ -1573,18 +1653,10 @@ async function loadServers() {
         const roster = await localRead("application/json", "/network/roster");
         machines = roster && roster.machine && typeof roster.machine === "object" ? roster.machine : {};
     } catch (ignored) { }
-    const active = (() => {
-        try { return new URL(wsBase, location.href); } catch (ignored) { return null; }
-    })();
-    const homeAuthority = active ? active.hostname + (active.port ? ":" + active.port : "") : null;
-    if (homeAuthority) {
-        homeName = homeAuthority;
-        if (currentName == null) currentName = homeAuthority;
-    }
 
     const tabButton = (authority, endpoint, after) => {
-        const isCurrent = authority === currentName;
-        const isLive = !isCurrent && (authority === homeName || instances.has(authority));
+        const isCurrent = !!active && authority === active.name;
+        const isLive = !isCurrent && INSTANCES.has(authority);
         const b = document.createElement("button");
         b.type = "button";
         b.className = "server-tab" + (isCurrent ? " current" : isLive ? " live" : "");
@@ -1593,8 +1665,7 @@ async function loadServers() {
         b.title = isCurrent ? authority + " · this instance" : (isLive ? "view " + authority : "connect to " + authority + " · " + endpoint);
         b.addEventListener("click", () => {
             if (after) after();
-            if (authority === homeName) showInstance(authority);
-            else openInstance(authority, endpoint);
+            activateServer(authority, endpoint);
         });
         return b;
     };
@@ -1602,6 +1673,12 @@ async function loadServers() {
     /* collect authorities, grouped by host */
     const groups = new Map();   // host -> [{authority, endpoint}]
     const seen = new Set();
+    const remember = (host, authority, endpoint) => {
+        if (!authority || seen.has(authority)) return;
+        seen.add(authority);
+        if (!groups.has(host)) groups.set(host, []);
+        groups.get(host).push({authority, endpoint});
+    };
     Object.keys(machines).sort().forEach((name) => {
         const machine = machines[name] && typeof machines[name] === "object" ? machines[name] : {};
         const mtron = machine.mtron && typeof machine.mtron === "object" ? machine.mtron : {};
@@ -1613,19 +1690,19 @@ async function loadServers() {
             const port = url.port || "";
             /* one authority per (host:port) — the same port over several
                interfaces collapses to one entry */
-            const authority = name + (port ? ":" + port : "");
-            if (seen.has(authority)) return;
-            seen.add(authority);
-            if (!groups.has(name)) groups.set(name, []);
-            groups.get(name).push({authority, endpoint});
+            remember(name, name + (port ? ":" + port : ""), endpoint);
         });
     });
-    /* the page's own instance is always present, even if the roster omits it */
-    if (homeAuthority && !seen.has(homeAuthority)) {
-        const host = active ? active.hostname : homeAuthority;
-        if (!groups.has(host)) groups.set(host, []);
-        groups.get(host).push({authority: homeAuthority, endpoint: wsBase});
-    }
+    /* a machine we can already reach is always present, even when the roster
+       omits it: the page's own, the local one, and every instance opened so far */
+    const ensure = (authority, endpoint) => {
+        let host = authority;
+        try { host = new URL(endpoint, location.href).hostname || authority; } catch (ignored) { }
+        remember(host, authority, endpoint);
+    };
+    ensure(authorityOf(bootBase), bootBase);
+    ensure(authorityOf(localBase), localBase);
+    INSTANCES.forEach((instance) => ensure(instance.name, instance.wsBase));
 
     bar.textContent = "";
     Array.from(groups.keys()).sort().forEach((host) => {
@@ -1667,22 +1744,16 @@ async function refresh() {
     refreshing = true;
     try {
         renderIdentity();
+        renderActiveStats();
         loadStats();
     } finally {
         refreshing = false;
     }
 }
 
-loadHighlighter();
-/* the static cards carry their span in data-col/data-row; a loaded page
-   overwrites it per card from the splash_card's span rec. */
-$$("#page-panel [data-col]").forEach((el) => applySpan(el, el.dataset.col, el.dataset.row));
-
-/* the example chips become real links — copy-link yields a working action */
-$$(".chips .chip").forEach((chip) => {
-    const expr = chip.dataset.expr || chip.textContent;
-    chip.replaceWith(actionLink(chip.textContent, expr, "web/console", "chip"));
-});
+/* the static cards' spans and the example chips are per <main>, so every
+   instance does them for its own clone in createInstance(); the highlighter (one
+   grammar for the whole page) loads once, and re-tints whatever is already out. */
 
 modalHost.tabs.querySelectorAll(".popup-tab").forEach((button) => {
     button.addEventListener("click", () => objCardTabTo(modalObjCard, modalHost, button.dataset.tab));
@@ -1716,15 +1787,28 @@ $("#popup-copy").addEventListener("click", async () => {
     }, 1200);
 });
 
+/* ── boot ────────────────────────────────────────────────────────────────
+   the page's own machine is the first instance; every other tab opens on demand
+   and keeps its connections once it has them. */
+const home = createInstance(authorityOf(bootBase), bootBase);
+activate(home);
+
 /* an action carried on this page's own url waits for one click */
 const actionExpr = params.get("mtron");
 const actionAt = params.get("at") || "web/console";
 if (actionExpr) showPending(actionExpr, actionAt);
 
-/* an embedded instance (iframe) has no tab strip of its own — the parent owns it */
-if (embed) {
-    const servers = $("#servers");
-    if (servers) servers.hidden = true;
+loadHighlighter();
+
+const homeSource = params.get("page") || params.get("vid");
+if (homeSource) {
+    home.page.loadPage(homeSource).catch((error) => {
+        line("err", "page load: " + (error && error.message ? error.message : error));
+    });
+} else {
+    /* no source in the url: load the saved default page, falling back to the static page */
+    home.page.loadPage(home.page.PAGE).catch(() => {
+    });
 }
 
 refresh();
@@ -1741,14 +1825,6 @@ document.addEventListener("visibilitychange", () => {
         loadServers();
     }
 });
-window.addEventListener("resize", () => {
-    instances.forEach((iframe) => {
-        if (iframe.hidden) return;
-        const top = frameTop();
-        iframe.style.top = top + "px";
-        iframe.style.height = (window.innerHeight - top) + "px";
-    });
-});
 document.addEventListener("click", (ev) => {
     /* close any open server menu when clicking outside its group */
     if (!ev.target.closest(".server-group")) {
@@ -1757,34 +1833,42 @@ document.addEventListener("click", (ev) => {
     }
 });
 
-/* the page itself is the splash_page card: [panel][mtron][json].
-   ?vid=<vid> or ?page=<url with ?vid=> loads that splash_page; save writes it back. */
-(function pageCard() {
+/* ── the page object: one per instance ────────────────────────────────────
+   each machine wears its own splash_page, so the layout and its save follow the
+   instance a tab stands for. the chrome (the topbar view tabs, the save button,
+   the save dialog, the mtron/json view) is the shell's, and always describes the
+   ACTIVE instance. ?vid=<vid> or ?page=<url with ?vid=> loads a named page. */
+function createPage(instance) {
     const tabs = $$(".page-tabs .popup-tab");
-    if (!tabs.length) return;
-    const pagePanel = $("#page-panel");
+    const pagePanel = PAGE_PANEL;
     const encoding = $("#page-encoding");
     const out = $("#page-encoding-out");
     const pageSave = $("#page-save");
-    const loadedGrid = $("#page-loaded");
-    let PAGE = defaultPage();
-    let pageOrigin = "local";
-    const cache = new Map();
-    let currentView = "panel";
-    let pageTitle = "metatron";
+    const loadedGrid = instance.loadedGrid;
+    const pinned = instance.pinned;
     const saveDialog = $("#save-as");
-    const saveForm = $("#save-as-form");
     const saveVid = $("#save-as-vid");
     const saveError = $("#save-as-error");
+    const page = {
+        PAGE: defaultPage(),
+        /* "instance": the layout came from the machine itself; "local": it was
+           inherited from the local machine and is the machine's to adopt */
+        origin: "local",
+        title: "metatron",
+        docTitle: "metatron",
+        view: "panel",
+        cache: new Map(),
+        loadedGrid: loadedGrid,
+        pinned: pinned
+    };
 
-    /* the page object lives on the active instance, so the layout and its save
-       follow the machine the app is pointed at — each machine wears its own page */
+    /* the instance's own page object — the local machine is only a fallback */
     function pageRead(mime, vid) {
-        return readAs(mime, vid);
+        return readAsOn(instance, mime, vid);
     }
 
     function pageEval(expr) {
-        return evalMtron(expr);
+        return evalMtronOn(instance, expr);
     }
 
     const BEFORE = [
@@ -1801,27 +1885,42 @@ document.addEventListener("click", (ev) => {
         {tid: "mcp_client", label: "mcp tools", col: 2, row: 1}
     ];
 
-    /* the shipped page is read-only: saving it asks where the copy should live */
+    /* the shipped page is read-only: saving it asks where the copy should live.
+       a machine that INHERITED the local layout has no page of its own yet, so
+       there "save" writes it its own default.mtron — the inherited layout becomes
+       that machine's own. */
     function isDefaultPage(vid) {
         const value = String(vid == null ? "" : vid).trim().replace(/^</, "").replace(/>$/, "");
         return value === "mfs:boot/space/web/default.mtron" ||
             value === "/mfs/boot/space/web/default.mtron";
     }
 
+    function readOnly() {
+        return isDefaultPage(page.PAGE) && !(page.origin === "local" && !instanceIsLocal(instance));
+    }
+
     function saveLabel() {
-        return isDefaultPage(PAGE) ? "save as…" : "save";
+        return readOnly() ? "save as…" : "save";
     }
 
     function updateSaveButton() {
-        if (!pageSave) return;
+        if (!pageSave || instance !== active) return;
         pageSave.textContent = saveLabel();
-        pageSave.title = isDefaultPage(PAGE)
+        pageSave.title = readOnly()
             ? "the default page is read-only — save this page somewhere else"
-            : "write this page to " + PAGE;
+            : "write this page to " + page.PAGE;
+    }
+
+    /* the shell's page chrome — the bar's vid and the save button, active only */
+    function sync() {
+        if (instance !== active) return;
+        const barVid = $(".page-vid");
+        if (barVid) barVid.textContent = page.PAGE;
+        updateSaveButton();
     }
 
     function suggestPage() {
-        const value = String(PAGE == null ? "" : PAGE).replace(/^</, "").replace(/>$/, "");
+        const value = String(page.PAGE == null ? "" : page.PAGE).replace(/^</, "").replace(/>$/, "");
         const cut = value.lastIndexOf("/");
         return (cut > 0 ? value.slice(0, cut + 1) : "mfs:boot/") + "my_splash_page.mtron";
     }
@@ -1850,26 +1949,31 @@ document.addEventListener("click", (ev) => {
         annotateObjects(out, text, (obj) => openNested(obj));
     }
 
+    /* the page view: [panel][mtron][json]. the tabs and the encoding panel are the
+       shell's, so only the active instance paints them; a hidden instance just
+       records the view it stands on, which activate() re-applies. */
     function show(view) {
-        currentView = view;
-        tabs.forEach((button) => button.setAttribute("aria-selected", String(button.dataset.pageView === view)));
+        page.view = view;
         const isPanel = view === "panel";
+        if (instance !== active) return;
+        tabs.forEach((button) => button.setAttribute("aria-selected", String(button.dataset.pageView === view)));
         pagePanel.hidden = !isPanel;
         encoding.hidden = isPanel;
         if (isPanel) return;
-        if (cache.has(view)) {
-            paintPage(cache.get(view), view);
+        if (page.cache.has(view)) {
+            paintPage(page.cache.get(view), view);
             return;
         }
-        out.textContent = "reading " + PAGE + "…";
+        out.textContent = "reading " + page.PAGE + "…";
         const read = view === "json"
-            ? pageRead("application/json", PAGE).then((value) => typeof value === "string" ? value : JSON.stringify(value, null, 2))
-            : pageRead("application/x-mtron-ui", PAGE).then((value) => typeof value === "string" ? value : String(value));
+            ? pageRead("application/json", page.PAGE).then((value) => typeof value === "string" ? value : JSON.stringify(value, null, 2))
+            : pageRead("application/x-mtron-ui", page.PAGE).then((value) => typeof value === "string" ? value : String(value));
         read.then((text) => {
-            cache.set(view, text);
-            paintPage(text, view);
+            page.cache.set(view, text);
+            if (instance === active && page.view === view) paintPage(text, view);
         }).catch((error) => {
-            out.textContent = String(error && error.message ? error.message : error);
+            if (instance === active && page.view === view)
+                out.textContent = String(error && error.message ? error.message : error);
         });
     }
 
@@ -1902,7 +2006,7 @@ document.addEventListener("click", (ev) => {
             return readCards(loadedGrid);
         }
         const cards = BEFORE.map((entry) => ({...entry}));
-        $$("#pinned .obj-card").forEach((root) => {
+        $$(".obj-card", pinned).forEach((root) => {
             if (!root.dataset.tid) return;
             cards.push({
                 tid: root.dataset.tid,
@@ -1935,10 +2039,11 @@ document.addEventListener("click", (ev) => {
                 view: view,
                 col: span.col,
                 row: span.row,
+                instance: instance,
                 parent: parent
             });
         }
-        const objCard = $$("#page-panel [data-tid]").find((el) => el.dataset.tid === cardTid);
+        const objCard = $$("[data-tid]", instance.main).find((el) => el.dataset.tid === cardTid);
         if (!objCard) return null;
         const label = rec.label ? String(rec.label) : (objCard.dataset.label || tid);
         const heading = objCard.querySelector("header h2");
@@ -2000,57 +2105,66 @@ document.addEventListener("click", (ev) => {
         }
         if (!MtronIO) throw new Error("mtron-io.js is not loaded");
         /* the vid is used exactly as given: mfs:boot/... is the mfs scheme, not the /mfs space path.
-           the ACTIVE instance is asked for the page object; an older app build names
-           its source tree fs: where the current one says mfs:, so both spellings are tried.
-           when neither answers, the app's built-in layout (the static page) carries the page. */
+           the INSTANCE is asked for the page object first — an older deployment names its
+           source tree fs: where the current one says mfs:, so both spellings are tried — and
+           when the machine has no page of its own the LOCAL machine's page is inherited (a
+           layout the machine can then adopt by saving). when nothing answers, the app's
+           built-in layout (the static page) carries the page. */
         const swapped = /^mfs:/.test(vid) ? "fs:" + vid.slice(4)
             : /^fs:/.test(vid) ? "mfs:" + vid.slice(3) : null;
-        const attempts = [{origin: "instance", vid}];
-        if (swapped) attempts.push({origin: "instance", vid: swapped});
+        const spellings = swapped ? [vid, swapped] : [vid];
+        const attempts = [];
+        spellings.forEach((spelling) => attempts.push({origin: "instance", vid: spelling}));
+        spellings.forEach((spelling) => attempts.push({origin: "local", vid: spelling}));
         let last = null;
-        let page = null;
+        let config = null;
         let loaded = null;
         for (const attempt of attempts) {
             try {
-                const raw = await readAs("application/x-mtron", attempt.vid);
+                const raw = attempt.origin === "local"
+                    ? await localRead("application/x-mtron", attempt.vid)
+                    : await pageRead("application/x-mtron", attempt.vid);
                 const sourceText = String(raw == null ? "" : raw).trim();
                 if (!sourceText || sourceText === "noobj" || /^fail::/.test(sourceText))
                     throw new Error(sourceText || "noobj");
                 const value = plain(MtronIO.read(sourceText));
                 if (!value || !value.layout) throw new Error("no splash_page object at " + attempt.vid);
-                page = value;
+                config = value;
                 loaded = attempt;
                 break;
             } catch (error) {
                 last = error;
             }
         }
-        if (!page) throw last || new Error("no page at " + vid);
-        const layout = Array.isArray(page.layout) ? page.layout : [];
+        if (!config) throw last || new Error("no page at " + vid);
+        const layout = Array.isArray(config.layout) ? config.layout : [];
         loadedGrid.textContent = "";
         layout.forEach((rec) => mountLayoutCard(rec, loadedGrid));
-        $$("#page-panel main > *").forEach((el) => {
+        Array.from(instance.main.children).forEach((el) => {
             if (el !== loadedGrid) el.hidden = true;
         });
         loadedGrid.hidden = false;
-        PAGE = loaded.vid;
-        pageOrigin = loaded.origin;
-        const barVid = $(".page-vid");
-        if (barVid) barVid.textContent = loaded.vid;
-        updateSaveButton();
-        if (page.title) {
-            pageTitle = String(page.title);
-            document.title = pageTitle;
+        page.PAGE = loaded.origin === "local" ? vid : loaded.vid;
+        page.origin = loaded.origin;
+        /* the page mounted against THIS instance: make it the active one so the
+           shell's chrome (and the console panel's #console-card) are this machine's */
+        activate(instance);
+        sync();
+        if (config.title) {
+            page.title = String(config.title);
+            page.docTitle = page.title;
+            if (instance === active) document.title = page.docTitle;
             /* the machine's hostname prefixes the page title: "booger - metatron" */
-            readJson("/network/host").then((host) => {
-                const name = String(host == null ? "" : host).trim();
+            readJsonOn(instance, "/network/host").then((hostName) => {
+                const name = String(hostName == null ? "" : hostName).trim();
                 if (name && name !== "noobj" && !/^fail::/.test(name)) {
-                    document.title = name + " - " + pageTitle;
+                    page.docTitle = name + " - " + page.title;
+                    if (instance === active) document.title = page.docTitle;
                 }
             }).catch(() => {});
         }
-        cache.clear();
-        if (!encoding.hidden) show(currentView);
+        page.cache.clear();
+        if (page.view !== "panel") show(page.view);
     }
 
     /* a leaf card or a group back to its splash_card::[…] spelling */
@@ -2081,77 +2195,92 @@ document.addEventListener("click", (ev) => {
     }
 
     async function savePage(destination) {
-        const vid = String(destination == null ? PAGE : destination);
-        if (pageSave) {
+        const vid = String(destination == null ? page.PAGE : destination);
+        if (pageSave && instance === active) {
             pageSave.disabled = true;
             pageSave.textContent = "saving…";
         }
         try {
             const layout = pageCards().map(serializeCard);
-            const value = "[title=>'" + String(pageTitle).replace(/'/g, "\\'") + "',layout=>[" + layout.join(",") + "]]";
+            const value = "[title=>'" + String(page.title).replace(/'/g, "\\'") + "',layout=>[" + layout.join(",") + "]]";
             const target = String(vid).charAt(0) === "<" ? String(vid) : "<" + vid + ">";
             const expr = target + " -> splash_page::" + value;
             const result = await pageEval(expr);
             const text = String(result == null ? "" : result);
             if (/^fail::/.test(text)) throw new Error(text);
-            cache.clear();
-            if (pageSave) pageSave.textContent = "saved";
-            if (!encoding.hidden) show(currentView);
+            page.origin = "instance";   // the machine holds its own page now
+            page.cache.clear();
+            if (pageSave && instance === active) pageSave.textContent = "saved";
+            if (page.view !== "panel") show(page.view);
             return true;
         } catch (error) {
-            if (pageSave) pageSave.textContent = "save failed";
+            if (pageSave && instance === active) pageSave.textContent = "save failed";
             line("err", "page save: " + (error && error.message ? error.message : error));
             return false;
         } finally {
-            if (pageSave) {
+            if (pageSave && instance === active) {
                 pageSave.disabled = false;
                 setTimeout(updateSaveButton, 1500);
             }
         }
     }
 
-    tabs.forEach((button) => button.addEventListener("click", () => show(button.dataset.pageView)));
-    if (pageSave) pageSave.addEventListener("click", () => {
-        if (isDefaultPage(PAGE)) openSaveAs();
-        else savePage(PAGE);
-    });
-    if (saveForm) saveForm.addEventListener("submit", (ev) => {
-        ev.preventDefault();
-        const vid = String(saveVid.value || "").trim().replace(/^</, "").replace(/>$/, "");
+    /* the save-as dialog is the shell's: it opens for the active instance and
+       writes through that instance's own socket */
+    function submitSaveAs(value) {
+        const vid = String(value == null ? "" : value).trim().replace(/^</, "").replace(/>$/, "");
         if (!vid) {
             saveFail("a save location is required");
-            return;
+            return Promise.resolve(false);
         }
         if (isDefaultPage(vid)) {
             saveFail("that is the default page — choose another location");
-            return;
+            return Promise.resolve(false);
         }
         saveFail("");
-        savePage(vid).then((ok) => {
-            if (!ok) return;
-            PAGE = vid;
-            const barVid = $(".page-vid");
-            if (barVid) barVid.textContent = vid;
-            if (!encoding.hidden) show(currentView);
-            saveDialog.close();
+        return savePage(vid).then((ok) => {
+            if (!ok) return false;
+            page.PAGE = vid;
+            sync();
+            if (page.view !== "panel") show(page.view);
+            if (saveDialog) saveDialog.close();
+            return true;
         });
-    });
-    if (saveDialog) {
-        const cancel = $("#save-as-cancel");
-        if (cancel) cancel.addEventListener("click", () => saveDialog.close());
     }
-    updateSaveButton();
 
-    const source = params.get("page") || params.get("vid");
-    if (source) {
-        loadPage(source).catch((error) => {
-            line("err", "page load: " + (error && error.message ? error.message : error));
-        });
-    } else {
-        /* no source in the url: load the saved default page, falling back to the static page */
-        loadPage(PAGE).catch(() => {
-        });
-    }
-    /* the instance switch re-renders the page's cards against the new machine */
-    reloadActivePage = () => loadPage(PAGE).catch(() => { });
+    Object.assign(page, {
+        loadPage: loadPage,
+        show: show,
+        sync: sync,
+        savePage: savePage,
+        openSaveAs: openSaveAs,
+        submitSaveAs: submitSaveAs,
+        readOnly: readOnly
+    });
+    return page;
+}
+
+/* ── the page card's chrome (the shell) ───────────────────────────────────
+   the view tabs, the save button and the save-as dialog are one page's, and they
+   always drive the ACTIVE instance's page. */
+$$(".page-tabs .popup-tab").forEach((button) => button.addEventListener("click", () => {
+    if (active) active.page.show(button.dataset.pageView);
+}));
+(function wirePageChrome() {
+    const pageSave = $("#page-save");
+    if (pageSave) pageSave.addEventListener("click", () => {
+        if (!active) return;
+        if (active.page.readOnly()) active.page.openSaveAs();
+        else active.page.savePage(active.page.PAGE);
+    });
+    const saveForm = $("#save-as-form");
+    if (saveForm) saveForm.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        if (active) active.page.submitSaveAs($("#save-as-vid").value);
+    });
+    const saveCancel = $("#save-as-cancel");
+    if (saveCancel) saveCancel.addEventListener("click", () => {
+        const dialog = $("#save-as");
+        if (dialog) dialog.close();
+    });
 })();

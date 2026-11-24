@@ -1564,7 +1564,7 @@ public final class mInsts {
                         .body((lhs, inst) -> {
                             final Map<Obj, Obj> result = new LinkedHashMap<>();
                             objs(lhs.stream()).stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
-                                final Obj kk = kv.first().isObjCall() || kv.first().isInst()
+                                final Obj kk = kv.first().isObjCall()
                                         ? kv.first().apply(e)
                                         : (e.isRec() ? e.asRec().at(kv.first()) : e);
                                 if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
