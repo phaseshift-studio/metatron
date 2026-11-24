@@ -23,6 +23,8 @@ false       [-- bool --]
 <a.b.c>     [-- uri (angle-bracket necessary of uri has . or space) --]
 /foo/bar    [-- uri (path literal) --]
 a           [-- uri (bare name — no angle brackets if alphanumeric) --]
+<a/b/c>{2}  [-- uri (a span after the brackets is a power: the path repeated) --]
+<a/b/c>{-1} [-- uri (a negative span is the converse: the path reversed) --]
 0x0F        [-- bytes (hex literal) --]
 noobj       [-- "no obj" (empty, none) --]
 ```

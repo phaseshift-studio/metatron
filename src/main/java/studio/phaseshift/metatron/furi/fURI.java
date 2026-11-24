@@ -36,6 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.ARGS;
@@ -1388,6 +1389,33 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                         expanded.add(Tuple.Pair.with(head + alternative.get0() + tail.get0(), point.mult(alternative.get1()).mult(tail.get1())));
             }
             return expanded;
+        }
+
+        /**
+         * THE POWER OF A PATH (Marko, 2026-11-24), the one algorithm behind a uri's span ({@code <w>{n}}, realized where
+         * the uri is made), {@code pow(n)} and {@code reverse()}: n copies of the path concatenated, the unit {@code <>}
+         * at zero, and a negative n the converse taken n times. The converse reverses the path alone and reads its
+         * value, not its spelling: the uri resolved (dot segments folded, so {@code a/x/../b/c} reverses as {@code a/b/c}
+         * does), each term of a branch reversed and the terms summed again ({@code <a/{b/c,d}>{-1}} is
+         * {@code {c/b,d}/a}). A scheme and an authority stay where they are, so a uri with a host keeps its root in
+         * front ({@code http://m.com/a/b/c} and {@code http://m.com/c/b/a} are each other's converse), while a path
+         * with no host moves its root to the far end ({@code /a/b/c} is {@code c/b/a/}). A parent step the fold keeps
+         * ({@code ../a}) has no converse, as it does not name the step it undoes. The converse is no inverse:
+         * {@code <a/b>} followed by {@code <a/b>{-1}} is {@code a/b/b/a}.
+         */
+        public static fURI power(final fURI path, final long n) {
+            if (0 == n)
+                return Singleton.f("");
+            if (Long.MIN_VALUE == n)
+                throw MTronException.of("%s has no power at %s: the span has no positive counterpart", path, n);
+            final fURI base = n > 0 ? path : sum(path.resolve().branches().map(term -> {
+                if (term.path().contains(".."))
+                    throw MTronException.of("%s has no converse: its parent step (..) does not name the step it undoes", term);
+                if (!term.hasHost())
+                    return term.path(term.path().reversed());
+                return term.segments().isEmpty() ? term : term.segments(term.segments().reversed());
+            }));
+            return LongStream.range(1, Math.abs(n)).mapToObj(i -> base).reduce(base, fURI::mult);
         }
 
         /**

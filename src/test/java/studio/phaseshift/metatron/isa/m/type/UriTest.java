@@ -25,9 +25,11 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.URI_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -202,7 +204,7 @@ public class UriTest extends AbstractAlgebraTest {
     @CsvSource(value = {
             "/a/b/c.reverse()                 % c/b/a/",
             "aaa/bbb/ccc.reverse()            % ccc/bbb/aaa",
-            "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a/>",
+            "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a>",
             "a.reverse()                      % a",
             "a/b.reverse()                    % b/a",
             "/a.reverse()                     % a/",
@@ -213,12 +215,13 @@ public class UriTest extends AbstractAlgebraTest {
 
     /**
      * A SPAN AFTER THE BRACKETS IS A POWER (Marko, 2026-11-24): {@code <w>{n}} is the path concatenated n times, the
-     * unit {@code <>} at zero, and a negative span its converse, the path reversed (span-and-point article, Def 5:
-     * {@code a⁻ⁿ = (a˘)ⁿ}). On a path the converse is a ∗, an involution that reverses a product and distributes over a
-     * sum; a uri with a host is not one yet, as its reverse keeps the root in front and a second reverse ends in a slash.
-     * The bolt-ons are the oracle: {@code {-1}} is {@code reverse()} and {@code {n}} is {@code pow(n)}. The brackets mark
-     * the locus: the obj's point before them is on the run ({@code c·aⁿ}), a point inside runs with the path
-     * ({@code (ca)ⁿ}, Theorems 7 and 13), and a converse is no inverse.
+     * unit {@code <>} at zero, and a negative span its converse (ring-theoretic-distributed-structures, Definition 3):
+     * an involution that reverses a product and distributes over a sum. It reverses the path alone (Marko, 2026-11-24),
+     * so a scheme and an authority stay and a uri with a host keeps its root in front, and a parent step the fold keeps
+     * has none. A span a uri takes from its lhs is realized the same way ({@code 'a.b'{3}.as(uri::T)}), so a uri never
+     * holds one. The bolt-ons are the oracle: {@code {-1}} is {@code reverse()} and {@code {n}} is {@code pow(n)}. The
+     * brackets mark the locus: the obj's point before them is on the run ({@code c·aⁿ}), a point inside runs with the
+     * path ({@code (ca)ⁿ}, span-and-point Theorems 7 and 13), and a converse is no inverse.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -231,7 +234,19 @@ public class UriTest extends AbstractAlgebraTest {
             "<a/b/c>{-1}                 % c/b/a",
             "</a/b/c>{-1}                % c/b/a/",
             "<a/b/c>{-2}                 % c/b/a/c/b/a",
-            "<http://m.com/a/b/c>{-1}    % <http://m.com/c/b/a/>",
+            "<a/{b,c}>{2}                % <a/{b,c}/a/{b,c}>",
+            // the path alone reverses: a scheme and an authority stay, and a host keeps its root in front
+            "<http://m.com/a/b/c>{-1}    % <http://m.com/c/b/a>",
+            "<http://m.com/c/b/a>{-1}    % <http://m.com/a/b/c>",
+            "<http://m.com/a/b/c>{-1}.reverse() % <http://m.com/a/b/c>",
+            "<http://m.com/a/b/c/>{-1}   % <http://m.com/c/b/a/>",
+            "<http://m.com/>{-1}         % <http://m.com/>",
+            "<test:a/b/c>{-1}            % <test:c/b/a>",
+            // no converse: a parent step the fold keeps names no step to undo, and a span with no positive counterpart
+            "<../a>.count()              % 1",
+            "<../a>{-1}                  % <ERROR>",
+            "<../a>.reverse()            % <ERROR>",
+            "<a>{-9223372036854775808}   % <ERROR>",
             // the bolt-ons agree: reverse() is {-1} and pow(n) is {n}, pow(-1) now the converse too
             "a/b/c.reverse()             % c/b/a",
             "<a/b/c>{-1}.reverse()       % a/b/c",
@@ -255,11 +270,33 @@ public class UriTest extends AbstractAlgebraTest {
             "<{2}a/b>{2}                 % <{2}a/b/{2}a/b>",
             "<a/b{2}>{2}                 % <a/b/a/b{4}>",
             "<a/b{2}>{-1}                % <b/a{2}>",
+            "<a/b{2}>{-2}                % <b/a/b/a{4}>",
             // inside the brackets a trailing {n} is still the path's own point
             "<a/b{2}>                    % <a/b{2}>",
+            // a span a uri takes from its lhs is its power too, the lhs's point on the run
+            "\"a.b\"{3}.as(uri::T)       % <a.b/a.b/a.b>",
+            "\"ab\"{3}.as(uri::T)        % ab/ab/ab",
+            "{2}\"ab\"{3}.as(uri::T)     % {2}ab/ab/ab",
     }, delimiter = '%')
     public void testASpanAfterTheBracketsIsAPower(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A URI HOLDS NO SPAN (Marko, 2026-11-24): retyped onto a span, as an answer is when it takes its lhs's, a uri holds
+     * its path's power and its tid no span, so the span is raised once though a clone sets its fields twice, and a
+     * negative span, which no value literal can carry onto a uri, is its converse.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b              % 2  % a/b/a/b",
+            "a/b/c            % -1 % c/b/a",
+            "/a/b             % -1 % b/a/",
+            "http://m.com/a/b % -1 % http://m.com/b/a",
+            "a/b              % 1  % a/b",
+    }, delimiter = '%')
+    public void testAUriMadeWithASpanHoldsItsPower(final String path, final long span, final String power) {
+        AbstractMetatronTest.checkEquality(LOG, uri(path).tid(URI_TID.b(cInt.of(span))), uri(power), true);
     }
 
 

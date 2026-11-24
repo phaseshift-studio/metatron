@@ -303,8 +303,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 !furi.b().isOne() ||
                 // a value whose path carries its own point (a sum's mass: /a + /a is </a{2}>): in the notation a value
                 // is {point}value{span}, so a bare trailing {n} is a span's place, and the point is written inside the
-                // brackets, which delineate the locus of the coefficient (Marko, 2026-11-24). The parser still reads a
-                // bare uri's trailing brace as its point (m_uri reads no value span), so both spellings read back alike
+                // brackets, which delineate the locus of the coefficient (Marko, 2026-11-24). The parser reads a bare
+                // uri's trailing brace as its point and a span only after the brackets, so both spellings of the point
+                // read back alike, and a uri realizes any span as its power (MUri), so none is written
                 !furi.d().isOne() ||
                 CommonUtil.isInt(uriString.substring(0, 1)) ||
                 uriString.contains(" ") ||

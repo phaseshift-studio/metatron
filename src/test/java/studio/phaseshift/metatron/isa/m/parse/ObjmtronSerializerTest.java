@@ -319,6 +319,11 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             // what needs no brackets stays bare: a plain path, and one counted by the obj's own point
             "a/b/c                     % a/b/c",
             "{2}a/b                    % {2}a/b",
+            // a uri holds no span: one it takes is its power, written as a path (<a.b>{3} and ab{3} before, the
+            // first reading back as the power and the second as a point)
+            "'a.b'{3}.as(uri::T)       % <a.b/a.b/a.b>",
+            "'ab'{3}.as(uri::T)        % ab/ab/ab",
+            "<a/b>{2}                  % a/b/a/b",
     })
     void testAUrisOwnPointIsWrittenInsideItsBrackets(final String source, final String written) {
         final Obj value = ObjmtronSerializer.single().read(source);

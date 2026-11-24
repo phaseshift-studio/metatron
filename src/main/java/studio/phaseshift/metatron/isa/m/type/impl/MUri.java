@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
@@ -121,8 +122,20 @@ public class MUri extends MObj implements Uri {
     @Override
     public Uri clone(final Object jvm, final fURI tid, final fURI vid) {
         MUri clone = super.clone(jvm, tid, vid);
+        final cInt span = clone.tid.b();
         if (clone.jvm().isZero())
             clone.tid = clone.tid.zero();
+        else if (!span.isOne() && span.isExact() && null != span.min()) {
+            // A SPAN ON A URI IS ITS POWER (Marko, 2026-11-24): a value carries its span on its tid ({point}value{span}),
+            // and a uri's product concatenates paths, so a span a uri takes is realized here, as its zero is: an answer
+            // that takes its lhs's span, 'a.b'{3}.as(uri::T), is a.b/a.b/a.b, so a uri never holds a span and is written
+            // as it reads. Not in self(), which a clone calls twice with the same tid (objCheckAndSave, then selfTID), so
+            // the path would be raised twice; and not in the constructor, where a uri made with a span on its tid fails
+            // its type check first ({2}a/b is not a {2}uri::T). A range ({*}) is no power and stays on the tid
+            clone.jvm = fURI.Helper.power(clone.jvm(), span.min());
+            clone.tid = clone.tid.b(cInt.ONE());
+            clone.parsedTemplatesCache = null;
+        }
         // Reset parsed templates cache if jvm changed (different fURI means different templates)
         if (!Objects.equals(jvm, this.jvm)) {
             clone.parsedTemplatesCache = null;

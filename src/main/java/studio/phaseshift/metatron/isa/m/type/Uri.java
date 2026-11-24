@@ -388,26 +388,6 @@ public interface Uri extends Mono, Comparable<Uri> {
             // do nothing
         }
 
-        /**
-         * THE POWER OF A PATH, the one algorithm behind a uri's span ({@code <w>{n}}), {@code pow(n)} and
-         * {@code reverse()}. A span is a power in the uri ring: n copies of the path concatenated, the unit {@code <>}
-         * at zero, and a negative span the converse taken n times (span-and-point article, Def 5: a⁻ⁿ = (a˘)ⁿ), which
-         * for a path is the path reversed, an absolute path's root moving to its far end ({@code /a/b/c} is
-         * {@code c/b/a/}). The converse is no inverse: {@code <a/b>} followed by {@code <a/b>{-1}} is {@code a/b/b/a}.
-         */
-        public static fURI power(final fURI path, final long n) {
-            if (0 == n)
-                return f("");
-            // the converse reads the path's value, not its spelling, and is additive: the uri resolved (its dot segments
-            // folded, so a/x/../b/c reverses as a/b/c does), each term of a branch reversed, and the terms summed again,
-            // so <a/{b/c,d}>{-1} is {c/b,d}/a
-            final fURI base = n < 0 ? fURI.Helper.sum(path.resolve().branches().map(term -> term.path(term.path().reversed()))) : path;
-            fURI power = base;
-            for (long i = 1; i < Math.abs(n); i++)
-                power = power.mult(base);
-            return power;
-        }
-
         public static Rec uriToRec(final Uri u) {
             final fURI lhsUri = u.uriValue();
             return rec(

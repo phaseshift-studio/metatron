@@ -42,7 +42,6 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -1311,6 +1310,8 @@ public class mParser {
      * value's tid, curled up, until a space gives it an axis (Marko, 2026-11-11): {3}5{3} is one int that counts 9, not the
      * lst of its copies, and 5{3}@xyz is 5 at xyz/0, xyz/1 and xyz/2. A span is an exact count, {n}: a ranged or negative
      * brace ({?}, {*}, {-1}) is no span, so the value parser leaves it unread: 3{?} reads as 3 and stops at the brace.
+     * A uri is the exception (Marko, 2026-11-24): its span is its power, realized when the uri is made (m_uri, MUri), so
+     * it never stays curled, and a quoted uri reads a negative span as well, its converse ({@code <a/b/c>{-1}}).
      */
     private static Parser m_value_span() {
         return seq(of('{'), digit().plus().flatten(), of('}')).map(t -> cInt.of(Long.parseLong(mParser.<String>pick(t, 1))));
@@ -1627,11 +1628,13 @@ public class mParser {
 
     public static Parser m_uri() {
         // A SPAN AFTER THE BRACKETS IS A POWER (Marko, 2026-11-24): <w>{n} is the path concatenated n times, and a
-        // negative span its converse, the path reversed (Uri.Helper.power). It reads only after a quoted uri, the
-        // brackets marking the locus: inside them a trailing {n} is the path's own point, as a bare a/b{n}'s is
+        // negative span its converse (fURI.Helper.power), realized here, before the uri is made, so a vid stores the
+        // power (a span a uri takes later is realized by MUri). It reads only after a quoted uri, the brackets marking
+        // the locus: inside them a trailing {n} is the path's own point, as a bare a/b{n}'s is. A quoted uri is read
+        // once, its span optional
         final Parser span = seq(of('{'), seq(opt(of('-'), ""), digit().plus()).flatten(), of('}')).map(t -> Long.parseLong(mParser.<String>pick(t, 1)));
         return seq(m_type_prefix(Tokens.URI_TID),
-                choice(seq(of('<').and(), m_furi(REDUCED_FURI_CHARS, true, true, true), span).map(t -> Uri.Helper.power(pick(t, 1), mParser.<Long>pick(t, 2))),
+                choice(seq(of('<').and(), m_furi(REDUCED_FURI_CHARS, true, true, true), opt(span, 1L)).map(t -> fURI.Helper.power(pick(t, 1), mParser.<Long>pick(t, 2))),
                         m_furi(REDUCED_FURI_CHARS, true, true, true)),
                 m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
