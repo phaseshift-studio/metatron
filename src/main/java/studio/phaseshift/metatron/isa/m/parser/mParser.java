@@ -42,6 +42,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -1625,7 +1626,14 @@ public class mParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(Tokens.URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
+        // A SPAN AFTER THE BRACKETS IS A POWER (Marko, 2026-11-24): <w>{n} is the path concatenated n times, and a
+        // negative span its converse, the path reversed (Uri.Helper.power). It reads only after a quoted uri, the
+        // brackets marking the locus: inside them a trailing {n} is the path's own point, as a bare a/b{n}'s is
+        final Parser span = seq(of('{'), seq(opt(of('-'), ""), digit().plus()).flatten(), of('}')).map(t -> Long.parseLong(mParser.<String>pick(t, 1)));
+        return seq(m_type_prefix(Tokens.URI_TID),
+                choice(seq(of('<').and(), m_furi(REDUCED_FURI_CHARS, true, true, true), span).map(t -> Uri.Helper.power(pick(t, 1), mParser.<Long>pick(t, 2))),
+                        m_furi(REDUCED_FURI_CHARS, true, true, true)),
+                m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_rel() {

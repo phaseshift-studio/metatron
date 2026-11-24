@@ -211,6 +211,57 @@ public class UriTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * A SPAN AFTER THE BRACKETS IS A POWER (Marko, 2026-11-24): {@code <w>{n}} is the path concatenated n times, the
+     * unit {@code <>} at zero, and a negative span its converse, the path reversed (span-and-point article, Def 5:
+     * {@code a⁻ⁿ = (a˘)ⁿ}). On a path the converse is a ∗, an involution that reverses a product and distributes over a
+     * sum; a uri with a host is not one yet, as its reverse keeps the root in front and a second reverse ends in a slash.
+     * The bolt-ons are the oracle: {@code {-1}} is {@code reverse()} and {@code {n}} is {@code pow(n)}. The brackets mark
+     * the locus: the obj's point before them is on the run ({@code c·aⁿ}), a point inside runs with the path
+     * ({@code (ca)ⁿ}, Theorems 7 and 13), and a converse is no inverse.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a power: n copies, the unit at zero
+            "<a/b/c>{1}                  % a/b/c",
+            "<a/b/c>{2}                  % a/b/c/a/b/c",
+            "<a/b/c>{0}                  % <>",
+            "</a/>{2}                    % /a/a/",
+            // the converse: the path reversed, an absolute path's root moved to its far end, and its powers
+            "<a/b/c>{-1}                 % c/b/a",
+            "</a/b/c>{-1}                % c/b/a/",
+            "<a/b/c>{-2}                 % c/b/a/c/b/a",
+            "<http://m.com/a/b/c>{-1}    % <http://m.com/c/b/a/>",
+            // the bolt-ons agree: reverse() is {-1} and pow(n) is {n}, pow(-1) now the converse too
+            "a/b/c.reverse()             % c/b/a",
+            "<a/b/c>{-1}.reverse()       % a/b/c",
+            "</a/b/c>{-1}.reverse()      % /a/b/c",
+            "a/b/c.pow(2)                % a/b/c/a/b/c",
+            "a/b/c.pow(-1)               % c/b/a",
+            "a/b/c.pow(-2)               % c/b/a/c/b/a",
+            // the converse reads the value, not the spelling (dot segments fold first), and it is additive
+            "<a/x/../b/c>{-1}            % c/b/a",
+            "<a/x/../b/c>.reverse()      % c/b/a",
+            "<a/{b/c,d}>{-1}             % <{c/b,d}/a>",
+            // a span reads only after the brackets: a bare uri keeps its trailing brace as its point
+            "a/b{2}{3}                   % <ERROR>",
+            // the converse reverses a product, and it is no inverse
+            "<a/b/c/d>{-1}               % d/c/b/a",
+            "<c/d>{-1}.mult(<a/b>{-1})   % d/c/b/a",
+            "<a/b>.mult(<a/b>{-1})       % a/b/b/a",
+            // the locus: the obj's point before the brackets is on the run, a point inside runs with the path
+            "{2}<a/b>{-1}                % {2}b/a",
+            "{2}<a/b>{2}                 % {2}a/b/a/b",
+            "<{2}a/b>{2}                 % <{2}a/b/{2}a/b>",
+            "<a/b{2}>{2}                 % <a/b/a/b{4}>",
+            "<a/b{2}>{-1}                % <b/a{2}>",
+            // inside the brackets a trailing {n} is still the path's own point
+            "<a/b{2}>                    % <a/b{2}>",
+    }, delimiter = '%')
+    public void testASpanAfterTheBracketsIsAPower(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

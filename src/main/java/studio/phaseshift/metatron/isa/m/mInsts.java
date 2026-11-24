@@ -606,7 +606,7 @@ public final class mInsts {
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the path of the lhs uri")
                         .dom(URI_TID, "the uri to reverse").rng(URI_TID, "the uri with its path reversed")
                         .argLst()
-                        .body((lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed())))
+                        .body((lhs, inst) -> lhs.jvm(Uri.Helper.power(lhs.uriValue(), -1)))
                         .law(Law.involution, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MERGE_INST_TID, "merge a uri stream into a single uri")
@@ -692,18 +692,10 @@ public final class mInsts {
                         .body((lhs, inst) -> lst(jnt((Long) lhs.uriValue().c().min()), jnt((Long) lhs.uriValue().c().max())))
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(POW_INST_TID, "concatenate the path of the lhs uri onto itself the argument number of times")
+                InstBuilder.build().tid(POW_INST_TID, "concatenate the path of the lhs uri onto itself the argument number of times, its reversed path for a negative number (the span <u>{n})")
                         .dom(URI_TID, "the base uri").rng(URI_TID, "the repeated uri")
-                        .argLst(T(INT_TID), "the number of repetitions")
-                        .body((lhs, inst) -> {
-                            final int pow = inst.arg(0).intValue().intValue();
-                            if (0 == pow) return lhs.jvm(f(""));
-                            fURI u = null;
-                            for (int i = 0; i < pow; i++) {
-                                u = null == u ? lhs.uriValue() : u.mult(lhs.uriValue());
-                            }
-                            return lhs.jvm(u);
-                        })
+                        .argLst(T(INT_TID), "the number of repetitions: zero is <>, and a negative number repeats the converse, the path reversed")
+                        .body((lhs, inst) -> lhs.jvm(Uri.Helper.power(lhs.uriValue(), inst.arg(0).intValue())))
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(SCHEME_INST_TID, "the scheme of the lhs uri")
