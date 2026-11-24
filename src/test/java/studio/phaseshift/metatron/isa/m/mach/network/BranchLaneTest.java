@@ -215,8 +215,9 @@ public class BranchLaneTest extends AbstractMetatronTest {
      * and stays on branch"): a place set deals each lane, per lane, the demand of the designator naming its place, read
      * as ?place reads it, the most specific naming winning; local names a home lane, a repeated designator sums its
      * demand, and a lane no designator names takes one share. A POINT IS COPIES, NEVER A SHARE ("cut{2}() will duplicate
-     * data"). A share below one is refused, and so is a split the branch does not perform. Each row: the expression % its
-     * answer.
+     * data"). A share below one is refused, and so is a split the branch does not perform. A DESIGNATOR KEY names its
+     * places when the branch runs: {@code <peer>} is a lane at each dialed peer, and {@code <#>} at each reachable place
+     * (this machine listens on nothing here, so # is the peers). Each row: the expression % its answer.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -225,6 +226,11 @@ public class BranchLaneTest extends AbstractMetatronTest {
             "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left> => count(),<loop://right> => count())                                                % {2}6",
             "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={2}part> => count(),<loop://left?split={2}part&timeout=20> => sum(),<loop://right?split=part> => count()) % {3,7,1}",
             "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(),<loop://left?split={2}part> => sum())                       % {2,16}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=part(<peer> => count())                                                                % {2}3",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<peer> => count())                                                                           % {2}6",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}//left](<peer> => count())                                                         % {4,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=part(<#> => count())                                                                   % {2}3",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=part(<peer> => count(),<~> => sum())                                                   % {{2}2,9}",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[//left,{2}//right](move(<loop://left>).count(),move(<loop://right>).count())          % {2,4}",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}loop://right](move(<loop://left>).count(),move(<loop://right>).count())            % {2,4}",
             "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}//left](move(<loop://left>).count(),count())                                       % {4,2}",
@@ -251,6 +257,15 @@ public class BranchLaneTest extends AbstractMetatronTest {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://right"));
         }
+    }
+
+    /**
+     * A DESIGNATOR NAMING NO PLACE IS NO LANE: with no peer dialed, {@code <peer>} names nothing, so the branch runs
+     * nothing and answers nothing, where a dialed peer is a lane (the {@code <peer>} rows above).
+     */
+    @Test
+    public void testADesignatorNamingNothingIsNoLane() {
+        AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2}.branch?<=int{*}(<peer> => count())", "noobj");
     }
 
     @Test

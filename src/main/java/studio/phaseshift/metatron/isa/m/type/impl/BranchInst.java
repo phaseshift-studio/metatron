@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Env;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlaceSet;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
@@ -38,6 +39,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -131,20 +133,30 @@ public class BranchInst extends MInst {
      * answers ("cut{2}() will duplicate data"). A KEYED branch is read as the lanes it means: each key {@code <p>} the
      * lane {@code cut(<p>, program)}, its share its {@code ?split}, and its {@code ?timeout} (the key's, else the
      * branch's) the cut's; a home key's program is timed by a cut that stays, {@code cut(<~>, program)}, as every
-     * timeout is a cut's.
+     * timeout is a cut's. A DESIGNATOR KEY, {@code <peer>} or {@code <#>}, is a lane at each place it names when the
+     * branch runs, as {@code ?place} resolves it: no place, no lane.
      */
     public static List<Lane> lanes(final Inst branch) {
         if (branch.args().isRec()) {
-            final List<Lane> lanes = routes(branch).<Rel>elements().map(route -> {
+            final List<Lane> lanes = routes(branch).<Rel>elements().flatMap(route -> {
                 final fURI key = route.first().uriValue();
                 final List<Inst> program = program(route.second());
-                // the key's place is its path, aligned as a move's target, and the hop budget it states rides with it
-                final fURI place = null == key.q(HOP) ? key.qLess() : key.qLess().q(HOP, key.q(HOP));
                 final fURI cut = null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT));
                 final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
-                return new Lane(home(key) ? null : place, program, share(split(key.q(SPLIT)), home(key) ? null : place),
-                        !home(key) ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
-                                : null == key.q(TIMEOUT) ? code(program) : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
+                final Obj split = split(key.q(SPLIT));
+                // A DESIGNATOR KEY NAMES ITS PLACES WHEN THE BRANCH RUNS (stage 3): peer is every dialed peer and # every
+                // reachable place, as ?place resolves them (PlaceResolver), one lane at each; any other key is the one
+                // place its path names (none at home), aligned as a move's target
+                final List<fURI> places = PEER.equals(key.qLess().toString()) || HASH_FURI.equals(key.qLess())
+                        ? PlaceResolver.resolve(PlaceSet.of(uri(key.qLess())), Env.snapshot()).stream().map(PlaceResolver.ResolvedPlace::authority).toList()
+                        : Collections.singletonList(home(key) ? null : key.qLess());
+                return places.stream().map(at -> {
+                    // the hop budget the key states rides with its place
+                    final fURI place = null == at || null == key.q(HOP) ? at : at.q(HOP, key.q(HOP));
+                    return new Lane(place, program, share(split, place),
+                            null != place ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
+                                    : null == key.q(TIMEOUT) ? code(program) : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
+                });
             }).toList();
             // A BRANCH DEALS ITS LHS OR COPIES IT (Marko, 2026-11-24: mixed copy and part keys are refused, "default")
             if (lanes.stream().anyMatch(lane -> 0 < lane.weight()) && lanes.stream().anyMatch(lane -> 0 == lane.weight()))
