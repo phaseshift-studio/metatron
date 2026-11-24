@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -48,8 +49,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * the typer free to acquire more orthogonal features beside it.
  * <pre>
  * typer::[check=>[code_resolve=>bool::T, inst_rng=>bool::T, inst_dom=>bool::T,
- *                 type_pred=>bool::T, obj_write=>bool::T]]
+ *                 type_pred=>bool::T, obj_write=>bool::T],
+ *         unfold=>[uri=>int::T, lst=>int::T]]
  * </pre>
+ * Beside {@code check}, {@code unfold} bounds how many copies a span may unfold into ({@link #UNFOLD}).
  * <p>
  * {@link Helper} is the funnel. It also holds the stage's <b>deduction rule</b> — which instruction <em>implementation</em>
  * a type lands on (the contract between a family read and the resolver).
@@ -89,6 +92,25 @@ public interface Typer extends Component {
      * every type-check point, in the order the boot profile and the console present them.
      */
     List<fURI> CHECKS = List.of(CODE_RESOLVE, INST_RNG, INST_DOM, TYPE_PRED, OBJ_WRITE);
+
+    /**
+     * the state field: HOW FAR A SPAN MAY UNFOLD (Marko, 2026-11-24), one {@code int::T} bound per carrier, the most
+     * copies the span of an obj may unfold into. A span past its bound fails rather than building an outsized obj.
+     */
+    fURI UNFOLD = f("unfold");
+    /**
+     * the most copies a uri's span unfolds its path into: {@code <a/b>{n}}, {@code pow(n)}, and a span a uri takes
+     * from its lhs ({@code 'a'{n}.as(uri::T)}).
+     */
+    fURI UNFOLD_URI = f(URI);
+    /**
+     * the most copies a span lays along a lst axis: {@code [5{n}]}, and an argument list.
+     */
+    fURI UNFOLD_LST = f("lst");
+    /**
+     * the bound an unfold the state does not name reads.
+     */
+    long UNFOLD_DEFAULT = 100L;
 
     /**
      * the boot default: every assertion on except {@link #CODE_RESOLVE}.
@@ -313,7 +335,7 @@ public interface Typer extends Component {
          * writes ({@code at("check/inst_dom", …)} swaps the check rec out), so a cached rec would go stale behind the
          * caller's back. The walks below are over recs with a handful of entries each.
          */
-        private static Obj check() {
+        private static Obj state(final fURI field) {
             // BEFORE OR DURING BOOT there is no machine to ask, and asking would recurse into the very machine being
             // constructed (a bool's construction runs a type check). The boot default is the only safe answer then.
             if (!Machine.loaded())
@@ -323,16 +345,41 @@ public interface Typer extends Component {
                 return noobj();
             final Obj compiler = raw(machine, COMPILER);
             final Obj stage = compiler.isRec() ? raw(compiler.asRec(), TYPER) : noobj();
-            return stage.isRec() ? raw(stage.asRec(), CHECK.name()) : noobj();
+            return stage.isRec() ? raw(stage.asRec(), field.name()) : noobj();
         }
 
         /**
          * is a type-check point on? The one question every stage (rewriter, resolver, processor, space write) asks.
          */
         public static boolean asserts(final fURI flag) {
-            final Obj check = check();
+            final Obj check = state(CHECK);
             final Obj on = check.isNoObj() ? noobj() : raw(check.asRec(), flag.name());
             return on.isNoObj() ? defaultsOn(flag) : on.boolValue();
+        }
+
+        /**
+         * MAY THIS SPAN UNFOLD? A span of n unfolds into |n| copies, and the bound is the current machine's
+         * {@code /compiler/typer/unfold} entry for {@code carrier} ({@link #UNFOLD_URI}, {@link #UNFOLD_LST}),
+         * {@link #UNFOLD_DEFAULT} when the state names none, read raw as the check points are, since it is asked while
+         * objs are being built. A span of at most one copy (the unit, the obj itself, its converse) unfolds nothing, so
+         * it is never refused and reads no state.
+         *
+         * @param carrier what the span unfolds into
+         * @param span    the span
+         * @return {@code span}, when the bound admits its copies
+         * @throws MTronException when its copies pass the bound
+         */
+        public static long unfolds(final fURI carrier, final long span) {
+            final long copies = Math.abs(span);
+            if (copies <= 1L)
+                return span;
+            final Obj unfold = state(UNFOLD);
+            final Obj bound = unfold.isRec() ? raw(unfold.asRec(), carrier.name()) : noobj();
+            final long most = bound.isInt() ? bound.intValue() : UNFOLD_DEFAULT;
+            if (copies > most)
+                throw MTronException.of("a span of %s copies unfolds past the typer's bound for %s: /compiler/typer/%s/%s is %s",
+                        copies, carrier.name(), UNFOLD.name(), carrier.name(), most);
+            return span;
         }
 
         public static boolean codeResolve() {

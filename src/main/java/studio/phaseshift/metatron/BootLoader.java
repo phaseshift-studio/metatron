@@ -582,6 +582,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             for (final java.util.Map.Entry<Obj, Obj> stage : checkOverrides.entrySet())
                 typerCheck = typerCheck.at(stage.getKey(), stage.getValue());
             final Typer typer = BasicTyper.of(typerCheck);
+            // the unfold bounds the same way: a profile names only the bounds it changes (`typer/unfold => [uri => 1000]`),
+            // written over the defaults the typer seeds
+            for (final java.util.Map.Entry<Obj, Obj> bound : args.at("typer/unfold").orElse(rec()).asRec().recValue().entrySet())
+                typer.at(uri(Typer.UNFOLD.name() + "/" + bound.getKey().uriValue().name()), bound.getValue(), MUTABLE);
             LOG.info("{{c}}typer{{X}} registered: %s", typer);
             /// /// START OF BOOTING PROCESS /// ///
             String hostname = null;

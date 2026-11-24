@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -1634,7 +1635,7 @@ public class mParser {
         // once, its span optional
         final Parser span = seq(of('{'), seq(opt(of('-'), ""), digit().plus()).flatten(), of('}')).map(t -> Long.parseLong(mParser.<String>pick(t, 1)));
         return seq(m_type_prefix(Tokens.URI_TID),
-                choice(seq(of('<').and(), m_furi(REDUCED_FURI_CHARS, true, true, true), opt(span, 1L)).map(t -> fURI.Helper.power(pick(t, 1), mParser.<Long>pick(t, 2))),
+                choice(seq(of('<').and(), m_furi(REDUCED_FURI_CHARS, true, true, true), opt(span, 1L)).map(t -> fURI.Helper.power(pick(t, 1), Typer.Helper.unfolds(Typer.UNFOLD_URI, mParser.<Long>pick(t, 2)))),
                         m_furi(REDUCED_FURI_CHARS, true, true, true)),
                 m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }

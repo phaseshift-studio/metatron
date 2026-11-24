@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.impl.MLst;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -371,7 +372,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                     !entry.tid().b().isOne() && entry.tid().b().isExact() && null != entry.tid().b().min();
             return entries.stream().noneMatch(lays) ? entries : entries.stream()
                     .flatMap(entry -> lays.test(entry) ?
-                            Stream.generate(() -> withoutSpan(entry)).limit(Math.max(0L, entry.tid().b().min())) :
+                            Stream.generate(() -> withoutSpan(entry)).limit(Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.max(0L, entry.tid().b().min()))) :
                             Stream.of(entry))
                     .collect(Collectors.toCollection(ArrayList::new));
         }

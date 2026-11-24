@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -132,7 +133,7 @@ public class MUri extends MObj implements Uri {
             // as it reads. Not in self(), which a clone calls twice with the same tid (objCheckAndSave, then selfTID), so
             // the path would be raised twice; and not in the constructor, where a uri made with a span on its tid fails
             // its type check first ({2}a/b is not a {2}uri::T). A range ({*}) is no power and stays on the tid
-            clone.jvm = fURI.Helper.power(clone.jvm(), span.min());
+            clone.jvm = fURI.Helper.power(clone.jvm(), Typer.Helper.unfolds(Typer.UNFOLD_URI, span.min()));
             clone.tid = clone.tid.b(cInt.ONE());
             clone.parsedTemplatesCache = null;
         }

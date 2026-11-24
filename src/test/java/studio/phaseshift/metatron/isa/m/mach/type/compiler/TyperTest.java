@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_TYPER_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -140,5 +141,50 @@ public class TyperTest extends AbstractMetatronTest {
         } finally {
             Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
         }
+    }
+
+    /**
+     * HOW FAR A SPAN MAY UNFOLD IS THE TYPER'S STATE (Marko, 2026-11-24): {@code unfold=>[uri=>int::T, lst=>int::T]},
+     * 100 each by default. A uri's span unfolds its path into |n| copies ({@code <a>{n}}, {@code pow(n)}, a span it
+     * takes from its lhs), a lst's axis lays a span's copies ({@code [5{n}]}), and a span past its bound fails. A span
+     * of one copy unfolds nothing, so the converse is never refused. Each row: the chain % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*/compiler/typer/unfold          % [uri=>100,lst=>100]",
+            "<a>{100}.count()                 % 1",
+            "<a>{-100}.count()                % 1",
+            "<a>{101}                         % <ERROR>",
+            "<a>{-101}                        % <ERROR>",
+            "a.pow(100).count()               % 1",
+            "a.pow(-101)                      % <ERROR>",
+            "\"a\"{100}.as(uri::T).count()    % 1",
+            "\"a\"{101}.as(uri::T)            % <ERROR>",
+            "[5{100}]>-.count()               % 100",
+            "[5{101}]                         % <ERROR>",
+            "<a/b>.reverse()                  % b/a"})
+    public void testASpanUnfoldsNoFurtherThanItsBound(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * THE BOUND IS THE TYPER'S TO CHANGE, by the same nested write as a check point, in java or mtron, and it is read
+     * live, so the next span sees it. The typer's type holds a bound to an int.
+     */
+    @Test
+    public void theUnfoldBoundIsTheTypersToChange() {
+        try {
+            Machine.current().compiler().typer().at("unfold/lst", jnt(200), Poly.MUTABLE);
+            checkCodeParseApply(LOG, "[5{101}]>-.count()", "101");
+            ObjmtronSerializer.parse("@/compiler/typer/unfold >>= [uri => 2]").apply();
+            checkCodeParseApply(LOG, "<a>{2}", "a/a");
+            checkCodeParseApply(LOG, "<a>{3}", "<ERROR>");
+            checkCodeParseApply(LOG, "a.pow(-3)", "<ERROR>");
+            checkCodeParseApply(LOG, "@/compiler/typer/unfold >>= [uri => 'many']", "<ERROR>");
+        } finally {
+            Machine.current().compiler().typer().at("unfold/uri", jnt(Typer.UNFOLD_DEFAULT), Poly.MUTABLE);
+            Machine.current().compiler().typer().at("unfold/lst", jnt(Typer.UNFOLD_DEFAULT), Poly.MUTABLE);
+        }
+        checkCodeParseApply(LOG, "<a>{3}", "a/a/a");
     }
 }

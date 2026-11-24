@@ -593,6 +593,7 @@ public class machInstSet extends AbstractInstSet {
                                         however, more active stages reduces potential for data corruption.
                                         typically use many stages when designing code and once stable,
                                         remove stages accordingly for increased performance.
+                                        beside them, the unfold bounds: how many copies a span may unfold into.
                                         """)
                                 // every slot is optional: a BasicTyper is checked against this type while its rec is
                                 // still empty (MObj's constructor), and an absent point reads the boot default
@@ -601,10 +602,14 @@ public class machInstSet extends AbstractInstSet {
                                         uri(Typer.INST_RNG.name()).maybe(), BOOL_TYPE,
                                         uri(Typer.TYPE_PRED.name()).maybe(), BOOL_TYPE,
                                         uri(Typer.CODE_RESOLVE.name()).maybe(), BOOL_TYPE,
-                                        uri(Typer.OBJ_WRITE.name()).maybe(), BOOL_TYPE)), mutableMap(
-                                        uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"))
+                                        uri(Typer.OBJ_WRITE.name()).maybe(), BOOL_TYPE),
+                                        uri(Typer.UNFOLD).maybe(), rec(
+                                        uri(Typer.UNFOLD_URI.name()).maybe().asUri(), INT_TYPE,
+                                        uri(Typer.UNFOLD_LST.name()).maybe(), INT_TYPE)), mutableMap(
+                                        uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)",
+                                        uri(Typer.UNFOLD), "the most copies a span unfolds into, 100 each by default, and a span past its bound fails: uri (a uri's path: <a>{n}, pow(n), a span a uri takes from its lhs), lst (laid along a lst axis: [5{n}], an argument list)"))
 
-                                // the typer fills in its rec (check, verify), so it gets a copy, never the caller's
+                                // the typer fills in its rec (check, unfold, verify), so it gets a copy, never the caller's
                                 .constructor(arg -> new BasicTyper(mutableMap(arg.asRec().jvm()), MACH_TYPER_TID, arg.vid()))
                                 .create(),
                         // memory — a machine's address space: its relative bindings are the rec itself, and its

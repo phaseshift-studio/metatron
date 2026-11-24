@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.BasicStatefulMonad;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -695,7 +696,7 @@ public final class mInsts {
                 InstBuilder.build().tid(POW_INST_TID, "concatenate the path of the lhs uri onto itself the argument number of times, its reversed path for a negative number (the span <u>{n})")
                         .dom(URI_TID, "the base uri").rng(URI_TID, "the repeated uri")
                         .argLst(T(INT_TID), "the number of repetitions: zero is <>, and a negative number repeats the converse, the path reversed")
-                        .body((lhs, inst) -> lhs.jvm(fURI.Helper.power(lhs.uriValue(), inst.arg(0).intValue())))
+                        .body((lhs, inst) -> lhs.jvm(fURI.Helper.power(lhs.uriValue(), Typer.Helper.unfolds(Typer.UNFOLD_URI, inst.arg(0).intValue()))))
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(SCHEME_INST_TID, "the scheme of the lhs uri")

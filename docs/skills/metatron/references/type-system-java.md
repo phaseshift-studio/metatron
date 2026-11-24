@@ -351,7 +351,8 @@ one `bool::T` per check point, grouped under `check` so the typer can grow other
 can later become a finer realization than true/false):
 
 ```
-typer::[check=>[code_resolve=>false, inst_rng=>true, inst_dom=>true, type_pred=>true, obj_write=>true], verify=>…]
+typer::[check=>[code_resolve=>false, inst_rng=>true, inst_dom=>true, type_pred=>true, obj_write=>true],
+        unfold=>[uri=>100, lst=>100], verify=>…]
 ```
 
 The boot default is every point on except `code_resolve`; a boot profile names only the points it overrides
@@ -373,6 +374,16 @@ Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABL
 
 Enforcement sites ask the gateway (`Typer.Helper`), never a static set: the processor before invoking, the space
 before a write, the obj before a type-predicate test, the selector before a dynamic resolution.
+
+Beside `check`, the typer's `unfold` field bounds how many copies a span may unfold into, one `int::T` per carrier
+(`unfold=>[uri=>100, lst=>100]` by default; a boot profile overrides with `typer/unfold => [uri => 1000]`). The four
+sites that unfold a span ask `Typer.Helper.unfolds`, which answers the span or throws past the bound. Three are a uri's
+path: `mParser.m_uri` for `<w>{n}`, `MUri.clone` for a span a uri takes from its lhs, and `pow(n)`. The fourth is
+`Lst.Helper.laid` for the copies laid along a lst axis. A span of one copy (the unit, the obj, its converse) reads no state:
+
+```java
+fURI.Helper.power(path, Typer.Helper.unfolds(Typer.UNFOLD_URI, n));   // <w>{n}: |n| copies of the path, or a fail
+```
 
 ## Common gotchas
 
