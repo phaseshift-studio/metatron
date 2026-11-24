@@ -141,6 +141,13 @@ of a live console are in [docs/agents/console-harness.md](docs/agents/console-ha
   `int{4}::T` — is a stream, and `stream()` is defined on `Obj` itself, so `obj.stream().forEach(...)` covers one match
   and many identically with no `isLst()`/`isRec()`/`isRel()`/`instanceof Poly` branching. Sort a read yourself when
   position matters. See the `stream()` note under Key Concepts.
+- **Read through a value that may be absent with `orElse(rec0())`:** `x.at(K).orElse(rec0()).at(K2)`. `at()` is
+  declared on `Poly`, so a `noobj` answer cannot take the next `at()`; the empty rec can, and answers `noobj` in turn.
+  No `isRec()`/`isNoObj()` branch and no path-key workaround (`SchemaSpace`, `grphInstSet` and `vecSpace` read this way).
+- **A helper called on every event stays allocation-free.** A gate, a meter or a log check runs inside the type
+  system's own hot paths (`TypeGraph.memo`, the resolver, the monad loop), so it never builds an obj or resolves a
+  type: read a constant key with a direct map read, never through `at()` or a freshly built key. An `enabled()` that
+  built a `uri` per call recursed through `TypeGraph.memo` until every profiled run overflowed the stack.
 
 ## API Design — the rules this codebase keeps re-learning
 
@@ -237,6 +244,11 @@ fold's height; a move's frame transition is a `move seam`).
 
 - `grep` the call sites first; the "called once in BootLoader" premise was wrong for `bootstrap` (its real callers are
   `AbstractMachine`'s constructor and `push`).
+- Retiring, renaming or defaulting a producer of KEYED data (a probe path, a rec key, a q-proc a config declares)
+  starts with a sweep by the key itself, its token and its literal, across `src/main`, the `.mtron` boot and config
+  files, `docs/skills/`, the `?docq` strings and the test fixtures that stand in for the producer. A reader of a
+  retired key still compiles and reads zero, and a sentence that says what the key measured survives a key sweep, so
+  search for its meaning too.
 - Renames are not done until javadoc `{@link}`, mtron doc strings (the strings served by `?docq`), and the
   hand-authored `docs/skills/` references are updated. Never edit the build output in `docs/website/` (the table
   under Skills and Docs): the next build overwrites it.
@@ -365,6 +377,14 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
 - dom/rng: `inst?a<=b()` is an instruction that maps objs of type `b` to objs of type `a` (note reverse arrow `<=`).
   ultimately compiles to the URI `inst?rng=a&dom=b`: query components render in the canonical order `rng`, `dom`,
   `args`, then the remaining keys in reverse alphabetical order, so one fURI has exactly one spelling.
+- slicing: use `fURI`'s own vocabulary, never index loops over `segments()` or string prefixes. `head(n)`/`tail(n)`
+  keep the first/last n segments and `retract(n)`/`pretract(n)` drop the last/first n; all four keep the scheme, the
+  host and the leading `/`, so a key sliced with `pretract` still carries its `test:`. `asNode()`/`asBranch()` strip
+  or add the trailing `/`, `asRelative()`/`asAbsolute()` the leading one. `hasPrefix(f)` is a segment prefix (a pattern
+  prefix bimatches), and `removePrefix(f)` answers the bare relative remainder, so call it behind a `hasPrefix` check.
+- the empty path is a trap: `head(0)` and a full `retract` leave an empty path, which counts as absolute, stays empty
+  under `asBranch()` and `asAbsolute()`, and reads as the relative `+` once extended. Root a slice with
+  `Space.Helper.root(...)` instead.
 
 **mtron language**
 
@@ -390,6 +410,9 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
    expressions in CSV rows; leverage `checkCodeParseApply`/`checkCodeEvaluate`/`checkEquality` from
    `AbstractMetatronTest`; use `@SkipInheritedTests` for selective skipping
 5. **Docker**: Image built & published to GHCR via `.github/workflows/docker.yml` (not part of the Maven build).
+6. **mtron files**: name a new `.mtron` file `<name>.<usage>.mtron` (`drstynx.boot.mtron`, `default.splash.mtron`,
+   `mach.instset.mtron`). Existing files keep their names until Marko migrates them, so a neighbouring file's name is
+   not an example.
 
 ---
 
@@ -418,6 +441,9 @@ named under Absolute Rules also blocks edits to the build output.
 * When you create, rename or significantly change a Java class documented in a skill reference, update that
   reference. Every example in a skill doc must pass the docs pipeline (`bin/metatron-docker build docs <file.md>`);
   `fail::` lines in the processed output are broken examples.
+* A change that alters what an existing example PRINTS is due the same check as a change to its text: before you
+  call a feature done, run the docs' examples of it through the pipeline. An inherited exclusion that leaves one of
+  them printing the old output is unfinished work to raise with Marko, not a note.
 * Create or rewrite `.md` docs only when asked, or when the change is mechanical (a new class in a package map).
 
 Which reference to update for which class, and how: [docs/agents/skill-docs.md](docs/agents/skill-docs.md).
@@ -452,7 +478,16 @@ A branch reaches main in this order:
 
 1. Commit on your branch, in your worktree.
 2. `git rebase main` in the worktree, so the branch is exactly what main will become.
-3. Have the branch reviewed against this file and CONTRIBUTING.md. In Claude Code that is the `metatron-reviewer`
-   subagent, which reads `git diff main...HEAD` itself. Fix every `must` finding, or say why it stands.
+3. Start the review in the background: in Claude Code, the `metatron-reviewer` subagent, which checks the branch
+   against this file and CONTRIBUTING.md. Give it the branch's base (`git merge-base main HEAD`) in its brief, because
+   once Marko fast-forwards, `main...HEAD` is empty. The merge command never waits for the review. Report only a
+   finding you have verified in the code, and fix it on the branch, or as a follow-up commit if main already has it.
 4. Run the test classes the change touches on the final tree, and read `Tests run:`.
-5. Hand Marko the merge, `git -C <main checkout> merge --ff-only <branch>`. Agents never run it.
+5. Hand Marko the merge, `git -C <main checkout> merge --ff-only <branch>`. Agents never run it. Run
+   `git log --oneline HEAD..main` in the worktree right before you write that command, in the same batch as the
+   message that carries it: main moves while you work, and a check from the start of the turn is stale. If it lists
+   anything, rebase, run step 4 again, and check again.
+
+A command you hand Marko runs from his own directory, whenever he runs it. Write every file it reads before you show
+it, name every path absolutely, and give every git step `-C <dir>`. When it needs a file that only one checkout has
+(`.claude/` is gitignored, so worktrees lack it), say so beside the command.

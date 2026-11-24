@@ -70,6 +70,13 @@ Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 3. `BootLoader.TESTING = true` — skips shutdown hook headless wait
 4. `BootLoader.load(...)` — initializes the VM
 
+## Asserting on what a server records
+
+Wait on the thing you assert. A test that waits for one event (a reply) and then asserts on another (a meter, a log
+line, a stored record) races the producer whenever the producer records after it sends: `QProc.Layer.read` counts a
+read after its source returns, and the source is what sends the reply. Read the producer to see which side of the
+event its recording falls on, then poll for the recorded value with a deadline and assert inside the poll's exit.
+
 ## Test Infrastructure
 
 - **Test containers**: MySQL (3306), PostgreSQL (5432), MariaDB (3307) — run in CI
