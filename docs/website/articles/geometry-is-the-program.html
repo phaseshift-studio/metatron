@@ -433,6 +433,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/tensor-product-computing-machine.html"><i
+                                class="bi bi-cpu icon-color me-2 isa-row"></i>An M⊗<sub>R</sub>N Computing Machine</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/tensor-product-computing-machine.html">html</a>
+                            <a class="article-format" href="../articles/tensor-product-computing-machine.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -567,12 +576,15 @@ running machine's own thread tree: each <code>&gt;&gt;</code> is a scatter that 
 into its children, and each <code>.count()</code> is the gather that folds them back to a
 single number:</p>
 <pre><code class="language-mtron">mtron&gt; /sys/thread.&gt;&gt;
+==&gt;/sys/thread/31a8a4f4
+==&gt;/sys/thread/4028d3eb
 ==&gt;/sys/thread/executor
 ==&gt;/sys/thread/main
+==&gt;/sys/thread/dc28c249
 mtron&gt; /sys/thread.&gt;&gt;.count()
-==&gt;2
+==&gt;5
 mtron&gt; /sys/thread.&gt;&gt;.&gt;&gt;.count()
-==&gt;8
+==&gt;30
 </code></pre>
 <p>The branching factor <em>is</em> the coefficient. Descend and the count grows; gather
 and it folds back to one number. The two directions are the two fundamental

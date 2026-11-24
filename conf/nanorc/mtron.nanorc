@@ -28,7 +28,9 @@ color green "\[" "\]" "\(" "\)" "\{" "\}"
 # real exponent
 icolor yellow "(\.|[0-9])+E[-+]?[0-9]+"
 # uri slash or schema
-icolor blue "(/|([a-z]+(://))|[a-z]|_)([0-9]|[a-z]|\.|-|_)*(:(?!:))?[0-9]*(/)?([a-z]|/|\_|[0-9]|\.|:(?!:))*"
+icolor blue "(/|([a-zA-Z]+(://))|[a-zA-Z]|_)([0-9]|[a-zA-Z]|\.|-|_)*(:(?!:))?[0-9]*(/)?([a-zA-Z]|/|\_|[0-9]|\.|:(?!:))*"
+# generic: an all-caps uri is a type variable (A, B, C) — distinct from a concrete type (int, rec)
+color cyan "\<[A-Z]+\>"
 # rec/rel uri key — applied after generic <> coloring below
 color green "=>"
 ### bytes

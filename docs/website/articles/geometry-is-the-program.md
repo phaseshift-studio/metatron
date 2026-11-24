@@ -55,12 +55,15 @@ single number:
 
 ```mtron
 mtron> /sys/thread.>>
+==>/sys/thread/31a8a4f4
+==>/sys/thread/4028d3eb
 ==>/sys/thread/executor
 ==>/sys/thread/main
+==>/sys/thread/dc28c249
 mtron> /sys/thread.>>.count()
-==>2
+==>5
 mtron> /sys/thread.>>.>>.count()
-==>8
+==>30
 ```
 The branching factor *is* the coefficient. Descend and the count grows; gather
 and it folds back to one number. The two directions are the two fundamental

@@ -433,6 +433,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/tensor-product-computing-machine.html"><i
+                                class="bi bi-cpu icon-color me-2 isa-row"></i>An M⊗<sub>R</sub>N Computing Machine</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/tensor-product-computing-machine.html">html</a>
+                            <a class="article-format" href="../articles/tensor-product-computing-machine.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -544,12 +553,12 @@ mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
                      pattern  =&gt; &lt;http://#&gt;,
                      route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                    /       =&gt; &lt;&gt;]]
-==&gt;http_server::[origin=&gt;http://localhost:8777,
-                 route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;],
-                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-                 q=&gt;[analq::[pattern=&gt;analq,pre_read=&gt;inst(uri::T){&lt;j&gt;},qless_write=&gt;inst(uri::T,
-                                                                                          #::T){&lt;j&gt;},qless_read=&gt;inst(uri::T,
-                                                                                                                      #::T){&lt;j&gt;},obj=&gt;analyzer::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;}]]]]
+==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
+   	while parsing: http_server::[origin     =&gt; http://localhost:8777,
+                        q        =&gt; [mimeq::[=&gt;]],
+                        pattern  =&gt; &lt;http://#&gt;,
+                        route    =&gt; [/mcp     =&gt; mcp_mtron_http,
+                                      /       =&gt; &lt;&gt;]]]
 mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
                    pattern  =&gt; &lt;ws://#&gt;,
                    q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -1048,8 +1057,69 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
-   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]
+==>mcp_client::[host=>ws://localhost:8555/mcp,
+                status=>!λstatus?bool<=(){<j>},
+                tool=>[
+                 m_web_mcp_mcp_mtron_write_memory=>tool::[
+                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
+                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
+                  name=>m_web_mcp_mcp_mtron_write_memory,
+                  desc=>'(experimental) returns a memory re...',
+                  arg=>[
+                   current_memory=>'the memory to remember -- e.g. a s...',
+                   previous_memory=>'a previous memory vid to chain cur...']],
+                 m_web_mcp_mcp_mtron_read_memory=>tool::[
+                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
+                  name=>m_web_mcp_mcp_mtron_read_memory,
+                  desc=>'(experimental) returns the result ...',
+                  arg=>[memory_vid=>'the vid of the memory to read']],
+                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
+                  inst=>inst(code=>'/m/code',mime=>'/m/uri'){<j>},
+                  name=>m_web_mcp_mcp_mtron_eval_mtron,
+                  desc=>'<no description>',
+                  arg=>[code=>'/m/code',mime=>'/m/uri']],
+                 m_web_mcp_mcp_mtron_list_space=>tool::[
+                  inst=>inst(){<j>},
+                  name=>m_web_mcp_mcp_mtron_list_space,
+                  desc=>'[filter] returns a rec identifying...',
+                  arg=>[=>]],
+                 m_web_mcp_mcp_mtron_machine_info=>tool::[
+                  inst=>inst(){<j>},
+                  name=>m_web_mcp_mcp_mtron_machine_info,
+                  desc=>'[filter] returns what the running ...',
+                  arg=>[=>]],
+                 m_web_mcp_mcp_mtron_find_inst=>tool::[
+                  inst=>inst(pattern=>'the inst tid to match',
+                             dom=>'the dom of inst to match (can be added to pattern arg)',
+                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
+                  name=>m_web_mcp_mcp_mtron_find_inst,
+                  desc=>'[filter] returns a lst of all inst...',
+                  arg=>[
+                   pattern=>'the inst tid to match',
+                   dom=>'the dom of inst to match (can be a...',
+                   rng=>'the rng of inst to match (can be a...']],
+                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
+                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
+                             on_message=>'the function to evaluate on every received message'){<j>},
+                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
+                  desc=>'create a websocket client with pro...',
+                  arg=>[
+                   host=>'the full ws:// uri of the websocke...',
+                   on_message=>'the function to evaluate on every ...']],
+                 ...(1 more)],
+                inst=>[
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
+                                                                       previous_memory=>'a previous memory vid to chain current memory to'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',mime=>'/m/uri'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
+                                                                    dom=>'the dom of inst to match (can be added to pattern arg)',
+                                                                    rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
+                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
+                                                                         on_message=>'the function to evaluate on every received message'){<j>},
+                 ...(4 more)]]@/usr/ai/mcp/mtron
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],

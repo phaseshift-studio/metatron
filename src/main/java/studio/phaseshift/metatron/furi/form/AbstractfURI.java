@@ -1160,6 +1160,11 @@ public abstract class AbstractfURI implements fURI {
             return h;
         // identical to Objects.hash(scheme, path, c, templates) without the Object[] allocation
         final fURI thisResolved = this.folded();
+        // EVERY ZERO IS THE ONE ZERO (equals), so every zero hashes alike
+        if (thisResolved.d().isZero()) {
+            this.hash = 1;
+            return 1;
+        }
         h = 1;
         h = 31 * h + (null == thisResolved.scheme() ? 0 : thisResolved.scheme().hashCode());
         h = 31 * h + (null == thisResolved.path() ? 0 : thisResolved.path().hashCode());
@@ -1181,7 +1186,8 @@ public abstract class AbstractfURI implements fURI {
             return true;
         final fURI thisResolved = this.folded();
         final fURI thatResolved = ((AbstractfURI) that).folded();
-
+        if (thisResolved.d().isZero())
+            return thatResolved.d().isZero();
         return Objects.equals(thisResolved.scheme(), thatResolved.scheme())
                 && Objects.equals(thisResolved.host(), thatResolved.host())
                 && thisResolved.port() == thatResolved.port()

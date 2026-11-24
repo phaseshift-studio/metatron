@@ -14,6 +14,7 @@ const metaContent = (name) => {
 const host = location.hostname || "localhost";
 const secure = location.protocol === "https:";
 const offline = location.protocol === "file:";
+const embed = params.get("embed") === "1";   // an iframe instance: no tab strip of its own
 const httpBase = params.get("http") ||
     (offline ? "http://" + host + ":8777" : location.origin);
 
@@ -50,20 +51,24 @@ function defaultPage() {
     return "mfs:boot/space/web/default.mtron";
 }
 
-const wsBase = params.get("ws") || metaContent("metatron:ws") ||
+let wsBase = params.get("ws") || metaContent("metatron:ws") ||
     (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
-const wsUrl = codecUrl(wsBase);
+let wsUrl = codecUrl(wsBase);
 /* the app's own machine: the page object (layout) and the save live here, never
    on the instance the ?ws names -- the shell and the data are separate things */
 const localBase = (secure ? "wss:" : "ws:") + "//" + host + ":8555/mtron";
 const localUrl = codecUrl(localBase);
-const onInstance = (() => {
+const onInstance = () => {
     try {
         return new URL(wsBase, location.href).host !== new URL(localBase, location.href).host;
     } catch (ignored) {
         return false;
     }
-})();
+};
+
+/* re-render the page's cards against the (possibly new) instance — assigned by
+   the pageCard closure, where loadPage lives */
+let reloadActivePage = null;
 
 /* the instance switch is URL state: the app is the shell, ?ws is the data */
 function viewPeer(url) {
@@ -71,6 +76,42 @@ function viewPeer(url) {
     if (url) at.searchParams.set("ws", url);
     else at.searchParams.delete("ws");
     location.href = at.pathname + at.search + at.hash;
+}
+
+/* switch the app to another metatron machine IN PLACE: point the data plane at
+   its /mtron endpoint, drop the old connections + per-instance state, and
+   re-render the grid and console. no reload — the shell stays, the data moves. */
+async function switchInstance(endpoint) {
+    if (!endpoint) return;
+    wsBase = String(endpoint);
+    wsUrl = codecUrl(wsBase);
+    const url = new URL(location.href);
+    url.searchParams.set("ws", String(endpoint));
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+
+    /* drop the instance's connections and per-instance state */
+    try { if (socket) socket.close(); } catch (ignored) { }
+    socket = null;
+    chain = Promise.resolve();
+    readers.forEach((reader) => { try { if (reader.socket) reader.socket.close(); } catch (ignored) { } });
+    readers.clear();
+    pageFrame = null;
+    REFERENCES.length = 0;
+    renderReferences();
+
+    /* clear the instance's pinned cards and any open inspection */
+    const pinned = $("#pinned");
+    if (pinned) { pinned.textContent = ""; pinned.hidden = true; }
+    const popup = $("#popup");
+    if (popup && popup.open) popup.close();
+
+    /* re-render the console + the page's cards against the new machine */
+    welcome();
+    setDot($("#d-console"), "down");
+    $("#m-console").textContent = "closed";
+    renderIdentity();
+    loadServers();
+    if (reloadActivePage) reloadActivePage();
 }
 
 const rootAddr = metaContent("metatron:root");
@@ -1396,7 +1437,7 @@ function evalMtron(expr) {
         const timer = setTimeout(() => {
             socket.removeEventListener("message", answer);
             resolve("");
-        }, 8000);
+        }, 15000);
         const answer = (ev) => {
             clearTimeout(timer);
             socket.removeEventListener("message", answer);
@@ -1435,7 +1476,7 @@ function renderIdentity() {
     }
     const localEl = $("#instance-local");
     if (localEl) {
-        localEl.hidden = !onInstance;
+        localEl.hidden = !onInstance();
         localEl.onclick = (ev) => {
             ev.preventDefault();
             viewPeer("");
@@ -1444,6 +1485,92 @@ function renderIdentity() {
     const boot = metaContent("metatron:boot");
     const bootEl = $("#boot-file");
     if (boot && bootEl) bootEl.textContent = boot;
+}
+
+/* a bind wildcard (0.0.0.0 / ::) is the machine's own address, not a dialable
+   one — swap it for the machine's name so the jump actually lands */
+function resolveEndpoint(name, endpoint) {
+    try {
+        const url = new URL(endpoint, location.href);
+        if (url.hostname === "0.0.0.0" || url.hostname === "::" || url.hostname === "[::]" || url.hostname === "0:0:0:0:0:0:0:1")
+            url.hostname = String(name);
+        return url.toString();
+    } catch (ignored) {
+        return endpoint;
+    }
+}
+
+/* ── servers: the cluster's metatron machines, as tabs ────────────────────
+   read from the page's own machine's roster (/network/roster/machine/<name>,
+   each carrying its /mtron/ws endpoint). the home machine is the parent's own
+   view; every other machine is a live iframe instance — greyed until clicked,
+   then connected and shown. */
+const instances = new Map();   // name -> iframe
+let homeName = null;           // the machine the parent's page-panel shows
+
+function frameTop() {
+    const bar = $("#servers");
+    return bar ? Math.ceil(bar.getBoundingClientRect().bottom) : 0;
+}
+
+function openInstance(name, endpoint) {
+    if (!instances.has(name)) {
+        const iframe = document.createElement("iframe");
+        iframe.className = "instance-frame";
+        iframe.src = location.pathname + "?ws=" + encodeURIComponent(endpoint) + "&embed=1";
+        iframe.title = name;
+        document.body.appendChild(iframe);
+        instances.set(name, iframe);
+    }
+    showInstance(name);
+}
+
+function showInstance(name) {
+    const panel = document.getElementById("page-panel");
+    if (panel) panel.hidden = (name !== homeName);
+    instances.forEach((iframe, n) => {
+        iframe.hidden = (n !== name);
+        const top = frameTop();
+        iframe.style.top = top + "px";
+        iframe.style.height = (window.innerHeight - top) + "px";
+    });
+    /* a newly-connected machine's tab becomes live */
+    const bar = $("#servers");
+    if (bar) Array.from(bar.children).forEach((tab) => {
+        tab.classList.toggle("live", tab.dataset.name === homeName || instances.has(tab.dataset.name));
+    });
+}
+
+async function loadServers() {
+    const bar = $("#servers");
+    if (!bar) return;
+    let machines = {};
+    try {
+        const roster = await localRead("application/json", "/network/roster");
+        machines = roster && roster.machine && typeof roster.machine === "object" ? roster.machine : {};
+    } catch (ignored) { }
+    const activeHost = (() => {
+        try { return new URL(wsBase, location.href).hostname; } catch (ignored) { return host; }
+    })();
+
+    bar.textContent = "";
+    Object.keys(machines).sort().forEach((name) => {
+        const machine = machines[name] && typeof machines[name] === "object" ? machines[name] : {};
+        const ws = machine.mtron && typeof machine.mtron === "object" ? machine.mtron.ws : null;
+        if (!ws) return;   // only a machine with a ws endpoint is an instance
+        const endpoint = resolveEndpoint(name, String(ws));
+        let isHome = false;
+        try { isHome = new URL(endpoint, location.href).hostname === activeHost; } catch (ignored) { }
+        if (isHome) homeName = name;
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.className = "server-tab" + (isHome || instances.has(name) ? " live" : "");
+        tab.dataset.name = name;
+        tab.textContent = name;
+        tab.title = isHome ? name + " · this instance" : (instances.has(name) ? "view " + name : "connect to " + name + " · " + endpoint);
+        tab.addEventListener("click", () => (isHome ? showInstance(name) : openInstance(name, endpoint)));
+        bar.appendChild(tab);
+    });
 }
 
 let refreshing = false;
@@ -1507,12 +1634,33 @@ const actionExpr = params.get("mtron");
 const actionAt = params.get("at") || "web/console";
 if (actionExpr) showPending(actionExpr, actionAt);
 
+/* an embedded instance (iframe) has no tab strip of its own — the parent owns it */
+if (embed) {
+    const servers = $("#servers");
+    if (servers) servers.hidden = true;
+}
+
 refresh();
+loadServers();
 setInterval(() => {
-    if (!document.hidden) refresh();
+    if (!document.hidden) {
+        refresh();
+        loadServers();
+    }
 }, 15000);
 document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) refresh();
+    if (!document.hidden) {
+        refresh();
+        loadServers();
+    }
+});
+window.addEventListener("resize", () => {
+    instances.forEach((iframe) => {
+        if (iframe.hidden) return;
+        const top = frameTop();
+        iframe.style.top = top + "px";
+        iframe.style.height = (window.innerHeight - top) + "px";
+    });
 });
 
 /* the page itself is the splash_page card: [panel][mtron][json].
@@ -1535,14 +1683,14 @@ document.addEventListener("visibilitychange", () => {
     const saveVid = $("#save-as-vid");
     const saveError = $("#save-as-error");
 
-    /* the page object lives on the app's own machine, so the layout and its
-       save never depend on what a peer happens to expose */
+    /* the page object lives on the active instance, so the layout and its save
+       follow the machine the app is pointed at — each machine wears its own page */
     function pageRead(mime, vid) {
-        return localRead(mime, vid);
+        return readAs(mime, vid);
     }
 
     function pageEval(expr) {
-        return localEval(expr);
+        return evalMtron(expr);
     }
 
     const BEFORE = [
@@ -1758,19 +1906,19 @@ document.addEventListener("visibilitychange", () => {
         }
         if (!MtronIO) throw new Error("mtron-io.js is not loaded");
         /* the vid is used exactly as given: mfs:boot/... is the mfs scheme, not the /mfs space path.
-           only the app's own machine is asked for the page object; an older app build names
+           the ACTIVE instance is asked for the page object; an older app build names
            its source tree fs: where the current one says mfs:, so both spellings are tried.
            when neither answers, the app's built-in layout (the static page) carries the page. */
         const swapped = /^mfs:/.test(vid) ? "fs:" + vid.slice(4)
             : /^fs:/.test(vid) ? "mfs:" + vid.slice(3) : null;
-        const attempts = [{origin: "local", vid}];
-        if (swapped) attempts.push({origin: "local", vid: swapped});
+        const attempts = [{origin: "instance", vid}];
+        if (swapped) attempts.push({origin: "instance", vid: swapped});
         let last = null;
         let page = null;
         let loaded = null;
         for (const attempt of attempts) {
             try {
-                const raw = await localRead("application/x-mtron", attempt.vid);
+                const raw = await readAs("application/x-mtron", attempt.vid);
                 const sourceText = String(raw == null ? "" : raw).trim();
                 if (!sourceText || sourceText === "noobj" || /^fail::/.test(sourceText))
                     throw new Error(sourceText || "noobj");
@@ -1800,7 +1948,7 @@ document.addEventListener("visibilitychange", () => {
             pageTitle = String(page.title);
             document.title = pageTitle;
             /* the machine's hostname prefixes the page title: "booger - metatron" */
-            localRead("application/json", "/network/host").then((host) => {
+            readJson("/network/host").then((host) => {
                 const name = String(host == null ? "" : host).trim();
                 if (name && name !== "noobj" && !/^fail::/.test(name)) {
                     document.title = name + " - " + pageTitle;
@@ -1910,4 +2058,6 @@ document.addEventListener("visibilitychange", () => {
         loadPage(PAGE).catch(() => {
         });
     }
+    /* the instance switch re-renders the page's cards against the new machine */
+    reloadActivePage = () => loadPage(PAGE).catch(() => { });
 })();

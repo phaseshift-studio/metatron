@@ -126,9 +126,9 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}typer=>'the fourth stage — the per-machine...',
-           {?}parser=>'the first stage — source text to o...',
            {?}rewriter=>'the second stage — the code::T to ...',
+           {?}parser=>'the first stage — source text to o...',
+           {?}typer=>'the fourth stage — the per-machine...',
            {?}resolver=>'the third stage — the walk that th...'],
           desc=>'the compiler contract of machine::...',
           example=>[
@@ -277,9 +277,9 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}tracer=>"the processor's diagnostics (trace...",
-           {?}state=>'the run state: stop, run or pause',
            {?}analyzer=>"the processor's statistics (analyz...",
+           {?}state=>'the run state: stop, run or pause',
+           {?}tracer=>"the processor's diagnostics (trace...",
            {?}result=>'the objs the last evaluation produ...',
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
@@ -294,7 +294,7 @@ separate axes of a machine.
 | `swarm_processor::T`               | the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result                                                                                                                                                                                                        |
 | `computer::T`, `swarm_computer::T` | the computer an evaluation runs in: its code and the state of the run                                                                                                                                                                                                                                                                                 |
 | `tracer::T`                        | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's                                                                                     |
-| `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`/`enabled`; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
+| `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`; `noobj` written at it switches it off, at `analysis/<probe>` mutes that probe; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
 
 Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
 stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
@@ -307,24 +307,61 @@ The `analyzer::T` is a measuring component's statistics, in the typer's and the 
 Java (`incr`/`record`/`set`) where the thing it counts happens, and anyone reads the live `analysis::T` — derived from
 the meters as it is read — at `~/<component>/analyzer/analysis`. The meters are `counter::T` (a `nat`, non-negative and
 monotonic in practice), `gauge::T` (a point-in-time `real`) and `timer::T` (`count`/`total`/`min`/`max` of nanos); the
-settings `step`, `profile` and `enabled` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
+settings `step` and `profile` sit beside them. `Analysis.Helper.merge` folds one analysis into another (a
 machine's components, a cluster's machines).
+
+A subscriber's own work is counted but never published: a code subscriber (`~/processor/analyzer/analysis?subq ->
+sub::[code=>…]`) is evaluated on each delivery, and that evaluation, with the reply to any round trip it makes, counts
+in the analysis without scheduling another publication, so each outside change is heard once. A request another
+machine sends is not this one's observer work: two machines whose subscribers push to each other still trade at most
+one publication per step, and a reply that misses its round trip's deadline announces.
+
+**Off is `noobj`.** `~/processor/analyzer -> noobj` removes the analyzer, so nothing records into it (its address then
+reads `noobj`), and a rec written there later — `~/processor/analyzer -> [profile=>true]` — installs a new one whose
+meters start at zero. `~/processor/analyzer/analysis/time -> noobj` mutes the one probe and everything below it, and any
+other value written at that probe lifts the mute; `*~/processor/analyzer/mute` lists what is muted, and a pushed machine
+starts with its parent's mutes, as with its settings.
+
+**The processor counts the machine's evaluations**, always on: `eval` (each computer's run, nested evaluations
+included), `time` (a timer over each run) and `fail` (each uncaught fail a run halts with) at
+`*~/processor/analyzer/analysis`. With
+`~/processor/analyzer/profile -> true`, each evaluation is also profiled into an analyzer of its own, held by the
+computer that ran it: `*~/processor/computer/<n>/analyzer/analysis` (the monad flow, per-instruction counts and stage
+timings), written as a component's analyzer is (`…/computer/<n>/analyzer/analysis/flow -> noobj`). A `profile()`'s
+analyzer is held the same way, by the first computer its timed runs mint.
 
 A **data space** is not a component, and its metrics are its `?analq` q-proc rather than a `~/<space>/analyzer` field:
 the q-proc holds the `analyzer::T`, so it travels with the space, and `read`/`write`/`delete` counts and latencies are
 read flat at the space's `?analq` (e.g. `*/t/#?analq` → `read => [count, latency], write => [count, latency, delete =>
 [count, latency]]`). A space records when it declares the q-proc; nothing is recorded for a space that does not.
 
-A **server is an addressable source too**, and its metrics are its own `?analq`. A listener is instrumented at
+An **address asks to be measured**: `/t/abc?analq -> analysis::[read=>counter::T]`, after which `*/t/abc?analq`
+answers `analysis::[read=>counter::12]`. The request is the type of its answer: the keys are events (`read`, `write`,
+`delete`, `miss`), and the values are meters.
+- **The cap.** The space's `analq::[…]` is the widest request it allows, e.g. `q => [analq::[read=>timer::T, max=>100]]`.
+  A request must fit inside it (counter <= timer); one that does not, or an address past `max`, gets a `fail::T`.
+- **Defaults.** An empty cap allows every event as a timer, and `analysis::[=>]` takes the whole cap.
+- **Withdrawing.** `noobj` withdraws a request; readings no standing request still covers are reset.
+- **Overlaps.** The most specific pattern governs an address (`+` before `#`), and a concrete request holds its `max`
+  slot from the start. The cap and the requests are read in the analyzer (`cap`, `request`).
+- **Wider reads.** `*/t/+?analq` reads the children, and `*/t/#?analq` the space's totals.
+
+**Memory is a space of spaces.** With `/memory/q -> [analq::[=>]]`, a space asks at its mount
+(`/memory/space/logs?analq -> analysis::[read=>counter::T]`) without declaring anything itself.
+`*/memory/space/+?analq` reads every space, and `*/memory/analyzer` (or `*/memory/space/logs/analyzer`, for a space
+with its own analq) reads the analyzer where it is held.
+
+A **server is an addressable source too**, and its metrics are its own `?analq` (one its config declares, `ws_server::[…, q=>[analq::[read=>counter::T]]]`, takes the built-in one's place on a socket the config binds). A listener is instrumented at
 construction, so `<scheme>://host:port/#?analq` answers that socket's analysis: a request or a received message is a
 `read` at its wire address, a sent message a `write` there, a hang-up a write of `noobj` (the `delete` subset), and
 `connections` a gauge beside them. Each socket's q-proc holds its own analyzer, so two servers on one machine never
 share meters — and the network's `~/network/analyzer` still counts the WIRE (`wire/sent`, `wire/recv`, every frame
-either way), which is a different question from the work one server did. An `?analq` read of a local socket is
+either way), which is a different question from the work one server did, and gauges the peers it holds (`peer`,
+sampled when the analysis is read, so a connect shows before any frame is sent). An `?analq` read of a local socket is
 answered locally even while a peer is declared at that origin: the meters of a socket this machine holds are not a
 peer's to answer.
 
-A metric no analyzable emits can be attached to the analyzer as a **derived `!` field** — a live computation over the
+A metric no producer records can be attached to the analyzer as a **derived `!` field** — a live computation over the
 analysis, pulled on demand (the mtron form of a recording rule):
 
 ```mtron
@@ -348,13 +385,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}runtime=>"computes the thread's current runn...",
-           code=>"the thread's executing code",
-           {?}time=>'the datetime::T when the thread wa...',
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}result=>'the last result produced by the th...',
            {?}state=>'current state of the thread',
-           {?}result=>'the last result produced by the th...'],
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}time=>'the datetime::T when the thread wa...',
+           code=>"the thread's executing code",
+           {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
 | key       | value                                        |
@@ -410,11 +447,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}analyzer=>"the network's statistics (analyzer...",
-           {?}peer=>"machine's own connections, one per...",
-           {?}pattern=>'the branch this network answers as...',
-           {?}listener=>'the sockets this machine serves th...',
            {?}status=>'the health method — an auto inst c...',
+           {?}listener=>'the sockets this machine serves th...',
+           {?}pattern=>'the branch this network answers as...',
+           {?}peer=>"machine's own connections, one per...",
+           {?}analyzer=>"the network's statistics (analyzer...",
            {?}roster=>'what the system knows, connectionl...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
@@ -527,17 +564,17 @@ network as `memspace::[pattern=>xyz/#]` indexes into memory.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>[pattern=>ws://localhost:8555/mtron,
-    host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    ...(1 more)]
+==>ws_client::[pattern=>ws://localhost:8555/mtron,
+               host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               ...(1 more)]
 ```
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
 its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three, and so does an

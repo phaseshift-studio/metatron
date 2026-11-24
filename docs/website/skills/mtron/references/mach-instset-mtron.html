@@ -433,6 +433,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/tensor-product-computing-machine.html"><i
+                                class="bi bi-cpu icon-color me-2 isa-row"></i>An M⊗<sub>R</sub>N Computing Machine</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/tensor-product-computing-machine.html">html</a>
+                            <a class="article-format" href="../../../articles/tensor-product-computing-machine.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -629,9 +638,9 @@ after which instruction memory answers the address.</p>
      {?}resolver=&gt;resolver::T,
      {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
-           {?}typer=&gt;'the fourth stage — the per-machine...',
-           {?}parser=&gt;'the first stage — source text to o...',
            {?}rewriter=&gt;'the second stage — the code::T to ...',
+           {?}parser=&gt;'the first stage — source text to o...',
+           {?}typer=&gt;'the fourth stage — the per-machine...',
            {?}resolver=&gt;'the third stage — the walk that th...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
@@ -769,9 +778,9 @@ write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the
      {?}tracer=&gt;tracer::T,
      {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor,
           args=&gt;[
-           {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
-           {?}state=&gt;'the run state: stop, run or pause',
            {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
+           {?}state=&gt;'the run state: stop, run or pause',
+           {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
            {?}result=&gt;'the objs the last evaluation produ...',
            computer=&gt;'the computers this processor minte...',
            fail=&gt;&quot;the machine's fail stack: an uncau...&quot;],
@@ -788,7 +797,7 @@ separate axes of a machine.</p>
 <tr><td><code>swarm_processor::T</code></td><td>the default: independent monads scheduled across the instruction chain, synchronized at barriers; the objs of the halted monads are the result</td></tr>
 <tr><td><code>computer::T</code>, <code>swarm_computer::T</code></td><td>the computer an evaluation runs in: its code and the state of the run</td></tr>
 <tr><td><code>tracer::T</code></td><td>the processor's diagnostics, in the typer's form: trace points at <code>~/processor/tracer/stack</code> (<code>mtron_stack</code>, <code>java_stack</code>), all off by default, overridden by a boot profile's <code>tracer/stack =&gt; […]</code>; a pushed machine's processor carries a copy of its parent's</td></tr>
-<tr><td><code>analyzer::T</code></td><td>any component's statistics at <code>~/&lt;component&gt;/analyzer</code>: a live <code>analysis::T</code> of <code>counter::T</code> (a <code>nat</code>, non-negative), <code>gauge::T</code> and <code>timer::T</code> meters, plus the settings <code>step</code>/<code>profile</code>/<code>enabled</code>; producers record in Java (<code>incr</code>/<code>record</code>/<code>set</code>); a derived <code>!</code> field (a custom aggregate) may be attached beside the analysis (see <em>analyzer</em>)</td></tr>
+<tr><td><code>analyzer::T</code></td><td>any component's statistics at <code>~/&lt;component&gt;/analyzer</code>: a live <code>analysis::T</code> of <code>counter::T</code> (a <code>nat</code>, non-negative), <code>gauge::T</code> and <code>timer::T</code> meters, plus the settings <code>step</code>/<code>profile</code>; <code>noobj</code> written at it switches it off, at <code>analysis/&lt;probe&gt;</code> mutes that probe; producers record in Java (<code>incr</code>/<code>record</code>/<code>set</code>); a derived <code>!</code> field (a custom aggregate) may be attached beside the analysis (see <em>analyzer</em>)</td></tr>
 </tbody>
 </table>
 <p>Each evaluation runs in a computer the processor mints at <code>~/processor/computer/&lt;n&gt;</code>. The processor holds the fail
@@ -800,20 +809,53 @@ evaluation at <code>~/processor/fail/&lt;k&gt;</code>. A fail read from a stack 
 Java (<code>incr</code>/<code>record</code>/<code>set</code>) where the thing it counts happens, and anyone reads the live <code>analysis::T</code> — derived from
 the meters as it is read — at <code>~/&lt;component&gt;/analyzer/analysis</code>. The meters are <code>counter::T</code> (a <code>nat</code>, non-negative and
 monotonic in practice), <code>gauge::T</code> (a point-in-time <code>real</code>) and <code>timer::T</code> (<code>count</code>/<code>total</code>/<code>min</code>/<code>max</code> of nanos); the
-settings <code>step</code>, <code>profile</code> and <code>enabled</code> sit beside them. <code>Analysis.Helper.merge</code> folds one analysis into another (a
+settings <code>step</code> and <code>profile</code> sit beside them. <code>Analysis.Helper.merge</code> folds one analysis into another (a
 machine's components, a cluster's machines).</p>
+<p>A subscriber's own work is counted but never published: a code subscriber (<code>~/processor/analyzer/analysis?subq -&gt; sub::[code=&gt;…]</code>) is evaluated on each delivery, and that evaluation, with the reply to any round trip it makes, counts
+in the analysis without scheduling another publication, so each outside change is heard once. A request another
+machine sends is not this one's observer work: two machines whose subscribers push to each other still trade at most
+one publication per step, and a reply that misses its round trip's deadline announces.</p>
+<p><strong>Off is <code>noobj</code>.</strong> <code>~/processor/analyzer -&gt; noobj</code> removes the analyzer, so nothing records into it (its address then
+reads <code>noobj</code>), and a rec written there later — <code>~/processor/analyzer -&gt; [profile=&gt;true]</code> — installs a new one whose
+meters start at zero. <code>~/processor/analyzer/analysis/time -&gt; noobj</code> mutes the one probe and everything below it, and any
+other value written at that probe lifts the mute; <code>*~/processor/analyzer/mute</code> lists what is muted, and a pushed machine
+starts with its parent's mutes, as with its settings.</p>
+<p><strong>The processor counts the machine's evaluations</strong>, always on: <code>eval</code> (each computer's run, nested evaluations
+included), <code>time</code> (a timer over each run) and <code>fail</code> (each uncaught fail a run halts with) at
+<code>*~/processor/analyzer/analysis</code>. With
+<code>~/processor/analyzer/profile -&gt; true</code>, each evaluation is also profiled into an analyzer of its own, held by the
+computer that ran it: <code>*~/processor/computer/&lt;n&gt;/analyzer/analysis</code> (the monad flow, per-instruction counts and stage
+timings), written as a component's analyzer is (<code>…/computer/&lt;n&gt;/analyzer/analysis/flow -&gt; noobj</code>). A <code>profile()</code>'s
+analyzer is held the same way, by the first computer its timed runs mint.</p>
 <p>A <strong>data space</strong> is not a component, and its metrics are its <code>?analq</code> q-proc rather than a <code>~/&lt;space&gt;/analyzer</code> field:
 the q-proc holds the <code>analyzer::T</code>, so it travels with the space, and <code>read</code>/<code>write</code>/<code>delete</code> counts and latencies are
 read flat at the space's <code>?analq</code> (e.g. <code>*/t/#?analq</code> → <code>read =&gt; [count, latency], write =&gt; [count, latency, delete =&gt; [count, latency]]</code>). A space records when it declares the q-proc; nothing is recorded for a space that does not.</p>
-<p>A <strong>server is an addressable source too</strong>, and its metrics are its own <code>?analq</code>. A listener is instrumented at
+<p>An <strong>address asks to be measured</strong>: <code>/t/abc?analq -&gt; analysis::[read=&gt;counter::T]</code>, after which <code>*/t/abc?analq</code>
+answers <code>analysis::[read=&gt;counter::12]</code>. The request is the type of its answer: the keys are events (<code>read</code>, <code>write</code>,
+<code>delete</code>, <code>miss</code>), and the values are meters.</p>
+<ul>
+<li><strong>The cap.</strong> The space's <code>analq::[…]</code> is the widest request it allows, e.g. <code>q =&gt; [analq::[read=&gt;timer::T, max=&gt;100]]</code>.
+A request must fit inside it (counter &lt;= timer); one that does not, or an address past <code>max</code>, gets a <code>fail::T</code>.</li>
+<li><strong>Defaults.</strong> An empty cap allows every event as a timer, and <code>analysis::[=&gt;]</code> takes the whole cap.</li>
+<li><strong>Withdrawing.</strong> <code>noobj</code> withdraws a request; readings no standing request still covers are reset.</li>
+<li><strong>Overlaps.</strong> The most specific pattern governs an address (<code>+</code> before <code>#</code>), and a concrete request holds its <code>max</code>
+slot from the start. The cap and the requests are read in the analyzer (<code>cap</code>, <code>request</code>).</li>
+<li><strong>Wider reads.</strong> <code>*/t/+?analq</code> reads the children, and <code>*/t/#?analq</code> the space's totals.</li>
+</ul>
+<p><strong>Memory is a space of spaces.</strong> With <code>/memory/q -&gt; [analq::[=&gt;]]</code>, a space asks at its mount
+(<code>/memory/space/logs?analq -&gt; analysis::[read=&gt;counter::T]</code>) without declaring anything itself.
+<code>*/memory/space/+?analq</code> reads every space, and <code>*/memory/analyzer</code> (or <code>*/memory/space/logs/analyzer</code>, for a space
+with its own analq) reads the analyzer where it is held.</p>
+<p>A <strong>server is an addressable source too</strong>, and its metrics are its own <code>?analq</code> (one its config declares, <code>ws_server::[…, q=&gt;[analq::[read=&gt;counter::T]]]</code>, takes the built-in one's place on a socket the config binds). A listener is instrumented at
 construction, so <code>&lt;scheme&gt;://host:port/#?analq</code> answers that socket's analysis: a request or a received message is a
 <code>read</code> at its wire address, a sent message a <code>write</code> there, a hang-up a write of <code>noobj</code> (the <code>delete</code> subset), and
 <code>connections</code> a gauge beside them. Each socket's q-proc holds its own analyzer, so two servers on one machine never
 share meters — and the network's <code>~/network/analyzer</code> still counts the WIRE (<code>wire/sent</code>, <code>wire/recv</code>, every frame
-either way), which is a different question from the work one server did. An <code>?analq</code> read of a local socket is
+either way), which is a different question from the work one server did, and gauges the peers it holds (<code>peer</code>,
+sampled when the analysis is read, so a connect shows before any frame is sent). An <code>?analq</code> read of a local socket is
 answered locally even while a peer is declared at that origin: the meters of a socket this machine holds are not a
 peer's to answer.</p>
-<p>A metric no analyzable emits can be attached to the analyzer as a <strong>derived <code>!</code> field</strong> — a live computation over the
+<p>A metric no producer records can be attached to the analyzer as a <strong>derived <code>!</code> field</strong> — a live computation over the
 analysis, pulled on demand (the mtron form of a recording rule):</p>
 <pre><code class="language-mtron">mtron&gt; ~/network/analyzer/total -&gt; !*~/network/analyzer/analysis/wire/sent.plus(*~/network/analyzer/analysis/wire/recv)
 ...
@@ -832,13 +874,13 @@ analysis, pulled on demand (the mtron form of a recording rule):</p>
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
-           code=&gt;&quot;the thread's executing code&quot;,
-           {?}time=&gt;'the datetime::T when the thread wa...',
-           {?}loop=&gt;'delay to repeat code evaluation (d...',
-           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}result=&gt;'the last result produced by the th...',
            {?}state=&gt;'current state of the thread',
-           {?}result=&gt;'the last result produced by the th...'],
+           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}loop=&gt;'delay to repeat code evaluation (d...',
+           {?}time=&gt;'the datetime::T when the thread wa...',
+           code=&gt;&quot;the thread's executing code&quot;,
+           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;],
           desc=&gt;'the thread base type']
 </code></pre>
 <table>
@@ -891,11 +933,11 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(2 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
-           {?}pattern=&gt;'the branch this network answers as...',
-           {?}listener=&gt;'the sockets this machine serves th...',
            {?}status=&gt;'the health method — an auto inst c...',
+           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}pattern=&gt;'the branch this network answers as...',
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
+           {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
            {?}roster=&gt;'what the system knows, connectionl...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
@@ -1015,17 +1057,17 @@ that level's rows.</p>
 <p>There is no connect instruction: constructing a protocol client is the dial, and the client indexes itself into the
 network as <code>memspace::[pattern=&gt;xyz/#]</code> indexes into memory.</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[pattern=&gt;&lt;ws://localhost:8555/mtron&gt;]
-==&gt;[pattern=&gt;ws://localhost:8555/mtron,
-    host=&gt;ws://localhost:8555/mtron,
-    send=&gt;λ(){&lt;j&gt;},
-    send_recv=&gt;λ(){&lt;j&gt;},
-    inst=&gt;[
-     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-     /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
-    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-    close=&gt;λ(){&lt;j&gt;},
-    ...(1 more)]
+==&gt;ws_client::[pattern=&gt;ws://localhost:8555/mtron,
+               host=&gt;ws://localhost:8555/mtron,
+               send=&gt;λ(){&lt;j&gt;},
+               send_recv=&gt;λ(){&lt;j&gt;},
+               inst=&gt;[
+                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+                /m/inst/from=&gt;*uri::T,
+                /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+               close=&gt;λ(){&lt;j&gt;},
+               ...(1 more)]
 </code></pre>
 <p>A client's <code>inst</code> is a mini-instset of overrides with the native signatures: <code>from(&lt;uri&gt;)</code> reads, <code>obj.to(&lt;uri&gt;)</code> writes
 its lhs, and <code>eval(code)</code> ships a program for the far side to run. A <code>ws_client</code> declares all three, and so does an

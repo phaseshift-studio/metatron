@@ -49,6 +49,24 @@ const AUTO_FROM_INST_TID = '/m/inst/auto_from';
 const AUTO_AT_INST_TID = '/m/inst/auto_at';
 const ISA_NAMES = new Set(['isa', '/m/inst/isa']);
 
+/* the four code presentations, richest first — the name toggle walks this
+   cycle: full (D) → short names (C) → no vids (B) → bare (A) → full … */
+const FULL_FORM = Object.freeze({ short: false, query: true, vid: true });
+const FORMS = Object.freeze([
+    FULL_FORM,
+    Object.freeze({ short: true, query: true, vid: true }),
+    Object.freeze({ short: true, query: true, vid: false }),
+    Object.freeze({ short: true, query: false, vid: false }),
+]);
+function nextForm(form) {
+    for (let i = 0; i < FORMS.length; i++) {
+        const f = FORMS[i];
+        if (f.short === form.short && f.query === form.query && f.vid === form.vid)
+            return FORMS[(i + 1) % FORMS.length];
+    }
+    return FULL_FORM;
+}
+
 const WS = /\s/;
 const WORD = /[A-Za-z0-9_]/;
 
@@ -154,8 +172,8 @@ function handleTID(obj, hideBaseTID) {
     return s;
 }
 
-function handleVID(obj) {
-    if (obj.vid == null) return '';
+function handleVID(obj, form) {
+    if ((form && !form.vid) || obj.vid == null) return '';
     return '@' + wrapUri(obj.vid);
 }
 
@@ -196,22 +214,22 @@ function writeFail(obj) {
     return handleIds(obj, body);
 }
 
-function writeLst(obj) {
+function writeLst(obj, form) {
     let s = handleTID(obj, true);
     if (obj.js.length === 0) s += '[,]';
-    else s += '[' + obj.js.map(write).join(',') + ']';
+    else s += '[' + obj.js.map((v) => write(v, form)).join(',') + ']';
     return s + handleVID(obj);
 }
 
-function writeRec(obj) {
+function writeRec(obj, form) {
     let s = handleTID(obj, true);
     const entries = [...obj.js.entries()];
     if (entries.length === 0) s += '[=>]';
-    else s += '[' + entries.map(([k, v]) => wrapUri(k) + '=>' + write(v)).join(',') + ']';
+    else s += '[' + entries.map(([k, v]) => wrapUri(k) + '=>' + write(v, form)).join(',') + ']';
     return s + handleVID(obj);
 }
 
-function writeRel(obj) {
+function writeRel(obj, form) {
     const relWrap = !(obj.tid != null && obj.tid.toString() === 'rel');
     const first = obj.js[0];
     const second = obj.js[1];
@@ -220,37 +238,41 @@ function writeRel(obj) {
     let body = '';
     if (relWrap) body += '(';
     if (firstRel) body += '(';
-    body += write(first);
+    body += write(first, form);
     if (firstRel) body += ')';
     body += '=>';
     if (secondRel) body += '(';
-    body += write(second);
+    body += write(second, form);
     if (secondRel) body += ')';
     if (relWrap) body += ')';
     return handleIds(obj, body);
 }
 
-function writeObjs(obj) {
+function writeObjs(obj, form) {
     if (obj.js.length === 0) return 'noobj';
-    return '{' + obj.js.map(write).join(',') + '}';
+    return '{' + obj.js.map((v) => write(v, form)).join(',') + '}';
 }
 
-function writeCode(obj) {
-    return String(obj.js);
+function writeCode(obj, form) {
+    form = form || FULL_FORM;
+    if (!form.short && form.query && form.vid) return String(obj.js);
+    return obj.insts().map((i) => writeInst(i, form)).join('.');
 }
 
 /* the instruction head: {span}name?rng<=dom&params */
 function defaultRng(tid) { return !tid.hasRng() || tid.rng().equals(fURI.ALL.maybeSome()); }
 function defaultDom(tid) { return !tid.hasDom() || tid.dom().equals(fURI.ALL.maybe()); }
 
-function generateInstHead(inst) {
+function generateInstHead(inst, form) {
+    form = form || FULL_FORM;
     let s = '';
     const tid = inst.tid;
     if (!tid.b().isOne()) s += '{' + tid.b().toString() + '}';
-    s += tid.basePath().toString();
+    s += form.short ? tid.name() : tid.basePath().toString();
+    if (!form.query) return s;
     let params = '';
-    const rng = defaultRng(tid) ? '' : (tid.rng().isZero() ? '{0}' : tid.rng().toString());
-    const dom = defaultDom(tid) ? '' : (tid.dom().isZero() ? '{0}' : tid.dom().toString());
+    const rng = defaultRng(tid) ? '' : (tid.rng().isZero() ? '{0}' : (form.short ? tid.rng().name() : tid.rng().toString()));
+    const dom = defaultDom(tid) ? '' : (tid.dom().isZero() ? '{0}' : (form.short ? tid.dom().name() : tid.dom().toString()));
     if (rng !== '' || dom !== '') params += rng + '<=' + dom;
     for (const [k, v] of tid.qMap()) {
         if (k === 'rng' || k === 'dom') continue;
@@ -269,7 +291,8 @@ function renderInstArg(arg) {
     return write(arg);
 }
 
-function writeInst(inst) {
+function writeInst(inst, form) {
+    form = form || FULL_FORM;
     const bp = inst.name() ? inst.name().toString() : '';
     if (bp === FROM_INST_TID) return '*' + renderInstArg(inst.arg(0));
     if (bp === AUTO_FROM_INST_TID) return '!*' + renderInstArg(inst.arg(0));
@@ -278,12 +301,12 @@ function writeInst(inst) {
 
     let body = '(';
     const a = inst.args();
-    if (a != null && a.isLst()) body += a.js.map(write).join(',');
+    if (a != null && a.isLst()) body += a.js.map((v) => write(v, form)).join(',');
     else if (a != null && a.isRec())
-        body += [...a.js.entries()].map(([k, v]) => wrapUri(k) + '=>' + write(v)).join(',');
+        body += [...a.js.entries()].map(([k, v]) => wrapUri(k) + '=>' + write(v, form)).join(',');
     body += ')';
-    if (inst.f() != null) body += '{' + write(inst.f()) + '}';
-    return handleIds(inst, body);
+    if (inst.f() != null) body += '{' + write(inst.f(), form) + '}';
+    return generateInstHead(inst, form) + body + handleVID(inst, form);
 }
 
 function writeType(type) {
@@ -311,15 +334,16 @@ function writeType(type) {
     return s;
 }
 
-function write(obj) {
+function write(obj, form) {
+    form = form || FULL_FORM;
     if (obj == null || obj.isNoObj()) return 'noobj';
-    if (obj.isInst()) return writeInst(obj);
+    if (obj.isInst()) return writeInst(obj, form);
     if (obj.isType()) return writeType(obj);
-    if (obj.isCode()) return writeCode(obj);
-    if (obj.isObjs()) return writeObjs(obj);
-    if (obj.isRec()) return writeRec(obj);
-    if (obj.isLst()) return writeLst(obj);
-    if (obj.isRel()) return writeRel(obj);
+    if (obj.isCode()) return writeCode(obj, form);
+    if (obj.isObjs()) return writeObjs(obj, form);
+    if (obj.isRec()) return writeRec(obj, form);
+    if (obj.isLst()) return writeLst(obj, form);
+    if (obj.isRel()) return writeRel(obj, form);
     if (obj.isUri()) return writeUri(obj);
     if (obj.isFail()) return writeFail(obj);
     if (obj.isStr()) return writeStr(obj);
@@ -794,7 +818,10 @@ class Reader {
         return head == null ? new Fail('', tid, null) : head;
     }
 
-    /* an inst or a code chain */
+    /* an inst or a code chain. a resolved chain carries a vid on each inst
+       (inst@vid.inst@vid …), so the chain's `.` sits after a `@vid` — look past
+       one before deciding; a lone `inst@vid` stays an inst, its vid attached by
+       value(). */
     instOrCode() {
         const start = this.i;
         const inst = this.inst();
@@ -802,6 +829,17 @@ class Reader {
         if (this.peek() === '.') {
             this.i = start;
             return new Code(this.codeText(), f('code'), null);
+        }
+        if (this.peek() === '@') {
+            const save = this.i;
+            this.i += 1;
+            this.vid();
+            this.skip();
+            if (this.peek() === '.') {
+                this.i = start;
+                return new Code(this.codeText(), f('code'), null);
+            }
+            this.i = save;
         }
         return inst;
     }
@@ -921,11 +959,41 @@ class Reader {
         }
         return this.text.slice(start, this.i).trim();
     }
+
+    /* a code chain into its insts, each with its tid (name + dom/rng), args,
+       body and vid — the JS mirror of Java's Code.insts() */
+    insts() {
+        const out = [];
+        while (true) {
+            this.skip();
+            const inst = this.inst();
+            this.skip();
+            if (this.peek() === '@') { this.i += 1; inst.vid = f(this.vid()); }
+            out.push(inst);
+            this.skip();
+            if (this.peek() === '.') { this.i += 1; continue; }
+            break;
+        }
+        return out;
+    }
 }
 
 function parse(text) {
     return new Reader(text).read();
 }
 
-export { parse, write, writeStrBody as quote, real, int, bytes, escaped };
+/* a code chain into its insts — the parser Code.insts() leans on */
+function parseInsts(text) {
+    const s = String(text == null ? '' : text).trim();
+    if (!s) return [];
+    return new Reader(s).insts();
+}
+
+/* re-render code text (a bare chain, or a [chain] list, or a lone inst) in one
+   of the FORMS — the name toggle's primitive */
+function writeCodeForm(text, form) {
+    return write(parse(String(text == null ? '' : text).trim()), form);
+}
+
+export { parse, write, writeStrBody as quote, real, int, bytes, escaped, parseInsts, writeCodeForm, FORMS, FULL_FORM, nextForm };
 export default { parse, write, real, int, bytes };

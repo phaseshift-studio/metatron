@@ -17,7 +17,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parse, write, real, int, quote } from '../sdk/obj_mtron_serializer.js';
+import { parse, write, real, int, quote, writeCodeForm, FORMS, FULL_FORM, nextForm } from '../sdk/obj_mtron_serializer.js';
 import { f } from '../sdk/furi.js';
 import { Int, Real, Str, Uri, Lst, Rec, Rel, Type, Inst, noobj } from '../sdk/mtron-obj.js';
 
@@ -214,6 +214,52 @@ exact('!@x', 'auto_at sugar');
 exact('plus(1){f}', 'inst body');
 exact('{0,4}plus(1)', 'spanned inst keeps its span');
 exact('start(0).plus(2)', 'a code chain');
+
+/* ---- regression: a resolved chain carries a vid on each inst
+   (inst@vid.inst@vid …); it must parse as one code, not drop the tail ---- */
+{
+    const chain = '/m/inst/start?/m/int<={0}(1)@<0>./m/inst/plus?/m/int<=/m/int(10)@<1>./m/inst/mult?/m/int<=/m/int(20)@<2>';
+    const o = parse(chain);
+    t(o.isCode() && o.js === chain, 'a resolved chain is one code, not the first inst');
+    eq(write(o), chain, 'resolved chain round-trips byte-identical');
+}
+{
+    const one = '/m/inst/start?/m/int<={0}(1)@<0>';
+    const o = parse(one);
+    t(o.isInst() && o.vid.toString() === '0', 'a lone inst keeps its vid (still an inst)');
+}
+
+/* ---- Code.insts(): a chain decomposes into its insts, losslessly ---- */
+{
+    const chain = '/m/inst/start?/m/int<={0}(1)@<0>./m/inst/plus?/m/int<=/m/int(10)@<1>./m/inst/mult?/m/int<=/m/int(20)@<2>';
+    const code = parse(chain);
+    const insts = code.insts();
+    t(code.isCode() && insts.length === 3, 'a code chain decomposes into three insts');
+    t(insts[0].name().toString() === '/m/inst/start' && insts[0].vid.toString() === '0', 'start keeps its name and vid');
+    t(insts[1].rng().toString() === '/m/int' && insts[1].dom().toString() === '/m/int', 'plus keeps its rng and dom');
+    eq(insts.map((i) => write(i)).join('.'), chain, 'insts().map(write).join(".") round-trips the chain');
+}
+{
+    const one = parse('/m/inst/plus(10)');
+    t(one.isInst() && one.insts().length === 1 && one.insts()[0] === one, 'an inst is its own one-element insts()');
+    const num = parse('29');
+    t(num.insts().length === 0, 'a non-call has no insts()');
+}
+
+/* ---- the name-form toggle: four presentations of one resolved chain ---- */
+{
+    const chain = '/m/inst/start?/m/int<={0}(1)@<0>./m/inst/plus?/m/int<=/m/int(10)@<1>./m/inst/mult?/m/int<=/m/int(20)@<2>';
+    const forms = [
+        chain,                                                                  // [D] full
+        'start?int<={0}(1)@<0>.plus?int<=int(10)@<1>.mult?int<=int(20)@<2>',    // [C] short names
+        'start?int<={0}(1).plus?int<=int(10).mult?int<=int(20)',               // [B] no vids
+        'start(1).plus(10).mult(20)',                                           // [A] bare
+    ];
+    FORMS.forEach((f, i) => eq(writeCodeForm(chain, f), forms[i], 'form ' + i + ' of a resolved chain'));
+    eq(writeCodeForm(chain, nextForm(FULL_FORM)), forms[1], 'nextForm walks full → short');
+    eq(writeCodeForm(chain, nextForm(nextForm(FULL_FORM))), forms[2], 'nextForm walks short → typed');
+    eq(writeCodeForm('[' + chain + ']', FORMS[3]), '[' + forms[3] + ']', 'a [chain] list renders its element in the form');
+}
 
 /* ---- round-trip on a diverse set (parse(write(o)) ≡ o) ---- */
 for (const s of [

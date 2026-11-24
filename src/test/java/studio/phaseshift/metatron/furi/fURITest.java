@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -36,8 +37,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Stream;
-
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -68,6 +67,33 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(v.uriValue(), u.uriValue());*/
         //////////////////////////
         return f;
+    }
+
+    /**
+     * ONLY A ZERO POINT IS ZERO (Marko, 2026-11-23). A zero point annihilates whatever its span, so every zero is the
+     * one zero and compares equal to every other. A zero span is the identity ({0}a is a⁰ = 1), no zero, and compares as
+     * any uri does, its point included. Testing the folded count c() = span × point instead took {0}int{2}::T for zero,
+     * equal to {0}int::T, and branch_collapse lost the {2} it summed (catInstSetTest#testBranchCollapse). Equal uris
+     * must share a hashCode, so every zero hashes alike.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{0}a/b{2}   | {0}a/b      | false",   // two identities with different points
+            "{0}a/b{2}   | {0}a/b{2}   | true",
+            "{0}a/b      | {0}c/d      | false",   // identities on different paths
+            "{0}a/b      | a/b{0}      | false",   // the identity is no zero
+            "a/b{0}      | c/d{0}      | true",    // every zero is the one zero
+            "a/b{0}      | {2}c/d{0}   | true",    // a zero point annihilates whatever its span
+            "a/b{0}      | a/b         | false",
+            "a/b         | a/b{1}      | true",    // a point of one is no point
+    }, delimiter = '|')
+    public void testOnlyAZeroPointIsZero(final String left, final String right, final boolean equal) {
+        final fURI a = f(left);
+        final fURI b = f(right);
+        assertEquals(equal, a.equals(b), () -> left + " = " + right + " should be " + equal);
+        assertEquals(equal, b.equals(a), () -> "equality is symmetric: " + right + " = " + left);
+        if (equal)
+            assertEquals(a.hashCode(), b.hashCode(), "equal uris must share a hashCode — the hash contract");
     }
 
     @ParameterizedTest

@@ -14,7 +14,7 @@
  */
 import { read } from '../sdk/mtron-io.js';
 import { parseSchema, renderForm, collectForm } from './mtron-form.js';
-import { parse, write, quote, real, int } from '../sdk/obj_mtron_serializer.js';
+import { parse, write, quote, real, int, writeCodeForm, FORMS, FULL_FORM, nextForm } from '../sdk/obj_mtron_serializer.js';
 import { f } from '../sdk/furi.js';
 import { parse as envelope } from '../sdk/mtron-envelope.js';
 import { toElement } from './mtron-dom.js';
@@ -86,9 +86,88 @@ import { typesetMath } from './mathjax.js';
         return wrap;
     }
 
-    /* /m/instset — the pattern and the q table every space shows. */
+    /* ── instset signature tables (type · inst · rewrite · const) ───────────
+       the four tables an instset can be asked, shared by the instset panel's
+       dropdowns. one read per table, over the x-mtron codec (entries come back
+       as complete, unclipped signature strings). */
+    const SIG_TABLES = ["type", "inst", "rewrite", "const"];
+
+    function escapeArgs(args) {
+        return args.replace(/[(){}[\]?@<>#&=-]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+    }
+
+    /* the doc/decq read of a signature, quoted the way the machine wants:
+       *<plus?int<=int&args=[int]&decq> — the furi supplies the name; the query
+       and args stay as the machine spelled them */
+    function signatureRead(entry, q) {
+        let depth = 0;
+        let quote = null;
+        let qAt = -1;
+        let openAt = -1;
+        let closeAt = entry.length;
+        for (let i = 0; i < entry.length; i++) {
+            const ch = entry[i];
+            if (quote) {
+                if (ch === "\\") i++;
+                else if (ch === quote) quote = null;
+                continue;
+            }
+            if (ch === "'" || ch === '"') { quote = ch; continue; }
+            const next = entry[i + 1];
+            if (depth === 0 && qAt < 0 && ch === "?") qAt = i;
+            if (depth === 0 && openAt < 0 && ch === "(") openAt = i;
+            /* < > are brackets only when they are not the <= >= => -> arrows */
+            if (ch === "(" || ch === "[" || ch === "{" || (ch === "<" && next !== "=" && next !== ">")) depth++;
+            else if (ch === ")" || ch === "]" || ch === "}" || (ch === ">" && next !== "=" && next !== "-")) {
+                depth = Math.max(0, depth - 1);
+                if (depth === 0 && openAt >= 0 && closeAt === entry.length) closeAt = i;
+            }
+        }
+        const headEnd = openAt > 0 ? openAt : (qAt > 0 ? qAt : entry.length);
+        const namePath = entry.slice(0, headEnd);
+        const query = qAt > 0 ? entry.slice(qAt, openAt > 0 ? openAt : entry.length) : "";
+        const args = openAt > 0 ? escapeArgs(entry.slice(openAt + 1, closeAt)) : null;
+        /* the first query param opens with `?`, the rest join with `&` — a
+           signature with no rng/dom (a base type) still needs `?decq`; the full
+           namePath (its address, not its last segment) is what to read */
+        let params = query;
+        if (args) params += (params ? "&" : "?") + "args=[" + args + "]";
+        params += (params ? "&" : "?") + q;
+        return "*<" + namePath + params + ">";
+    }
+
+    /* split an x-mtron table list into signature strings: a type's vid (its
+       name), else its tid for a base type where tid == vid; an inst/const
+       writes back verbatim */
+    function signatureOf(obj) {
+        if (obj.isType()) {
+            const name = obj.vid ? obj.vid : obj.tid;
+            return name ? name.toString() : null;
+        }
+        return write(obj);
+    }
+
+    function signaturesOf(text) {
+        const source = String(text == null ? "" : text).trim();
+        if (!source || source === "noobj") return [];
+        const parsed = parse(source);
+        const out = [];
+        if (parsed.isLst() || parsed.isObjs()) {
+            for (const obj of parsed.js) {
+                const sig = signatureOf(obj);
+                if (sig) out.push(sig);
+            }
+        } else {
+            const sig = signatureOf(parsed);
+            if (sig) out.push(sig);
+        }
+        return out;
+    }
+
+    /* /m/instset — the pattern, the q table, and the type/inst/rewrite/const
+       tables the machine can be asked. */
     register("/m/instset", async function (env, api) {
-        const box = node("div", "mpanel");
+        const box = node("div", "mpanel instset-panel");
         const value = await api.json();
         if (!value || typeof value !== "object") {
             box.appendChild(node("div", "mpanel-empty", "no instset value"));
@@ -107,6 +186,96 @@ import { typesetMath } from './mathjax.js';
             row.appendChild(node("span", "mpanel-v", brief(target)));
             box.appendChild(row);
         });
+
+        /* the four signature tables: side-by-side heads, one shared drop-down */
+        const tables = node("div", "instset-tables");
+        const heads = node("div", "instset-table-heads");
+        const drop = node("div", "instset-drop");
+        drop.hidden = true;
+        tables.appendChild(heads);
+        tables.appendChild(drop);
+        const sigCache = new Map();
+        let activeKey = null;
+        const vid = String((env && env.vid) || "~/instset").replace(/\/+$/, "");
+
+        function sigRead(key) {
+            if (!sigCache.has(key))
+                sigCache.set(key, api.mtron("*" + vid + "/" + key).then(signaturesOf));
+            return sigCache.get(key);
+        }
+
+        /* one row's doc/dec: evaluate the read and wear the answer as the
+           standard object card (a docs::/decs:: rec is a read result with its
+           own address) */
+        function showRead(entry, label) {
+            const readExpr = signatureRead(entry, label + "q");
+            const wear = (text) => {
+                const clean = String(text == null ? "" : text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "");
+                const opened = Object.assign({raw: clean, expr: readExpr}, envelope(clean) || {shortTid: label});
+                opened.tid = label + "s";
+                opened.isType = false;
+                if (api && typeof api.open === "function") api.open(opened);
+            };
+            if (api && typeof api.mtron === "function")
+                api.mtron(readExpr).then(wear).catch((problem) => wear(problem && problem.message ? problem.message : problem));
+            else
+                wear(readExpr);
+        }
+
+        SIG_TABLES.forEach((key) => {
+            const toggle = node("button", "instset-table-head", key);
+            toggle.type = "button";
+            toggle.dataset.table = key;
+            heads.appendChild(toggle);
+
+            toggle.addEventListener("click", () => {
+                const wasOpen = activeKey === key;
+                activeKey = wasOpen ? null : key;
+                heads.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.table === key && !wasOpen));
+                if (wasOpen) {
+                    drop.hidden = true;
+                    drop.textContent = "";
+                    return;
+                }
+                drop.hidden = false;
+                drop.textContent = "";
+                drop.appendChild(node("div", "instset-drop-empty", "reading " + vid + "/" + key + "…"));
+                sigRead(key).then((list) => {
+                    if (activeKey !== key) return;
+                    drop.textContent = "";
+                    if (!list.length) {
+                        drop.appendChild(node("div", "instset-drop-empty", "the instset names no " + key));
+                        return;
+                    }
+                    list.forEach((text) => {
+                        const row = node("div", "instset-drop-row");
+                        const cell = node("button", "instset-drop-cell");
+                        cell.type = "button";
+                        cell.title = text + " · click to open";
+                        cell.setAttribute("aria-label", "open " + text);
+                        paintSig(cell, text);
+                        cell.addEventListener("click", () => {
+                            if (api && api.open)
+                                api.open({isType: key === "type", vid: text, raw: text, shortTid: text.split("/").pop() || text});
+                        });
+                        row.appendChild(cell);
+                        ["doc", "dec"].forEach((label) => {
+                            const button = node("button", "instset-drop-btn", label);
+                            button.type = "button";
+                            button.addEventListener("click", () => showRead(text, label));
+                            row.appendChild(button);
+                        });
+                        drop.appendChild(row);
+                    });
+                }).catch((problem) => {
+                    if (activeKey !== key) return;
+                    drop.textContent = "";
+                    drop.appendChild(node("div", "instset-drop-empty", String(problem && problem.message ? problem.message : problem)));
+                });
+            });
+        });
+
+        box.appendChild(tables);
         return box;
     });
 
@@ -587,237 +756,23 @@ import { typesetMath } from './mathjax.js';
             });
         }
 
-        function tile(label, metric, sub, inherited) {
-            const el = node("div", "machine-tile");
-            el.appendChild(node("span", "machine-tile-label", label));
-            el.appendChild(node("b", "machine-tile-metric", metric));
-            if (sub) el.appendChild(node("span", "machine-tile-sub", sub + (inherited ? " · inherited" : "")));
-            return el;
-        }
-
-        /* ── instset tables: type · inst · rewrite · const ───────────────────
-           one read per table, over the JSON codec (the entries come back as
-           address strings — the signatures, complete and unclipped); the first
-           open of a table fetches, its promise is kept for the panel's life. */
-        const SIG_TABLES = ["type", "inst", "rewrite", "const"];
-        const sigCache = new Map();
-        let activeDrop = null;
-
-        function sigRead(key) {
-            if (!sigCache.has(key))
-                sigCache.set(key, api.mtron("*~/instset/" + key).then(signaturesOf));
-            return sigCache.get(key);
-        }
-
-        /* split an x-mtron table list into signature strings: parse it into objs
-           and pull each entry's display signature — a type's vid (its name), else
-           its tid for a base type where tid == vid; an inst/const writes back verbatim */
-        function signaturesOf(text) {
-            const source = String(text == null ? "" : text).trim();
-            if (!source || source === "noobj") return [];
-            const parsed = parse(source);
-            const out = [];
-            if (parsed.isLst() || parsed.isObjs()) {
-                for (const obj of parsed.js) {
-                    const sig = signatureOf(obj);
-                    if (sig) out.push(sig);
-                }
-            } else {
-                const sig = signatureOf(parsed);
-                if (sig) out.push(sig);
-            }
-            return out;
-        }
-
-        function signatureOf(obj) {
-            if (obj.isType()) {
-                const name = obj.vid ? obj.vid : obj.tid;
-                return name ? name.toString() : null;
-            }
-            return write(obj);
-        }
-
-        /* the signature the machine names — painted with the mtron grammar,
-           plain text when the highlighter has not loaded yet */
-        function paintSignature(el, text) {
-            if (window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron")) {
-                try {
-                    el.innerHTML = window.hljs.highlight(text, {language: "mtron", ignoreIllegals: true}).value;
-                    return;
-                } catch (ignored) {
-                }
-            }
-            el.textContent = text;
-        }
-
-        /* the doc/decq read of a signature, quoted the way the machine wants:
-           *<plus?int<=int&args=[int]&decq>
-           the furi supplies the name; the query and args stay as the machine
-           spelled them, with the characters the angle cannot carry raw taken
-           to their percent form (rec{?} → rec%7B%3F%7D, (10) → %2810%29, …) */
-        function escapeArgs(args) {
-            return args.replace(/[(){}[\]?@<>#&=-]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
-        }
-
-        function signatureRead(entry, q) {
-            let depth = 0;
-            let quote = null;
-            let qAt = -1;
-            let openAt = -1;
-            let closeAt = entry.length;
-            for (let i = 0; i < entry.length; i++) {
-                const ch = entry[i];
-                if (quote) {
-                    if (ch === "\\") i++;
-                    else if (ch === quote) quote = null;
-                    continue;
-                }
-                if (ch === "'" || ch === '"') { quote = ch; continue; }
-                const next = entry[i + 1];
-                if (depth === 0 && qAt < 0 && ch === "?") qAt = i;
-                if (depth === 0 && openAt < 0 && ch === "(") openAt = i;
-                /* < > are brackets only when they are not the <= >= => -> arrows */
-                if (ch === "(" || ch === "[" || ch === "{" || (ch === "<" && next !== "=" && next !== ">")) depth++;
-                else if (ch === ")" || ch === "]" || ch === "}" || (ch === ">" && next !== "=" && next !== "-")) {
-                    depth = Math.max(0, depth - 1);
-                    if (depth === 0 && openAt >= 0 && closeAt === entry.length) closeAt = i;
-                }
-            }
-            const headEnd = openAt > 0 ? openAt : (qAt > 0 ? qAt : entry.length);
-            const namePath = entry.slice(0, headEnd);
-            const query = qAt > 0 ? entry.slice(qAt, openAt > 0 ? openAt : entry.length) : "";
-            const args = openAt > 0 ? escapeArgs(entry.slice(openAt + 1, closeAt)) : null;
-            /* the first query param opens with `?`, the rest join with `&` — a
-               signature with no rng/dom (a base type) still needs `?decq`. the
-               full namePath (its address, not its last segment) is what to read */
-            let params = query;
-            if (args) params += (params ? "&" : "?") + "args=[" + args + "]";
-            params += (params ? "&" : "?") + q;
-            return "*<" + namePath + params + ">";
-        }
-
-        /* one row's doc/dec: evaluate the read over the structural socket and
-           wear the answer as the standard object card — a docs::/decs:: rec is
-           a read result with its own address, so parse it, and fall back to a
-           plain raw card when it carries no envelope. the panel never owns
-           the socket or the dialog */
-        function showRead(entry, label) {
-            const readExpr = signatureRead(entry, label + "q");
-            const wear = (text) => {
-                const clean = String(text == null ? "" : text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "");
-                /* a docs::/decs:: answer is a normal obj: parse its envelope and
-                   wear it as the standard card (panel when one is registered),
-                   the read it came from sitting in the card's expr line */
-                const env = Object.assign({raw: clean, expr: readExpr}, envelope(clean) || {shortTid: label});
-                env.tid = label + "s";   /* docs::T / decs::T — the panel marker */
-                env.isType = false;      /* the answer is a doc/dec, never the type card */
-                if (api && typeof api.open === "function")
-                    api.open(env);
-            };
-            if (api && typeof api.mtron === "function") {
-                api.mtron(readExpr).then(wear)
-                    .catch((problem) => wear(problem && problem.message ? problem.message : problem));
-            } else {
-                wear(readExpr);
-            }
-        }
-
-        /* a pinned card clips its contents; a card with an open table unclips */
-        function unclip(tileEl, on) {
-            const host = tileEl.closest(".obj-card");
-            if (host) host.classList.toggle("drop-open", on);
-        }
-
-        function closeDrop() {
-            if (!activeDrop) return;
-            activeDrop.drop.hidden = true;
-            activeDrop.actions.querySelectorAll("button.on").forEach((button) => button.classList.remove("on"));
-            unclip(activeDrop.tile, false);
-            activeDrop.key = null;
-            activeDrop = null;
-        }
-
-        function wireActions(tileEl) {
-            const actions = node("div", "machine-tile-actions");
-            const drop = node("div", "machine-drop");
-            drop.hidden = true;
-            const pair = {tile: tileEl, actions: actions, drop: drop, key: null};
-
-            function open(key) {
-                /* clicking the already-open table closes it — a toggle, not a re-open */
-                if (activeDrop === pair && pair.key === key) {
-                    closeDrop();
-                    return;
-                }
-                closeDrop();
-                pair.key = key;
-                const button = actions.querySelector('[data-table="' + key + '"]');
-                if (button) button.classList.add("on");
-                activeDrop = pair;
-                unclip(tileEl, true);
-                drop.hidden = false;
-                drop.textContent = "";
-                drop.appendChild(node("div", "machine-drop-empty", "reading ~/instset/" + key + "…"));
-                sigRead(key).then((list) => {
-                    if (activeDrop !== pair) return;
-                    drop.textContent = "";
-                    if (!list.length) {
-                        drop.appendChild(node("div", "machine-drop-empty", "the machine names no " + key));
-                        return;
-                    }
-                    list.forEach((text) => {
-                        const row = node("div", "machine-drop-row");
-                        const cell = node("button", "machine-drop-cell");
-                        cell.type = "button";
-                        cell.title = text + " · click to open";
-                        cell.setAttribute("aria-label", "open " + text);
-                        paintSignature(cell, text);
-                        cell.addEventListener("click", () => {
-                            if (api && api.open)
-                                api.open({
-                                    isType: key === "type",
-                                    vid: text,
-                                    raw: text,
-                                    shortTid: text.split("/").pop() || text
-                                });
-                        });
-                        row.appendChild(cell);
-                        ["doc", "dec"].forEach((label) => {
-                            const button = node("button", "machine-drop-btn", label);
-                            button.type = "button";
-                            button.addEventListener("click", () => showRead(text, label));
-                            row.appendChild(button);
-                        });
-                        drop.appendChild(row);
-                    });
-                }).catch((problem) => {
-                    if (activeDrop !== pair) return;
-                    drop.textContent = "";
-                    drop.appendChild(node("div", "machine-drop-empty",
-                        String(problem && problem.message ? problem.message : problem)));
-                });
-            }
-
-            SIG_TABLES.forEach((key) => {
-                const button = node("button", "", key);
-                button.type = "button";
-                button.dataset.table = key;
-                button.addEventListener("click", () => open(key));
-                actions.appendChild(button);
+        function tile(item) {
+            const el = node("button", "machine-tile");
+            el.type = "button";
+            el.appendChild(node("span", "machine-tile-label", item.label));
+            const stats = [item.metric, item.sub, item.inherited ? "inherited" : null].filter(Boolean).join(" · ");
+            el.appendChild(node("span", "machine-tile-metric", stats));
+            el.title = "open " + item.label;
+            el.addEventListener("click", () => {
+                if (api && api.open)
+                    api.open({tid: item.tid, vid: item.vid, raw: "", shortTid: item.label});
             });
-
-            drop.addEventListener("mousedown", (ev) => ev.stopPropagation());
-            tileEl.appendChild(actions);
-            tileEl.appendChild(drop);
+            return el;
         }
 
         function setTiles(items) {
             tiles.textContent = "";
-            items.forEach((item) => {
-                const el = tile(item.label, item.metric, item.sub, item.inherited);
-                if (item.actions) wireActions(el);
-                tiles.appendChild(el);
-            });
+            items.forEach((item) => tiles.appendChild(tile(item)));
         }
 
         /* a frame's unions fall through to the enclosing machine; the rec read only
@@ -868,10 +823,10 @@ import { typesetMath } from './mathjax.js';
                     ? Object.keys(instset.prefix).length
                     : 0;
                 setTiles([
-                    { label: "instset", metric: sets + " sets", sub: aliases + " aliases", inherited: instsetR.inherited, actions: true },
-                    { label: "compiler", metric: stages + "/4 stages", sub: checksOn + "/" + (Object.keys(checks).length || 5) + " checks on", inherited: compilerR.inherited },
-                    { label: "network", metric: peers + " peers", sub: listeners + " listeners", inherited: peerR.inherited || rosterR.inherited },
-                    { label: "processor", metric: computers + " computers", sub: traceStacks + " trace stacks", inherited: computerR.inherited || tracerR.inherited }
+                    { label: "instset", metric: sets + " sets", sub: aliases + " aliases", inherited: instsetR.inherited, tid: "/m/instset", vid: here + "/instset" },
+                    { label: "compiler", metric: stages + " stages", sub: checksOn + "/" + (Object.keys(checks).length || 5) + " checks on", inherited: compilerR.inherited, tid: "/m/mach/component/compiler", vid: here + "/compiler" },
+                    { label: "network", metric: peers + " peers", sub: listeners + " listeners", inherited: peerR.inherited || rosterR.inherited, tid: "/m/mach/component/network", vid: here + "/network" },
+                    { label: "processor", metric: computers + " computers", sub: traceStacks + " trace stacks", inherited: computerR.inherited || tracerR.inherited, tid: "/m/mach/component/processor", vid: here + "/processor" }
                 ]);
             } catch (problem) {
                 if (my !== token) return;
@@ -932,18 +887,6 @@ import { typesetMath } from './mathjax.js';
             }).catch((problem) => fail(problem && problem.message ? problem.message : String(problem)));
         });
 
-        /* a mousedown outside the tile closes its table (bound once per panel);
-           a mousedown on the object card's modal — its backdrop included — does
-           not, so a type can be opened, its card dismissed, and the table stays */
-        if (!box._outsideBound) {
-            box._outsideBound = true;
-            document.addEventListener("mousedown", (ev) => {
-                const modal = document.getElementById("popup");
-                if (activeDrop && !activeDrop.tile.contains(ev.target) && !(modal && modal.contains(ev.target)))
-                    closeDrop();
-            });
-        }
-
         (async () => {
             try {
                 const current = uiVids(await run("@~.vid()"))[0];
@@ -955,9 +898,14 @@ import { typesetMath } from './mathjax.js';
             loadTree();
             load();
         })();
-        /* the tree is the VM's; frames pushed from the console must show up here */
+        /* the tree and the tiles are the VM's; frames pushed from the console
+           and the tile statistics must both stay fresh (the first load can miss
+           while the reader socket is still connecting) */
         setInterval(() => {
-            if (box.isConnected && !document.hidden) loadTree();
+            if (box.isConnected && !document.hidden) {
+                loadTree();
+                load();
+            }
         }, 4000);
         return box;
     }
@@ -1346,17 +1294,6 @@ import { typesetMath } from './mathjax.js';
         return Array.from(names);
     }
 
-    /* the address an auto-at / auto-deref reference points at — what a clickable
-       cell opens. */
-    function refTarget(text) {
-        if (typeof text !== "string") return null;
-        const m = /^![@*]\s*(.+)$/.exec(text.trim());
-        if (!m) return null;
-        let t = m[1].trim();
-        if (t.charAt(0) === "<" && t.charAt(t.length - 1) === ">") t = t.slice(1, -1);
-        return t;
-    }
-
     register("/m/db/tble/space/tblespace", async function (env, api) {
         const box = node("div", "mpanel tblespace");
         let data = "";
@@ -1401,45 +1338,77 @@ import { typesetMath } from './mathjax.js';
         /* one cell: an auto-at reference becomes a clickable button (opens the
            popup, where it can be pinned); an array is its elements in a row; a
            plain value is text. */
-        function renderCell(value) {
-            if (Array.isArray(value)) {
+        /* the display text of a cell value — scalars plain, uri unbracketed,
+           poly compact via the faithful serializer. */
+        function cellText(obj) {
+            if (obj == null || (obj.isNoObj && obj.isNoObj())) return "noobj";
+            if ((obj.isInt && obj.isInt()) || (obj.isReal && obj.isReal()) || (obj.isBool && obj.isBool())) return String(obj.js);
+            if (obj.isStr && obj.isStr()) return obj.js;
+            if (obj.isUri && obj.isUri()) return obj.js.toString();
+            if (obj.isBytes && obj.isBytes()) return "0x" + Array.from(obj.js).map((b) => b.toString(16).padStart(2, "0")).join("");
+            const s = write(obj);
+            return s.length > 150 ? s.slice(0, 149) + "…" : s;
+        }
+
+        function renderCell(obj) {
+            if (obj == null || (obj.isNoObj && obj.isNoObj())) return document.createTextNode("noobj");
+            if (obj.isLst && obj.isLst()) {
                 const span = node("span", "tble-cell");
-                value.forEach((item, i) => {
+                obj.js.forEach((item, i) => {
                     if (i) span.appendChild(document.createTextNode(" · "));
                     span.appendChild(renderCell(item));
                 });
                 return span;
             }
-            const target = refTarget(value);
-            if (target) {
-                const prefix = String(value).slice(0, 2);
-                const b = node("button", "tble-ref", prefix + target.split("/").pop());
+            if (obj.isUri && obj.isUri()) {
+                const vid = obj.js.toString();
+                const b = node("button", "tble-ref", vid.split("/").pop() || vid);
                 b.type = "button";
-                b.title = String(value) + " → " + target + " · shift-click for ?docq";
+                b.title = vid + " · click to open · shift-click for ?docq";
                 b.addEventListener("click", (ev) => {
                     if (ev.shiftKey) {
-                        api.open({ vid: target + "?docq", shortTid: "docs" });
+                        api.open({ vid: vid + "?docq", shortTid: "docs" });
                     } else {
-                        api.open({ vid: target, raw: String(value) });
+                        api.open({ vid: vid, raw: write(obj) });
                     }
                 });
                 return b;
             }
-            return document.createTextNode(brief(value));
+            const span = node("span", "tble-cell tble-plain");
+            span.textContent = cellText(obj);
+            span.title = "click to inspect";
+            span.addEventListener("click", () => openCell(obj));
+            return span;
+        }
+
+        /* a cell opens its value as an obj modal: a uri opens the obj at that vid;
+           a plain value opens its raw value with its tid (e.g. /m/str). */
+        function openCell(obj) {
+            if (obj == null || (obj.isNoObj && obj.isNoObj())) {
+                api.open({raw: "noobj"});
+                return;
+            }
+            if (obj.isUri && obj.isUri()) {
+                api.open({vid: obj.js.toString(), raw: write(obj)});
+                return;
+            }
+            const tid = obj.tid ? String(obj.tid) : null;
+            const path = tid ? "/m/" + tid : null;
+            api.open({raw: write(obj), shortTid: path ? "value " + path : "value"});
         }
 
         function renderGrid(result) {
             let rows = null;
-            if (Array.isArray(result))
-                rows = result.length && result.every((r) => r && typeof r === "object" && !Array.isArray(r)) ? result : null;
-            else if (result && typeof result === "object")
+            if (result && result.isLst && result.isLst())
+                rows = result.js;
+            else if (result && result.isRec && result.isRec())
                 rows = [result];
-            if (!rows) {
+            if (!rows || !rows.length) {
                 grid.textContent = "";
-                grid.appendChild(node("div", "tble-empty", result == null ? "noobj" : (typeof result === "string" ? result : brief(result))));
+                grid.appendChild(node("div", "tble-empty", result == null || (result.isNoObj && result.isNoObj()) ? "noobj" : cellText(result)));
                 return;
             }
-            const columns = Object.keys(rows[0]);
+            const columns = [...rows[0].js.keys()].map((k) => k.toString());
             const table = node("table", "tble-sheet");
             const thead = document.createElement("thead");
             const hr = document.createElement("tr");
@@ -1449,11 +1418,12 @@ import { typesetMath } from './mathjax.js';
             table.appendChild(thead);
             const tbody = document.createElement("tbody");
             rows.forEach((row, idx) => {
+                const cells = new Map([...row.js.entries()].map(([k, v]) => [k.toString(), v]));
                 const tr = document.createElement("tr");
                 tr.appendChild(node("td", "tble-idx", String(idx + 1)));
                 columns.forEach((col) => {
                     const td = document.createElement("td");
-                    td.appendChild(renderCell(row[col]));
+                    td.appendChild(renderCell(cells.get(col) || null));
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
@@ -1470,7 +1440,15 @@ import { typesetMath } from './mathjax.js';
             grid.appendChild(spinner("loading…"));
             let result;
             try {
-                result = await api.evalJson(source);
+                const raw = await api.mtron(source);
+                let text = String(raw == null ? "" : raw).trim();
+                /* the reader may answer with a JSON-quoted string — unquote it */
+                try {
+                    const unquoted = JSON.parse(text);
+                    if (typeof unquoted === "string") text = unquoted;
+                } catch (ignored) { }
+                if (!text) throw new Error("no answer");
+                result = read(text);
             } catch (problem) {
                 grid.textContent = "";
                 grid.appendChild(node("div", "tble-empty", String(problem && problem.message ? problem.message : problem)));
@@ -1700,7 +1678,8 @@ import { typesetMath } from './mathjax.js';
         return [...rec.js.entries()].map(([k, v]) => ({key: k.toString(), type: write(v)}));
     }
 
-    function paintSig(el, text) {
+    /* highlight code text with the mtron grammar, plain text when hljs is absent */
+    function highlightCode(el, text) {
         if (window.hljs && window.hljs.getLanguage && window.hljs.getLanguage("mtron")) {
             try {
                 el.innerHTML = window.hljs.highlight(text, {language: "mtron", ignoreIllegals: true}).value;
@@ -1710,6 +1689,26 @@ import { typesetMath } from './mathjax.js';
         }
         el.textContent = text;
         typesetMath(el, text);
+    }
+
+    /* the four presentation forms by name, parallel to FORMS */
+    const FORM_LABELS = ["full", "short", "typed", "bare"];
+    function formLabel(form) {
+        const i = FORMS.indexOf(form);
+        return i >= 0 ? FORM_LABELS[i] : FORM_LABELS[0];
+    }
+
+    /* render code/signature text in one of the FORMS. no gesture here — the
+       toggle is an explicit control (shift/alt/ctrl clicks are the browser's on
+       selectable text), so a caller cycles the form itself and re-renders. */
+    function paintCode(el, text, form) {
+        let shown = String(text == null ? "" : text);
+        try { shown = writeCodeForm(shown, form || FORMS[2]); } catch (ignored) { }
+        highlightCode(el, shown);
+    }
+
+    function paintSig(el, text) {
+        paintCode(el, text, FORMS[2]);
     }
 
     register("type", async function (env, api) {
@@ -1932,5 +1931,185 @@ import { typesetMath } from './mathjax.js';
 
         return box;
     });
+
+/* ── compiler::T — the machine's lowering axis, source text to code::T ─────
+   a tree: parse → resolve (selector/binder) → rewrite. each stage shows the
+   code at that point; the rewrite stage lists the registered rewriters, and
+   only those whose application changed the resolved code. everything reads
+   application/x-mtron and parses it with the serializer — JSON drops tids. */
+function compilerPanel(env, api) {
+    const box = node("div", "mpanel compiler-panel");
+
+    const form = node("form", "compiler-form");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "compiler-expr";
+    input.spellcheck = false;
+    input.autocapitalize = "off";
+    input.autocomplete = "off";
+    input.placeholder = "1.plus(10).mult(20)";
+    input.value = "1.plus(10).mult(20)";
+    const runBtn = node("button", "primary compiler-run", "compile");
+    runBtn.type = "submit";
+    const formBtn = node("button", "ghost compiler-form-btn", formLabel(FULL_FORM));
+    formBtn.type = "button";
+    formBtn.title = "cycle the code name form (full → short → typed → bare)";
+    form.appendChild(input);
+    form.appendChild(formBtn);
+    form.appendChild(runBtn);
+    box.appendChild(form);
+
+    const tree = node("div", "compiler-tree");
+    box.appendChild(tree);
+
+    let busy = false;
+    let currentForm = FULL_FORM;
+
+    formBtn.addEventListener("click", () => {
+        currentForm = nextForm(currentForm);
+        formBtn.textContent = formLabel(currentForm);
+        Array.from(tree.querySelectorAll(".cnode-code")).forEach((pre) => {
+            if (pre.dataset.mtronText != null) paintCode(pre, pre.dataset.mtronText, currentForm);
+        });
+    });
+
+    /* one mtron expression, read as x-mtron and parsed (never JSON) */
+    function evalObj(expr) {
+        return api.mtron(expr).then((text) => parse(String(text == null ? "" : text).trim()));
+    }
+
+    /* the code::T inside a pipeline result — each stage answers a lst [code] */
+    function codeOf(obj) {
+        if (obj && obj.isLst() && obj.js.length === 1) obj = obj.js[0];
+        return obj;
+    }
+    function textOf(obj) {
+        const c = codeOf(obj);
+        return c ? write(c) : "";
+    }
+
+    /* escape a source expression into an mtron '…' string */
+    function quote1(s) {
+        return "'" + String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+    }
+
+    function head(mark, label) {
+        const h = node("div", "cnode-head");
+        h.appendChild(node("span", "cnode-mark", mark));
+        h.appendChild(node("span", "cnode-label", label));
+        return h;
+    }
+    function code(text) {
+        const pre = node("pre", "cnode-code", "");
+        pre.dataset.mtronText = text;
+        paintCode(pre, text, currentForm);
+        return pre;
+    }
+    function branch(h, kids) {
+        const root = node("div", "cnode");
+        root.appendChild(h);
+        if (kids && kids.length) {
+            const wrap = node("div", "cnode-kids");
+            kids.forEach((k) => wrap.appendChild(k));
+            root.appendChild(wrap);
+        }
+        return root;
+    }
+
+    async function compile() {
+        const expr = input.value.trim();
+        if (!expr || busy) return;
+        busy = true;
+        runBtn.disabled = true;
+        input.disabled = true;
+        tree.textContent = "";
+        const status = node("div", "compiler-status", "compiling …");
+        tree.appendChild(status);
+
+        try {
+            const src = "[" + quote1(expr) + "]";
+
+            /* 1. parse — present it the moment it lands */
+            const parsed = await evalObj(src + "==[!*/compiler/parser]");
+            const parsedText = textOf(parsed);
+            tree.appendChild(branch(head("_", "parser"), [code(parsedText || "noobj")]));
+
+            /* 2. resolve */
+            status.textContent = "resolving …";
+            const resolved = await evalObj(src + "==[!*/compiler/parser]==[!*/compiler/resolver]");
+            const resolvedText = textOf(resolved);
+            tree.appendChild(branch(head("|_", "resolver"), [
+                branch(head("|__", "selector"), [code(resolvedText || "noobj")]),
+                branch(head("|__", "binder"), [])
+            ]));
+
+            /* 3. the registered rewriters */
+            status.textContent = "reading rewriters …";
+            const rewriterObj = await evalObj("*/instset/rewrite");
+            const names = [];
+            if (rewriterObj && rewriterObj.isLst()) {
+                rewriterObj.js.forEach((e) => {
+                    if (e && e.isInst()) {
+                        const n = e.name() ? e.name().toString() : null;
+                        if (n) names.push(n);
+                    }
+                });
+            }
+
+            /* the top status has served its purpose; the rewrite churn lives
+               inside the rewriter node — where the rules will land — so the
+               panel does not jump */
+            status.remove();
+
+            /* 4. rewrite — a rule is shown the moment it changes the code */
+            const rwRoot = node("div", "cnode");
+            rwRoot.appendChild(head("|_", "rewriter"));
+            const rwKids = node("div", "cnode-kids");
+            rwRoot.appendChild(rwKids);
+            tree.appendChild(rwRoot);
+
+            const churn = node("div", "compiler-status", "");
+            rwKids.appendChild(churn);
+
+            let changedCount = 0;
+            if (resolvedText) {
+                for (let i = 0; i < names.length; i++) {
+                    const name = names[i];
+                    churn.textContent = "rewrite " + (i + 1) + "/" + names.length + " · " + name + " …";
+                    try {
+                        const out = await evalObj("[" + resolvedText + "]==[!*" + name + "]");
+                        const outText = textOf(out);
+                        if (outText && outText !== "noobj" && !/^fail::/.test(outText) && outText !== resolvedText) {
+                            rwKids.appendChild(branch(head("|_", name), [code(outText)]));
+                            changedCount += 1;
+                        }
+                    } catch (ignored) {
+                        /* a rule that will not apply is not an error */
+                    }
+                }
+            }
+            churn.remove();
+            if (changedCount === 0) {
+                rwKids.appendChild(node("div", "cnode-empty", "no rewrite changed the resolved code"));
+            }
+        } catch (error) {
+            status.remove();
+            tree.appendChild(code("fail:: " + (error && error.message ? error.message : String(error))));
+        } finally {
+            busy = false;
+            runBtn.disabled = false;
+            input.disabled = false;
+        }
+    }
+
+    form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        compile();
+    });
+
+    return box;
+}
+register("/m/mach/component/compiler", compilerPanel);
+register("compiler", compilerPanel);
 
 export { register, registerParent, resolve, parentOf, panels, parents };

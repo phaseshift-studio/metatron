@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import { fURI } from './furi.js';
+import { parseInsts } from './obj_mtron_serializer.js';
 
 /*
  * PlatonicObj — the foundation of metatron. There are objs.
@@ -67,6 +68,10 @@ class PlatonicObj {
     /* ── stream: one or many, the same code ──
        a single obj yields itself; an objs yields its members. */
     *stream() { yield this; }
+
+    /* the instructions this call composes: a code's chain, a lone inst itself,
+       nothing otherwise (mirrors Java Call.insts()) */
+    insts() { return []; }
 
     /* every obj is a function that maps an obj to an obj: this(a) -> b */
     apply(lhs) { return this; }
@@ -160,8 +165,12 @@ class Inst extends PlatonicObj {
     }
     /* the body (mtron code or another instruction), or null */
     f() { return this._f; }
+    insts() { return [this]; }
 }
-class Code extends PlatonicObj { isCode() { return true; } }
+class Code extends PlatonicObj {
+    isCode() { return true; }
+    insts() { return parseInsts(this.js); }
+}
 
 /* Objs — a multiplicity (int{4}::T in the language). js is an array of objs and
    stream() yields the members, so one code path covers one and many. */

@@ -116,6 +116,55 @@ code {
     padding: .5rem 0 .35rem;
 }
 
+/* ── servers: the cluster's metatron machines as a tab strip ───────────
+   a live tab is the active instance; the rest are greyed until clicked */
+.servers {
+    width: min(1180px, 100% - 2.5rem);
+    margin: 0 auto;
+    display: flex;
+    gap: .3rem;
+    padding: .45rem 0 0;
+    overflow-x: auto;
+}
+
+.server-tab {
+    appearance: none;
+    margin: 0;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    color: var(--dim);
+    font: inherit;
+    font-size: 11px;
+    line-height: 1;
+    padding: .28rem .6rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.server-tab:hover {
+    color: var(--fg);
+    border-color: var(--dim);
+}
+
+.server-tab.live {
+    color: var(--fg);
+    border-color: var(--red);
+    background: rgba(151, 2, 7, .14);
+}
+
+/* a remote instance: a full-page iframe below the parent's tab strip */
+.instance-frame {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border: 0;
+    z-index: 100;
+    background: #0b0e13;
+}
+
 .topbar-inner {
     width: min(1180px, 100% - 2.5rem);
     margin: 0 auto;
@@ -920,6 +969,89 @@ dialog.save-as .actions {
     font-size: 11.5px;
 }
 
+/* ── compiler panel: the machine's lowering axis as a tree ───── */
+.compiler-form {
+    display: flex;
+    gap: .5rem;
+    padding: .1rem 0 .5rem;
+}
+
+.compiler-expr {
+    flex: 1;
+    min-width: 0;
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--fg);
+    font: 12px/1.4 var(--mono);
+    padding: .35rem .5rem;
+}
+
+.compiler-expr:focus {
+    outline: none;
+    border-color: var(--mred);
+}
+
+.compiler-run {
+    flex: none;
+}
+
+.compiler-tree {
+    display: flex;
+    flex-direction: column;
+}
+
+.compiler-status {
+    color: var(--faint);
+    font-size: 11px;
+    padding: .15rem 0 .35rem;
+}
+
+.cnode-head {
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    padding: .12rem 0;
+}
+
+.cnode-mark {
+    color: var(--faint);
+    font-size: 11px;
+    white-space: pre;
+    user-select: none;
+}
+
+.cnode-label {
+    color: var(--mred);
+    font-size: 11.5px;
+    overflow-wrap: anywhere;
+}
+
+.cnode-kids {
+    margin-left: 1.1rem;
+    padding-left: .6rem;
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+}
+
+.cnode-code {
+    margin: .15rem 0;
+    padding: .35rem .5rem;
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 11px;
+    color: var(--fg);
+}
+
+.cnode-empty {
+    color: var(--faint);
+    font-size: 11px;
+}
+
 /* ── type panel: a type's definition ───────────────────── */
 .type-head {
     display: flex;
@@ -1241,6 +1373,10 @@ dialog.save-as .actions {
     max-width: 280px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.tble-sheet .tble-plain {
+    cursor: pointer;
 }
 
 .tble-sheet .tble-idx {
@@ -1615,16 +1751,40 @@ dialog.save-as .actions {
     padding: .45rem .55rem;
 }
 
-/* instset tables — the four buttons a machine set can be asked */
-.machine-tile-actions {
-    display: flex;
-    gap: .25rem;
+button.machine-tile {
+    appearance: none;
+    margin: 0;
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+button.machine-tile:hover {
+    border-color: var(--dim);
+}
+
+button.machine-tile:focus-visible {
+    outline: none;
+    border-color: var(--red);
+}
+
+/* instset tables — the four tables an instset can be asked, as side-by-side
+   heads sharing one drop-down */
+.instset-tables {
     margin-top: .4rem;
 }
 
-.machine-tile-actions button {
+.instset-table-heads {
+    display: flex;
+    gap: .25rem;
+}
+
+.instset-table-head {
     flex: 1;
     min-width: 0;
+    text-align: center;
     background: transparent;
     border: 1px solid var(--line);
     border-radius: 5px;
@@ -1633,61 +1793,51 @@ dialog.save-as .actions {
     font-size: 10px;
     line-height: 1;
     letter-spacing: .05em;
-    padding: .12rem .1rem;
+    padding: .3rem .1rem;
     cursor: pointer;
 }
 
-.machine-tile-actions button:hover {
+.instset-table-head:hover {
     color: var(--fg);
     border-color: var(--dim);
 }
 
-.machine-tile-actions button.on {
+.instset-table-head.on {
     background: rgba(151, 2, 7, .14);
     border-color: var(--red);
     color: var(--fg);
 }
 
-/* the signature drop-down: floats under the tile; one item per signature —
-   no wrap, the long ones elide (the full address is the item's title) */
-.machine-drop {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 40;
-    width: min(34rem, 78vw);
+/* the signature drop-down: in place, under its table head; one item per
+   signature — no wrap, the long ones elide (the full address is the title) */
+.instset-drop {
+    margin-top: .2rem;
     max-height: 22rem;
     overflow-y: auto;
     background: var(--bg);
     border: 1px solid var(--line);
-    border-top: 2px solid var(--red);
     border-radius: 7px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, .55);
-    padding: .3rem 0;
 }
 
-/* a row is one signature: its text takes the line, two little buttons keep the
-   rest — equal, aligned, and as small as the word in them allows */
-.machine-drop-row {
+.instset-drop-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: .35rem;
     gap: .25rem .4rem;
     border-bottom: 1px solid rgba(48, 54, 61, .35);
     padding: .24rem .6rem;
 }
 
-.machine-drop-row:last-child {
+.instset-drop-row:last-child {
     border-bottom: 0;
 }
 
-.machine-drop-row:hover,
-.machine-drop-row:focus-within {
+.instset-drop-row:hover,
+.instset-drop-row:focus-within {
     background: rgba(151, 2, 7, .14);
 }
 
-.machine-drop-cell {
+.instset-drop-cell {
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -1701,12 +1851,11 @@ dialog.save-as .actions {
     cursor: pointer;
 }
 
-.machine-drop-cell:hover {
-    background: none;
+.instset-drop-cell:hover {
     color: var(--link);
 }
 
-.machine-drop-btn {
+.instset-drop-btn {
     background: transparent;
     border: 1px solid var(--line);
     border-radius: 3px;
@@ -1719,14 +1868,14 @@ dialog.save-as .actions {
     cursor: pointer;
 }
 
-.machine-drop-btn:hover,
-.machine-drop-btn:focus-visible {
+.instset-drop-btn:hover,
+.instset-drop-btn:focus-visible {
     color: var(--fg);
     border-color: var(--dim);
     outline: 0;
 }
 
-.machine-drop-empty {
+.instset-drop-empty {
     color: var(--faint);
     font-size: 11px;
     padding: .35rem .65rem;
@@ -1740,13 +1889,8 @@ dialog.save-as .actions {
 
 .machine-tile-metric {
     color: var(--fg);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.machine-tile-sub {
-    color: var(--dim);
-    font-size: 10.5px;
+    font-size: 11px;
+    overflow-wrap: anywhere;
 }
 
 .machine-note {

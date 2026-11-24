@@ -20,17 +20,17 @@ package studio.phaseshift.metatron.isa.m.web.space.mdns.handler;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
-import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.isa.m.web.type.mcpMetatronBuilder;
+import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import javax.jmdns.JmDNS;
@@ -650,7 +650,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
                 final Map<InetAddress, List<Obj>> responders = this.heard.computeIfAbsent(info.getKey(), key -> new HashMap<>());
                 responders.put(responder, rows);
                 if (this.roster(info.getKey(), responders.values().stream().flatMap(List::stream).toList()) > 0)
-                    this.LOG.info("mdns: discovered %s: %s", machine, rows);
+                    LOG.status(DEBUG, "mdns: discovered %s: %s", machine, rows);
             }
         } finally {
             Machine.current(current);

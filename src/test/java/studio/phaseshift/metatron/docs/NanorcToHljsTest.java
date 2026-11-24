@@ -113,7 +113,7 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
     @Test
     public void theRealNanorcParsesIntoItsFullRuleList() throws IOException {
         final List<NanorcToHljs.Rule> rules = NanorcToHljs.parse(Files.readAllLines(NANORC));
-        assertEquals(90, rules.size());
+        assertEquals(91, rules.size());
         assertEquals(3, rules.stream().filter(r -> null != r.start()).count());
         // the design principle comment says so: assume everything is a uri — the first rule paints
         // the whole line blue, and the last rule is the final repaint
@@ -176,8 +176,8 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             // uri default (prompt-matchers in their guarded form)
             final String full = js.split("const MTRON_RULES = \\[")[1].split("];")[0];
             final String subset = js.split("const MTRON_RESULT_RULES = \\[")[1].split("];")[0];
-            assertEquals(89, full.split("className: 'mtron-nanorc-").length - 1);
-            assertEquals(89, subset.split("className: 'mtron-nanorc-").length - 1);
+            assertEquals(90, full.split("className: 'mtron-nanorc-").length - 1);
+            assertEquals(90, subset.split("className: 'mtron-nanorc-").length - 1);
             assertTrue(subset.contains("(?!^mtron>)"));
             // BOTH arrays resolve in the reversed (later-wins) order — the subset lost its reversal
             // once and the int rule beat the green 0x inside every result body
