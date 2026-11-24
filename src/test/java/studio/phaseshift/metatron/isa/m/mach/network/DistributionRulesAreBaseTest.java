@@ -297,6 +297,21 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     }
 
     /**
+     * NOTHING IS LEFT OPEN HERE FOR CODE THAT RUNS ELSEWHERE OR LATER: a blocking instruction applies its arguments
+     * itself (a cut's tail where it lands, a profile's program on each timed run), so the compiled line has no
+     * unresolved instruction and the console reports no dynamic resolution. Each row: the line.
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "{1,2,3,4}.move(<..>).plus(1).sum()",
+            "1.plus(2).profile()",
+    })
+    void testACompiledLineLeavesNothingOpenHere(final String mtron) {
+        final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse(mtron.trim())).asCode();
+        checkEquality(LOG, jnt(0), jnt(Call.Helper.getUnresolvedInsts(compiled).size()), true);
+    }
+
+    /**
      * law_shard plans the fold before a cut, and the cut follows with its tail as written.
      */
     @Test

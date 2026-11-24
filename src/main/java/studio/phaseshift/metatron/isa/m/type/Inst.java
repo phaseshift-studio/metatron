@@ -324,12 +324,13 @@ public interface Inst extends Call {
 
     /**
      * Whether this instruction is bound to a body, and with {@code nested}, every instruction in its arguments too.
-     * A CUT'S TAIL IS NOT THIS MACHINE'S TO RESOLVE ({@code Law.nomadic}): it is the program the machine it lands in
-     * compiles, so a cut is resolved once it is bound itself.
+     * A BLOCKING INSTRUCTION'S ARGUMENTS ARE NOT THIS RESOLUTION'S: it applies them itself, where and when they run (a
+     * cut's tail in the machine it lands in, a branch's lanes at their places, a profile's program on each timed run),
+     * so it is resolved once it is bound itself, and the console reports no dynamic resolution for them.
      */
     default boolean isResolved(final boolean nested) {
         final boolean resolved = this.hasf();
-        return !nested || !resolved || CUT_INST_TID.equals(this.tid().basePath())
+        return !nested || !resolved || this.isBlocking()
                 ? resolved
                 : this.<Inst>as().args().elements().allMatch(c -> c.isResolved(true));
     }
