@@ -309,7 +309,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         // even fan of two, its four members dealt two and two)
         checkCodeParseApply(LOG, "branch?<={0}(<" + endpoint(1) + "> => start({1,2,3,4}).plus?hop=1(1))"
                 + ".explain()>>ext/topology/format.has('[{]4[}]──┤').count()", "1");
-        checkCodeRewrite(LOG, source, "start().repeat(branch(cut(),cut(),cut()),loop().is())",
+        checkCodeRewrite(LOG, source, "start().repeat(branch(plus(),plus(),plus()),loop().is())",
                 "{5,6,7,8,9,10,11,12}", true);
     }
 

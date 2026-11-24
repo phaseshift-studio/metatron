@@ -119,11 +119,12 @@ form: `[h,1]` is a **chain** (one child per node, `monoidic` alone, order preser
 The arity **caps the fan-out**: each node takes the first `w` lanes of the emitter's lane order (home-first, then the
 resolution order — deterministic, never rotated per node), still clamped by `min(shares, seed)`. A node with fewer live
 targets takes what there is. The **form is restated, never the number**: the emitted lane's budget is the same arity
-with the height decremented (`{2}3 ⇒ {2}2 ⇒ {2}1 ⇒ 0`, `[3,1] ⇒ [2,1] ⇒ [1,1]`). It is stated on the lane's **first
-instruction** — the `start(part)` of a seeded lane, the first run instruction otherwise — so a human and a re-planning
-peer read the metadata in one place. A leaf states the bare `?hop=0`; no copied instruction is stripped of a budget it
-carries (the earliest statement wins, so the head is authoritative); and the master states none (its head is the
-layout's `branch`).
+with the height decremented (`{2}3 ⇒ {2}2 ⇒ {2}1 ⇒ 0`, `[3,1] ⇒ [2,1] ⇒ [1,1]`). A shipped lane states it on its
+**move's target**, `cut(<//peer?hop={2}2>, …)`, and the cut hands it to the program it ships, on that program's first
+instruction; a home lane, which has no move, states it on its **first instruction** — the `start(part)` of a seeded
+lane, the first run instruction otherwise. So a re-planning peer reads the budget in one place, the head of what it
+runs. A leaf states the bare `?hop=0`; no copied instruction is stripped of a budget it carries (the earliest statement
+wins, so the head is authoritative); and the master states none (its head is the layout's `branch`).
 
 ### `?place` — where
 
@@ -404,7 +405,9 @@ partials through the combiner: the chain **expands** into one lane per place and
 - **A run partition replicates the seed and narrows the exponent.** A seeded lane carries the whole seed and its own
   subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. After a cut the
   seed is computed, so the branch copies it to every lane (`branch?<=T{*}&split=copy(…)`). See *the run partition*.
-- A place with n shares is keyed `?split={n}part`, and `?split=copy` hands every lane the whole seed.
+- A peer with n shares is one lane weighted n, the point on its cut (`cut{n}(<p_i?hop=h>, …)`, the keyed spelling's
+  `?split={n}part`); home's n shares are n home lanes, as a home lane has no move to weigh. `?split=copy` hands every
+  lane the whole seed.
 - A lane ships raw. The master's compiler never binds a lane; each is compiled where it runs (server side for a host,
   by that machine's compiler for a machine path).
 

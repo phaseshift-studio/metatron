@@ -41,6 +41,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
@@ -1170,7 +1171,10 @@ public class mInstSet extends AbstractInstSet {
                             final List<Inst> out = new ArrayList<>(code.insts().size() + 1);
                             for (int i = 0; i < code.insts().size(); i++) {
                                 final Inst inst = code.insts().get(i);
-                                final List<Obj> members = op.basePath().equals(inst.tid().basePath()) && !inst.args().isRec() ? inst.args().elements().toList() : List.of();
+                                // A LAYOUT FACTORS NOTHING: a head run ahead of a deal changes what each lane is dealt
+                                // (a filter moves the members between lanes), and a lane's head is its move
+                                final List<Obj> members = op.basePath().equals(inst.tid().basePath()) && !inst.args().isRec() && !BranchInst.isLayout(inst)
+                                        ? inst.args().elements().toList() : List.of();
                                 final Inst head = 2 > members.size() || !factorable.test(members.getFirst()) ? null : members.getFirst().asCode().insts().getFirst();
                                 final Rec declared = null == head ? noobjRec() : Law.Helper.declared(head.tid().basePath(), carriers.get(i));
                                 // HEADS ALIKE BUT FOR AN EXACT SPAN SHARE THEIR SHORTEST RUN (Marko, 2026-11-15: a span stays on its
@@ -1203,12 +1207,14 @@ public class mInstSet extends AbstractInstSet {
                             return changed ? MCode.code(out) : code;
                         }), "the left-distributive normal form, law-indexed: members of the algebra's additive op that all start with the same pure instruction share it ahead of the op -- \\(\\mathrm{branch}(a \\cdot b, a \\cdot c) \\leadsto a \\cdot \\mathrm{branch}(b, c)\\), \\(ab + ac = a(b + c)\\) -- one instruction a pass, the heads alike to their point and to their span (exact runs sharing the shortest, \\(a^m b + a^n c \\leadsto a^m (b + a^{n-m} c)\\)) and taking one obj at a time (a map, filter or flatmap, as a branch feeds its members), every member keeping a remainder"),
                         // THE LIKE-TERM LAW: equal members of an occurrence of the op collapse to the member that first appeared,
-                        // carrying the summed multiplicities, S(x,x,…,x) ⇝ S(x{n}). A REC ARGUMENT LIST IS A ROUTE TABLE: its
-                        // members are SCHEDULED (each runs at its key's place), not free additive terms. Equal lanes under ONE
-                        // key are already summed by the rec itself (a => x, a => x is a => x{2}), and lanes under different keys
-                        // run at different places, so they never collapse. A MEMBER'S MULTIPLICITY is the coefficient the law
-                        // sums: an inst's own point d, the point of a code's last inst (on the member's output), else the obj's
-                        // point (a stream's count). Never the head's: a point there floats past a reducer, so
+                        // carrying the summed multiplicities, S(x,x,…,x) ⇝ S(x{n}). A LAYOUT IS A ROUTE TABLE
+                        // (BranchInst#isLayout): its members are SCHEDULED (each runs at its lane's place), not free additive
+                        // terms. Equal lanes under ONE key are already summed by the rec itself (a => x, a => x is a => x{2}),
+                        // lanes at different places never collapse, and equal lanes of a deal each take their own share, which
+                        // one lane with their summed point would not: {1,2,3}.branch?<=int{*}&split=part(count(),count()) is
+                        // {2,1}, never {2}3. A MEMBER'S MULTIPLICITY is the coefficient the law sums: an inst's own point d,
+                        // the point of a code's last inst (on the member's output), else the obj's point (a stream's count).
+                        // Never the head's: a point there floats past a reducer, so
                         // 5.branch(plus(1).count(),plus(1).count()) collapsed to plus{2}(1).count() and answered 2, not {2}1.
                         // Never the whole coefficient b·d: a span is part of the function (like terms share it), so summing it
                         // as a point read {?}plus(1) + plus(1) as plus{1,2}(1). The same holds for a type and a value: a type's
@@ -1225,7 +1231,7 @@ public class mInstSet extends AbstractInstSet {
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
-                                if (!op.basePath().equals(inst.tid().basePath()) || inst.args().isRec() || 2 > inst.args().count()) {
+                                if (!op.basePath().equals(inst.tid().basePath()) || inst.args().isRec() || 2 > inst.args().count() || BranchInst.isLayout(inst)) {
                                     out.add(inst);
                                     continue;
                                 }
@@ -1274,8 +1280,9 @@ public class mInstSet extends AbstractInstSet {
                         // multiplication itself. A call member splices in by its insts, a non-call member lifts to the map that
                         // emits it, stream-transparent either way. A REMOTE LANE IS NOT A ONE-TERM SUM: inlining a lane keyed to
                         // another host would drop the place and run the program here. A lone addressless lane runs here anyway,
-                        // so it inlines as a positional one does. A SPANNED ONE-TERM SUM IS A RUN of the frame, never a point
-                        // on its member (Marko, 2026-11-15): {2}branch(b) is b.b, so it stays for Inst.Helper.runs to walk, where
+                        // so it inlines as a positional one does, as the lane it means (BranchInst#lanes): a key's ?timeout is
+                        // the cut that stays, cut?timeout=n(<~>, program), never dropped. A SPANNED ONE-TERM SUM IS A RUN of
+                        // the frame, never a point on its member (Marko, 2026-11-15): {2}branch(b) is b.b, so it stays for Inst.Helper.runs to walk, where
                         // folding its c() (span x point) in made {2}branch(plus{3}(34)) one plus{6}(34)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_inline"), code -> {
                             final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
@@ -1288,7 +1295,7 @@ public class mInstSet extends AbstractInstSet {
                                 // share the deal consumes (BranchInst#lanes), which an inlined member would run as copies
                                 if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)
                                         && (inst.args().isRec() || !inst.tid().hasQ(SPLIT))) {
-                                    final Obj lone = inst.args().isRec() ? inst.args().asRec().recValue().values().iterator().next() : inst.arg(0);
+                                    final Obj lone = inst.args().isRec() ? BranchInst.lanes(inst).getFirst().member() : inst.arg(0);
                                     final cInt c = inst.c();
                                     final Obj member;
                                     if (cInt.ONE().equals(c))
@@ -1710,7 +1717,7 @@ public class mInstSet extends AbstractInstSet {
         // only a local branch applies its own rule; a layout (BranchInst#isLayout: lanes headed by cuts, a deal, keys)
         // is a route table the plan rewriter types, and its rng is the compiler's (the topology extension owns the
         // distributed count)
-        if (!i.tid().basePath().equals(BRANCH_INST_TID) || !i.args().isLst() || studio.phaseshift.metatron.isa.m.type.impl.BranchInst.isLayout(i))
+        if (!i.tid().basePath().equals(BRANCH_INST_TID) || !i.args().isLst() || BranchInst.isLayout(i))
             return new ExplainTypes(i.dom(), i.rng(), i.dom().c(), i.rng().c());
         final cInt grain = i.dom().c().isMaybe() ? cInt.ONE() : i.dom().c();
         final List<Obj> programs = i.args().values().filter(b -> !b.isNoObj()).toList();
@@ -1995,9 +2002,9 @@ public class mInstSet extends AbstractInstSet {
                     // without a vid) is the local one by construction.
                     final List<Obj> reports = gathered.get().stream().filter(Obj::isRec).toList();
                     final List<Obj> keys = run.insts().stream()
-                            .filter(studio.phaseshift.metatron.isa.m.type.impl.BranchInst::isLayout)
+                            .filter(BranchInst::isLayout)
                             .findFirst()
-                            .map(branch -> studio.phaseshift.metatron.isa.m.type.impl.BranchInst.lanes(branch).stream()
+                            .map(branch -> BranchInst.lanes(branch).stream()
                                     .map(lane -> (Obj) uri(lane.home() ? f("~") : lane.place())).toList())
                             .orElse(List.of());
                     final Map<Obj, Obj> places = new LinkedHashMap<>();

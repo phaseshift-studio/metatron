@@ -183,19 +183,19 @@ public class catInstSet extends AbstractInstSet {
     }
 
     /**
-     * The realized placement of an emitted layout — the {@code branch}'s keyed lanes ({@code place => program}),
-     * lifted to their place DESIGNATORS and WEIGHTED, keyed by the shard's AT span:
+     * The realized placement of an emitted layout — the {@code branch}'s lanes ({@link BranchInst#lanes}), lifted to
+     * their place DESIGNATORS and WEIGHTED, keyed by the shard's AT span:
      * {@code [[span=><at]=>[local=>1,//ginger:8555=>2,//booger:8555=>1]]}. {@code noobj} when the emitter shipped nothing
-     * (the layout has no keyed {@code branch}). A designator keeps its port: {@code ws://localhost:1111} and
+     * (the code has no layout). A designator keeps its port: {@code ws://localhost:1111} and
      * {@code ws://localhost:1112} are two places.
      * <p>
-     * THE DEMAND IS THE REALIZED SHARE COUNT, NOT THE DECLARED BAND: a lane's key states the shares its place took,
-     * {@code ?split={n}part} (one when the key states no weight of its own) — after the emitter's clamps
+     * THE DEMAND IS THE REALIZED SHARE COUNT, NOT THE DECLARED BAND: a lane's weight is the shares its place took, the
+     * point on its cut ({@code cut{n}(<place>, …)}), one for each home lane — after the emitter's clamps
      * ({@code k = min(Σ demands, seed)} and the hop arity), not what the plan asked for. A band {@code //ginger{2,5}}
      * that could only fill three shares records {@code //ginger=>3}. The rec is the weighted {@code ?place} spelling,
      * so a realized {@code where} can be read back as a place set directly.
      * <p>
-     * THE HOME KEY IS THE LOCAL PLACE ({@code <~>}, a path rather than a host, the lane at distance zero): it ran part
+     * A HOME LANE IS THE LOCAL PLACE (no move, a path rather than a host, the lane at distance zero): it ran part
      * of the fold where the code already stands, so it is recorded as the {@code local} designator — the same
      * designator {@code ?place} uses, and the honest answer even when this machine has no listening authority to name
      * ({@link Places#self()} would answer {@code noobj} there, and dropping the lane would report a place set that ran
@@ -211,13 +211,12 @@ public class catInstSet extends AbstractInstSet {
                 .filter(BranchInst::isLayout)
                 .findFirst()
                 .ifPresent(branch -> BranchInst.lanes(branch).forEach(lane -> {
-                    // a lane's weight is its share of the place's shares (BranchInst#lanes: the point on its head, or a
-                    // key's {n}part); a lane of weight zero, a copy, is one. The home lane is the LOCAL place; a shipped
+                    // a lane's weight is its share of the place's shares (BranchInst#lanes: the point on its cut, or a
+                    // key's {n}part); a lane of weight zero, a copy, is one. A home lane is the LOCAL place; a shipped
                     // one is the `//host:port` its cut's target names. The port is the place: two services on one host
                     // are two places, not one place twice
                     final fURI place = lane.place();
-                    lanes.merge(null == place || null == place.host() ? uri(LOCAL)
-                                    : uri("//" + place.host() + (place.hasPort() ? ":" + place.port() : "")),
+                    lanes.merge(null == place || null == place.host() ? uri(LOCAL) : uri(f().host(place.host()).port(place.port())),
                             0 < lane.weight() ? lane.weight() : 1L, Long::sum);
                 }));
         if (lanes.isEmpty())

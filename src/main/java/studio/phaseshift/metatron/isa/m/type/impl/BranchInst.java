@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -121,53 +122,63 @@ public class BranchInst extends MInst {
     /**
      * THE BRANCH'S LANES, in order (Marko, 2026-11-24): a lane is a MEMBER HEADED BY A MOVE, or the cut a move
      * compiles to, so its place is the cut's target, the program is the cut's tail, and its weight is the point on its
-     * head, the share it is dealt when the branch splits {@code ?split=part}: {@code move{2}(<//1>)} is two shares. A
-     * member headed by neither is a home lane, its program the member, its weight its head's point too. Under a copy the
-     * head's point is the member's own, as written. A KEYED branch is read as the lanes it means: each key
-     * {@code <p>} the lane {@code cut(<p>, program)} (no cut for a home key), its weight its {@code ?split} and its
-     * {@code ?timeout} the cut's, the branch's query the default of every key's.
+     * move ("move() point coefficient is branch weight"), the share it is dealt when the branch splits
+     * {@code ?split=part}: {@code move{2}(<//1>)} is two shares. A member headed by neither is a HOME LANE, which gets no
+     * move and so carries no weight: it takes one share, and every point it states is its own, as written (a home
+     * place that takes several shares is as many home lanes). A move whose target is computed when it runs names no
+     * place yet, so its member reads as a home lane, as a cut to {@code <~>} (a stay, which a timed home member is) does.
+     * A KEYED branch is read as the lanes it means: each key {@code <p>} the lane {@code cut(<p>, program)}, its weight
+     * its {@code ?split}, and its {@code ?timeout} (the key's, else the branch's) the cut's; a home key's program is
+     * timed by a cut that stays, {@code cut(<~>, program)}, as every timeout is a cut's.
      */
     public static List<Lane> lanes(final Inst branch) {
         if (branch.args().isRec())
             return routes(branch).<Rel>elements().map(route -> {
                 final fURI key = route.first().uriValue();
                 final List<Inst> program = program(route.second());
-                // the key's place is its path, aligned as a move's target, and the hop budget it states rides with it;
-                // THE CUT HOLDS THE TIMEOUT (Marko, 2026-11-24): the key's, else the branch's, is the lane's cut's
+                // the key's place is its path, aligned as a move's target, and the hop budget it states rides with it
                 final fURI place = null == key.q(HOP) ? key.qLess() : key.qLess().q(HOP, key.q(HOP));
-                return new Lane(home(key) ? null : place, program, weight(key.q(SPLIT)), home(key) ? code(program)
-                        : instB(null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT)), lst(
-                        uri(Machine.Helper.align(Machine.current(), place)),
-                        program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst())));
+                final fURI cut = null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT));
+                final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
+                return new Lane(home(key) ? null : place, program, weight(key.q(SPLIT)),
+                        !home(key) ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
+                                : null == key.q(TIMEOUT) ? code(program) : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
             }).toList();
         final boolean part = 0 < weight(branch.tid().q(SPLIT));
         return branch.args().<Obj>elements().filter(member -> !uri(LHS).equals(member)).map(member -> {
             final List<Inst> insts = program(member);
             final Inst head = insts.isEmpty() ? null : insts.getFirst();
             final fURI base = null == head ? null : head.tid().basePath();
-            final fURI place = CUT_INST_TID.equals(base) ? head.arg(0).uriValue()
-                    : MOVE_INST_TID.equals(base) ? (head.arg(0).isUri() ? head.arg(0).uriValue() : fURI.Singleton.f(".."))
+            // move() is move(<..>); a target computed when the move or the cut runs names no place here
+            final fURI place = (CUT_INST_TID.equals(base) || MOVE_INST_TID.equals(base)) && head.arg(0).isUri() ? head.arg(0).uriValue()
+                    : MOVE_INST_TID.equals(base) && head.arg(0).isNoObj() ? fURI.Singleton.f("..")
                     : null;
-            // the point on the head is the lane's share, consumed by the deal: the lane runs its part once
-            final long weight = !part ? 0L : null == head || null == head.tid().d() ? 1L : head.tid().d().min();
-            final Obj run = !part || null == head || null == head.tid().d() || head.tid().d().isOne() ? member
+            final boolean lane = null != place && !home(place);
+            // the point on a lane's move is its share, consumed by the deal: the lane runs its part once
+            final long weight = !part ? 0L : !lane || null == head.tid().d() ? 1L : head.tid().d().min();
+            if (part && 1L > weight)
+                throw MTronException.of("a lane's weight is a share of the lhs, one or more: %s in %s", member, branch);
+            final Obj run = !part || !lane || null == head.tid().d() || head.tid().d().isOne() ? member
                     : code(Stream.concat(Stream.of(instB(head.tid().d(null), head.args())), insts.stream().skip(1)).toList());
-            return new Lane(null == place || home(place) ? null : place,
-                    CUT_INST_TID.equals(base) ? program(head.arg(1)) : null == place ? insts : insts.subList(1, insts.size()),
+            return new Lane(lane ? place : null,
+                    null == place ? insts : CUT_INST_TID.equals(base) ? program(head.arg(1)) : insts.subList(1, insts.size()),
                     weight, run);
         }).toList();
     }
 
     /**
      * Whether a branch is a LAYOUT: it routes its lanes (a key, a lane headed by a move or a cut) or deals its lhs
-     * ({@code ?split}), so a planner does not plan around it and a rewrite does not inline it.
+     * ({@code ?split=part}), so a planner does not plan around it and a rewrite neither inlines it nor sums its members.
      */
     public static boolean isLayout(final Inst inst) {
         return BRANCH_INST_TID.equals(inst.tid().basePath())
-                && (inst.args().isRec() || inst.tid().hasQ(SPLIT) || lanes(inst).stream().anyMatch(lane -> !lane.home()));
+                && (inst.args().isRec() || 0 < weight(inst.tid().q(SPLIT)) || lanes(inst).stream().anyMatch(lane -> !lane.home()));
     }
 
-    private static List<Inst> program(final Obj member) {
+    /**
+     * A member's instructions: a call's own, else the map that emits the value.
+     */
+    public static List<Inst> program(final Obj member) {
         return member.isCall() ? member.asCall().insts() : List.of((Inst) map_(member).tryToInst());
     }
 
@@ -190,7 +201,7 @@ public class BranchInst extends MInst {
             // in and the caller is left there: the next member and the instruction after the branch start from home
             final Machine home = Machine.current();
             return objs(this.args().elements().map(o -> Machine.Helper.evalAt(home, () -> this.isBatching()
-                    ? start_(lhs).addInsts(o.isCall() ? o.asCall().insts() : List.of((Inst) map_(o).tryToInst())).apply(noobj())
+                    ? start_(lhs).addInsts(program(o)).apply(noobj())
                     : o.apply(lhs).c(c -> lhs.c().mult(c)))));
         }
         final List<Lane> lanes = lanes(this);
@@ -201,7 +212,21 @@ public class BranchInst extends MInst {
                         : parts.get(r).isEmpty() ? noobj()
                         : lane(lanes.get(r), objs(parts.get(r))))
                 .toList();
-        return objs(threads.stream().map(thread -> thread.isNoObj() ? thread : thread.asRec().at(uri(RHS))));
+        return objs(threads.stream().map(thread -> {
+            if (thread.isNoObj())
+                return thread;
+            // A LANE WHOSE WAIT FAILED IS STOPPED: the branch answers its failure, so nothing the lane does after counts
+            final AbstractThread lane = (AbstractThread) thread;
+            try {
+                final Obj answer = lane.at(uri(RHS));
+                if (!lane.future().isDone())
+                    lane.stop();
+                return answer;
+            } catch (final RuntimeException e) {
+                lane.stop();
+                throw e;
+            }
+        }));
     }
 
     /**
@@ -261,11 +286,17 @@ public class BranchInst extends MInst {
     private static Obj lane(final Lane lane, final Obj input) {
         final List<Inst> member = program(lane.member());
         final Obj code = lane.seeded() ? code(member) : start_(input).addInsts(member);
-        // the lane's thread waits as long as its cut may run: the cut times the lane, and the branch's wait on the
-        // thread (its own default, else) must not cut the lane short
-        final String timeout = member.isEmpty() ? null : member.getFirst().tid().q(TIMEOUT);
-        return (null == timeout ? VirtualThread.virtual(code) : new VirtualThread(CommonUtil.mutableMap(uri(CODE), code,
-                uri(TIMEOUT), machInstSet.Helper.seconds(timeout)), MACH_VIRTUAL_THREAD_TID, null)).apply(noobj());
+        // THE LANE'S THREAD WAITS AS LONG AS ITS CUTS MAY RUN, and a second more: a cut times its own run from when it
+        // starts, after the lane has compiled, so the branch's wait (the thread's own default, else) must not cut a timed
+        // lane short; the cut's wait is the one that times out. A move not yet compiled to its cut times the same
+        final long seconds = member.stream()
+                .filter(inst -> (CUT_INST_TID.equals(inst.tid().basePath()) || MOVE_INST_TID.equals(inst.tid().basePath()))
+                        && inst.tid().hasQ(TIMEOUT))
+                .mapToLong(inst -> machInstSet.Helper.seconds(inst.tid().q(TIMEOUT)).realValue().longValue())
+                .max().orElse(-1L);
+        return (0 > seconds ? VirtualThread.virtual(code) : new VirtualThread(CommonUtil.mutableMap(uri(CODE), code,
+                uri(TIMEOUT), machInstSet.Helper.seconds(String.valueOf(seconds + 1))), MACH_VIRTUAL_THREAD_TID, null))
+                .apply(noobj());
     }
 
     /**

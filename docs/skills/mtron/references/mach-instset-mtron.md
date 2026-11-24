@@ -570,8 +570,9 @@ reference.
 ## distribution
 
 Distribution ships code over a client (`ws`, `http`, `mcp`) and returns values. `law_shard`
-([the category graph](cat-instset-mtron.md)) emits $\mathrm{branch}(p_i \Rightarrow \mathrm{start}(\mathit{part}_i)
-\cdot \mathit{program}, \ldots) \cdot \mathit{combiner}$; each lane runs on its own virtual thread, so the latency is
+([the category graph](cat-instset-mtron.md)) emits $\mathrm{branch}(\mathrm{cut}(p_i, \mathrm{start}(\mathit{part}_i)
+\cdot \mathit{program}), \ldots) \cdot \mathit{combiner}$, each lane the cut its $\mathrm{move}(p_i)$ compiles to and a
+home lane the program alone; each lane runs on its own virtual thread, so the latency is
 $\max_i \mathrm{RTT}_i$ rather than $\sum_i \mathrm{RTT}_i$. The layouts are catalogued in
 [distributed computing](distributed-computing-mtron.md).
 

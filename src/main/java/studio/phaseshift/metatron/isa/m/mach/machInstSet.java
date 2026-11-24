@@ -49,12 +49,14 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -1030,7 +1032,9 @@ public class machInstSet extends AbstractInstSet {
                                 .desc("""
                                         choose where the next inst will evaluate, and close nothing. The address is folded
                                         against the current machine, and an address that walks past the root saturates
-                                        there rather than failing.""")
+                                        there rather than failing. Followed by more of the chain, a move compiles to the
+                                        cut that runs it there, which keeps the move's ?timeout=n and its target's ?hop
+                                        budget; heading a branch member, it is a lane, and its point the lane's weight.""")
                                 .example("move(<..>)          [-- up: the parent machine, without closing this one --]")
                                 .example("move()              [-- the same instruction --]")
                                 .example("move(<../b>)        [-- across, to the sibling b --]")
@@ -1133,7 +1137,10 @@ public class machInstSet extends AbstractInstSet {
                                         door, so a client that runs no program is a place too; a host with no peer
                                         dialed is a failure. The tail
                                         ends at `explain()` and `profile()`, the return home: they stay after the cut
-                                        and analyze it where the expression began.""")
+                                        and analyze it where the expression began. A cut holds every timeout:
+                                        cut?timeout=n waits n seconds for its run and stops it, failing, when it runs
+                                        longer, and a move's or a branch's ?timeout compiles onto its cut. The target's
+                                        ?hop is the budget of what the cut compiles or ships.""")
                                 .law(Law.nomadic)
                                 .example("5.move(<a>).plus(1)           [-- compiles to 5.cut(<a>, plus(1)): /a compiles plus(1) --]")
                                 .example("push(b).plus(1)               [-- compiles to push(b).cut(<~>, plus(1)): /b compiles plus(1) --]")
@@ -1153,8 +1160,18 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(CODE), instLambda((l, i) -> untimed.apply(lhs)), uri(TIMEOUT), seconds),
                                                 MACH_VIRTUAL_THREAD_TID, null);
                                         run.apply(noobj());
-                                        final Obj answer = run.at(uri(RHS));
-                                        if (null != run.landedPerspective())
+                                        // A RUN THAT OUTLIVES ITS TIME IS STOPPED: the caller is told it failed, so nothing
+                                        // the run does after counts (a shipped program's peer is not reached by the stop)
+                                        final Obj answer;
+                                        try {
+                                            answer = run.at(uri(RHS));
+                                        } catch (final RuntimeException e) {
+                                            run.stop();
+                                            throw e;
+                                        }
+                                        if (!run.future().isDone())
+                                            run.stop();
+                                        else if (null != run.landedPerspective())
                                             Machine.current(run.landedPerspective());
                                         return answer;
                                     }
@@ -1391,16 +1408,15 @@ public class machInstSet extends AbstractInstSet {
             // A BRANCH'S TIMEOUT IS ITS LANES' (Marko, 2026-11-24: "branch?timeout compiles to branch(cut?timeout,
             // cut?timeout)"): the branch states it for the writer's convenience, and each lane's cut keeps it, so all of
             // the timing is the cut's. Every branch before the first machine change is this machine's to compile
-            final List<Inst> insts = new ArrayList<>(source.insts());
-            boolean timed = false;
-            for (int i = 0; i < insts.size() && !nomadic.contains(insts.get(i).tid().basePath()); i++) {
-                final Inst branch = insts.get(i);
-                if (BRANCH_INST_TID.equals(branch.tid().basePath()) && branch.tid().hasQ(TIMEOUT) && !branch.args().isRec()) {
-                    insts.set(i, timed(branch));
-                    timed = true;
-                }
-            }
-            final Code code = timed ? code(insts) : source;
+            final List<Inst> given = source.insts();
+            final int departs = IntStream.range(0, given.size())
+                    .filter(i -> nomadic.contains(given.get(i).tid().basePath())).findFirst().orElse(given.size());
+            final List<Inst> insts = IntStream.range(0, given.size())
+                    .mapToObj(i -> i < departs && BRANCH_INST_TID.equals(given.get(i).tid().basePath())
+                            && given.get(i).tid().hasQ(TIMEOUT) && !given.get(i).args().isRec()
+                            ? timed(given.get(i)) : given.get(i))
+                    .toList();
+            final Code code = insts.equals(given) ? source : code(insts);
             for (int i = 0; i < insts.size(); i++) {
                 final Inst inst = insts.get(i);
                 if (!nomadic.contains(inst.tid().basePath()))
@@ -1439,7 +1455,8 @@ public class machInstSet extends AbstractInstSet {
                         // WITH NOTHING BEFORE IT the point stays on the cut, a branch member's head, where the branch
                         // reads a lane's weight (Marko, 2026-11-24: "move() point coefficient is branch weight"); and
                         // the move's ?timeout is its cut's to keep
-                        final Inst moved = instB(timeout(CUT_INST_TID, inst), lst(where, tail));
+                        final Inst moved = instB(inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID,
+                                lst(where, tail));
                         if (!inst.tid().d().isOne() && !cut.isEmpty()) {
                             final Inst before = cut.getLast();
                             cut.set(cut.size() - 1, before.d(before.tid().d().mult(inst.tid().d())).asInst());
@@ -1453,7 +1470,8 @@ public class machInstSet extends AbstractInstSet {
                     return code;
                 // a move that stays a move hands its ?timeout to the cut after it, which times the tail
                 cut.add(inst.tid().hasQ(TIMEOUT) ? instB(inst.tid().removeQ(TIMEOUT), inst.args()) : inst);
-                cut.add(instB(timeout(CUT_INST_TID, inst), lst(uri(HERE), tail)));
+                cut.add(instB(inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID,
+                        lst(uri(HERE), tail)));
                 cut.addAll(home);
                 return code(cut);
             }
@@ -1461,25 +1479,19 @@ public class machInstSet extends AbstractInstSet {
         }
 
         /**
-         * The cut's tid with the move's {@code ?timeout}, when the move states one.
-         */
-        private static fURI timeout(final fURI cut, final Inst move) {
-            return move.tid().hasQ(TIMEOUT) ? cut.q(TIMEOUT, move.tid().q(TIMEOUT)) : cut;
-        }
-
-        /**
-         * A branch whose {@code ?timeout} its lanes carry: each member headed by a move or a cut that states no
-         * {@code ?timeout} of its own takes the branch's, and the branch states none. A home member has no cut to
-         * time, as a home lane has no move.
+         * A branch whose {@code ?timeout} its lanes carry, the branch stating none: a member headed by a move or a cut
+         * that states no {@code ?timeout} of its own takes the branch's, and a home member, which has no move, is
+         * timed by a cut that stays, {@code cut?timeout=n(<~>, member)}, as every timeout is a cut's.
          */
         private static Inst timed(final Inst branch) {
             final String timeout = branch.tid().q(TIMEOUT);
             return instB(branch.tid().removeQ(TIMEOUT), lst(branch.args().<Obj>elements().map(member -> {
-                final List<Inst> insts = member.isCall() ? member.asCall().insts() : List.of();
+                final List<Inst> insts = BranchInst.program(member);
                 final Inst head = insts.isEmpty() ? null : insts.getFirst();
-                if (null == head || head.tid().hasQ(TIMEOUT) || !(CUT_INST_TID.equals(head.tid().basePath())
-                        || MOVE_INST_TID.equals(head.tid().basePath())))
+                if (null == head || head.tid().hasQ(TIMEOUT))
                     return member;
+                if (!CUT_INST_TID.equals(head.tid().basePath()) && !MOVE_INST_TID.equals(head.tid().basePath()))
+                    return (Obj) instB(CUT_INST_TID.q(TIMEOUT, timeout), lst(uri(HERE), code(insts).tryToInst()));
                 final List<Inst> lane = new ArrayList<>(insts);
                 lane.set(0, instB(head.tid().q(TIMEOUT, timeout), head.args()));
                 return member.isInst() ? (Obj) lane.getFirst() : code(lane);

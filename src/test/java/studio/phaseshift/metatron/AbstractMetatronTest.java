@@ -58,6 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.Tokens.HOP;
 
 /**
@@ -681,16 +682,19 @@ public abstract class AbstractMetatronTest {
             try {
                 if (checkTIDs) {
                     assertFalse(secondStage.insts().isEmpty(), "call must not be empty");
-                    final Call compiled = lane(compilation, secondStage);
-                    assertEquals(secondStage.insts().size(), compiled.insts().size(), "code must be the same size");
-                    for (int i = 0; i < compiled.insts().size(); i++) {
+                    assertEquals(secondStage.insts().size(), compilation.insts().size(), "code must be the same size");
+                    for (int i = 0; i < compilation.insts().size(); i++) {
                         final Inst secondStageInst = secondStage.insts().get(i);
-                        final Inst compilationInst = compiled.insts().get(i);
+                        final Inst compilationInst = compilation.insts().get(i);
                         assertEquals(secondStageInst.tid().basePath(), compilationInst.tid().basePath(), "inst tids must match");
                         if (!secondStageInst.args().isEmpty()) { // if test specifies args, then recurse checking args
                             assertEquals(secondStageInst.args().count(), compilationInst.args().count(), "inst args must be the same size");
                             for (int j = 0; j < secondStageInst.args().count(); j++) {
-                                checkCodeRewrite(LOG, ObjmtronSerializer.single().write(compilationInst.arg(j)), ObjmtronSerializer.single().write(secondStageInst.arg(j)), null, checkTIDs);
+                                // a branch's member may be a lane, which the row names by its program
+                                final Obj arg = BRANCH_INST_TID.equals(compilationInst.tid().basePath()) && compilationInst.arg(j).isCall()
+                                        && secondStageInst.arg(j).isCall()
+                                        ? lane(compilationInst.arg(j).asCall(), secondStageInst.arg(j).asCall()) : compilationInst.arg(j);
+                                checkCodeRewrite(LOG, ObjmtronSerializer.single().write(arg), ObjmtronSerializer.single().write(secondStageInst.arg(j)), null, checkTIDs);
                             }
                         }
                     }
@@ -717,9 +721,10 @@ public abstract class AbstractMetatronTest {
 
     /**
      * A LANE IS THE CUT ITS MOVE COMPILES TO (Law.nomadic, stage 2): a lane the plan ships is one cut, its place the
-     * target, its budget the target's {@code ?hop}, its program the tail. A row names a lane by its program's
-     * instructions, as it always did, so a cut met where the row names none is read as the program its place compiles:
-     * the tail, the budget handed to its head as the cut hands it, rewritten again (a tree's next level shows).
+     * target, its budget the target's {@code ?hop}, its program the tail. A row names a branch member by its program's
+     * instructions, as it always did, so a lane's cut met where the row names none is read as the program its place
+     * compiles: the tail, the budget handed to its head as the cut hands it, rewritten again (a tree's next level shows).
+     * Only a branch's member is a lane: a cut anywhere else is checked as written.
      */
     private static Call lane(final Call compilation, final Call expected) {
         if (1 != compilation.insts().size() || !CUT_INST_TID.equals(compilation.insts().getFirst().tid().basePath())

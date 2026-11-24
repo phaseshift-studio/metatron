@@ -186,14 +186,17 @@ public class MoveSeamsTest extends AbstractMetatronTest {
     /**
      * A HOST-LESS MOVE IS NOT A BOUNDARY: it re-homes THIS thread and it persists past the expression. That is the
      * state a boundary ISOLATES (where the other half keeps it), which is why the distinction is worth a test at all.
-     * A move with a tail is the cut, which moves the thread as the move does and runs the tail where it landed. Each
-     * row: the expression % its answer.
+     * A move with a tail is the cut, which moves the thread as the move does and runs the tail where it landed; a
+     * timed cut runs on a thread of its own and moves the caller once the run answers in time. Each row: the expression
+     * % its answer.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "5.move(<persist>)                 % 5",
-            "5.move(<persist>).plus(1)         % 6",
-            "5.move(<persist>).plus(1).mult(2) % 12",
+            "5.move(<persist>)                           % 5",
+            "5.move(<persist>).plus(1)                   % 6",
+            "5.move(<persist>).plus(1).mult(2)           % 12",
+            "5.move?timeout=2(<persist>).plus(1)         % 6",
+            "5.move?timeout=2(<persist>).plus(1).mult(2) % 12",
     }, delimiter = '%')
     void aHostlessMoveRehomesAndPersists(final String mtron, final int answer) {
         final Machine before = Machine.current();

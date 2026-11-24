@@ -59,9 +59,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  * <em>lanes</em> of one branch, one per distinct place, the home place first.
  *
  * <p><b>The oracle is the law, not the layout.</b> Every row that emits also asserts the value, because a place axis
- * is result-preserving (Thm 19): {@code distribute(c) ≡ c}. The lane <em>structure</em> is the other half — the home
- * place's key is {@code <~>} (the lane at distance zero), a peer's is its authority, and a place with demand n is one
- * key weighted {@code ?split={n}part}.
+ * is result-preserving (Thm 19): {@code distribute(c) ≡ c}. The lane <em>structure</em> is the other half — a home
+ * lane has no move (the lane at distance zero), a peer's lane is the cut its move to the peer compiles to, and a peer
+ * with demand n is one lane weighted n, the point on its cut.
  *
  * <p><b>Hermetic where it can be.</b> The {@code local} rows resolve against a synthetic {@link Env} — the seam C4
  * opened — because a test VM has no listening authority, so {@code Places.self()} is {@code noobj} unless the env
@@ -70,8 +70,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  * same synthetic env.
  *
  * <p>The counts are the design's: a share is a weight, so {@code [local,peer]} is two lanes and
- * {@code [local,local,local,local]} is ONE home lane weighted four — the lanes case, a peerless machine sharding,
- * keyed by the one place it has.
+ * {@code [local,local,local,local]} is four home lanes of one share each — the lanes case, a peerless machine
+ * sharding, as a home lane has no move to weigh.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -133,10 +133,10 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE LANES — {@code ?place=[local,local,local,local]} on a <b>peerless</b> machine: four home shares, keyed by the
-     * one place they share, so ONE home lane weighted {@code {4}part} takes every member of the seed, recombined at home
-     * through the same combiner. The four shares no longer run as four concurrent lanes: a branch has one lane per key,
-     * and a place is one key. The value is the local fold's. Each row: the fold % its value.
+     * THE LANES — {@code ?place=[local,local,local,local]} on a <b>peerless</b> machine: four home shares are four home
+     * lanes of one share each, as a home lane has no move to weigh (Law.nomadic, stage 2), so the plan deals each two
+     * of the eight members and the four run concurrently, recombined at home through the same combiner. The value is
+     * the local fold's. Each row: the fold % its value.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -146,10 +146,12 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     void testFourHomeLanesOnAPeerlessMachine(final String tail, final int expected) {
         final Code emitted = lower(alone(), "start?place=[local,local,local,local]({1,2,3,4,5,6,7,8})." + tail);
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
-        assertEquals(1, layout.lanes().size(), "a place with demand four is one key: " + emitted);
-        assertTrue(layout.lane(0).local(), "a peerless machine's lane stays home: " + emitted);
-        assertEquals("{4}part", layout.lane(0).split(), "the key is weighted by its four shares: " + emitted);
-        assertEquals(8, layout.lane(0).part().size(), "the one weighted key is dealt the whole seed: " + emitted);
+        assertEquals(4, layout.lanes().size(), "four home shares are four home lanes: " + emitted);
+        assertTrue(layout.lanes().stream().allMatch(DistributedSweep.Lane::local), "a peerless machine's lanes stay home: " + emitted);
+        assertEquals(List.of("part", "part", "part", "part"), layout.lanes().stream().map(DistributedSweep.Lane::split).toList(),
+                "each home lane takes one share: " + emitted);
+        assertEquals(List.of(2, 2, 2, 2), layout.lanes().stream().map(lane -> lane.part().size()).toList(),
+                "the plan deals each two of the eight: " + emitted);
         checkEquality(LOG, jnt(expected),
                 evaluate(emitted).clone().selfVID(null), true);
     }

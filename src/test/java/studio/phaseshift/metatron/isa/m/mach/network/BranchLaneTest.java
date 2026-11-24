@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -67,11 +68,12 @@ public class BranchLaneTest extends AbstractMetatronTest {
      * A KEY'S {@code ?timeout} IS A {@code time::T} ({@code second::n}) and its await converts it with
      * {@code as(millis::T)}: those types are {@code /m/math}'s, so the test mounts the ISA it reads rather than
      * relying on whichever class in the fork happened to mount it first (an unmounted type converts nothing, and the
-     * key waited its {@code second::20} as 20 ms).
+     * key waited its {@code second::20} as 20 ms). A home lane that runs long sleeps, which is {@code /m/sys}'s.
      */
     @BeforeAll
     public static void importMathInstSet() {
         InstSet.importInstSet(MATH_ISA_TID);
+        InstSet.importInstSet(SYS_ISA_TID);
     }
 
     /**
@@ -216,14 +218,17 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
                     + "<loop://right?split={2}part> => count(), <loop://left> => count())", "{2,4,6}");
             // A LANE'S WEIGHT IS THE POINT ON ITS MOVE (Marko, 2026-11-24: "move() point coefficient is branch weight"):
-            // the deal is the branch's, and a home member is weighted by its head's point; the weight is a share, never
-            // copies of what the lane answers
+            // the deal is the branch's, and the weight is a share, never copies of what the lane answers. A home member
+            // has no move, so it takes one share, and its own point is copies of what it answers
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).count(), "
                     + "move{2}(<loop://right>).count())", "{2,4}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move{2}(<loop://left>).count(), "
                     + "count())", "{4,2}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).sum(), "
-                    + "count{2}())", "{5,4}");
+                    + "count{2}())", "{9,{2}3}");
+            // a share is one or more: a lane's move pointed below one is refused, never dealt
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move{-1}(<loop://left>).count(), "
+                    + "count())", "<ERROR>");
         } finally {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://right"));
@@ -284,9 +289,80 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(move(<loop://slow>).plus(1))", "<ERROR>");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(move?timeout=2(<loop://slow>).plus(1))", "2");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=soon(<loop://slow>).plus(1)", "<ERROR>");
+            // A HOME LANE HAS NO MOVE, so a cut that stays times it, a key's as a member's: it answers in time or fails
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=1> => sleep(second::3.0))", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=5> => sleep(second::1.0))", "1");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=1(sleep(second::3.0))", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=5(sleep(second::1.0))", "1");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=2(sleep(second::3.0),move(<loop://slow>).plus(1))", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=2(sleep(second::1.0),move(<loop://slow>).plus(1))", "{1,2}");
         } finally {
             Machine.current().network().drop(f("loop://slow"));
         }
+    }
+
+    /**
+     * A WAIT LONGER THAN A THREAD'S OWN DEFAULT (five seconds) IS THE CUT'S: a lane's thread waits as long as its cut may
+     * run, so a place that answers in six seconds answers a lane that waits ten, shipped or home, keyed or moved.
+     */
+    @Test
+    public void testALongWaitIsTheCuts() {
+        dial("loop://slower", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> {
+            CommonUtil.sleepThread(6000);
+            return Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
+        })));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slower?timeout=10> => plus(1))", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move?timeout=10(<loop://slower>).plus(1),plus(2))", "{2,3}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=10(<~> => sleep(second::6.0))", "1");
+        } finally {
+            Machine.current().network().drop(f("loop://slower"));
+        }
+    }
+
+    /**
+     * A RUN THAT OUTLIVES ITS TIME IS STOPPED (the cut's): the caller is told it failed and stays where it stood, as only
+     * a run that answers in time persists its move, and the run's thread is stopped before it writes.
+     */
+    @Test
+    public void testATimedOutRunIsStopped() {
+        final Machine root = Machine.current();
+        final Machine late = root.push(f("branch_late"));
+        Machine.current(root);
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.move?timeout=1(<branch_late>).sleep(second::2.0).to(<~/branch/late>)", "<ERROR>");
+            AbstractMetatronTest.checkEquality(LOG, uri(root.vid()), uri(Machine.current().vid()), true);
+            CommonUtil.sleepThread(2500);
+            Machine.Helper.evalAt(late, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/late>", "noobj");
+                return noobj();
+            });
+            // the same run given the time it needs writes, so the write above was stopped, not missed
+            AbstractMetatronTest.checkCodeParseApply(LOG, "2.move?timeout=5(<branch_late>).sleep(second::1.0).to(<~/branch/late>)", "2");
+            Machine.Helper.evalAt(late, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/late>", "2");
+                return noobj();
+            });
+        } finally {
+            Machine.Helper.evalAt(late, () -> Machine.current().pop());
+            Machine.current(root);
+        }
+    }
+
+    /**
+     * A DEAL'S LANES ARE NEVER SUMMED OR FACTORED: under {@code ?split=part} each lane takes its own share, so two equal
+     * lanes are two shares, never one lane with their summed point, and a head they share stays in each, as run ahead
+     * of the deal it would change what each lane is dealt (a filter moves members between lanes). Each row: the
+     * expression % its answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.branch?<=int{*}&split=part(count(),count())                      % {2,1}",
+            "{1,2,3,4}.branch?<=int{*}&split=part(is(gt(1)).sum(),is(gt(1)).count())  % {3,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=part(count{2}(),sum())               % {{2}3,12}",
+    }, delimiter = '%')
+    public void testADealsLanesAreNeverSummed(final String mtron, final String answer) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, mtron.trim(), answer.trim());
     }
 
     @Test

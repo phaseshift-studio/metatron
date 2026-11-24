@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -304,12 +305,16 @@ public final class Shard {
         // THE FORM IS RESTATED, NEVER THE NUMBER: the lane's budget is the same arity with the height decremented and
         // the unstated arity keeps its spelling; below a height of one the leaf states the bare point, 0.
         final Obj budget = 1 == hop.height() ? jnt(0) : Hop.of(hop.height() - 1, hop.arity()).toObj();
-        // ONE KEY PER DISTINCT PLACE, in the lane order: the home place is <~>, a peer is its authority. Under the seed
-        // axis the n shares one place takes are one key weighted ?split={n}part; under the run axis a key is one lane,
-        // at most one per unroll or copy, its share chosen by WORK for a span (splitByCost) and evenly for a point.
+        // ONE LANE PER DISTINCT PLACE, in the lane order: the home place is <~>, a peer is its authority. Under the seed
+        // axis the n shares a peer takes are one lane weighted n, the point on its move, while home's n shares are n
+        // home lanes, as a home lane has no move to weigh; under the run axis and a copy a place is one lane, at most
+        // one per unroll or copy, its share chosen by WORK for a span (splitByCost) and evenly for a point.
         final Map<fURI, Integer> places = new LinkedHashMap<>();
         shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
-        final List<Map.Entry<fURI, Integer>> keys = List.copyOf(places.entrySet());
+        final List<Map.Entry<fURI, Integer>> keys = places.entrySet().stream()
+                .flatMap(key -> runAxis || copy || !BranchInst.home(key.getKey()) ? Stream.of(key)
+                        : Stream.generate(() -> Map.entry(key.getKey(), 1)).limit(key.getValue()))
+                .toList();
         final int lanes = runAxis ? (int) Math.min(keys.size(), range.count()) : keys.size();
         if (runAxis && 2 > lanes)
             return null;
@@ -326,7 +331,7 @@ public final class Shard {
         // through the combiner. A LANE IS A MOVE (Law.nomadic, stage 2), emitted as the cut it compiles to, so a
         // profiled lane's profile() stays the place's: a remote lane's budget rides on its cut's target and its weight
         // is the cut's point (Marko, 2026-11-24: "move() point coefficient is branch weight"); a home lane gets no move,
-        // its budget and its weight on its head
+        // so no weight, and its budget goes on its head
         final int stop = 0 > cut ? runEnd : cut;
         final List<Obj> routes = new ArrayList<>();
         for (int r = 0; r < lanes; r++) {
@@ -354,8 +359,6 @@ public final class Shard {
             final cInt share = runAxis || copy || 1 == weight ? null : cInt.of(weight);
             final boolean home = BranchInst.home(place);
             stampHop(lane, home ? budget : null);
-            if (home && null != share)
-                lane.set(0, instB(lane.getFirst().tid().d(share), lane.getFirst().args()));
             routes.add(home ? code(lane).tryToInst() : instB(null == share ? CUT_INST_TID : CUT_INST_TID.d(share),
                     lst(uri(place.q(HOP, budget)), code(lane).tryToInst())));
         }

@@ -1230,18 +1230,14 @@ public final class mInsts {
                             if (lhs.equals(inst.arg(0)))
                                 return lhs.c(c -> c.plus(inst.arg(0).c()));
                             else {
-                                List<Obj> branches = new ArrayList<>();
-                                // ONLY a POSITIONAL branch flattens: a keyed branch is a route table, and
-                                // splicing its rels into a lst would turn the routes into ordered members.
-                                if (lhs.asCode().insts().size() == 1 && lhs.asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)
-                                        && lhs.asCode().insts().getFirst().args().isLst()) {
-                                    branches.addAll(lhs.asCode().insts().getFirst().args().elements().toList());
-                                }
-                                if (inst.arg(0).asCode().insts().size() == 1 && inst.arg(0).asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)
-                                        && inst.arg(0).asCode().insts().getFirst().args().isLst()) {
-                                    branches.addAll(inst.arg(0).asCode().insts().getFirst().args().elements().toList());
-                                }
-                                return branch_(branches.toArray(new Obj[0])).as();
+                                // ONLY a LOCAL branch flattens: a layout is a route table (BranchInst#isLayout), and
+                                // splicing its members into another branch would drop its keys or its deal, so it
+                                // joins whole, as one member, as any other code does
+                                return branch_(Stream.of(lhs, inst.arg(0)).flatMap(side -> 1 == side.asCode().insts().size()
+                                        && BRANCH_INST_TID.equals(side.asCode().insts().getFirst().tid().basePath())
+                                        && !BranchInst.isLayout(side.asCode().insts().getFirst())
+                                        ? side.asCode().insts().getFirst().args().<Obj>elements() : Stream.of(side))
+                                        .toArray(Obj[]::new)).as();
                             }
                         })
                         .law(Law.commutative, Law.monoidic, Law.pure)
@@ -1403,21 +1399,23 @@ public final class mInsts {
                                 `{n}` pages it (a buffer of at most n per call); `{*}` gathers the whole lhs once and
                                 passes it to every member — the barrier a DISTRIBUTION REWRITE states on the branch it
                                 emits.
-                                an ordered call is the local branch: each member applied at current machine.
-                                a keyed call routes: `place => program` evaluates the lhs through move(<place>).program,
-                                as the cut that move compiles to: a path names a local machine (<~> or <.> this one, run
-                                with no move, <..> its parent, </.> the root, </abc>, <abc> a child), whose compiler
-                                compiles the lane and whose processor runs it; a host names a peer, and the path past the
-                                surface it was dialed at names the machine in it the lane runs at; a host-bearing key with
-                                no dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) of
-                                one obj, at the peer itself, needs only that verb there, so a client that reads and writes
-                                but runs no program serves it. every lane runs on its own virtual::T, so the lanes run
-                                concurrently. an ordered member runs from the machine the branch stands in, and the merge
-                                returns there. a key marked
-                                ?split={w}part takes a share of the lhs by its weight w among the marked keys, and an
-                                unmarked key (or ?split=copy) gets the whole lhs. a key's ?timeout=n waits n seconds for
-                                its lane. a query on the branch itself (branch?timeout=24) is every key's default, and a
-                                key's own overrides it.
+                                an ordered call is the local branch: each member applied at current machine, from the
+                                machine the branch stands in, and the merge returns there.
+                                a LANE is a member headed by a move, move(<place>).program, which compiles to the cut
+                                cut(<place>, program): a path names a local machine (<..> its parent, </.> the root,
+                                </abc>, <abc> a child), whose compiler compiles the lane and whose processor runs it; a
+                                host names a peer, and the path past the surface it was dialed at names the machine in it
+                                the lane runs at; a host with no dialed peer is unreachable. a program that is one
+                                from(</path>) or one to(</path>) of one obj, at the peer itself, needs only that verb
+                                there, so a client that reads and writes but runs no program serves it. every lane runs on
+                                its own virtual::T, so the lanes run concurrently. a member with no move is a home lane.
+                                a keyed call is read as its lanes: `place => program` is the lane cut(<place>, program),
+                                and <~> or <.> a home lane.
+                                branch?split=part deals the lhs by the lanes' weights: the point on a lane's move
+                                (move{2}(<place>) takes two shares), one share for a home lane, or a key's ?split={w}part,
+                                where an unmarked key (or ?split=copy) gets the whole lhs. without part every lane gets
+                                the whole lhs. ?timeout=n is a cut's: move?timeout=n(<place>) waits n seconds for its
+                                lane, and branch?timeout=n is every lane's that states none (a key's own overrides it).
                                 arguments are blocked, so a call is not computed here.
                                 """)
                         // THE BODY LIVES ON ITS CLASS: the definition is minted a BranchInst, and a call bound from it is
