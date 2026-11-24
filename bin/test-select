@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+# bin/test-select — the test classes that use what a change touched, as a -Dtest= list.
+#
+# A change's blast radius is its users, not the package it sits in: a shared test boot, the bare-uri parser and a
+# space's read semantics each broke test classes nobody ran. This finds the users by search instead of by judgement.
+#
+# Usage:
+#   bin/test-select                          # what the branch changed against main: commits, working tree, new files
+#   bin/test-select PeerNode                 # a class
+#   bin/test-select mParser.m_furi           # a member: its bare name is searched (m_furi)
+#   bin/test-select src/main/java/.../fsSpace.java boot/peer.mtron     # files
+#   bin/hunk-revert-check $(bin/test-select)                           # stdout is only the -Dtest= argument
+#
+# Options:
+#   --base <ref>   the base of the default diff (default: main)
+#   --explain      print, for every class, the chain that selected it
+#
+# How:
+#   1. Names to search. A .java file gives its class name, plus the name in lowercase when the class name starts in
+#      lowercase (fsSpace -> fsspace: a space's mtron type is spelled that way). A .mtron file gives its file name
+#      and the names it defines (`name -> |...`, `name => |...`, `name?rng<=dom(...)`, `...@name`). Any other file
+#      under src/ or boot/ gives its file name; files elsewhere are ignored. A symbol gives itself; Class.member
+#      gives the member.
+#   2. Users. Every file under src/test and every boot/**/*.mtron that holds a name as a bare token: identifier
+#      boundaries only, no syntax anchors, because a leading dot or a quote delimiter hides users
+#      (`is(matches(int::T[]))`, a %-delimited CSV row). Strings count, since mtron lives in them. A comment counts
+#      in a concrete test class, where it names what the test depends on (MarkdownHtmlAsInstTest's notes on how
+#      fsSpace reads a file), but not in a helper, an annotation or a base class: following a {@link} there pulls
+#      in classes that never run the change.
+#   3. Classes. A user that is a concrete test class (surefire's names: Test*, *Test, *Tests, *TestCase) is
+#      selected with its test subclasses; an abstract class or an interface gives its concrete test subclasses; any
+#      other user (a helper such as PeerCluster, a resource, a boot file) is searched for in turn by its own name.
+#
+# Prints `-Dtest=A,B,...` on stdout and how each class was reached on stderr; exits 1, printing nothing on stdout,
+# when no test class uses the change (an empty -Dtest= would run the whole suite). A list longer than 40 classes is
+# flagged: AGENTS.md's rule is targeted classes, never the full suite, so name the gating classes with Marko.
+import argparse
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.java_lexer import lex  # noqa: E402
+
+TEST_NAME = re.compile(r'Test\w*|\w*(Test|Tests|TestCase)')
+FILE_NAME = re.compile(r'\.(java|mtron|xml|json|csv|txt|properties|yaml|yml|md|sql|html|py)$')
+DECLARATION = r'((?:\b(?:public|protected|private|abstract|final|sealed|non-sealed|static|strictfp)\s+)*)' \
+              r'(class|@\s*interface|interface|enum|record)\s+{name}\b([^{{]*)\{{'
+WIDE = 40
+MTRON_DEFINITIONS = [re.compile(p, re.M) for p in (
+    r'^\s*([A-Za-z_]\w*)\s*->\s*\|',  # name -> |inst...
+    r'\b([A-Za-z_]\w*)\s*=>\s*\|',  # name => |inst... (a rec of instructions)
+    r'\b([A-Za-z_]\w*)\?[^\s(<]*<=',  # name?rng<=dom(...)
+    r'@(?:[A-Za-z_][\w]*/)*([A-Za-z_]\w*)\b(?!\s*/)',  # ...@name, ...@a/b/name
+)]
+NOT_DEFINITIONS = {'inst', 'code', 'T'}
+
+
+class JavaClass:
+    """A src/test file's top-level type: its kind, whether it is abstract, what it extends and implements."""
+
+    def __init__(self, path: Path, code: str):  # code: the source without its comments
+        self.name = path.stem
+        m = re.search(DECLARATION.format(name=re.escape(self.name)), code)
+        self.kind = re.sub(r'@\s*', '@', m[2]) if m else ''  # an @interface is an annotation: a helper
+        self.abstract = bool(m) and ('abstract' in m[1].split() or m[2] == 'interface')
+        header = m[3] if m else ''
+        while '<' in header and re.search(r'<[^<>]*>', header):  # generics out, innermost first
+            header = re.sub(r'<[^<>]*>', '', header)
+        self.parents = {name.strip().rsplit('.', 1)[-1]
+                        for part in re.findall(r'\b(?:extends|implements)\s+(.*?)(?=\b(?:implements|permits)\b|$)',
+                                               header, re.S)
+                        for name in part.split(',') if name.strip()}
+        self.test = self.kind == 'class' and not self.abstract and bool(TEST_NAME.fullmatch(self.name))
+
+
+def plural(n: int, noun: str) -> str:
+    return f'{n} {noun}' + ('' if n == 1 else 'es' if noun.endswith(('s', 'ss')) else 's')
+
+
+def git(*args: str) -> str:
+    r = subprocess.run(['git', *args], capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit(f'test-select: git {" ".join(args)}: {r.stderr.strip()}')
+    return r.stdout
+
+
+def changed_files(base: str) -> list[str]:
+    merge_base = git('merge-base', base, 'HEAD').strip()
+    tracked = git('diff', '--name-only', '--no-renames', merge_base).split('\n')
+    return sorted({f for f in tracked + git('ls-files', '--others', '--exclude-standard').split('\n') if f})
+
+
+def with_mtron_spelling(name: str) -> list[str]:
+    return [name] + ([name.lower()] if name[:1].islower() and name != name.lower() else [])
+
+
+def names_of(arg: str, root: Path) -> list[str]:
+    """The names a changed file or a symbol is searched by; [] for a file outside src/ and boot/."""
+    if Path(arg).is_absolute() and Path(arg).is_relative_to(root):
+        arg = Path(arg).relative_to(root).as_posix()
+    arg = arg.removeprefix('./')
+    if '/' in arg or (root / arg).exists() or FILE_NAME.search(arg):
+        if ('/' in arg or (root / arg).exists()) and not arg.startswith(('src/', 'boot/')):
+            return []
+        path = Path(arg)
+        if path.suffix == '.java':
+            return with_mtron_spelling(path.stem)
+        if path.suffix == '.mtron' and (root / arg).is_file():
+            text = (root / arg).read_text(encoding='utf-8', errors='replace')
+            defined = {m for pattern in MTRON_DEFINITIONS for m in pattern.findall(text)} - NOT_DEFINITIONS
+            return [path.name] + sorted(defined)
+        return [path.name]
+    return with_mtron_spelling(arg.rsplit('.', 1)[-1])
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog='bin/test-select', add_help=False)
+    parser.add_argument('-h', '--help', action='store_true')
+    parser.add_argument('--base', default='main')
+    parser.add_argument('--explain', action='store_true')
+    parser.add_argument('inputs', nargs='*')
+    args = parser.parse_args(argv)
+    if args.help:
+        lines = Path(__file__).read_text(encoding='utf-8').splitlines()[1:]
+        print('\n'.join(re.sub(r'^# ?', '', line) for line in lines[:next(k for k, l in enumerate(lines)
+                                                                            if not l.startswith('#'))]))
+        return 0
+    root = Path(git('rev-parse', '--show-toplevel').strip())
+    inputs = args.inputs or changed_files(args.base)
+    queue: list[tuple[str, str]] = []  # (name, where it came from)
+    ignored = []
+    for arg in inputs:
+        names = names_of(arg, root)
+        if not names:
+            ignored.append(arg)
+        queue += [(name, arg) for name in names]
+    files: dict[Path, tuple[str, str]] = {}  # each searched file: its text, and a Java file's without comments
+    for p in sorted((root / 'src' / 'test').rglob('*')) + sorted((root / 'boot').rglob('*.mtron')):
+        raw = p.read_bytes() if p.is_file() else b'\0'
+        if b'\0' not in raw[:8192]:
+            text = raw.decode('utf-8', errors='replace')
+            files[p] = (text, '\n'.join(line.text for line in lex(text)) if p.suffix == '.java' else text)
+    classes = {p.stem: JavaClass(p, code) for p, (_, code) in files.items() if p.suffix == '.java'}
+    children: dict[str, set[str]] = {}
+    for c in classes.values():
+        for parent in c.parents:
+            children.setdefault(parent, set()).add(c.name)
+
+    def test_descendants(name: str, seen: set[str]) -> set[str]:
+        found = set()
+        for child in children.get(name, ()):
+            if child not in seen:
+                seen.add(child)
+                found |= ({child} if classes[child].test else set()) | test_descendants(child, seen)
+        return found
+
+    selected: dict[str, str] = {}  # class -> why
+    searched: set[str] = set()
+    trail: list[str] = []
+    boot_users: set[str] = set()
+    unused: list[str] = []  # followed names that nothing uses
+    while queue:
+        name, source = queue.pop(0)
+        if name in searched:
+            continue
+        searched.add(name)
+        # a file name is not the tail of a longer one (boot.mtron in docker.boot.mtron); an identifier may follow a dot
+        token = re.compile(('(?<![\\w$.-])' if '.' in name else '(?<![\\w$])') + re.escape(name) + '(?![\\w$-])')
+        said = []
+        for p in (p for p, (text, code) in files.items()
+                  if token.search(text if p.suffix == '.java' and classes[p.stem].test else code)):
+            rel = p.relative_to(root).as_posix()
+            if p.suffix == '.java' and p.stem in classes:
+                c = classes[p.stem]
+                picked = ({c.name} if c.test else set()) | test_descendants(c.name, {c.name})
+                for cls in sorted(picked):
+                    selected.setdefault(cls, ' <- '.join(dict.fromkeys([cls, c.name, name, source])))
+                if not c.test and not c.abstract:
+                    queue.append((c.name, f'{name} <- {source}'))
+                if c.name != name or c.test:  # a class's own file is its definition, not a user
+                    subclasses = plural(len(picked), 'test subclass')
+                    said.append(c.name + ('' if c.test else f' (abstract: {subclasses})' if c.abstract
+                                          else f' (followed, {subclasses})' if picked else ' (followed)'))
+            elif p.name != name:  # a file that names itself is not its own user
+                if rel.startswith('boot/'):
+                    boot_users.add(rel)
+                queue.append((p.name, f'{name} <- {source}'))
+                said.append(f'{rel} (followed)')
+        if said:
+            trail.append(f'  {name}: ' + ', '.join(said[:12]) + (f' and {len(said) - 12} more' if len(said) > 12
+                                                                 else ''))
+        elif source in inputs:
+            trail.append(f'  {name}: no users')
+        else:
+            unused.append(name)
+    searched_inputs = plural(len(inputs) - len(ignored), 'input')
+    print(f'test-select: searched src/test and boot/**/*.mtron for the names of {searched_inputs}'
+          + (f' ({len(ignored)} outside src/ and boot/ ignored: {", ".join(ignored[:5])}'
+             + (', ...)' if len(ignored) > 5 else ')') if ignored else ''), file=sys.stderr)
+    print('\n'.join(trail + ([f'  followed, with no users: {", ".join(unused)}'] if unused else [])), file=sys.stderr)
+    if boot_users:
+        print('boot files that use them: ' + ', '.join(sorted(boot_users)), file=sys.stderr)
+    if args.explain:
+        print('\n'.join(f'  {why}' for _, why in sorted(selected.items())), file=sys.stderr)
+    if not selected:
+        print('test-select: no test class uses these names', file=sys.stderr)
+        return 1
+    print(plural(len(selected), 'test class') + (f': a wide radius (over {WIDE}); AGENTS.md runs targeted classes, '
+                                                 f'never the full suite, so name the gating classes with Marko'
+                                                 if len(selected) > WIDE else ''), file=sys.stderr)
+    print('-Dtest=' + ','.join(sorted(selected)))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

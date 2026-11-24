@@ -1,0 +1,508 @@
+#!/usr/bin/env python3
+# bin/hunk-revert-check — revert each behavior hunk of a branch alone, run the named test classes, and report every
+# hunk no test turned red.
+#
+# New tests that are red on the parent commit can still leave part of a change untested: some test must go red
+# when one hunk alone is reverted, or nothing checks that hunk. This runs that check for every hunk.
+#
+# Usage:
+#   bin/hunk-revert-check -Dtest=AnalyzerTest,wsServerTest    # every behavior hunk of main...HEAD under src/main
+#   bin/hunk-revert-check $(bin/test-select)                   # bin/test-select prints the -Dtest= argument
+#   bin/hunk-revert-check --list                               # the hunks and how each is classified; runs nothing
+#   bin/hunk-revert-check --hunk 2,5 -Dtest=AnalyzerTest       # only hunks 2 and 5 (the numbers --list prints)
+#
+# Options:
+#   -Dtest=<A,B>    the classes to run (or plain arguments: A B). Class names, each with an optional #method. An
+#                   empty entry, a wildcard, a path or a trailing # is refused: each runs more than was named
+#   --base <ref>    the base (default: main); the hunks are `git diff <base>...HEAD -- src/main`
+#   -U <n>          context lines per hunk (default: 3, git's); -U0 splits a hunk at every unchanged line
+#   --hunk <i,j>    check only these hunks
+#   --timeout <s>   surefire's fork timeout in a revert run (default: 5x the baseline run, within 300..2700)
+#   --runner <cmd>  the build command line (default: bin/metatron-docker), run as `<cmd> build test -Dtest=...`
+#
+# Steps:
+#   1. Refuses unless it runs in a worktree (not the main checkout), on a branch other than the base, with no
+#      uncommitted change to a tracked file and no other check running in the same worktree.
+#   2. Splits the diff into hunks. A hunk that changes only comments, whitespace or imports (java, read with
+#      bin/lib/java_lexer.py) or only blank lines (any other file) is skipped; --list shows each skip and why.
+#   3. Baseline: runs the classes once on the branch tip. It needs `Tests run:` above 0, a report from every named
+#      class and none from an unnamed one: a filter that fell back to the whole suite stops the check.
+#   4. Detaches HEAD at the tip. For each hunk it builds a scratch WIP commit (the tip with that hunk alone
+#      reverted, made with `git apply --cached -R` on a temporary index), moves HEAD to it with `git reset --keep`,
+#      runs the classes, and resets to the tip. The branch ref never moves, and only the hunk's file changes. When
+#      the lines a revert brings back name a class whose import the branch removed from that file (and imported from
+#      nowhere else), that import line is put back too, so a deleted method compiles back.
+#   5. Re-attaches the branch and prints one line per hunk:
+#        red     a test that passed on the baseline failed: the hunk is tested (the failing tests are named)
+#        green   no test went red: nothing in these classes notices the hunk (expected for a hunk that only
+#                deletes code nothing calls: putting it back changes no behavior)
+#        no run  the revert did not compile alone, a test fork timed out or died, the reverted file was not
+#                recompiled, or a class did not report: not shown tested
+#
+# Exit: 0 when every behavior hunk is red; 1 when any is green or no run; 2 when a precondition is refused; 3 when
+# the baseline did not run. Each run's full output is kept under .docker-target/hunk-revert-check/<time>/.
+#
+# AGENTS.md's build rules hold: runs go one at a time through bin/metatron-docker (routed as configured:
+# METATRON_BUILD_REMOTE, bin/test/metatron-remote.env), targeted classes only, and the results come from the
+# `Tests run:` summary and the per-test failure lines, never from the exit code. Leave the tree alone while it runs.
+# Interrupted (ctrl-c, SIGTERM), it restores the branch, but a remote build it started may still be running: check
+# `bin/metatron-remote status` before the next run.
+import argparse
+import os
+import re
+import shlex
+import shutil
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.java_lexer import IMPORT_LINE, lex  # noqa: E402
+
+TEST_ENTRY = re.compile(r'[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*(#[\w$*+]+)?')
+HUNK_HEADER = re.compile(r'@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)')
+ANSI = re.compile(r'\x1b\[[0-9;?]*[A-Za-z]')
+TOTAL = re.compile(r'^\[\w+\] Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+)\s*$', re.M)
+CLASS_REPORTED = re.compile(
+    r'Tests run: \d+, Failures: \d+, Errors: \d+, Skipped: \d+, Time elapsed: .* -- in ([\w.$]+)\s*$', re.M)
+TEST_FAILED = re.compile(r'^\[ERROR\] (?!Tests run:)(\S.*?) -- Time elapsed: .*<<< (?:FAILURE|ERROR)!\s*$', re.M)
+FORK_DIED = re.compile(r'timeout in the fork|forked VM terminated|error in the forked process', re.I)
+MAIN_COMPILED = re.compile(r'Compiling \d+ source files? .*\bto target/classes\b')
+TIMEOUT_FLOOR, TIMEOUT_CEILING = 300, 2700  # seconds; 2700 is the pom's surefire.timeout
+
+
+class Stop(Exception):
+    def __init__(self, message: str, code: int = 2):
+        super().__init__(message)
+        self.code = code
+
+
+@dataclass
+class Hunk:
+    number: int
+    path: str
+    header: list[str]  # the file's diff header: diff --git through +++
+    lines: list[str]  # the @@ line, then the body
+    old_start: int
+    old_len: int
+    new_start: int
+    new_len: int
+    context: str
+    added: int = 0
+    removed: int = 0
+    at: int = 0  # the first changed line on the branch side
+    skip: str = ''  # why it is not a behavior hunk; empty for a behavior hunk
+
+
+@dataclass
+class Run:
+    log: Path
+    seconds: float
+    total: tuple[int, int, int, int] | None  # tests, failures, errors, skipped; None without a summary
+    classes: set[str]  # the simple names of the classes that reported
+    failed: set[str]  # the failing tests, named as surefire prints them
+    compile_error: bool
+    fork_died: bool
+    main_compiled: bool
+
+
+def git(*args: str, env: dict | None = None, check: bool = True, strip: bool = True) -> str:
+    r = subprocess.run(['git', *args], capture_output=True, text=True, encoding='utf-8', errors='surrogateescape',
+                       env=env)
+    if check and r.returncode != 0:
+        raise Stop(f'git {" ".join(args)}: {(r.stderr or r.stdout).strip()}')
+    return r.stdout.strip() if strip else r.stdout
+
+
+def usage() -> str:
+    lines = Path(__file__).read_text(encoding='utf-8').splitlines()[1:]
+    return '\n'.join(re.sub(r'^# ?', '', line) for line in lines[:next(k for k, l in enumerate(lines)
+                                                                        if not l.startswith('#'))])
+
+
+def named_tests(entries: list[str]) -> list[str]:
+    named: list[str] = []
+    for entry in entries:
+        for test in entry.split(','):
+            test = test.strip()
+            if not TEST_ENTRY.fullmatch(test):
+                raise Stop(f'refused test entry {test!r}: name classes (Class or Class#method); an empty entry, a '
+                           f'wildcard, a path or a trailing # runs more than was named')
+            if test not in named:
+                named.append(test)
+    return named
+
+
+def simple_class(test: str) -> str:
+    return test.split('#')[0].rsplit('.', 1)[-1]
+
+
+def file_path(header: list[str]) -> str:
+    names = {line[:4]: line[4:].rstrip('\n').rstrip('\t') for line in header if line.startswith(('--- ', '+++ '))}
+    name = names.get('+++ ') if names.get('+++ ', '/dev/null') != '/dev/null' else names.get('--- ')
+    if not name or name.startswith('"'):  # binary, mode-only, or a path git had to quote
+        return ''
+    return name[2:]
+
+
+def hunks_of(diff: str) -> tuple[list[Hunk], list[str]]:
+    """The hunks of a `git diff` text, and the changed files that have none (binary or mode-only)."""
+    hunks: list[Hunk] = []
+    others: list[str] = []
+    for block in re.split(r'(?m)^(?=diff --git )', diff):
+        if not block.startswith('diff --git '):
+            continue
+        lines = block.splitlines(keepends=True)
+        first = next((k for k, line in enumerate(lines) if line.startswith('@@ ')), len(lines))
+        path = file_path(lines[:first])
+        if not path or first == len(lines):
+            others.append(path or lines[0].strip())
+            continue
+        for line in lines[first:]:
+            m = HUNK_HEADER.match(line)
+            if m:
+                hunks.append(Hunk(len(hunks) + 1, path, lines[:first], [line], int(m[1]),
+                                  1 if m[2] is None else int(m[2]), int(m[3]), 1 if m[4] is None else int(m[4]),
+                                  m[5].strip()))
+            else:
+                hunks[-1].lines.append(line)
+    for h in hunks:
+        body = h.lines[1:]
+        h.added = sum(line.startswith('+') for line in body)
+        h.removed = sum(line.startswith('-') for line in body)
+        lead = next((k for k, line in enumerate(body) if not line.startswith(' ')), len(body))
+        h.at = h.new_start + lead if h.new_len else h.new_start
+    return hunks, others
+
+
+def classify(hunks: list[Hunk], base: str, tip: str) -> None:
+    """Sets the skip reason of every hunk that changes no behavior."""
+    lexed: dict[tuple[str, str], list] = {}
+
+    def lines_at(rev: str, path: str) -> list:
+        if (rev, path) not in lexed:
+            r = subprocess.run(['git', 'show', f'{rev}:{path}'], capture_output=True, text=True, encoding='utf-8',
+                               errors='surrogateescape')
+            lexed[rev, path] = lex(r.stdout) if r.returncode == 0 else []
+        return lexed[rev, path]
+
+    def code(lines: list, imports: bool = True) -> str:
+        return ''.join(line.code for line in lines if imports or not IMPORT_LINE.match(line.text))
+
+    for h in hunks:
+        if not h.path.endswith('.java'):
+            changed = [line[1:] for line in h.lines[1:] if line.startswith(('+', '-'))]
+            h.skip = '' if any(text.strip() for text in changed) else 'blank lines only'
+            continue
+        old = lines_at(base, h.path)[h.old_start - 1:h.old_start - 1 + h.old_len] if h.old_len else []
+        new = lines_at(tip, h.path)[h.new_start - 1:h.new_start - 1 + h.new_len] if h.new_len else []
+        if code(old) == code(new):
+            h.skip = 'comments or whitespace only'
+        elif code(old, imports=False) == code(new, imports=False):
+            h.skip = 'imports only'
+
+
+def parse_run(text: str, log: Path, seconds: float) -> Run:
+    text = ANSI.sub('', text)
+    totals = TOTAL.findall(text)
+    return Run(log, seconds,
+               tuple(int(v) for v in totals[-1]) if totals else None,
+               {fqcn.rsplit('.', 1)[-1].split('$')[0] for fqcn in CLASS_REPORTED.findall(text)},
+               set(TEST_FAILED.findall(text)),
+               'COMPILATION ERROR' in text,
+               bool(FORK_DIED.search(text)),
+               bool(MAIN_COMPILED.search(text)))
+
+
+def run_tests(runner: list[str], tests: list[str], timeout: int | None, log: Path) -> Run:
+    command = [*runner, 'build', 'test', '-Dtest=' + ','.join(tests)]
+    if timeout:
+        command.append(f'-Dsurefire.timeout={timeout}')
+    start = time.monotonic()
+    with open(log, 'w', encoding='utf-8') as out:
+        out.write('$ ' + ' '.join(command) + '\n')
+        out.flush()
+        subprocess.run(command, stdout=out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+    return parse_run(log.read_text(encoding='utf-8', errors='replace'), log, time.monotonic() - start)
+
+
+def short(test: str) -> str:
+    """studio.x.FooTest.testBar(String)[2] -> FooTest.testBar(String)[2]"""
+    head, paren, rest = test.partition('(')
+    return '.'.join(head.rsplit('.', 2)[-2:]) + paren + rest
+
+
+def judge(run: Run, baseline: Run, hunk: Hunk) -> tuple[str, str]:
+    if run.fork_died:
+        return 'no run', f'a test fork timed out or died ({run.log.name})'
+    if run.total is None:
+        return 'no run', ('the revert does not compile with the rest of the branch' if run.compile_error
+                          else f'no `Tests run:` summary ({run.log.name})')
+    if hunk.path.endswith('.java') and not run.main_compiled:
+        return 'no run', f'the build did not recompile the reverted file ({run.log.name})'
+    new = sorted(run.failed - baseline.failed)
+    if new:
+        return 'red', f'{len(new)} failed: ' + ', '.join(short(t) for t in new[:3]) + (', ...' if len(new) > 3 else '')
+    if run.total[1] + run.total[2] > baseline.total[1] + baseline.total[2]:
+        return 'red', f'more failures than the baseline, not attributed to a test ({run.log.name})'
+    silent = baseline.classes - run.classes
+    if silent:
+        return 'no run', 'did not report: ' + ', '.join(sorted(silent))
+    return 'green', 'no test went red'
+
+
+def imported_name(line: str) -> str:
+    m = re.match(r'[-+ ]\s*import\s+(?:static\s+)?[\w$.]*?([\w$]+)\s*;', line)
+    return m[1] if m else ''
+
+
+def imports_back(hunk: Hunk, hunks: list[Hunk]) -> list[tuple[int, list[str]]]:
+    """The same file's import-only hunks, each narrowed to putting back the removed imports that the lines this
+    revert restores name, unless the branch imports that name anew (a swap: putting it back would clash)."""
+    restored = ''.join(line[1:] for line in hunk.lines[1:] if line.startswith('-'))
+    imported = {imported_name(line) for h in hunks if h.path == hunk.path for line in h.lines[1:]
+                if line.startswith('+')} - {''}
+    narrowed = []
+    for other in (h for h in hunks if h.path == hunk.path and h.skip == 'imports only'):
+        body, back = [], 0
+        for line in other.lines[1:]:
+            name = imported_name(line) if line.startswith('-') else ''
+            if not line.startswith('-'):
+                body.append(' ' + line[1:] if line.startswith('+') else line)  # what the tip has stays
+            elif name and name not in imported and re.search(r'(?<![\w$])' + re.escape(name) + r'(?![\w$])',
+                                                              restored):
+                body.append(line)
+                back += 1
+        if back:
+            narrowed.append((other.number, [f'@@ -{other.old_start},{other.new_len + back} '
+                                            f'+{other.new_start},{other.new_len} @@\n'] + body))
+    return narrowed
+
+
+def scratch_commit(hunk: Hunk, imports: list[tuple[int, list[str]]], tip: str, logdir: Path,
+                   zero_context: bool) -> str:
+    """The tip with this hunk (and the imports it needs back) reverted, as a commit no ref points to; '' when it
+    does not reverse-apply."""
+    patch = logdir / f'hunk-{hunk.number:02d}.patch'
+    patch.write_text(''.join(hunk.header) + ''.join(line for _, lines in sorted([(hunk.number, hunk.lines), *imports])
+                                                    for line in lines),
+                     encoding='utf-8', errors='surrogateescape')
+    with tempfile.TemporaryDirectory(prefix='hunk-revert-check-') as tmp:
+        env = dict(os.environ, GIT_INDEX_FILE=str(Path(tmp) / 'index'))
+        git('read-tree', tip, env=env)
+        apply = ['git', 'apply', '--cached', '-R', '--whitespace=nowarn'] + (['--unidiff-zero'] if zero_context else [])
+        if subprocess.run(apply + [str(patch)], env=env, capture_output=True).returncode != 0:
+            return ''
+        tree = git('write-tree', env=env)
+    return git('commit-tree', tree, '-p', tip, '-m',
+               f'WIP hunk-revert-check: hunk {hunk.number} reverted ({hunk.path}:{hunk.at})')
+
+
+def move_head(to: str) -> bool:
+    """Moves the DETACHED head (never a branch) to a commit, changing only the files that differ."""
+    if git('symbolic-ref', '-q', 'HEAD', check=False):
+        raise Stop('HEAD is on a branch; refusing to move it')
+    return subprocess.run(['git', 'reset', '-q', '--keep', to], capture_output=True).returncode == 0
+
+
+def restore(branch: str, tip: str) -> bool:
+    """Puts HEAD back on the branch at its tip; signals wait until it is done. False, with a message, when it cannot."""
+    signals = {signal.SIGINT, signal.SIGTERM, signal.SIGHUP}
+    signal.pthread_sigmask(signal.SIG_BLOCK, signals)
+    try:
+        if git('symbolic-ref', '-q', 'HEAD', check=False) != f'refs/heads/{branch}':
+            head = git('rev-parse', 'HEAD')
+            if subprocess.run(['git', 'checkout', '-q', branch], capture_output=True).returncode != 0:
+                raise Stop(f'a file the revert changed was edited during the run: HEAD stays detached at the scratch '
+                           f'commit {head[:12]}, with the edit in the tree. to restore: save the edit, then '
+                           f'`git checkout -f {branch}`')
+        if git('rev-parse', 'HEAD') != tip or git('symbolic-ref', '-q', 'HEAD', check=False) != f'refs/heads/{branch}':
+            raise Stop(f'HEAD is not back on {branch} at {tip[:12]}; check `git status`')
+        return True
+    except Stop as stop:
+        print(f'hunk-revert-check: {stop}', file=sys.stderr)
+        return False
+    finally:
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, signals)
+
+
+def interrupt(signum, frame):
+    raise KeyboardInterrupt
+
+
+def alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+def baseline_problem(baseline: Run, named: list[str]) -> tuple[int, str] | None:
+    expected = {simple_class(t) for t in named}
+    if baseline.total is None:
+        return 3, 'the baseline printed no `Tests run:` summary' + (' (a compilation error)' if baseline.compile_error
+                                                                     else '')
+    if baseline.total[0] == 0:
+        return 3, 'the baseline ran 0 tests'
+    if baseline.fork_died:
+        return 3, 'a test fork timed out or died in the baseline'
+    if baseline.classes - expected:
+        return 2, (f'classes ran that were not named ({", ".join(sorted(baseline.classes - expected))}): the -Dtest '
+                   f'filter did not hold')
+    if expected - baseline.classes:
+        return 2, (f'named classes did not report ({", ".join(sorted(expected - baseline.classes))}): misspelled, '
+                   f'abstract, or not a test class')
+    return None
+
+
+def preflight(base: str) -> tuple[str, str, Path]:
+    if Path('.git').is_dir():
+        raise Stop('this is a main checkout (.git is a directory): run it in your own worktree')
+    lock = Path(git('rev-parse', '--absolute-git-dir')) / 'hunk-revert-check.lock'
+    branch = git('symbolic-ref', '--short', '-q', 'HEAD', check=False)
+    if lock.exists():
+        words = lock.read_text().split()
+        pid = int(words[0]) if words and words[0].isdigit() else 0
+        if pid > 0 and alive(pid):
+            raise Stop(f'another check (pid {pid}) is running in this worktree ({lock})')
+        if not branch:
+            raise Stop(f'an earlier check left HEAD detached: restore with `git checkout -f '
+                       f'{words[1] if len(words) > 1 else "<your branch>"}`, then remove {lock}')
+        lock.unlink()
+    if not branch:
+        raise Stop('HEAD is detached: check out your branch first')
+    if branch == base:
+        raise Stop(f'HEAD is on the base branch {base}: run it on your own branch')
+    dirty = git('status', '--porcelain', '--untracked-files=no')
+    if dirty:
+        raise Stop('uncommitted changes to tracked files; commit them (a WIP commit will do) first:\n' + dirty)
+    return branch, git('rev-parse', 'HEAD'), lock
+
+
+def main(argv: list[str]) -> int:
+    entries = [a[len('-Dtest='):] for a in argv if a.startswith('-Dtest=')]
+    parser = argparse.ArgumentParser(prog='bin/hunk-revert-check', add_help=False)
+    parser.add_argument('-h', '--help', action='store_true')
+    parser.add_argument('--list', action='store_true')
+    parser.add_argument('--base', default='main')
+    parser.add_argument('-U', dest='context', type=int, default=3)
+    parser.add_argument('--hunk', default='')
+    parser.add_argument('--timeout', type=int)
+    parser.add_argument('--runner')
+    parser.add_argument('classes', nargs='*')
+    args = parser.parse_args([a for a in argv if not a.startswith('-Dtest=')])
+    if args.help:
+        print(usage())
+        return 0
+    os.chdir(git('rev-parse', '--show-toplevel'))
+    root = Path.cwd()
+    named = named_tests(entries + args.classes)
+    if not args.list:
+        if not named:
+            raise Stop('name the classes to run: -Dtest=A,B (bin/test-select prints such a list)')
+        branch, tip, lock = preflight(args.base)
+    else:
+        branch, tip, lock = git('symbolic-ref', '--short', '-q', 'HEAD', check=False), git('rev-parse', 'HEAD'), None
+    merge_base = git('merge-base', args.base, 'HEAD')
+    hunks, others = hunks_of(git('-c', 'core.quotePath=false', 'diff', '--no-color', '--no-ext-diff', '--no-textconv',
+                                 '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', f'-U{args.context}',
+                                 merge_base, tip, '--', 'src/main', strip=False))
+    classify(hunks, merge_base, tip)
+    behavior = [h for h in hunks if not h.skip]
+    wanted = {n.strip() for n in args.hunk.split(',') if n.strip()}
+    unknown = sorted(wanted - {str(h.number) for h in behavior})
+    if unknown:
+        raise Stop(f'no behavior hunk numbered {", ".join(unknown)} (--list shows the numbers)')
+    chosen = [h for h in behavior if not wanted or str(h.number) in wanted]
+    print(f'hunk-revert-check: {len(behavior)} behavior hunks of {args.base}...{branch or "HEAD"} under src/main '
+          f'({len(hunks) - len(behavior)} skipped' + (f', {len(others)} files without hunks' if others else '') + ')',
+          flush=True)
+    if args.list:
+        for h in hunks:
+            status = f'skip ({h.skip})' if h.skip else 'behavior'
+            print(f'  {h.number:>3}  {status:<36} {h.path}:{h.at}  (+{h.added} -{h.removed})  {h.context[:60]}')
+        for path in others:
+            print(f'    -  {"no hunks (binary or mode only)":<36} {path}')
+        return 0
+    if not chosen:
+        return 0
+    runner = shlex.split(args.runner) if args.runner else [str(root / 'bin' / 'metatron-docker')]
+    if not runner or not shutil.which(runner[0]):
+        raise Stop(f'the runner is not an executable: {args.runner or runner[0]}')
+    try:
+        os.close(os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+    except FileExistsError:
+        raise Stop(f'another check is starting in this worktree ({lock})')
+    lock.write_text(f'{os.getpid()} {branch} {tip}\n')
+    signal.signal(signal.SIGTERM, interrupt)
+    signal.signal(signal.SIGHUP, interrupt)
+    logdir = root / '.docker-target' / 'hunk-revert-check' / time.strftime('%Y%m%d-%H%M%S')
+    logdir.mkdir(parents=True, exist_ok=True)
+    results: list[tuple[Hunk, str, str]] = []
+    failed = False
+    try:
+        print(f'baseline: {",".join(named)} on {tip[:12]} ({shlex.join(runner)} build test)', flush=True)
+        baseline = run_tests(runner, named, args.timeout, logdir / 'baseline.log')
+        problem = baseline_problem(baseline, named)
+        if problem:
+            raise Stop(f'{problem[1]}; see {baseline.log}', problem[0])
+        print(f'baseline: Tests run: {baseline.total[0]}, Failures: {baseline.total[1]}, Errors: {baseline.total[2]} '
+              f'in {baseline.seconds:.0f}s', flush=True)
+        if baseline.failed:
+            print(f'baseline: {len(baseline.failed)} tests already fail; a hunk is red only through other tests: '
+                  + ', '.join(short(t) for t in sorted(baseline.failed)), flush=True)
+        timeout = args.timeout or min(TIMEOUT_CEILING, max(TIMEOUT_FLOOR, round(5 * baseline.seconds)))
+        git('checkout', '-q', '--detach')
+        for h in chosen:
+            wip = scratch_commit(h, imports_back(h, hunks), tip, logdir, args.context == 0)
+            if not wip:
+                status, detail = 'no run', 'the hunk does not reverse-apply alone'
+            else:
+                if not move_head(wip):
+                    raise Stop(f'could not move HEAD to the scratch commit for hunk {h.number} ({h.path})')
+                run = run_tests(runner, named, timeout, logdir / f'hunk-{h.number:02d}.log')
+                if not move_head(tip):
+                    raise Stop(f'{h.path} was edited during the run of hunk {h.number}')
+                status, detail = judge(run, baseline, h)
+            results.append((h, status, detail))
+            print(f'{status:<6}  hunk {h.number:>3}  {h.path}:{h.at}  (+{h.added} -{h.removed})  {detail}', flush=True)
+    except BaseException:
+        failed = True
+        raise
+    finally:
+        restored = restore(branch, tip)
+        if restored:
+            lock.unlink(missing_ok=True)
+            if failed:
+                print(f'hunk-revert-check: {branch} is restored at {tip[:12]}', file=sys.stderr)
+    unchecked = [(h, s, d) for h, s, d in results if s != 'red']
+    report = [f'{len(results)} hunks checked: {len(results) - len(unchecked)} red, '
+              f'{sum(s == "green" for _, s, _ in results)} green, {sum(s == "no run" for _, s, _ in results)} no run']
+    if unchecked:
+        report.append('no test went red for:')
+        report += [f'  {s:<6}  hunk {h.number:>3}  {h.path}:{h.at}  {h.context[:50]}  ({d})' for h, s, d in unchecked]
+    report.append(f'logs: {logdir.relative_to(root)}')
+    (logdir / 'report.txt').write_text('\n'.join(report) + '\n', encoding='utf-8')
+    print('\n'.join(report))
+    if not restored:
+        return 2
+    return 1 if unchecked else 0
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except Stop as stop:
+        print(f'hunk-revert-check: {stop}', file=sys.stderr)
+        sys.exit(stop.code)
+    except KeyboardInterrupt:
+        print('hunk-revert-check: interrupted. a remote build it started may still be running: check '
+              '`bin/metatron-remote status` before the next run', file=sys.stderr)
+        sys.exit(130)
