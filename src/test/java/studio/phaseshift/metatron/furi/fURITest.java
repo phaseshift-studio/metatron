@@ -787,6 +787,17 @@ public class fURITest extends AbstractMetatronTest {
                 "q-value '%s' reads back as the fURIs it names".formatted(key.trim()));
     }
 
+    /**
+     * A bare uri is not a {@code [{+}uri::T]}: the read refuses it by key and address, where a cast would have failed
+     * without naming either (a rewrite's {@code ?pre} is read on every pass, so the message is the whole diagnosis).
+     */
+    @Test
+    public void testQueryParamUriListValueRefusesABareUri() {
+        final MTronException refused = assertThrows(MTronException.class,
+                () -> idem("/m/inst/rewrite/x?pre=/m/db/tble/inst/rewrite").qValue("pre", List.class));
+        assertTrue(refused.getMessage().contains("?pre of /m/inst/rewrite/x is a [{+}uri::T]"), refused.getMessage());
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

@@ -21,8 +21,9 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Shard;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
@@ -43,8 +44,10 @@ import static studio.phaseshift.metatron.Tokens.PRE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REPEAT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MOVE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.ROOT_MACHINE_VID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.POP_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PUSH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -60,6 +63,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
 
     private static final fURI SIBLING = f("loop://sibling:8555");
+
+    /**
+     * the instructions that change the current machine
+     */
+    private static final Set<fURI> NOMADIC = Set.of(MOVE_INST_TID, PUSH_INST_TID, POP_INST_TID);
 
     @AfterEach
     void hangUp() {
@@ -138,58 +146,74 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     }
 
     /**
-     * law_bsp deals only what runs here: a whole-frontier repeat past a move away is the other machine's to deal.
-     */
-    @Test
-    void testLawBspDealsOnlyWhatRunsHere() {
-        Network.Helper.connect(Machine.current().network(), SIBLING);
-        final Code written = ObjmtronSerializer
-                .parse("{1,2,3}.move(<a>).repeat?<=int{*}(code=>plus(1),until=>loop()?>3)").asCode();
-        checkEquality(LOG, written, rule("law_bsp").apply(written), true);
-    }
-
-    /**
-     * A FOLD BEFORE A MOVE AWAY IS PLANNED, AND THE REST IS LEFT AS WRITTEN: the move and everything after it are the
-     * machine it lands on's to re-plan over its own peers.
-     */
-    @Test
-    void testLawShardPlansUpToAMoveAway() {
-        Network.Helper.connect(Machine.current().network(), SIBLING);
-        final String mtron = "{1,2,3,4}.plus(1).sum().move(<..>).plus(1)";
-        final Code written = ObjmtronSerializer.parse(mtron).asCode();
-        final Code planned = planned(mtron);
-        final int move = indexOf(planned, MOVE_INST_TID);
-        checkEquality(LOG, bool(true), branches(planned.insts().subList(0, move)), true);
-        checkEquality(LOG, code(written.insts().subList(indexOf(written, MOVE_INST_TID), written.insts().size())),
-                code(planned.insts().subList(move, planned.insts().size())), true);
-    }
-
-    /**
-     * A FRAME CHANGE BEFORE THE FOLD LEAVES THE WHOLE CHAIN AS WRITTEN: a move up, a move down and a push each hand the
-     * fold to another machine, so nothing of it is planned here (MoveSeamsTest's and MoveRemoteTest's chains failed
-     * this way, shipping their tails over peers the machine they moved to never dialed).
+     * A MACHINE CHANGE IS A COMPILATION BOUNDARY ({@code Law.nomadic}): the nomadic extractor cuts the chain at its
+     * first move, push or pop, ahead of every rule, so neither law_shard nor law_bsp sees the tail. A move becomes the
+     * cut to its target; a push or a pop stays and is followed by the cut to {@code ~}. The tail is the cut's argument,
+     * exactly as written, and is compiled where it lands. Each row: the chain % its compiled form's instructions before
+     * the cut % the cut's target.
      */
     @ParameterizedTest
-    @ValueSource(strings = {
-            "{1,2,3,4}.move(<..>).plus(1).sum()",
-            "{1,2,3,4}.move(<a>).plus(1).sum()",
-            "{1,2,3,4}.push(<a>).plus(1).sum()"})
-    void testAFoldPastAFrameChangeIsNotPlannedHere(final String mtron) {
+    @CsvSource(value = {
+            "{1,2,3,4}.move(<..>).plus(1).sum()                                % 1 % ..",
+            "{1,2,3,4}.move(<a>).plus(1).sum()                                 % 1 % a",
+            "{1,2,3,4}.push(<a>).plus(1).sum()                                 % 2 % ~",
+            "{1,2,3,4}.pop().plus(1).sum()                                     % 2 % ~",
+            "{1,2,3}.move(<a>).repeat?<=int{*}(code=>plus(1),until=>loop()?>3) % 1 % a",
+    }, delimiter = '%')
+    void testAMachineChangeCutsTheChainAsWritten(final String mtron, final int kept, final String target) {
         Network.Helper.connect(Machine.current().network(), SIBLING);
-        checkEquality(LOG, ObjmtronSerializer.parse(mtron).asCode(), planned(mtron), true);
+        final Code written = ObjmtronSerializer.parse(mtron.trim()).asCode();
+        final Code planned = planned(mtron.trim());
+        // the tail is everything after the first nomadic instruction, as written
+        final int nomadic = IntStream.range(0, written.insts().size())
+                .filter(i -> NOMADIC.contains(written.insts().get(i).tid().basePath())).findFirst().orElseThrow();
+        checkEquality(LOG, jnt(kept + 1), jnt(planned.insts().size()), true);
+        checkEquality(LOG, code(written.insts().subList(0, kept)), code(planned.insts().subList(0, kept)), true);
+        final Inst cut = planned.insts().get(kept);
+        checkEquality(LOG, uri(CUT_INST_TID), uri(cut.tid().basePath()), true);
+        checkEquality(LOG, uri(target.trim()), cut.arg(0), true);
+        final Code tail = code(written.insts().subList(nomadic + 1, written.insts().size()));
+        checkEquality(LOG, tail.tryToInst(), cut.arg(1), true);
     }
 
     /**
-     * A CUT'S PAYLOAD IS RE-PLANNED WHERE IT LANDS: a move to another machine ships
-     * {@code start(lhs).move(</.>).<tail>}, and at that machine's root the re-home stays where it is, so the tail is
-     * dealt over the peers that machine dialed (the quine rule).
+     * law_shard plans the fold before a cut, and the cut follows with its tail as written.
      */
     @Test
-    void testACutsPayloadIsPlannedWhereItLands() {
+    void testLawShardPlansTheFoldBeforeACut() {
         Network.Helper.connect(Machine.current().network(), SIBLING);
-        final Code planned = planned("start({1,2,3,4}).move(</.>).plus(1).sum()");
-        final int move = indexOf(planned, MOVE_INST_TID);
-        checkEquality(LOG, uri(ROOT_MACHINE_VID), planned.insts().get(move).arg(0), true);
-        checkEquality(LOG, bool(true), branches(planned.insts().subList(move + 1, planned.insts().size())), true);
+        final Code planned = planned("{1,2,3,4}.plus(1).sum().move(<..>).plus(1)");
+        final Inst cut = planned.insts().getLast();
+        checkEquality(LOG, uri(CUT_INST_TID), uri(cut.tid().basePath()), true);
+        checkEquality(LOG, ObjmtronSerializer.parse("plus(1)").asCode().tryToInst(), cut.arg(1), true);
+        checkEquality(LOG, bool(true), branches(planned.insts().subList(0, planned.insts().size() - 1)), true);
+    }
+
+    /**
+     * THE TAIL IS COMPILED WHERE IT LANDS: a cut into this machine's own root compiles plus(1).sum() when it runs, and
+     * that compilation deals it over the peer the root dialed; the fold answers its value either way.
+     */
+    @Test
+    void testACutsTailCompilesWhereItLands() {
+        Network.Helper.connect(Machine.current().network(), SIBLING);
+        checkCodeParseApply(LOG, "{1,2,3,4}.move(</.>).plus(1).sum()", "14");
+    }
+
+    /**
+     * A LONE MACHINE HAS NO PEER AND STATES NO PLACE SET ({@code Shard.lone}), the one rule law_shard's pool pre-check
+     * and {@code Shard.apply} share: a stated {@code ?place} lets a peerless chain through, and so does a dial. Each
+     * row: the chain % whether a peer is dialed % whether the machine is lone for it.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start({1,2,3,4}).plus(1).sum()                                % false % true",
+            "start?place=[local,local,local,local]({1,2,3,4}).plus(1).sum() % false % false",
+            "start({1,2,3,4}).plus(1).sum()                                % true  % false",
+    }, delimiter = '%')
+    void testALoneMachineHasNoPeerAndStatesNoPlace(final String mtron, final boolean dialed, final boolean lone) {
+        if (dialed)
+            Network.Helper.connect(Machine.current().network(), SIBLING);
+        final Code code = ObjmtronSerializer.parse(mtron.trim()).asCode();
+        checkEquality(LOG, bool(lone), bool(Shard.lone(Machine.current().network().peers(), code)), true);
     }
 }

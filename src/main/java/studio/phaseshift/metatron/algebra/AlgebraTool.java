@@ -795,6 +795,7 @@ public final class AlgebraTool {
     private static String uncheckableReason(final Law law) {
         return switch (law) {
             case pure -> "a declared effect, not an equation";
+            case nomadic -> "a declared machine change, not an equation";
             case floatable -> "a stream-ring coefficient law, not an operand equation";
             case blocked -> "a declared barrier, not an equation";
             case poset -> "the type declares no order operation to compare";

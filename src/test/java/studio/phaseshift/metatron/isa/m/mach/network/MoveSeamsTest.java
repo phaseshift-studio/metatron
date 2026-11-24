@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -66,8 +67,9 @@ import studio.phaseshift.metatron.isa.m.mach.type.Component;
  *   <tr>
  *     <td rowspan="2">crossing</td>
  *     <td>target has <b>no host</b> ({@code a}, {@code ..}, {@code loop:a})</td>
- *     <td>no cut, no shipped tail; a host-less move re-homes THIS thread and persists</td>
- *     <td>{@link #aSchemeWithNoHostIsNotCut}, {@link #aHostlessMoveRehomesAndPersists}</td>
+ *     <td>cut here (Law.nomadic: the tail is compiled in the machine the move lands in), no shipped tail; a host-less
+ *     move re-homes THIS thread and persists</td>
+ *     <td>{@link #aSchemeWithNoHostIsCutHereAndFailsByAddress}, {@link #aHostlessMoveRehomesAndPersists}</td>
  *   </tr>
  *   <tr>
  *     <td>target has a <b>host</b> ({@code loop://…}, {@code //name}, {@code maria://h})</td>
@@ -166,16 +168,17 @@ public class MoveSeamsTest extends AbstractMetatronTest {
     // ======================== the crossing rule ========================
 
     /**
-     * NEGATIVE HALF: a target with a scheme but NO HOST names no service, so the extractor leaves the chain alone — and
-     * the program then dies by address. The assertion is on the REWRITE (no {@code cut}), because a cut here would ship
-     * a tail to an origin nothing could ever dial.
+     * NEGATIVE HALF: a target with a scheme but NO HOST names no service. It is still a machine change, so the nomadic
+     * extractor cuts the chain there (Law.nomadic, Marko 2026-11-24: code is never compiled past one), but the cut is
+     * HERE, never a shipment: its local path moves the thread, and the move dies by address, as the bare move did.
      */
     @Test
-    void aSchemeWithNoHostIsNotCut() {
+    void aSchemeWithNoHostIsCutHereAndFailsByAddress() {
         final Code parsed = ObjmtronSerializer.parse("5.move(<loop:a>).plus(1)");
         final var rewritten = parsed.rewrite().tryToInst();
-        assertTrue(rewritten.insts().stream().noneMatch(inst -> CUT_INST_TID.equals(inst.tid().basePath())),
-                "a host-less target is not cut: " + rewritten);
+        final Inst cut = rewritten.insts().getLast();
+        assertEquals(CUT_INST_TID, cut.tid().basePath(), "a machine change is cut: " + rewritten);
+        assertEquals(f("loop:a"), cut.arg(0).uriValue(), "the cut keeps the target: " + rewritten);
         final Obj answer = parsed.apply(noobj());
         assertTrue(answer.isFail(), "and it fails by address instead of shipping: " + answer);
     }

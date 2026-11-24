@@ -1041,10 +1041,11 @@ public abstract class AbstractfURI implements fURI {
             return (T) Boolean.valueOf(this.qMap().get(key));
         else if (List.class.isAssignableFrom(valueClass)) {
             // a [{+}uri::T]: the fURIs it names, so ?pre=[/m/db/+/inst/rewrite] reads as a list of prefixes (Marko,
-            // 2026-11-24)
-            return (T) ObjmtronSerializer.parse(this.qMap().get(key)).asLst().<Obj>elements()
-                    .map(Obj::uriValue)
-                    .toList();
+            // 2026-11-24). Anything else is refused by name, since a rule's declaration is read on every pass
+            final Obj value = ObjmtronSerializer.parse(this.qMap().get(key));
+            if (!value.isLst())
+                throw MTronException.of("?%s of %s is a [{+}uri::T], not %s", key, this.basePath(), value);
+            return (T) value.asLst().<Obj>elements().map(Obj::uriValue).toList();
         } else
             throw MTronException.of("no known conversion of %s to %s", this.qMap().get(key), valueClass);
     }

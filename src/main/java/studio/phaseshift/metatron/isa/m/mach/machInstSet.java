@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.mach;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -156,6 +157,11 @@ public class machInstSet extends AbstractInstSet {
      * The one spelling of "up", so {@code move()} and {@code move(<..>)} cannot come to mean different things.
      */
     private static final fURI UP = f("..");
+
+    /**
+     * the current machine, as a frame instruction addresses it: a cut to {@code ~} stays where it is
+     */
+    private static final fURI HERE = f("~");
 
 
     public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread");
@@ -938,6 +944,7 @@ public class machInstSet extends AbstractInstSet {
                                 .example("push()                                 [-- an anonymous child, c = mintShortUUID(vid(here)) --]")
                                 .example("push(<ws://localhost:8555/worker>)     [-- refused: a peer, not a machine in this tree --]")
                                 .example("move(//remote).push(a/b)               [-- create a machine at a remote location by moving to that location first --]")
+                                .law(Law.nomadic)
                                 .body((lhs, inst) -> {
                                     final Machine here = Machine.current();
                                     final Machine pushed;
@@ -991,6 +998,7 @@ public class machInstSet extends AbstractInstSet {
                                 .example("pop(_)              [-- and the same again with the lhs as the argument --]")
                                 .example("pop(<../b>)         [-- refused: b is not the current machine --]")
                                 .example("pop()               [-- at the root: refused, reset metatron instead --]")
+                                .law(Law.nomadic)
                                 .body((lhs, inst) -> {
                                     final Machine here = Machine.current();
                                     if (here == Machine.root())
@@ -1027,6 +1035,7 @@ public class machInstSet extends AbstractInstSet {
                                 .example("move(<a/c>)         [-- down a composed path in one step --]")
                                 .example("move(<~/..>)        [-- ~ is the current machine, consumed before the fold: the parent --]")
                                 .example("move(<../../..>)    [-- past the root: saturates at the root --]")
+                                .law(Law.nomadic)
                                 .body((lhs, inst) -> {
                                     final fURI target = inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue();
                                     final Machine moved = Machine.current().move(target);
@@ -1102,21 +1111,35 @@ public class machInstSet extends AbstractInstSet {
                                 })
                                 .create(),
                         InstBuilder.build().tid(CUT_INST_TID)
-                                .dom(ALL.maybeSome(), "the value the shipped tail starts from: it is the lhs that the cut program was cut off of")
-                                .rng(ALL.maybeSome(), "whatever the shipped tail answers at the peer — the one scattered lane, merged")
-                                .argLst(URI_TYPE, "the peer and the place in it to resume at: `<//worker/a>`",
-                                        ALL_TYPE, "the tail to run at the peer, as code: it picks up where the chain was cut")
+                                .dom(ALL.maybeSome(), "the value the tail starts from: it is the lhs that the cut program was cut off of")
+                                .rng(ALL.maybeSome(), "whatever the tail answers where it lands — at a peer, the one scattered lane, merged")
+                                .argLst(URI_TYPE, "where the tail runs: a machine of this server's tree (`<a>`, `<..>`, `<~>`), or a peer and the place in it to resume at (`<//worker/a>`)",
+                                        ALL_TYPE, "the tail, as code: it picks up where the chain was cut, and is compiled where it lands")
                                 .desc("""
-                                        ship a chain to a peer and retrieve the result of its remote evaluation. 
-                                        the move-extractor splits the chain at the
-                                        first move whose target names a host, and the cut carries the resolved origin and
-                                        the tail — `5.move(<//worker/a>).plus(1)` becomes
-                                        `5.cut(<//worker/a>, |plus(1))` — so the shipped program is the lhs, the move
-                                        to the tail's place in the peer, and the tail, evaluated through the peer's
-                                        `eval` and gathered back as one lane. A cut never runs locally: an origin with no
-                                        peer dialed is a failure.""")
-                                .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut(<//worker>, |plus(1)) --]")
+                                        run the rest of a chain in another machine, compiled by that machine. The
+                                        nomadic extractor cuts a chain at its first instruction that changes the current
+                                        machine (Law.nomadic: move, push, pop), and the tail is never compiled by the
+                                        machine that cut it. A target in this server's machine tree switches the current
+                                        machine there, as a move does, and that machine compiles and runs the tail:
+                                        `5.move(<a>).plus(1)` becomes `5.cut(<a>, plus(1))`, and `~` stays in the
+                                        machine a push or a pop made current. A target that names a host ships the
+                                        program to that server — the lhs, the move to the tail's place in it, and the
+                                        tail — through its `eval`, gathered back as one lane; a host with no peer dialed
+                                        is a failure.""")
+                                .example("5.move(<a>).plus(1)           [-- compiles to 5.cut(<a>, plus(1)): /a compiles plus(1) --]")
+                                .example("push(b).plus(1)               [-- compiles to push(b).cut(<~>, plus(1)): /b compiles plus(1) --]")
+                                .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut(<//worker>, plus(1)): the worker compiles it --]")
                                 .body((lhs, inst) -> {
+                                    // A CUT INTO THIS SERVER'S MACHINE TREE: the current machine moves there, as a move
+                                    // does (it persists), and the tail is compiled and run by THAT machine — its
+                                    // compiler, its instruction set, its peers — never by the one that cut it. `~`
+                                    // stays where it is: the machine a push or a pop just made current
+                                    final fURI target = inst.arg(0).uriValue();
+                                    if (!target.isAddressed()) {
+                                        if (!HERE.equals(target))
+                                            MachinePerspective.publish(Machine.current().move(target));
+                                        return code(new ArrayList<>(inst.arg(1).asCall().insts())).apply(lhs);
+                                    }
                                     // A CUT SHIPS TO A PEER, so the peer has to exist: with none dialed at the authority, the
                                     // scatter's eval would resolve to the NATIVE eval — which evaluates locally — and the
                                     // authority would vanish without a word (`1.move(//abc)` answered 1). Answering the lhs
@@ -1219,8 +1242,11 @@ public class machInstSet extends AbstractInstSet {
                                 .create()
                 ))),
                 uri(REWRITE), lst(
-                        docWrap(InstSet.Helper.rewriter(MACH_INST_TID.extend(REWRITE).extend("move_extract"), Helper::extractMove),
-                                "the move-extractor: a move(<authority>) with a tail ships the tail, so the compiler packages it as the move's blocked-code argument — move(//host/xyz).c().d() becomes move(//host/xyz, |c().d())")
+                        docWrap(InstSet.Helper.rewriter(
+                                        MACH_INST_TID.extend(REWRITE).extend("nomadic_extract")
+                                                .q(POST, List.of(M_ISA_TID)),
+                                        Helper::extractNomadic),
+                                "the nomadic extractor: code is never compiled past an instruction that changes the current machine (Law.nomadic: move, push, pop), so the chain is cut there and the tail is compiled where it lands — a().move(<t>).c().d() becomes a().cut(<t>, c().d()), push(b).c() becomes push(b).cut(<~>, c()) — ahead of every other instruction set's rules")
                 )));
         docWrap(this, "the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor");
         super.setup();
@@ -1238,57 +1264,60 @@ public class machInstSet extends AbstractInstSet {
         }
 
         /**
-         * The move-extractor: a {@code move(<authority>)} is a scatter, so this rule splits the chain at the move and
-         * ships the whole thing through the peer's eval:
-         * {@code a().b().move(//host/xyz).c().d()} → {@code a().b().-<[|move(xyz),_,|c().d()].as(code::T).eval(//host)}.
-         * The split's lst holds the localized move, the identity (the lhs flows through here), and the tail; casting it
-         * to {@code code::T} rebuilds the chain, and the peer re-compiles the shipped code, so a nested remote move is
-         * extracted where it lands. A local move (no authority) is left alone.
+         * THE NOMADIC EXTRACTOR (Marko, 2026-11-24): code is never compiled past an instruction that changes
+         * {@code Machine.current()} ({@link Law#nomadic}: move, push, pop). A metatron server runs a stack of machines,
+         * each with its own compiler, spaces, instruction set and processor, so the rest of a chain after such an
+         * instruction is cut off as written, and the machine it lands in compiles it.
+         * <ul>
+         *   <li>A MOVE IS THE CUT: {@code a().move(<target>).c().d()} becomes {@code a().cut(<target>, c().d())}. A
+         *       target in this server's machine tree switches the current machine there, as a move does, and that
+         *       machine compiles and runs the tail. A target that names a host ships the tail to that server, whose own
+         *       extractor cuts the {@code move(</path>)} the program arrives with, so the receiving thread moves to the
+         *       path and the tail is compiled there.</li>
+         *   <li>A PUSH OR A POP KEEPS ITS INSTRUCTION, which mints or discards the machine, and the tail follows as
+         *       {@code cut(<~>, tail)}: compiled in whichever machine the push or the pop made current.</li>
+         * </ul>
+         * A nomadic instruction that ends the chain has no tail and is left as written. The extractor stops at the
+         * first cut and returns the rest verbatim: the tail is a program, re-planned where it lands, so a nested move
+         * keeps its spelling and is resolved by the destination's own tables (aligning it here would bake this
+         * machine's denotation into a program meant to be re-homed). It runs ahead of every other instruction set's
+         * rules ({@code ?post=[/m]}), so no rule of this machine rewrites a tail it does not own.
          * <p>
-         * A PREFIXED TARGET IS ALIGNED BEFORE THE DECISION, and the aligned form is what the cut carries.
-         * {@code move(<self:/a>)} denotes a real authority, so the tail must be cut — and the CUT'S TARGET must be the
-         * RESOLVED address, because the far side has never heard of this machine's names. The alignment goes through
-         * {@link Machine.Helper#align}, the same door the runtime uses, so a spelling cannot resolve one way at compile
-         * time and another when it runs.
+         * A PREFIXED TARGET IS ALIGNED BEFORE THE CUT, and the aligned form is what the cut carries:
+         * {@code move(<self:/a>)} denotes a real authority, and the far side has never heard of this machine's names.
+         * The alignment goes through {@link Machine.Helper#align}, the door the runtime uses, so a spelling cannot
+         * resolve one way at compile time and another when it runs.
          * <p>
-         * THE TWO HALVES RESOLVE IN DIFFERENT PLACES — do not "finish" the tail here. What this machine DIALS, it
-         * resolves (the cut's target, above). What the RECEIVER RUNS stays exactly as written: the tail is a program,
-         * re-planned in the environment it lands in, so a nested {@code move(<//self/b>)} keeps its spelling and is
-         * resolved by the destination's own tables. Aligning it here would bake THIS machine's denotation into a
-         * program meant to be re-homed: a peer whose {@code self} names another place (or nothing) would then run
-         * somewhere its tables never said. That is why this rule stops at the first cut and returns the rest verbatim.
-         * <p>
-         * THE CROSSING RULE IS HOST PRESENCE, and it is also where the STATE BOUNDARY lives: a target that names a host
-         * is the only move that leaves this machine, so it is the only one whose tail runs in the receiver's frame state
-         * ({@link Network.Helper} — {@code boundary} swaps the perspective, arg frames and thread away and back). A
-         * host-less move changes the running thread's machine and persists; it changes state, it does not isolate it.
+         * THE STATE BOUNDARY IS HOST PRESENCE, as it always was: a target that names a host is the only cut whose tail
+         * runs in the receiver's frame state ({@link Network.Helper} — {@code boundary} swaps the perspective, arg
+         * frames and thread away and back), while a cut into this server's tree re-homes the running thread and
+         * persists, as a move does. The COMPILATION boundary is every machine change.
          */
-        static Code extractMove(final Code code) {
+        static Code extractNomadic(final Code code) {
             final List<Inst> insts = code.insts();
-            for (int i = 0; i < insts.size(); i++) {
+            final List<fURI> nomadic = Law.Helper.claimants(Law.nomadic).stream()
+                    .map(term -> Inst.Helper.operationTid(term.tid()))
+                    .toList();
+            for (int i = 0; i < insts.size() - 1; i++) {
                 final Inst inst = insts.get(i);
-                if (!MOVE_INST_TID.equals(inst.tid().basePath()) || inst.arg(0).isNoObj())
+                if (!nomadic.contains(Inst.Helper.operationTid(inst.tid())))
                     continue;
-                final fURI target = Machine.Helper.align(Machine.current(), inst.arg(0).uriValue());
-                // A MOVE CROSSES IFF ITS TARGET NAMES A HOST. A host is the smallest thing that can name a SERVICE
-                // rather than a place, so it is the one shape that can be somewhere else: a local path (`a`, `..`,
-                // bare move()) stays here, and a scheme with no host (`loop:a`) names no service at all -- it fails by
-                // address, and cutting for it would ship the tail to an origin nothing can dial (measured: scheme-only
-                // targets crashed the origin arithmetic instead of failing the move). An ALIGNED spelling ACQUIRES its
-                // host from the tables (`self:/a`, `//self/a` -> loop://self/a), so resolution -- not the page --
-                // decides whether this move crosses.
-                // THIS IS ALSO THE ONLY PLACE A STATE BOUNDARY EXISTS: a crossing move's tail runs in the RECEIVER's
-                // frame state (Network.Helper.boundary: perspective, arg frames and thread swapped away and restored),
-                // because a move that crossed to another host must neither see nor leak the caller's frames. A host-less move
-                // re-homes the running thread and PERSISTS -- it changes state, it does not isolate it -- which is why
-                // only this branch cuts.
-                if (!target.isAddressed())
-                    continue;
-                final Obj authority = target.equals(inst.arg(0).uriValue()) ? inst.arg(0) : uri(target);
-                final List<Inst> newCode = new ArrayList<>(insts.subList(0, i));
-                //newCode.add(branch_(authority.tid(authority.tid().q(HOP, 0)), code(new ArrayList<>(insts.subList(i + 1, insts.size())))).q(HOP, 0).tryToInst().asInst());
-                newCode.add(instB(CUT_INST_TID, lst(authority, code(new ArrayList<>(insts.subList(i + 1, insts.size()))))));
-                return code(newCode);
+                // a push or a pop already followed by its cut was extracted on an earlier pass: the tail is the cut's
+                if (i + 2 == insts.size() && CUT_INST_TID.equals(insts.get(i + 1).tid().basePath()))
+                    return code;
+                final List<Inst> cut = new ArrayList<>(insts.subList(0, i));
+                // a tail of one instruction is that instruction, as the parser reads cut(<a>, plus(1))
+                final Obj tail = code(new ArrayList<>(insts.subList(i + 1, insts.size()))).tryToInst();
+                if (MOVE_INST_TID.equals(inst.tid().basePath())) {
+                    final fURI written = inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue();
+                    final fURI target = Machine.Helper.align(Machine.current(), written);
+                    final Obj where = !inst.arg(0).isNoObj() && target.equals(written) ? inst.arg(0) : uri(target);
+                    cut.add(instB(CUT_INST_TID, lst(where, tail)));
+                } else {
+                    cut.add(inst);
+                    cut.add(instB(CUT_INST_TID, lst(uri(HERE), tail)));
+                }
+                return code(cut);
             }
             return code;
         }

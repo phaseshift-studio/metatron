@@ -34,10 +34,6 @@ import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MOVE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.POP_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.PUSH_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.ROOT_MACHINE_VID;
 import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
@@ -89,23 +85,14 @@ public final class Shard {
     }
 
     /**
-     * WHERE THE CHAIN LEAVES THE FRAME BEING COMPILED: the index of its first {@code push}, {@code pop} or {@code move}
-     * that hands the rest to another machine, or -1 when it never does. The one move that stays is {@code move(</.>)}
-     * compiled at the root: the re-home a cut's payload opens with on arrival ({@code start(lhs).move(</.>).<tail>},
-     * machInstSet's cut), which lands where it already is, so its tail is that machine's to plan. Every other move,
-     * {@code <..>} at the root included, is read as written and leaves.
+     * A LONE MACHINE DOES NOT FAN OUT — unless the decision states its own place set, whose HOME lane is the lanes case
+     * ({@code ?place=[{4}local]}: a peerless machine shards), or names a machine it knows ({@code //host}). PEERS ARE
+     * EXPLICIT (Marko, 2026-11-23): the roster is knowledge, not reach, so a machine nothing dialed is never a
+     * candidate on its own; a program that wants peers dials them. One rule, read by {@link #apply} off its snapshot
+     * and by the pool off the peer map before any snapshot is taken (mInstSet's law_shard).
      */
-    public static int departure(final List<Inst> insts, final Env env) {
-        for (int i = 0; i < insts.size(); i++) {
-            final Inst inst = insts.get(i);
-            final fURI op = inst.tid().basePath();
-            if (PUSH_INST_TID.equals(op) || POP_INST_TID.equals(op))
-                return i;
-            if (MOVE_INST_TID.equals(op)
-                    && !(env.root() && inst.arg(0).isUri() && ROOT_MACHINE_VID.equals(inst.arg(0).uriValue())))
-                return i;
-        }
-        return -1;
+    public static boolean lone(final Rec peers, final Code code) {
+        return peers.isEmpty() && code.insts().stream().noneMatch(inst -> inst.tid().hasQ(PLACE));
     }
 
     /**
@@ -120,28 +107,9 @@ public final class Shard {
         // layout holds nothing left to plan.
         if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
             return code;
-        // A FRAME CHANGE HANDS THE REST OF THE CHAIN TO ANOTHER MACHINE, which re-plans it on arrival over its own
-        // peers (the quine rule), so this machine plans only the stretch before the first one (departure). Planned
-        // here, the tail would ship over peers the target never dialed (reach is not inherited), or deal out a run that
-        // is not this machine's to run.
-        final int departs = departure(code.insts(), env);
-        if (0 == departs)
-            return code;
-        if (0 < departs) {
-            final Code here = apply(plan, code(code.insts().subList(0, departs)), env);
-            if (here.insts().equals(code.insts().subList(0, departs)))
-                return code;
-            final List<Inst> relocated = new ArrayList<>(here.insts());
-            relocated.addAll(code.insts().subList(departs, code.insts().size()));
-            return code(relocated);
-        }
-        // A LONE MACHINE DOES NOT FAN OUT -- unless the decision states its own place set, whose HOME lane is the lanes
-        // case (?place=[{4}local]: a peerless machine shards), or names a machine it knows (//host). PEERS ARE
-        // EXPLICIT (Marko, 2026-11-23): the roster is knowledge, not reach, so a machine nothing dialed is never a
-        // candidate on its own; a program that wants peers dials them.
-        final boolean stated = code.insts().stream().anyMatch(inst -> inst.tid().hasQ(PLACE));
-        final boolean dialed = !env.peers().isEmpty();
-        if (!dialed && !stated)
+        // a lone machine does not fan out (lone). A machine change never reaches this rule: the nomadic extractor cut
+        // the chain there before any rule ran, so the tail is the cut's argument, compiled where it lands
+        if (lone(env.peers(), code))
             return code;
         final List<Inst> insts = code.insts();
         // THE SEED IS THE INITIAL FORM (dom {0}) at the head of the chain, read off the contract the chain's own typing

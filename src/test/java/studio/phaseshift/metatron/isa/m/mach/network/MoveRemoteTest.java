@@ -96,10 +96,11 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             // ... AND THE SAME TARGET FROM THE OTHER SLOT: the authority spelling resolves through the network's
             // table (`self:` through the ISA's), so `//self/a` ends at the very same cut.
             "5.move(<//self/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
-            // ... AND A LOCAL MOVE IS STILL LEFT ALONE: no authority, no cut, no shipped tail. `..` from the root
+            // ... AND A LOCAL MOVE IS A CUT TOO (Law.nomadic, Marko 2026-11-24): code is never compiled past a machine
+            // change, so the tail is the cut's, compiled by the machine the move lands in. `..` from the root
             // saturates at the root, which is where every row starts -- checkCodeRewrite re-stands the caller's
             // machine before each evaluation, so no earlier row can leave the thread somewhere else.
-            "5.move(<..>).plus(1)                                                                                                     % 5.move(<..>).plus(1)                                                                                                     % 6",
+            "5.move(<..>).plus(1)                                                                                                     % start(5).cut(<..>,plus(1))                                                                                               % 6",
     }, delimiter = '%')
     void testMoveRewrite(final String code, final String expected, final String expectedResult) {
         // REACH IS PER MACHINE, and every frame the shipped program STANDS IN needs the dial: the first move drops

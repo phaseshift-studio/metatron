@@ -111,6 +111,13 @@ public enum Law {
      */
     pure,
     /**
+     * the machine axis (Marko, 2026-11-24): applying it changes {@code Machine.current()}, so what follows it runs in
+     * another machine, with that machine's compiler, spaces, instruction set and processor. It is a compilation
+     * boundary: no stage of this machine compiles past it, and the rest of the chain is cut off as written and compiled
+     * where it lands ({@code nomadic_extract}). {@code move}, {@code push} and {@code pop} declare it
+     */
+    nomadic,
+    /**
      * a monoid/group acting on a carrier — {@code f(gh)x = f(g)f(h)x}
      */
     action,
@@ -279,6 +286,8 @@ public enum Law {
                     + "nothing else — no write, no print, no spawn. Declared, never inferred: an instruction that does not "
                     + "declare pure is effectful, so a rule that moves, drops or replicates code (law_absorbing's swallowed "
                     + "prefix, law_shard's floatable run) admits only declared-pure instructions";
+            case nomadic -> "the machine axis: applying it changes the current machine, so what follows it runs, and "
+                    + "is compiled, in another machine — a compilation boundary no stage crosses";
             case action -> "a monoid/group acting on a carrier — f(gh)x = f(g)f(h)x";
             case prime -> "an atomic/indecomposable element — no nontrivial factorization";
             case left_distributive -> "distributes over + on the left — a(b+c) = ab+ac";
@@ -355,8 +364,8 @@ public enum Law {
             case semi_right_distributive, kleene -> List.of(FOLD);
             // coefficient/form laws: read off the instruction's form, no operation on a carrier to state
             case floatable, blocked, partial -> List.of(FORM);
-            // the effect axis: there is no carrier
-            case pure -> List.of(EFFECT);
+            // the effect axis and the machine axis: there is no carrier
+            case pure, nomadic -> List.of(EFFECT);
         };
     }
 

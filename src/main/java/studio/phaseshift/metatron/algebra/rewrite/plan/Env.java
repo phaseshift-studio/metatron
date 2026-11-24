@@ -34,10 +34,9 @@ import java.util.Set;
  * input so a rewrite does not hold the network open or read a status that changes mid-derivation.
  *
  * <p>For now a small Java value (the ISA union and processor capabilities are still read live by the resolver, not
- * here): the dialed {@link #peers() peer map}, the {@link #machines() roster}, this machine's own listening
- * {@link #authorities()} (the origin place's transports), and whether the frame being compiled is the {@link #root()}.
- * A rec projection follows (§11.7). The {@link #fingerprint()} is a stable hash of those four, so "re-plan iff the
- * fingerprint differs" is a comparison away.
+ * here): the dialed {@link #peers() peer map}, the {@link #machines() roster}, and this machine's own listening
+ * {@link #authorities()} (the origin place's transports). A rec projection follows (§11.7). The {@link #fingerprint()}
+ * is a stable hash of those three, so "re-plan iff the fingerprint differs" is a comparison away.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -46,26 +45,22 @@ public final class Env {
     private final Rec peers;
     private final Rec machines;
     private final Set<fURI> authorities;
-    private final boolean root;
     private final String fingerprint;
 
-    private Env(final Rec peers, final Rec machines, final Set<fURI> authorities, final boolean root) {
+    private Env(final Rec peers, final Rec machines, final Set<fURI> authorities) {
         this.peers = peers;
         this.machines = machines;
         this.authorities = authorities;
-        this.root = root;
         this.fingerprint = Integer.toHexString(this.peers.jvm().hashCode()
-                ^ this.machines.jvm().hashCode() ^ this.authorities.hashCode() ^ Boolean.hashCode(root));
+                ^ this.machines.jvm().hashCode() ^ this.authorities.hashCode());
     }
 
     /**
      * The one immutable snapshot per application — read the machine exactly once, here.
      */
     public static Env snapshot() {
-        final Machine machine = Machine.current();
-        final Network network = machine.network();
-        return of(network.peers(), network.machines(), Network.Helper.authorities(),
-                !(machine.parent() instanceof Machine));
+        final Network network = Machine.current().network();
+        return of(network.peers(), network.machines(), Network.Helper.authorities());
     }
 
     /**
@@ -78,22 +73,14 @@ public final class Env {
      * and the authority set are <em>shallow-copied</em> into fresh {@link MRec}s and a fresh {@link LinkedHashSet}, so
      * the two maps' membership (and their order) cannot change under the caller. A member's own liveness is still read
      * off the member — that is what {@code PlaceResolver.serves} asks — so a peer that goes offline between the snapshot and
-     * the resolution is dropped, as it always was. The {@link #fingerprint()} is the same hash of the same fields. The
-     * frame is the root, as it is wherever a test or a re-plan hands one in.
+     * the resolution is dropped, as it always was. The {@link #fingerprint()} is the same hash of the same three
+     * fields.
      */
     public static Env of(final Rec peers, final Rec machines, final Set<fURI> authorities) {
-        return of(peers, machines, authorities, true);
-    }
-
-    /**
-     * An env from its three tables and its frame: {@code root} when the frame being compiled is its machine's root,
-     * which is where a cut's payload lands ({@link Shard#departure}).
-     */
-    public static Env of(final Rec peers, final Rec machines, final Set<fURI> authorities, final boolean root) {
         return new Env(
                 new MRec(new LinkedHashMap<>(peers.jvm()), peers.tid(), peers.vid()),
                 new MRec(new LinkedHashMap<>(machines.jvm()), machines.tid(), machines.vid()),
-                new LinkedHashSet<>(authorities), root);
+                new LinkedHashSet<>(authorities));
     }
 
     /**
@@ -115,13 +102,6 @@ public final class Env {
      */
     public Set<fURI> authorities() {
         return this.authorities;
-    }
-
-    /**
-     * Whether the frame being compiled is its machine's root, not a pushed child.
-     */
-    public boolean root() {
-        return this.root;
     }
 
     /**

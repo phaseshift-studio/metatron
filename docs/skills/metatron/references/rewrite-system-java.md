@@ -98,7 +98,7 @@ obj flowing in:
 ~/instset/rewrite/law_absorbing -> noobj                                           on again, the same way
 ```
 
-An instruction set's own path walks its rec: what no table holds is the rec's, so `*/m/inst/rewrite` answers what
+An instruction set's own path walks its rec: what no table holds is the rec's, so `*/m/rewrite` answers what
 `*/m>>rewrite` does, the set's live rewrites.
 
 ### The pass order a rule declares
@@ -111,6 +111,9 @@ its tid (Marko, 2026-11-24), and `Rewriter.Helper.sort` is the one place the ord
 - `?pre=[{+}uri::T]`: every rule of another grouping whose tid has one of the prefixes runs before it;
   `?post=[{+}uri::T]`: after it. A prefix may be a pattern (`/m/db/+/inst/rewrite`, every database instset's rules).
 - What the declarations leave unordered goes by zindex, then registration, across groupings too.
+
+The nomadic extractor (`/m/mach/inst/rewrite/nomadic_extract?post=[/m]`) runs ahead of every other instruction
+set's rules: code is never compiled past an instruction that changes the current machine (`Law.nomadic`).
 
 The declarations need not form a poset: a declaration on a cycle is void, and zindex ranks the cycle's rules. The
 distribution rules show the form: `/m/inst/rewrite/law_shard?zindex=500&pre=[/m/db/+/inst/rewrite]` runs after every

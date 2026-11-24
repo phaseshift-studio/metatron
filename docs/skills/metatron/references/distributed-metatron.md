@@ -52,7 +52,7 @@ One function decides local vs remote; everything else is a transport it can call
 | `~/network/listener`                           | bound sockets: origin → listener::T (a machine's presence)                    | `Network.java:199`         |
 | `~/network/prefix`                             | the NAMES a peer goes by: `//ginger => origin`, stored `ginger => origin`     | `Network.java` (`alignPrefix`) |
 | `~/instset/prefix`                             | the NAMES a vocabulary goes by: scheme → vid (`import(/m/math, math)`)        | `AbstractInstSet.java`     |
-| `Machine.Helper.align`                         | the ONE canonicalization door: read, write and the move-extractor all ask it  | `Machine.java`             |
+| `Machine.Helper.align`                         | the ONE canonicalization door: read, write and the nomadic extractor ask it   | `Machine.java`             |
 | `Network.Helper.authorities()`                 | the origins this VM answers on (its listeners)                               | `Network.java:695`         |
 | `fURI.origin()` / `authority()` / `localize()` | `scheme://host:port`; `host:port`; strip scheme+origin, keep path            | `fURI.java:215`, `:319`, `:353` |
 
@@ -127,8 +127,8 @@ Concurrent, not remote — but the same monad is the work unit in both cases.
 - **A NAME IS RESOLVED ONCE, BEFORE ANY DISPATCH, AND TRAVELS RESOLVED.** `math:cos` and `//ginger/a` are
   canonicalized at the gatekeeper (`Machine.Helper.align`), each component answering for the slot it owns — the ISA for
   a scheme, the network for an authority — so the slots cannot collide and no dispatch below ever sees a spelling. The
-  compiler's move-extractor asks the same door, so the tail shipped to a peer carries the resolved origin: a name is
-  the caller's, and the far side has never heard of it.
+  compiler's nomadic extractor asks the same door, so the tail shipped to a peer carries the resolved origin: a name
+  is the caller's, and the far side has never heard of it.
 - **A multiplicity of dereferences is a program, not data.** `{*A,*B}` holds unapplied `from` insts (`.explain()`
   reports `rng=>from`), so arithmetic applies element-wise to instructions. Chaining works: `*A.plus(*B)`.
 - **Evaluating one has a lasting side effect**: it re-types the dereferenced vids to `*`, so later reads of those

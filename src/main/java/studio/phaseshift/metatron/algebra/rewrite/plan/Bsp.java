@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
@@ -79,13 +80,13 @@ public final class Bsp {
      * taken, so a pass over every other chain costs one scan.
      */
     public static Code apply(final Code code) {
-        return code.insts().stream().noneMatch(Bsp::wholeFrontier) ? code : apply(code, Env.snapshot());
+        return code.insts().stream().noneMatch(Bsp::wholeFrontier)
+                || Machine.current().network().peers().isEmpty() ? code : apply(code, Env.snapshot());
     }
 
     /**
-     * The rule over one code and one snapshot: the code itself when nothing is dealt. Only the stretch this frame runs
-     * is dealt ({@link Shard#departure}): a repeat after a push, a pop or a move away runs on another machine, over
-     * peers this one never dialed for it.
+     * The rule over one code and one snapshot: the code itself when nothing is dealt. A repeat past a machine change is
+     * never seen here: the nomadic extractor cut the chain there, and the tail is compiled where it lands.
      */
     public static Code apply(final Code code, final Env env) {
         final List<Inst> insts = code.insts();
@@ -94,14 +95,12 @@ public final class Bsp {
         final List<fURI> peers = peers(env);
         if (peers.isEmpty())
             return code;
-        final int departs = Shard.departure(insts, env);
-        final int here = 0 > departs ? insts.size() : departs;
         final List<Type> carriers = carriers(code);
         final List<Inst> rewritten = new ArrayList<>(insts.size());
         boolean dealt = false;
         for (int i = 0; i < insts.size(); i++) {
             final Inst inst = insts.get(i);
-            final Inst superstep = i < here && wholeFrontier(inst) && i < carriers.size()
+            final Inst superstep = wholeFrontier(inst) && i < carriers.size()
                     ? deal(inst, carriers.get(i), peers) : null;
             rewritten.add(null == superstep ? inst : superstep);
             dealt |= null != superstep;
