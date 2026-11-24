@@ -96,12 +96,13 @@ public final class Shard {
         // layout holds nothing left to plan.
         if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
             return code;
-        // A LONE MACHINE DOES NOT FAN OUT -- unless its ROSTER declares a candidate (a declared machine is a
-        // potential peer: the declared half of the liveness test, §4), or the decision states its own place set, whose
-        // HOME lane is the lanes case (?place=[{4}local]: a peerless machine shards).
+        // A LONE MACHINE DOES NOT FAN OUT -- unless the decision states its own place set, whose HOME lane is the lanes
+        // case (?place=[{4}local]: a peerless machine shards), or names a machine it knows (//host). PEERS ARE
+        // EXPLICIT (Marko, 2026-11-23): the roster is knowledge, not reach, so a machine nothing dialed is never a
+        // candidate on its own; a program that wants peers dials them.
         final boolean stated = code.insts().stream().anyMatch(inst -> inst.tid().hasQ(PLACE));
         final boolean dialed = !env.peers().isEmpty();
-        if (!dialed && env.machines().isEmpty() && !stated)
+        if (!dialed && !stated)
             return code;
         final List<Inst> insts = code.insts();
         // THE SEED IS THE INITIAL FORM (dom {0}) at the head of the chain, read off the contract the chain's own typing
@@ -118,7 +119,7 @@ public final class Shard {
         final List<Inst> typed = IntStream.range(0, insts.size())
                 .mapToObj(i -> 0 == i ? insts.getFirst() : retype(insts.get(i), carriers.get(i)))
                 .toList();
-        final Chain chain = new Chain(insts, typed, contracts, carriers, plan.cut().laws().toArray(Law[]::new), route, env, dialed);
+        final Chain chain = new Chain(insts, typed, contracts, carriers, plan.cut().laws().toArray(Law[]::new), route, env);
         // EVERY CUT PLANS THE RUN BEFORE IT. A cut is a fold whose partials recombine through a fold declaring the cut's
         // laws: its run ships, and its combiner brings the computation home, where the next run starts. A run states its
         // own axes; one that states none keeps the axes the run before it resolved, else the plan's, so a budget or a
@@ -251,12 +252,9 @@ public final class Shard {
         final long members = runAxis ? range.count() : seed;
         if (2 > members)
             return null;
-        // THE CANDIDATES: the run's place set, except that the peer enum with nothing dialed and nothing stated answers
-        // the ROSTER's machines -- each named as an address (//host), so the resolver reads the row discovery filed and
-        // admits it when its transport's scheme resolves (step 6's declared half of liveness). Planning never dials.
-        final PlaceSet candidates = !chain.dialed() && !axes.placed()
-                && axes.place().designators().stream().allMatch(designator -> PlaceSet.Form.PEER == designator.form())
-                ? roster(chain.env()) : axes.place();
+        // THE CANDIDATES: the run's place set, and nothing else. The peer enum is the dialed set; a machine the roster
+        // knows is a candidate only when the place set names it (//host). Planning never dials.
+        final PlaceSet candidates = axes.place();
         // THE SHARES: the place set resolved against the snapshot, one entry per share, the HOME place's shares FIRST.
         // A literal seed clamps the shares; a computed bag's size is the branch's to know; the ARITY caps the window.
         // NO PEER WITHOUT A MEMBER (Marko, 2026-11-20: "don't use all peers if we don't need to"): a literal seed of n
@@ -567,7 +565,7 @@ public final class Shard {
      * contract each resolved to, the carriers, the cut's laws, the plan's distributing route, and the snapshot.
      */
     private record Chain(List<Inst> insts, List<Inst> typed, List<Inst> contracts, List<Type> carriers, Law[] laws,
-                         Placement route, Env env, boolean dialed) {
+                         Placement route, Env env) {
     }
 
     /**
@@ -689,23 +687,6 @@ public final class Shard {
         } catch (final MTronException e) {
             throw MTronException.of("?%s=%s cannot be read as a place set: %s", key, tid.q(key), e.getMessage());
         }
-    }
-
-    /**
-     * THE ROSTER AS CANDIDATES — the places a peer enum names when nothing is dialed. Each roster machine is written as
-     * an address ({@code //host}), which {@link PlaceResolver} reads through the roster and admits by the declared half
-     * of liveness (its transport's scheme resolves in the ISA). No dial is attempted here: a candidate is planned, and
-     * the run — the branch's own key — is what connects.
-     */
-    private static PlaceSet roster(final Env env) {
-        final List<fURI> hosts = env.machines().elements()
-                .map(Rel::first)
-                .filter(Obj::isUri)
-                .map(key -> key.uriValue())
-                .map(host -> fURI.Singleton.f("//" + (null == host.host() ? host.toString() : host.host())))
-                .distinct()
-                .toList();
-        return hosts.isEmpty() ? PlaceSet.none() : PlaceSet.of(hosts.toArray(fURI[]::new));
     }
 
     /**

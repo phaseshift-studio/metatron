@@ -363,7 +363,7 @@ public class catTypes {
 
     /**
      * The place-class word (§11.4): a located path's realized placement (span → place) abstracted into a flat list of
-     * places, or the reachable places (roster ∪ dialed peers) when nothing has been realized — the α word of
+     * places, or the reachable places (the dialed peers' hosts) when nothing has been realized — the α word of
      * locations, the same lift as the instruction word. {@code noobj} for an unlocated path.
      */
     private static Obj placeWord(final Rec path) {

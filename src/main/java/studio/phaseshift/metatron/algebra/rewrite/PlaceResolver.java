@@ -269,10 +269,10 @@ public final class PlaceResolver {
      * is deliberately absent (step 4): reach is what this machine holds, not what it has heard about, and a shard
      * shipped to a known-but-unreachable machine is the accepted-twin failure the dialed set exists to prevent.
      *
-     * <p><b>This is NOT {@link Places#reachable()}.</b> That reading is <em>roster ∪ dialed</em> — it answers "which
-     * places does this machine know of", which is the right question for introspection and the wrong one for shipping
-     * code; this one answers "which places can a share travel to", so the roster may not contribute. The two are
-     * deliberately different and neither should be "fixed" into the other.
+     * <p><b>This is NOT {@link Places#reachable()}.</b> That reading is the dialed <em>hosts</em>, each lifted to a
+     * {@code place::T} — the place-class word a placement guard reads — while this one answers "which authorities can a
+     * share travel to", the dialed set ∪ the local place, one entry per authority. Neither reads the roster: peers are
+     * explicit (Marko, 2026-11-23), and a machine nothing dialed is knowledge, not reach.
      *
      * <p>The order is the resolver's written order — the dials as the peer map holds them, then the local place — and
      * it is not the <em>lane</em> order: the emitter canonicalises lanes (the home place's shares first) because it must

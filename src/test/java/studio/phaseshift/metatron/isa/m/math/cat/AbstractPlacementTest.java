@@ -228,21 +228,20 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
     }
 
     /**
-     * A declared (roster) machine, dialed or not, is a distribution candidate: it appears in the place-class word and
-     * makes {@code law_shard} live.
+     * A DECLARED (ROSTER) MACHINE IS KNOWLEDGE, NOT REACH: with nothing dialed it is no distribution candidate, so the
+     * place-class word is empty and {@code law_shard} is not live. Peers are explicit (Marko, 2026-11-23): a suite that
+     * needs them dials them, e.g. {@code *~/network/roster/machine/+/mtron/ws.-<[host=>_].as(ws_client::T)} in a
+     * {@code @BeforeAll}, and a roster machine is a target only when a place set names it ({@code //host}).
      */
     @Test
-    public void testRosterMachineEnablesDistribution() {
+    public void testRosterMachineAloneIsNoReach() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
-                uri("ginger.local"), rec(uri(MTRON), rec(uri(WS), uri("ws://ginger.local:8555"))))))));
+                uri("known.test"), rec(uri(MTRON), rec(uri(WS), uri("ws://known.test:8555"))))))));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
         final Obj abstraction = catInstSet.ABSTRACTION_TYPE.constructor().apply(code);
-        final Obj word = abstraction.asRec().at(uri(WHERE));
-        assertTrue(word.isLst() && 1 == word.asLst().count(), "a roster machine is in the word: " + word);
-        assertEquals(f("//ginger.local"), Place.of(word.asLst().elements().findFirst().orElse(noobj()).asRec()).obj(),
-                "the word names the declared machine");
+        checkEquality(LOG, noobj(), abstraction.asRec().at(uri(WHERE)), true);
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
-        assertTrue(path.asRec().has(uri("law_shard")), "a roster machine makes law_shard live: " + path);
+        assertFalse(path.asRec().has(uri("law_shard")), "a roster machine alone leaves law_shard the identity: " + path);
     }
 
     /**

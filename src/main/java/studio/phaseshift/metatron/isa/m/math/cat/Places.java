@@ -153,11 +153,9 @@ public final class Places {
      */
     public static Obj reachable() {
         final Set<String> hosts = new LinkedHashSet<>();
-        // the roster (known): every machine discovery declared, dialed or not — the candidate set is roster ∪ peers
-        Machine.current().network().machines().elements()
-                .filter(kv -> kv.first().isUri())
-                .forEach(kv -> hosts.add(kv.first().uriValue().toString()));
-        // the peer map (realized): the authorities this machine actually dialed (a dialed peer carries a host)
+        // the peer map (realized) alone: the authorities this machine actually dialed (a dialed peer carries a host).
+        // The roster is knowledge, not reach: peers are explicit (Marko, 2026-11-23), so a machine nothing dialed is no
+        // place code can go
         Machine.current().network().peers().values()
                 .filter(Obj::isRec)
                 .filter(peer -> peer.asRec().has(uri(HOST)))
