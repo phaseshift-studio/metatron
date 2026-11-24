@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -131,22 +132,22 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
      * The descriptions are checked over the whole enum, not a hand-written list, so a law added to
      * {@code Law} fails here rather than in a reader's face.
      * <p>
-     * Not every law IS an equation — the effect and coefficient laws ({@code pure}, {@code nomadic},
-     * {@code blocked}, {@code floatable}, {@code partial}) state a property of the implementation or of the coefficient
-     * algebra — so the LaTeX guarantee is that the equation-bearing majority carry it: prose for all, math for
-     * the ones that can state one.
+     * Not every law IS an equation — the effect, barrier and machine laws ({@code pure}, {@code blocked},
+     * {@code nomadic}) state a property of the implementation rather than an equation between operands — so the
+     * LaTeX guarantee is that the equation-bearing rest carry it: prose for all, math for the ones that can
+     * state one. The prose-only set is pinned exactly, so a law that gains or loses an equation has to say so
+     * here.
      */
     @Test
     public void testEveryDeclaredLawHasATooltipAndTheEquationsCarryLatex() {
-        int equations = 0;
+        final Set<Law> proseOnly = EnumSet.noneOf(Law.class);
         for (final Law law : Law.values()) {
             final String doc = InstSetDocGenerator.lawDoc(law);
             assertFalse(doc.isEmpty(), "no tooltip for the declared law " + law);
-            if (doc.contains("\\(") || doc.contains("\\[")) equations++;
+            if (!doc.contains("\\(") && !doc.contains("\\[")) proseOnly.add(law);
         }
-        assertTrue(equations >= Law.values().length - 3,
-                "only the three laws that are not equations (`pure`, `blocked`, `nomadic`) lack LaTeX — got "
-                        + equations + " of " + Law.values().length);
+        assertEquals(EnumSet.of(Law.pure, Law.blocked, Law.nomadic), proseOnly,
+                "the effect, barrier and machine laws state no equation — every other law's tooltip carries LaTeX");
     }
 
     /**
