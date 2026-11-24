@@ -1,0 +1,1292 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>An M ⊗_R N Computing Machine · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
+         (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
+         downloading it on every page view. Page-specific MathJax config scripts (e.g. the
+         theory articles) run during parse, before this loader fires. -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var content = document.querySelector('main') || document.body;
+            var text = content.textContent || '';
+            if (text.indexOf('\\(') === -1 && text.indexOf('\\[') === -1) return;
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js';
+            mathjax.async = true;
+            document.head.appendChild(mathjax);
+        });
+    </script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+        <link href="../css/theory-article.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/db/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                            src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus/index.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.page.mtron">drstynx.page.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-computing.html"><i
+                                class="bi bi-plus-slash-minus icon-color me-2 isa-row"></i>Ring Theoretic Distributed Computing</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-computing.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/ring-theoretic-distributed-structures.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>Ring Theoretic Distributed Structures</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-structures.html">html</a>
+                            <a class="article-format" href="../articles/ring-theoretic-distributed-structures.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/tensor-product-computing-machine.html"><i
+                                class="bi bi-cpu icon-color me-2 isa-row"></i>An M⊗<sub>R</sub>N Computing Machine</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/tensor-product-computing-machine.html">html</a>
+                            <a class="article-format" href="../articles/tensor-product-computing-machine.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+   <!-- <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1"
+               href="http://localhost:8777/splash"
+               title="the metatron web console — served by this machine">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div> -->
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="article-doc">
+        <h1 class="article-title mb-1">An M ⊗_R N Computing Machine</h1>
+        <small class="article-subtitle">metatron's swarm processor computes in a tensor product of modules. a monad is a basis element of objects ⊗ instructions, bulking collects like terms, and a computation moves instructions across the tensor sign until only objects remain.</small>
+        <div class="article-author">Dr. Marko A. Rodriguez<br>Dr. Stynx</div>
+    </div>
+    <div class="article-body">
+<h2>Introduction</h2>
+<p>metatron evaluates a program with a swarm of <em>monads</em>. A monad holds two references: one to an object, its <em>data
+counter</em>, and one to an instruction, its <em>program counter</em>. The instruction a monad points at decides where the data
+counter goes next, and the structure of the code decides where the program counter goes next. A computation starts
+monads, runs them through the data, and ends when every monad has either halted, with no instruction left, or died,
+with no object left. Its result is the objects the halted monads hold. The machine descends from the Gremlin traversal
+machine <a href="#references">[5]</a>, whose traversers are monads of this kind.</p>
+<p>This article states that machine as algebra. The objects span a module \(M\), the instruction positions span a module
+\(N\), both over a ring \(R\) of point coefficients, and a monad is a basis element of the tensor product
+\(M \otimes_R N\). Three behaviors of the machine follow from that one choice:</p>
+<ul>
+<li>bulking is the collection of like terms;</li>
+<li>a dead monad is zero, because a tensor with a zero factor is zero;</li>
+<li>a halted monad is its object, because the end of the code contributes nothing but a single dimension.</li>
+</ul>
+<p>Read through the ring of programs, the data module is a module over code. Between barriers, a computation moves
+instructions across the tensor sign, one per step, and so computes the canonical isomorphism \(M \otimes_F F \cong M\),
+where \(F\) is the code ring. Barriers, the instructions that take a whole stream at once, are where that linearity
+stops, and they cut a computation into strata. One more boundary is marked where it occurs: an instruction that gives
+something from nothing lies outside the module, and the machine applies it by a mechanism of its own.</p>
+<p>The definitions follow metatron's swarm processor, <code>BasicSwarmComputer</code>. Where the text says the machine does
+something, the code does it, and the <em>In metatron</em> paragraphs name where. mtron is the language in which one writes
+the elements of this space: data and the programs applied to it.</p>
+<h2>Modules and Tensor Products</h2>
+<p>The machine needs four constructions from algebra <a href="#references">[7,8]</a>. This section states them for a reader who has
+not met them.</p>
+<p>::: <strong>Definition 1</strong> (Module). Let \(R\) be a commutative ring. An <em>\(R\)-module</em> is an abelian group \(M\) with a scalar
+action \(R \times M \to M\) that distributes over sums in both arguments and satisfies \(r(sm) = (rs)m\) and \(1m = m\). A
+map \(f : M \to M'\) is <em>\(R\)-linear</em> when \(f(rm + sm') = r f(m) + s f(m')\).
+:::</p>
+<p>A vector space is a module over a field. Over a ring, a scalar need not have an inverse: over the integers, a module is
+just an abelian group.</p>
+<p>::: <strong>Definition 2</strong> (Free module). For a set \(X\), the <em>free module</em> \(R[X]\) is the set of finite formal sums
+\(\sum_x c_x\,x\) with coefficients \(c_x \in R\), added coefficientwise. The elements of \(X\) are its <em>basis</em>, and a linear
+map out of \(R[X]\) is fixed by its values on the basis.
+:::</p>
+<p>::: <strong>Definition 3</strong> (Tensor product). The <em>tensor product</em> \(M \otimes_R N\) of two \(R\)-modules is the module generated
+by symbols \(m \otimes n\), subject to bilinearity:
+\[
+\begin{equation*} (m + m') \otimes n = m \otimes n + m' \otimes n,
+\qquad
+m \otimes (n + n') = m \otimes n + m \otimes n',
+\qquad (rm) \otimes n = r\,(m \otimes n) = m \otimes (rn).
+\end{equation*}
+\]
+:::</p>
+<p>Two consequences of bilinearity carry the article. A tensor with a zero factor is zero:
+\(0 \otimes n = (0 + 0) \otimes n = 0 \otimes n + 0 \otimes n\), so \(0 \otimes n = 0\). And the tensor product of free
+modules is free on the pairs of their bases, \(R[X] \otimes_R R[P] \cong R[X \times P]\), with \(x \otimes p\) the basis
+element \((x, p)\) <a href="#references">[7]</a>.</p>
+<p>::: <strong>Definition 4</strong> (Balanced tensor product). Let \(F\) be a ring, not necessarily commutative, \(M\) a <em>right</em>
+\(F\)-module, written \(m \cdot f\), and \(N\) a <em>left</em> \(F\)-module, written \(f \cdot n\). Then \(M \otimes_F N\) is the abelian
+group generated by symbols \(m \otimes n\), additive in each factor, subject also to
+\[
+\begin{equation*} (m \cdot f) \otimes n = m \otimes (f \cdot n).
+\end{equation*}
+\]
+A scalar of \(F\) may move across the tensor sign.
+:::</p>
+<p>When \(N\) is the ring \(F\) itself, the map \(m \otimes f \mapsto m \cdot f\) is an isomorphism \(M \otimes_F F \cong M\)
+<a href="#references">[8]</a>. Every element \(m \otimes f\) equals \((m \cdot f) \otimes 1\), the scalar moved entirely onto \(M\).
+That isomorphism is what the machine computes (Theorem 2).</p>
+<h2>The Machine's Modules</h2>
+<p>::: <strong>Definition 5</strong> (Data module). Let \(X\) be the objects of <a href="./stream-ring-theory.html">[1]</a>, among them <code>noobj</code>, the
+empty stream, and let \(R\) be the point coefficients of <a href="#references">[1,2]</a>, taken commutative here: the integers, in
+metatron. The <em>data module</em> is \(M = R[X]/(\mathtt{noobj})\), the free module on the objects other than <code>noobj</code>, in which
+<code>noobj</code> is zero. A stream is an element of \(M\): the stream \(\{\{2\}a, b\}\) is \(2a + b\), and the empty stream is \(0\).
+:::</p>
+<p>metatron's coefficients take two forms <a href="./span-and-point-coefficient-algebra.html">[2]</a>. A <em>point</em> is mass at one
+address, copies of one object, and it iterates \(+\): it is the scalar of this module. A <em>span</em> is extent along a run
+of addresses, and it iterates \(\cdot\). On a value, the span is part of the object: <code>2{3}</code> is one value, curled until
+an axis lays it along three slots, and so a basis element of its own. On an instruction, the span is a power in the
+code ring (Definition 11). A point may also be a range of multiplicities, as <code>{?}3</code> is. The reading of a point range
+is still open in <a href="./span-and-point-coefficient-algebra.html">[2]</a>, and this article takes exact points.</p>
+<p>::: <strong>Definition 6</strong> (Program module). A <em>code</em> is a finite word \(p = i_1\,i_2 \cdots i_k\) of instructions. Its
+<em>positions</em> are \(P = \{1, \ldots, k\} \cup \{\dashv\}\), where \(\dashv\) is the <em>end</em> of the code. Its <em>successor</em> is
+\(\nu(j) = j + 1\) for \(j &lt; k\), with \(\nu(k) = \dashv\) and \(\nu(\dashv) = \dashv\). The <em>program module</em> is \(N = R[P]\).
+:::</p>
+<p>The code's structure decides the next program counter, and \(\nu\) records exactly that. The end \(\dashv\) is a position
+like any other: a basis element of \(N\), not its zero.</p>
+<p>::: <strong>Definition 7</strong> (Monad space). The <em>monad space</em> of a code \(p\) is \(M \otimes_R N\), free on the pairs of a nonempty
+object and a position. A <em>monad</em> is a basis element \(x \otimes j\), whose <em>data counter</em> is \(x\) and whose <em>program
+counter</em> is \(j\). A <em>frontier</em> is an element of the monad space, a finite sum \(\sum c\,(x \otimes j)\), and the
+coefficient of a monad, its point, is its <em>bulk</em>.
+:::</p>
+<p>::: <strong>Definition 8</strong> (Instructions). An instruction has a <em>domain</em> and a <em>range</em>, and each carries a point that is a
+range of multiplicities <a href="./span-and-point-coefficient-algebra.html">[2]</a>: how many objects the instruction takes, and how
+many it gives. The machine reads three kinds from the domain:</p>
+<ul>
+<li>an <em>initial</em> instruction has domain \(\{0\}\): it takes nothing and gives a seed;</li>
+<li>a <em>gather</em> has an unbounded domain, \(\{*\}\) or \(\{+\}\), and is a total function \(G_i : M \to M\) on a whole stream;</li>
+<li>an instruction whose domain takes at most one object, \(\{1\}\), or \(\{?\}\) for zero or one, is <em>per-object</em>: it takes
+one object at a time and is a total function \(f_i : X \to M\).</li>
+</ul>
+<p>A per-object instruction acts on \(M\) by the linear extension of \(f_i\) to the nonempty objects,
+\(\rho(i)\big(\sum_x c_x\,x\big) = \sum_x c_x\,f_i(x)\). It is <em>linear</em> when it gives nothing from nothing,
+\(f_i(\mathtt{noobj}) = 0\). One whose domain admits zero may be applied to the empty stream too, and if
+\(f_i(\mathtt{noobj}) \neq 0\) it is <em>affine</em>: it gives something from nothing.
+:::</p>
+<p>An instruction whose domain is finite and above one takes its stream in pages; this article leaves paging aside. An
+instruction whose range is \(\{0\}\) is per-object and gives nothing, \(f_i(x) = 0\): it is not the end of a code.</p>
+<p>In metatron, the machine reads <code>Inst.isInitial</code> (in <code>BasicSwarmComputer.resolve</code>), <code>Inst.isGather</code> and
+<code>Inst.isBatching</code> (in <code>runMonads</code>), and <code>Monad.halted</code>. A per-object instruction is one that is neither initial nor
+batching, and the machine splits a monad into one monad per object before it. The predicates <code>isMap</code>, <code>isFilter</code>,
+<code>isFlatMap</code> and <code>isScatter</code> classify only a per-object instruction's form (<code>Inst.Form</code>). The end \(\dashv\) is marked by
+the <code>noobj</code> instruction, which the machine never applies. Another instruction of range \(\{0\}\), such as <code>sys/close</code>,
+is applied like any other.</p>
+<h2>Monads and Their States</h2>
+<p>::: <strong>Definition 9</strong> (States). A monad \(x \otimes j\) is <em>halted</em> when \(j = \dashv\), <em>waiting</em> when the instruction at
+\(j\) is a gather, and <em>running</em> otherwise. A monad whose data counter is <code>noobj</code> is <em>dead</em>.
+:::</p>
+<p>::: <strong>Proposition 1</strong> (A dead monad is zero). For every position \(j\), \(0 \otimes j = 0\).
+:::</p>
+<p>::: <em>Proof.</em> Bilinearity (Definition 3). ◻
+:::</p>
+<p>A linear instruction leaves a dead monad dead: it gives nothing from nothing, so a sum ignores it. A filter that
+rejects its object gives the empty stream, \(f_i(x) = 0\), and the monad it would have made is zero.</p>
+<p><strong>Live proof.</strong> A filter keeps 2 and 3, and the monad that held 1 is gone.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3}.is(gt(1))
+==&gt;3
+==&gt;2
+</code></pre>
+<p>The machine also walks a dead monad into its next instruction when that instruction's domain admits zero, and applies
+the instruction to the empty stream. That is how an initial instruction gives its seed, and for a linear instruction
+it gives nothing. For an affine instruction it gives something, once for every dead monad, but the frontier does not
+record how many monads died: in the monad space, every one of them is \(0\). The results below that rest on linearity
+therefore concern code whose per-object instructions are linear.</p>
+<p>In metatron, <code>BasicSwarmComputer.resolve</code> makes one dead monad at each initial instruction. So <code>s.p</code>, which runs as
+<code>start(s).p</code>, begins with a dead monad that <code>start</code> turns into \(s\). A dead monad that walks on is a zombie
+(<code>Monad.zombie</code>). <code>Processor.Helper.invoke</code> answers <code>noobj</code> for an empty input unless the instruction's domain admits
+zero, and <code>map</code> and <code>branch</code> declare the domain \(\{?\}\), which does.</p>
+<p>::: <strong>Proposition 2</strong> (Bulking collects like terms). Two monads bulk exactly when they are one basis element
+\(x \otimes j\), and bulking adds their points, \(c\,(x \otimes j) + d\,(x \otimes j) = (c + d)\,(x \otimes j)\).
+Bulking never changes a frontier as an element of the monad space.
+:::</p>
+<p>::: <em>Proof.</em> The basis of the monad space is the pairs \((x, j)\), and a sum of equal basis elements is their
+coefficient sum (Definition 2). ◻
+:::</p>
+<p>Bulking is a choice of representation. The machine may hold \(c\,(x \otimes j)\) as one monad or as \(c\) monads, and both
+are the same element. Holding it as one is what keeps a frontier small <a href="#references">[5]</a>. Proposition 2 is the bulk
+axiom of <a href="./stream-ring-theory.html">[1]</a>, \(\langle cx, dx \rangle = \langle (c+d)x \rangle\), and the first law of points
+in <a href="./span-and-point-coefficient-algebra.html">[2]</a>, \(ca + da = (c + d)a\), read in the monad space.</p>
+<p><strong>Live proof.</strong> Four monads become two, since 1 and 3 have one remainder modulo 2, and 2 and 4 another.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.mod(2)
+==&gt;{2}1
+==&gt;{2}0
+</code></pre>
+<p>In metatron, a monad is the list <code>[obj, inst, state, code]</code> (<code>StatefulMonad</code>). <code>Monad.halted()</code> holds when its
+instruction is the <code>noobj</code> end, and <code>Monad.dead()</code> when its object is <code>noobj</code>. Two monads are equal terms when their
+components, coefficients included, are equal (<code>Monad.Helpers.monadEquals</code>); the state is the subject of <em>Species of
+Monads</em>. The basis element is the object with its span and without its point: <code>MObjs.attemptBulk</code> keys a stream's
+members on the object with its point set to one, a spanned object keeping its span, and adds their points, which is
+Proposition 2. The machine collects like terms when it builds a stream with <code>objs(...)</code>, and the halted result is
+built that way. Its running list (<code>ListMonad</code>) and a barrier's slice, which grows by <code>append</code> and bulks only past
+<code>MObjs.BULK_TRIGGER</code> members, may hold
+like terms uncollected, and that is the same frontier.</p>
+<h2>The Step</h2>
+<p>::: <strong>Definition 10</strong> (Step). Let every instruction of a code \(p = i_1 \cdots i_k\) other than its gathers be
+per-object. The <em>step</em> of \(p\) sends a running monad \(x \otimes j\) to
+\[
+\begin{equation*}
+T(x \otimes j) = f_{i_j}(x) \otimes \nu(j),
+\end{equation*}
+\]
+fixes every halted and every waiting monad, and extends to a frontier linearly.
+:::</p>
+<p>The instruction moves the data counter, \(x \mapsto f_{i_j}(x)\), and the code moves the program counter,
+\(j \mapsto \nu(j)\). The step is the sum of the two moves tensored together,
+\[
+\begin{equation*}
+T \;=\; \sum_{j \,\text{running}} \rho(i_j) \otimes E_{\nu(j)\,j}
+\;+\; \mathrm{id}_M \otimes \Big(E_{\dashv\,\dashv} + \sum_{b \,\text{gather}} E_{b\,b}\Big),
+\end{equation*}
+\]
+where \(E_{j'j}\) sends position \(j\) to \(j'\) and every other position to zero.</p>
+<p>::: <strong>Proposition 3</strong> (The step is linear). For a code as in Definition 10, \(T\) is \(R\)-linear on the monad space. In
+particular \(T\big(c\,(x \otimes j)\big) = c\,T(x \otimes j)\): the point of a bulked monad rides through its step.
+:::</p>
+<p>::: <em>Proof.</em> \(T\) is a sum of tensor products of linear maps. ◻
+:::</p>
+<p><strong>Live proof.</strong> Two 3s give two 4s, and the point rides along. A point on the instruction multiplies in, as points
+multiply along a chain <a href="./span-and-point-coefficient-algebra.html">[2]</a>: three lanes of \(+1\) on two 3s give six 4s.</p>
+<pre><code class="language-mtron">mtron&gt; {2}3.plus(1)
+==&gt;{2}4
+mtron&gt; {2}3.plus{3}(1)
+==&gt;{6}4
+</code></pre>
+<p>In metatron, <code>StatefulMonad.next(obj)</code> returns <code>[obj, code.nextInst(inst), state, code]</code>: the data counter set to the
+instruction's output, and the program counter set to the code's next instruction. <code>BasicSwarmComputer.split</code> hands a
+bulked monad to its instruction unsplit when its object is one repeated value and the instruction takes one object at
+a time. <code>Processor.Helper.invoke</code> then applies the instruction to one copy and multiplies the count back, so the step is
+taken once, as Proposition 3 permits. A monad that holds a stream of distinct objects is split first.</p>
+<h2>Evaluation</h2>
+<p>A step moves one instruction from the code onto the data. To say so exactly, read the code as an element of a ring.</p>
+<p>::: <strong>Definition 11</strong> (Code ring). Let \(I_1\) be the per-object instructions. The <em>code ring</em> \(F = R\langle I_1 \rangle\)
+is the free algebra on them: sums of instruction words with coefficients, multiplied by concatenation. Its unity \(1\) is
+the empty word.
+:::</p>
+<p>Under the action below, \(F\) maps into the ring of stream functions of <a href="./stream-ring-theory.html">[1]</a>, where the
+relations among instructions live. \(F\) itself has none: it is the syntax of programs.</p>
+<p>\(F\) is generated by the per-object instructions because that is where the code is a ring. With its reduce functions the
+code is only a near-ring, by Lemma 1 and Theorem 18 of <a href="./stream-ring-theory.html">[1]</a>: \((a + b)\,c \neq ac + bc\) when
+\(c\) reduces, as the left side reduces one merged stream and the right side two. The flatmap functions, maps and filters
+among them, are closed under both operations, and they are the per-object instructions of Definition 8.</p>
+<p>Both coefficients of an instruction are already in \(F\) <a href="./span-and-point-coefficient-algebra.html">[2]</a>. A point is a
+scalar, <code>a{c}</code> being \(c\,a\), and a span is a power, <code>{n}a</code> being \(a^n\) and <code>{m,n}a</code> the sum \(a^m + \cdots + a^n\). So
+<code>{n}a{c}</code> is \(c\,a^n\): the point iterates the \(+\) of \(F\), and the span its \(\cdot\). A spanned instruction holds one
+position, and the machine walks its run when it applies it <a href="./span-and-point-coefficient-algebra.html">[2]</a>, so one step
+moves the whole word \(a^n\) across the tensor sign.</p>
+<p><strong>Live proof.</strong> Five steps of \(+1\) from 0 are one instruction, and three lanes of the run \(+34\), \(+34\) from 1 land on
+69 three times.</p>
+<pre><code class="language-mtron">mtron&gt; 0.{5}plus(1)
+==&gt;5
+mtron&gt; 1.{2}plus{3}(34)
+==&gt;{3}69
+</code></pre>
+<p>::: <strong>Proposition 4</strong> (Data is a module over code). Setting \(x \cdot i = \rho(i)(x)\) for each per-object instruction
+\(i\), and extending by
+\[
+\begin{equation*}
+x \cdot (i_1\,i_2 \cdots i_k) = \Big(\big((x \cdot i_1) \cdot i_2\big) \cdots\Big) \cdot i_k,
+\qquad
+x \cdot (w + w') = x \cdot w + x \cdot w',
+\end{equation*}
+\]
+makes \(M\) a right \(F\)-module.
+:::</p>
+<p>::: <em>Proof.</em> \(F\) is free on \(I_1\), so an assignment of a linear map to each instruction extends uniquely to words, by
+composition in their order, and to sums, by addition <a href="#references">[8]</a>. ◻
+:::</p>
+<p>A program applied to data is the module action, so the mtron expression <code>s.p</code> is \(s \cdot p\). The action is on the
+right because mtron reads a code from left to right, and its first instruction acts first. This answers, in part, the
+module of data over code that <a href="./ring-theoretic-distributed-structures.html">[4]</a> asks for in its mirror of distributed
+computing: here a program acts on data through its per-object instructions, and the gathers of <em>Barriers</em> act outside
+the module.</p>
+<p>A <em>branch</em> is an instruction whose members are code. When its members are code of per-object instructions, it is
+per-object, and its action is the sum of its members' actions,
+\(\rho\big(\mathrm{branch}(p_1, \ldots, p_n)\big) = \rho(p_1) + \cdots + \rho(p_n)\), the \(+\) of \(F\) acting on data. Its
+domain is \(\{?\}\), so it is applied to the empty stream as well, and a branch of linear members is linear. A branch
+feeds its members one object at a time, so a member that gathers folds each object alone: there is no nested reduce
+function (Proposition 1 of <a href="./stream-ring-theory.html">[1]</a>).</p>
+<p><strong>Live proof.</strong> The two members of a branch take 1 to 2 by different routes, and their monads meet as one basis
+element.</p>
+<pre><code class="language-mtron">mtron&gt; 1.branch(plus(1),mult(2))
+==&gt;{2}2
+</code></pre>
+<p>::: <strong>Definition 12</strong> (Remainder and evaluation). For a code of per-object instructions, the <em>remainder</em> of position
+\(j\) is the word the program counter has left to run, \(w_j = i_j\,i_{j+1} \cdots i_k \in F\), with \(w_\dashv = 1\). The
+<em>evaluation</em> of a monad is \(\mathrm{ev}(x \otimes j) = x \cdot w_j\), extended linearly.
+:::</p>
+<p>::: <strong>Theorem 1</strong> (The step preserves evaluation). For a code of linear per-object instructions,
+\(\mathrm{ev} \circ T = \mathrm{ev}\), and \(\mathrm{ev}(x \otimes \dashv) = x\).
+:::</p>
+<p>::: <em>Proof.</em> For a running monad,
+\[
+\begin{equation*}
+\begin{array}{lclll}
+\mathrm{ev}\big(T(x \otimes j)\big) &amp;=&amp; \mathrm{ev}\big(f_{i_j}(x) \otimes \nu(j)\big) &amp;&amp; [\text{Definition 10}] \\
+&amp;=&amp; (x \cdot i_j) \cdot w_{\nu(j)} &amp;&amp; [\text{Definition 12}] \\
+&amp;=&amp; x \cdot (i_j\,w_{\nu(j)}) &amp;&amp; [\text{Proposition 4}] \\
+&amp;=&amp; x \cdot w_j &amp;&amp; [w_j = i_j\,w_{\nu(j)}].
+\end{array}
+\end{equation*}
+\]
+For a halted monad, \(T\) is the identity and \(w_\dashv = 1\). Both sides are linear, so the equation holds on every
+frontier. ◻
+:::</p>
+<p>::: <strong>Theorem 2</strong> (The machine computes \(M \otimes_F F \cong M\)). Let \(p\) be a code of linear per-object
+instructions, and send a monad \(x \otimes j\) to \(x \otimes w_j\) in \(M \otimes_F F\). A step is then the balancing
+relation of Definition 4, applied to the first letter of the remainder,
+\[
+\begin{equation*}
+x \otimes \big(i_j\,w_{\nu(j)}\big) = \big(x \cdot i_j\big) \otimes w_{\nu(j)},
+\end{equation*}
+\]
+so every frontier of a computation of \(s\) under \(p\) is sent to the same element, \(s \otimes p\). A halted frontier is
+sent to \((s \cdot p) \otimes 1\), and its data is the image of \(s \otimes p\) under \(M \otimes_F F \cong M\): the result
+is \(s \cdot p\).
+:::</p>
+<p>::: <em>Proof.</em> The displayed equation is Definition 4 with \(f = i_j\), read through Definitions 10 and 12, since
+\(w_j = i_j\,w_{\nu(j)}\). By Theorem 1, the evaluation of the frontier is the same at every step. At a halted frontier
+every remainder is \(1\), and \(m \otimes 1\) is the image of \(m\). ◻
+:::</p>
+<p>The machine computes nothing the algebra does not already say. It moves instructions across the tensor sign, one per
+step, until every remainder is the unity, and then the data is the answer.</p>
+<h2>The Result</h2>
+<p>::: <strong>Definition 13</strong> (Result). The <em>result</em> of a halted frontier \(\sum c\,(x \otimes \dashv)\) is its data,
+\(\sum c\,x \in M\), the image under the isomorphism \(M \otimes_R R\dashv \cong M\) that sends \(x \otimes \dashv\) to \(x\).
+:::</p>
+<p>A halted monad is its object. Once the program counter reaches the end, the program factor has one dimension, and the
+tensor with it is the object itself. A halted frontier holds a single position, so only its data counters can differ,
+and two monads that reach the same object bulk however they got there. A barrier's slice has the same shape (Definition
+17).</p>
+<p><strong>Live proof.</strong> A chain of two maps halts at three objects.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3}.plus(1).mult(2)
+==&gt;4
+==&gt;8
+==&gt;6
+</code></pre>
+<p>In metatron, a halted monad's objects are handed to the computer's halt hook (<code>BasicSwarmComputer.makeOnHalt</code>), which
+appends them to the halted pool. The result is <code>objs(halted)</code>, which bulks as it is built.</p>
+<h2>Species of Monads</h2>
+<p>A monad may carry more than its two counters: a record of its walk, or a loop counter. Each adds a factor to the monad
+space, and with it a coordinate that two monads must share to bulk.</p>
+<p>::: <strong>Definition 14</strong> (State). A <em>state space</em> is a set \(S\), and a <em>stateful</em> monad is a basis element
+\(x \otimes j \otimes \sigma\) of \(M \otimes_R N \otimes_R R[S]\). The step acts on the state by a rule of its own,
+\(T(x \otimes j \otimes \sigma) = \sum_y c_y\,\big(y \otimes \nu(j) \otimes \sigma_y\big)\) when
+\(f_{i_j}(x) = \sum_y c_y\,y\).
+:::</p>
+<p>::: <strong>Definition 15</strong> (Walks). A <em>walk</em> is the word of objects that a monad's data counter has held,
+\(x_0\,x_1 \cdots x_t\). The <em>walk algebra</em> is the free algebra \(R\langle X \rangle\). A <em>path-tracking</em> monad carries its
+walk as its state, and each step extends the walk by the new data counter: \(\sigma_y = \sigma \cdot y\).
+:::</p>
+<p>The walk algebra is a free algebra again. It records everything, and two walks are equal only when they are the same
+word. A stateless monad is its quotient. A walk is a whole object thread of <a href="./stream-ring-theory.html">[1]</a>, its
+<em>mutation history</em> \(\Delta\) followed by its datum: a map takes \((x, \Delta)\) to \((a(x), \Delta \uplus x)\), and a reducer
+resets the history. There a filter leaves the history as it is, where Definition 15 extends the walk at every step.</p>
+<p>::: <strong>Proposition 5</strong> (A stateless monad is a walk of length one). Dropping the state, $x \otimes j \otimes \sigma
+\mapsto x \otimes j$, is a linear surjection of the stateful monad space onto the stateless one, and it commutes with
+the step. The last object of a monad's walk is its data counter, so a stateless monad remembers its walk only as far
+as its current object.
+:::</p>
+<p>::: <em>Proof.</em> The map is \(\mathrm{id} \otimes \mathrm{id} \otimes \varepsilon\), where \(\varepsilon : R[S] \to R\) sends
+every state to \(1\), so it is linear and onto. Both ways round, \(x \otimes j \otimes \sigma\) is sent to
+\(\sum_y c_y\,\big(y \otimes \nu(j)\big)\). ◻
+:::</p>
+<p>The species form a chain of quotients, and bulking grows down the chain. Two path-tracking monads bulk only when their
+walks agree, while two stateless monads bulk whenever their current object and position agree.</p>
+<p><strong>Live proof.</strong> From 1 and 3, the walks through \(+1\) and then \(\bmod\, 2\) end at the same 0, so the two stateless
+monads bulk. Their walks, \(1\,2\,0\) and \(3\,4\,0\), differ, so two path-tracking monads would stay apart.</p>
+<pre><code class="language-mtron">mtron&gt; {1,3}.plus(1).mod(2)
+==&gt;{2}0
+</code></pre>
+<p>[To be shown: the path-tracking run, once <code>path()</code> carries the walk of Definition 15.]</p>
+<p>In metatron, a monad's state is a record, <code>StatefulMonad.state()</code>, and a loop counter is <code>state/loop</code>. Path tracking,
+<code>state/path</code>, does not yet carry the walk of Definition 15.</p>
+<h2>Barriers</h2>
+<p>A per-object instruction never needs to see more than one monad. A gather needs every monad that reaches it, and the
+machine makes that possible by treating a stream as an object.</p>
+<p>::: <strong>Definition 16</strong> (Streams are objects). A stream is itself an object: there is a map \(\alpha : M \to X\), with
+\(\alpha(x) = x\) for a nonempty object \(x\) and \(\alpha(0) = \mathtt{noobj}\), so a single object is the stream that holds
+it once and the empty stream is <code>noobj</code>. A stream of streams is its members:
+\[
+\begin{equation*}
+\alpha\Big(\sum_s c_s\,\alpha(s)\Big) = \alpha\Big(\sum_s c_s\,s\Big).
+\end{equation*}
+\]
+:::</p>
+<p>These two laws make \(\alpha\) an algebra, in the sense of Eilenberg and Moore, for the monad that sends a pointed set to
+the free module on its points other than the base point <a href="#references">[9,10]</a>. The algebras of that monad are the
+\(R\)-modules, abelian groups when \(R\) is the integers. metatron states the second law as &quot;there is no nested stream&quot;.
+Because a stream is an object, every instruction is a total function on streams. A per-object instruction is fixed by
+its values on single objects, and a gather may be any total function.</p>
+<p>::: <strong>Definition 17</strong> (Slice). For a gather at position \(b\), the <em>slice</em> of a frontier at \(b\) is its component there,
+\(m_b \otimes b\) with \(m_b \in M\).
+:::</p>
+<p>A slice is a pure tensor. Every monad that reaches \(b\) shares the program counter \(b\), so a slice is one stream
+tensored with one position, and only data counters can differ.</p>
+<p>::: <strong>Theorem 3</strong> (Why a barrier waits). A gather's value on a slice may depend on the whole slice, so the machine
+applies it when the slice is complete: when no running monad can still reach it. Let the gather be a fold, whose
+answer is \(\varphi_b(m_b)\) for a map \(\varphi_b\) into a commutative monoid \(\langle A, \oplus \rangle\). If
+\(\varphi_b(m + m') = \varphi_b(m) \oplus \varphi_b(m')\), the slice may be folded as its monads arrive, and the barrier
+waits only to emit.
+:::</p>
+<p>::: <em>Proof.</em> A monad that reaches \(b\) after the gather is applied adds a term to \(m_b\), and \(G_b(m_b + m)\) need not be
+a function of \(G_b(m_b)\) and \(m\): the streams \(\{1, 2\}\) and \(\{0, 3\}\) have the same median, \(1.5\), but with a \(3\)
+added their medians are \(2\) and \(3\). For an additive fold, \(\varphi_b(m_b + m) = \varphi_b(m_b) \oplus \varphi_b(m)\),
+so the barrier may hold the fold of the monads that have arrived and add each arrival to it, and only the answer waits
+for the slice to be complete. A map on single objects into a commutative monoid extends uniquely to such a
+homomorphism on slices with natural coefficients, by the universal property of the free commutative monoid
+\(\mathbb{N}[X]\). A slice with negative coefficients needs \(\langle A, \oplus \rangle\) to be an abelian group, by the
+universal property of \(\mathbb{Z}[X]\) <a href="#references">[9]</a>. ◻
+:::</p>
+<p>The first half of Theorem 3 is Theorem 16 of <a href="./stream-ring-theory.html">[1]</a>, <em>reduce functions are temporal</em>: every
+function before a reducer is applied, and its streams merged, before the reducer reads its input. The second half is
+the license that <code>law_shard</code> reads in <a href="./ring-theoretic-distributed-computing.html">[3]</a>: a fold that declares a
+commutative monoid can be pushed into the branches of its input. There it follows from Theorem 19 of
+<a href="./stream-ring-theory.html">[1]</a>, and here from the universal property that makes the fold a homomorphism.</p>
+<p>::: <strong>Definition 18</strong> (Drain). When no monad is running, the machine drains the barriers in code order. <em>Draining</em> the
+barrier at \(b\) replaces its slice with the gather's output at the next position, and the monads it makes start with an
+empty state: \(m_b \otimes b \mapsto G_b(m_b) \otimes \nu(b)\). A barrier is drained even when its slice is empty, so a
+seeded fold of nothing gives its seed, \(G_b(0)\), while a gather whose domain is \(\{+\}\) gives nothing. The instruction
+at \(\nu(b)\) decides the shape of the output: a gather takes it into its own slice, a batching instruction takes it as
+one monad, and any other instruction takes one monad per object, a <em>scatter</em>.
+:::</p>
+<p>::: <strong>Theorem 4</strong> (Strata). Let a code without loops hold gathers at positions \(b_1 &lt; \cdots &lt; b_m\), with every other
+instruction per-object and linear, and let \(L\) run the step until no monad is running. A computation of \(s\) is the
+composite
+\[
+\begin{equation*}
+s \;\mapsto\; L\Big(D_{b_m}\big(\cdots L\big(D_{b_1}\big(L(s \otimes 1)\big)\big) \cdots\big)\Big),
+\end{equation*}
+\]
+where \(D_b\) drains the barrier at \(b\). Each \(L\) is a power of \(T\), so it is linear (Proposition 3), and only the
+drains may be non-linear.
+:::</p>
+<p>::: <em>Proof.</em> \(T\) fixes halted and waiting monads, and every step moves a running monad's program counter forward, so in
+a code without loops no monad is running after at most \(k\) steps; \(L\) is that power of \(T\). Every monad is then halted
+or waiting at a barrier not yet drained, and program counters only move forward, so nothing can still reach the first
+of those barriers: its slice is complete, as Theorem 3 requires. The machine drains it and runs the step again. ◻
+:::</p>
+<p>A computation alternates linear phases with barrier drains. The linear phases need no coordination, since a linear
+map splits over any division of its input, and the drains are where the computation synchronizes: the cuts of
+<a href="./ring-theoretic-distributed-computing.html">[3]</a>. Stratified Datalog evaluates negation stratum by stratum in the same
+way <a href="#references">[11]</a>, and the supersteps of bulk synchronous parallel computation are strata
+<a href="#references">[12]</a>.</p>
+<p><strong>Live proof.</strong> A sum drains once, after its stream is complete. A count of three objects is 3, and a single object is
+the stream that holds it once, so its count is 1. A sort drains its stream to one list, and the merge after it
+scatters the list back into monads.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3}.plus(1).sum()
+==&gt;9
+mtron&gt; {1,1,2}.count()
+==&gt;3
+mtron&gt; 5.count()
+==&gt;1
+mtron&gt; {3,1,2}.order().merge()
+==&gt;1
+==&gt;2
+==&gt;3
+</code></pre>
+<p>In metatron, <code>BasicSwarmComputer.resolve</code> creates one barrier monad per gather, in code order, each holding an empty
+stream. An arriving monad appends its object to the first barrier's stream, and a dead one appends <code>noobj</code>, which
+changes nothing. When the running list is empty, the first barrier is taken and its instruction applied to its stream,
+empty or not. The output goes to the next barrier, into one monad, or scattered, by <code>Inst.isGather</code> and
+<code>Inst.isBatching</code>.</p>
+<h2>The Machine</h2>
+<p>The four parts assemble into the loop <code>BasicSwarmComputer</code> runs.</p>
+<ol>
+<li><strong>Start.</strong> Make an empty slice at every gather, and a dead monad at every initial instruction, which that
+instruction turns into its seed. A code with no initial instruction is seeded with the start, \(s \otimes 1\).</li>
+<li><strong>Step.</strong> While some monad is running, step one (Definition 10) and route each of its successors by its position:
+into its barrier's slice at a gather, to the halted frontier at \(\dashv\), and back to the running frontier
+otherwise. A dead successor vanishes, unless its next instruction's domain admits zero, and then it walks on.</li>
+<li><strong>Drain.</strong> When no monad is running and a barrier remains, drain the first one (Definition 18), even if its slice
+is empty, and return to the step.</li>
+<li><strong>Result.</strong> When neither remains, the result is the data of the halted frontier (Definition 13).</li>
+</ol>
+<p>A code without loops halts: every step moves a running monad's program counter forward. A loop revisits positions,
+and then the run is a sum of powers of the step, as a span range is a sum of powers of its instruction. It halts when
+the loop's frontier empties, as the walk of a span halts where its run leaves the domain
+<a href="./span-and-point-coefficient-algebra.html">[2]</a>.</p>
+<p>In metatron, the loop is <code>BasicSwarmComputer.runMonads</code>. It also counts failed monads and stops after ten, an
+engineering bound that lies outside this algebra.</p>
+<h2>A Rosetta Stone</h2>
+<p>The machine restates the stream ring theory of <a href="./stream-ring-theory.html">[1]</a> in the language of modules, and metatron
+runs both. The table sets the three scripts side by side: an axiom or theorem of stream ring theory, the definition or
+result of this article that states it for the machine, and the name metatron gives it.</p>
+<table>
+<thead>
+<tr><th>Stream ring theory <a href="./stream-ring-theory.html">[1]</a></th><th>The \(M \otimes_R N\) machine</th><th>metatron</th></tr>
+</thead>
+<tbody>
+<tr><td>the coefficient ring \(\mathcal{C}\), any ring with unity (Def. 2)</td><td>\(R\), the point coefficients, taken commutative (Def. 5)</td><td>a point, <code>{c}x</code></td></tr>
+<tr><td>a stream \(\langle x, y, z \rangle\), unordered (Def. 1)</td><td>an element of the data module \(M\) (Def. 5)</td><td>a stream, <code>{x,y,z}</code></td></tr>
+<tr><td>the bulk axiom, \(\langle cx, dx \rangle = \langle (c+d)x \rangle\)</td><td>bulking collects like terms (Prop. 2)</td><td><code>MObjs.attemptBulk</code></td></tr>
+<tr><td>\(\langle 0x \rangle = \langle c\emptyset \rangle = \langle\rangle\)</td><td>\(M = R[X]/(\mathtt{noobj})\), and a dead monad is \(0\) (Prop. 1)</td><td><code>noobj</code></td></tr>
+<tr><td>the merge axiom, \(\langle cx \rangle + \langle dy \rangle = \langle cx, dy \rangle\)</td><td>the addition of \(M\)</td><td>the union of streams</td></tr>
+<tr><td>the apply axiom, \(\langle cx \rangle da = \langle (c \cdot d)\,a(x) \rangle\)</td><td>the step, whose point rides through it (Def. 10, Prop. 3)</td><td><code>Processor.Helper.invoke</code></td></tr>
+<tr><td>the split axiom, \(\langle cx \rangle (da + eb) = \langle cx \rangle da + \langle cx \rangle eb\)</td><td>\(x \cdot (w + w') = x \cdot w + x \cdot w'\) (Prop. 4)</td><td><code>branch</code></td></tr>
+<tr><td>a stream's tail and head functions, which write and read it (Def. 1)</td><td>the instructions on either side of a stream: each writes the stream after it and reads the one before (Defs. 6, 8)</td><td>an instruction's <code>rng</code> and <code>dom</code></td></tr>
+<tr><td>the function ring \(\langle \mathcal{F}, +, \cdot \rangle\) (Theorem 3)</td><td>what the code ring \(F = R\langle I_1 \rangle\) maps into (Def. 11)</td><td><code>code::T</code></td></tr>
+<tr><td>\(\langle x \rangle a\), a stream before its function</td><td>a right module of data over code, \(s \cdot p\) (Prop. 4)</td><td><code>s.p</code></td></tr>
+<tr><td>streams are atemporal (Theorem 5)</td><td>the step is linear, so bulking may come before or after it (Props. 2, 3)</td><td>any running order</td></tr>
+<tr><td>the floating coefficient, \(ca = a \cdot c\) (Theorem 6)</td><td>bilinearity, \((cx) \otimes j = x \otimes (cj)\) (Def. 3)</td><td><code>Inst.Form.isFloatable()</code></td></tr>
+<tr><td>left and right factors over a non-commutative \(\mathcal{C}\) (Corollary 2)</td><td>the balanced tensor product (Def. 4)</td><td>—</td></tr>
+<tr><td>the map, filter and flatmap rings</td><td>the per-object instructions, \(f_i : X \to M\) (Def. 8)</td><td><code>Inst.Form</code></td></tr>
+<tr><td>the reduce near-ring, not right distributive (Lemma 1, Theorem 18)</td><td>a gather whose range is one, outside \(F\) (Defs. 8, 11)</td><td><code>Inst.isReducing</code></td></tr>
+<tr><td>the barrier near-ring, \(X^* \to Y^*\)</td><td>a gather, \(G_b : M \to M\) (Def. 8)</td><td><code>Inst.isGather</code></td></tr>
+<tr><td>a reducer drains the stream before it</td><td>the drain (Def. 18)</td><td>a barrier monad</td></tr>
+<tr><td>reduce functions are temporal (Theorem 16)</td><td>why a barrier waits (Theorem 3)</td><td>barriers drain when nothing runs</td></tr>
+<tr><td>coefficients do not float past a reducer (Theorem 17)</td><td>only the drains are non-linear (Theorem 4)</td><td><code>Inst.Form.isBlocked()</code></td></tr>
+<tr><td>monoidic reducers are semi-right distributive (Theorem 19)</td><td>a commutative-monoid fold is a homomorphism (Theorem 3)</td><td><code>law_shard</code></td></tr>
+<tr><td>there is no nested reducer (Proposition 1)</td><td>a branch feeds its members one object at a time (Evaluation)</td><td>members fold per object</td></tr>
+<tr><td>an object thread, which a reducer resets (Def. 7)</td><td>a drained monad starts with an empty state (Def. 18)</td><td>the monad's <code>state</code></td></tr>
+<tr><td>an object thread, a mutation history and its datum, \((a(x), \Delta \uplus x)\)</td><td>a walk, \(x_0 x_1 \cdots x_t \in R\langle X \rangle\) (Def. 15)</td><td><code>path()</code></td></tr>
+<tr><td>a loop counter, \((x, i)\)</td><td>a state factor, \(R[S]\) (Def. 14)</td><td><code>state/loop</code></td></tr>
+<tr><td>a sack, merged by an operator</td><td>no tensor factor, as a point would pass into the state (open)</td><td>—</td></tr>
+<tr><td>repetition, \((\bar{a} + ab)^\infty\)</td><td>a loop, a sum of powers of the step (The Machine)</td><td><code>repeat</code>, a <code>{*}</code> span</td></tr>
+<tr><td>matrix coefficients in \(\mathbb{C}^{2 \times 2}\), bulking as interference</td><td>complex points with a coin, \(\mathbb{C}[X] \otimes \mathbb{C}^2\) (Conclusion)</td><td>—</td></tr>
+<tr><td>Turing completeness (Theorem 25)</td><td>the machine with loops and state</td><td>—</td></tr>
+</tbody>
+</table>
+<h2>Conclusion</h2>
+<p><strong>NOTES</strong>:</p>
+<ul>
+<li>A monad is a basis element of \(M \otimes_R N\): an object tensored with an instruction position. Bulking adds the
+points of like terms, a dead monad is zero by bilinearity, and a halted monad is its object.</li>
+<li>The step tensors the instruction's move of the data counter with the code's move of the program counter. For linear
+instructions it is linear, and the point of a bulked monad rides through it.</li>
+<li>The data module is a right module over the code ring of per-object instructions. Between barriers, a computation
+moves instructions across the tensor sign, one per step, and computes the canonical isomorphism
+\(M \otimes_F F \cong M\); its result is \(s \cdot p\).</li>
+<li>metatron's two coefficients sit in the two rings. The point is the scalar of data and of code, which bulking adds and
+a step multiplies. The span is a power in the code ring, a run the machine walks in one step, and on a value it is
+part of the object.</li>
+<li>An instruction that gives something from nothing is affine. The machine applies it by walking dead monads, and the
+module does not record how many died; that is where the machine and its algebra part.</li>
+<li>State adds tensor factors. Walks form a free algebra, and a stateless monad is its quotient, a walk of length one.
+Bulking grows as the state is forgotten.</li>
+<li>A stream is an object, by the algebra laws of the free-module monad, so every instruction is a total function on
+streams. A per-object instruction is fixed by its values on single objects, and a gather need not be linear.</li>
+<li>A barrier waits because a gather may need its whole slice. A fold into a commutative monoid is a homomorphism, on
+slices with natural coefficients or into an abelian group, so it may fold on arrival and across machines. A
+computation is a sequence of strata: linear phases separated by drains.</li>
+<li>The point coefficients are a parameter of the algebra. The machine's are the integers, and with them it counts; over
+other rings the same algebra weighs or interferes, and with complex points and unitary steps it is the quantum walk
+of <a href="#references">[6]</a>. <a href="./stream-ring-theory.html">[1]</a> carries that walk's coin in a \(\mathbb{C}^{2 \times 2}\)
+coefficient, where bulking is interference.</li>
+<li>Open, from the <em>sacks</em> of <a href="./stream-ring-theory.html">[1]</a>: objects that bulk merge their sacks with an operator, each
+keeping its coefficient apart from its sack. That is no tensor factor: in \(M \otimes N \otimes A\) a point passes into
+the state, \(c\,(x \otimes j \otimes \sigma) = x \otimes j \otimes (c\sigma)\), which is right for a coin's amplitudes
+and wrong for a sack. A sack merge keeps the count and the state apart: a species still to be stated.</li>
+</ul>
+<h2>References</h2>
+<ol>
+<li>Rodriguez, M.A., &quot;<a href="./stream-ring-theory.html">Stream Ring Theory</a>,&quot; S/V Red Herring's Ship's Log: Chronicles in the Sea
+of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.</li>
+<li>Rodriguez, M.A., Dr. Stynx,
+&quot;<a href="./span-and-point-coefficient-algebra.html">A Span and Point Coefficient Algebra for Stream Rings</a>.&quot;</li>
+<li>Rodriguez, M.A., Dr. Stynx, &quot;<a href="./ring-theoretic-distributed-computing.html">Ring Theoretic Distributed Computing</a>.&quot;</li>
+<li>Rodriguez, M.A., Dr. Stynx, &quot;<a href="./ring-theoretic-distributed-structures.html">Ring Theoretic Distributed Structures</a>.&quot;</li>
+<li>Rodriguez, M.A., &quot;The Gremlin Graph Traversal Machine and Language,&quot; Proceedings of the 15th Symposium on Database
+Programming Languages (DBPL), ACM, 2015.</li>
+<li>Rodriguez, M.A., Watkins, J.H., &quot;Quantum Walks with Gremlin,&quot; GraphDay, 2016. arXiv:1511.06278.</li>
+<li>Atiyah, M.F., Macdonald, I.G., &quot;Introduction to Commutative Algebra,&quot; Addison-Wesley, 1969.</li>
+<li>Lam, T.Y., &quot;Lectures on Modules and Rings,&quot; Graduate Texts in Mathematics 189, Springer, 1999.</li>
+<li>Mac Lane, S., &quot;Categories for the Working Mathematician,&quot; second edition, Graduate Texts in Mathematics 5,
+Springer, 1998.</li>
+<li>Eilenberg, S., Moore, J.C., &quot;Adjoint Functors and Triples,&quot; Illinois Journal of Mathematics 9(3), pages 381–398,
+1965.</li>
+<li>Apt, K.R., Blair, H.A., Walker, A., &quot;Towards a Theory of Declarative Knowledge,&quot; in Minker, J. (ed.), Foundations of
+Deductive Databases and Logic Programming, pages 89–148, Morgan Kaufmann, 1988.</li>
+<li>Valiant, L.G., &quot;A Bridging Model for Parallel Computation,&quot; Communications of the ACM 33(8), pages 103–111, 1990.</li>
+</ol>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="bi bi-envelope text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>
