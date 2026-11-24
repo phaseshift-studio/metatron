@@ -473,8 +473,17 @@ $a\{p\} = a\{p_1\} + a\{p_2\}$ with $p = p_1 + p_2$, so the places take even sha
 <!-- figure source: images/ring-theoretic-distributed-computing/fig-05.tex -->
 ![figure 7](images/ring-theoretic-distributed-computing/fig-05.svg)
 
-[To be written: the point's live example. Over places today a shipped lane loses its point, so the example waits on
-that fix.]
+The right half of the figure runs live with $x$ the seed `0`, $a$ the step `plus(1)`, and $r$ the fold `sum`:
+
+```mtron_pre
+0.plus{5}(1).sum()
+0.plus{5}(1).sum().explain()>>format
+```
+
+Both lanes again start from the same `0`, and each runs the one step with its share of the copies, `plus{3}(1)` at one
+place and `plus{2}(1)` at the other. A lane's copies answer as one object, `{3}1` or `{2}1`, which its `sum` folds to
+the partial `3` or `2`, and home sums the partials to `5`. The share is written into the lane as the point of its
+`plus`, so a place runs exactly the copies it was dealt.
 
 The same holds after a cut, where the object to copy is the fold's answer: the second `branch` in the chain of cuts
 above copies the `20` to both places and splits the span $[0,3]$ as $[0,2]$ and $[3,3]$.
