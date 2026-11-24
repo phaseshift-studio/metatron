@@ -841,10 +841,10 @@ public final class mInsts {
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(MERGE_INST_TID, "merge the slots of the lhs lst into an obj stream")
-                        // merge?A{*}<=lst[{**}A{*}]() (Marko, 2026-11-18): the A the lst's indices hold is the A it
-                        // hands on, so order(…).merge() over ints is an int stream and what follows it is typed. An
+                        // merge?A{*}<=lst[{**}A{*}](): the A the lst's indices hold is the A it hands on (Marko,
+                        // 2026-11-18), so order(…).merge() over ints is an int stream and what follows it is typed. An
                         // index holds ANY mass, a negative point too (Marko, 2026-11-24): [{2}5,{-2}5,7]>- is 7, the 5s
-                        // cancelling, where {*}, zero to unbounded, refused the anti-member. A bracket reads its entries
+                        // canceling, where {*}, zero to unbounded, refused the anti-member. A bracket reads its entries
                         // as values, {point}value{span} (Type#lstIndices), so the mass is the uri's leading b: {**}A{*}
                         // is A.maybeSome().b(ANY). THE RANGE STAYS A{*} (Marko, 2026-11-24, domain only): the binder
                         // binds a reducer's A{*} dom only from a coefficient within {*}, so under an A{**} range the sum
@@ -1534,7 +1534,8 @@ public final class mInsts {
                         .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\): the distinct members of the lhs, each once with its whole mass, sorted by the arg's projection of them. A projection that reads mass (cc()) sorts by it; such a sort ships no lane, since a shard parts each value's mass across its lanes, so the members come home and sort where every mass is whole")
                         .dom(A.maybeSome(), "maybe some A to sort")
                         // equal objs sort to one index as a point ({1.1,1.1}.order() is [{2}1.1]), so its indices take
-                        // any mass: lst[{*}A{*}], the left coefficient a bracket entry's mass (Marko, 2026-11-18)
+                        // a mass of zero or more: lst[{*}A{*}], the left coefficient a bracket entry's mass (Marko,
+                        // 2026-11-18). Not merge's {**}: a negative member is not ruled on here
                         .rng(LST_TID.poly(A.maybeSome().b(cInt.MAYBESOME())), "a sorted lst of the lhs A{*}")
                         .argLst(T(ALL.maybe()), "a projection of A to compare")
                         // BULK, THEN SORT (Marko, 2026-11-20): a stream bulks, and it has no nested streams

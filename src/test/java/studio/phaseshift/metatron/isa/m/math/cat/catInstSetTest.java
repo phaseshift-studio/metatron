@@ -1359,7 +1359,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.is(gt(1)).neg()         % # /m/int /m/int",
             "5.plus(1).is(gt(0)).plus(2).zero()   % # /m/int /m/int /m/int /m/int",
             "{1,2,3}.is(gt(1)).plus(2).zero()     % # /m/int /m/int /m/int",
-            // order's lst[{*}A{*}] binds A, and merge's A{*}<=lst[A{*}] reads it back: the objs merge unrolls are ints
+            // order's lst[{*}A{*}] binds A, and merge's A{*}<=lst[{**}A{*}] reads it back: the objs merge unrolls are ints
             "{1,2,3}.order().merge().plus(1)              % # /m/int /m/lst /m/int",
             "{1,2,3}.order(neg()).merge().plus(1).sum()   % # /m/int /m/lst /m/int /m/int",
     }, delimiter = '%')

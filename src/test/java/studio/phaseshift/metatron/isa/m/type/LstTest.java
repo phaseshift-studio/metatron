@@ -420,6 +420,10 @@ public class LstTest extends AbstractAlgebraTest {
             "[{2}5,{3}5,7].merge()                                               % {{5}5,7}",
             "[{2}5,{-2}5,7].merge()                                              % 7",
             "[{2}5,{-2}5,7]>-                                                    % 7",
+            // the A the lst binds reaches the reducer after it (two objs fold to one), and a total cancellation unrolls
+            // to nothing
+            "[{2}5,{-1}5,7]>-.sum()                                              % 12",
+            "[{2}5,{-2}5]>-                                                      % noobj",
             // the range stays A{*} (Marko, 2026-11-24, domain only), so a negative total is a range fail until stream
             // doms take {**}: an A{**} range left the reducer after a merge unbound ([1,2,3]>-.sum() folded per obj)
             // "[{-2}5].merge()                                                  % {-2}5",

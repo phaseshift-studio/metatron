@@ -1424,7 +1424,7 @@ public interface Inst extends Call {
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
             }
             // A VARIABLE A LST BRACKET NAMES binds to the type of the lhs's indices its run claims, read the way the
-            // bracket tests them (Lst.LstType.bindings): merge's A{*}<=lst[{*}A{*}] over order's lst[{*}int{*}] binds
+            // bracket tests them (Lst.LstType.bindings): merge's A{*}<=lst[{**}A{*}] over order's lst[{*}int{*}] binds
             // A to int, so the objs it unrolls are typed (Marko, 2026-11-18). A contradiction binds nothing here: the
             // domain gate is what refuses it
             if (!lhs.isNoObj() && apiInstTemp.tid().hasDom() && apiInstTemp.tid().dom().hasPoly()) {
