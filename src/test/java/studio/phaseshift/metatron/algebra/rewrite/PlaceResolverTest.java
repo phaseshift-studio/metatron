@@ -119,6 +119,16 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     private static final fURI MINE = f("loop://mantis:8555");
 
     /**
+     * Two good peers on ONE host, as harvest spawns them: their transports differ only by port.
+     */
+    private static final fURI PAIR_0 = f("loop://pair:1111");
+    private static final fURI PAIR_1 = f("loop://pair:1112");
+    /**
+     * A third peer on that host, serving {@code eval} with its link down.
+     */
+    private static final fURI PAIR_DOWN = f("loop://pair:1113");
+
+    /**
      * A roster row for a machine this one knows and has not dialed: nutmeg, at its one transport.
      */
     private static final Rec ROSTER = rec(uri("nutmeg"), objs(uri(SECOND)));
@@ -195,6 +205,39 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     public void testThePlaceSetResolves(final String written, final String expected) {
         assertEquals(null == expected ? "" : expected.trim(), rendered(PlaceResolver.resolve(places(written), universe())),
                 "resolving " + written);
+    }
+
+    /**
+     * AN ALIAS NAMES ITS AUTHORITY. harvest spawns its peers on one host and names each in the network's prefix table
+     * ({@code //0 => ws://localhost:1111}, {@code //1 => ws://localhost:1112}), so reading only the aligned host would
+     * hand {@code //0} every peer on it. A prefix row that states a port names that transport; a written
+     * {@code //host:port} is taken literally by the alignment, so it stays the host (the port is not a selector there),
+     * and an alias whose transport is down names nothing. Each row: the place set % its resolution, with {@code //p0},
+     * {@code //p1} and {@code //pdown} bound in the current machine's prefix table ({@code ~/network/prefix}) for the
+     * row.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "//p0              % loop://pair:1111{1}",
+            "//p1              % loop://pair:1112{1}",
+            "'[//p0,//p1]'     % loop://pair:1111{1}, loop://pair:1112{1}",
+            "//pdown           % ",
+            "//pair            % loop://pair:1111{1}, loop://pair:1112{1}",
+            "//pair:1111       % loop://pair:1111{1}, loop://pair:1112{1}",
+    }, delimiter = '%')
+    public void testAnAliasNamesItsAuthority(final String written, final String expected) {
+        final Map<fURI, fURI> aliases = Map.of(f("//p0"), PAIR_0, f("//p1"), PAIR_1, f("//pdown"), PAIR_DOWN);
+        aliases.forEach(Machine.current().network()::registerPrefix);
+        try {
+            assertEquals(null == expected ? "" : expected.trim(),
+                    rendered(PlaceResolver.resolve(places(written), env(Set.of(MINE), ROSTER,
+                            peer(PAIR_0, true, true, EVAL_INST_TID),
+                            peer(PAIR_1, true, true, EVAL_INST_TID),
+                            peer(PAIR_DOWN, true, false, EVAL_INST_TID)))),
+                    "resolving " + written);
+        } finally {
+            aliases.keySet().forEach(Machine.current().network()::unregisterPrefix);
+        }
     }
 
     /**

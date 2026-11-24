@@ -69,7 +69,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li><b>No frame paths</b> — {@link #address} selects on {@link fURI#host()} alone, and {@link #origin} strips the
  *       path and the query off a spelled authority. A place is a host and its authority; {@code //host/a/b} names the
  *       same place as {@code //host}, and the port is not a selector either ({@code //host:9999} resolves through the
- *       host's transports — {@code Places.place}'s own reading).</li>
+ *       host's transports — {@code Places.place}'s own reading). The one exception is an alias whose prefix row states
+ *       a port ({@code //0 => ws://localhost:1111}): it names that transport, since peers spawned on one host differ
+ *       only by port.</li>
  *   <li><b>Liveness</b> — {@link #dialed}: a place is a candidate only when {@link PlaceResolver#serves} says so — the client
  *       is <em>online</em> ∧ declares the instructions the route requires (a shipped shard travels to its place's
  *       {@code eval}, so {@code eval}). An offline peer is dropped (a shard shipped down it answers
@@ -307,6 +309,8 @@ public final class PlaceResolver {
      * tables for that host, deduped by transport and sorted (the canonical order {@code Places} gives an authority
      * set). The <em>host</em> is the selector: a path in the designator names no frame and the port names no socket
      * ({@code //ginger:9999} resolves through ginger's transports), so a place is an authority, never a frame path.
+     * An alias is the exception: when the prefix table maps it to an authority that states a port
+     * ({@code //0 => ws://localhost:1111}), the place is that one transport.
      * <p>
      * The two tables are gated by the half of liveness each one can answer: a dialed peer by {@link PlaceResolver#serves}
      * (there is a client to ask), a roster row by {@link Signatures#resolves} (there is none — the declared half of the
@@ -319,6 +323,11 @@ public final class PlaceResolver {
         final String host = aligned.host();
         if (null == host)
             return List.of();
+        // AN ALIAS WHOSE ROW STATES A PORT NAMES THAT TRANSPORT. harvest spawns its peers on one host and names each in
+        // the prefix table (//0 => ws://localhost:1111, //1 => ws://localhost:1112), so the host alone would hand //0
+        // every peer on it. Only the table's port selects: alignment takes a written //host:9999 literally, so that
+        // spelling is still the host.
+        final fURI named = aligned.equals(address) || !aligned.hasPort() ? null : origin(aligned);
         final List<fURI> transports = new ArrayList<>();
         // the roster (known): the addresses discovery announced for the host, each admitted only if it can be dialed
         env.machines().elements()
@@ -344,6 +353,7 @@ public final class PlaceResolver {
                 .forEach(transports::add);
         return transports.stream()
                 .map(fURI::basePath)
+                .filter(transport -> null == named || named.equals(origin(transport)))
                 .distinct()
                 .sorted(Comparator.comparing(fURI::toString))
                 .toList();

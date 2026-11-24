@@ -136,7 +136,8 @@ and concurrency). Repetition is multiplicity: `[//ginger,//ginger,//booger]` is 
 | `local`              | this frame's own place (the addressless `eval()`)            |
 | `peer`               | the **dialed** set (host-bearing, online, `serves`-positive) |
 | `#`                  | every reachable place the other entries did not name         |
-| `//host[:port]`      | the roster's place (a redirect)                              |
+| `//host[:port]`      | the roster's place (a redirect); the port is not a selector  |
+| `//alias`            | a `~/network/prefix` name; a row's port names one transport  |
 | `scheme://host:port` | one authority, as written                                    |
 
 `?place=[local,peer]` is S (the master takes a share); `[{4}local]` is four home lanes on a peerless machine, still a
