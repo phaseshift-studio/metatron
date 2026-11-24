@@ -295,6 +295,40 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
     }
 
     /**
+     * A URI'S OWN POINT IS WRITTEN INSIDE ITS BRACKETS (Marko, 2026-11-24: "< > is important here so you can delineate
+     * the locus of the coefficient"). A value is {point}value{span}, so bare, a trailing {n} reads as the value's span
+     * ({@code a/b/c{2}} would be {@code a/b/c/a/b/c}). The point a uri's path carries, a sum's mass among them
+     * ({@code /a + /a}), is written as the fURI writes it, inside {@code < >}, and the obj's coefficient stays before the
+     * brackets. The whole text is asserted: the bare spelling reads back as the same obj, so a round trip alone could
+     * not tell the two apart.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', quoteCharacter = '`', value = {
+            // a sum's mass is the path's own point: <a/b/c> + <a/b/c> was written a/b/c{2}
+            "a/b/c + a/b/c             % <a/b/c{2}>",
+            "/a + /a + /a              % </a{3}>",
+            "<a/b/c{2}>                % <a/b/c{2}>",
+            "<a/b{-1}>                 % <a/b{-1}>",
+            "<a/b{2,3}>                % <a/b{2,3}>",
+            // the obj's coefficient before the brackets, the path's point inside them
+            "{3}<a/b{2}>               % {3}<a/b{2}>",
+            // the brackets travel with the uri into a lst slot and a rec value
+            "[<a/b{2}>,a/b]            % [<a/b{2}>,a/b]",
+            "[k=><a/b{2}>]             % [k=><a/b{2}>]",
+            // what needs no brackets stays bare: a plain path, and one counted by the obj's own point
+            "a/b/c                     % a/b/c",
+            "{2}a/b                    % {2}a/b",
+    })
+    void testAUrisOwnPointIsWrittenInsideItsBrackets(final String source, final String written) {
+        final Obj value = ObjmtronSerializer.single().read(source);
+        assertFalse(value.isFail() || value.isNoObj(), () -> "the row read as " + value + ", so it tests nothing: " + source);
+        final String wire = ObjmtronSerializer.single().write(value);
+        LOG.debug("testing {{b}}%s{{/b}} on the wire as {{b}}%s{{/b}}", source, wire);
+        assertEquals(written.trim(), wire);
+        idem(value);
+    }
+
+    /**
      * A LANE KEEPS ITS POINTS ACROSS THE WIRE, built in Java as law_shard builds a layout, never parsed: a keyed branch
      * whose rec holds one code per place, each lane stamped with its budget and carrying a narrowed share
      * ({@code plus{2}}) and the run's other point ({@code plus{3}}). A peer reads exactly this text, so a point the

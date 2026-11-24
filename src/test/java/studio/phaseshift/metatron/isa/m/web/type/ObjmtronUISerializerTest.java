@@ -401,12 +401,14 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(
             value = {"[a=>{[1,2,3],[2,3],[1,2,3]}] % [a=>{{2}[1,2,3],[2,3]}]", "{[1,2,3],[2,3],[1,2,3]}      % {{2}[1,2,3],[2,3]}",
-                    // a uri's own point is drawn with it, the obj's coefficient before it
-                    "/a/a/b{6}                    % /a/a/b{6}",
-                    "{2}a/b/c{3}                  % {2}a/b/c{3}",
+                    // a uri's own point is drawn inside its brackets (bare, a trailing {n} reads as the value's span),
+                    // the obj's coefficient before them
+                    "/a/a/b{6}                    % </a/a/b{6}>",
+                    "{2}a/b/c{3}                  % {2}<a/b/c{3}>",
+                    "/a + /a                      % </a{2}>",
                     "<{2}>                        % <{2}>",
                     "</a/{{6}a/b,b/c}>            % </a/{{6}a/b,b/c}>",
-                    "/a/b/c + /a/c/c/d + {2}/a/a/{3}b.-< % {/a/a/b{6},/a/b/c,/a/c/c/d}",
+                    "/a/b/c + /a/c/c/d + {2}/a/a/{3}b.-< % {</a/a/b{6}>,/a/b/c,/a/c/c/d}",
                     // a value that leads with its span keeps its brackets: bare, {2}/a/b is two /a/b
                     "<{2}/a/b>                    % <{2}/a/b>",
                     "{3}<{2}/a/b{4}>              % {3}<{2}/a/b{4}>"},

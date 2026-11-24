@@ -112,8 +112,8 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "<>",
             "<{2}>",
             "{3}<{2}>",                         // the obj coefficient before the brackets, the value's point inside
-            "/a/a/b{6}",                        // a uri's own point: bare, a trailing {6} is the value's point
-            "{2}a/b/c{3}",                      // the obj coefficient before the value, the value's point after it
+            "/a/a/b{6}",                        // a uri's own point, which the writer brackets: </a/a/b{6}>
+            "{2}a/b/c{3}",                      // the obj coefficient before the brackets, the uri's own point inside
             "</a/{{6}a/b,b/c}>",                // a branch that leads with a point
             "{2}</a/{b,c}>",
             "<{{5}http://a.com/a,{4}ws://a.com/a}>",   // a root branch: whole uris summed
@@ -168,6 +168,12 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "<{2}int{3}>::T     % {2}int{3}::T",        // the bracketed spelling reads the same type
             "{2}int::T          % {2}int::T",
             "lst[{3}int{2}]::T  % lst[{3}int{2}]::T",   // a slot run's span lives in the poly, not before the name
+            // a type's point trails its name bare, where a uri VALUE's own point is bracketed (</a{2}>)
+            "int{*}::T          % int{*}::T",
+            "int{2,3}::T        % int{2,3}::T",
+            // a name that brackets for itself keeps its point inside, the one place the grammar reads it there
+            "<#{*}>::T          % <#{*}>::T",
+            "<a/{b,c}{3}>::T    % <a/{b,c}{3}>::T",
     }, delimiter = '%')
     public void testATypeIsWrittenWithItsSpanBeforeIt(final String expr, final String expected) {
         final Obj type = ObjmtronSerializer.parse(expr);

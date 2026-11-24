@@ -301,6 +301,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 // a value that leads with its span: bare, a leading {n} is the obj coefficient ({2}/a/b is two
                 // /a/b), and before a vid it is the point, so only <{2}/a/b> reads back as one uri spanning 2
                 !furi.b().isOne() ||
+                // a value whose path carries its own point (a sum's mass: /a + /a is </a{2}>): a value is
+                // {point}value{span}, so bare, a trailing {n} reads as its span; < > delineates the locus of the
+                // coefficient (Marko, 2026-11-24)
+                !furi.d().isOne() ||
                 CommonUtil.isInt(uriString.substring(0, 1)) ||
                 uriString.contains(" ") ||
                 startChar == 'T' ||
@@ -698,7 +702,15 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         // is written as that prefix: inside the name it would be bracketed, as a value that leads with its span is
         if (!name.b().isOne())
             sb.append('{').append(name.b()).append('}');
-        sb.append(this.writeUri(name.b(cInt.ONE()).toUri())).append("::T");
+        // ... and the point trails the name bare (int{3}::T), where a uri VALUE's own point is bracketed: only a name
+        // that brackets for itself (a branch, a #) or carries a query keeps its point inside, the one place the type
+        // grammar reads it there (<a/{b,c}{3}>::T parses, <a/{b,c}>{3}::T does not)
+        final fURI unpointed = name.b(cInt.ONE()).d(cInt.ONE());
+        if (name.d().isOne() || requiresQuoting(unpointed) || !unpointed.qMap().isEmpty())
+            sb.append(this.writeUri(name.b(cInt.ONE()).toUri()));
+        else
+            sb.append(this.writeUri(unpointed.toUri())).append('{').append(name.d()).append('}');
+        sb.append("::T");
         if (type.hasPredicate()) {
             if (type.isIsaPredicate()) {
                 sb.append("[?");
