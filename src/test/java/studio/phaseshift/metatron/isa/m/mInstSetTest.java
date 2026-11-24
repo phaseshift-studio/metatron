@@ -1460,6 +1460,12 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1>-[+2,+3]                                   % [1,plus(2),plus(3)]",
             "1>-[+2,+3]>|                                 % 6",
             "1>-[plus(2),plus(2)]>|                       % 5",
+            // the empty list folds to the unit, fold([,]) = 1 (ring-theoretic-distributed-structures.md, Claim 22), which
+            // passes its obj on: the obj before the fold, the list itself when the fold is its postfix, and nothing alone
+            "5.>|[,]                                      % 5",
+            "{1,2}.>|[,]                                  % {1,2}",
+            "[,]>|                                        % [,]",
+            ">|[,]                                        % noobj",
     }, delimiter = '%')
     public void testCascade(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

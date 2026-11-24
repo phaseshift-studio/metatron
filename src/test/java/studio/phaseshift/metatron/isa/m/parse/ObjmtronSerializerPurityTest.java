@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjByteBufferSerializer;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.Tokens.SEND;
 import static studio.phaseshift.metatron.Tokens.SEND_RECV;
 import static studio.phaseshift.metatron.Tokens.STATUS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -52,8 +54,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * The contract of the pure mtron serializer: every {@code write(obj)} is legal, complete
  * mtron, and {@code read} brings it back equal to what was written.  This is what makes the
  * output travelable — a database row, an http body, a message between spaces — without loss.
- * A BUILT obj is the one exception: what its constructor derived in Java is left out, and the read
- * builds it again from its data ({@link #testABuiltObjTravelsAsItsData}).
+ * A BUILT obj is one exception: what its constructor derived in Java is left out, and the read
+ * builds it again from its data ({@link #testABuiltObjTravelsAsItsData}). An empty code is the other: it is written
+ * as the unit, id(), and reads back as that instruction, equal to it in the code ring but not as a Java obj
+ * ({@link #testAnEmptyCodeIsWrittenAsTheUnitByEveryWriter}).
  * The display side (clipping, indentation, links) is asserted in ObjmtronUISerializerTest.
  */
 public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
@@ -222,6 +226,43 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
         final Obj readBack = ser.read(ser.write(state));
         assertFalse(readBack.isFail(), "read-back failed");
         assertTrue(readBack.asRec().at(uri("halted")).isNoObj(), "and reads back as noobj");
+    }
+
+    /**
+     * AN EMPTY CODE IS THE UNIT, id() (Marko, 2026-11-24), and every writer writes it as it writes the unit: here as a
+     * rec's value, which the wire reads back with its key kept, where a noobj value is dropped. The rows of
+     * {@code ObjmtronSerializerTest.testAnEmptyCodeIsWrittenAsTheUnit} hold it alone, pointed and in the other slots. Its
+     * instructions joined to nothing, so the wire wrote nothing at all (a shipped program arrived as
+     * {@code reply(,<0x91cc5da9>)}), and the byte serializer sliced the empty chain and threw.
+     */
+    @Test
+    public void testAnEmptyCodeIsWrittenAsTheUnitByEveryWriter() {
+        final ObjmtronSerializer ser = ObjmtronSerializer.single();
+        final Code empty = code(List.of());
+        final Rec holder = rec(uri("program"), empty);
+        assertEquals("[program=>/m/inst/id()]", ser.write(holder), "the wire writes it as the unit");
+        final Rec back = ser.read(ser.write(holder)).asRec();
+        assertEquals(1, back.jvm().size(), "the read keeps its key: " + back);
+        checkEquality(LOG, ser.read("[program=>id()]"), back, true);
+        assertEquals(ObjmtronUISerializer.diagnostic().write(rec(uri("program"), empty.one())),
+                ObjmtronUISerializer.diagnostic().write(holder), "the display draws it as it draws the unit");
+        final ObjByteBufferSerializer bytes = ObjByteBufferSerializer.singleton();
+        assertEquals(new String(bytes.write(empty.one()).array()), new String(bytes.write(empty).array()),
+                "and so does the byte serializer");
+    }
+
+    /**
+     * THE BYTE SERIALIZER WRITES A CODE AS ITS TYPE AND ITS BARE CHAIN, the {@code |[…]|} brackets gone from the grammar
+     * (Marko, 2026-11-24). Its text still does not read back, with the brackets or without them: an instruction is
+     * written {@code <tid>(…)}, and a tid carrying {@code ?args=[…]} does not parse inside the angle brackets.
+     */
+    @Test
+    public void testTheByteSerializerWritesACodeWithoutBrackets() {
+        final ObjByteBufferSerializer bytes = ObjByteBufferSerializer.singleton();
+        final Code program = ObjmtronSerializer.parse("start(1).plus(2)").asCode();
+        assertEquals("/m/code::</m/inst/start?args=[/m/int]>(</m/int>::1).</m/inst/plus?args=[/m/int]>(</m/int>::2)",
+                new String(bytes.write(program).array()));
+        assertTrue(bytes.read(bytes.write(program)).isFail(), "the text does not read back until its instructions do");
     }
 
     /**

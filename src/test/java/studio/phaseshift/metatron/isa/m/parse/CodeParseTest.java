@@ -49,6 +49,21 @@ public class CodeParseTest extends AbstractMetatronTest {
         assertEquals(ObjmtronSerializer.parse(expectedResult), ObjmtronSerializer.parse(expression).apply());
     }
 
+    /**
+     * A CODE IS ITS CHAIN, with no {@code |[…]|} brackets around it (Marko, 2026-11-24): the bracketed spelling read as
+     * the code it held, and no longer parses. Each row's code starts from a value, so on the parent it ran without
+     * failing and only the parse can fail here; a bare {@code |[plus(1)]|} is no row, as it faults on the parent too.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "|[start(1).plus(2)]|           % <ERROR>",
+            "|[start(1).plus(1).plus(2)]|   % <ERROR>",
+            "code::|[start(1).plus(1)]|     % <ERROR>",
+    }, delimiter = '%')
+    void testACodeHasNoBrackets(final String source, final String expected) {
+        checkCodeParseApply(LOG, source, expected);
+    }
+
 
 }
  

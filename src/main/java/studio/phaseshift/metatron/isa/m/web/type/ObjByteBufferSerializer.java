@@ -155,8 +155,12 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
     public ByteBuffer writeCode(final Code code) {
         //  final Obj t = code.tryToInst();
         //  if (t.isInst()) return this.writeInst(t.as());
+        // an empty code is the unit, id() (Marko, 2026-11-24), its coefficient the unit's point; its joined chain had no
+        // remainder to slice
+        if (code.jvm().isEmpty())
+            return this.write(code.one().c(code.c()));
         final String internal = IteratorUtil.stream(code.insts()).map(i -> new String(this.writeInst(i).array())).reduce(".", (a, b) -> a + b + ".");
-        return ByteBuffer.wrap((CODE_TID.toString() + "::|[" + internal.substring(1, internal.length() - 1) + "]|").getBytes());
+        return ByteBuffer.wrap((CODE_TID.toString() + "::" + internal.substring(1, internal.length() - 1)).getBytes());
     }
 
     @Override

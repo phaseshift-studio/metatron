@@ -1301,8 +1301,9 @@ public class catInstSetTest extends AbstractInstSetTest {
         checkEquality(LOG, ObjmtronSerializer.parse("[monoidic,unit,commutative,involution,left_distributive,right_distributive]"),
                 TheoryHelper.stated(RING_THEORY_TID, LAW), true);
         checkEquality(LOG, noobj(), TheoryHelper.stated(RING_THEORY_TID, REWRITE), true);
-        // the role names stay free: built at boot, before inv names a registered instruction, so the rule reads as written
-        assertEquals("[[op(<#>::T@a).op(inv(<#>::T@a))=>],[op(inv(<#>::T@a)).op(<#>::T@a)=>]]",
+        // the role names stay free: built at boot, before inv names a registered instruction, so the rule reads as written.
+        // Its right side is the empty code, the unit, written id() (Marko, 2026-11-24)
+        assertEquals("[[op(<#>::T@a).op(inv(<#>::T@a))=>/m/inst/id()],[op(inv(<#>::T@a)).op(<#>::T@a)=>/m/inst/id()]]",
                 TheoryHelper.stated(GROUP_THEORY_TID, REWRITE).toString(), "the group states a·a⁻¹ = 1 and a⁻¹·a = 1 over a named operand");
         assertTrue(PendingWrites.writes().stream().noneMatch(write -> write.address().equals(PendingWrites.decq(MONOID_THEORY_TID))),
                 "nothing declares the monoid's laws or rules: they are its type's");

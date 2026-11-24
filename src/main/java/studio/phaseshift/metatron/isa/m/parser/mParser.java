@@ -1713,23 +1713,24 @@ public class mParser {
         // follows it, the chain is read from the same place without it. A wrap sugar's head reads like a prefix: before
         // this, ~knows::[weight=>?>0.4]~> and _/knows::[…]\_ took ~knows and _/knows for the code's type and failed
         // (docs/design/smooth-crumple-relations.md)
+        // A CODE IS ITS CHAIN, one element at least and no brackets around it (Marko, 2026-11-24: the |[…]| brackets are
+        // gone, and an empty code is the unit, spelled id())
         final Parser prefixed = seq(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0),
-                opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix());
-        final Parser plain = seq(of("").map(t -> Tokens.CODE_TID),
-                opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix());
+                m_chain_element().plus(), m_vid_postfix());
+        final Parser plain = seq(of("").map(t -> Tokens.CODE_TID), m_chain_element().plus(), m_vid_postfix());
         return choice(prefixed, plain)
                 .map(t -> {
                     // a span stays on its instruction, a run that applying it walks (Inst.Helper.runs), and a zero span
                     // is id() (Marko, 2026-11-16): {0}plus(1) is plus(1) to the zero, the identity. The point stays
                     // (Marko, 2026-11-17): {0}plus{3}(1) is c·f⁰, id{3}(), and {0}plus{0}(1) is the zero
-                    final List<Object> elements = mParser.<List<Object>>pick(t, 2).stream()
+                    final List<Object> elements = mParser.<List<Object>>pick(t, 1).stream()
                             .map(e -> e instanceof Inst inst && inst.tid().b().isZero() ? instB(ID_INST_TID.d(inst.tid().d()), lst()) : e)
                             .toList();
                     return elements.size() == 1 ? elements.getFirst() : new MCode((List) startAfterEnd(elements
                             .stream()
                             .filter(x -> x instanceof Inst)
                             .map(x -> (Inst) x)
-                            .toList()), pick(t, 0), pick(t, 4)).tryToInst();
+                            .toList()), pick(t, 0), pick(t, 2)).tryToInst();
                 });
     }
 

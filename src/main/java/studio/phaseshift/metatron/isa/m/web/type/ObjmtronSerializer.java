@@ -540,8 +540,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeCode(final Code code) {
-        final String internal = IteratorUtil.stream(code.insts()).map(this::writeInst).reduce("", (a, b) -> a + "." + b);
-        return !internal.isEmpty() ? internal.substring(1) : "";
+        // AN EMPTY CODE IS THE UNIT, id() (Marko, 2026-11-24): f⁰, the composition of no instruction, its coefficient the
+        // unit's point, as FixPointRewriter.descend writes a member that cancels to nothing. Joined, it wrote nothing at
+        // all, and nothing is no obj: an argument read reply(,<0x91cc5da9>), which the peer's parser refused
+        if (code.jvm().isEmpty())
+            return this.write(code.one().c(code.c()));
+        return IteratorUtil.stream(code.insts()).map(this::writeInst).reduce("", (a, b) -> a + "." + b).substring(1);
     }
 
     @Override

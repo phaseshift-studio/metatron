@@ -405,8 +405,9 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     /**
      * A BARE MOVE TO A PEER STILL SHIPS A PROGRAM (Marko's console, 2026-11-24: {@code move(//0)} failed). A compiled
      * move with no lhs and no tail is the cut with nothing to run, and the program a cut ships goes as
-     * {@code reply(program, tag)}: an empty one wrapped so, {@code reply(,<tag>)}, is no program the peer can parse. It
-     * ships {@code start()}, which the peer answers with nothing. Here {@code a} compiles the bare move to {@code b} (a
+     * {@code reply(program, tag)}: an empty one was written as nothing, {@code reply(,<tag>)}, which the peer could not
+     * parse, and is written {@code id()} now, the unit (Marko, 2026-11-24). It ships {@code start()}, which the peer
+     * answers with nothing. Here {@code a} compiles the bare move to {@code b} (a
      * lone move is compiled by a console, or by the machine a tail lands in, never by a test's one-instruction apply);
      * the lhs alone ships as its start, and a tail as the cut its move compiles to.
      */

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.AbstractSerializerTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -354,6 +357,90 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
         LOG.debug("a pointed layout on the wire: %s", wire);
         assertTrue(wire.contains("plus{2}(34)") && wire.contains("plus{3}(34)"), () -> "every lane's points are written: " + wire);
         idem(layout);
+    }
+
+    /**
+     * AN EMPTY CODE IS THE UNIT, id() (Marko, 2026-11-24): f⁰, the composition of no instruction, written as the unit
+     * with the code's coefficient as its point, as {@code FixPointRewriter.descend} writes a member that cancels to
+     * nothing. Its instructions joined to nothing, so it was written as nothing at all: a ws client wraps each shipped
+     * program as {@code reply(program, tag)}, and a peer handed an empty one read {@code reply(,<0x91cc5da9>)}, a parse
+     * error. No literal spells an empty code, so a row is what it must read back as: each id() in a slot of the row is
+     * swapped for an empty code of the id()'s point, built in Java as a cut's tail and an empty lane are, and what holds
+     * it must be written as text that reads back as the row's own obj, which round-trips strictly ({@link #idem}).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // alone, where "" read back as noobj, the zero, for the unit
+            "id()",
+            "id{3}()",
+            // the trip the peer could not read, as it arrived
+            "/m/mach/inst/reply(id(),<0x91cc5da9>)",
+            "/m/mach/inst/reply(id{-1}(),<0x91cc5da9>)",
+            // a cut's tail, alone and in a chain
+            "cut(<//worker>,id())",
+            "start(5).cut(<//worker>,id{2}())",
+            // a branch member, the tail of a cut that a member is, a keyed lane's program, and a lst's entry
+            "start(1).branch(id(),plus(1))",
+            "start(1).branch(cut(<//worker>,id()),plus(1))",
+            "start(5).branch(<//worker>=>id())",
+            "start([id(),1])",
+    }, delimiter = '%')
+    void testAnEmptyCodeIsWrittenAsTheUnit(final String row) {
+        final Obj expected = ObjmtronSerializer.parse(row);
+        assertFalse(expected.isFail(), () -> "the row is not mtron: " + row);
+        final AtomicInteger slots = new AtomicInteger();
+        final Obj holder = emptied(expected, true, slots);
+        // a row whose id() the parser did not keep in a slot holds no empty code, so its round trip would test nothing
+        assertTrue(0 < slots.get(), () -> "the row has no id() in a slot to swap for an empty code: " + row);
+        final String wire = ObjmtronSerializer.single().write(holder);
+        LOG.debug("testing {{b}}%s{{/b}} with an empty code on the wire as {{b}}%s{{/b}}", row, wire);
+        checkEquality(LOG, expected, ObjmtronSerializer.parse(wire), true);
+        idem(expected);
+    }
+
+    /**
+     * A PROGRAM HOLDING AN EMPTY CODE ANSWERS ALIKE ONCE WRITTEN AND READ BACK: built in Java, its empty code passes its
+     * obj on, and read back, the id() written in its place does the same. A cut whose tail is empty answers its lhs, and a
+     * branch member that is empty passes its obj on beside the others. Written as noobj, the read program annihilated what
+     * the built one passed on. The rows hold the unit itself, at point 1: a pointed empty code is written id{c}(), c
+     * copies of the unit, while Code.apply still passes an empty code's obj on once whatever its coefficient (the
+     * tryToInst() follow-up), so built and read back a pointed one answers alike only once that is settled.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start(5).cut(<~>,id())         % 5",
+            "start(5).branch(id(),plus(1))  % {5,6}",
+    }, delimiter = '%')
+    void testAProgramHoldingAnEmptyCodeAnswersAlikeOnceWritten(final String row, final String answer) {
+        final AtomicInteger slots = new AtomicInteger();
+        final Obj built = emptied(ObjmtronSerializer.parse(row), true, slots);
+        assertTrue(0 < slots.get(), () -> "the row has no id() in a slot to swap for an empty code: " + row);
+        final Obj expected = ObjmtronSerializer.parse(answer).apply();
+        checkEquality(LOG, expected, built.apply(), true);
+        checkEquality(LOG, expected, ObjmtronSerializer.parse(ObjmtronSerializer.single().write(built)).apply(), true);
+    }
+
+    /**
+     * The obj with every id() that sits in a slot -- the obj itself, an instruction's argument, a lst's entry, a rec's
+     * value -- swapped for an empty code of the id()'s point, each swap counted. An instruction of a chain is no slot.
+     */
+    private static Obj emptied(final Obj obj, final boolean slot, final AtomicInteger slots) {
+        if (slot && obj.isObjInst() && ID_INST_TID.equals(obj.tid().basePath()) && obj.asInst().args().isEmpty()) {
+            slots.incrementAndGet();
+            return code(List.of()).c(obj.c());
+        }
+        if (obj.isCode())
+            return code(new ArrayList<>(obj.asCode().insts().stream().map(inst -> emptied(inst, false, slots).asInst()).toList()));
+        if (obj.isObjInst())
+            return obj.asInst().args().isPoly() ? obj.asInst().args((Poly<?, ?>) emptied(obj.asInst().args(), false, slots)) : obj;
+        if (obj.isLst())
+            return lst(obj.asLst().<Obj>elements().map(entry -> emptied(entry, true, slots)));
+        if (obj.isRec()) {
+            final Map<Obj, Obj> fields = new LinkedHashMap<>();
+            obj.asRec().<Rel>elements().forEach(field -> fields.put(field.first(), emptied(field.second(), true, slots)));
+            return rec(fields);
+        }
+        return obj;
     }
 
     /**

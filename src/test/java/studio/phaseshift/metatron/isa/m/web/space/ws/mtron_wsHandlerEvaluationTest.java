@@ -44,6 +44,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +52,11 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -272,6 +278,23 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
         try (final RoundTripClient client = this.roundTripClient()) {
             final Obj reply = FutureObj.resolveFuture(client.wsRec.sendRecv(ObjmtronSerializer.parse(code), 15_000L));
             checkEquality(LOG, ObjmtronSerializer.parse(expected), reply, true);
+        }
+    }
+
+    /**
+     * AN EMPTY PROGRAM TRAVELS AS THE UNIT, id() (Marko, 2026-11-24). The client wraps each shipped program as
+     * {@code reply(program, tag)}, and an empty code was written as nothing, {@code reply(,<0x…>)}, which the peer's
+     * parser refused. Written as id(), the peer runs it as the identity: an empty program answers nothing, and a cut
+     * whose tail is empty answers its lhs, as both do where they are built. No literal spells an empty code, so both are
+     * built in Java, as the client and the cut build them.
+     */
+    @Training.SkipTraining(reason = "the scenario is a Java client's round trip of a code no literal spells")
+    @Test
+    void testAnEmptyProgramTravelsAsTheUnit() {
+        try (final RoundTripClient client = this.roundTripClient()) {
+            checkEquality(LOG, noobj(), FutureObj.resolveFuture(client.wsRec.sendRecv(code(List.of()), 15_000L)), true);
+            final Obj cut = code(List.of(instB(START_INST_TID, lst(jnt(5))), instB(CUT_INST_TID, lst(uri("~"), code(List.of())))));
+            checkEquality(LOG, jnt(5), FutureObj.resolveFuture(client.wsRec.sendRecv(cut, 15_000L)), true);
         }
     }
 

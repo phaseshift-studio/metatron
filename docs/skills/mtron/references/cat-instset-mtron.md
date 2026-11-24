@@ -310,7 +310,7 @@ not the value an expression computes. A rewrite's declared
 argument *is* its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
 place, and its body is where they hold: the gate it applies them under is written beside them, not picked by a key. A
 law's rule is stated in the name `op`, the instruction that claims the law: `law_involution` carries
-`[op.op => ]`, and `law_idempotent` and `law_monoidic` both carry `[op.op => op]`, told apart by the law whose
+`[op.op => ε]`, and `law_idempotent` and `law_monoidic` both carry `[op.op => op]`, told apart by the law whose
 claimants bind `op` and by the gate that reads it. Every claimant binds `op` to
 its own term (`neg`, `ucase`, `sum`, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
