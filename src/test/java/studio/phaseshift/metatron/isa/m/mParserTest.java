@@ -1049,6 +1049,46 @@ public class mParserTest extends AbstractMetatronTest {
                 () -> desc + ": column must be the source column of the position");
     }
 
+    /**
+     * AN UNCLOSED QUOTE NAMES ITS QUOTE. The explanation is the diagnostic's last line. Each row: the source % the
+     * explanation.
+     */
+    @Training.SkipTraining(reason = "asserts the parser DIAGNOSTIC of deliberately malformed input; the second column is the expected explanation, not an evaluation")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "~'abc~        % ~unclosed single-quote — missing closing '''~",
+            "~\"abc~       % ~unclosed double-quote — missing closing '\"'~",
+            "~\"\"\"abc~   % ~unclosed triple-quote — missing closing '\"\"\"'~",
+    }, delimiter = '%', quoteCharacter = '~')
+    void testAnUnclosedQuoteNamesItsQuote(final String code, final String explanation) {
+        final Obj parsed = mParser.parse(code);
+        assertTrue(parsed.isFail(), () -> code + " must fail to parse: " + parsed);
+        final String message = mParser.faultOf(parsed).getMessage();
+        assertEquals(explanation, message.substring(message.lastIndexOf('\n') + 1).trim(), () -> "the diagnostic: " + message);
+    }
+
+    /**
+     * A FAILURE WHERE NO QUOTE OPENED NAMES NO QUOTE. A string rule labels only what follows its opening delimiter, so
+     * a source that fails where a string could have started, but did not, is not explained as an unclosed string (the
+     * triple quote, tried first, used to claim every such failure). The rows are a stray closer, and a {@code <…>} uri
+     * quote nested in a query value, which a query value cannot hold: the query is part of the instruction's uri. Each
+     * row: the source % the column % the explanation.
+     */
+    @Training.SkipTraining(reason = "asserts the parser DIAGNOSTIC of deliberately malformed input; the last two columns are the expected column and explanation, not an evaluation")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "]                                                  % 1  % unexpected ']'",
+            "0.plus{5}(1).sum?place=[<ws://localhost:1111>]()   % 23 % unexpected '='",
+    }, delimiter = '%', quoteCharacter = '~')
+    void testAFailureWhereNoQuoteOpenedNamesNoQuote(final String code, final int column, final String explanation) {
+        final Obj parsed = mParser.parse(code);
+        assertTrue(parsed.isFail(), () -> code + " must fail to parse: " + parsed);
+        final mParser.ParseFault fault = mParser.faultOf(parsed);
+        final String message = fault.getMessage();
+        assertEquals(column, fault.column(), () -> "the column of: " + message);
+        assertEquals(explanation, message.substring(message.lastIndexOf('\n') + 1).trim(), () -> "the diagnostic: " + message);
+    }
+
     @Test
     public void testPickOutOfRangeUsesDesignedText() {
         // pick() is the inst-chain token accessor — an out-of-range ask is a

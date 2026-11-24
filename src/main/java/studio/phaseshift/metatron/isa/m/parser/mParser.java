@@ -1588,19 +1588,18 @@ public class mParser {
     public static Parser m_str() {
         final Parser sqInner = noneOf("'\\").or(of("\\").seq(any()));
         final Parser dqInner = noneOf("\"\\").or(of("\\").seq(any()));
-        final Parser singleQuote = labeled(
-                seq(of('\''), sqInner.starLazy(of('\'')), of('\'')).flatten(),
-                "unclosed single-quote — missing closing '''")
+        // A LABEL NAMES A QUOTE THAT OPENED: each rule labels only what follows its opening delimiter. Labeled
+        // whole, the triple quote (tried first) claimed every failure where a string could have started, so a <…>
+        // nested in a query value read "unclosed triple-quote". A double quote never opens with """: that is an
+        // unclosed triple quote, which would otherwise read as the empty string "" and then an unclosed double quote.
+        final Parser singleQuote = seq(of('\''), labeled(seq(sqInner.starLazy(of('\'')), of('\'')),
+                "unclosed single-quote — missing closing '''")).flatten()
                 .map(t -> unescape(t.toString().substring(1, t.toString().length() - 1)));
-        final Parser doubleQuote = labeled(
-                seq(of('"'), dqInner.starLazy(of('"')), of('"')).flatten(),
-                "unclosed double-quote — missing closing '\"'")
+        final Parser doubleQuote = seq(of('"'), of("\"\"").not(), labeled(seq(dqInner.starLazy(of('"')), of('"')),
+                "unclosed double-quote — missing closing '\"'")).flatten()
                 .map(t -> unescape(t.toString().substring(1, t.toString().length() - 1)));
-        final Parser tripleQuote = labeled(seq(
-                        of('"').repeat(3, 3),
-                        any().starLazy(of('"').repeat(3, 3)),
-                        of('"').repeat(3, 3)).flatten(),
-                "unclosed triple-quote — missing closing '\"\"\"'")
+        final Parser tripleQuote = seq(of('"').repeat(3, 3), labeled(seq(any().starLazy(of('"').repeat(3, 3)),
+                of('"').repeat(3, 3)), "unclosed triple-quote — missing closing '\"\"\"'")).flatten()
                 .map(t -> t.toString().substring(3, t.toString().length() - 3));
         return seq(m_type_prefix(Tokens.STR_TID), choice(tripleQuote, singleQuote, doubleQuote), opt(m_value_span(), cInt.ONE()), m_vid_postfix())
                 .map(t -> new MStr(mParser.pick(t, 1), mParser.<fURI>pick(t, 0).b(pick(t, 2)), pick(t, 3)));
