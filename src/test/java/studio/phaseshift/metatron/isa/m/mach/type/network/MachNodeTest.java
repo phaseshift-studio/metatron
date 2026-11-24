@@ -26,7 +26,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.WS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
@@ -41,18 +44,22 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 public class MachNodeTest extends AbstractMetatronTest {
 
     /**
-     * The parent dies after the node is serving: the node exits, and its port with it.
+     * The parent dies after the node is serving: the node exits through the watch (its line in the log, exit 0), and
+     * its port with it.
      */
     @Test
     public void testANodeExitsWithItsParent() throws Exception {
         final Process parent = new ProcessBuilder("sleep", "300").start();
-        final fURI authority = f("ws://localhost:" + generatePort() + "/reaped");
+        final fURI authority = f("").scheme(WS).host("localhost").port(generatePort()).extend(f("/reaped"));
         final Path log = Files.createTempFile("metatron-node-reap-", ".log");
         final Process node = PeerSpawn.fork(authority, log, null, parent.pid());
         try {
             PeerSpawn.awaitReady(node, log, authority);
             parent.destroy();
             assertTrue(node.waitFor(30, TimeUnit.SECONDS), "the node outlived its parent:\n" + Files.readString(log));
+            assertEquals(0, node.exitValue(), "the watch exits cleanly:\n" + Files.readString(log));
+            assertTrue(Files.readString(log).contains("node: parent " + parent.pid() + " exited"),
+                    "the watch is what ended the node:\n" + Files.readString(log));
         } finally {
             node.destroyForcibly();
             parent.destroyForcibly();
@@ -61,19 +68,24 @@ public class MachNodeTest extends AbstractMetatronTest {
     }
 
     /**
-     * The parent is gone before the node starts: the node exits at once, never mistaking the process it was handed to
-     * for a parent.
+     * The parent is gone before the node starts: the node exits at once, before it serves (no READY in its log, so
+     * nothing ever held its port), and never mistakes the process it was handed to for a parent.
      */
     @Test
     public void testANodeWhoseParentIsGoneExitsAtOnce() throws Exception {
         final Process parent = new ProcessBuilder("true").start();
         parent.waitFor();
-        final fURI authority = f("ws://localhost:" + generatePort() + "/orphaned");
+        final fURI authority = f("").scheme(WS).host("localhost").port(generatePort()).extend(f("/orphaned"));
         final Path log = Files.createTempFile("metatron-node-orphan-", ".log");
         final Process node = PeerSpawn.fork(authority, log, null, parent.pid());
         try {
             assertTrue(node.waitFor(30, TimeUnit.SECONDS),
                     "a node whose parent was gone kept running:\n" + Files.readString(log));
+            assertEquals(0, node.exitValue(), "the watch exits cleanly:\n" + Files.readString(log));
+            assertTrue(Files.readString(log).contains("node: parent " + parent.pid() + " exited"),
+                    "the watch is what ended the node:\n" + Files.readString(log));
+            assertFalse(Files.readString(log).contains(MachNode.READY),
+                    "the node served before it exited:\n" + Files.readString(log));
         } finally {
             node.destroyForcibly();
             Files.deleteIfExists(log);

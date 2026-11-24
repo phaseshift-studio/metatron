@@ -199,6 +199,34 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     }
 
     /**
+     * A LOCAL SPAWN FORKS A NODE THAT LIVES UNTIL ITS FRAME REAPS IT: spawn names this VM as the node's parent
+     * ({@link studio.phaseshift.metatron.isa.m.mach.type.network.MachNode#PARENT}), so the node keeps serving past its
+     * readiness (a parent that is no process, or not this one, would have it exit before it was ready), and the frame
+     * that dialed it reaps it on pop.
+     */
+    @Test
+    public void testALocalSpawnLivesUntilItsFrameReapsIt() throws InterruptedException {
+        final Obj declared = Machine.read(Network.ROOT_ROSTER);
+        final fURI origin = f("").scheme(WS).host("localhost").port(generatePort());
+        try {
+            final Machine child = Machine.current().push(f("spawn_local"));
+            try {
+                PeerSpawn.spawn(origin.extend(f("/spawned")));
+                for (int poll = 0; poll < 5; poll++) {
+                    assertTrue(PeerSpawn.alive(origin), "the node serves while its parent lives (poll " + poll + ")");
+                    Thread.sleep(200L);
+                }
+                Network.Helper.connect(Machine.current().network(), PeerSpawn.address(origin));
+            } finally {
+                child.pop();
+            }
+            assertFalse(PeerSpawn.alive(origin), "the pop of the frame that dialed it reaps the node");
+        } finally {
+            Machine.write(Network.ROOT_ROSTER, declared);
+        }
+    }
+
+    /**
      * A TAKE-BACK INTO A WIPED TABLE IS SKIPPED: the machine table written noobj after the spawn holds no count of it,
      * so the pop's undeclare takes nothing back, and the origin declared again is listed — where a take-back into the
      * absent level would leave a sign the new declaration cancels.
