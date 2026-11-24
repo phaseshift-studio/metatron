@@ -1338,13 +1338,36 @@ import { typesetMath } from './mathjax.js';
         /* one cell: an auto-at reference becomes a clickable button (opens the
            popup, where it can be pinned); an array is its elements in a row; a
            plain value is text. */
+        /* the vid a cell opens: a uri's path, or an !@/!* auto-reference's target. */
+        function refVid(obj) {
+            if (obj == null) return null;
+            if (obj.isUri && obj.isUri()) {
+                /* a plain uri is a reference; a refined uri (datetime, …) is a
+                   scalar value, not a target to open */
+                if (obj.isBaseTid && !obj.isBaseTid()) return null;
+                return obj.js.toString();
+            }
+            if (obj.isInst && obj.isInst()) {
+                const text = String(write(obj)).trim();
+                const m = /^![@*]\s*(.+)$/.exec(text);
+                if (!m) return null;
+                let t = m[1].trim();
+                if (t.charAt(0) === "<" && t.charAt(t.length - 1) === ">") t = t.slice(1, -1);
+                return t;
+            }
+            return null;
+        }
+
         /* the display text of a cell value — scalars plain, uri unbracketed,
            poly compact via the faithful serializer. */
         function cellText(obj) {
             if (obj == null || (obj.isNoObj && obj.isNoObj())) return "noobj";
             if ((obj.isInt && obj.isInt()) || (obj.isReal && obj.isReal()) || (obj.isBool && obj.isBool())) return String(obj.js);
             if (obj.isStr && obj.isStr()) return obj.js;
-            if (obj.isUri && obj.isUri()) return obj.js.toString();
+            if (obj.isUri && obj.isUri()) {
+                if (obj.isBaseTid && !obj.isBaseTid()) return write(obj);
+                return obj.js.toString();
+            }
             if (obj.isBytes && obj.isBytes()) return "0x" + Array.from(obj.js).map((b) => b.toString(16).padStart(2, "0")).join("");
             const s = write(obj);
             return s.length > 150 ? s.slice(0, 149) + "…" : s;
@@ -1360,11 +1383,18 @@ import { typesetMath } from './mathjax.js';
                 });
                 return span;
             }
-            if (obj.isUri && obj.isUri()) {
-                const vid = obj.js.toString();
-                const b = node("button", "tble-ref", vid.split("/").pop() || vid);
+            const vid = refVid(obj);
+            if (vid) {
+                let label = vid.split("/").pop() || vid;
+                let title = vid;
+                if (obj.isInst && obj.isInst()) {
+                    const ref = String(write(obj)).trim();
+                    label = ref.slice(0, 2) + label;
+                    title = ref;
+                }
+                const b = node("button", "tble-ref", label);
                 b.type = "button";
-                b.title = vid + " · click to open · shift-click for ?docq";
+                b.title = title + " · click to open · shift-click for ?docq";
                 b.addEventListener("click", (ev) => {
                     if (ev.shiftKey) {
                         api.open({ vid: vid + "?docq", shortTid: "docs" });
@@ -1388,8 +1418,9 @@ import { typesetMath } from './mathjax.js';
                 api.open({raw: "noobj"});
                 return;
             }
-            if (obj.isUri && obj.isUri()) {
-                api.open({vid: obj.js.toString(), raw: write(obj)});
+            const vid = refVid(obj);
+            if (vid) {
+                api.open({vid: vid, raw: write(obj)});
                 return;
             }
             const tid = obj.tid ? String(obj.tid) : null;
@@ -1439,19 +1470,27 @@ import { typesetMath } from './mathjax.js';
             grid.textContent = "";
             grid.appendChild(spinner("loading…"));
             let result;
+            let raw = null;
             try {
-                const raw = await api.mtron(source);
+                raw = await api.mtron(source);
                 let text = String(raw == null ? "" : raw).trim();
-                /* the reader may answer with a JSON-quoted string — unquote it */
+                /* the reader may answer with a JSON-quoted string or a one-key
+                   JSON envelope — unwrap the string out of either */
                 try {
-                    const unquoted = JSON.parse(text);
-                    if (typeof unquoted === "string") text = unquoted;
+                    const parsed = JSON.parse(text);
+                    if (typeof parsed === "string") {
+                        text = parsed;
+                    } else if (parsed && typeof parsed === "object") {
+                        const strings = Object.values(parsed).filter((v) => typeof v === "string");
+                        if (strings.length === 1) text = strings[0];
+                    }
                 } catch (ignored) { }
                 if (!text) throw new Error("no answer");
-                result = read(text);
+                result = parse(text);
             } catch (problem) {
                 grid.textContent = "";
-                grid.appendChild(node("div", "tble-empty", String(problem && problem.message ? problem.message : problem)));
+                const detail = raw == null ? "null" : String(raw).slice(0, 120);
+                grid.appendChild(node("div", "tble-empty", String(problem && problem.message ? problem.message : problem) + " — raw: " + detail));
                 return;
             }
             renderGrid(result);
