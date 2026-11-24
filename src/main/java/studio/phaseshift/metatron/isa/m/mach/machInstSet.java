@@ -1472,9 +1472,9 @@ public class machInstSet extends AbstractInstSet {
                         final Obj where = !inst.arg(0).isNoObj() && target.equals(written) ? inst.arg(0) : uri(target);
                         // the value passes through a move unchanged, so a host move's point is the lhs's: it rides on
                         // the instruction before the move, and the tail's folds count it (5.move{3}(<//h>).count() is 3).
-                        // WITH NOTHING BEFORE IT the point stays on the cut, a branch member's head, where the branch
-                        // reads a lane's weight (Marko, 2026-11-24: "move() point coefficient is branch weight"); and
-                        // the move's ?timeout is its cut's to keep
+                        // WITH NOTHING BEFORE IT the point stays on the cut, a branch member's head, where it is copies
+                        // of what the lane answers (Marko, 2026-11-24: "cut{2}() will duplicate data"); and the move's
+                        // ?timeout is its cut's to keep
                         final Inst moved = instB(inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID,
                                 lst(where, tail));
                         if (!inst.tid().d().isOne() && !cut.isEmpty()) {
@@ -1504,7 +1504,7 @@ public class machInstSet extends AbstractInstSet {
          * there), the key's {@code ?timeout} the cut's and its {@code ?hop} the target's, and a home key ({@code <~>},
          * {@code <.>}) is its program, timed by a cut that stays when it states a timeout ({@link BranchInst#lanes}). The
          * keys' splits become the branch's: all copy (or none) is the whole lhs to every lane; all part is an even part
-         * or, where the shares differ, the BIAS naming each lane's place, {@code {w}local} or {@code {w}//host[:port]}.
+         * or, where the shares differ, the BIAS naming each lane's place, {@code {w}local} or its authority.
          * Mixed copy and part keys are refused (Marko: "default"; {@link BranchInst#lanes} refuses them where the branch
          * runs too). A branch the bias cannot state stays keyed, its keys' shares read where it runs: a key that is a
          * designator itself ({@code peer}, {@code #}), which names its places only then; a share no designator names (a
@@ -1526,7 +1526,7 @@ public class machInstSet extends AbstractInstSet {
                         return branch;
                     continue;
                 }
-                final Long before = bias.put(null == place ? f(LOCAL) : f().host(place.host()).port(place.port()), lane.weight());
+                final Long before = bias.put(null == place ? f(LOCAL) : place.origin(), lane.weight());
                 if (null != before && before != lane.weight())
                     return branch;
             }

@@ -307,10 +307,10 @@ public final class Shard {
         // the unstated arity keeps its spelling; below a height of one the leaf states the bare point, 0.
         final Obj budget = 1 == hop.height() ? jnt(0) : Hop.of(hop.height() - 1, hop.arity()).toObj();
         // THE LANES, in the lane order, the home place's first: a peer is one lane at its authority, and so is home
-        // under the run axis and a copy. Under the seed axis the n shares a peer takes are one lane weighted n, the
-        // point on its move, while home's n shares are n home lanes, as a home lane has no move to weigh. Under the run
-        // axis a lane is at most one per unroll or copy, its share chosen by WORK for a span (splitByCost) and evenly
-        // for a point.
+        // under the run axis and a copy. Under the seed axis the n shares a peer takes are one lane whose demand is n in
+        // the branch's bias, while home's n shares are n home lanes, each local's one share, so they run concurrently.
+        // Under the run axis a lane is at most one per unroll or copy, its share chosen by WORK for a span
+        // (splitByCost) and evenly for a point.
         final Map<fURI, Integer> places = new LinkedHashMap<>();
         shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
         final List<Map.Entry<fURI, Integer>> keys = places.entrySet().stream()
@@ -378,15 +378,16 @@ public final class Shard {
         final Inst answers = profiling ? null : chain.contracts().get(0 <= cut ? cut : runEnd - 1);
         final fURI lane = null == answers || !answers.tid().hasRng() ? null : answers.rng().typeId();
         // THE BIAS ON THE BRANCH (Marko, 2026-11-24: "?split= is bias and stays on branch"): a peer's n shares are its
-        // demand in the place set the branch splits by, {n}//host:port (the address form, which a query value can hold,
-        // where a bracketed scheme cannot), read per lane (BranchInst#share), and each home lane is local's one share.
-        // Shares of one apiece are an even part
+        // demand in the place set the branch splits by, {n}<authority> (the spelled authority, which names that one
+        // service, as ?place reads it, where an address would name every transport of its host), read per lane
+        // (BranchInst#share), and each home lane is local's one share. Shares of one apiece are an even part. The set is
+        // written as a value is; an authority the writer brackets (a dotted host) leaves the branch's text unparseable
+        // as source, as a query cannot hold a bracketed uri, though the branch reads it
         final fURI branch = literal && runAxis ? BRANCH_INST_TID.dom(dom)
                 : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY
                 : keys.stream().allMatch(key -> 1 == key.getValue()) ? PART
                 : ObjmtronSerializer.single().write(lst(places.entrySet().stream()
-                .map(place -> BranchInst.home(place.getKey()) ? (Obj) uri(LOCAL)
-                        : uri(fURI.Singleton.f().host(place.getKey().host()).port(place.getKey().port())).c(cInt.of(place.getValue())))
+                .map(place -> BranchInst.home(place.getKey()) ? (Obj) uri(LOCAL) : uri(place.getKey().origin()).c(cInt.of(place.getValue())))
                 .toList())));
         final List<Inst> master = new ArrayList<>();
         if (!literal)

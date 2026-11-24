@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlaceSet;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -36,10 +38,8 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -142,7 +142,7 @@ public class BranchInst extends MInst {
                 final fURI place = null == key.q(HOP) ? key.qLess() : key.qLess().q(HOP, key.q(HOP));
                 final fURI cut = null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT));
                 final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
-                return new Lane(home(key) ? null : place, program, share(key.q(SPLIT), home(key) ? null : place),
+                return new Lane(home(key) ? null : place, program, share(split(key.q(SPLIT)), home(key) ? null : place),
                         !home(key) ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
                                 : null == key.q(TIMEOUT) ? code(program) : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
             }).toList();
@@ -151,7 +151,8 @@ public class BranchInst extends MInst {
                 throw MTronException.of("a branch either deals its lhs or copies it, so its keys cannot mix copy and part: %s", branch);
             return lanes;
         }
-        final String split = branch.tid().q(SPLIT);
+        // the split is read once, and each lane takes its share of it
+        final Obj split = split(branch.tid().q(SPLIT));
         return branch.args().<Obj>elements().filter(member -> !uri(LHS).equals(member)).map(member -> {
             final List<Inst> insts = program(member);
             final Inst head = insts.isEmpty() ? null : insts.getFirst();
@@ -233,50 +234,55 @@ public class BranchInst extends MInst {
     }
 
     /**
-     * A LANE'S SHARE of the lhs under the split its branch (or its key) states, for the lane at {@code place}
-     * ({@code null} at home). {@code copy}, or no split, hands every lane the whole lhs: a share of zero. {@code part}
-     * deals the lhs evenly, one share each ({@code {w}part}, w apiece, as a key marks itself). A PLACE SET IS THE BIAS
-     * (Marko, 2026-11-24: "?split= is bias and stays on branch as a query param as its a concept relative to all lanes
-     * of the branch"): {@code ?split=[{2}//a,//b]} deals each lane the demand of the designator that names its place,
-     * PER LANE ("treat each lane as if they are unique"), so two lanes at //a take two shares apiece. {@code local}
-     * names a home lane, an address or an authority a lane at its host (at its port too, and its scheme, when the
-     * designator states them), {@code peer} a lane at any host and {@code #} any lane; the most specific naming wins,
-     * its demands summed, and a lane no designator names takes one share. A point is never a share: it is copies of what
-     * its lane answers. Any other split is refused, never read as a copy (a misspelled part would hand every lane the
-     * whole lhs and double-count its fold), and so is a share below one.
+     * THE SPLIT a branch or a key states, read as the object it is (the grammar reads a leading coefficient,
+     * {@code {4}part}, as it reads {@code ?hop={2}4}): {@code copy}, {@code part} or a place set, the bias. None is
+     * {@code noobj}, and any other split is refused, never read as a copy: a misspelled part would hand every lane the
+     * whole lhs and double-count its fold.
      */
-    protected static long share(final String split, final fURI place) {
-        if (null == split)
-            return 0L;
-        // the object grammar reads the leading coefficient ({4}part), as it reads ?hop={2}4
-        final Obj value = ObjmtronSerializer.parse(split);
-        if (value.isUri() && COPY.equals(value.uriValue().name()))
-            return 0L;
-        if (!value.isLst() && !value.isRec() && !(value.isUri() && PART.equals(value.uriValue().name())))
+    private static Obj split(final String split) {
+        final Obj value = null == split ? noobj() : ObjmtronSerializer.parse(split);
+        if (!value.isNoObj() && !value.isLst() && !value.isRec()
+                && !(value.isUri() && (PART.equals(value.uriValue().name()) || COPY.equals(value.uriValue().name()))))
             throw MTronException.of("?%s=%s is not a split a branch performs: %s, %s or a place set", SPLIT, split, PART, COPY);
-        final fURI at = null == place ? null : Machine.Helper.align(Machine.current(), place);
-        final Predicate<PlaceSet.Designator> names = designator -> switch (designator.form()) {
-            case LOCAL -> null == at;
-            case PEER -> null != at && at.hasHost();
-            case ANY -> true;
-            case ADDRESS, AUTHORITY -> {
-                final fURI named = Machine.Helper.align(Machine.current(), designator.uri());
-                yield null != at && at.hasHost() && named.host().equals(at.host())
-                        && (!named.hasPort() || named.port() == at.port())
-                        && (!named.hasScheme() || named.scheme().equals(at.scheme()));
-            }
-        };
-        final long share = value.isUri() ? value.c().min()
-                : List.of(EnumSet.of(PlaceSet.Form.LOCAL, PlaceSet.Form.ADDRESS, PlaceSet.Form.AUTHORITY),
-                        EnumSet.of(PlaceSet.Form.PEER), EnumSet.of(PlaceSet.Form.ANY)).stream()
-                .map(forms -> PlaceSet.of(value).designators().stream()
-                        .filter(designator -> forms.contains(designator.form()) && names.test(designator)).toList())
+        return value;
+    }
+
+    /**
+     * A LANE'S SHARE of the lhs under the split its branch (or its key) states ({@link #split}), for the lane at
+     * {@code place} ({@code null} at home). {@code copy}, or no split, hands every lane the whole lhs: a share of zero.
+     * {@code part} deals the lhs evenly, one share each ({@code {w}part}, w apiece, as a key marks itself). A PLACE SET
+     * IS THE BIAS (Marko, 2026-11-24: "?split= is bias and stays on branch as a query param as its a concept relative to
+     * all lanes of the branch"): {@code ?split=[{2}//a,//b]} deals each lane the demand of the designator that names its
+     * place, PER LANE ("treat each lane as if they are unique"), so two lanes at //a take two shares apiece. A designator
+     * names a lane as {@code ?place} reads it: {@code local} a home lane, an address a lane at its host (its port no
+     * selector, but an authority's, or an alias's that states one, is: {@link Network.Helper#names}), {@code peer} a lane
+     * at any host and {@code #} any lane; the most specific naming wins ({@link PlaceResolver#specificity}), its demands
+     * summed, and a lane no designator names takes one share. A point is never a share: it is copies of what its lane
+     * answers. A share below one is refused, and so is a demand with no least count ({@code {**}}).
+     */
+    protected static long share(final Obj split, final fURI place) {
+        if (split.isNoObj() || (split.isUri() && COPY.equals(split.uriValue().name())))
+            return 0L;
+        final fURI at = split.isUri() || null == place ? null : Machine.Helper.align(Machine.current(), place);
+        final List<PlaceSet.Designator> bias = split.isUri() ? List.of() : PlaceSet.of(split).designators();
+        final Long share = split.isUri() ? split.c().min() : IntStream.range(0, 3).boxed()
+                .map(pass -> bias.stream().filter(designator -> pass == PlaceResolver.specificity(designator.form())
+                        && switch (designator.form()) {
+                    case LOCAL -> null == place;
+                    case PEER -> null != at && at.hasHost();
+                    case ANY -> true;
+                    case ADDRESS, AUTHORITY -> {
+                        final fURI named = Machine.Helper.align(Machine.current(), designator.uri());
+                        yield null != at && null != named.host() && named.host().equals(at.host()) && Network.Helper.names(named, at);
+                    }
+                }).toList())
                 .filter(named -> !named.isEmpty())
                 .findFirst()
-                .map(named -> named.stream().mapToLong(designator -> designator.demand().min()).sum())
+                .map(named -> named.stream().map(designator -> designator.demand().min())
+                        .reduce((a, b) -> null == a || null == b ? null : a + b).orElse(null))
                 .orElse(1L);
-        if (1L > share)
-            throw MTronException.of("a lane's share is one or more: ?%s=%s gives %s", SPLIT, split, null == place ? LOCAL : place);
+        if (null == share || 1L > share)
+            throw MTronException.of("a lane's share is one or more: %s gives %s", split, null == place ? LOCAL : place);
         return share;
     }
 

@@ -245,7 +245,7 @@ public final class PlaceResolver {
      * enum ({@code local}, {@code peer}), {@code 2} pattern ({@code #}). The design's "explicit address beats an enum
      * beats a pattern".
      */
-    private static int specificity(final PlaceSet.Form form) {
+    public static int specificity(final PlaceSet.Form form) {
         return switch (form) {
             case ADDRESS, AUTHORITY -> 0;
             case LOCAL, PEER -> 1;

@@ -189,8 +189,9 @@ public class catInstSet extends AbstractInstSet {
      * (the code has no layout). A designator keeps its port: {@code ws://localhost:1111} and
      * {@code ws://localhost:1112} are two places.
      * <p>
-     * THE DEMAND IS THE REALIZED SHARE COUNT, NOT THE DECLARED BAND: a lane's weight is the shares its place took, the
-     * point on its cut ({@code cut{n}(<place>, …)}), one for each home lane — after the emitter's clamps
+     * THE DEMAND IS THE REALIZED SHARE COUNT, NOT THE DECLARED BAND: a lane's weight is the shares its place took, its
+     * demand in the branch's bias ({@code ?split=[{n}<place>,…]}, {@link BranchInst#share}), one for each home lane —
+     * after the emitter's clamps
      * ({@code k = min(Σ demands, seed)} and the hop arity), not what the plan asked for. A band {@code //ginger{2,5}}
      * that could only fill three shares records {@code //ginger=>3}. The rec is the weighted {@code ?place} spelling,
      * so a realized {@code where} can be read back as a place set directly.
@@ -211,8 +212,8 @@ public class catInstSet extends AbstractInstSet {
                 .filter(BranchInst::isLayout)
                 .findFirst()
                 .ifPresent(branch -> BranchInst.lanes(branch).forEach(lane -> {
-                    // a lane's weight is its share of the place's shares (BranchInst#lanes: the point on its cut, or a
-                    // key's {n}part); a lane of weight zero, a copy, is one. A home lane is the LOCAL place; a shipped
+                    // a lane's weight is its share of the place's shares (BranchInst#share: its demand in the branch's
+                    // bias, or a key's {n}part); a lane of weight zero, a copy, is one. A home lane is the LOCAL place; a shipped
                     // one is the `//host:port` its cut's target names. The port is the place: two services on one host
                     // are two places, not one place twice
                     final fURI place = lane.place();

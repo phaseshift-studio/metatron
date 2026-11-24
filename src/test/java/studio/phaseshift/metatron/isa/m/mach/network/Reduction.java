@@ -98,8 +98,8 @@ public final class Reduction {
 
     /**
      * Each lane's split as the layout states it, in lane order: {@code part} for a lane of weight one, {@code {2}part}
-     * for a weight of two (the point on its head), and the branch's own split for a lane of weight zero ({@code copy},
-     * or none). Empty when the code was not shard-planned.
+     * for a weight of two (its demand in the branch's bias), and the branch's own split for a lane of weight zero
+     * ({@code copy}, or none). Empty when the code was not shard-planned.
      */
     public static List<String> splits(final Code master) {
         final Inst branch = branch(master);

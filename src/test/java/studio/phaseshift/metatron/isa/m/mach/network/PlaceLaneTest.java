@@ -46,6 +46,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.HOP;
+import static studio.phaseshift.metatron.Tokens.SPLIT;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
@@ -62,7 +63,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  * <p><b>The oracle is the law, not the layout.</b> Every row that emits also asserts the value, because a place axis
  * is result-preserving (Thm 19): {@code distribute(c) ≡ c}. The lane <em>structure</em> is the other half — a home
  * lane has no move (the lane at distance zero), a peer's lane is the cut its move to the peer compiles to, and a peer
- * with demand n is one lane whose share n the branch's bias states ({@code ?split=[{n}<peer>,…]}).
+ * with demand n is one lane whose share n the branch's bias states ({@code ?split=[{n}loop://peer:8555,…]}).
  *
  * <p><b>Hermetic where it can be.</b> The {@code local} rows resolve against a synthetic {@link Env} — the seam C4
  * opened — because a test VM has no listening authority, so {@code Places.self()} is {@code noobj} unless the env
@@ -72,7 +73,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  *
  * <p>The counts are the design's: a share is a weight, so {@code [local,peer]} is two lanes and
  * {@code [local,local,local,local]} is four home lanes of one share each — the lanes case, a peerless machine
- * sharding, as a home lane has no move to weigh.
+ * sharding, each home lane local's one share.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -135,7 +136,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
 
     /**
      * THE LANES — {@code ?place=[local,local,local,local]} on a <b>peerless</b> machine: four home shares are four home
-     * lanes of one share each, as a home lane has no move to weigh (Law.nomadic, stage 2), so the plan deals each two
+     * lanes of one share each, local's one share apiece in the branch's bias, so the plan deals each two
      * of the eight members and the four run concurrently, recombined at home through the same combiner. The value is
      * the local fold's. Each row: the fold % its value.
      */
@@ -188,12 +189,47 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         assertEquals(List.of(GINGER, BOOGER), layout.routes(), "one lane per place: " + emitted);
         assertEquals(List.of("{2}part", "part"), layout.lanes().stream().map(DistributedSweep.Lane::split).toList(),
                 "ginger takes two shares and booger one: " + emitted);
-        // THE SHARES ARE THE BRANCH'S BIAS, never a point on a lane's cut, which would be copies of its answer
+        // THE SHARES ARE THE BRANCH'S BIAS, each peer named by its authority, never a point on a lane's cut, which would
+        // be copies of its answer
         final Inst branch = emitted.insts().stream().filter(BranchInst::isLayout).findFirst().orElseThrow();
+        assertEquals("[{2}loop://ginger:8555,loop://booger:8555]", branch.tid().q(SPLIT), "the bias the branch splits by: " + emitted);
         assertEquals(List.of(true, true), branch.args().<Obj>elements().map(lane -> lane.tid().d().isOne()).toList(),
                 "no lane's cut is pointed: " + emitted);
         checkEquality(LOG, jnt(expected),
                 evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * THE BIAS law_shard WRITES IS THE ONE THE BRANCH READS, lane by lane: home's two shares are two home lanes, each
+     * local's one share, beside a peer whose two shares are one lane's demand.
+     */
+    @Test
+    void testHomeLanesBesideAWeightedPeer() {
+        Network.Helper.connect(Machine.current().network(), GINGER);
+        final Code emitted = lower(homeAndPeer(), "start?place=[local,local,//ginger,//ginger]({1,2,3,4,5,6,7,8}).plus(1).sum()");
+        assertEquals(List.of("part", "part", "{2}part"), DistributedSweep.layout(emitted).lanes().stream().map(DistributedSweep.Lane::split).toList(),
+                "each home lane takes local's one share and ginger two: " + emitted);
+        checkEquality(LOG, jnt(44), evaluate(emitted).clone().selfVID(null), true);
+    }
+
+    /**
+     * TWO TRANSPORTS OF ONE HOST ARE TWO PLACES IN THE BIAS: law_shard names each peer by its authority, which names that
+     * one service, where an address would name every transport of the host, so the 2:1 a place set states for two ports
+     * of ginger is the 2:1 the branch deals.
+     */
+    @Test
+    void testTwoTransportsOfOneHostKeepTheirShares() {
+        final fURI gingerToo = f("loop://ginger:8556");
+        Network.Helper.connect(Machine.current().network(), GINGER);
+        Network.Helper.connect(Machine.current().network(), gingerToo);
+        try {
+            final Code emitted = lower(homeAndPeer(), "start?place=[{2}loop://ginger:8555,loop://ginger:8556]({1,2,3,4,5,6,7,8}).plus(1).sum()");
+            assertEquals(List.of("{2}part", "part"), DistributedSweep.layout(emitted).lanes().stream().map(DistributedSweep.Lane::split).toList(),
+                    "8555 takes two shares and 8556 one: " + emitted);
+            checkEquality(LOG, jnt(44), evaluate(emitted).clone().selfVID(null), true);
+        } finally {
+            Machine.current().network().drop(gingerToo);
+        }
     }
 
     /**

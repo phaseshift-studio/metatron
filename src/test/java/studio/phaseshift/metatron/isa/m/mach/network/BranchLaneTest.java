@@ -207,50 +207,46 @@ public class BranchLaneTest extends AbstractMetatronTest {
         }
     }
 
-    @Test
-    public void testMarkedLanesShipOnlyTheirShare() {
-        // each place counts what reached it. A KEY IS SUGAR FOR ITS LANE (Law.nomadic, stage 3): the marked keys are the
-        // bias that splits the six by weight (one and two), and a key's split is not part of its place. Keys that mix a
-        // copy with a part are refused when the branch compiles (Marko, 2026-11-24: "default")
+    /**
+     * EACH LANE TAKES ITS SHARE OF THE LHS, and each place counts what reached it (two loop places, whose eval runs what
+     * they are shipped). A KEY IS SUGAR FOR ITS LANE (Law.nomadic, stage 3): marked keys are the bias, and keys that mix
+     * a copy with a part are refused (Marko, 2026-11-24: "default"); two keys at one place take its demand apiece, and
+     * two shares at one place, which no bias states, stay keyed. A LANE'S SHARE IS THE BRANCH'S BIAS ("?split= is bias
+     * and stays on branch"): a place set deals each lane, per lane, the demand of the designator naming its place, read
+     * as ?place reads it, the most specific naming winning; local names a home lane, a repeated designator sums its
+     * demand, and a lane no designator names takes one share. A POINT IS COPIES, NEVER A SHARE ("cut{2}() will duplicate
+     * data"). A share below one is refused, and so is a split the branch does not perform. Each row: the expression % its
+     * answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(),<loop://right?split={2}part> => count())                    % {2,4}",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(),<loop://right?split={2}part> => count(),<loop://left> => count()) % <ERROR>",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left> => count(),<loop://right> => count())                                                % {2}6",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={2}part> => count(),<loop://left?split={2}part&timeout=20> => sum(),<loop://right?split=part> => count()) % {3,7,1}",
+            "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(),<loop://left?split={2}part> => sum())                       % {2,16}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[//left,{2}//right](move(<loop://left>).count(),move(<loop://right>).count())          % {2,4}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}loop://right](move(<loop://left>).count(),move(<loop://right>).count())            % {2,4}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}//left](move(<loop://left>).count(),count())                                       % {4,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}local,//left](count(),move(<loop://left>).count())                                 % {4,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[//right,//right](move(<loop://left>).count(),move(<loop://right>).count())            % {2,4}",
+            "{1,2,3,4,5,6,7,8,9,10}.branch?<=int{*}&split=[{2}//left,//right](move(<loop://left>).count(),move(<loop://left>).count(),move(<loop://right>).count()) % {4,4,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{3}peer,//left](move(<loop://left>).count(),move(<loop://right>).count())             % {2,4}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}#,local](move(<loop://left>).count(),count())                                      % {4,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).count(),move{2}(<loop://right>).count())                       % {3}3",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).sum(),count{2}())                                               % {9,{2}3}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[//left=>2](move(<loop://left>).count(),count())                                       % {4,2}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[//left=>0](move(<loop://left>).count(),count())                                       % <ERROR>",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{3}//left](move(<loop://left>).count(),count())                                       % {5,1}",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=[{**}//left](move(<loop://left>).count(),count())                                      % <ERROR>",
+            "{1,2,3,4,5,6}.branch?<=int{*}&split=halves(move(<loop://left>).count(),count())                                            % <ERROR>",
+    }, delimiter = '%')
+    public void testEachLaneTakesItsShare(final String mtron, final String answer) {
         final BiFunction<Obj, Inst, Obj> run = (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
         dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         dial("loop://right", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         try {
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
-                    + "<loop://right?split={2}part> => count())", "{2,4}");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
-                    + "<loop://right?split={2}part> => count(), <loop://left> => count())", "<ERROR>");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left> => count(), "
-                    + "<loop://right> => count())", "{2}6");
-            // ... two keys at one place take its demand apiece; two shares at one place, which no bias states, stay keyed
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={2}part> => count(), "
-                    + "<loop://left?split={2}part&timeout=20> => sum(), <loop://right?split=part> => count())", "{3,7,1}");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
-                    + "<loop://left?split={2}part> => sum())", "{2,16}");
-            // A LANE'S SHARE IS THE BRANCH'S BIAS (Marko, 2026-11-24: "?split= is bias and stays on branch"): a place set
-            // deals each lane the demand of the designator naming its place, per lane; local names a home lane, and a
-            // lane no designator names takes one share
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[//left,{2}//right]("
-                    + "move(<loop://left>).count(), move(<loop://right>).count())", "{2,4}");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}//left]("
-                    + "move(<loop://left>).count(), count())", "{4,2}");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[{2}local,//left]("
-                    + "count(), move(<loop://left>).count())", "{4,2}");
-            // ... and a designator repeated is its demand summed, the brace-free spelling of the same bias
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=[//right,//right]("
-                    + "move(<loop://left>).count(), move(<loop://right>).count())", "{2,4}");
-            // ... "per lane. treat each lane as if they are unique": two lanes at one place take its demand apiece, 2:2:1
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6,7,8,9,10}.branch?<=int{*}&split=[{2}//left,//right]("
-                    + "move(<loop://left>).count(), move(<loop://left>).count(), move(<loop://right>).count())", "{4,4,2}");
-            // A POINT IS COPIES, NEVER A SHARE ("cut{2}() will duplicate data"): an even part deals 1:1, and the lane's
-            // point doubles what it answers, at a place or at home
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).count(), "
-                    + "move{2}(<loop://right>).count())", "{3}3");
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=part(move(<loop://left>).sum(), "
-                    + "count{2}())", "{9,{2}3}");
-            // a split the branch does not perform is refused, never read as a copy
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}&split=halves(move(<loop://left>).count(), "
-                    + "count())", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, mtron.trim(), answer.trim());
         } finally {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://right"));
