@@ -209,14 +209,24 @@ public class BranchLaneTest extends AbstractMetatronTest {
 
     @Test
     public void testMarkedLanesShipOnlyTheirShare() {
-        // each place counts what reached it: the marked keys split the six by weight (one and two), the unmarked key
-        // gets all six, and a key's split is not part of its place (both left keys reach the one left client)
+        // each place counts what reached it. A KEY IS SUGAR FOR ITS LANE (Law.nomadic, stage 3): the marked keys are the
+        // bias that splits the six by weight (one and two), and a key's split is not part of its place. Keys that mix a
+        // copy with a part are refused when the branch compiles (Marko, 2026-11-24: "default")
         final BiFunction<Obj, Inst, Obj> run = (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
         dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         dial("loop://right", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         try {
             AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
-                    + "<loop://right?split={2}part> => count(), <loop://left> => count())", "{2,4,6}");
+                    + "<loop://right?split={2}part> => count())", "{2,4}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
+                    + "<loop://right?split={2}part> => count(), <loop://left> => count())", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left> => count(), "
+                    + "<loop://right> => count())", "{2}6");
+            // ... two keys at one place take its demand apiece; two shares at one place, which no bias states, stay keyed
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split={2}part> => count(), "
+                    + "<loop://left?split={2}part&timeout=20> => sum(), <loop://right?split=part> => count())", "{3,7,1}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
+                    + "<loop://left?split={2}part> => sum())", "{2,16}");
             // A LANE'S SHARE IS THE BRANCH'S BIAS (Marko, 2026-11-24: "?split= is bias and stays on branch"): a place set
             // deals each lane the demand of the designator naming its place, per lane; local names a home lane, and a
             // lane no designator names takes one share
@@ -415,7 +425,8 @@ public class BranchLaneTest extends AbstractMetatronTest {
     @Test
     public void testAPathLaneRunsAtItsMachine() {
         // a path names a local machine: its lane is compiled and run there, so the lane's ~ is that machine's own. This
-        // machine (<~>), a pushed machine and the root (</.>) are three lanes that share the parts; a path naming no
+        // machine (<~>), a pushed machine and the root (</.>) are three lanes that share the parts, which a copy key
+        // cannot join; a path key's own share, which no designator names, keeps its branch keyed; a path naming no
         // machine is refused, and so is a bare key, a path relative to this machine
         final Machine root = Machine.current();
         final Machine machine = root.push(f("branch_m"));
@@ -423,7 +434,13 @@ public class BranchLaneTest extends AbstractMetatronTest {
             Machine.Helper.evalAt(root, () -> {
                 AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(</branch_m> => to(<~/branch/lane>))", "7");
                 AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?dom=int{*}&split=part(<~> => count(), "
-                        + "</branch_m> => count(), </.?split=copy> => count())", "{3,3,6}");
+                        + "</branch_m> => count(), </.> => count())", "{3}2");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?dom=int{*}&split=part(<~> => count(), "
+                        + "</branch_m> => count(), </.?split=copy> => count())", "<ERROR>");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?dom=int{*}(<~?split=part> => count(), "
+                        + "</branch_m?split=part> => count())", "{2}3");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?dom=int{*}(<~?split=part> => count(), "
+                        + "</branch_m?split={2}part> => count())", "{2,4}");
                 AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(</branch_none> => plus(1))", "<ERROR>");
                 AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(a => plus(1))", "<ERROR>");
                 return noobj();

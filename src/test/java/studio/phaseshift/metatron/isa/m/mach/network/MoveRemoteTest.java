@@ -96,6 +96,9 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             // move(<//self/b>).mult(2).plus(1) becomes the lone inst cut(<loop://self/b>,mult(2).plus(1)), and the branch
             // applies it as an inst. The cut answered its shipping code, unrun, and the branch handed that code on as a value.
             "1.branch(move(<//self/b>).mult(2).plus(1),plus(7))                                                                 % start(1).branch(cut(<loop://self/b>,mult(2).plus(1)),plus(7))                                                                 % {3,8}",
+            // A KEY IS SUGAR FOR ITS LANE (Law.nomadic, stage 3; Marko, 2026-11-24: "whole lane at p straight to cut"): a
+            // keyed branch compiles to the cuts its keys name, each lane whole at its place, the keys gone
+            "5.branch(<//self/a> => plus(1),<//self/b> => mult(2))                                                                    % start(5).branch(cut(<loop://self/a>,plus(1)),cut(<loop://self/b>,mult(2)))                                                % {6,10}",
             // THE CUT'S TARGET IS THE SENDER'S TO RESOLVE -- the one thing that IS aligned: `self:/a` (the ISA slot)
             // and `//self/a` (the network slot) are two spellings of one peer, and both ship as loop://self/a.
             "5.move(<self:/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",

@@ -1845,14 +1845,14 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A lane keyed to a remote place is compiled and run where its key points, so the fixpoint leaves a lone remote
-     * lane where it stands: inlining it would drop the place and run the program here. Rewritten only, never run, so
-     * the row needs no dialed peer.
+     * A lane keyed to a remote place is compiled and run where its key points: the key is sugar for the cut that carries
+     * the lane there (Law.nomadic, stage 3), and the fixpoint leaves that lone remote lane where it stands, as inlining
+     * it would drop the place and run the program here. Rewritten only, never run, so the row needs no dialed peer.
      */
     @Test
     public void testARemoteLaneIsNeverInlined() {
         final Call compilation = FixPointRewriter.single().apply(ObjmtronSerializer.parse("1.branch(<loop://self> => plus(2))")).tryToInst();
-        assertEquals(ObjmtronSerializer.parse("start(1).branch(<loop://self> => plus(2))"), compilation);
+        assertEquals(ObjmtronSerializer.parse("start(1).branch(cut(<loop://self>,plus(2)))"), compilation);
     }
 
     /**

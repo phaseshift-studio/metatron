@@ -1358,7 +1358,7 @@ public class machInstSet extends AbstractInstSet {
                                         MACH_INST_TID.extend(REWRITE).extend("nomadic_extract")
                                                 .q(POST, List.of(M_ISA_TID)),
                                         Helper::extractNomadic),
-                                "the nomadic extractor: code is never compiled past an instruction that changes the current machine (Law.nomadic: move, push, pop, cut), so the chain is cut there and the tail is compiled where it lands — a().move(<t>).c().d() becomes a().cut(<t>, c().d()), push(b).c() becomes push(b).cut(<~>, c()) — ahead of every other instruction set's rules. explain() and profile() are the return home: the tail ends before them, so a().move(<t>).c().explain() becomes a().cut(<t>, c()).explain()")
+                                "the nomadic extractor: code is never compiled past an instruction that changes the current machine (Law.nomadic: move, push, pop, cut), so the chain is cut there and the tail is compiled where it lands — a().move(<t>).c().d() becomes a().cut(<t>, c().d()), push(b).c() becomes push(b).cut(<~>, c()) — ahead of every other instruction set's rules. explain() and profile() are the return home: the tail ends before them, so a().move(<t>).c().explain() becomes a().cut(<t>, c()).explain(). A keyed branch is sugar for its lanes, each lane whole at its place: branch(<p> => a, <q> => b) becomes branch(cut(<p>, a), cut(<q>, b)), and a branch's ?timeout goes onto each lane's cut")
                 )));
         docWrap(this, "the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor");
         super.setup();
@@ -1390,6 +1390,10 @@ public class machInstSet extends AbstractInstSet {
          *       {@code cut(<~>, tail)}: compiled in whichever machine the push or the pop made current. So does a move
          *       to {@code ~} (it is {@code stay()}), a move whose target is computed when it runs, and a cut written
          *       with more of the chain after it.</li>
+         *   <li>A KEYED BRANCH IS SUGAR FOR ITS LANES (stage 3): {@code branch(<p> => a)} becomes
+         *       {@code branch(cut(<p>, a))}, each lane whole at its place, its own {@code explain()} or {@code profile()}
+         *       run there ({@link #desugared}); and a branch's {@code ?timeout} goes onto its lanes' cuts ({@link #timed}).
+         *       Both happen to every branch before the first machine change, the one this machine compiles.</li>
          *   <li>THE TAIL ENDS AT HOME: {@code explain()} and {@code profile()} stay after the cut and analyze the chain
          *       where the expression began ({@link #isHome}), so {@code 1.move(<a>).plus(1).explain()} becomes
          *       {@code 1.cut(<a>, plus(1)).explain()}.</li>
@@ -1417,16 +1421,20 @@ public class machInstSet extends AbstractInstSet {
             final List<fURI> nomadic = Law.Helper.claimants(Law.nomadic).stream()
                     .map(term -> term.tid().basePath())
                     .toList();
-            // A BRANCH'S TIMEOUT IS ITS LANES' (Marko, 2026-11-24: "branch?timeout compiles to branch(cut?timeout,
-            // cut?timeout)"): the branch states it for the writer's convenience, and each lane's cut keeps it, so all of
-            // the timing is the cut's. Every branch before the first machine change is this machine's to compile
+            // A KEYED BRANCH IS SUGAR FOR ITS LANES (desugared), and A BRANCH'S TIMEOUT IS ITS LANES' (Marko, 2026-11-24:
+            // "branch?timeout compiles to branch(cut?timeout, cut?timeout)"): the branch states it for the writer's
+            // convenience, and each lane's cut keeps it, so all of the timing is the cut's. Every branch before the first
+            // machine change is this machine's to compile
             final List<Inst> given = source.insts();
             final int departs = IntStream.range(0, given.size())
                     .filter(i -> nomadic.contains(given.get(i).tid().basePath())).findFirst().orElse(given.size());
             final List<Inst> insts = IntStream.range(0, given.size())
-                    .mapToObj(i -> i < departs && BRANCH_INST_TID.equals(given.get(i).tid().basePath())
-                            && given.get(i).tid().hasQ(TIMEOUT) && !given.get(i).args().isRec()
-                            ? timed(given.get(i)) : given.get(i))
+                    .mapToObj(i -> {
+                        if (i >= departs || !BRANCH_INST_TID.equals(given.get(i).tid().basePath()))
+                            return given.get(i);
+                        final Inst branch = given.get(i).args().isRec() ? desugared(given.get(i)) : given.get(i);
+                        return branch.tid().hasQ(TIMEOUT) && !branch.args().isRec() ? timed(branch) : branch;
+                    })
                     .toList();
             final Code code = insts.equals(given) ? source : code(insts);
             for (int i = 0; i < insts.size(); i++) {
@@ -1488,6 +1496,47 @@ public class machInstSet extends AbstractInstSet {
                 return code(cut);
             }
             return code;
+        }
+
+        /**
+         * A KEYED BRANCH IS SUGAR (Law.nomadic, stage 3; Marko, 2026-11-24: "whole lane at p straight to cut"): each key
+         * {@code <p> => program} is the lane {@code cut(<p>, program)}, whole at p (its own explain() or profile() run
+         * there), the key's {@code ?timeout} the cut's and its {@code ?hop} the target's, and a home key ({@code <~>},
+         * {@code <.>}) is its program, timed by a cut that stays when it states a timeout ({@link BranchInst#lanes}). The
+         * keys' splits become the branch's: all copy (or none) is the whole lhs to every lane; all part is an even part
+         * or, where the shares differ, the BIAS naming each lane's place, {@code {w}local} or {@code {w}//host[:port]}.
+         * Mixed copy and part keys are refused (Marko: "default"; {@link BranchInst#lanes} refuses them where the branch
+         * runs too). A branch the bias cannot state stays keyed, its keys' shares read where it runs: a key that is a
+         * designator itself ({@code peer}, {@code #}), which names its places only then; a share no designator names (a
+         * machine path's, other than one); and two shares at one place, as a place's lanes take its demand apiece.
+         */
+        private static Inst desugared(final Inst branch) {
+            if (BranchInst.routes(branch).<Rel>elements().map(route -> route.first().uriValue().qLess().toString())
+                    .anyMatch(key -> PEER.equals(key) || HASH_FURI.toString().equals(key)))
+                return branch;
+            final List<BranchInst.Lane> lanes = BranchInst.lanes(branch);
+            final boolean part = lanes.stream().anyMatch(lane -> 0 < lane.weight());
+            // the designator naming each lane's place in the bias, and the share it states: a lane of one share needs no
+            // naming (an unnamed lane takes one), so a machine path, which no designator names, may only take one
+            final Map<fURI, Long> bias = new LinkedHashMap<>();
+            for (final BranchInst.Lane lane : lanes) {
+                final fURI place = lane.home() ? null : Machine.Helper.align(Machine.current(), lane.place().qLess());
+                if (null != place && !place.hasHost()) {
+                    if (part && 1L != lane.weight())
+                        return branch;
+                    continue;
+                }
+                final Long before = bias.put(null == place ? f(LOCAL) : f().host(place.host()).port(place.port()), lane.weight());
+                if (null != before && before != lane.weight())
+                    return branch;
+            }
+            final fURI tid = branch.tid().removeQ(TIMEOUT).removeQ(SPLIT);
+            return instB(!part ? tid
+                            : bias.values().stream().allMatch(share -> 1L == share) ? tid.q(SPLIT, PART)
+                            : tid.q(SPLIT, ObjmtronSerializer.single().write(lst(bias.entrySet().stream()
+                            .filter(share -> 1L != share.getValue())
+                            .map(share -> (Obj) uri(share.getKey()).c(cInt.of(share.getValue()))).toList()))),
+                    lst(lanes.stream().map(BranchInst.Lane::member).toList()));
         }
 
         /**

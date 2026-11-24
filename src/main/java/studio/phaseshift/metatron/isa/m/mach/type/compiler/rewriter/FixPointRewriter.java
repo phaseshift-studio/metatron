@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -124,7 +125,10 @@ public class FixPointRewriter extends AbstractRewriter {
      * reduces itself first). Only the members of branch insts are descended into — the arguments of every other
      * inst stay exactly as written, because the chain rules are not compositional over a derivation's slots.
      * A branch whose members all come back unchanged keeps its object identity, and a member that came in as an
-     * inst stays an inst (a single-instruction rewrite unwraps back to its inst).
+     * inst stays an inst (a single-instruction rewrite unwraps back to its inst). A LAYOUT'S HOME LANE IS COMPILED
+     * WHERE IT RUNS, as every lane is: its lane's thread evaluates it ({@code BranchInst#lane}), so the master leaves it
+     * as written. A rewrite here would hide what the layout's readers read off it, a seeded lane's own
+     * {@code start(part)} (profile() wrapped it, and law_shard planned it into a layout of its own).
      */
     private Code descend(final Code code) {
         boolean changed = false;
@@ -135,9 +139,15 @@ public class FixPointRewriter extends AbstractRewriter {
                 continue;
             }
             final List<Obj> args = inst.args().elements().toList();
+            final List<BranchInst.Lane> lanes = BranchInst.isLayout(inst) && !inst.args().isRec() ? BranchInst.lanes(inst) : null;
             final List<Obj> built = new ArrayList<>(args.size());
             boolean argChanged = false;
-            for (final Obj arg : args) {
+            for (int i = 0; i < args.size(); i++) {
+                final Obj arg = args.get(i);
+                if (null != lanes && lanes.get(i).home()) {
+                    built.add(arg);
+                    continue;
+                }
                 // A MEMBER REWRITTEN TO NOTHING IS THE UNIT, NEVER THE ZERO: neg().neg() and plus(0) do nothing to an obj,
                 // so the empty code is 1, the path that passes its obj on, where tryToInst() answers noobj, the 0 that
                 // kills it (1.branch(id(),neg(),neg().neg()) answered {1,-1}). As id() it is a like term of an id()

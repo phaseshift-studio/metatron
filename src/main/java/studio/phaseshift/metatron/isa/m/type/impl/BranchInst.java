@@ -134,8 +134,8 @@ public class BranchInst extends MInst {
      * timeout is a cut's.
      */
     public static List<Lane> lanes(final Inst branch) {
-        if (branch.args().isRec())
-            return routes(branch).<Rel>elements().map(route -> {
+        if (branch.args().isRec()) {
+            final List<Lane> lanes = routes(branch).<Rel>elements().map(route -> {
                 final fURI key = route.first().uriValue();
                 final List<Inst> program = program(route.second());
                 // the key's place is its path, aligned as a move's target, and the hop budget it states rides with it
@@ -146,6 +146,11 @@ public class BranchInst extends MInst {
                         !home(key) ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
                                 : null == key.q(TIMEOUT) ? code(program) : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
             }).toList();
+            // A BRANCH DEALS ITS LHS OR COPIES IT (Marko, 2026-11-24: mixed copy and part keys are refused, "default")
+            if (lanes.stream().anyMatch(lane -> 0 < lane.weight()) && lanes.stream().anyMatch(lane -> 0 == lane.weight()))
+                throw MTronException.of("a branch either deals its lhs or copies it, so its keys cannot mix copy and part: %s", branch);
+            return lanes;
+        }
         final String split = branch.tid().q(SPLIT);
         return branch.args().<Obj>elements().filter(member -> !uri(LHS).equals(member)).map(member -> {
             final List<Inst> insts = program(member);

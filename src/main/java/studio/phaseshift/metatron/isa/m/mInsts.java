@@ -1402,8 +1402,9 @@ public final class mInsts {
                                 from(</path>) or one to(</path>) of one obj, at the peer itself, needs only that verb
                                 there, so a client that reads and writes but runs no program serves it. every lane runs on
                                 its own virtual::T, so the lanes run concurrently. a member with no move is a home lane.
-                                a keyed call is read as its lanes: `place => program` is the lane cut(<place>, program),
-                                and <~> or <.> a home lane.
+                                a keyed call is sugar for its lanes, and compiles to them: `place => program` is the lane
+                                cut(<place>, program), whole at its place, <~> or <.> a home lane, a key's ?timeout its
+                                cut's, and the keys' splits the branch's (mixed copy and part keys are refused).
                                 branch?split=part deals the lhs evenly over the lanes. branch?split=[{2}//a,//b] deals
                                 it by the bias that place set states: each lane, per lane, the demand of the designator
                                 naming its place (local a home lane, peer any host, # any lane), one share where none

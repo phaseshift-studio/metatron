@@ -313,8 +313,8 @@ public class mInstSetTest extends AbstractInstSetTest {
      * A keyed branch call routes by its keys. A path names a local machine ({@code <~>} and {@code <.>} this one,
      * {@code </.>} the root, which is this test's own), and a host would ship. A bare key ({@code local}) is a path
      * relative to this machine, and one that names no machine is refused. A key marked {@code ?split={w}part} takes its
-     * weighted share of the lhs among the marked keys, and an unmarked key (or {@code ?split=copy}) the whole lhs; any
-     * other split is refused. Under a {@code {*}} dom the share is of the bag, and under a {@code {1}} dom each
+     * weighted share of the lhs, and an unmarked key (or {@code ?split=copy}) the whole lhs; keys that mix the two are
+     * refused (Marko, 2026-11-24), and so is any other split. Under a {@code {*}} dom the share is of the bag, and under a {@code {1}} dom each
      * application holds one member, which the first marked key takes. A query on the branch itself is every key's
      * default, and a key's own overrides it. A SEEDED lane — a program that starts from its own {@code start(...)} —
      * takes none of the lhs, and a branch of seeded lanes alone is the initial form, {@code branch?<={0}(…)} (Marko,
@@ -338,9 +338,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4}.branch?<=int{*}(<~> => plus(100), </.> => plus(200)).sum()                            % 1220",
             "1.branch?dom=int{*}&split=part(<~> => count(), </.> => count())                                 % 1",
             "{1,2,3,4}.branch?split=part(<~> => plus(100), </.> => plus(200))                                % {101,102,103,104}",
-            "{1,2,3,4}.branch?<=int{*}(</.?split=part> => count(), <~> => count())                           % {4,4}",
+            "{1,2,3,4}.branch?<=int{*}(</.?split=part> => count(), <~> => count())                           % <ERROR>",
+            "{1,2,3,4}.branch?<=int{*}(</.?split=part> => count(), <~?split=part> => count())                % {2}2",
             "{1,2}.branch?<=int{*}(</.?split=block> => count())                                              % <ERROR>",
-            "{1,2,3,4}.branch?split=part(<~> => plus(100), </.?split=copy> => plus(200))                     % {101,102,103,104,201,202,203,204}",
+            "{1,2,3,4}.branch?split=part(<~> => plus(100), </.?split=copy> => plus(200))                     % <ERROR>",
+            "{1,2,3,4}.branch?split=copy(<~> => plus(100), </.?split=copy> => plus(200))                     % {101,102,103,104,201,202,203,204}",
             "branch?<={0}(<~> => start({1,2}).plus(10), </.> => start({3,4}).plus(20))                       % {11,12,23,24}",
             "branch?<={0}(<~> => start({1,2}).plus(10), </.> => start({3,4}).plus(20)).sum()                 % 70",
             "{5,6}.branch(<~> => start({1,2}).plus(10), </.> => plus(20))                                    % {{2}11,{2}12,25,26}",
