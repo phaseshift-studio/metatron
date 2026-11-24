@@ -60,6 +60,12 @@ public class ReplyInstTest extends AbstractMetatronTest {
             "reply(start(3).plus(1), </sys/anchor/row-a>)                        % 4@</sys/anchor/row-a>",
             "reply(start(3), </sys/anchor/row-b>)                          % 3@</sys/anchor/row-b>",
             "reply({3}34, </sys/anchor/row-b2>)                             % {3}34@</sys/anchor/row-b2>",
+            // a negative point is an answer like any other: the range is any coefficient, so with inst_rng checked the
+            // answer was a range fail ("expected #{*}") where the program answered {-5}5. A span rides in the program:
+            // as reply's own argument it would unroll along the argument axis
+            "reply({-5}5, </sys/anchor/row-b3>)                             % {-5}5@</sys/anchor/row-b3>",
+            "reply(start({-1}5{4}), </sys/anchor/row-b4>)                   % {-1}5{4}@</sys/anchor/row-b4>",
+            "reply(start({-2,3}5), </sys/anchor/row-b5>)                    % {-2,3}5@</sys/anchor/row-b5>",
             "reply(noobj, </sys/anchor/row-c>)                             % </wire/noobj>@/sys/anchor/row-c",
             "reply(4.map(noobj).plus(1), </sys/anchor/row-d>)               % </wire/noobj>@/sys/anchor/row-d",
             // an answer with an address of its own keeps it: the tag rides as its last segment, never replacing it

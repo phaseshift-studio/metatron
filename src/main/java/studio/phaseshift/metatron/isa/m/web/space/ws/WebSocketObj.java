@@ -315,7 +315,10 @@ public interface WebSocketObj extends Rec, Closeable {
         final Map<fURI, Waiter> waiters = WAITERS.computeIfAbsent(this, k -> new ConcurrentHashMap<>());
         waiters.put(tag, waiter);
         this.logger().debug("awaiting: tag=%s minted=%s deadline=%s outstanding=%s on %s", tag, minted, deadlineMs, waiters.size(), peer);
-        return FutureObj.async(instLambda(outbound -> {
+        // THE ROUND TRIP ANSWERS ANY COEFFICIENT (#{**}): instLambda's default range, #{*}, made a negative answer a range
+        // fail while inst_rng is checked. The domain stays #{?}, so a counted VALUE message travels as one copy and its
+        // count goes back on the answer here; a program's answer brings its count across the wire
+        return FutureObj.async(instLambda(ALL.maybe(), ALL.any(), outbound -> {
                     try {
                         if (!this.awaitOpen(deadlineMs)) {
                             this.logger().warn("not connected: tag=%s on %s -- nothing sent (%s)", tag, peer, this.socketState());
@@ -468,13 +471,14 @@ public interface WebSocketObj extends Rec, Closeable {
             final Obj previous = this.atDirect(uri(ON_MESSAGE));
             ROUTED.put(this, previous);
             this.logger().debug("WIRE router installed on %s (previous=%s)", this.peerName(), previous.isNoObj() ? "none" : previous.tid());
-            // THE ROUTER TAKES ANY MULTIPLICITY (#{*}), as mtron_on_message does. Declared #{?}, instLambda's default,
+            // THE ROUTER TAKES ANY COEFFICIENT (#{**}), as mtron_on_message does. Declared #{?}, instLambda's default,
             // a reply with a coefficient did not match it, so while inst_dom is checked the processor compressed the
             // coefficient away before the body ran: {2}2@<0x…> filled its waiter as 2@<0x…>, and only the lambda's own
             // return regained the {2}, which no caller reads. A bulked member lost its count on every remote lane that
             // answered it alone (2026-11-22: a peer re-planning {{2}1,2} dealt {2}1 to one leaf, and {{2}2,3} came home
-            // as {2,3}).
-            this.at(uri(ON_MESSAGE), instLambda(ALL.maybeSome(), ALL.maybeSome(), (lhs, inst) -> {
+            // as {2,3}). Declared #{*}, zero to unbounded, a negative point did not match it, checked or not:
+            // {-5}5@<0x…> filled its waiter as 5@<0x…>.
+            this.at(uri(ON_MESSAGE), instLambda(ALL.any(), ALL.any(), (lhs, inst) -> {
                 final Map<fURI, Waiter> waiters = WAITERS.computeIfAbsent(this, k -> new ConcurrentHashMap<>());
                 final fURI vid = lhs.vid();
                 final fURI trip = tripOf(vid);

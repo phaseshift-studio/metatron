@@ -122,6 +122,8 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
             "fail::[a]                              % <ERROR>",
             "1.plus(b)                              % <ERROR>",
             "{3}34                                  % {3}34",
+            "{-5}5                                  % {-5}5",
+            "{-1}5{4}                               % {-1}5{4}",
     }, delimiter = '%')
     void testAFrameIsEvaluatedOnce(final String code, final String expected) throws Exception {
         this.checkAnswer(code, expected, ask("127.0.0.1", cluster.port(1), code));
@@ -177,7 +179,14 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
      * A COEFFICIENT CROSSES THE WIRE. The handler is applied to the message, and with a {@code #{?}} domain a
      * {@code {3}34} message did not match it: while {@code inst_dom} is checked the processor compresses the
      * coefficient away, so the handler saw and sent {@code 34}. Checked against the in-JVM endpoint with
-     * {@code inst_dom} pinned on, because a forked peer runs with every type check off and never compresses.
+     * {@code inst_dom} pinned on; the forked peer's rows in {@link #testAFrameIsEvaluatedOnce} run with every type
+     * check off.
+     * <p>
+     * A NEGATIVE POINT CROSSES IT TOO, AND A SPAN WITH IT. {@code #{*}} takes zero to unbounded, so a negative
+     * coefficient, or a range reaching below zero, never matched it: the handler ran on one copy and sent
+     * {@code 5} for {@code {-5}5} and for {@code {-1}5{4}}, where the console printed them as written. That held
+     * with the check off as well, where a dom that takes one runs a count it does not take on one copy, so the domain
+     * is {@code #{**}}, any coefficient.
      */
     @Training.SkipTraining(reason = "the scenario is a type-check mode of the endpoint; the rows are plain values")
     @ParameterizedTest
@@ -186,6 +195,9 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
             "{2}\"quirky\"                            % {2}\"quirky\"",
             "{4}1.5                                 % {4}1.5",
             "34                                     % 34",
+            "{-5}5                                  % {-5}5",
+            "{-1}5{4}                               % {-1}5{4}",
+            "{-2,3}5                                % {-2,3}5",
     }, delimiter = '%')
     void testACoefficientCrossesTheWire(final String code, final String expected) throws Exception {
         final boolean checked = Typer.Helper.instDom();
@@ -199,16 +211,25 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
     }
 
     /**
-     * A COEFFICIENT COMES BACK. A guard on the other half of the wire: a Java client hands every inbound frame to its
-     * router (an inst, applied to the frame), which fills the waiting round trip. Its domain is {@code #{?}} like the
-     * server handler's was, but no coefficient was found lost here even with {@code inst_dom} on, so this pins the
-     * round trip rather than a fix. {@code inst_dom} is pinned on in the client's JVM; the forked peer runs unchecked.
+     * A COEFFICIENT COMES BACK. The other half of the wire: a Java client hands every inbound frame to its router (an
+     * inst, applied to the frame), which fills the waiting round trip with what the router's body saw, so the router's
+     * domain decides what the caller receives. A negative point lay outside its {@code #{*}} and came back as one
+     * copy, {@code 5} for {@code start({-5}5)}, and outside the round trip's own range, also {@code #{*}}, which
+     * failed it while {@code inst_rng} is checked; both are {@code #{**}}, as the server handler's domain is.
+     * {@code inst_dom} is pinned on in the client's JVM; the forked peer runs unchecked.
+     * <p>
+     * A counted VALUE never carries its count across: the round trip runs on one copy of the message and the client
+     * multiplies its count back onto the answer, so a value row passes whatever the wire does to a count. The rows that
+     * see the wire ship a program, a call of count one, whose answer is counted on the far side.
      */
-    @Training.SkipTraining(reason = "the scenario is a Java client's round trip; the rows are plain values")
+    @Training.SkipTraining(reason = "the scenario is a Java client's round trip")
     @ParameterizedTest
     @CsvSource(value = {
             "{3}34                                  % {3}34",
             "34                                     % 34",
+            "start({3}34)                           % {3}34",
+            "start({-5}5)                           % {-5}5",
+            "start({-1}5{4})                        % {-1}5{4}",
     }, delimiter = '%')
     void testACoefficientComesBack(final String code, final String expected) {
         final boolean checked = Typer.Helper.instDom();

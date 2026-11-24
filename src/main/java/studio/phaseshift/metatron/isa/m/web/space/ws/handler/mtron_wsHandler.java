@@ -73,12 +73,14 @@ public class mtron_wsHandler extends WebSocketRec {
      * bare call-typed answer (a lambda, a quote) RAN on noobj, so the wire answered the application of the answer
      * where the console answered the answer.
      * <p>
-     * The domain takes ANY multiplicity ({@code #{*}}). Declared {@code #{?}}, a message with a coefficient did not
+     * The domain takes ANY coefficient ({@code #{**}}). Declared {@code #{?}}, a message with a coefficient did not
      * match it, so while {@code inst_dom} is checked the processor compressed the coefficient away: the function saw
-     * {@code 34} for {@code {3}34} and sent that, and only the inst's own return regained the {@code {3}}.
+     * {@code 34} for {@code {3}34} and sent that, and only the inst's own return regained the {@code {3}}. Declared
+     * {@code #{*}}, zero to unbounded, a negative point did not match it, checked or not (an unchecked dom that takes
+     * one runs a count it does not take on one copy): {@code {-5}5} and {@code {-1}5{4}} were both sent as {@code 5}.
      */
     public static Inst mtron_on_message(final WebSocketRec ws) {
-        return instC(M_ISA_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        return instC(M_ISA_INST_TID.dom(ALL.any()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 // caughtTransient, not caught(): caught() deletes the fail from the fail
                 // space — a write the message thread must not perform just to format a

@@ -1203,9 +1203,11 @@ public class machInstSet extends AbstractInstSet {
                         // does not admit zero, so a trailing reply would never be reached. As the frame's root this
                         // inst always runs, and the payload is evaluated in its body — where "the answer is nothing"
                         // is an ordinary return value, not a dead monad.
+                        // ITS RANGE IS ANY COEFFICIENT: the answer's count is part of the answer, and with a range of #{*}
+                        // (zero to unbounded) a negative point was a range fail while inst_rng is checked
                         InstBuilder.build().tid(REPLY_INST_TID.addQ(BLOCK))
                                 .dom(ALL.maybe(), "the frame the payload is evaluated against — a shipped program starts at noobj")
-                                .rng(ALL.maybeSome(), "the payload's answer, addressed by the trip's tag; the absent-answer mark when the payload answers nothing")
+                                .rng(ALL.any(), "the payload's answer, addressed by the trip's tag; the absent-answer mark when the payload answers nothing")
                                 .argLst(T(ALL.maybeSome()), "the payload to evaluate on this side",
                                         URI_TYPE, "the trip's correlation tag, a uri")
                                 .desc("""
