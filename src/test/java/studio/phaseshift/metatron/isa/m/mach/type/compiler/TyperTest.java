@@ -156,6 +156,7 @@ public class TyperTest extends AbstractMetatronTest {
             "<a>{-100}.count()                % 1",
             "<a>{101}                         % <ERROR>",
             "<a>{-101}                        % <ERROR>",
+            "<a>{-9223372036854775807}        % <ERROR>",
             "a.pow(100).count()               % 1",
             "a.pow(-101)                      % <ERROR>",
             "\"a\"{100}.as(uri::T).count()    % 1",

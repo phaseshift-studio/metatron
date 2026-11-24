@@ -305,7 +305,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 // is {point}value{span}, so a bare trailing {n} is a span's place, and the point is written inside the
                 // brackets, which delineate the locus of the coefficient (Marko, 2026-11-24). The parser reads a bare
                 // uri's trailing brace as its point and a span only after the brackets, so both spellings of the point
-                // read back alike, and a uri realizes any span as its power (MUri), so none is written
+                // read back alike, and a uri retyped onto an exact span holds its power instead (MUri.clone)
                 !furi.d().isOne() ||
                 CommonUtil.isInt(uriString.substring(0, 1)) ||
                 uriString.contains(" ") ||

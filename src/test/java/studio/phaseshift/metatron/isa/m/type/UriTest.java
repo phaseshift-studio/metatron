@@ -215,13 +215,14 @@ public class UriTest extends AbstractAlgebraTest {
 
     /**
      * A SPAN AFTER THE BRACKETS IS A POWER (Marko, 2026-11-24): {@code <w>{n}} is the path concatenated n times, the
-     * unit {@code <>} at zero, and a negative span its converse (ring-theoretic-distributed-structures, Definition 3):
-     * an involution that reverses a product and distributes over a sum. It reverses the path alone (Marko, 2026-11-24),
-     * so a scheme and an authority stay and a uri with a host keeps its root in front, and a parent step the fold keeps
-     * has none. A span a uri takes from its lhs is realized the same way ({@code 'a.b'{3}.as(uri::T)}), so a uri never
-     * holds one. The bolt-ons are the oracle: {@code {-1}} is {@code reverse()} and {@code {n}} is {@code pow(n)}. The
-     * brackets mark the locus: the obj's point before them is on the run ({@code c·aⁿ}), a point inside runs with the
-     * path ({@code (ca)ⁿ}, span-and-point Theorems 7 and 13), and a converse is no inverse.
+     * unit {@code <>} at zero, and a negative span its converse (ring-theoretic-distributed-structures, Definition 3),
+     * which on paths with no host is an involution that reverses a product and distributes over a sum (its Claim 3).
+     * It reverses the path alone (Marko, 2026-11-24), so a scheme and a host stay and a uri with a host keeps its root
+     * in front, and a parent step the fold keeps has none. A uri retyped onto an exact span, as an answer is when it
+     * takes its lhs's ({@code 'a.b'{3}.as(uri::T)}), holds the power the same way. The bolt-ons are the oracle:
+     * {@code {-1}} is {@code reverse()} and {@code {n}} is {@code pow(n)}. The brackets mark the locus: the obj's point
+     * before them is on the run ({@code c·aⁿ}), a point inside runs with the path ({@code (ca)ⁿ}, span-and-point
+     * Theorems 7 and 13), and a converse is no inverse.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -246,6 +247,9 @@ public class UriTest extends AbstractAlgebraTest {
             "<../a>.count()              % 1",
             "<../a>{-1}                  % <ERROR>",
             "<../a>.reverse()            % <ERROR>",
+            // reverse() declares the involution law, so the rewriter cancels a pair before it runs: a kept .. reversed
+            // twice is itself, though reversed once it has no spelling
+            "<../a>.reverse().reverse()  % <../a>",
             "<a>{-9223372036854775808}   % <ERROR>",
             // the bolt-ons agree: reverse() is {-1} and pow(n) is {n}, pow(-1) now the converse too
             "a/b/c.reverse()             % c/b/a",
@@ -258,6 +262,8 @@ public class UriTest extends AbstractAlgebraTest {
             "<a/x/../b/c>{-1}            % c/b/a",
             "<a/x/../b/c>.reverse()      % c/b/a",
             "<a/{b/c,d}>{-1}             % <{c/b,d}/a>",
+            "<a/{x/../b,c}>{-1}          % <{b,c}/a>",
+            "<a/{./b,c}>{-1}             % <{b,c}/a>",
             // a span reads only after the brackets: a bare uri keeps its trailing brace as its point
             "a/b{2}{3}                   % <ERROR>",
             // the converse reverses a product, and it is no inverse
@@ -268,6 +274,8 @@ public class UriTest extends AbstractAlgebraTest {
             "{2}<a/b>{-1}                % {2}b/a",
             "{2}<a/b>{2}                 % {2}a/b/a/b",
             "<{2}a/b>{2}                 % <{2}a/b/{2}a/b>",
+            "{2}<a/b>{-2}                % {2}b/a/b/a",
+            "<{2}a/b>{-2}                % <b/a/b/a{4}>",
             "<a/b{2}>{2}                 % <a/b/a/b{4}>",
             "<a/b{2}>{-1}                % <b/a{2}>",
             "<a/b{2}>{-2}                % <b/a/b/a{4}>",
@@ -277,15 +285,16 @@ public class UriTest extends AbstractAlgebraTest {
             "\"a.b\"{3}.as(uri::T)       % <a.b/a.b/a.b>",
             "\"ab\"{3}.as(uri::T)        % ab/ab/ab",
             "{2}\"ab\"{3}.as(uri::T)     % {2}ab/ab/ab",
+            "5{3}.tid().eq(5.tid().pow(3)) % true",
     }, delimiter = '%')
     public void testASpanAfterTheBracketsIsAPower(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     /**
-     * A URI HOLDS NO SPAN (Marko, 2026-11-24): retyped onto a span, as an answer is when it takes its lhs's, a uri holds
-     * its path's power and its tid no span, so the span is raised once though a clone sets its fields twice, and a
-     * negative span, which no value literal can carry onto a uri, is its converse.
+     * A URI RETYPED ONTO A SPAN HOLDS ITS POWER (Marko, 2026-11-24): retyped onto an exact span, as an answer is when
+     * it takes its lhs's, a uri holds its path's power and its tid no span, so the span is raised once though a clone
+     * sets its fields twice, and a negative span, which no value literal can carry onto a uri, is its converse.
      */
     @ParameterizedTest
     @CsvSource(value = {

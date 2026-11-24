@@ -126,13 +126,14 @@ public class MUri extends MObj implements Uri {
         final cInt span = clone.tid.b();
         if (clone.jvm().isZero())
             clone.tid = clone.tid.zero();
-        else if (!span.isOne() && span.isExact() && null != span.min()) {
+        else if (span.isExact() && null != span.min() && 1L != span.min()) {
             // A SPAN ON A URI IS ITS POWER (Marko, 2026-11-24): a value carries its span on its tid ({point}value{span}),
-            // and a uri's product concatenates paths, so a span a uri takes is realized here, as its zero is: an answer
-            // that takes its lhs's span, 'a.b'{3}.as(uri::T), is a.b/a.b/a.b, so a uri never holds a span and is written
-            // as it reads. Not in self(), which a clone calls twice with the same tid (objCheckAndSave, then selfTID), so
-            // the path would be raised twice; and not in the constructor, where a uri made with a span on its tid fails
-            // its type check first ({2}a/b is not a {2}uri::T). A range ({*}) is no power and stays on the tid
+            // and a uri's product concatenates paths, so an exact span a uri is retyped onto is realized here, as its zero
+            // is: an answer that takes its lhs's span, 'a.b'{3}.as(uri::T) or 5{3}.tid(), is the path's power, written as
+            // it reads. Not in self(), which a clone calls twice with the same tid (objCheckAndSave, then selfTID), so the
+            // path would be raised twice; and not in the constructor, where a uri made with a span on its tid fails its
+            // type check first ({2}a/b is not a {2}uri::T). A range ({*}) is no power and stays on the tid. The test reads
+            // the span's fields, as this runs on every uri cloned and isOne() would build a cInt each time
             clone.jvm = fURI.Helper.power(clone.jvm(), Typer.Helper.unfolds(Typer.UNFOLD_URI, span.min()));
             clone.tid = clone.tid.b(cInt.ONE());
             clone.parsedTemplatesCache = null;

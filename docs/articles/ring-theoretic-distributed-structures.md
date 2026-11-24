@@ -368,7 +368,7 @@ $(1 \Rightarrow 1) - (k \Rightarrow k)$ is idempotent.
 **Directions.**
 
 - *Traces.* Two writes commute when they touch disjoint paths, or when both are sums. A log of writes, taken up to
-  swapping independent neighbours, is a Mazurkiewicz trace [18]. Do replicas converge exactly when they hold the same
+  swapping independent neighbors, is a Mazurkiewicz trace [18]. Do replicas converge exactly when they hold the same
   trace? Is the coordination-free fragment exactly the additive one? That would be a data analogue of the CALM
   theorem [19], with conflict-free replicated data types [9] as its sums.
 - *Relational algebra.* A type is a predicate, and a predicate $P$ is a diagonal idempotent,
@@ -663,7 +663,7 @@ merge recurses into it.
 The first branches two list letters at one key, `[a=>{[1,2],[1,3]}]`, which the list ring factors to
 `[a=>[1,{2,3}]]`. The second has a record as a shared first moment, and its sum is
 $[a \Rightarrow b]\,(c\,d + d\,e)$: the record appears once, neither doubled, as lockstep would have it, nor merged
-into a neighbour, which would apply a record's operation from inside a list. The third concatenates,
+into a neighbor, which would apply a record's operation from inside a list. The third concatenates,
 `[[a=>b],c,[b=>e]]`, and the records' join waits for a fold.
 
 ## Containers and Code
