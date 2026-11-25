@@ -626,12 +626,13 @@ form.repl input::placeholder {
 
 button {
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.45;
     color: var(--fg);
     background: #1c232c;
     border: 1px solid var(--line-hi);
-    border-radius: 7px;
-    padding: .38rem .75rem;
+    border-radius: 5px;
+    padding: .2rem .55rem;
     cursor: pointer;
 }
 
@@ -652,10 +653,14 @@ button.ghost {
     background: none;
 }
 
+/* the primary is the page's one loud control: keep it red, but compact — a button
+   should be the size of its word, not of a row */
 button.primary {
     background: var(--red);
     border-color: #b3131c;
+    border-radius: 5px;
     color: #fff;
+    padding: .2rem .62rem;
 }
 
 button.primary:hover {
@@ -1011,6 +1016,7 @@ dialog.save-as .actions {
 /* ── compiler panel: the machine's lowering axis as a tree ───── */
 .compiler-form {
     display: flex;
+    align-items: center;
     gap: .5rem;
     padding: .1rem 0 .5rem;
 }
@@ -1089,6 +1095,558 @@ dialog.save-as .actions {
 .cnode-empty {
     color: var(--faint);
     font-size: 11px;
+}
+
+/* a code::T's `?` — the explanation affordance, top right of the code. the uri
+   analogue is a cursor-only obj-link because a uri names itself in text; a code
+   does not, so this mark is explicit and the holder of the code adds it. */
+.cnode-code-wrap {
+    position: relative;
+}
+
+.code-ask {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 15px;
+    height: 15px;
+    padding: 0;
+    border: 1px solid var(--line-hi);
+    border-radius: 50%;
+    background: var(--panel-hi);
+    color: var(--faint);
+    font: 10px/1 var(--mono);
+    cursor: pointer;
+    opacity: .55;
+}
+
+.code-ask:hover {
+    opacity: 1;
+    color: var(--fg);
+    border-color: var(--mred);
+}
+
+/* a code::T card: the code in the compiler's form, and a plain `explain` button
+   (a card is already an explicit code surface, so it gets the button, not the mark) */
+.code-panel {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.code-head {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.code-kind {
+    color: var(--faint);
+    font-size: 10px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.code-head .code-explain {
+    margin-left: auto;
+}
+
+.code-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.code-body {
+    margin: 0;
+    padding: .4rem .5rem;
+    max-height: 40vh;
+    overflow: auto;
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--fg);
+    font: 11px/1.45 var(--mono);
+    white-space: pre-wrap;
+}
+
+/* the icon vocabulary's buttons (see mtron-dom ICONS): a mark, not a word.
+   ? = explain, book = ?docq, a*b = ?decq — the same mark means the same thing
+   in every panel, and a panel's main action never becomes one of these. */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 .25rem;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--faint);
+    font: 10px/1 var(--mono);
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    color: var(--fg);
+    border-color: var(--line-hi);
+    background: var(--panel-hi);
+}
+
+.icon-btn:disabled {
+    opacity: .4;
+    cursor: default;
+}
+
+.icon-btn:disabled:hover {
+    color: var(--faint);
+    border-color: var(--line);
+    background: transparent;
+}
+
+.icon-btn svg {
+    display: block;
+}
+
+.icon-btn.ic-decq {
+    font-size: 9px;
+    letter-spacing: -.02em;
+}
+
+/* ── explain panel: the instruction table + the derived data-flow widget ────
+   the table is explanation::T's per_inst (the COMPILED chain); the flow is the
+   topology extension's `flow`, drawn locally — the machine's `format` is a lazy
+   inst, never a string, so the drawing is derived, not read. */
+.explain-panel {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+/* the panel is a tool: an expression in, an explanation out */
+.exp-tool {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .1rem 0 .2rem;
+}
+
+.exp-tool input {
+    flex: 1;
+    min-width: 0;
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--fg);
+    font: 11px/1.4 var(--mono);
+    padding: .3rem .45rem;
+}
+
+.exp-tool input:focus {
+    outline: none;
+    border-color: var(--mred);
+}
+
+.exp-tool .exp-run {
+    flex: none;
+}
+
+.exp-content {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.exp-head {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    padding: .1rem 0 .3rem;
+}
+
+.exp-type {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.exp-type code {
+    color: var(--fg);
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 0 .3rem;
+    font: 11px/1.7 var(--mono);
+}
+
+.exp-arrow {
+    color: var(--faint);
+}
+
+.exp-insts {
+    color: var(--faint);
+    font-size: 11px;
+}
+
+.exp-views {
+    display: flex;
+    gap: .35rem;
+}
+
+.exp-tab {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    color: var(--dim);
+    font: 11px/1.5 var(--mono);
+    padding: .1rem .45rem;
+    cursor: pointer;
+}
+
+.exp-tab[aria-selected="true"] {
+    border-color: var(--mred);
+    color: var(--fg);
+    background: var(--panel-hi);
+}
+
+.exp-tab:disabled {
+    opacity: .4;
+    cursor: default;
+}
+
+.exp-table-wrap {
+    overflow: auto;
+    max-height: 46vh;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+
+.exp-table {
+    border-collapse: collapse;
+    width: 100%;
+    font: 11px/1.45 var(--mono);
+}
+
+.exp-table th {
+    position: sticky;
+    top: 0;
+    background: var(--panel-hi);
+    color: var(--dim);
+    font-weight: normal;
+    text-align: left;
+    padding: .25rem .4rem;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+}
+
+.exp-table td {
+    padding: .2rem .4rem;
+    border-bottom: 1px solid #171d25;
+    vertical-align: top;
+}
+
+.exp-table tbody tr:hover {
+    background: var(--panel-hi);
+}
+
+.exp-table tbody tr.sel {
+    background: #1b2430;
+}
+
+.exp-op {
+    color: var(--fg);
+    white-space: nowrap;
+}
+
+.exp-form {
+    color: var(--dim);
+    white-space: nowrap;
+}
+
+.exp-f {
+    color: var(--faint);
+    white-space: nowrap;
+}
+
+.exp-none {
+    color: #3b434d;
+}
+
+.exp-type-cell {
+    color: var(--link);
+    white-space: nowrap;
+}
+
+.exp-coef-cell {
+    color: var(--dim);
+    white-space: nowrap;
+}
+
+.exp-args {
+    display: block;
+    max-width: 46ch;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--fg);
+    font: inherit;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+    cursor: pointer;
+}
+
+.exp-args:hover {
+    color: var(--link);
+}
+
+.exp-exts {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+.exp-ext-head {
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    border-top: 1px solid var(--line);
+    padding-top: .35rem;
+}
+
+.exp-ext-name {
+    color: var(--fg);
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.exp-ext-kind {
+    color: var(--faint);
+    font-size: 10px;
+}
+
+.exp-noext {
+    color: var(--faint);
+    font-size: 11px;
+    border-top: 1px solid var(--line);
+    padding-top: .35rem;
+}
+
+.exp-raw {
+    margin: 0;
+    max-height: 20vh;
+    overflow: auto;
+    color: var(--dim);
+    font: 11px/1.4 var(--mono);
+    white-space: pre-wrap;
+}
+
+/* a flow: runs and fans side by side along one line, a lane that re-plans drawn
+   inside its fan (a tree within the tree), a repeat boxed with a back-edge badge */
+.eflow-widget {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.eflow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem .4rem;
+}
+
+.eflow.ef-nested {
+    border-left: 1px solid var(--line-hi);
+    padding-left: .5rem;
+    margin-left: .1rem;
+}
+
+.ef-run {
+    display: flex;
+    align-items: center;
+    gap: .2rem;
+}
+
+.ef-coef {
+    color: var(--fg);
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0 .28rem;
+    font: 10px/1.7 var(--mono);
+    white-space: nowrap;
+}
+
+.ef-none {
+    color: #3b434d;
+}
+
+.ef-fan {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    padding: .1rem 1.1rem;
+}
+
+.ef-fan::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: .55rem;
+    border-top: 1px solid var(--line-hi);
+}
+
+.ef-lane {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: .05rem .2rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.ef-lane:hover {
+    background: var(--panel-hi);
+}
+
+.ef-lane.sel {
+    background: #1b2430;
+    box-shadow: inset 0 0 0 1px var(--mred);
+}
+
+/* the bracket: each lane draws its own vertical stroke and its stub into the lane,
+   with the first and last lanes' strokes clipped to the half that belongs to them */
+.ef-lane::before {
+    content: "";
+    position: absolute;
+    left: -.55rem;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--line-hi);
+}
+
+.ef-lane::after {
+    content: "";
+    position: absolute;
+    left: -.55rem;
+    top: 50%;
+    width: .55rem;
+    border-top: 1px solid var(--line-hi);
+}
+
+.ef-lane:first-child::before {
+    top: 50%;
+}
+
+.ef-lane:last-child::before {
+    bottom: 50%;
+}
+
+.ef-lane:only-child::before,
+.ef-lane:only-child::after {
+    display: none;
+}
+
+.ef-lane-empty {
+    color: var(--faint);
+    font-size: 10px;
+    cursor: default;
+}
+
+.ef-lane-body {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    flex-wrap: wrap;
+}
+
+.ef-place {
+    background: var(--panel-hi);
+    border: 1px solid var(--line-hi);
+    border-radius: 4px;
+    color: var(--link);
+    font: 10px/1.7 var(--mono);
+    padding: 0 .3rem;
+    cursor: pointer;
+}
+
+.ef-place.ef-home {
+    color: var(--fg);
+}
+
+.ef-place:hover {
+    border-color: var(--mred);
+}
+
+.ef-stage {
+    display: flex;
+    align-items: center;
+    gap: .2rem;
+}
+
+.ef-sub {
+    display: flex;
+    align-items: flex-start;
+    gap: .1rem;
+}
+
+.ef-toggle {
+    background: none;
+    border: 0;
+    padding: 0 .1rem;
+    color: var(--faint);
+    font: 10px/1 var(--mono);
+    cursor: pointer;
+}
+
+.ef-toggle:hover {
+    color: var(--fg);
+}
+
+.ef-open {
+    background: none;
+    border: 0;
+    padding: 0 .1rem;
+    color: var(--faint);
+    font: 11px/1 var(--mono);
+    cursor: pointer;
+}
+
+.ef-open:hover {
+    color: var(--fg);
+}
+
+.ef-loop {
+    position: relative;
+    border: 1px dashed var(--mred);
+    border-radius: 6px;
+    padding: .15rem .35rem .2rem;
+}
+
+.ef-loop-badge {
+    display: flex;
+    align-items: baseline;
+    gap: .25rem;
+    color: var(--faint);
+    font-size: 10px;
+}
+
+.ef-loop-mark {
+    color: var(--red-hi);
+}
+
+.ef-inspect {
+    min-height: 1.2em;
+    border-top: 1px solid var(--line);
+    padding-top: .2rem;
+    color: var(--faint);
+    font: 10px/1.5 var(--mono);
 }
 
 /* ── type panel: a type's definition ───────────────────── */
@@ -1892,26 +2450,6 @@ button.machine-tile:focus-visible {
 
 .instset-drop-cell:hover {
     color: var(--link);
-}
-
-.instset-drop-btn {
-    background: transparent;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    color: var(--dim);
-    font: inherit;
-    font-size: 9px;
-    letter-spacing: .04em;
-    line-height: 1;
-    padding: .16rem .3rem;
-    cursor: pointer;
-}
-
-.instset-drop-btn:hover,
-.instset-drop-btn:focus-visible {
-    color: var(--fg);
-    border-color: var(--dim);
-    outline: 0;
 }
 
 .instset-drop-empty {

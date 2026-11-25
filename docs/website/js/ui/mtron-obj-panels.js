@@ -17,8 +17,9 @@ import { parseSchema, renderForm, collectForm } from './mtron-form.js';
 import { parse, write, quote, real, int, writeCodeForm, FORMS, FULL_FORM, nextForm } from '../sdk/obj_mtron_serializer.js';
 import { f } from '../sdk/furi.js';
 import { parse as envelope } from '../sdk/mtron-envelope.js';
-import { toElement } from './mtron-dom.js';
+import { toElement, iconButton } from './mtron-dom.js';
 import { typesetMath } from './mathjax.js';
+import { explanationModel, explainExtension, explainBadge } from './explain-flow.js';
 
 "use strict";
 
@@ -259,11 +260,10 @@ import { typesetMath } from './mathjax.js';
                                 api.open({isType: key === "type", vid: text, raw: text, shortTid: text.split("/").pop() || text});
                         });
                         row.appendChild(cell);
-                        ["doc", "dec"].forEach((label) => {
-                            const button = node("button", "instset-drop-btn", label);
-                            button.type = "button";
-                            button.addEventListener("click", () => showRead(text, label));
-                            row.appendChild(button);
+                        /* auxiliary actions wear the page-wide marks: book = ?docq, a*b = ?decq */
+                        ["docq", "decq"].forEach((kind) => {
+                            const button = iconButton(kind, () => showRead(text, kind.slice(0, -1)));
+                            if (button) row.appendChild(button);
                         });
                         drop.appendChild(row);
                     });
@@ -1843,7 +1843,29 @@ import { typesetMath } from './mathjax.js';
         const expr = String((env && env.expr) || "").trim();
         if (!expr) { box.appendChild(node("div", "mpanel-empty", "no doc read")); return box; }
 
-        const doc = await (api && api.evalJson ? api.evalJson(expr) : Promise.resolve(null)).catch(() => null);
+        /* x-mtron is the model (convention 14). the card usually carries the ?docq
+           answer already, so prefer it; only a bare expr costs a read. the parsed
+           rec is flattened into the same shape the JSON codec used to answer, so
+           the layout below is unchanged. */
+        let clean = String((env && env.raw) || "").replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "").trim();
+        if (!clean && env && env.expr) {
+            const text = await (api && api.mtron ? api.mtron(env.expr) : Promise.resolve("")).catch(() => "");
+            clean = String(text == null ? "" : text).replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "").trim();
+        }
+        if (!clean || clean === "noobj") { box.appendChild(node("div", "mpanel-empty", "no documentation")); return box; }
+
+        const flat = (obj) => {
+            if (!obj || obj.isNoObj()) return "";
+            if (obj.isStr()) return obj.js;
+            if (obj.isUri()) return obj.js.toString();
+            return write(obj);
+        };
+        const parsed = parse(clean);
+        const doc = parsed.isRec() ? Object.fromEntries([...parsed.js.entries()].map(([k, v]) => {
+            if (v.isRec()) return [k.toString(), Object.fromEntries([...v.js.entries()].map(([k2, v2]) => [k2.toString(), flat(v2)]))];
+            if (v.isLst()) return [k.toString(), v.js.map(flat)];
+            return [k.toString(), flat(v)];
+        })) : null;
         if (!doc || typeof doc !== "object") { box.appendChild(node("div", "mpanel-empty", "no documentation")); return box; }
 
         const desc = doc.desc != null ? String(doc.desc).trim() : "";
@@ -1993,9 +2015,19 @@ function compilerPanel(env, api) {
     const formBtn = node("button", "ghost compiler-form-btn", formLabel(FULL_FORM));
     formBtn.type = "button";
     formBtn.title = "cycle the code name form (full → short → typed → bare)";
+    /* auxiliary: the page's explain mark, not a word — compile is the main action */
+    const explainBtn = iconButton("explain", () => {
+        const expr = input.value.trim();
+        if (!expr) return;
+        /* the panel reads env.expr, so it is handed the explain chain */
+        api.open({tid: "/m/inst/explain/explanation", vid: null, raw: "", shortTid: "explanation", expr: expr + ".explain()"});
+    });
+    explainBtn.disabled = true;
+    explainBtn.classList.add("compiler-explain");
     form.appendChild(input);
     form.appendChild(formBtn);
     form.appendChild(runBtn);
+    form.appendChild(explainBtn);
     box.appendChild(form);
 
     const tree = node("div", "compiler-tree");
@@ -2038,11 +2070,17 @@ function compilerPanel(env, api) {
         h.appendChild(node("span", "cnode-label", label));
         return h;
     }
+    /* a stage's code, with the `?` that opens its explanation: every code::T in
+       the tree is one click from its table (and its topology) */
     function code(text) {
+        const wrap = node("div", "cnode-code-wrap");
         const pre = node("pre", "cnode-code", "");
         pre.dataset.mtronText = text;
         paintCode(pre, text, currentForm);
-        return pre;
+        wrap.appendChild(pre);
+        const badge = explainBadge(text, api);
+        if (badge) wrap.appendChild(badge);
+        return wrap;
     }
     function branch(h, kids) {
         const root = node("div", "cnode");
@@ -2072,6 +2110,7 @@ function compilerPanel(env, api) {
             const parsed = await evalObj(src + "==[!*/compiler/parser]");
             const parsedText = textOf(parsed);
             tree.appendChild(branch(head("_", "parser"), [code(parsedText || "noobj")]));
+            explainBtn.disabled = false;   /* it compiled: now it can be explained */
 
             /* 2. resolve */
             status.textContent = "resolving …";
@@ -2148,6 +2187,337 @@ function compilerPanel(env, api) {
 
     return box;
 }
+
+/* ── /m/code — a code::T card ───────────────────────────────────────────────
+   a text dump never names its type, so the `?` mark belongs only to explicit code
+   interaction panels; a code CARD is already that surface, and there the way to
+   explain is a plain button rather than a small mark. the code is drawn in the
+   compiler's own form, so a stage and a card read alike. */
+function codePanel(env, api) {
+    const box = node("div", "mpanel code-panel");
+
+    const head = node("div", "code-head");
+    head.appendChild(node("span", "code-kind", "code"));
+    box.appendChild(head);
+
+    const explain = node("button", "primary code-explain", "explain");
+    explain.type = "button";
+    explain.disabled = true;
+    explain.title = "explain this code";
+    let text = "";
+    explain.addEventListener("click", () => {
+        if (!text || !api.open) return;
+        api.open({tid: "/m/inst/explain/explanation", vid: null, raw: "", shortTid: "explanation", expr: text + ".explain()"});
+    });
+    head.appendChild(explain);
+
+    const body = node("div", "code-content");
+    box.appendChild(body);
+
+    const show = (code) => {
+        text = String(code == null ? "" : code).trim();
+        body.textContent = "";
+        explain.disabled = !text || text === "noobj";
+        if (!text || text === "noobj") {
+            body.appendChild(node("div", "mpanel-empty", "no code"));
+            return;
+        }
+        const pre = node("pre", "code-body", "");
+        paintCode(pre, text, FULL_FORM);
+        body.appendChild(pre);
+    };
+
+    /* the card may arrive with its code as text (a badge, a stage) or by address */
+    const raw = String(env && env.raw ? env.raw : "").trim();
+    if (raw) {
+        show(raw);
+        return box;
+    }
+    if (env && env.vid) {
+        body.appendChild(node("div", "mpanel-empty", "reading " + env.vid + "…"));
+        return Promise.resolve(api.mtron("*<" + String(env.vid).replace(/^</, "").replace(/>$/, "") + ">"))
+            .then((value) => show(value))
+            .catch((error) => {
+                body.textContent = "";
+                body.appendChild(node("div", "mpanel-empty", String(error && error.message ? error.message : error)));
+                return box;
+            });
+    }
+    show("");
+    return box;
+}
+
+/* ── explanation::T — explain() as a table, its extensions as widgets ───────
+   the machine answers explain() with [format, desc, per_inst, ext?]: per_inst is
+   the COMPILED chain (the table), desc.rewrite is the SUBMITTED expression's own
+   explanation (the second view), and each ext/<name> rec belongs to an extension
+   (today: topology), drawn by the renderer registered in explain-flow.js. the
+   panel only READS and renders — it never mints an explanation, so the console
+   stays the one place an expression is evaluated. */
+function explanationPanel(env, api) {
+    const box = node("div", "mpanel explain-panel");
+
+    /* the card is a TOOL, not a view of a stored obj: an explanation exists only
+       once explain() runs, so the panel carries the expression and asks for one,
+       exactly as the compiler card carries the expression it lowers. a card opened
+       from a console answer arrives with that answer's expression already in it. */
+    const form = node("form", "exp-tool");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.spellcheck = false;
+    input.autocapitalize = "off";
+    input.autocomplete = "off";
+    input.placeholder = "1.plus(2)   ·   start?hop=2(0).{0,10}plus(1).sum()";
+    const runButton = node("button", "primary exp-run", "explain");
+    runButton.type = "submit";
+    form.appendChild(input);
+    form.appendChild(runButton);
+    box.appendChild(form);
+    const content = node("div", "exp-content");
+    box.appendChild(content);
+
+    /* the expression a card was opened FROM: an explain() chain minus its marker */
+    const sourceOf = (expr) => {
+        const text = String(expr == null ? "" : expr).trim();
+        const cut = text.lastIndexOf(".explain()");
+        return cut > 0 ? text.slice(0, cut).trim() : text;
+    };
+
+    /* the machine form is the complete one (the ui form clips, json drops tid/vid):
+       read the obj by its vid when it has one, re-run the console's own expression
+       when it has not, and fall back to the answer's text. */
+    const readOne = async () => {
+        /* a card the PAGE mounts stands on a machine address (~, ., /.): a root rec
+           is not an explanation, and reading one whole is pointless and expensive,
+           so only a real address is asked. */
+        const rootAddress = /^(~|\.|\/\.|\/)$/;
+        const attempts = [];
+        if (env.vid && !rootAddress.test(String(env.vid).trim()))
+            attempts.push(() => api.mtron("*<" + String(env.vid).replace(/^</, "").replace(/>$/, "") + ">"));
+        if (env.expr) attempts.push(() => api.mtron(String(env.expr)));
+        if (env.raw) attempts.push(() => Promise.resolve(env.raw));
+        for (const attempt of attempts) {
+            try {
+                const text = String((await attempt()) || "").trim();
+                if (!text || text === "noobj" || /^fail::/.test(text)) continue;
+                const model = explanationModel(parse(text));
+                if (model) return model;
+            } catch (ignored) { /* the next source may answer */ }
+        }
+        return null;
+    };
+
+    const COLS = ["op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng", "c_out"];
+    let model = null;
+    let busy = false;
+
+    function td(value, cls) {
+        const cell = document.createElement("td");
+        if (cls) cell.className = cls;
+        cell.textContent = value == null ? "" : String(value);
+        return cell;
+    }
+
+    /* a type the rec did not record: explanation::T omits a type whose least count
+       is 0, which covers both a literal start (noobj{0}::T) and a reducer's
+       int{*}::T — so the two cannot be told apart here, and a dash is the honest
+       cell (the terminal table derives the name from the inst itself). */
+    function typeCell(value) {
+        if (value) return td(value, "exp-type-cell");
+        const cell = td("—", "exp-none");
+        cell.title = "not recorded — a type whose least count is 0 is omitted from the rec";
+        return cell;
+    }
+
+    /* a coefficient as the rec records it: the LEAST COUNT it admits, so a {*} or
+       a {0,3} in the terminal table may read as {0} here */
+    function coefCell(value) {
+        if (value) return td(value, "exp-coef-cell");
+        const cell = td("—", "exp-none exp-coef-cell");
+        cell.title = "no least count recorded (the coefficient is unbounded below)";
+        return cell;
+    }
+
+    function argsCell(row) {
+        const cell = td(null, "exp-args-cell");
+        if (!row.args) return cell;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "exp-args";
+        button.textContent = row.args;
+        button.title = "click to open these args as a card";
+        button.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            if (api.open) api.open({tid: null, vid: null, raw: row.args, shortTid: "args"});
+        });
+        cell.appendChild(button);
+        return cell;
+    }
+
+    function tableOf(m) {
+        const wrap = node("div", "exp-table-wrap");
+        const table = document.createElement("table");
+        table.className = "exp-table";
+        const thead = document.createElement("thead");
+        const headRow = document.createElement("tr");
+        COLS.forEach((col) => {
+            const th = document.createElement("th");
+            th.textContent = col;
+            if (col === "desc") th.title = "the instruction's form (Inst.Form)";
+            if (col.indexOf("c_") === 0) th.title = "the least count explain() records; the terminal table can show a wider coefficient ({*}, {0,3})";
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        m.rows.forEach((row) => {
+            const tr = document.createElement("tr");
+            tr.appendChild(td(row.op, "exp-op"));
+            tr.appendChild(typeCell(row.dom));
+            tr.appendChild(typeCell(row.rng));
+            tr.appendChild(argsCell(row));
+            tr.appendChild(td(row.f, "exp-f"));
+            tr.appendChild(td(row.form, "exp-form"));
+            tr.appendChild(coefCell(row.cDom));
+            tr.appendChild(coefCell(row.cRng));
+            tr.appendChild(coefCell(row.cOut));
+            tr.addEventListener("click", () => tr.classList.toggle("sel"));
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        return wrap;
+    }
+
+    /* one section per extension the machine attached; a registered renderer draws
+       it, and an unknown one still shows its rec rather than disappearing */
+    function mountExtensions() {
+        const exts = node("div", "exp-exts");
+        if (!model.ext.length) {
+            exts.appendChild(node("div", "exp-noext", "no explain extensions — a chain that fans out nowhere has no topology"));
+            return exts;
+        }
+        model.ext.forEach((entry) => {
+            const section = node("section", "exp-ext");
+            const head = node("div", "exp-ext-head");
+            head.appendChild(node("span", "exp-ext-name", entry.name));
+            head.appendChild(node("span", "exp-ext-kind", "extension"));
+            section.appendChild(head);
+            const factory = explainExtension(entry.name);
+            if (!factory) {
+                section.appendChild(node("div", "mpanel-empty", "no renderer registered for the '" + entry.name + "' extension"));
+                const raw = node("pre", "exp-raw", write(entry.rec));
+                section.appendChild(raw);
+            } else {
+                try {
+                    Promise.resolve(factory(entry.rec, api, {model: model, env: env}))
+                        .then((rendered) => {
+                            if (rendered) section.appendChild(rendered);
+                        })
+                        .catch((error) => {
+                            section.appendChild(node("div", "mpanel-empty", String(error && error.message ? error.message : error)));
+                        });
+                } catch (error) {
+                    section.appendChild(node("div", "mpanel-empty", String(error && error.message ? error.message : error)));
+                }
+            }
+            exts.appendChild(section);
+        });
+        return exts;
+    }
+
+    /* one explanation, rendered: the desc head, the view switch, the table and its
+       extensions. called for the card's own answer and again for every expression a
+       reader asks through the field. */
+    function render(loaded) {
+        model = loaded;
+        content.textContent = "";
+        if (!model) {
+            content.appendChild(node("div", "mpanel-empty", "no explanation — type an expression above and press explain"));
+            return;
+        }
+        const head = node("div", "exp-head");
+        const type = node("span", "exp-type");
+        type.appendChild(node("code", "exp-dom", model.desc.dom || "—"));
+        type.appendChild(node("span", "exp-arrow", "→"));
+        type.appendChild(node("code", "exp-rng", model.desc.rng || "—"));
+        if (!model.desc.dom) type.title = "no dom recorded — the chain starts at a literal (noobj{0}::T), or a type whose least count is 0 was omitted";
+        head.appendChild(type);
+        head.appendChild(node("span", "exp-insts", (model.desc.insts == null ? model.rows.length : model.desc.insts) + " insts"));
+        content.appendChild(head);
+
+        const views = node("div", "exp-views");
+        const body = node("div", "exp-body");
+        const tabs = [];
+        const show = (name) => {
+            const which = name === "submitted" && model.submitted ? model.submitted : model;
+            tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.expView === name)));
+            body.replaceChildren(tableOf(which));
+        };
+        const addTab = (name, label, enabled) => {
+            const tab = document.createElement("button");
+            tab.type = "button";
+            tab.className = "exp-tab";
+            tab.dataset.expView = name;
+            tab.textContent = label;
+            tab.disabled = !enabled;
+            tab.addEventListener("click", () => show(name));
+            views.appendChild(tab);
+            tabs.push(tab);
+        };
+        addTab("compiled", "compiled", true);
+        addTab("submitted", "submitted", !!model.submitted);
+        content.appendChild(views);
+        content.appendChild(body);
+        content.appendChild(mountExtensions());
+        show("compiled");
+    }
+
+    /* ask the machine to explain the field's expression */
+    async function explainFrom(expr) {
+        const source = sourceOf(expr);
+        if (!source || busy) return;
+        busy = true;
+        runButton.disabled = true;
+        input.disabled = true;
+        content.textContent = "";
+        content.appendChild(node("div", "compiler-status", "explaining " + source + " …"));
+        try {
+            const text = String((await api.mtron(source + ".explain()")) || "").trim();
+            if (!text || text === "noobj" || /^fail::/.test(text)) throw new Error(text || "no answer");
+            const next = explanationModel(parse(text));
+            if (!next) throw new Error("not an explanation: " + text.slice(0, 120));
+            render(next);
+        } catch (error) {
+            content.textContent = "";
+            content.appendChild(node("div", "mpanel-empty", String(error && error.message ? error.message : error)));
+        } finally {
+            busy = false;
+            runButton.disabled = false;
+            input.disabled = false;
+        }
+    }
+
+    form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        explainFrom(input.value);
+    });
+
+    /* a console answer seeds the field with the expression it explained */
+    const seeded = sourceOf(env.expr);
+    if (seeded) input.value = seeded;
+    return readOne().then((loaded) => {
+        render(loaded);
+        return box;
+    });
+}
+
+register("/m/code", codePanel);
+register("code", codePanel);
+
+register("/m/inst/explain/explanation", explanationPanel);
+register("explanation", explanationPanel);
+
 register("/m/mach/component/compiler", compilerPanel);
 register("compiler", compilerPanel);
 

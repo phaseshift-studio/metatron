@@ -120,7 +120,7 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
         assertEquals(List.of("blue"), rules.get(0).styles());
         assertEquals(".*", rules.get(0).regex());
         assertEquals(List.of("bright-black"), rules.get(rules.size() - 1).styles());
-        assertEquals("\\[==", rules.get(rules.size() - 1).start());
+        assertEquals("\\[== ", rules.get(rules.size() - 1).start());
         // every regex the file declares — the dead one included — is a java regex jline can compile
         for (final NanorcToHljs.Rule rule : rules) {
             final String regex = null == rule.start() ? rule.regex() : rule.start() + rule.end();

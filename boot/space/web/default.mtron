@@ -5,7 +5,8 @@ splash_page::[
       splash_card::[tid => </m/mach/machine>,            vid => </.>,                   label => 'machine',            view => panel, span => [col => 4]],
       splash_card::[tid => </m/mach/component/network>,  vid => <~/network>,            label => 'current network',    view => panel, span => [col => 2, row => 1]],
       splash_card::[tid => </m/mach/component/memory>,   vid => <~/memory>,             label => 'current memory',     view => panel, span => [col => 2, row => 1]],
-      splash_card::[tid => </m/mach/component/compiler>, vid => <~/compiler>,           label => 'compiler',           view => panel, span => [col => 4, row => 2]]
+      splash_card::[tid => </m/mach/component/compiler>, vid => <~/compiler>,           label => 'compiler',           view => panel, span => [col => 4, row => 2]],
+      splash_card::[tid => </m/inst/explain/explanation>, vid => <~>,                   label => 'explain',            view => panel, span => [col => 4, row => 2]]
     ]],
     splash_card::[label => 'server', card => [
       splash_card::[tid => </m/web/http/http_server>,    vid => </network/web/http>,    label => 'http server',        view => panel, span => [col => 2, row => 1]],

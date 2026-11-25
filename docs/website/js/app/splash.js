@@ -536,7 +536,15 @@ function createConsole(instance) {
         const env = MtronEnvelope ? MtronEnvelope.parse(text) : null;
         if (!env) return;
         env.expr = expr ? String(expr).trim() : null;
-        if (!REPL.references.some((r) => r.tid === env.tid && r.vid === env.vid)) {
+        /* one chip per (tid, vid) — and two answers can share both: every explain()
+           answer is an explanation at NO vid, so the chip keeps its place but takes
+           the LATEST expression and text, or a card opened from it would re-run the
+           expression that produced the previous answer. */
+        const same = REPL.references.find((r) => r.tid === env.tid && r.vid === env.vid);
+        if (same) {
+            same.expr = env.expr;
+            same.raw = env.raw;
+        } else {
             REPL.references.unshift(env);
             if (REPL.references.length > 8) REPL.references.pop();
         }
