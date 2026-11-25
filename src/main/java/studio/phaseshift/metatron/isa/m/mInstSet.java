@@ -1812,15 +1812,13 @@ public class mInstSet extends AbstractInstSet {
     }
 
     /**
-     * The dom/rng value of a stage rec: the type's vid as a uri. A LEAST COUNT OF 0 DOES NOT DROP THE KEY
-     * (Marko, 2026-11-25): a domain is always a type, and an omitted key left the table's type column with
-     * nothing to show — a {@code -}, which is not a type. A no-object type records its own name, so a
-     * literal start reads {@code noobj::T}. (The COEFFICIENT is still not carried: {@code dom} is a uri, and
-     * {@code int{*}} is a type, not a uri, so it reads {@code int::T} here; {@code c_dom} states its least
-     * count. Carrying the coefficient would need this field to hold the type's spelling rather than a uri.)
+     * The dom/rng value of a stage rec: a zero-coefficient (noobj) type yields noobj itself,
+     * otherwise the type's vid as a uri. (a noobj{c} uri and a noobj literal parse to different
+     * classes — noobj-vs-noobj is the one equivalence test literals can express)
      */
     private static Obj domRngValue(final Type t) {
-        if (null == t.vid()) return noobj();
+        // a range unbounded below has no min (cc's A.any(): a coefficient may be set negative), and is no zero
+        if (Long.valueOf(0L).equals(t.c().min())) return noobj();
         return uri(f(t.vid().small().pathString()));
     }
 
