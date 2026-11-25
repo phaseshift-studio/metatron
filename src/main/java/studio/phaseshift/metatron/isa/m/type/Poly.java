@@ -767,8 +767,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         /**
          * THE MERGE'S NORMAL FORM OF A VALUE, AS A READ BELOW IT SEES IT ({@link #withWalks}): the recs of data a bag
          * holds fused into one rec, a bulked rec's multiplicity spread into its walks, and anything else as it is. A read
-         * below a key reads its value in this form (Marko, 2026-11-25, "read the normal form"), so it answers as the
-         * merged value does. A single unbulked value is its own normal form for a read, and is answered as it is.
+         * below a key reads its value in this form (Marko, 2026-11-25, "read the normal form"). A single unbulked value is
+         * not rewritten: a literal keeps its form until a merge reads it (Marko, 2026-11-24), and a key a read runs
+         * through inside it is read in this form in turn, so only the value a path ends at keeps a form the merge would
+         * change ({@code [a=>[b=>{[x=>1],[y=>2]}]]>>(a/b)} is the bag as written, and {@code [a=>[b=>[=>],c=>1]]>>(a/b)}
+         * is {@code [=>]}, which a merge drops).
          */
         public static Obj normal(final Obj value) {
             if (!value.isObjs() && value.c().isOne())
@@ -780,12 +783,18 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         /**
          * THE READS BELOW A KEY, one per poly its value holds in the merge's normal form ({@link #normal}). The recs of
          * a bag read as their one fused rec, and a bulked rec as the rec its copies spread into, so
-         * {@code [a=>{2}[b=>[x=>1]]]} reads {@code a/b} as {@code [x=>{2}1]}, as {@code [a=>[b=>[x=>{2}1]]]} does. A
-         * holder becomes the parent of each poly of data it reads (a plain lst, a rec of walks), so a reference inside
-         * climbs to it; a live poly (a space, a machine, a queue) is not re-parented here, and a walk passes no holder
-         * (the keys an address runs through, in Rec.at and in Space.Helper.within, and the polys Space.Helper.held reads
-         * at an address). Rec.at toggles each value before it reaches here, which parents it, as on main; within toggles
-         * only code, so a live value there keeps its parent.
+         * {@code [a=>{2}[b=>[x=>1]]]} reads {@code a/b} as {@code [x=>{2}1]}, as {@code [a=>[b=>[x=>{2}1]]]} does. The
+         * callers are the keys an address runs through, in Rec.at and in Space.Helper.within, and the polys
+         * Space.Helper.held reads at an address. A holder, where one is passed (a walk passes none), becomes the parent
+         * of each poly of data read here, a rec of walks or a plain lst, so a link climbs to it: a reference's {@code ..}
+         * through a rec (Rec.at's {@code ..} step reads the link), and {@code <<} from either. A lst in a bag gets no
+         * parent elsewhere (an objs takes none): {@code [a=>{[[b=>1]],[q=>2]}]>>(a/0).<<.<<} is the holder. On main,
+         * Rec.at parented every poly here and Space.Helper.within none. A live poly (a space, a machine, a queue) is not
+         * re-parented here, nor a vec (a lst of reals, not of class MLst). Rec.at toggles the value before it reaches
+         * here, which parents a single value, a live one too, as on main, but not the members of a bag, so on that
+         * linear branch a live member of a bag keeps its parent, where main re-parented it; Rec.at's wildcard step still
+         * parents each member, as on main. Space.Helper.within toggles only code at a key it runs through, so a live value
+         * stored there keeps its parent.
          */
         public static List<Obj> readsBelow(final Obj value, final Obj holder, final Function<Poly<?, ?>, Obj> read) {
             return normal(value).stream()

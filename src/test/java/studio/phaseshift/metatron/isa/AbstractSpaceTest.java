@@ -75,12 +75,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         // to tell its terms from its views. Until then these two reads of uri.adoc's n/m/r, laid out as monos, wait
         @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {"^V2/entry$"}),
         @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {"^V3/entry$"}),
-        // OPEN, the same question at one address: the polys of a stream stored at an address are read as the store's
-        // answers there, kept apart (a graph answers a step with each element it reaches), so what each holds below
-        // does not add as the polys of a key's bag do
+        // OPEN, the same question at one address: the polys of a stream stored above the address read are the store's
+        // answers there, read apart (a graph answers a step with each element it reaches), so what each holds below
+        // does not add as the polys of a key's bag do. Ruled (Marko, 2026-11-25): they add, a stored stream reading in
+        // its fused normal form, as uri.adoc's form B, a stream of recs, equals form A, their fusion
         @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {"^B[14]/stream$"}),
-        // OPEN: a space's + read lists a bag's polys at a key one by one, so a child that two of them hold is listed
-        // twice, where the bag's normal form holds it once (Rec.at's [a=>{[b=>[x=>1]],[b=>[y=>2]]}]>>(a/+) lists it once)
+        // OPEN: a space's + read lists the polys held at an address one by one, a key's bag (nested) or a stream stored
+        // at the address itself (stream), so a child that two of them hold is listed per distinct value, where the
+        // normal form holds it once (Rec.at's [a=>{[b=>[x=>1]],[b=>[y=>2]]}]>>(a/+) lists it once). The stream case
+        // waits on the ruling above as well
         @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {"^B3/(nested|stream)$"}),
         // OPEN: a + read takes its values from the walk, which fires no reference, so the terms a reference reads are
         // not listed (Rec.at's own + past the first segment lists them, but misses the keys beside the reference)

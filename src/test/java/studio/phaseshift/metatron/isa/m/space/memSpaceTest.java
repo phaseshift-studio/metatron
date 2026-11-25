@@ -103,25 +103,37 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
     }
 
     /**
-     * A READ THROUGH A STORED LIVE VALUE LEAVES ITS PARENT ALONE: within toggles only code at a key it runs through,
-     * and Poly.Helper.readsBelow parents only polys of data, so reading below a stored space does not point the
-     * space's parent at the rec that holds it (Machine.pop and Component.machine read that link). The read names a
-     * key the space holds, so within answers it; a read that misses falls back to Rec.at, which toggles every value
-     * and so parents it, as on main (open)
+     * A READ BELOW A LIVE VALUE LEAVES ITS PARENT ALONE (Machine.pop and Component.machine read that link). At a key a
+     * read runs through, Space.Helper.within toggles only code, and Poly.Helper.readsBelow parents only polys of data,
+     * so a space stored at the key does not take the rec holding it as its parent (main's within parented nothing
+     * there either: this guards the gate). On its linear branch Rec.at parents a single value it toggles, as on main,
+     * but not the members of a bag, where main parented each. Each read checks its value, so no check passes on a read
+     * that reached nothing. Open, each as on main: a read of the key itself toggles its value, so does a read that
+     * misses and falls back to Rec.at, and Rec.at's wildcard step ({@code +/pattern}) parents each member of a bag
      */
     @Test
-    public void testAReadThroughALiveValueKeepsItsParent() {
+    public void testAReadBelowALiveValueKeepsItsParent() {
         final memSpace live = memSpace.of(rec(uri(PATTERN), uri("/live_parent/#")), f("/memory/space/live_parent"));
+        final memSpace other = memSpace.of(rec(uri(PATTERN), uri("/live_other/#")), f("/memory/space/live_other"));
         final Obj parent = live.parent();
+        final Obj otherParent = other.parent();
         final fURI holder = this.baseURI.extend("holder");
         try {
+            // a space stored at the key
             Machine.write(holder, rec(uri("s"), live));
             AbstractMetatronTest.checkEquality(LOG, uri("/live_parent/#"),
                     Machine.read(holder.extend("s").extend(PATTERN)).selfVID(null), true);
-            assertEquals(parent, live.parent());
+            AbstractMetatronTest.checkEquality(LOG, parent, live.parent(), true);
+            // a bag of spaces at a key, read below by Rec.at
+            final Obj read = rec(uri("a"), objs(live, other)).at(uri(f("a").extend(PATTERN)));
+            AbstractMetatronTest.checkEquality(LOG, objs(uri("/live_parent/#"), uri("/live_other/#")),
+                    objs(read.stream().map(obj -> (Obj) obj.selfVID(null)).toList()), true);
+            AbstractMetatronTest.checkEquality(LOG, parent, live.parent(), true);
+            AbstractMetatronTest.checkEquality(LOG, otherParent, other.parent(), true);
         } finally {
             Machine.write(holder, noobj());
             live.close();
+            other.close();
         }
     }
 

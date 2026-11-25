@@ -426,10 +426,12 @@ public interface Space extends Addressable, Rec, Closeable {
          * rest read below it in the key's value in the merge's normal form (Poly.Helper.readsBelow: a bag's recs fused
          * into one, a bulked rec's multiplicity spread); and the keys under the rest, its subtree. On a READ of an address
          * with no wildcard, an auto_from at the key that is the rest, or at a key the rest runs through, fires, and the
-         * polys of data read below a key take its holder as their parent. A key meets the rest literally, so a literal
-         * path answers before a wildcard key that would match it (the web gateway's {@code http/#} beside a dialed
-         * {@code http/quarry/8777}). Only when the keys' sum is noobj, and only on a READ of an address with no wildcard,
-         * does the poly answer by its own walk, Rec.at (a position, a wildcard key matching a concrete address). A WALK
+         * polys of data read below a key take its holder as their parent. The key that is the rest is toggled, as
+         * Rec.at's named key is, which parents a single value, a live one too, as on main, but not the members of a bag
+         * (an objs takes no parent). A key meets the rest literally, so a literal path answers before a wildcard key that
+         * would match it (the web gateway's {@code http/#} beside a dialed {@code http/quarry/8777}). Only when the keys'
+         * sum is noobj, and only on a READ of an address with no wildcard, does the poly answer by its own walk, Rec.at
+         * (a position, a wildcard key matching a concrete address). A WALK
          * stops at what the layout holds: no auto_from fires and no wildcard key matches deeper, or a key like
          * {@code http/#} would answer every address below it, without end, and the keys it runs through parent nothing.
          */
@@ -450,15 +452,14 @@ public interface Space extends Addressable, Rec, Closeable {
                         // the reads below the key in its value's normal form, as Rec.at's (Poly.Helper.readsBelow). A
                         // read fires an auto_from there first and parents the polys of data it reads to this poly; a
                         // walk, or a rest holding a layout wildcard, fires nothing and parents nothing. A value holding
-                        // no code is not toggled, so a live one keeps its parent. The rest names one address (a wildcard
-                        // in it is a segment), so its reads add
+                        // no code is not toggled, so a live one stored at the key keeps its parent. The rest names one
+                        // address (a wildcard in it is a segment), so its reads add
                         final boolean raw = walk || rest.hasPattern();
                         final Obj holds = raw || value.stream().noneMatch(Obj::isObjCall)
                                 ? value : Poly.Helper.autoToggle(poly, value, true);
                         reads.addAll(Poly.Helper.readsBelow(holds, raw ? null : poly,
                                 member -> within(member, rest.pretract(keyPath.segmentLength()), walk)));
-                    }
-                    else if (runsThrough(rest, keyPath))
+                    } else if (runsThrough(rest, keyPath))
                         under.add(IdObj.of(keyPath.pretract(rest.segmentLength()), value));
                 });
                 if (!under.isEmpty())
@@ -515,8 +516,12 @@ public interface Space extends Addressable, Rec, Closeable {
          * the addresses one level below an address in the logical tree, each with the obj the listing answered for it
          * ({@code null}: derive it). The store lists the level itself with one {@code +}: what is stored there, and — a
          * store that keeps its structure (a trie's nodes, a filesystem's directories) — the interior nodes there, as
-         * noobj. The poly the address holds adds its keys, in the merge's normal form, each slot's obj with the
-         * coefficient its rel carries (the node form resolves it). Only a level that lists nothing is looked for below,
+         * noobj. Each poly the address holds adds its keys, each in its own normal form (a bulked poly's multiplicity
+         * spread into them), each slot's obj with the coefficient its rel carries (the node form resolves it): the polys
+         * of a bag held there are listed one by one, so a child two of them hold is listed once per distinct value
+         * ({@link #offer} keeps one of equal objs), where the bag's normal form holds it once, its values added (open:
+         * {@code [b=>[x=>1]]} twice lists {@code [x=>1]} where the sum is {@code [x=>{2}1]}). Only a level that lists
+         * nothing is looked for below,
          * with {@code #}: a store keeping flat keys and no node for the levels between (Marko, 2026-11-19: + is the
          * everyday step, # is there for mqtt).
          */

@@ -286,6 +286,7 @@ public class RecTest extends AbstractAlgebraTest {
             "[a/b/x=>1,a/b/y=>2]>>(a/b)                                                  % [x=>1,y=>2]",
             "[a=>{[x=>1],[y=>2]}]>>a                                                     % {[x=>1],[y=>2]}",
             "[a=>[b=>{[x=>1],[y=>2]}]]>>(a/b)                                            % {[x=>1],[y=>2]}",
+            "[a=>[b=>[=>],c=>1]]>>(a/b)                                                  % [=>]",
             "[a/b=>{[x=>1],[y=>2]}]>>(a/b)                                               % {[x=>1],[y=>2]}",
             // the terms fold onto an untyped rec, so no typed term types the sum's top, whichever key holds it
             "[a=>[k=>[rank=>2]],a/k=>scout::[name=>'kai']]>>(a/k)                        % [rank=>2,name=>'kai']",
@@ -296,6 +297,8 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>{2}[1,2,3]]>>(a/+)                                                      % {{2}1,{2}2,{2}3}",
             "[a=>{2}[b=>1]]>>a>>b                                                        % {2}1",
             "[y=>[c=>7],a=>{[b=>!*<../../y>],[q=>1]},a/b/d=>2]>>(a/b)                    % [c=>7,d=>2]",
+            // a lst in a bag has no parent of its own (an objs takes none): the read parents it, so << climbs to the holder
+            "[a=>{[[b=>1]],[q=>2]}]>>(a/0).<<.<<                                         % [a=>{[[b=>1]],[q=>2]}]",
             "[x=>[b=>[c=>1]],a=>!*<../x>,a/b/c=>2]>>(a/b)                                % [c=>{1,2}]",
             "[x=>[b=>[c=>1]],a=>!*<../x>,a/b/c=>2]>>(a/b/c)                              % {1,2}",
             // OPEN, the costs of reading the normal form, each as the merge holds it: a reference inside a bulked poly
@@ -311,7 +314,8 @@ public class RecTest extends AbstractAlgebraTest {
             // OPEN, as before: an index read into a bulked lst counts no copies (Lst.at), where its + read counts them
             "[a=>{2}[1,2,3]]>>(a/0)                                                      % 1",
             // OPEN, a regression against main (which answers [x=>1,y=>2] here, as (a/b/c) and the space read do): a
-            // pattern read through two keys that reach one matched address gathers rather than adds
+            // pattern read through two keys that reach one matched address gathers rather than adds. It lands open
+            // (Marko, 2026-11-25): the fix sums the reads at each matched address and gathers across addresses
             "[a=>[b=>[c=>[x=>1]]],a/b=>[c=>[y=>2]]]>>(a/b/+)                             % {[x=>1],[y=>2]}",
             // a value at an interior address with an entry below it: every read keeps every term (Marko, 2026-11-25)
             "[n/m/r=>1,n/m/r/s=>2]>>(n/m)                                                % [r=>{1,[s=>2]}]",
