@@ -23,6 +23,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
@@ -37,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -102,6 +105,103 @@ public class CodeTest extends AbstractMetatronTest {
         assertEquals(lhs, empty.apply(lhs), "ε is the identity morphism, never the annihilator");
         assertEquals(lhs, identity.apply(lhs), "a bare id is the identity morphism");
         assertEquals(empty.apply(lhs), identity.apply(lhs), "code([]) and code([id]) are the same morphism");
+    }
+
+    /**
+     * AN EMPTY CODE IS THE UNIT (Marko, 2026-11-24): f⁰, the composition of no instruction, is the instruction
+     * {@code id()} with the code's coefficient as its point ({@link Call#tryToInst}), so it is one when its point is, and
+     * only the code of coefficient {0} is the zero, noobj. It was noobj at every point, so isOne() said the unit was not
+     * one. The empty code has no literal (a code is its chain, one instruction at least), so each row builds it in Java.
+     * Each row: the code's point % the instruction it is % whether it is one.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1   % id()      % true",
+            "3   % id{3}()   % false",
+            "-1  % id{-1}()  % false",
+            "0   % noobj     % false",
+    }, delimiter = '%')
+    public void testAnEmptyCodeIsTheUnit(final long point, final String inst, final boolean one) {
+        final Code empty = code(List.of()).c(_ -> cInt.of(point)).as();
+        final Obj expected = ObjmtronSerializer.parse(inst);
+        assertEquals(List.of(), empty.codeValue(), "the code under test holds no instruction");
+        assertEquals(cInt.of(point), empty.c(), "the code under test counts its point");
+        assertFalse(expected.isFail(), "the instruction it is must parse");
+        checkEquality(LOG, expected, empty.tryToInst(), true);
+        assertEquals(one, empty.isOne(), empty + (one ? " is one" : " is not one"));
+        assertEquals(0 == point, empty.isZero(), empty + (0 == point ? " is the zero" : " is not the zero"));
+    }
+
+    /**
+     * AN EMPTY CODE APPLIES AS THE UNIT IT IS: it passes its lhs on, and its point goes on the answer as {@code id{c}()}'s
+     * does, so the code and the instruction answer alike. It ignored its point: {3}ε at 5 answered 5, where the text it
+     * is written as, id{3}(), answers {3}5. Each row: the code's point % the lhs % the instruction it is, on the lhs %
+     * what both answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1   % 5       % 5.id()          % 5",
+            "3   % 5       % 5.id{3}()       % {3}5",
+            "2   % 'abc'   % 'abc'.id{2}()   % {2}'abc'",
+            "3   % {1,2}   % {1,2}.id{3}()   % {{3}1,{3}2}",
+            "-1  % 5       % 5.id{-1}()      % {-1}5",
+            "0   % 5       % 5.id{0}()       % noobj",
+    }, delimiter = '%', quoteCharacter = '^')
+    public void testAnEmptyCodeAppliesAsTheUnit(final long point, final String lhs, final String unit, final String answer) {
+        final Code empty = code(List.of()).c(_ -> cInt.of(point)).as();
+        final Obj value = ObjmtronSerializer.parse(lhs).apply();
+        final Obj expected = ObjmtronSerializer.parse(answer);
+        assertFalse(value.isNoObj() || value.isFail(), "the lhs under test must be a value");
+        assertFalse(expected.isFail(), "the answer must parse");
+        assertEquals(cInt.of(point), empty.c(), "the code under test counts its point");
+        checkEquality(LOG, expected, ObjmtronSerializer.parse(unit).apply(), true);
+        checkEquality(LOG, expected, empty.apply(value), true);
+    }
+
+    /**
+     * A CODE THE REWRITER EMPTIES IS THE UNIT: neg().neg() and plus(0) do nothing to an obj, so their rewrite keeps no
+     * instruction, and that code is id(), one, as a lone id() is (the rewriter keeps it), never noobj, the zero that kills
+     * the path it stands on. With id() they are the members of 1.branch(id(),neg(),neg().neg()), whose rewrite keeps the
+     * emptied member as id() and bulks it with the id() beside it (FixPointRewriter.descend reads the unit off
+     * tryToInst()). Each row: the code % the instruction its rewrite is % whether that is one.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "neg().neg()                        % id()                              % true",
+            "plus(0)                            % id()                              % true",
+            "id()                               % id()                              % true",
+            "neg()                              % neg()                             % false",
+            "branch(id(),neg(),neg().neg())     % branch(id{2}(),neg())             % false",
+            "1.branch(id(),neg(),neg().neg())   % start(1).branch(id{2}(),neg())    % false",
+    }, delimiter = '%')
+    public void testACodeTheRewriterEmptiesIsTheUnit(final String code, final String inst, final boolean one) {
+        final Obj parsed = ObjmtronSerializer.parse(code);
+        final Obj expected = ObjmtronSerializer.parse(inst);
+        assertFalse(parsed.isNoObj() || parsed.isFail(), "the code under test must parse");
+        assertFalse(expected.isNoObj() || expected.isFail(), "the instruction it rewrites to must parse");
+        final Code rewritten = parsed.asCode().rewrite();
+        checkEquality(LOG, expected, rewritten.tryToInst(), true);
+        assertEquals(one, rewritten.isOne(), rewritten + (one ? " is one" : " is not one"));
+    }
+
+    /**
+     * A PROGRAM THE COMPILER EMPTIES ANSWERS AS THE UNIT ON NOTHING: compiled, a startless neg().neg() keeps no
+     * instruction (each row checks that it keeps none), and the machine runs that empty code as the instruction it is,
+     * id(), which passes noobj on. As noobj it applied the zero, which answered the same, so these rows hold on either side
+     * of the ruling: they guard the machine's dispatch of the unit (Machine.evaluate) from refusing a program with nothing
+     * left to run. Each row: the program % what it answers.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "neg().neg()            % noobj",
+            "plus(0)                % noobj",
+            "neg().neg().plus(0)    % noobj",
+    }, delimiter = '%')
+    public void testAProgramTheCompilerEmptiesAnswersAsTheUnit(final String program, final String answer) {
+        final Obj compiled = Machine.current().compiler().apply(str(program));
+        assertFalse(compiled.isFail(), "the program must compile");
+        assertEquals(List.of(), compiled.asCode().codeValue(), "the compiler leaves no instruction to run");
+        checkEquality(LOG, ObjmtronSerializer.parse(answer), Machine.evaluate(program), true);
     }
 
     @ParameterizedTest
@@ -206,8 +306,9 @@ public class CodeTest extends AbstractMetatronTest {
     }
 
     /**
-     * A ONE-INSTRUCTION CODE IS ITS INSTRUCTION, from either side of a test, and nothing longer or emptier is: asserted in
-     * Java because the parser reads {@code plus(2)} as the instruction itself, never as a one-instruction code.
+     * A ONE-INSTRUCTION CODE IS ITS INSTRUCTION, from either side of a test, and nothing longer is, while the empty code
+     * is the unit, id() (Marko, 2026-11-24): asserted in Java because the parser reads {@code plus(2)} as the instruction
+     * itself, never as a one-instruction code, and has no literal for the empty code.
      */
     @Test
     public void testACodeAndAnInstTestAsTheInstTheCodeIs() {
@@ -219,7 +320,10 @@ public class CodeTest extends AbstractMetatronTest {
         assertTrue(plus.test(code(List.of(plusPattern))), "an inst tests a one-instruction code as its instruction");
         assertFalse(user.test(plusPattern), "two instructions are not one");
         assertFalse(plus.test(pattern), "nor against two instructions");
-        assertFalse(code(List.of()).test(plusPattern), "the empty code is no instruction");
+        assertFalse(code(List.of()).test(plusPattern), "the empty code is id(), not plus");
+        final Inst unit = ObjmtronSerializer.parse("id()");
+        assertTrue(code(List.of()).test(unit), "the empty code tests as the instruction it is, id()");
+        assertTrue(unit.test(code(List.of())), "and id() tests the empty code as itself");
         assertTrue(user.test(pattern), "a code tests a code pattern");
         final Obj bound = ObjmtronSerializer.parse("plus(int::T@A).mult(A::T)");
         assertTrue(ObjmtronSerializer.parse("plus(2).mult(2)").test(bound), "A is int for the whole pattern");

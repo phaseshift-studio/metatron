@@ -1134,8 +1134,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * ({@link #testMapUnwrap}). Each row runs one rewrite's rules over a bare chain with {@link Call.Helper#update}, in Java
      * and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds here under bool's idempotent plus and
      * {@code mult(2).div(2)} under real's mult group, and only the carrier's law stops them in a rewrite
-     * ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the law or rule % the chain % the chain its
-     * rules leave.
+     * ({@link #testIdempotent}, {@link #testInverseCancellation}). A chain its rules empty is the unit, id(), never noobj
+     * (Marko, 2026-11-24). Each row: the law or rule % the chain % the chain its rules leave.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -1157,7 +1157,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "units       % plus(\"\").plus(false).id().neg()  % neg()",
             // a match type-tests the operand, so a computed one passes as the unit here; the rewrite compares it
             // (testDerivationContraction folds plus(3.neg()) instead)
-            "units       % plus(map(3).neg())            % noobj",
+            "units       % plus(map(3).neg())            % id()",
             // end is the additive group's id, composition's zero, never the identity morphism
             "units       % end()                         % end()",
             // code's add_monoid binds branch, whose operands are lanes: branch(a, end) = a is no chain rule, so it
@@ -1168,7 +1168,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "inverses    % plus(3).minus(4)              % plus(3).minus(4)",
             // a⁻¹·a = 1 as well as a·a⁻¹ = 1: the group states both sides
             "inverses    % minus(3).plus(3).plus(2)      % plus(2)",
-            "inverses    % div(2).mult(2)                % noobj",
+            "inverses    % div(2).mult(2)                % id()",
             // an involution's pair is the involution law's, not the group's
             "inverses    % neg().neg()                   % neg().neg()",
             "mapper      % map(neg()).plus(1)            % neg().plus(1)",

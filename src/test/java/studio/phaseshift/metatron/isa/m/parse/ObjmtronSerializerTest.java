@@ -402,14 +402,18 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
      * A PROGRAM HOLDING AN EMPTY CODE ANSWERS ALIKE ONCE WRITTEN AND READ BACK: built in Java, its empty code passes its
      * obj on, and read back, the id() written in its place does the same. A cut whose tail is empty answers its lhs, and a
      * branch member that is empty passes its obj on beside the others. Written as noobj, the read program annihilated what
-     * the built one passed on. The rows hold the unit itself, at point 1: a pointed empty code is written id{c}(), c
-     * copies of the unit, while Code.apply still passes an empty code's obj on once whatever its coefficient (the
-     * tryToInst() follow-up), so built and read back a pointed one answers alike only once that is settled.
+     * the built one passed on. A pointed empty code is id{c}(), c copies of the unit: written so, and applied it puts its
+     * point on the answer as id{c}() does (Code.apply), so a pointed branch member answers alike built and read back; it
+     * passed its obj on once built while its written id{3}() answered {3}5. The cut row stays at point 1: a cut runs its
+     * tail's instructions and drops the tail code's own coefficient, so built, a pointed empty tail still passes 5 on
+     * where its written id{3}() answers {3}5.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "start(5).cut(<~>,id())         % 5",
-            "start(5).branch(id(),plus(1))  % {5,6}",
+            "start(5).cut(<~>,id())             % 5",
+            "start(5).branch(id(),plus(1))      % {5,6}",
+            "start(5).branch(id{3}(),plus(1))   % {{3}5,6}",
+            "start(5).branch(id{-1}(),plus(1))  % {{-1}5,6}",
     }, delimiter = '%')
     void testAProgramHoldingAnEmptyCodeAnswersAlikeOnceWritten(final String row, final String answer) {
         final AtomicInteger slots = new AtomicInteger();

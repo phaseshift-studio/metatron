@@ -171,8 +171,10 @@ public interface Code extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
+        // an empty code is the unit, id{c}() (tryToInst): it passes its lhs on and puts its point on the answer, as the
+        // processor puts an instruction's point (Inst.Helper.pointed), so {3}ε answers {3}5 at 5
         if (this.jvm().isEmpty())
-            return this.tid().isZero() ? noobj() : lhs;
+            return this.tid().isZero() ? noobj() : Inst.Helper.pointed(lhs, this.c());
         return Machine.evaluate(lhs, this);
     }
 

@@ -436,7 +436,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
      * Recursively drill into an argument value. A code value pushes a full
      * {@link ExplainLevel}; a non-empty poly pushes an arg-selection frame (so
      * its elements — which may themselves be code — are one Enter away); an
-     * empty poly or a scalar (an empty code is a noobj, which is scalar) shows
+     * empty poly or a scalar (noobj, the code of coefficient {0} too, is scalar) shows
      * a popup.
      */
     private void drillIntoObj(final ExplainLevel current, final Obj obj) {

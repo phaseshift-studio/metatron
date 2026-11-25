@@ -75,8 +75,10 @@ public interface Call extends Obj {
 
     default Call tryToInst() {
         if (this.isCode()) {
+            // AN EMPTY CODE IS THE UNIT (Marko, 2026-11-24): f⁰, the composition of no instruction, is id() with the
+            // code's coefficient as its point ({3}ε is id{3}()), and only a coefficient of {0} is the zero, noobj
             if (this.codeValue().isEmpty())
-                return noobj();
+                return this.isNoObj() ? noobj() : this.one().c(_ -> this.c());
             else if (this.codeValue().size() == 1)
                 // a one-instruction code IS its instruction, bulk included: the code's coefficient multiplies the
                 // instruction's own (a code of coefficient one, nearly every code, answers the instruction itself)
