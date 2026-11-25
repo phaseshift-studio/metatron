@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Env;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlaceSet;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Shard;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -42,7 +43,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
@@ -151,19 +154,16 @@ public class BranchInst extends MInst {
                         ? PlaceResolver.resolve(PlaceSet.of(uri(key.qLess())), Env.snapshot()).stream().map(PlaceResolver.ResolvedPlace::authority).toList()
                         : Collections.singletonList(home(key) ? null : key.qLess());
                 // a home program whose head names another place would read as a lane there once its key is gone, so a cut
-                // that stays keeps it home, as it times a home key's program, and it keeps the head's ?timeout when the key
-                // states none, so the lane's thread still waits as long as the head may run. A head that names home or a
-                // computed place reads as home already, and stays bare, every later timed move in sight of the lane
+                // that stays keeps it home, as it times a home key's program; a head that names home or a computed place
+                // reads as home already, and stays bare. Either way the lane's thread reads every timed cut in it (lane)
                 final fURI headed = program.isEmpty() ? null : headed(program.getFirst());
                 final boolean leaves = null != headed && !home(headed);
-                final fURI stay = !leaves || null != key.q(TIMEOUT) || !program.getFirst().tid().hasQ(TIMEOUT) ? cut
-                        : CUT_INST_TID.q(TIMEOUT, program.getFirst().tid().q(TIMEOUT));
                 return places.stream().map(at -> {
                     // the hop budget the key states rides with its place
                     final fURI place = null == at || null == key.q(HOP) ? at : at.q(HOP, key.q(HOP));
                     return new Lane(place, program, share(split, place),
                             null != place ? instB(cut, lst(uri(Machine.Helper.align(Machine.current(), place)), tail))
-                                    : null == key.q(TIMEOUT) && !leaves ? tail : instB(stay, lst(uri(fURI.Singleton.f("~")), tail)));
+                                    : null == key.q(TIMEOUT) && !leaves ? tail : instB(cut, lst(uri(fURI.Singleton.f("~")), tail)));
                 });
             }).toList();
             // A BRANCH DEALS ITS LHS OR COPIES IT (Marko, 2026-11-24: mixed copy and part keys are refused, "default")
@@ -205,6 +205,38 @@ public class BranchInst extends MInst {
     public static boolean isLayout(final Inst inst) {
         return BRANCH_INST_TID.equals(inst.tid().basePath())
                 && (inst.args().isRec() || inst.tid().hasQ(SPLIT) || lanes(inst).stream().anyMatch(lane -> !lane.home()));
+    }
+
+    /**
+     * Whether a keyed branch names a place by DESIGNATOR, a key {@code <peer>} or {@code <#>}: a designator is the
+     * places it names when the branch runs ({@link #lanes}), so the branch stays keyed until then, neither desugared nor
+     * inlined as the places it would name when it compiles.
+     */
+    public static boolean designated(final Inst branch) {
+        return routes(branch).<Rel>elements().map(route -> route.first().uriValue().qLess())
+                .anyMatch(key -> PEER.equals(key.toString()) || HASH_FURI.equals(key));
+    }
+
+    /**
+     * Whether a member CHANGES MACHINES: a Law.nomadic instruction anywhere in it ({@link Shard#departure}), an
+     * argument's code included, as a map's move re-homes the thread the map runs on. A cut or a move to {@code <~>} or
+     * {@code <.>} stays ({@link #home}), and its tail is read in turn; a move whose target is computed when it runs is a
+     * move.
+     */
+    public static boolean moves(final Obj member) {
+        return -1 != Shard.departure(insts(member).filter(inst -> !((CUT_INST_TID.equals(inst.tid().basePath())
+                || MOVE_INST_TID.equals(inst.tid().basePath())) && inst.arg(0).isUri() && home(inst.arg(0).uriValue()))).toList());
+    }
+
+    /**
+     * Every instruction in an obj, each before those in its arguments: a call's own, the code a keyed argument's value or
+     * a poly argument holds, and so on down.
+     */
+    private static Stream<Inst> insts(final Obj obj) {
+        return obj.isNoObj() ? Stream.empty()
+                : obj.isCall() ? obj.asCall().insts().stream().flatMap(inst -> Stream.concat(Stream.of(inst), insts(inst.args())))
+                : obj.isPoly() ? obj.<Obj>elements().flatMap(BranchInst::insts)
+                : Stream.empty();
     }
 
     /**
@@ -360,11 +392,15 @@ public class BranchInst extends MInst {
         final Obj code = lane.seeded() ? code(member) : start_(input).addInsts(member);
         // THE LANE'S THREAD WAITS AS LONG AS ITS CUTS MAY RUN, and a second more: a cut times its own run from when it
         // starts, after the lane has compiled, so the branch's wait (the thread's own default, else) must not cut a timed
-        // lane short; the cut's wait is the one that times out. A move not yet compiled to its cut times the same
-        final long seconds = member.stream()
-                .filter(inst -> (CUT_INST_TID.equals(inst.tid().basePath()) || MOVE_INST_TID.equals(inst.tid().basePath()))
-                        && inst.tid().hasQ(TIMEOUT))
-                .mapToLong(inst -> machInstSet.Helper.seconds(inst.tid().q(TIMEOUT)).realValue().longValue())
+        // lane short; the cut's wait is the one that times out. A move or a branch not yet compiled to its cuts times the
+        // same, a keyed branch by its keys, wherever in the lane it stands (insts): a stay's tail, an argument's code
+        final long seconds = insts(lane.member())
+                .flatMap(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()
+                        ? routes(inst).<Rel>elements().map(route -> route.first().uriValue().q(TIMEOUT))
+                        : List.of(CUT_INST_TID, MOVE_INST_TID, BRANCH_INST_TID).contains(inst.tid().basePath()) ? Stream.of(inst.tid().q(TIMEOUT))
+                        : Stream.empty())
+                .filter(Objects::nonNull)
+                .mapToLong(timeout -> machInstSet.Helper.seconds(timeout).realValue().longValue())
                 .max().orElse(-1L);
         return (0 > seconds ? VirtualThread.virtual(code) : new VirtualThread(CommonUtil.mutableMap(uri(CODE), code,
                 uri(TIMEOUT), machInstSet.Helper.seconds(String.valueOf(seconds + 1))), MACH_VIRTUAL_THREAD_TID, null))

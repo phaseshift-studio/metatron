@@ -48,6 +48,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -1278,31 +1279,35 @@ public class mInstSet extends AbstractInstSet {
                         // nothing, S(x) ⇝ x. The frame unwraps and its own coefficient folds into the member, branch{c}(b) ⇝ b{c}:
                         // a code member takes it on its last inst, where its multiplicity is read, and any other member takes the
                         // multiplication itself. A call member splices in by its insts, a non-call member lifts to the map that
-                        // emits it, stream-transparent either way. A REMOTE LANE IS NOT A ONE-TERM SUM: inlining a lane keyed to
-                        // another host would drop the place and run the program here. A lone addressless lane runs here anyway,
-                        // so it inlines as a positional one does, as the lane it means (BranchInst#lanes): a key's ?timeout is
-                        // the cut that stays, cut?timeout=n(<~>, program), never dropped. A SPANNED ONE-TERM SUM IS A RUN of
-                        // the frame, never a point on its member (Marko, 2026-11-15): {2}branch(b) is b.b, so it stays for Inst.Helper.runs to walk, where
-                        // folding its c() (span x point) in made {2}branch(plus{3}(34)) one plus{6}(34)
+                        // emits it, stream-transparent either way. A LONE MEMBER IS ONE TERM AS THE ONE LANE IT MEANS
+                        // (BranchInst#lanes), and only a lane that never changes machines (BranchInst#moves) inlines: the branch's
+                        // merge returns home (Marko, 2026-11-24), where an inlined lane keyed to another place, or a member that
+                        // moves, would run here or leave the caller wherever it moved. A home key's ?timeout is the cut that
+                        // stays, cut?timeout=n(<~>, program), which moves nowhere, so it inlines as the lane, never dropped. A
+                        // SPANNED ONE-TERM SUM IS A RUN of the frame, never a point on its member (Marko, 2026-11-15): {2}branch(b)
+                        // is b.b, so it stays for Inst.Helper.runs to walk, where folding its c() (span x point) in made
+                        // {2}branch(plus{3}(34)) one plus{6}(34)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_inline"), code -> {
                             final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
                             if (null == op)
                                 return code;
-                            final List<fURI> nomadic = Law.Helper.claimants(Law.nomadic).stream().map(term -> term.tid().basePath()).toList();
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
                                 // A POSITIONAL SPLIT IS NO ONE-TERM SUM EITHER: its lone lane runs on a thread of its own, and
                                 // its ?split is checked where it runs (BranchInst#split refuses one it cannot perform), both of
-                                // which an inlined member would skip
-                                // A LONE MEMBER THAT CHANGES MACHINES IS NO ONE-TERM SUM: the branch's merge returns home (Marko,
-                                // 2026-11-24), where an inlined move or cut would leave the caller where the member moved. And a
-                                // keyed branch is one term only while its key is one lane (a designator may name none, or several)
-                                if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)
-                                        && (inst.args().isRec() ? 1 == BranchInst.lanes(inst).size() : !inst.tid().hasQ(SPLIT))
-                                        && BranchInst.program(inst.args().isRec() ? BranchInst.lanes(inst).getFirst().member() : inst.arg(0)).stream()
-                                        .noneMatch(member -> nomadic.contains(member.tid().basePath()))) {
-                                    final Obj lone = inst.args().isRec() ? BranchInst.lanes(inst).getFirst().member() : inst.arg(0);
+                                // which an inlined member would skip. A DESIGNATOR KEY names its places when the branch runs
+                                // (BranchInst#designated), and a branch its lanes refuse refuses there, so neither is inlined
+                                final List<BranchInst.Lane> lanes;
+                                try {
+                                    lanes = op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne()
+                                            && (inst.args().isRec() ? !BranchInst.designated(inst) : !inst.tid().hasQ(SPLIT)) ? BranchInst.lanes(inst) : List.of();
+                                } catch (final MTronException e) {
+                                    out.add(inst);
+                                    continue;
+                                }
+                                if (1 == lanes.size() && !BranchInst.moves(lanes.getFirst().member())) {
+                                    final Obj lone = lanes.getFirst().member();
                                     final cInt c = inst.c();
                                     final Obj member;
                                     if (cInt.ONE().equals(c))

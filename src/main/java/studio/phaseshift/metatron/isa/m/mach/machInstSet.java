@@ -1513,8 +1513,7 @@ public class machInstSet extends AbstractInstSet {
          * machine path's, other than one); and two shares at one place, as a place's lanes take its demand apiece.
          */
         private static Inst desugared(final Inst branch) {
-            if (BranchInst.routes(branch).<Rel>elements().map(route -> route.first().uriValue().qLess().toString())
-                    .anyMatch(key -> PEER.equals(key) || HASH_FURI.toString().equals(key)))
+            if (BranchInst.designated(branch))
                 return branch;
             // a branch its lanes refuse (mixed copy and part keys) stays keyed: it refuses where it runs, and only there,
             // where a throw here would leave the whole chain as written, every later move uncut

@@ -24,8 +24,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -52,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -311,19 +314,55 @@ public class BranchLaneTest extends AbstractMetatronTest {
      * WHAT A BRANCH COMPILES TO, its instructions by name, rewritten only and never run. A layout its lanes refuse (a
      * split it cannot perform) compiles as it stands, refused where it runs, and no rule drops its pass for it: a lone
      * refused key is not inlined while the lone branch after it is, and the move after a refused keyed branch is still cut.
-     * A lone member that changes machines is never inlined: the branch's merge returns home, where an inlined cut would
-     * leave the caller wherever it moved. Each row: the chain % its compiled instructions.
+     * A lone member that changes machines is never inlined, a move anywhere in it, an argument's code included: the
+     * branch's merge returns home, where an inlined move would leave the caller wherever it moved. The cut that stays,
+     * which a timed home member is, moves nowhere, so a timed lone fold inlines as its cut and folds the whole lhs,
+     * unless its tail moves; and a designator, which names its places when the branch runs, is never inlined, nor does
+     * it drop the pass when it names none. Each row: the chain % its compiled instructions % its answer, if it runs.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3}.branch?<=int{*}&split=halves(count(),count())                         % start().branch()",
-            "5.branch(<~?split=halves> => plus(1)).branch(plus(2))                         % start().branch().plus()",
-            "5.branch(</a?split=part> => plus(1),</b> => plus(2)).move(</c>).plus(1)       % start().branch().cut()",
-            "1.branch(<~> => move(<branch_away>).plus(1))                                 % start().branch()",
-            "1.branch(plus(2))                                                             % start().plus()",
+            "{1,2,3}.branch?<=int{*}&split=halves(count(),count())                         % start().branch()        %",
+            "5.branch(<~?split=halves> => plus(1)).branch(plus(2))                         % start().branch().plus() %",
+            "5.branch(</a?split=part> => plus(1),</b> => plus(2)).move(</c>).plus(1)       % start().branch().cut()  %",
+            "1.branch(<~> => move(<branch_away>).plus(1))                                 % start().branch()        %",
+            "5.branch(map(move(<branch_away>).plus(1)))                                   % start().branch()        %",
+            "5.branch(repeat(code=>move(<branch_away>).plus(1),until=>loop()?>0))         % start().branch()        %",
+            "5.branch(push(<branch_kid>).plus(1))                                         % start().branch()        %",
+            "5.branch(pop().plus(1))                                                      % start().branch()        %",
+            "1.branch(<~?timeout=5> => move(<branch_away>).plus(1))                       % start().branch()        %",
+            "{1,2}.branch?<=int{*}(<peer> => count()).branch(plus(2))                      % start().branch().plus() %",
+            "1.branch(plus(2))                                                             % start().plus()          % 3",
+            "{1,2,3}.branch?timeout=5(sum())                                               % start().cut()           % 6",
+            "{1,2,3}.branch(<~?timeout=5> => sum())                                        % start().cut()           % 6",
     }, delimiter = '%')
-    public void testWhatABranchCompilesTo(final String chain, final String compiled) {
-        AbstractMetatronTest.checkCodeRewrite(LOG, chain.trim(), compiled.trim(), null, true);
+    public void testWhatABranchCompilesTo(final String chain, final String compiled, final String answer) {
+        AbstractMetatronTest.checkCodeRewrite(LOG, chain.trim(), compiled.trim(), null == answer ? null : answer.trim(), true);
+    }
+
+    /**
+     * A DESIGNATOR NAMES ITS PLACES WHEN THE BRANCH RUNS: on a machine that answers on a socket and has dialed no peer,
+     * {@code <#>} names this machine alone, one home lane, and the branch compiles as it is written all the same, never
+     * inlined as the one lane it names when it compiles.
+     */
+    @Test
+    public void testADesignatorIsNeverInlined() {
+        final fURI socket = f("ws://0.0.0.0:28557");
+        Network.Helper.listen(Machine.current().network(), new Listener(CommonUtil.mutableMap(uri(ORIGIN), uri(socket)), REC_TID, Machine.current().network()) {
+            @Override
+            protected void unbind() {
+            }
+
+            @Override
+            public fURI protocol() {
+                return f("test");
+            }
+        }, rec0());
+        try {
+            AbstractMetatronTest.checkCodeRewrite(LOG, "5.branch(<#> => plus(1))", "start().branch()", "6", true);
+        } finally {
+            Machine.current().network().unlisten(socket);
+        }
     }
 
     /**
@@ -403,8 +442,8 @@ public class BranchLaneTest extends AbstractMetatronTest {
 
     /**
      * A WAIT LONGER THAN A THREAD'S OWN DEFAULT (five seconds) IS THE CUT'S: a lane's thread waits as long as any of its
-     * cuts may run, so a place that answers in six seconds answers a lane that waits ten, shipped or home, keyed or
-     * moved, and a home lane that moves after its head.
+     * cuts may run, wherever in the lane it stands, so a place that answers in six seconds answers a lane that waits ten,
+     * shipped or home, keyed or moved, and a home lane that moves after its head.
      */
     @Test
     public void testALongWaitIsTheCuts() {
@@ -416,10 +455,15 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slower?timeout=10> => plus(1))", "2");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move?timeout=10(<loop://slower>).plus(1),plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=10(<~> => sleep(second::6.0))", "1");
-            // a home key whose program starts with a timed move keeps that time on the cut that keeps it home, and one whose
-            // head names home stays bare, its later timed move in sight of the lane's wait
+            // a home key whose program starts with a move to another place is kept home by a cut that stays, and one whose
+            // head names home stays bare: either way every timed move in the lane is in sight of its wait, the head's or a
+            // later one's, wherever it stands
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => move?timeout=10(<loop://slower>).plus(1),<loop://slower?timeout=10> => plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => move(<~>).move?timeout=10(<loop://slower>).plus(1),<loop://slower?timeout=10> => plus(2))", "{2,3}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => move(</.>).move?timeout=10(<loop://slower>).plus(1),<loop://slower?timeout=10> => plus(2))", "{2,3}");
+            // a branch in the lane, not yet compiled to its cuts, is timed by its keys or by its own timeout
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => branch(<loop://slower?timeout=10> => plus(2)),<loop://slower?timeout=10> => plus(1))", "{3,2}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => branch?timeout=10(move(<loop://slower>).plus(2)),<loop://slower?timeout=10> => plus(1))", "{3,2}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=10> => sleep(second::6.0),<loop://slower?timeout=10> => plus(1))", "{1,2}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?<=int{*}&split=part(plus(1).move?timeout=10(<loop://slower>).plus(1))", "3");
         } finally {
@@ -623,6 +667,8 @@ public class BranchLaneTest extends AbstractMetatronTest {
             "5.branch?<=int{*}(move(<branch_away>).plus(1),*<~/branch/where>)         % {6,1}",
             "5.branch(<branch_away> => *<~/branch/where>,<~> => *<~/branch/where>)    % {2,1}",
             "5.branch(<~> => move(<branch_away>).plus(1)).map(*<~/branch/where>)       % 1",
+            "5.branch(map(move(<branch_away>).plus(1))).map(*<~/branch/where>)        % 1",
+            "5.branch(<~?timeout=5> => move(<branch_away>).plus(1)).map(*<~/branch/where>) % 1",
     }, delimiter = '%')
     public void testTheMergeIsAReturnHome(final String mtron, final String answer) {
         final Machine root = Machine.current();

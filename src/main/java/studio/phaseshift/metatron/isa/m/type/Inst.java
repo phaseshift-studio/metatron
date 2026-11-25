@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
@@ -866,26 +865,6 @@ public interface Inst extends Call {
 
         public static Optional<fURI> isFromOrAtInstToUri(final Inst inst) {
             return Optional.ofNullable((inst.tid().basePath().equals(FROM_INST_TID) || inst.tid().basePath().equals(AT_INST_TID)) && inst.arg(0).isUri() ? inst.arg(0).uriValue() : null);
-        }
-
-        /**
-         * Whether {@code inst} is a branch with a lane anywhere but this machine (BranchInst#lanes): a member headed by a
-         * move, or the cut it compiles to, or a key, naming a peer (a host) or another local machine (a path,
-         * {@code </abc>}); only {@code <~>} and {@code <.>} name the machine the code runs on. That lane is compiled and
-         * run where its cut carries it, and the branch's merge is a return home, so a rewrite here neither inlines it
-         * nor looks inside it. A branch whose lanes refuse (a split it cannot perform) answers true as well: it is no lone
-         * home lane, and it refuses where it runs.
-         */
-        public static boolean hasRemoteLane(final Inst inst) {
-            if (!BRANCH_INST_TID.equals(inst.tid().basePath()))
-                return false;
-            // a branch its lanes refuse (a split it cannot perform) answers true too: it is no lone home lane to inline,
-            // as it refuses where it runs
-            try {
-                return BranchInst.lanes(inst).stream().anyMatch(lane -> !lane.home());
-            } catch (final MTronException e) {
-                return true;
-            }
         }
 
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {
