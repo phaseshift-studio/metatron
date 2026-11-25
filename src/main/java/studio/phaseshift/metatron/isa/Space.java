@@ -365,7 +365,10 @@ public interface Space extends Addressable, Rec, Closeable {
 
         /**
          * what an address holds in the logical tree: what {@link #held} finds, else — an interior address — its whole
-         * subtree
+         * subtree. The first answer, not the sum of every level's: a store may answer one datum at several addresses (a
+         * document and its fields, a graph element and its properties), so its levels are views, not terms, and adding
+         * them would count the datum again. Summing a space's terms, as Rec.at sums a poly's (Marko, 2026-11-25, "keep
+         * every term"), needs a store to tell its terms from its views (open)
          */
         private static Obj valueAt(final fURI address, final Function<fURI, Iterator<IdObj>> directReader) {
             final Obj held = held(address, directReader, false);
@@ -417,36 +420,38 @@ public interface Space extends Addressable, Rec, Closeable {
         /**
          * what a poly holds at a relative address. A rec's KEY IS A PATH, whatever obj it is (the int key 0 is the segment
          * 0), compared segment by segment and LITERALLY: a wildcard in a key is a segment of the layout, never a query.
-         * The key that is the rest answers it (on a read as Rec.at answers, an auto_from firing); else the longest key
-         * the rest runs through is descended, so a literal path beats a wildcard key that would match it (the web
-         * gateway's {@code http/#} beside a dialed {@code http/quarry/8777}); else the rest is an interior address of the
-         * rec's path keys and reads as their subtree. Only then, and only on a READ of an address with no wildcard, does
-         * the poly answer by its own walk (a position, a wildcard key matching a concrete address, an auto_from chained
-         * through). A WALK stops at what the layout holds: no auto_from fires and no wildcard key matches deeper, or a
-         * key like {@code http/#} would answer every address below it, without end.
+         * Every key that meets the rest adds, as in Rec.at: the key that is the rest (on a read as Rec.at answers, an
+         * auto_from firing), each key the rest runs through, descended, and the keys under the rest, its subtree. A key
+         * meets the rest literally, so a literal path answers before a wildcard key that would match it (the web
+         * gateway's {@code http/#} beside a dialed {@code http/quarry/8777}). Only when no key meets the rest, and only on
+         * a READ of an address with no wildcard, does the poly answer by its own walk (a position, a wildcard key matching
+         * a concrete address, an auto_from chained through). A WALK stops at what the layout holds: no auto_from fires and
+         * no wildcard key matches deeper, or a key like {@code http/#} would answer every address below it, without end.
          */
         private static Obj within(final Poly<?, ?> poly, final fURI rest, final boolean walk) {
             if (poly.isRec()) {
+                // A READ IS LINEAR, as Rec.at's is: the key that is the rest, each key the rest runs through (the rest
+                // read below it), and the keys under the rest, its subtree, all add ({@link Poly.Helper#added})
                 final Function<Obj, fURI> path = key -> key.isUri() ? key.uriValue() : f(key.jvm().toString());
-                final Map<Obj, Obj> entries = poly.asRec().jvm();
-                final Optional<Obj> exact = entries.keySet().stream()
-                        .filter(key -> path.apply(key).segments().equals(rest.segments()))
-                        .findFirst();
-                if (exact.isPresent())
-                    return walk || rest.hasPattern() ? entries.get(exact.get()) : poly.at(exact.get());
-                final Optional<Map.Entry<Obj, Obj>> through = entries.entrySet().stream()
-                        .filter(entry -> entry.getValue().isPoly() && runsThrough(path.apply(entry.getKey()), rest))
-                        .max(Comparator.comparingInt(entry -> path.apply(entry.getKey()).segmentLength()));
-                if (through.isPresent())
-                    return within(through.get().getValue().as(), rest.pretract(path.apply(through.get().getKey()).segmentLength()), walk);
-                final List<IdObj> under = entries.entrySet().stream()
-                        .filter(entry -> runsThrough(rest, path.apply(entry.getKey())))
-                        .map(entry -> IdObj.of(path.apply(entry.getKey()).pretract(rest.segmentLength()), entry.getValue()))
-                        .toList();
+                final List<Obj> reads = new ArrayList<>();
+                final List<IdObj> under = new ArrayList<>();
+                poly.asRec().jvm().forEach((key, value) -> {
+                    final fURI keyPath = path.apply(key);
+                    if (keyPath.segments().equals(rest.segments()))
+                        // the key's own value, an auto_from firing on a read, as Rec.at's named key: Rec.at itself would
+                        // add the keys under it a second time
+                        reads.add(walk || rest.hasPattern() ? value : Poly.Helper.autoToggle(poly, value, true));
+                    else if (runsThrough(keyPath, rest))
+                        // a key holding a bag is descended through each poly in it, as a stored stream is (held)
+                        value.stream().filter(Obj::isPoly).forEach(member -> reads.add(within(member.as(), rest.pretract(keyPath.segmentLength()), walk)));
+                    else if (runsThrough(rest, keyPath))
+                        under.add(IdObj.of(keyPath.pretract(rest.segmentLength()), value));
+                });
                 if (!under.isEmpty())
-                    return nest(under);
-                if (walk)
-                    return noobj();
+                    reads.add(sum(under));
+                final Obj sum = Poly.Helper.added(reads);
+                if (walk || !sum.isNoObj())
+                    return sum;
             }
             if (rest.hasPattern())
                 return noobj();
@@ -468,15 +473,28 @@ public interface Space extends Addressable, Rec, Closeable {
         }
 
         /**
-         * relative entries nested into one rec by their paths, a shallower entry first so a deeper one nests below it —
-         * an address holding a value with entries below it reads as its entries (uri.adoc: {@code *n/m} answers
-         * {@code [r=>[s=>2]]}); the stored objs are never mutated (each step answers a new rec)
+         * a store's entries below an address nested into one rec by their paths, a shallower entry first so a deeper one
+         * nests below it, replacing a value there: a store's listing may hold views of one datum at several levels (a
+         * document and its fields), and the views collapse to one. On a store of terms this drops a value with entries
+         * below it (n/m/r -> 1 and n/m/r/s -> 2 read *n/m as [r=>[s=>2]], where the rule is [r=>{1,[s=>2]}]: open, as
+         * {@link #valueAt} says); the stored objs are never mutated (each step answers a new rec)
          */
         public static Obj nest(final List<IdObj> entries) {
             Rec tree = rec();
             for (final IdObj entry : entries.stream().sorted(Comparator.comparingInt(entry -> entry.furi().segmentLength())).toList())
                 tree = tree.at(uri(entry.furi()), entry.obj());
             return tree.isEmpty() ? noobj() : tree;
+        }
+
+        /**
+         * relative entries nested by their paths and ADDED as terms ({@link Poly.Helper#added}), so an address holding a
+         * value with entries below it keeps both (Marko, 2026-11-25, "keep every term": [n/m/r=>1,n/m/r/s=>2] reads n/m
+         * as [r=>{1,[s=>2]}]). For the keys of one poly, each a term of it (Rec.at, {@link #within}); a store's listing
+         * nests as views ({@link #nest})
+         */
+        public static Obj sum(final List<IdObj> entries) {
+            final Obj tree = Poly.Helper.added(entries.stream().map(entry -> (Obj) rec().at(uri(entry.furi()), entry.obj())).toList());
+            return tree.isRec() && tree.asRec().isEmpty() ? noobj() : tree;
         }
 
         /**

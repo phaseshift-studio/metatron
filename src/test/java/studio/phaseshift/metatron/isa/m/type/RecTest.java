@@ -256,7 +256,17 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>[x=>1],a/b=>[c=>2]]>>(a/b)                                              % [c=>2]",
             "[a=>[x=>1],a/b=>[c=>2]]>>a                                                  % [x=>1,b=>[c=>2]]",
             "[a=>[x=>1],a/b=>2]>>a                                                       % [x=>1,b=>2]",
-            "[a=>[x=>1],a/b=>[c=>2]]>>(a/b/c/)                                           % c=>2",
+            "[a=>[x=>1],a/b=>[c=>2]]>>(a/b/c/)                                           % a/b/c=>2",
+            // a trailing '/' names the relation of the whole read, and a bulked read spreads into its own walks only
+            "[a=>[x=>1],a/b=>2]>>(a/)                                                    % a=>[x=>1,b=>2]",
+            "[a=>[b=>[x=>1]],a/b=>[c=>2]]>>(a/b/)                                        % a/b=>[x=>1,c=>2]",
+            "[a=>{2}[b=>1],a/c=>3]>>a                                                    % [b=>{2}1,c=>3]",
+            // a value at an interior address with an entry below it: every read keeps every term (Marko, 2026-11-25)
+            "[n/m/r=>1,n/m/r/s=>2]>>(n/m)                                                % [r=>{1,[s=>2]}]",
+            "[n/m/r=>1,n/m/r/s=>2]>>(n/m/r)                                              % {1,[s=>2]}",
+            "[n=>[m=>[r=>1]],n/m/r/s=>2]>>(n/m/r)                                        % {1,[s=>2]}",
+            "[n=>[m=>[r=>1]],n/m/r/s=>2]>>(n/m)                                          % [r=>{1,[s=>2]}]",
+            "[n=>[m=>[r=>{1,[s=>2]}]]]>>(n/m/r/s)                                        % 2",
             "[a/b/c=>1,a=>[b=>[c=>2]]]>>(a/b/c)                                          % {1,2}",
             "[a=>[b=>[c=>9]],a/b=>[c=>2]]>>(a/b/c)                                       % {9,2}",
             "[a=>5,a/b=>6]>>a                                                            % {5,[b=>6]}",

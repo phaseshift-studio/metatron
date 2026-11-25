@@ -59,7 +59,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @SkipRegexTest(value = {
         @SkipRegexTest.Skip(method = "testMultiFieldUpdates"),
         @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M28", "M29", "M30", "M31", "M39"}),
-        @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = {"a/\\.>>\\.>>\\.\\*_", "x.*"})
+        @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = {"a/\\.>>\\.>>\\.\\*_", "x.*"}),
+        // a file cannot also be a directory: once v/n/m/r holds 1, nothing is written below it, so the monos of
+        // uri.adoc's n/m/r cannot be laid out on a filesystem
+        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization", params = {"^V1/entry$"})
 })
 public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
 

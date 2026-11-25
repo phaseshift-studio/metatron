@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -524,38 +523,43 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                                     .map(o -> o.c(c -> c.mult(cKey))));
                 } else {
                     // A READ IS LINEAR (Claim 4 of ring-theoretic-distributed-structures.md), and flat, path-keyed and
-                    // nested recs are one term (Marko, 2026-11-24: [a/b=>35]>>a is [b=>35]), so an address reads every
-                    // key it meets, and the reads add as the terms do: the key it names; each key it runs through, the
-                    // rest read below it ([a=>[x=>1],a/b=>[c=>2]]>>(a/b/c) is 2, as [a/b=>[c=>2]]>>(a/b/c) is); and the
-                    // keys under it, its subtree ([a=>[x=>1],a/b=>2]>>a is [x=>1,b=>2]). Data recs that meet add into one
-                    // rec, as the merge adds them, and other reads gather beside it. A key whose rest past the address
-                    // is a pattern is a pattern key ([b/#=>x]>>b is x), and pattern keys answer only when no key meets
-                    // the address, so a key that names the address overrides a pattern, as it always has
+                    // nested recs are one term (Marko, 2026-11-24: [a/b=>35]>>a is [b=>35]), so an address without a
+                    // pattern reads every key it meets, and the reads add as the terms do (Poly.Helper.added): the key it
+                    // names; each key it runs through, the rest read below it ([a=>[x=>1],a/b=>[c=>2]]>>(a/b/c) is 2, as
+                    // [a/b=>[c=>2]]>>(a/b/c) is); and the keys under it, its subtree, a value among them kept (Marko,
+                    // 2026-11-25: [a=>5,a/b=>6]>>a is {5,[b=>6]}). Each key's read stays whole, so a key holding a bag
+                    // reads as its bag, and a trailing '/' names the relation of the whole read, x/ being x=>*x. A key
+                    // whose rest past the address is a pattern is a pattern key ([b/#=>x]>>b is x), and pattern keys
+                    // answer only when no key meets the address, so a key that names the address overrides a pattern. An
+                    // address that holds a pattern past its first segment reads as it always has (open)
+                    final int length = keyF.segmentLength();
+                    final boolean whole = isBranch && !keyF.hasPattern();
                     final List<Obj> reads = new ArrayList<>();
                     final List<Space.IdObj> under = new ArrayList<>();
                     final Obj named = arec.jvm().get(asNode);
                     if (null != named)
-                        reads.add(isBranch ? rel(asNode, autoToggle(arec, named, doAuto)) : autoToggle(arec, named, doAuto));
+                        reads.add(isBranch && !whole ? rel(asNode, autoToggle(arec, named, doAuto)) : autoToggle(arec, named, doAuto));
                     arec.jvm().forEach((k, v) -> {
-                        if (!k.isUri())
+                        // a key is read only where it can meet the address, so the usual rec, its keys and its address of
+                        // one segment each and its values monos, is a loop of field reads (the resolver reads recs so)
+                        if (!k.isUri() || k.uriValue().segmentLength() == length)
                             return;
                         final fURI kF = k.uriValue();
-                        if (kF.segmentLength() < keyF.segmentLength() && Space.Helper.runsThrough(kF, keyF)) {
+                        if (kF.segmentLength() < length && (v.isPoly() || v.isObjs() || v.isObjCall()) && Space.Helper.runsThrough(kF, keyF)) {
                             // the raw toggle runs the whole path: atDirect stays raw below the key, as on a flat key
-                            final Uri rest = uri(isBranch ? keyF.pretract(kF.segmentLength()).asBranch() : keyF.pretract(kF.segmentLength()));
+                            final Uri rest = uri(isBranch && !whole ? keyF.pretract(kF.segmentLength()).asBranch() : keyF.pretract(kF.segmentLength()).asNode());
                             reads.add(objs(IteratorUtil.stream(autoToggle(arec, v, doAuto).iterator()).filter(Obj::isPoly)
                                     .map(o -> o.parent(arec).<Poly<?, ?>>as())
                                     .map(below -> (Obj) (doAuto ? below.at(rest) : below.atDirect(rest)))));
-                        } else if (kF.segmentLength() > keyF.segmentLength() && Space.Helper.runsThrough(keyF, kF)
-                                && !kF.pretract(keyF.segmentLength()).hasPattern())
-                            under.add(new Space.IdObj(kF.pretract(keyF.segmentLength()), v));
+                        } else if (kF.segmentLength() > length && Space.Helper.runsThrough(keyF, kF) && !kF.pretract(length).hasPattern())
+                            under.add(new Space.IdObj(kF.pretract(length), v));
                     });
                     if (!under.isEmpty()) {
-                        final Obj subtree = Space.Helper.nest(under);
-                        reads.add(isBranch ? rel(asNode, subtree) : subtree);
+                        final Obj subtree = Space.Helper.sum(under);
+                        reads.add(isBranch && !whole ? rel(asNode, subtree) : subtree);
                     }
-                    final List<Obj> found = reads.stream().filter(read -> !read.isNoObj()).toList();
-                    if (found.isEmpty())
+                    final Obj sum = Poly.Helper.added(reads);
+                    if (sum.isNoObj())
                         return (OBJ) objs(arec.jvm().entrySet()
                                 .stream()
                                 .filter(kv -> kv.getKey().isUri())
@@ -563,10 +567,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                                 .map(kv -> isBranch ? rel(
                                         kv.getKey(), autoToggle(arec, kv.getValue(), doAuto)) :
                                         autoToggle(arec, kv.getValue(), doAuto)));
-                    // each key's read stays whole (a key holding a bag of recs reads as their bag, a stream), and the reads
-                    // of different keys add as the merge adds terms, data recs first, so they meet as one rec
-                    return (OBJ) found.stream().sorted(Comparator.comparing(read -> !Rec.Helper.holdsWalks(read)))
-                            .reduce(Poly.Helper::mergeObjRecursion).orElseThrow().c(c -> c.mult(cKey));
+                    return (OBJ) (whole ? rel(asNode, sum) : sum).c(c -> c.mult(cKey));
                 }
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
                 if (singleSegment) {

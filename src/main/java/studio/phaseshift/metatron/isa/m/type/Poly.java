@@ -750,6 +750,22 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
          * else keeps it — an atom of the merge, a lst included, whose coefficient already is its multiplicity in an objs
          * set ({@code {2}1}, {@code {2}[1,2]}).
          */
+        /**
+         * READS ADD AS TERMS DO (a read is linear: Claim 4 of ring-theoretic-distributed-structures.md). The reads of one
+         * address from the terms of one structure (a rec's keys, Rec.at, and a space's entries, Space.Helper) added into
+         * one answer: the data recs among them fold into one rec, each entering the merge as its rhs onto an unbulked
+         * rec, so a bulked read's copies spread into its own walks and multiply no other read's; any other read gathers
+         * beside them. A read that is noobj adds nothing, and a lone read is itself, unrebuilt.
+         */
+        public static Obj added(final List<Obj> reads) {
+            final List<Obj> found = reads.stream().filter(read -> !read.isNoObj()).toList();
+            if (found.size() < 2)
+                return found.isEmpty() ? noobj() : found.getFirst();
+            final Obj recs = found.stream().filter(Rec.Helper::holdsWalks).reduce((Obj) rec(), Helper::mergeObjRecursion);
+            return objs(Stream.concat(found.stream().filter(read -> !Rec.Helper.holdsWalks(read)),
+                    recs.asRec().isEmpty() ? Stream.empty() : Stream.of(recs)));
+        }
+
         private static Obj distributed(final Obj value) {
             if (value.c().isOne() || !value.isRec())
                 return value;
