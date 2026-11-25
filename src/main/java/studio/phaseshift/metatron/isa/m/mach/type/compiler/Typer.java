@@ -104,7 +104,10 @@ public interface Typer extends Component {
      */
     fURI UNFOLD_URI = f(URI);
     /**
-     * the most copies a span lays along a lst axis: {@code [5{n}]}, and an argument list.
+     * the most copies a lst unfolds into: a span laid along a lst axis ({@code [5{n}]}, an argument list), a lst's power
+     * ({@code [1,2]{n}}, {@code pow(n)}, and a range's, by its farthest power and by the copies all its powers hold), and
+     * the words a sum or {@code as(uri::T)} expands a lst into, in copies of the letters the lst holds, each sub-word a
+     * span's copies share held once ({@code Lst.Helper.words}).
      */
     fURI UNFOLD_LST = f("lst");
     /**
@@ -368,8 +371,8 @@ public interface Typer extends Component {
          * MAY THIS SPAN UNFOLD? A span of n unfolds into |n| copies, and the bound is the current machine's
          * {@code /compiler/typer/unfold} entry for {@code carrier} ({@link #UNFOLD_URI}, {@link #UNFOLD_LST}, {@link #UNFOLD_REC}),
          * {@link #UNFOLD_DEFAULT} when the state names none, read raw as the check points are, since it is asked while
-         * objs are being built. A span of at most one copy (the unit, the obj itself, its converse) unfolds nothing, so
-         * it is never refused and reads no state.
+         * objs are being built. A span of at most one copy (the unit, the obj itself, its converse, which reverses each
+         * sub-word a lst holds once) unfolds nothing, so it is never refused and reads no state.
          *
          * @param carrier what the span unfolds into
          * @param span    the span
@@ -384,7 +387,7 @@ public interface Typer extends Component {
             final Obj bound = unfold.isRec() ? raw(unfold.asRec(), carrier.name()) : noobj();
             final long most = bound.isInt() ? bound.intValue() : UNFOLD_DEFAULT;
             if (copies > most)
-                throw MTronException.of("a span of %s copies unfolds past the typer's bound for %s: /compiler/typer/%s/%s is %s",
+                throw MTronException.of("%s copies unfold past the typer's bound for %s: /compiler/typer/%s/%s is %s",
                         copies, carrier.name(), UNFOLD.name(), carrier.name(), most);
             return span;
         }

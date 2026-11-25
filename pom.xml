@@ -196,6 +196,11 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+        <!-- GUAVA: used directly (LongMath in Lst, the rewriter), its version pinned above -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.integrallis</groupId>
             <artifactId>vectors</artifactId>

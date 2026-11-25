@@ -449,52 +449,72 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * that splice (Marko, 2026-11-25): {@code [x,{[a,b],c}]} is {@code x a b + x c}, as {@code <x/{a/b,c}>} is. A
          * brace of equal sub-words is bulked into one lst with a point ({@link #isSubWord}), spliced with that mass:
          * {@code [x,{[a,b],[a,b]}]} is {@code 2 x a b}. A hole, noobj, is the zero letter, so no word runs through it.
-         * A brace multiplies the words, so they are measured before any is built ({@link #measure}) and bounded by the
-         * typer's unfold for lsts, in copies of the letters the lst writes, a nested brace's among them: a brace of many
-         * members is as many words, linear in the lst, while k braces of two are 2^k words of k letters, written in 2k.
-         * A lst with a hole is no word at all, so none is built, however many its braces before the hole would make.
+         * A brace multiplies the words, and a span shares one sub-word among all its copies, so a short literal can hold
+         * more letters than memory: the words are measured before any is built ({@link #measure}) and bounded by the
+         * typer's unfold for lsts, in copies of the letters the lst holds ({@link #held}): a brace of many members is as
+         * many words, linear in the lst, while k braces of two are 2^k words of k letters, held in 2k, and five nested
+         * spans of 100, [{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}, one word of 2·10^10 letters, held in 200. A
+         * lst with a hole is no word at all, so none is built, however many its braces before the hole would make.
          */
         private static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
-            final long[] measure = measure(slots);
+            final Map<Obj, long[]> measured = new IdentityHashMap<>();
+            final long[] measure = measure(slots, measured);
             if (0L == measure[0])
                 return new LinkedHashMap<>();
-            Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.ceilDiv(Math.max(measure[0], measure[1]), Math.max(1L, measure[2])));
+            Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.ceilDiv(Math.max(measure[0], measure[1]),
+                    Math.max(1L, held(slots, Collections.newSetFromMap(new IdentityHashMap<>())))));
             final Map<List<Obj>, cInt> words = new LinkedHashMap<>();
-            expand(slots, coefficient).forEach(word -> words.merge(word.getKey(), word.getValue(), cInt::plus));
+            expand(slots, coefficient, measured).forEach(word -> words.merge(word.getKey(), word.getValue(), cInt::plus));
             return words;
         }
 
         /**
-         * the words a lst's slots are, measured before any is built ({@link #words}): how many, how many letters they hold
-         * together, and how many letters the slots write, a sub-word's own among them. A slot of m moments makes w words
-         * of l letters m w words of m l letters and w times the moments' letters, and a hole, a slot of no moment, makes
-         * no word. Counted in saturating longs, as the word count can pass any long: a product with a zero factor is
-         * zero, whatever the other, and one past a long's range is the long's largest, past the bound, so no measure is
-         * undefined, and a hole is no word in whatever order it meets an unbounded count
+         * the words a lst's slots are, measured before any is built ({@link #words}): how many, and how many letters they
+         * hold together. A slot of m moments makes w words of l letters m w words of m l letters and w times the moments'
+         * letters, and a hole, a slot of no moment, makes no word. Each sub-word is measured once, however many slots hold
+         * it ({@code measured}, by identity), as a span's copies share theirs. Counted in saturating longs, as the word
+         * count can pass any long: a product with a zero factor is zero, whatever the other, and one past a long's range
+         * is the long's largest, past the bound, so no measure is undefined, and a hole is no word in whatever order it
+         * meets an unbounded count
          */
-        private static long[] measure(final List<Obj> slots) {
+        private static long[] measure(final List<Obj> slots, final Map<Obj, long[]> measured) {
             return slots.stream()
-                    .map(slot -> slot.stream()
-                            .map(member -> isSubWord(slot, member) ? measure(member.lstValue()) : new long[]{1L, 1L, 1L})
-                            .reduce(new long[]{0L, 0L, 0L}, (a, b) -> new long[]{saturatedAdd(a[0], b[0]), saturatedAdd(a[1], b[1]), saturatedAdd(a[2], b[2])}))
-                    .reduce(new long[]{1L, 0L, 0L}, (at, slot) -> new long[]{saturatedMultiply(at[0], slot[0]),
-                            saturatedAdd(saturatedMultiply(at[1], slot[0]), saturatedMultiply(at[0], slot[1])), saturatedAdd(at[2], slot[2])});
+                    .map(slot -> {
+                        if (Thread.currentThread().isInterrupted())
+                            throw MTronException.of("the words of %s slots were interrupted as they were measured", slots.size());
+                        return slot.stream()
+                                .map(member -> isSubWord(slot, member) ? measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured)) : new long[]{1L, 1L})
+                                .reduce(new long[]{0L, 0L}, (a, b) -> new long[]{saturatedAdd(a[0], b[0]), saturatedAdd(a[1], b[1])});
+                    })
+                    .reduce(new long[]{1L, 0L}, (at, slot) -> new long[]{saturatedMultiply(at[0], slot[0]),
+                            saturatedAdd(saturatedMultiply(at[1], slot[0]), saturatedMultiply(at[0], slot[1]))});
+        }
+
+        /**
+         * the letters a lst holds in memory ({@link #words}): each slot's letters, and each sub-word's once, however many
+         * slots hold it ({@code seen}, by identity), so a span's copies of a sub-word hold its letters once
+         */
+        private static long held(final List<Obj> slots, final Set<Obj> seen) {
+            return slots.stream()
+                    .flatMap(slot -> slot.stream().map(member -> !isSubWord(slot, member) ? 1L : seen.add(member) ? held(member.lstValue(), seen) : 0L))
+                    .reduce(0L, (a, b) -> saturatedAdd(a, b));
         }
 
         /**
          * the words of a lst's slots as they are built ({@link #words}), each its own letters at point one with its
          * coefficient, like words merged after: a slot of one moment extends every word in place, so a lst without braces
-         * is one word built once, linear in its length, and a slot of many moments copies each word once per moment. Once
-         * a hole leaves no word, no later slot is read, and a sub-word that is no word ({@link #measure}) is never built
+         * is one word built once, linear in its length, and a slot of many moments copies each word once per moment. A
+         * sub-word that is no word ({@link #measure}) is never built
          */
-        private static List<Map.Entry<List<Obj>, cInt>> expand(final List<Obj> slots, final cInt coefficient) {
+        private static List<Map.Entry<List<Obj>, cInt>> expand(final List<Obj> slots, final cInt coefficient, final Map<Obj, long[]> measured) {
             final List<Map.Entry<List<Obj>, cInt>> words = new ArrayList<>(List.of(Map.<List<Obj>, cInt>entry(new ArrayList<>(), coefficient)));
             for (final Obj slot : slots) {
-                if (words.isEmpty())
-                    return words;
+                if (Thread.currentThread().isInterrupted())
+                    throw MTronException.of("the words of %s slots were interrupted as they were built", slots.size());
                 final List<Map.Entry<List<Obj>, cInt>> moments = slot.stream().flatMap(member -> !isSubWord(slot, member)
                         ? Stream.of(Map.<List<Obj>, cInt>entry(List.of(member.d(cInt.ONE())), member.tid().d()))
-                        : 0L == measure(member.lstValue())[0] ? Stream.empty() : expand(member.lstValue(), member.tid().d()).stream()).toList();
+                        : 0L == measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured))[0] ? Stream.empty()
+                        : expand(member.lstValue(), member.tid().d(), measured).stream()).toList();
                 final List<Map.Entry<List<Obj>, cInt>> longer = words.stream().flatMap(word -> moments.stream().map(moment -> {
                     final List<Obj> letters = 1 == moments.size() ? word.getKey() : new ArrayList<>(word.getKey());
                     letters.addAll(moment.getKey());
@@ -573,7 +593,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
             if (Long.MIN_VALUE == n)
                 throw MTronException.of("%s has no power at %s: the span has no positive counterpart", lst, n);
             Typer.Helper.unfolds(Typer.UNFOLD_LST, n);
-            final List<Obj> word = n < 0L ? converse(lst.lstValue()) : lst.lstValue();
+            final List<Obj> word = n < 0L ? converse(lst.lstValue(), new IdentityHashMap<>()) : lst.lstValue();
             final List<Obj> slots = new ArrayList<>();
             for (long i = 0L; i < Math.abs(n); i++)
                 slots.addAll(word);
@@ -595,8 +615,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * as a value ({@code [[x=>a],[a=>plus(1)]]>|} is {@code [x=>a=>plus(1)]}), while a key that acts, code or a type,
          * runs as a WHERE on the ends it meets, as in the product. A live rec holds no walks, so it applies as itself,
          * running whatever its apply runs: a space, a network among them, passes a value on and runs the code it meets
-         * ({@code Space.Helper.resolveApply}), a parser parses a str, and a thread starts with the fold's value as its
-         * lhs. The zero drops from a stream that holds anything else, and a stream of zeros is the zero,
+         * ({@code Space.Helper.resolveApply}), and a parser parses a str. The zero drops from a stream that holds anything else, and a stream of zeros is the zero,
          * as in a sum: {@code [[x=>a],{[a=>b],[a=>c]},[b=>e]]>|} is {@code [x=>a=>b=>e]}, and
          * {@code [[x=>a],{[b=>c],[d=>e]}]>|} is {@code [=>]}.
          */
@@ -619,13 +638,20 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * THE CONVERSE OF A LST, its span -1 (Claim 21): its letters in the reverse order, each held as it is, since a
          * letter's own converse is never needed, and the sub-words in a brace reversed with it, since a brace splices
          * them: {@code [x,{[a,b],c}]{-1}} is {@code [{[b,a],c},x]}, as is a lst slot with a point, a brace of equal
-         * sub-words ({@link #isSubWord}). Points stay with their letters. The converse is an
+         * sub-words ({@link #isSubWord}). Points stay with their letters. A sub-word is reversed once however many slots
+         * hold it ({@code reversed}, by identity), so the converse writes the slots the lst holds, sharing what it shares,
+         * and never the letters a span's copies stand for. The converse is an
          * involution and reverses a product, (u v)^-1 = v^-1 u^-1, but it is no inverse: {@code [a,b]} times its converse
          * is {@code [a,b,b,a]}.
          */
-        private static List<Obj> converse(final List<Obj> slots) {
+        private static List<Obj> converse(final List<Obj> slots, final Map<Obj, Obj> reversed) {
             return slots.reversed().stream()
-                    .map(slot -> slot.isObjs() || isSubWord(slot, slot) ? objs(slot.stream().map(member -> isSubWord(slot, member) ? member.<Lst>jvm(converse(member.lstValue())) : member)) : slot)
+                    .map(slot -> {
+                        if (Thread.currentThread().isInterrupted())
+                            throw MTronException.of("the converse of %s slots was interrupted", slots.size());
+                        return slot.isObjs() || isSubWord(slot, slot) ? objs(slot.stream().map(member -> isSubWord(slot, member)
+                                ? reversed.computeIfAbsent(member, sub -> sub.<Lst>jvm(converse(sub.lstValue(), reversed))) : member)) : slot;
+                    })
                     .collect(Collectors.toCollection(ArrayList::new));
         }
 

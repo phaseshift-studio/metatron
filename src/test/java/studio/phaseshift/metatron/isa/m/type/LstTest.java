@@ -348,39 +348,68 @@ public class LstTest extends AbstractAlgebraTest {
         assertEquals(151L, sum.lstValue().getFirst().stream().count(), () -> "a brace of 150 and a word sum to 151 members: " + sum);
         final Lst narrow = lst(java.util.stream.IntStream.range(0, 12).mapToObj(i -> objs(jnt(2L * i), jnt(2L * i + 1L))).toList());
         final MTronException refused = assertThrows(MTronException.class, () -> narrow.plus(lst(jnt(-1))), "twelve braces of two are 4096 words of 12 letters, written in 24");
-        final String words = "a span of 2048 copies unfolds past the typer's bound for lst";
+        final String words = "2048 copies unfold past the typer's bound for lst";
         assertEquals(words, refused.getMessage().substring(0, Math.min(words.length(), refused.getMessage().length())));
         // a range is bounded by its farthest power before any is built, never walked power by power
         final MTronException farthest = assertThrows(MTronException.class, () -> Lst.Helper.power(lst(jnt(1)), cInt.of(1L, 10_000_000_000L)));
-        final String far = "a span of 10000000000 copies unfolds past the typer's bound for lst";
+        final String far = "10000000000 copies unfold past the typer's bound for lst";
         assertEquals(far, farthest.getMessage().substring(0, Math.min(far.length(), farthest.getMessage().length())));
-        // words past a long's range are past the bound, and a lst with a hole is no word, built from nothing, in whatever
-        // order the hole, a mass-only {2}[,] and an unbounded sub-word come, a sub-word of a brace that is no word
-        // included, as the sum, as(uri::T) and a range's powers read them. Built, each would exhaust the heap, so each runs
-        // under a timeout, and a lost guard fails an assertion
         final Machine machine = Machine.current();
-        for (final String[] row : new String[][]{
-                {"[{a,b}]{100}.pow(11).mult([{2}[,]]).plus([y])", "<ERROR>"},
-                {"[{a,b}]{100}.pow(11).mult([noobj]).plus([y])", "[y]"},
-                {"[{a,b}]{100}.pow(11).mult([y,noobj]).plus([y])", "[y]"},
-                {"[{2}[{2}[{a,b}]{100}]{11}] + [y]", "<ERROR>"},
-                {"[{2}[,],{2}[{2}[{a,b}]{100}]{11}] + [y]", "<ERROR>"},
-                {"[noobj,{2}[{2}[{a,b}]{100}]{11}] + [y]", "[y]"},
-                {"[{[{2}[{a,b}]{50},noobj],c}] + [y]", "[{c,y}]"},
-                {"[{2}[{2}[{a,b}]{100}]{11}].as(uri::T)", "<ERROR>"},
-                {"[{2}[{2}[{a,b}]{100}]{11}]{1,2}", "<ERROR>"}})
-            assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> {
-                AbstractMetatronTest.checkCodeParseApply(LOG, row[0], row[1]);
-                return noobj();
-            }), row[0]);
         final Lst unbounded = lst(lst(java.util.stream.IntStream.range(0, 1024).mapToObj(i -> objs(jnt(2L * i), jnt(2L * i + 1L))).toList()).d(cInt.of(2L)));
-        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine,
+        final MTronException beyond = assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine,
                 () -> assertThrows(MTronException.class, () -> unbounded.plus(lst(jnt(-1))))), "1024 braces of two in a bulked brace");
+        final String saturated = Long.MAX_VALUE / 2048L + 1L + " copies unfold past the typer's bound for lst";
+        assertEquals(saturated, beyond.getMessage().substring(0, Math.min(saturated.length(), beyond.getMessage().length())));
         // a lst without braces is one word, extended in place: its sum is linear in its length, where a copy of the word
         // per slot took minutes at this length
         final Lst longest = lst(java.util.stream.IntStream.range(0, 200_000).mapToObj(i -> (Obj) jnt(i % 10)).toList());
         assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> longest.plus(lst(jnt(-1)))),
                 "a sum over 200,000 letters is linear in them");
+    }
+
+    /// THE WORDS ARE BOUNDED BEFORE THEY ARE BUILT, in whatever order a hole, a mass-only {2}[,] and an unbounded
+    /// sub-word come, a sub-word of a brace that is no word included, as the sum, as(uri::T), a range's powers and the
+    /// converse reach them, and nested spans, whose copies share one sub-word, are bounded by the letters they hold,
+    /// each shared sub-word once, so five spans of 100 over [x,y] are 2·10^10 letters held in 200. Built, each would
+    /// exhaust the heap, so each runs under a timeout, the measure, the expansion and the converse stopping when it
+    /// interrupts them. <BOUND> is the refusal of the typer's bound for lsts.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[{a,b}]{100}.pow(11).mult([{2}[,]]).plus([y])                                % <BOUND>",
+            "[{a,b}]{100}.pow(11).mult([noobj]).plus([y])                                 % [y]",
+            "[{a,b}]{100}.pow(11).mult([y,noobj]).plus([y])                               % [y]",
+            "[{2}[{2}[{a,b}]{100}]{11}] + [y]                                             % <BOUND>",
+            "[{2}[,],{2}[{2}[{a,b}]{100}]{11}] + [y]                                      % <BOUND>",
+            "[noobj,{2}[{2}[{a,b}]{100}]{11}] + [y]                                       % [y]",
+            "[{[{2}[{a,b}]{50},noobj],c}] + [y]                                           % [{c,y}]",
+            "[{2}[{2}[{a,b}]{100}]{11}].as(uri::T)                                        % <BOUND>",
+            "[{2}[{2}[{a,b}]{100}]{11}]{1,2}                                              % <BOUND>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100} + [y]                 % <BOUND>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.as(uri::T)            % <BOUND>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{1,2}                       % <BOUND>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.pow(-1) + [y]         % <BOUND>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.pow(-1).count()       % 1",
+            // a shared sub-word is held once: 200 letters held in 100 expand, while 250,000 held in 100 are refused
+            "[{-1}[x,y]{50}]{2}.plus([{-1}[x,y]{50}]{2}.neg())                            % noobj",
+            "[{-1}[{-1}[x,y]{50}]{50}]{50} + [y]                                          % <BOUND>",
+    }, delimiter = '%')
+    public void testTheWordsAreBoundedBeforeTheyAreBuilt(final String code, final String expected) {
+        final Machine machine = Machine.current();
+        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> {
+            if (!"<BOUND>".equals(expected.trim()))
+                AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+            else {
+                String refusal;
+                try {
+                    refusal = Machine.parse(code).apply(noobj()).stream().map(o -> ObjmtronSerializer.single().write(o)).toList().toString();
+                } catch (final Exception e) {
+                    refusal = String.valueOf(e.getMessage());
+                }
+                final String bound = refusal;
+                assertTrue(bound.contains(" copies unfold past the typer's bound for lst"), () -> code + " => " + bound);
+            }
+            return noobj();
+        }), code);
     }
 
     /// THE WORD RING KEEPS ITS LAWS on lsts that hold braces, sub-words, points, holes and letters of every kind, each

@@ -266,9 +266,12 @@ public interface Resolver extends Component {
                 i++;
             }
             final Code resolved = code.jvm(resolvedCode);
-            LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s",
-                    fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}",
-                    ObjmtronSerializer.prettyPrintCode(resolved));
+            // the code is printed only when it is logged: its constants may be as large as a lst a span's copies share,
+            // whose text is every letter it stands for
+            if (LOG.logger().isDebugEnabled())
+                LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s",
+                        fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}",
+                        ObjmtronSerializer.prettyPrintCode(resolved));
             return resolved;
         }
     }
