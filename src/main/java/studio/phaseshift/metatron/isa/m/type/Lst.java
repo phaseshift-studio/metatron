@@ -41,15 +41,14 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -429,14 +428,14 @@ public interface Lst extends Poly<Lst, List<Obj>> {
             final int suffix = fURI.Helper.sharedSuffix(letters, prefix);
             final List<Obj> first = letters.getFirst();
             final List<Obj> slots = new ArrayList<>(first.subList(0, prefix));
-            // the middles in the order of their letters' text, a middle before every middle it begins, as a path sorts
+            // the middles in the order of their letters' text, a middle before every middle it begins, as a path sorts. A
+            // brace is a sum, so its members may all be negative, as a negated brace's are: it is no stream of objs
             slots.add(objs(live.stream()
                     .map(word -> Map.entry(word.getKey().subList(prefix, word.getKey().size() - suffix), word.getValue()))
                     .sorted(Comparator.comparing(middle -> middle.getKey().stream().map(Obj::toString).toArray(String[]::new), Arrays::compare))
                     .map(middle -> 1 == middle.getKey().size() && !middle.getKey().getFirst().isLst()
                             ? middle.getKey().getFirst().d(middle.getValue())
-                            : lst(new ArrayList<>(middle.getKey())).d(middle.getValue()))
-                    .toList()));
+                            : lst(new ArrayList<>(middle.getKey())).d(middle.getValue()))));
             slots.addAll(first.subList(first.size() - suffix, first.size()));
             return lst(slots);
         }
@@ -451,9 +450,12 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * A brace multiplies the words, so they are measured before any is built ({@link #measure}) and bounded by the
          * typer's unfold for lsts, in copies of the letters the lst writes, a nested brace's among them: a brace of many
          * members is as many words, linear in the lst, while k braces of two are 2^k words of k letters, written in 2k.
+         * A lst with a hole is no word at all, so none is built, however many its braces before the hole would make.
          */
         private static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
             final double[] measure = measure(slots);
+            if (0.0d == measure[0])
+                return new LinkedHashMap<>();
             Typer.Helper.unfolds(Typer.UNFOLD_LST, (long) Math.ceil(Math.max(measure[0], measure[1]) / Math.max(1.0d, measure[2])));
             final Map<List<Obj>, cInt> words = new LinkedHashMap<>();
             expand(slots, coefficient).forEach(word -> words.merge(word.getKey(), word.getValue(), cInt::plus));
@@ -463,15 +465,17 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         /**
          * the words a lst's slots are, measured before any is built ({@link #words}): how many, how many letters they hold
          * together, and how many letters the slots write, a sub-word's own among them. A slot of m moments makes w words
-         * of l letters m w words of m l letters and w times the moments' letters. Counted in doubles, so a measure past a
-         * long's range is still past the bound
+         * of l letters m w words of m l letters and w times the moments' letters, and a hole, a slot of no moment, makes
+         * no word, so it never multiplies a count past a double's range: counted in doubles, a measure past a long's
+         * range is infinite, and so past the bound
          */
         private static double[] measure(final List<Obj> slots) {
             return slots.stream()
                     .map(slot -> slot.stream()
                             .map(member -> isSubWord(slot, member) ? measure(member.lstValue()) : new double[]{1.0d, 1.0d, 1.0d})
                             .reduce(new double[]{0.0d, 0.0d, 0.0d}, (a, b) -> new double[]{a[0] + b[0], a[1] + b[1], a[2] + b[2]}))
-                    .reduce(new double[]{1.0d, 0.0d, 0.0d}, (at, slot) -> new double[]{at[0] * slot[0], at[1] * slot[0] + at[0] * slot[1], at[2] + slot[2]});
+                    .reduce(new double[]{1.0d, 0.0d, 0.0d}, (at, slot) -> 0.0d == slot[0] ? new double[]{0.0d, 0.0d, at[2] + slot[2]}
+                            : new double[]{at[0] * slot[0], at[1] * slot[0] + (0.0d == slot[1] ? 0.0d : at[0] * slot[1]), at[2] + slot[2]});
         }
 
         /**
@@ -579,10 +583,14 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * {@code {[1,plus(2),plus(3)],[1,mult(2),plus(5)]}>|} is. A branch answers a stream, and an instruction runs over
          * what reached it as its code runs over a stream, a map on each obj and a reducer on them all:
          * {@code [1,{plus(1),plus(2)},sum()]>|} is {@code 5}, as {@code {2,3}.sum()} is. Nothing is still one input, so a
-         * constant answers it. A record that meets a record is their join, a record's product, whatever they hold, since
-         * the join runs none of their code, so a lst of records folds to their product (Claim 28): {@code [[a=>b],[b=>e]]>|}
-         * is {@code [a=>b=>e]}, and {@code [[a=>b],[c=>d]]>|} the zero, the empty rec. The zero drops from a stream that
-         * holds anything else, as it drops from a sum: {@code [[x=>a],{[a=>b],[a=>c]},[b=>e]]>|} is {@code [x=>a=>b=>e]}.
+         * constant answers it. A record of walks ({@code Rec.Helper.holdsWalks}) that meets a record of walks is their
+         * join, a record's product, so a lst of them folds to their product (Claim 28): {@code [[a=>b],[b=>e]]>|} is
+         * {@code [a=>b=>e]}, and {@code [[a=>b],[c=>d]]>|} the zero, the empty rec. The join runs no code a record holds
+         * as a value ({@code [[x=>a],[a=>plus(1)]]>|} is {@code [x=>a=>plus(1)]}), while a key that acts, code or a type,
+         * runs as a WHERE on the ends it meets, as in the product. A live rec, a space or a machine, holds no walks, so it
+         * applies as a constant. The zero drops from a stream that holds anything else, and a stream of zeros is the zero,
+         * as in a sum: {@code [[x=>a],{[a=>b],[a=>c]},[b=>e]]>|} is {@code [x=>a=>b=>e]}, and
+         * {@code [[x=>a],{[b=>c],[d=>e]}]>|} is {@code [=>]}.
          */
         public static Obj fold(final Lst word, final Obj lhs) {
             final Predicate<Obj> zero = obj -> Rec.Helper.holdsWalks(obj) && obj.asRec().isEmpty();
@@ -590,11 +598,12 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                 final Obj answered = objs(slot.stream().flatMap(member -> isSubWord(slot, member)
                         ? fold(member.d(cInt.ONE()).asLst(), at).stream().map(folded -> folded.c(c -> c.mult(member.tid().d())))
                         : member.isCall() && !at.isNoObj()
-                        ? MCode.code(Stream.concat(Stream.of(instB(START_INST_TID, lst(at))), member.d(cInt.ONE()).asCall().insts().stream()).toList())
-                        .apply(noobj()).stream().map(out -> out.c(c -> c.mult(member.tid().d())))
+                        ? Code.wrapStart(at, MCode.code(member.d(cInt.ONE()).asCall().insts())).apply(at.isMonad() ? at : noobj())
+                        .stream().map(out -> out.c(c -> c.mult(member.tid().d())))
                         : (at.isNoObj() ? Stream.of(at) : at.stream()).map(obj -> Rec.Helper.holdsWalks(member) && Rec.Helper.holdsWalks(obj)
                         ? obj.asRec().mult(member.asRec()) : member.apply(obj))));
-                return answered.stream().allMatch(zero) || answered.stream().noneMatch(zero) ? answered : objs(answered.stream().filter(zero.negate()));
+                return answered.stream().noneMatch(zero) ? answered
+                        : answered.stream().allMatch(zero) ? rec() : objs(answered.stream().filter(zero.negate()));
             });
         }
 

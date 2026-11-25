@@ -276,7 +276,7 @@ objs anchored to their address are specified with `@`.
 [1,2,3,4]@b              [-- lst anchored at *a --]
 *a + [b=>2]
 *a
-@b + [5,6]
+@b * [5,6]
 *b
 ```
 

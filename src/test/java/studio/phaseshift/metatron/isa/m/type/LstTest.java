@@ -33,9 +33,11 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -115,6 +117,9 @@ public class LstTest extends AbstractAlgebraTest {
             "[[1,2]] + [3]                                                                % [{3,[[1,2]]}]",
             "[[1,2],3] + [[1,2],4]                                                        % [[1,2],{3,4}]",
             "[x,{[a,b]},y] + [x,c,y]                                                      % [x,{[[a,b]],c},y]",
+            // a brace whose mass bulks to one holds one sub-word at point one, so it is that one-member brace (open)
+            "[x,{{2}[a,b],{-1}[a,b]}]                                                     % [x,{[a,b]}]",
+            "[x,{{2}[a,b],{-1}[a,b]}] + [x,a,b]                                           % [x,{[a,b]}] + [x,a,b]",
             // a sum's mass on its letters (Claim 24): the argument counts by its point, and the lhs's floats
             "[a,b] + [a,b]                                                                % [{2}a,b]",
             "[a,b] + [a,b] + [a,b]                                                        % [{3}a,b]",
@@ -135,6 +140,8 @@ public class LstTest extends AbstractAlgebraTest {
             "[{-1}1,2] + [1,2]                                                            % noobj",
             "[a,b] + [a,{-1}b]                                                            % noobj",
             "[a,b,c] + [a,d,c] + [a,{-1}d,c]                                              % [a,b,c]",
+            "[{-1}a] + [{-1}b]                                                            % [{a,b}].neg()",
+            "[{-1}a] + [{-1}b] + [a]                                                      % [{-1}b]",
             // a hole is the zero letter, so no word runs through it
             "[1,noobj] + [2]                                                              % [2]",
             // the unity carries its mass as the sub-word it is, as <> + <> is <{2}>, so its multiples sum and multiply
@@ -223,11 +230,18 @@ public class LstTest extends AbstractAlgebraTest {
             "[{[{a,b},{c,d}],z},{e,f}].plus([y]).count()                                  % 1",
             "[0,1,2,3,4,5,6,7,8,9]{10}.mult([{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v},{w,x}]).plus([y]) % <ERROR>",
             "[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v},{w,x}].mult([0,1,2,3,4,5,6,7,8,9]{10}).plus([y]) % <ERROR>",
+            // a range sums its powers' words, each bounded before it is built: its seventh power's braces are refused
+            "[0{10},1{10},2{10},3{10},4{10},5{10},6{10},7{10},8{10},9{10},{a,b}]{1,11}    % <ERROR>",
+            // words past a double's range are infinite, so past the bound, and a lst with a hole is no word, built from
+            // nothing however many braces precede the hole
+            "[{a,b}]{100}.pow(11).mult([{2}[,]]).plus([y])                                % <ERROR>",
+            "[{a,b}]{100}.pow(11).mult([noobj]).plus([y])                                 % [y]",
+            "[{a,b}]{100}.pow(11).mult([y,noobj]).plus([y])                               % [y]",
             // a lst without braces is one word, built once: its sum is linear in its length
             "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([x]).count()                        % 1",
             "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([0,1,2,3,4,5,6,7,8,9]{100}.pow(100).neg()) % noobj",
-            // a range is bounded before its powers are built
-            "[0{10},1{10},2{10},3{10},4{10},5{10},6{10},7{10},8{10},9{10},{a,b}]{1,11}    % <ERROR>",
+            // a range is bounded by its farthest power, then by the copies all of them hold, before any is built
+            "[1]{1,10000000000}                                                           % <ERROR>",
             // the span at run time
             "[1,2].pow(2)                                                                 % [1,2,1,2]",
             "[1,2,3].pow(-1)                                                              % [3,2,1]",
@@ -269,6 +283,8 @@ public class LstTest extends AbstractAlgebraTest {
             "[[a=>b],[c=>d]]>|                                                            % [=>]",
             "[[x=>a],{[a=>b],[a=>c]},[b=>e]]>|                                            % [x=>a=>b=>e]",
             "[[x=>a],{[a=>b],[a=>c]},[c=>e]]>|                                            % [x=>a=>c=>e]",
+            "[[x=>a],{[b=>c],[d=>e]}]>|                                                   % [=>]",
+            "[[x=>a],{[b=>c],[d=>e]}]>|                                                   % [x=>a].mult([b=>c,d=>e])",
             "[[a=>b],{[b=>c],[x=>y]},5]>|                                                 % 5",
             "[[a=>5],[nat::T=>x]]>|                                                       % [a=>5] * [nat::T=>x]",
             "[[a=>5],[?>=0=>x]]>|                                                         % [a=>5] * [?>=0=>x]",
@@ -309,6 +325,7 @@ public class LstTest extends AbstractAlgebraTest {
             "{2}[a,b]      % [c]",
             "[a,{2}b]      % {3}[a,b]",
             "[x,{2}[a,b]]  % [x,a,b]",
+            "[,]           % [,]",
     }, delimiter = '%')
     public void testUriIsTheOracle(final String lhs, final String rhs) {
         AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".plus(" + rhs + ").as(uri::T).sum()", lhs + ".as(uri::T).plus(" + rhs + ".as(uri::T)).sum()");
@@ -325,7 +342,18 @@ public class LstTest extends AbstractAlgebraTest {
         assertEquals(151L, sum.lstValue().getFirst().stream().count(), () -> "a brace of 150 and a word sum to 151 members: " + sum);
         final Lst narrow = lst(java.util.stream.IntStream.range(0, 12).mapToObj(i -> objs(jnt(2L * i), jnt(2L * i + 1L))).toList());
         final MTronException refused = assertThrows(MTronException.class, () -> narrow.plus(lst(jnt(-1))), "twelve braces of two are 4096 words of 12 letters, written in 24");
-        assertTrue(refused.getMessage().startsWith("a span of 2048 copies unfolds past the typer's bound for lst"), refused::getMessage);
+        final String words = "a span of 2048 copies unfolds past the typer's bound for lst";
+        assertEquals(words, refused.getMessage().substring(0, Math.min(words.length(), refused.getMessage().length())));
+        // a range is bounded by its farthest power before any is built, never walked power by power
+        final MTronException farthest = assertThrows(MTronException.class, () -> Lst.Helper.power(lst(jnt(1)), cInt.of(1L, 10_000_000_000L)));
+        final String far = "a span of 10000000000 copies unfolds past the typer's bound for lst";
+        assertEquals(far, farthest.getMessage().substring(0, Math.min(far.length(), farthest.getMessage().length())));
+        // a lst without braces is one word, extended in place: its sum is linear in its length, where a copy of the word
+        // per slot took minutes at this length
+        final Machine machine = Machine.current();
+        final Lst longest = lst(java.util.stream.IntStream.range(0, 200_000).mapToObj(i -> (Obj) jnt(i % 10)).toList());
+        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> longest.plus(lst(jnt(-1)))),
+                "a sum over 200,000 letters is linear in them");
     }
 
     /// THE WORD RING KEEPS ITS LAWS on lsts that hold braces, sub-words, points, holes and letters of every kind, each
@@ -363,6 +391,18 @@ public class LstTest extends AbstractAlgebraTest {
                     checkEquality(LOG, normal.apply(y.plus(z).mult(x)), y.mult(x).plus(z.mult(x)), true);
                 }
             }
+        }
+        // a lst that carries its own point: * concatenates as written, its lhs's point floating and its argument's on the
+        // product's first letter, so the product's unity and associativity hold in the sum's normal form, where the mass
+        // of [{2}[,],a] and of [{2}a] is the same 2a
+        final List<Lst> pointed = Stream.of("{2}[,]", "{2}[a,b]", "{-1}[x]", "[,]", "[a]", "[x,{[a,b],[a,b]}]", "{3}[{a,b},c]")
+                .map(code -> ObjmtronSerializer.parse(code).asLst()).toList();
+        for (final Lst x : pointed) {
+            checkEquality(LOG, normal.apply(x), normal.apply(x.mult(one)), true);
+            checkEquality(LOG, normal.apply(x), normal.apply(one.mult(x)), true);
+            for (final Lst y : pointed)
+                for (final Lst z : pointed)
+                    checkEquality(LOG, normal.apply(x.mult(y).mult(z)), normal.apply(x.mult(y.mult(z))), true);
         }
     }
 

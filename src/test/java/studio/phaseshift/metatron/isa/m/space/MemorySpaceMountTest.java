@@ -150,7 +150,7 @@ public class MemorySpaceMountTest extends AbstractMetatronTest {
         assertEquals(f("/dev/#"), dev.pattern(), "the space is indexed by its name below the mount root");
         assertEquals(0, dev.qs().lstValue().size(), "no q-procs yet");
 
-        Machine.evaluate("@/memory/space/dev/q >>= +[analq::[=>]]");
+        Machine.evaluate("@/memory/space/dev/q >>= mult([analq::[=>]])");
         assertTrue(dev.hasQ(QCollection.ANALQ_PATTERN), "the q-proc written at the mount address is on the LIVE space");
 
         Machine.evaluate("/dev/x -> 1");

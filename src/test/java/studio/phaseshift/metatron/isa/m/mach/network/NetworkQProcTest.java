@@ -115,7 +115,7 @@ public class NetworkQProcTest extends AbstractMetatronTest {
     }
 
     /**
-     * A q-proc attached AFTER boot at the network's own {@code q} address: {@code @~/network/q >>= +[analq::[=>]]}
+     * A q-proc attached AFTER boot at the network's own {@code q} address: {@code @~/network/q >>= mult([analq::[=>]])}
      * lands on the LIVE network's processor list, and the layer then records the level's accesses into it (read back
      * at {@code ~/network/q?analq}). No peer is needed: the read is addressed at an unreachable authority, which the
      * network declines locally.
@@ -124,7 +124,7 @@ public class NetworkQProcTest extends AbstractMetatronTest {
     void shouldAcceptAQProcAttachedAtTheNetworkQ() {
         final Network network = Machine.current().network();
         assertFalse(network.hasQ(ANALQ_PATTERN), "no analq processor yet");
-        Machine.evaluate("@~/network/q >>= +[analq::[=>]]");
+        Machine.evaluate("@~/network/q >>= mult([analq::[=>]])");
         assertTrue(network.hasQ(ANALQ_PATTERN), "the update landed on the LIVE network's q");
         try {
             Machine.read(f(UNREACHABLE + "/probe"));

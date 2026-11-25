@@ -764,9 +764,11 @@ tests where two pieces meet.
 **Claim 28 (records are steps).** An arrow is a guarded step, $(k \Rightarrow v) \mapsto \mathrm{is}(k) \cdot v$:
 keep what equals or satisfies $k$, then answer $v$. This maps the record ring into the stream ring, merge to branch
 and join to composition, forgetting the middle a walk keeps. A list of records folds to their join,
-$\mathrm{fold}([\,r_1, \ldots, r_n]) = r_1 \cdots r_n$, whatever the records hold, as the join runs none of their
-code: a program written as a timeline of steps through space. A walk through a branch that does not connect is the
-zero, $[\Rightarrow]$, which drops from what the branch answers as it drops from a sum.
+$\mathrm{fold}([\,r_1, \ldots, r_n]) = r_1 \cdots r_n$: a program written as a timeline of steps through space. The
+join runs no code a record holds as a value, while a key that acts runs as the `WHERE` it is (Claim 16) on the ends it
+meets, so the fold is the product whatever the records hold, a live record aside (a space or a machine), which holds no
+walks and applies as a constant. A walk through a branch that does not connect is the zero, $[\Rightarrow]$, which
+drops from what the branch answers as it drops from a sum, and a branch none of whose walks connects is the zero.
 
 ```mtron_pre
 [[a=>b],[b=>e]]>|
