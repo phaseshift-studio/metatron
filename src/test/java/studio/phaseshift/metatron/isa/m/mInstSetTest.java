@@ -614,6 +614,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4}.sum{2}()                                                     % int{2}::10",
             "{1,2,3,4}.sum{2}().count()                                             % 2",
             "{1,2,3,4,5,6}.sum?int<=int{2}().count()                                % 3",
+            // a pager answers one page at a time, so the cut after it gathers every page's answer: it states no dom
+            "{1,2,3,4,5,6}.sum?int<=int{2}().move(<..>).count()                     % 3",
             "{1,2,3,4}.sum?int<=int{+}()                                            % 10",
             "{1,2,3,4}.count?int<=int()                                             % int{4}::1",
             //  "{1,2,3,4}.count?int<=int{2}()                                          % int{2}::2",

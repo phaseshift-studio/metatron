@@ -755,10 +755,11 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    `1.cut?<=int(<a>, plus(1)).explain()`, explained here with nothing run, and a profile times the cut here, every run
    starting from home. The cut's dom is the stream that flows into the move (the rng of the instruction before it is
    the dom of the next), `int` for `1` and `int{4}` for `{1,2,3,4}`, wherever a chain that starts from its own seed
-   hands the move its whole stream at once (from the seed, or a gather run once); anywhere else the count is not known
-   here (after an instruction that answers per obj or per page, after a fold run a range of times, in a branch member
-   compiled without its lhs, or where the stream may hold nothing), and the cut keeps `#{*}`, so it still gathers the
-   stream whole.
+   hands the move its whole stream at once, an exact count (from the seed, or a gather run once); anywhere else the
+   count is not known here (after an instruction that answers per obj or per page, after a fold run a range of times,
+   where a count is only a range, in a branch member compiled without its lhs, or where the stream may hold nothing),
+   and the cut keeps `#{*}`, so it still gathers the stream whole. A cut with no tail answers nothing, as its tail is
+   the zero.
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's

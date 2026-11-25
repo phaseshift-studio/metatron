@@ -1129,7 +1129,7 @@ public class machInstSet extends AbstractInstSet {
                                 .dom(ALL.maybeSome(), "the value the tail starts from: it is the lhs that the cut program was cut off of, gathered whole. A cut that replaces a move states the stream that flows into it where that is known (int for one int, int{4} for four)")
                                 .rng(ALL.maybeSome(), "whatever the tail answers where it lands — at a peer, the one scattered lane, merged")
                                 .argLst(URI_TYPE, "where the tail runs: a machine of this server's tree (`<a>`, `<..>`, `<~>`), or a peer and the place in it to resume at (`<//worker/a>`)",
-                                        T(ALL_STAR), "the tail, as code: it picks up where the chain was cut, and is compiled where it lands. It is code, never one obj, so a tail of one instruction is any count of it, none included (from{2}(...), {?}plus(1)), as the tail of any longer chain is; an absent tail is the empty one, nothing to run, and the cut answers what reaches its place")
+                                        T(ALL_STAR), "the tail, as code: it picks up where the chain was cut, and is compiled where it lands. It is code, never one obj, so a tail of one instruction is any count of it, none included (from{2}(...), {?}plus(1)), as the tail of any longer chain is. An absent tail is noobj, the zero, so the cut answers nothing: x times 0 is 0")
                                 .desc("""
                                         run the rest of a chain in another machine, compiled by that machine. The
                                         nomadic extractor cuts a chain at its first instruction that changes the
@@ -1158,6 +1158,11 @@ public class machInstSet extends AbstractInstSet {
                                 .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut?<=int(<//worker>, plus(1)): the worker compiles it --]")
                                 .example("5.move(<a>).plus(1).explain() [-- compiles to 5.cut?<=int(<a>, plus(1)).explain(): explained here, nothing runs --]")
                                 .body((lhs, inst) -> {
+                                    // A CUT WITH NO TAIL ANSWERS THE ZERO (Marko, 2026-11-25): an absent tail arrives as
+                                    // noobj, the ring's zero, so the cut is lhs times 0, and nothing runs anywhere. A tail
+                                    // that may run no times ({?}plus(1)) is no zero, and the empty code is the unit
+                                    if (inst.arg(1).isNoObj())
+                                        return noobj();
                                     // A CUT TIMES ITS RUN (Marko, 2026-11-24: all timeout logic lives in the cut, and a
                                     // move's ?timeout, as a branch's, compiles onto it). The run goes on a virtual::T that
                                     // waits at most ?timeout whole seconds for it, held as the time it is (second::n), as
@@ -1488,15 +1493,16 @@ public class machInstSet extends AbstractInstSet {
                         // {1,2,3,4}.move(<//h>) an int{4}, and {1,2,3,4}.count{2}().move(<//h>) an int{2}. Anywhere else
                         // the count is not known here, so the cut keeps #{*} and gathers: after an instruction that
                         // answers per obj, a dom of one would run the cut, and every fold in its tail, once per answer;
-                        // a chain with no seed (a branch member, compiled without its lhs) only guesses its types; and a
-                        // dom that may hold nothing (a sup, a ;'s empty seed, a move{0}) would never run the cut, or seed
-                        // it. Only the chain before the move is resolved here
+                        // a chain with no seed (a branch member, compiled without its lhs) only guesses its types; a dom
+                        // that may hold nothing (a sup, a ;'s empty seed, a move{0}) would never run the cut, or seed it;
+                        // and a count known only as a range (a move{2,3}, a count{2,3}()) pages its stream, which a
+                        // split of a range never ends. Only the chain before the move is resolved here
                         final Inst flowing = cut.isEmpty() || !START_INST_TID.equals(cut.getFirst().tid().basePath()) ? null
                                 : Rewriter.Helper.contracts(code(new ArrayList<>(cut))).getLast();
                         final fURI flows = null == flowing || !flowing.tid().hasRng() || !flowing.tid().b().isOne()
                                 || !(flowing.isInitial() || flowing.isGather()) ? null
                                 : flowing.tid().rng().c(c -> c.mult(flowing.tid().d()).mult(inst.tid().d()));
-                        final fURI dom = null == flows || flows.isZeroable() ? null : flows;
+                        final fURI dom = null == flows || flows.isZeroable() || !flows.c().isExact() ? null : flows;
                         final fURI timed = inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID;
                         final Inst moved = instB(null == dom ? timed : timed.dom(dom), lst(where, tail));
                         if (!inst.tid().d().isOne() && !cut.isEmpty()) {

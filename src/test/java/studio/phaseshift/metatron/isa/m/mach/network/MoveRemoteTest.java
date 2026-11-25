@@ -144,10 +144,10 @@ public class MoveRemoteTest extends AbstractMetatronTest {
      * the move its whole stream at once: the seed's int for one int and int{4} for four, a fold's one int, times the
      * fold's point and the move's. Anywhere else the count is not known, so the cut keeps its {*} and still gathers: after
      * an instruction that answers per obj, after a fold that runs a range of times, in a branch member compiled without
-     * its lhs, and where the stream may hold nothing (an empty fold, a ;'s empty seed, a point of zero). Each of those
-     * rows has its twin without the move, which answers the same. A cut's tail is code, any count of it, none included,
-     * and a cut with no tail answers what reaches its place, as a move that ends a chain does. Each row: the expression
-     * % its answer.
+     * its lhs, where the stream may hold nothing (an empty fold, a ;'s empty seed, a point of zero), and where its count
+     * is known only as a range (a move{2,3}, a count{2,3}(), whose split never ended). Each of those rows has its twin
+     * without the move, which answers the same. A cut's tail is code, any count of it, none included, and a cut with no
+     * tail answers nothing: its tail is noobj, the zero (Marko, 2026-11-25). Each row: the expression % its answer.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -160,6 +160,7 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             "{1,2,3,4}.plus(1).move(<//self>).count().explain()>>format.has('cut +int[{][*][}]::T ').count()        % 1",
             "{1,2,3,4}.move(<//self>).count()                                                                     % 4",
             "{1,2,3,4}.plus(1).move(<//self>).count()                                                             % 4",
+            "{1,2,3,4}.plus(1).count()                                                                            % 4",
             "5.move{3}(<//self>).count()                                                                          % 3",
             "{1,2,3,4}.count().move(<//self>).plus(2)                                                             % 6",
             // the tail is code, never one obj, so a tail of one instruction with a point binds against the stated dom
@@ -181,11 +182,16 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             "5; move(<//self>).count()                                                                            % 0",
             "5; count()                                                                                           % 0",
             "5.move{0}(<//self>).count()                                                                          % 0",
+            "{0}5.count()                                                                                         % 0",
+            "5.move{2,3}(<//self>).count()                                                                        % 3",
+            "{2,3}5.count()                                                                                       % 3",
+            "{1,2,3,4}.count{2,3}().move(<//self>).count()                                                        % 3",
+            "{1,2,3,4}.count{2,3}().count()                                                                       % 3",
             "2.5.branch(sum().move(<//self>).plus(1.0))                                                           % 3.5",
             "2.5.branch(sum().plus(1.0))                                                                          % 3.5",
-            // a tail of one instruction may run any number of times, none included; with no tail, the lhs answers
+            // a tail of one instruction may run any number of times, none included; a cut with no tail answers nothing
             "5.move(<//self>).{?}plus(1)                                                                          % {5,6}",
-            "5.cut(<loop://self>)                                                                                 % 5",
+            "5.cut(<loop://self>)                                                                                 % noobj",
     }, delimiter = '%')
     void testTheCutsDomIsTheStreamThatFlowsIn(final String mtron, final String answer) {
         checkCodeParseApply(LOG, mtron.trim(), answer.trim());
