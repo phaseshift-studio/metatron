@@ -112,7 +112,7 @@ public class RecTest extends AbstractAlgebraTest {
             "[1=>[2=>3]]                           % 1                    % [2=>3]",
             "[1=>[2=>3]]                           % 2                    % noobj",
             "[a=>[b=>c],a/b/c=>[e=>f]]             % a/b/c                % [e=>f]",
-            "[a=>[b=>c],a/b/c=>[e=>f]]             % a/b                  % c",
+            "[a=>[b=>c],a/b/c=>[e=>f]]             % a/b                  % {c,[c=>[e=>f]]}",
             // "[a=>[b=>c],a/b=>c]               % a/b                  % {c,c}",
             // "[a=>[b=>c],a/b/c=>[e=>f]]             % a/b/c/               % [a/b/c=>[e=>f]].>-{,}",
             "[a=>[b=>c,d=>[e=>f]]]                 % a                    % [b=>c,d=>[e=>f]]",
@@ -251,6 +251,21 @@ public class RecTest extends AbstractAlgebraTest {
             "[a/b=>[c=>1]]>>(a/b/c)                                                      % 1",
             "[a=>[b=>[c=>1]]]>>(a/b/c)                                                   % 1",
             "[b/#=>x]>>b                                                                 % x",
+            // a read is linear: an address reads every key it meets, named, run through or under it, and the reads add
+            "[a=>[x=>1],a/b=>[c=>2]]>>(a/b/c)                                            % 2",
+            "[a=>[x=>1],a/b=>[c=>2]]>>(a/b)                                              % [c=>2]",
+            "[a=>[x=>1],a/b=>[c=>2]]>>a                                                  % [x=>1,b=>[c=>2]]",
+            "[a=>[x=>1],a/b=>2]>>a                                                       % [x=>1,b=>2]",
+            "[a=>[x=>1],a/b=>[c=>2]]>>(a/b/c/)                                           % c=>2",
+            "[a/b/c=>1,a=>[b=>[c=>2]]]>>(a/b/c)                                          % {1,2}",
+            "[a=>[b=>[c=>9]],a/b=>[c=>2]]>>(a/b/c)                                       % {9,2}",
+            "[a=>5,a/b=>6]>>a                                                            % {5,[b=>6]}",
+            // the other layouts of the first rec's term answer alike
+            "[a=>[x=>1,b=>[c=>2]]]>>a                                                    % [x=>1,b=>[c=>2]]",
+            "[a/x=>1,a/b/c=>2]>>a                                                        % [x=>1,b=>[c=>2]]",
+            // a key that names the address overrides a pattern key, which answers only when no key meets the address
+            "[a/b=>1,a/+=>2]>>(a/b)                                                      % 1",
+            "[a/+=>2]>>(a/b)                                                             % 2",
             "{2}[a/b=>35]>>a                                                            % {2}[b=>35]",
             "{2}[a=>[b=>35]]>>a                                                         % {2}[b=>35]",
     }, delimiter = '%')
@@ -670,6 +685,8 @@ public class RecTest extends AbstractAlgebraTest {
                 "atDirect(a/b/c) on a nested rec should return the raw !@ inst");
         assertTrue(Obj.Helper.getAutoPointer(rec(uri("a/b/c"), ptr).atDirect(uri("a/b/c"))).isPresent(),
                 "atDirect(a/b/c) on a flat rec should return the raw !@ inst");
+        assertTrue(Obj.Helper.getAutoPointer(rec(uri("a"), rec(uri("x"), jnt(1)), uri("a/b"), rec(uri("c"), ptr)).atDirect(uri("a/b/c"))).isPresent(),
+                "atDirect(a/b/c) through a path key beside a first-segment key should return the raw !@ inst");
         AbstractMetatronTest.checkEquality(LOG, rec(), ObjmtronSerializer.parse("[a=>[=>]]").asRec().atDirect(uri("a")), true);
     }
 
