@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -108,6 +109,32 @@ public class FailTest extends AbstractObjTest {
     // ========================================
     // fail(t, cause) cause-chain preservation
     // ========================================
+
+    /**
+     * A FAIL'S JVM IS A THROWABLE, never the value its tid describes. A fail minted from a raw
+     * throwable — {@link MFail#transientFail}, the merged chain {@code plus} builds, a fail's own
+     * cause — used to fail the base-type test in {@code Obj.Helper.objTypeCheck} ("[stackoverflowerror]
+     * is not a fail::T"), so it could not be WRITTEN. Under the strict typer ({@code type_pred => true},
+     * the docker profile's default) that meant the answer to a frame whose evaluation overflowed the
+     * stack was never sent, and the ill-typed fail it had already filed made every later read of
+     * {@code /} (which holds {@code /processor/fail}) answer a fail about a fail.
+     */
+    @Test
+    public void testAFailCarryingARawErrorIsWritable() {
+        Typer.Helper.set(Typer.TYPE_PRED, true);
+        try {
+            assertTrue(Typer.Helper.typePred(), "the strict typer is on");
+            final Obj raw = MFail.transientFail(new StackOverflowError());
+            assertDoesNotThrow(() -> Obj.Helper.objToString(raw), "printing a fail of an Error terminates");
+            assertDoesNotThrow(() -> Machine.write(f("/usr/fail/raw_error"), raw),
+                    "a fail of an Error is writable under type_pred");
+            final Obj answered = MFail.fail(new StackOverflowError()).caughtTransient();
+            assertDoesNotThrow(() -> Machine.write(f("/usr/fail/answered_error"), answered),
+                    "the caught form of a fail of an Error is writable under type_pred");
+        } finally {
+            Typer.Helper.set(Typer.TYPE_PRED, false);
+        }
+    }
 
     @Test
     public void testFailCausePreservesThrowableCauseChain() {

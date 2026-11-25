@@ -19,45 +19,60 @@
 package studio.phaseshift.metatron.isa.m.web.space.ws;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 
 /**
- * A FRAME IS ALWAYS ANSWERED, AND THE SESSION SURVIVES THE ANSWER.
+ * THE mtron_ws ENDPOINT OVER THE WIRE: a session is held by its socket, and a frame is always answered.
  * <p>
- * A failure that escapes the evaluation as an {@code Error} — a {@code StackOverflowError} from a
- * description that re-entered itself, an OOM — is not an {@code Exception}, so every guard on the way
- * out ({@code mtron_on_message}, {@code WebSocketRec.onMessage}, {@code mtron_wsHandler.evaluate})
- * stepped aside and it reached the worker's own guard, whose documented job is to DROP the connection:
- * "nothing may reach the socket's worker thread". The client then saw a closed socket (1006) and no
- * reason at all. That is how a remote {@code sys_stat()} whose {@code free_jvm} was a real wearing
- * {@code percent::T} looked like a dead machine: the type failure's own MESSAGE popped the stack
- * before any fail could be built.
+ * TOP LEVEL ON PURPOSE. This class used to be {@code mtron_wsHandlerTest.mtron_wsHandlerIntegrationTest}, a
+ * static nested subclass of {@link AbstractWebSocketServerIntegrationTest} — and Surefire's file-name scan never
+ * selects a nested class, so {@link #testASessionIsNoAddress()} had never run. A nested integration test is a
+ * test that does not exist.
  * <p>
- * The frame answers {@code fail::T} instead, and the next frame is served on the same session. This
- * is a top-level class on purpose: a static nested subclass of
- * {@link AbstractWebSocketServerIntegrationTest} is not selected by Surefire's file-name scan, so it
- * would never run.
+ * The second contract is the boundary: a failure that escapes an evaluation as an {@code Error} is not an
+ * {@code Exception}, so every {@code catch (Exception)} on the way out steps aside and the worker's own guard
+ * drops the connection — the client saw code 1006 and no reason. The frame answers {@code fail::T} instead, and
+ * the session keeps serving.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mtron_wsHandlerFailAnswerTest extends AbstractWebSocketServerIntegrationTest {
+public class mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
 
     @Override
     protected Listener createWSServer() {
         return wsServer.of(rec(
-                uri(NAME), uri("mtron-fail-answer"),
+                uri(NAME), uri("mtron-test"),
                 uri(ORIGIN), uri("ws://localhost:" + generatePort()),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
     }
 
+    /**
+     * a session is held by its socket, not an address: it answers over the wire, and nothing under the server's
+     * authority reads it back (a wsspace cached its sessions at ws://host:port/...)
+     */
+    @Test
+    public void testASessionIsNoAddress() throws Exception {
+        this.connectToServer(this.primaryRoutePath());
+        // an answer proves the server has opened the session: the client's open can lead the server's
+        assertNotNull(this.sendAndReceive("1+2"), "the session should answer");
+        checkEquality(LOG, Machine.read(f(WS + "://" + this.wsHost + ":" + this.wsPort + "/#")), noobj(), true);
+    }
+
+    /**
+     * A FAILING FRAME IS ANSWERED, AND THE SESSION SURVIVES THE ANSWER. A parse error is the everyday case: it
+     * used to be quiet on this endpoint, and the error-typed answer is the contract a client reads.
+     */
     @Test
     public void testAFailingFrameIsAnsweredAndTheSessionSurvives() throws Exception {
         this.connectToServer(this.primaryRoutePath());

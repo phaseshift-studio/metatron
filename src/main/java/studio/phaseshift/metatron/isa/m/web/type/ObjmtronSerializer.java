@@ -36,7 +36,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -419,38 +418,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeInst(final Inst inst) {
-        if (DESCRIBE_DEPTH.get() >= MAX_DESCRIBE_DEPTH)
-            return this.generateInstHead(new StringBuilder(), inst).append("()").toString();
-        return this.describe(() -> this.generateInst(new StringBuilder(), inst, 0).toString());
-    }
-
-    /**
-     * HOW DEEP A DESCRIPTION MAY DESCRIBE ITSELF. A type can name itself: {@code percent::T}'s
-     * constructor is {@code percent?<=(<#{*}>::T)}, whose argument IS the type, so
-     * {@code writeType -> generateType -> the constructor -> writeInst -> generateInst -> writeType}
-     * has no natural end. Nothing stopped it, either, because the walk is entered from a VALUE's
-     * tid: the failure MESSAGE of a type error printed the value (and so the whole type), the stack
-     * died inside the message, and the frame that should have answered {@code fail::T} was left with
-     * nothing to send — its socket was dropped instead (a remote {@code sys_stat()} looked dead).
-     * <p>
-     * Past this depth a type is written by NAME and an instruction by its HEAD. Both are legal
-     * mtron, and a reader that wants the whole type reads it at its own address.
-     */
-    private static final int MAX_DESCRIBE_DEPTH = 64;
-    private static final ThreadLocal<Integer> DESCRIBE_DEPTH = ThreadLocal.withInitial(() -> 0);
-
-    /**
-     * Run one description a level deeper than its caller, restoring the depth whatever it does
-     * (a throw included: the depth is thread state, and a half-unwound walk must not leave it raised).
-     */
-    private <T> T describe(final Supplier<T> description) {
-        final int depth = DESCRIBE_DEPTH.get();
-        DESCRIBE_DEPTH.set(depth + 1);
-        try {
-            return description.get();
-        } finally {
-            DESCRIBE_DEPTH.set(depth);
-        }
+        return this.generateInst(new StringBuilder(), inst, 0).toString();
     }
 
     /**
@@ -592,9 +560,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeType(final Type type) {
-        if (DESCRIBE_DEPTH.get() >= MAX_DESCRIBE_DEPTH)
-            return this.writeUri(type.tid().toUri()) + "::T";
-        return this.describe(() -> this.generateType(new StringBuilder(), type, 0).toString());
+        return this.generateType(new StringBuilder(), type, 0).toString();
     }
 
     @Override

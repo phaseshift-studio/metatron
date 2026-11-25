@@ -118,11 +118,11 @@ public class mathInstSetTest extends AbstractInstSetTest {
             // ring_theory_unit_removal — plus(zero) / mult(one) collapse to the operand
             "cmplx::[1.0,2.0] + cmplx::[0.0,0.0]                   % cmplx::[1.0,2.0]",
             "cmplx::[1.0,2.0] * cmplx::[1.0,0.0]                   % cmplx::[1.0,2.0]",
-            "cmplx::[1.0,2.0].plus(cmphx::[0.0,0.0])               % cmplx::[1.0,2.0]",
-            "cmplx::[1.0,2.0].mult(cmphx::[1.0,0.0])               % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].plus(cmplx::[0.0,0.0])               % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].mult(cmplx::[1.0,0.0])               % cmplx::[1.0,2.0]",
             // group_theory_involution — neg().neg() collapses to identity
             "cmplx::[1.0,2.0].neg().neg()                          % cmplx::[1.0,2.0]",
-            "cmplx::[1.0,2.0].neg().neg().plus(cmphx::[3.0,4.0])   % cmplx::[4.0,6.0]",
+            "cmplx::[1.0,2.0].neg().neg().plus(cmplx::[3.0,4.0])   % cmplx::[4.0,6.0]",
     }, delimiter = '%', quoteCharacter = '~')
     public void testComplex(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -282,6 +282,26 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "tB::2048.0.normalize()    % pB::2.0",
     }, delimiter = '%', quoteCharacter = '~')
     public void testNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A REFINEMENT'S PREDICATE IS A FILTER, INCLUSIVE AT BOTH ENDS: {@code ?int::T[is(and(gte(0),lte(100)))]} is
+     * percent::T's description (percent is a VID on that int type), asked as a hidden type: a value that satisfies it
+     * answers ITSELF, and one that does not answers NOTHING — an empty answer is the miss, not a fail (100 and 0 are
+     * inside; -10 and 101 are not). The same type's TEXT round-trips in {@code ObjmtronSerializerTest}; this is the
+     * behavior the text stands for. Marko's console session, 2026-11-25, is the oracle on all five rows.
+     */
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "12.?int::T[is(and(gte(0),lte(100)))]    % 12",
+            "0.?int::T[is(and(gte(0),lte(100)))]     % 0",
+            "100.?int::T[is(and(gte(0),lte(100)))]   % 100",
+            "-10.?int::T[is(and(gte(0),lte(100)))]   % noobj",
+            "101.?int::T[is(and(gte(0),lte(100)))]   % noobj",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testARefinementsPredicateFiltersAndAdmitsItsBounds(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

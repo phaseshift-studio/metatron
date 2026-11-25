@@ -864,7 +864,7 @@ public class mathInstSet extends AbstractInstSet {
                         TypeBuilder.build()
                                 .tid(INT_TID)
                                 .vid(MATH_PERCENT_TID, "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100")
-                                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100))))
+                                .isaPredicate(is_(and_(gte_(jnt(0)), lte_(jnt(100)))).tryToInst())
                                 .constructor(arg ->
                                         (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
                                                 jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :

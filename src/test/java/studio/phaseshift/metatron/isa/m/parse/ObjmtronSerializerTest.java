@@ -284,6 +284,13 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             "int{3}::T",
             "lst[{2}int]::T",
             "lst[int{2}]::T",
+            // A TYPE'S PREDICATE STACK SURVIVES THE WIRE, in the spelling Marko writes and in the spelling the writer
+            // emits for it. Both rows are percent::T's description — percent is a VID on this int type, and the
+            // strict-typer check that died on 2026-11-25 read exactly this stack (its FILTER behavior is pinned in
+            // mathInstSetTest, in the same two spellings). A writer that dropped the bracket would answer a bare
+            // int::T, a DIFFERENT type, so idem's type comparison fails rather than passing on a name that parses.
+            "int::T[is(and(gte(0),lte(100)))]",
+            "int::T[?is(and(gte(0),lte(100)))]",
     })
     void testAValueKeepsEveryCoefficientAcrossTheWire(final String literal) {
         // THE OBJ IS WHAT READING THE ROW GIVES, as ObjmtronSerializerPurityTest reads its rows (1f14fff4a): applying

@@ -1,0 +1,17 @@
+# THE ACCEPTANCE RUN for the docker profile's type checking.
+# run: bin/metatron-docker build console --boot bin/test/typer-console.boot.mtron \
+#        --steps bin/test/typer-console.steps --cwd /work
+# No WAIT on the answers: what this script reproduced was exactly that no answer arrived.
+# Before Marko's percent::T definition fix it died with StackOverflowError (ArrayList.equalsRange,
+# Type.Helper.testTypePoly) and answered nothing; now sys_stat() answers and the session continues.
+WAIT_CONSOLE
+SLEEP 1
+NOTE confirm the checks are on
+SEND *</compiler/typer/check>
+SLEEP 2
+NOTE the frame that died in production — it must answer, with sane percentages
+SEND sys_stat()
+SLEEP 8
+NOTE and the session must still answer
+SEND 1+2
+SLEEP 2

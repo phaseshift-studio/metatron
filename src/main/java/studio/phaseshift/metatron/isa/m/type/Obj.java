@@ -1182,7 +1182,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * Throws {@link MTronException} on failure. Does NOT trigger a space write.
          */
         public static void objTypeCheck(final Obj obj) {
-            if (Machine.loaded() && null != obj.jvm() && !obj.isType() && !obj.isNoObj() && !obj.isCall() && !obj.isInstSet() && !ObjFactory.Helper.baseTID(obj).test(obj.type().baseTypeID().basePath()))
+            if (Machine.loaded() && null != obj.jvm() && !obj.isType() && !obj.isNoObj() && !obj.isCall() && !obj.isInstSet() && !obj.isFail() && !ObjFactory.Helper.baseTID(obj).test(obj.type().baseTypeID().basePath()))
                 throw new TypeMismatchException(obj, obj.type(), "%s [%s] is not a %s", obj, obj.jvm().getClass().getSimpleName().toLowerCase(), obj.type());
             if (!obj.isType() && obj.tid().isGeneric())
                 throw new TypeMismatchException(obj, obj.type(), "%s value can not be typed generic %s::T", obj.jvm(), obj.tid());

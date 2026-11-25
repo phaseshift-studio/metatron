@@ -175,14 +175,23 @@ public class mtron_wsHandler extends WebSocketRec {
             // guard, which drops the only channel that could carry the fail: the client saw a
             // closed connection (1006) and no reason at all — a remote sys_stat() looked like a
             // dead machine. Answer first; the connection survives its own failure.
-            LOG.warn("answered a frame whose evaluation escaped with %s", t.getClass().getName());
+            // The frame and the recursion's own top frames are logged: a StackOverflowError's first
+            // frames name the loop, and a bare class name names nothing.
+            LOG.warn("answered a frame whose evaluation escaped with %s: %s [%s]", t.getClass().getName(),
+                    message.length() > 120 ? message.substring(0, 120) : message,
+                    t.getStackTrace().length == 0 ? "no frames"
+                            : t.getStackTrace()[0].toString() + (t.getStackTrace().length > 1 ? " <- " + t.getStackTrace()[1] : ""));
             final Fail failure = fail(t).caughtTransient();
             try {
                 this.send(failure);
             } catch (final Throwable ignored) {
                 // the socket is already gone: nothing left to answer on
             }
-            MTronException.emitStackTrace(failure.jvm());
+            try {
+                MTronException.emitStackTrace(failure.jvm());
+            } catch (final Throwable ignored) {
+                // the trace of a failure is diagnostics, never a reason to lose the answer
+            }
         }
     }
 

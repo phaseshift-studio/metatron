@@ -18,25 +18,21 @@
 
 package studio.phaseshift.metatron.isa.m.web.space.ws;
 
-import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 
-/*
+/**
+ * The mtron_ws endpoint in this JVM. Its over-the-wire contract lives in
+ * {@link mtron_wsHandlerIntegrationTest} — as a TOP-LEVEL class, because the integration test used to be a static
+ * nested subclass here, and Surefire's file-name scan never selects a nested class (that test had never run).
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 //@Isolated
@@ -48,28 +44,4 @@ public class mtron_wsHandlerTest extends AbstractWebSocketServerTest {
                 uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
                 uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value))), vid);
     }
-
-    public static class mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
-
-        @Override
-        protected Listener createWSServer() {
-            return wsServer.of(rec(
-                    uri(NAME), uri("mtron-test"),
-                    uri(ORIGIN), uri("ws://localhost:" + generatePort()),
-                    uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
-        }
-
-        /**
-         * a session is held by its socket, not an address: it answers over the wire, and nothing under the server's
-         * authority reads it back (a wsspace cached its sessions at ws://host:port/...)
-         */
-        @Test
-        public void testASessionIsNoAddress() throws Exception {
-            this.connectToServer(this.primaryRoutePath());
-            // an answer proves the server has opened the session: the client's open can lead the server's
-            assertNotNull(this.sendAndReceive("1+2"), "the session should answer");
-            checkEquality(LOG, Machine.read(f(WS + "://" + this.wsHost + ":" + this.wsPort + "/#")), noobj(), true);
-        }
-    }
 }
-

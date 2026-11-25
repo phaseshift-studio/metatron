@@ -249,13 +249,12 @@ public class sysInstSet extends AbstractInstSet {
                                     uri("os"), str(System.getProperty("os.name", "?") + " " + System.getProperty("os.version", "?")),
                                     uri("arch"), str(System.getProperty("os.arch", "?")),
                                     uri("processor"), jnt(Runtime.getRuntime().availableProcessors()),
-                                    // the percentages are INT percents, built here rather than cast: percent::T
-                                    // refines int::T over 0..100, so casting the free FRACTION to it left
-                                    // percent::0.77 — a percent that is no percent at all — and under the strict
-                                    // typer stage (type_pred => true, the docker profile's default) that cast
-                                    // aborts the whole evaluation, dropping the socket the answer was due on:
-                                    // a remote sys_stat() looked like a dead machine. the byte fields below
-                                    // take the same route (a typed value, not a cast).
+                                    // THE PERCENT IS COMPUTED HERE, NOT CAST. percent::T names int::T over 0..100, so a
+                                    // cast of the free FRACTION truncates it (0.74 -> percent::0, a reading that looks
+                                    // like a fact) — the type's own real->percent edge does not fire on this path
+                                    // (2026-11-25: the strict-typer console answers percent::0 for
+                                    // real(0.74).as(percent::T) with the edge declared). the byte fields below take the
+                                    // same route: a typed value, built once, not a cast whose result is inspected later.
                                     uri("free_jvm"), jnt((long) (100.0d * (1.0d - ((double) usedMemory / (double) totalMemory))), MATH_PERCENT_TID, null),
                                     uri("free_mach"), jnt((long) (100.0d * (1.0d - ((double) usedMemory / (double) maxMemory))), MATH_PERCENT_TID, null),
                                     uri("thread"), ThreadExecutor.instance().summary(),

@@ -1,0 +1,25 @@
+[== boot args ==]
+[== STRICT-TYPER CONSOLE: the docker profile's type checking, on a console ==]
+[== with no ports. this is the profile under which sys_stat() overflowed the ==]
+[== stack in production (METATRON_TYPER_TYPE_PRED=true in dist/docker/compose.yaml). ==]
+[space  => /memory/space,
+ log    => info,
+ typer/stage  => [inst_dom     => true,
+                  inst_rng     => true,
+                  type_pred    => true,
+                  obj_write    => true,
+                  code_resolve => false]]
+[== ========= ==]
+print("{{y}}strict typer boot{{X}} {{k}}— inst_dom/inst_rng/type_pred/obj_write ON{{X}}\n");
+[== mount instruction sets — with the PREFIX, exactly as boot/boot.mtron does: a prefix-less ==]
+[== import leaves the byte/percent types resolving as labels, and their predicates then differ ==]
+import(/m/web);
+import(/m/mach);
+import(/m/sys/ui,ui);
+import(/m/math,math);
+[== spaces ==]
+memspace::[pattern => /usr/#,
+              q => [subq::[=>],docq::[=>]]]@~/memory/space/usr;
+[== the console ==]
+console::[header=>'strict typer']@/usr/ui/console;
+print("{{g}}console created{{X}}\n");
