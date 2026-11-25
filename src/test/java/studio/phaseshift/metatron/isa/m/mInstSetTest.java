@@ -689,6 +689,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{[1,2],[3,4,5],[6,7,8]}.prod().>-.count()                               % 8",
             "{[1],[2],[3]}.prod()                                                    % [1,2,3]",
             "{[1],[2],[3]}.prod{10}()                                                % lst[int,int,int]{10}::[1,2,3]",
+            // a stream bulks equal lsts, and a point there counts copies, as {2,{2}3}.prod() is 18: never a span
+            "{[1],[2],[1]}.prod()                                                    % [1,1,2]",
+            "{[a],{2}[b]}.prod()                                                     % [a,b,b]",
+            "{[a,b],{2}[c,d]}.prod()                                                 % [a,b,c,d,c,d]",
+            "{[a,b],{2}[c,d],{-1}[e]}.prod()                                         % <ERROR>",
             "{[1],[2],[3]}.prod()._/sum()\\_                             % [6]",
             "{[1],[2,3],[1,3]}.prod()._/sum()\\_.>-                      % 10",
             "{[1],[2,3],[1,3]}.prod()._/sum()\\_.merge{3,7}()            % int{3,7}::10",

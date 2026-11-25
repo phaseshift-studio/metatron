@@ -1466,21 +1466,8 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
             // the root's one blank is both its absolute and its directory marker: as a path among paths it is both
             final List<List<String>> paths = terms.stream().map(term -> List.of("").equals(term.path()) ? List.of("", "") : term.path()).toList();
             final List<String> first = paths.getFirst();
-            int prefix = 0;
-            for (; prefix < first.size(); prefix++) {
-                final int i = prefix;
-                if (!paths.stream().allMatch(path -> i < path.size() && path.get(i).equals(first.get(i))))
-                    break;
-            }
-            final int p = prefix;
-            int suffix = 0;
-            for (; suffix < first.size() - p; suffix++) {
-                final int j = suffix;
-                final String segment = first.get(first.size() - 1 - j);
-                if (!paths.stream().allMatch(path -> j < path.size() - p && path.get(path.size() - 1 - j).equals(segment)))
-                    break;
-            }
-            final int s = suffix;
+            final int p = sharedPrefix(paths);
+            final int s = sharedSuffix(paths, p);
             final boolean shared = 1 == terms.stream().map(fURI::d).distinct().count();
             final List<Tuple.Pair<List<String>, cInt>> middles = IntStream.range(0, terms.size())
                     .mapToObj(i -> Tuple.Pair.with(paths.get(i).subList(p, paths.get(i).size() - s), shared ? cInt.ONE() : terms.get(i).d()))
@@ -1499,6 +1486,29 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                     .collect(Collectors.joining(",", "{", "}"));
             final String path = (0 < p ? head + (leading ? "" : "/") : "") + branch + (0 < s ? (trailing ? "" : "/") + tail : "");
             return terms.getFirst().path(Singleton.f(path).path()).d(shared ? terms.getFirst().d() : cInt.ONE());
+        }
+
+        /**
+         * THE PREFIX A SUM'S TERMS SHARE ({@link #pathSum}, and a lst's sum, {@code Lst.Helper.sum}): how many leading
+         * letters every word holds alike, the first word's own length at most.
+         */
+        public static int sharedPrefix(final List<? extends List<?>> words) {
+            final List<?> first = words.getFirst();
+            return (int) IntStream.range(0, first.size())
+                    .takeWhile(i -> words.stream().allMatch(word -> i < word.size() && Objects.equals(word.get(i), first.get(i))))
+                    .count();
+        }
+
+        /**
+         * THE SUFFIX A SUM'S TERMS SHARE past their shared prefix ({@link #sharedPrefix}): how many trailing letters every
+         * word holds alike, none of them a letter of the prefix.
+         */
+        public static int sharedSuffix(final List<? extends List<?>> words, final int prefix) {
+            final List<?> first = words.getFirst();
+            return (int) IntStream.range(0, first.size() - prefix)
+                    .takeWhile(j -> words.stream().allMatch(word -> j < word.size() - prefix
+                            && Objects.equals(word.get(word.size() - 1 - j), first.get(first.size() - 1 - j))))
+                    .count();
         }
 
         /**

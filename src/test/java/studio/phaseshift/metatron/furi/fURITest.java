@@ -425,7 +425,7 @@ public class fURITest extends AbstractMetatronTest {
             "<http://api.com/search?${>>query>>q>>}>              | [query=>[q=>test]]                        | http://api.com/search?noobj",
             "<http://api.com:${>>port}${>>version}>               | [port=>9000,version=>v1]                  | http://api.com:9000/v1",
             "<http://api.com:${>>port}${>>version}/${>>path}>     | [port=>9000,version=>v1,path=>[a,b,c]]    | http://api.com:9000/v1/a/b/c",
-            "<http://api.com/${plus([d])}>                        | [a,b,c]                                   | http://api.com/a/b/c/d",
+            "<http://api.com/${mult([d])}>                        | [a,b,c]                                   | http://api.com/a/b/c/d",
             "<http://api.com/${within(>-.mult(x))}>               | [a,b,c]                                   | http://api.com/a/x/b/x/c/x",
             "<${>>1}://api.com/${within(>-.mult(x))}>             | [a,b,c]                                   | b://api.com/a/x/b/x/c/x",
     }, delimiter = '|')

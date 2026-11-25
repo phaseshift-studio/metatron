@@ -790,7 +790,7 @@ public final class mInsts {
                 // refusal of a bulked argument ("one lst appends one lst") is retired with the append it guarded
                 InstBuilder.build().tid(PLUS_INST_TID, "add the argument lst to the lhs lst in the word ring: one lst, their shared prefix and suffix around a brace of what differs")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID.maybe(), "the sum, noobj when its words cancel")
-                        .argLst(T(LST_TID.maybe()), "the lst to add")
+                        .argLst(T(LST_TID.c(cInt.ANY())), "the lst to add, counted by its point")
                         .body((lhs, inst) -> lhs.asLst().plus(inst.arg(0).asLst()))
                         .desc("a branch function \\(f(x, y) \\mapsto x + y\\): two timelines as one lst, \\([a,b,c] + [a,d,c] = [a,\\{b,d\\},c]\\)")
                         .law(Law.monoidic, Law.commutative, Law.pure)
@@ -813,7 +813,7 @@ public final class mInsts {
                         .create(),
                 InstBuilder.build().tid(MULT_INST_TID, "concatenate the argument lst onto the lhs lst: the word ring's product, with the unity [,]")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID.maybe(), "the concatenation, noobj when either is the zero")
-                        .argLst(T(LST_TID.maybe()), "the lst to follow the lhs lst")
+                        .argLst(T(LST_TID.c(cInt.ANY())), "the lst to follow the lhs lst, its point on the product's first letter")
                         .body((lhs, inst) -> lhs.asLst().mult(inst.arg(0).asLst()))
                         .desc("a product function \\(f(x, y) \\mapsto xy\\): one timeline after another, \\([1,2] \\cdot [3] = [1,2,3]\\)")
                         .law(Law.monoidic, Law.pure)
@@ -878,13 +878,20 @@ public final class mInsts {
                         .body((lhs, inst) -> Lst.Helper.sum(lhs.stream().map(Obj::asLst)))
                         .law(Law.monoidic, Law.commutative, Law.pure)
                         .create(),
-                // the product of a lst stream is their concatenation in arrival order, as a uri stream's is its
-                // extension, a bulked lst counting as the power its point makes it, so it declares no commutative law
+                // the product of a lst stream is their concatenation, as a uri stream's is its extension, so it declares
+                // no commutative law. A stream bulks equal lsts, so it holds them in the order it first meets each, a
+                // bulked lst counting as many copies as its point, as {2,{2}3}.prod() is 2*3*3: {[1],[2],[1]}.prod() is
+                // [1,1,2]. A point there is a count, never a span, so one that counts no copy is refused
                 InstBuilder.build().tid(PROD_INST_TID, "concatenate a lst stream into a single lst: the word ring's product")
                         .dom(LST_TID.maybeSome(), "zero or more lsts").rng(LST_TID, "a single mult reduced lst")
                         .argLst()
                         .seed(lst())
-                        .body((lhs, inst) -> lhs.stream().map(Obj::asLst).reduce(lst(), (a, b) -> a.mult(Lst.Helper.power(b.d(cInt.ONE()).asLst(), b.tid().d()))))
+                        .body((lhs, inst) -> lhs.stream().map(Obj::asLst).reduce(lst(), (a, b) -> {
+                            final Long count = b.tid().d().isExact() ? b.tid().d().min() : null;
+                            if (null == count || count < 1L)
+                                throw MTronException.of("the product of a lst stream counts %s copies of %s: a point in a stream counts copies, never a span", b.tid().d(), b.d(cInt.ONE()));
+                            return a.mult(Lst.Helper.power(b.d(cInt.ONE()).asLst(), b.tid().d()));
+                        }))
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(ZIP_INST_TID, "interleave lst argument with lhs lst")

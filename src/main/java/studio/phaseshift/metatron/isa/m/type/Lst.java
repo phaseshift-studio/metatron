@@ -33,6 +33,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -40,9 +41,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -240,7 +243,13 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          */
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(LST_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(Helper.path(lhs.asLst()))),
+                    // THE PATH A LST OF ATOMS SPELLS, the word ring's embedding in the uri ring ([a,b,c].as(uri) is a/b/c):
+                    // the uri sum of its words, each word its letters' segments with its coefficient for the point, so the
+                    // sum a lst factors is the sum a uri factors, [a,{b,d},c] spelling <a/{b,d}/c>
+                    instC(AS_INST_TID.dom(LST_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(fURI.Helper.sum(Helper.words(lhs.asLst().lstValue(), cInt.ONE())
+                            .entrySet().stream()
+                            .filter(word -> !word.getValue().isZero())
+                            .map(word -> word.getKey().stream().map(Obj::uriValue).reduce(fURI::extend).orElse(Singleton.f("")).d(word.getValue()))))),
                     instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(boundOrDeclared(lhs.asLst(), inst.arg(0).vidOrTid())).c(c -> c.mult(lhs.c()))),
                     instC(AS_INST_TID.dom(LST_TID).rng(CODE_TID), lst(T(CODE_TID)), (lhs, inst) -> MCode.code(lhs.asLst().jvm().stream().flatMap(o -> o.isCall() ? o.asCall().insts().stream() : map_(o).tryToInst().insts().stream()).toList()).c(c -> c.mult(lhs.c())))
             ));
@@ -398,14 +407,14 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         }
 
         /**
-         * THE CANONICAL SUM OF LSTS ({@link Lst#plus}), uri's {@code fURI.Helper.sum} over objects instead of segments.
-         * Each lst counts as its words ({@link #words}): like words add their coefficients, and a word at zero drops.
-         * What is left is written as one lst, the prefix and suffix every word shares around one brace of the middles,
-         * sorted by their text. A middle of one letter is that letter, and any other is a sub-word lst. So is one
-         * letter that is itself a lst, wrapped as {@code [[x,y]]}, since a brace splices the lsts it holds. A single word
-         * is written alone, its coefficient on its first letter ({@link #scaled}), and a sum of nothing, or of words that
-         * cancel, is the zero. Summing a stream at once is the fold of {@link Lst#plus} without re-expanding each
-         * partial sum.
+         * THE CANONICAL SUM OF LSTS ({@link Lst#plus}), uri's {@code fURI.Helper.sum} over objects instead of segments,
+         * with its scans for the shared prefix and suffix ({@link fURI.Helper#sharedPrefix}). Each lst counts as its
+         * words ({@link #words}): like words add their coefficients, and a word at zero drops. What is left is written as
+         * one lst, the prefix and suffix every word shares around one brace of the middles, sorted by their text. A
+         * middle of one letter is that letter, and any other is a sub-word lst. So is one letter that is itself a lst,
+         * wrapped as {@code [[x,y]]}, since a brace splices the lsts it holds. A single word is written alone, its
+         * coefficient on its first letter ({@link #scaled}), and a sum of nothing, or of words that cancel, is the zero.
+         * Summing a stream at once is the fold of {@link Lst#plus} without re-expanding each partial sum.
          */
         public static Lst sum(final Stream<Lst> lsts) {
             final Map<List<Obj>, cInt> words = new LinkedHashMap<>();
@@ -415,21 +424,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                 return lst_noobj();
             if (1 == live.size())
                 return scaled(live.getFirst().getKey(), live.getFirst().getValue());
-            final List<Obj> first = live.getFirst().getKey();
-            int shared = 0;
-            for (; shared < first.size(); shared++) {
-                final int i = shared;
-                if (!live.stream().allMatch(word -> i < word.getKey().size() && word.getKey().get(i).equals(first.get(i))))
-                    break;
-            }
-            final int prefix = shared;
-            for (shared = 0; shared < first.size() - prefix; shared++) {
-                final int j = shared;
-                final Obj letter = first.get(first.size() - 1 - j);
-                if (!live.stream().allMatch(word -> j < word.getKey().size() - prefix && word.getKey().get(word.getKey().size() - 1 - j).equals(letter)))
-                    break;
-            }
-            final int suffix = shared;
+            final List<List<Obj>> letters = live.stream().map(Map.Entry::getKey).toList();
+            final int prefix = fURI.Helper.sharedPrefix(letters);
+            final int suffix = fURI.Helper.sharedSuffix(letters, prefix);
+            final List<Obj> first = letters.getFirst();
             final List<Obj> slots = new ArrayList<>(first.subList(0, prefix));
             // the middles in the order of their letters' text, a middle before every middle it begins, as a path sorts
             slots.add(objs(live.stream()
@@ -448,48 +446,89 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * points along it and the lst's own: {@code [{2}a,b]} is the word {@code a b} twice, as a lst is multilinear in
          * its letters (Claim 24). A brace is a sum at one moment whose members are letters, or lsts, which are sub-words
          * that splice (Marko, 2026-11-25): {@code [x,{[a,b],c}]} is {@code x a b + x c}, as {@code <x/{a/b,c}>} is. A
-         * hole, noobj, is the zero letter, so no word runs through it. A brace multiplies the words, so their count is
-         * bounded before it is built, in copies of the lst's own members, by the typer's unfold for lsts: a brace of many
-         * members is as many words, while k braces of two are 2^k words from 2k members.
+         * brace of equal sub-words is bulked into one lst with a point ({@link #isSubWord}), spliced with that mass:
+         * {@code [x,{[a,b],[a,b]}]} is {@code 2 x a b}. A hole, noobj, is the zero letter, so no word runs through it.
+         * A brace multiplies the words, so they are measured before any is built ({@link #measure}) and bounded by the
+         * typer's unfold for lsts, in copies of the letters the lst writes, a nested brace's among them: a brace of many
+         * members is as many words, linear in the lst, while k braces of two are 2^k words of k letters, written in 2k.
          */
         private static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
-            Map<List<Obj>, cInt> words = Map.of(List.of(), coefficient);
-            long members = 0L;
+            final double[] measure = measure(slots);
+            Typer.Helper.unfolds(Typer.UNFOLD_LST, (long) Math.ceil(Math.max(measure[0], measure[1]) / Math.max(1.0d, measure[2])));
+            final Map<List<Obj>, cInt> words = new LinkedHashMap<>();
+            expand(slots, coefficient).forEach(word -> words.merge(word.getKey(), word.getValue(), cInt::plus));
+            return words;
+        }
+
+        /**
+         * the words a lst's slots are, measured before any is built ({@link #words}): how many, how many letters they hold
+         * together, and how many letters the slots write, a sub-word's own among them. A slot of m moments makes w words
+         * of l letters m w words of m l letters and w times the moments' letters. Counted in doubles, so a measure past a
+         * long's range is still past the bound
+         */
+        private static double[] measure(final List<Obj> slots) {
+            return slots.stream()
+                    .map(slot -> slot.stream()
+                            .map(member -> isSubWord(slot, member) ? measure(member.lstValue()) : new double[]{1.0d, 1.0d, 1.0d})
+                            .reduce(new double[]{0.0d, 0.0d, 0.0d}, (a, b) -> new double[]{a[0] + b[0], a[1] + b[1], a[2] + b[2]}))
+                    .reduce(new double[]{1.0d, 0.0d, 0.0d}, (at, slot) -> new double[]{at[0] * slot[0], at[1] * slot[0] + at[0] * slot[1], at[2] + slot[2]});
+        }
+
+        /**
+         * the words of a lst's slots as they are built ({@link #words}), each its own letters at point one with its
+         * coefficient, like words merged after: a slot of one moment extends every word in place, so a lst without braces
+         * is one word built once, linear in its length, and a slot of many moments copies each word once per moment
+         */
+        private static List<Map.Entry<List<Obj>, cInt>> expand(final List<Obj> slots, final cInt coefficient) {
+            final List<Map.Entry<List<Obj>, cInt>> words = new ArrayList<>(List.of(Map.<List<Obj>, cInt>entry(new ArrayList<>(), coefficient)));
             for (final Obj slot : slots) {
-                final Map<List<Obj>, cInt> moments = new LinkedHashMap<>();
-                slot.stream().forEach(member -> {
-                    if (slot.isObjs() && member.isLst())
-                        words(member.lstValue(), member.tid().d()).forEach((word, c) -> moments.merge(word, c, cInt::plus));
-                    else
-                        moments.merge(List.of(member.d(cInt.ONE())), member.tid().d(), cInt::plus);
-                });
-                members += Math.max(1L, moments.size());
-                Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.ceilDiv(Math.multiplyExact((long) words.size(), (long) moments.size()), members));
-                final Map<List<Obj>, cInt> longer = new LinkedHashMap<>();
-                words.forEach((word, c) -> moments.forEach((moment, d) -> {
-                    final List<Obj> letters = new ArrayList<>(word);
-                    letters.addAll(moment);
-                    longer.merge(letters, c.mult(d), cInt::plus);
-                }));
-                words = longer;
+                final List<Map.Entry<List<Obj>, cInt>> moments = slot.stream().flatMap(member -> isSubWord(slot, member)
+                        ? expand(member.lstValue(), member.tid().d()).stream()
+                        : Stream.of(Map.<List<Obj>, cInt>entry(List.of(member.d(cInt.ONE())), member.tid().d()))).toList();
+                final List<Map.Entry<List<Obj>, cInt>> longer = words.stream().flatMap(word -> moments.stream().map(moment -> {
+                    final List<Obj> letters = 1 == moments.size() ? word.getKey() : new ArrayList<>(word.getKey());
+                    letters.addAll(moment.getKey());
+                    return Map.entry(letters, word.getValue().mult(moment.getValue()));
+                })).toList();
+                words.clear();
+                words.addAll(longer);
             }
             return words;
         }
 
         /**
+         * A LST WITH A POINT IS A BRACE: a brace of equal sub-words is bulked into one lst with a point,
+         * {@code {[a,b],[a,b]}} being {@code {2}[a,b]}, so a lst slot whose point is not one is a sub-word with that mass,
+         * as a lst member of a brace is, while a lst slot at point one is a letter: {@code [[a,b]]} is the word of one
+         * letter, the lst {@code [a,b]}. A brace of one sub-word at point one is that letter ({@code [x,{[a,b]},y]} is
+         * {@code [x,[a,b],y]}). The words ({@link #words}), the converse, the fold and a scaled word read a slot so
+         */
+        private static boolean isSubWord(final Obj slot, final Obj member) {
+            return member.isLst() && (slot.isObjs() || !member.tid().d().isOne());
+        }
+
+        /**
          * A word times a coefficient, written where a lst keeps its mass: on its first letter, as a lst is multilinear in
-         * its letters (Claim 24), so {@code [a,b]} twice is {@code [{2}a,b]}, and a brace there scales each member. The
-         * empty word has no letter to hold it, so a multiple of the unity other than itself is refused: as the lst's own
-         * point, {@code {2}[,]}, it would float over the next plus, and {@code [,] + [,] + [,]} would be four of it. Inside
-         * a brace it is a member like any other, {@code [a] + [a] + [a,b]} is {@code [a,{{2}[,],b}]}.
+         * its letters (Claim 24), so {@code [a,b]} twice is {@code [{2}a,b]}, and a brace there scales each member. A lst
+         * with a point is a sub-word ({@link #isSubWord}), so the mass never lands on a lst letter: a lst letter is wrapped
+         * as the sub-word that holds it ({@code [[x,y],z]} twice is {@code [{2}[[x,y]],z]}), a sub-word's point takes the
+         * mass, and one back at point one is spliced into its letters ({@code [{-1}[a,b],c].neg()} is {@code [a,b,c]}).
+         * The unity has no letter, so it carries its mass as the sub-word it is, as {@code <> + <>} is {@code <{2}>}:
+         * {@code [,] + [,]} is {@code [{2}[,]]}.
          */
         private static Lst scaled(final List<Obj> slots, final cInt coefficient) {
             if (coefficient.isOne())
                 return lst(new ArrayList<>(slots));
             if (slots.isEmpty())
-                throw MTronException.of("%s times the unity [,] has no letter to hold its mass: a lst keeps the mass of a sum on its letters", coefficient);
-            final List<Obj> scaled = new ArrayList<>(slots);
-            scaled.set(0, objs(scaled.getFirst().stream().map(member -> member.d(member.tid().d().mult(coefficient)))));
+                return lst(lst().d(coefficient));
+            final Obj first = slots.getFirst();
+            final List<Obj> scaled = new ArrayList<>(slots.subList(1, slots.size()));
+            if (isSubWord(first, first) && first.tid().d().mult(coefficient).isOne())
+                scaled.addAll(0, first.lstValue());
+            else
+                scaled.addFirst(first.isLst() && !isSubWord(first, first)
+                        ? lst(first).d(coefficient)
+                        : objs(first.stream().map(member -> member.d(member.tid().d().mult(coefficient)))));
             return lst(scaled);
         }
 
@@ -499,30 +538,21 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * power is n copies of the lst concatenated, the unity {@code [,]} at zero, and a negative span the converse's
          * power, so {@code [1,2,3]{-1}} is {@code [3,2,1]} ({@link #converse}). A span range is the sum of its powers,
          * {@code [a]{1,2}} being {@code [a,{[,],a}]}, a + a a. A power copies the lst's letters with their points, and
-         * keeps the lst's own point once, outside it. The copies are bounded by the typer's unfold for lsts: an exact
-         * span's, and a range's summed over its powers, both sides of zero together. An open side runs until a power is
-         * the zero, and the powers of a lst that holds a word never are, so such a side is refused at the bound.
+         * keeps the lst's own point once, outside it. Every power of a lst that holds no word is the zero but the unity, so
+         * only the lst itself is read for one, and every power of a lst that holds a word holds one, so an open side never
+         * ends and is refused at the bound. A range is bounded before any of its powers is built, by the typer's unfold
+         * for lsts: its farthest power, then the copies all of them hold, both sides of zero together.
          */
         public static Lst power(final Lst lst, final cInt span) {
             final Long low = span.min();
             final Long high = span.max();
             if (null != low && low.equals(high))
                 return copies(lst, low);
-            final List<Lst> powers = new ArrayList<>();
-            long held = 0L;
-            // the powers at and above zero, then the converse's below it; a null end is an open side
-            for (final long[] side : new long[][]{{null == low || low < 0L ? 0L : low, null == high ? Long.MAX_VALUE : high, 1L},
-                    {null == high || high >= 0L ? -1L : high, null == low ? Long.MIN_VALUE + 1L : low, -1L}}) {
-                for (long k = side[0]; side[2] > 0L ? k <= side[1] : k >= side[1]; k += side[2]) {
-                    final Lst term = copies(lst, k);
-                    if (words(term.lstValue(), cInt.ONE()).values().stream().allMatch(cInt::isZero))
-                        break;
-                    held = Math.addExact(held, Math.abs(k));
-                    Typer.Helper.unfolds(Typer.UNFOLD_LST, held);
-                    powers.add(term);
-                }
-            }
-            return Helper.sum(powers.stream());
+            if (words(lst.lstValue(), cInt.ONE()).values().stream().allMatch(cInt::isZero))
+                return (null == low || low <= 0L) && (null == high || high >= 0L) ? lst() : lst_noobj();
+            Typer.Helper.unfolds(Typer.UNFOLD_LST, null == low || null == high ? Long.MAX_VALUE : Math.max(Math.abs(Math.max(low, -Long.MAX_VALUE)), Math.abs(high)));
+            Typer.Helper.unfolds(Typer.UNFOLD_LST, LongStream.rangeClosed(low, high).map(Math::abs).sum());
+            return Helper.sum(LongStream.rangeClosed(low, high).mapToObj(k -> copies(lst, k)));
         }
 
         /**
@@ -543,46 +573,42 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         /**
          * THE FOLD, {@code >|} (Claim 22 of ring-theoretic-distributed-structures.md): a lst run as a program, each slot a
          * step applied to what the steps before it answered, a value the constant that answers it and an instruction
-         * itself. A brace is a branch, each member stepping from what reached it, and a member lst is a sub-word, folded
-         * as the program it is and counted once by its point, so the fold of a sum is the sum of the folds:
+         * itself. A brace is a branch, each member stepping from what reached it, and a sub-word ({@link #isSubWord}) is
+         * folded as the program it is and counted by its point, so the fold of a sum is the sum of the folds:
          * {@code [1,{[plus(2),plus(3)],[mult(2),plus(5)]}]>|} is {@code {6,7}}, as
-         * {@code {[1,plus(2),plus(3)],[1,mult(2),plus(5)]}>|} is. A step after a branch applies to each obj the branch
-         * answered, as a stream's steps do, and nothing is still one input, so a constant answers it. A record of data
-         * that meets a record of data is their join, a record's product (Claim 28, Rec.Helper.isData), so a lst of
-         * records folds to their walk: {@code [[a=>b],[b=>e]]>|} is {@code [a=>b=>e]}, while a rec that holds code applies
-         * as any letter does.
+         * {@code {[1,plus(2),plus(3)],[1,mult(2),plus(5)]}>|} is. A branch answers a stream, and an instruction runs over
+         * what reached it as its code runs over a stream, a map on each obj and a reducer on them all:
+         * {@code [1,{plus(1),plus(2)},sum()]>|} is {@code 5}, as {@code {2,3}.sum()} is. Nothing is still one input, so a
+         * constant answers it. A record that meets a record is their join, a record's product, whatever they hold, since
+         * the join runs none of their code, so a lst of records folds to their product (Claim 28): {@code [[a=>b],[b=>e]]>|}
+         * is {@code [a=>b=>e]}, and {@code [[a=>b],[c=>d]]>|} the zero, the empty rec. The zero drops from a stream that
+         * holds anything else, as it drops from a sum: {@code [[x=>a],{[a=>b],[a=>c]},[b=>e]]>|} is {@code [x=>a=>b=>e]}.
          */
         public static Obj fold(final Lst word, final Obj lhs) {
-            final BiFunction<Obj, Obj, Obj> step = (letter, obj) -> Rec.Helper.isData(obj) && Rec.Helper.isData(letter)
-                    ? obj.asRec().mult(letter.asRec()) : letter.apply(obj);
-            return word.values().reduce(lhs, (at, slot) -> objs((at.isNoObj() ? Stream.of(at) : at.stream())
-                    .flatMap(obj -> !slot.isObjs() ? step.apply(slot, obj).stream() : slot.stream().flatMap(member -> member.isLst()
-                            ? fold(member.d(cInt.ONE()).asLst(), obj).stream().map(folded -> folded.c(c -> c.mult(member.tid().d())))
-                            : step.apply(member, obj).stream()))));
-        }
-
-        /**
-         * THE PATH A LST OF ATOMS SPELLS, the word ring's embedding in the uri ring ({@code [a,b,c].as(uri)} is
-         * {@code a/b/c}): the uri sum of its words ({@link #words}), each word its letters' segments with its coefficient
-         * for the point. So the sum a lst factors is the sum a uri factors, {@code [a,{b,d},c]} spelling
-         * {@code <a/{b,d}/c>}, and {@code (l + m).as(uri)} is {@code l.as(uri) + m.as(uri)}.
-         */
-        public static fURI path(final Lst lst) {
-            return fURI.Helper.sum(words(lst.lstValue(), cInt.ONE()).entrySet().stream()
-                    .filter(word -> !word.getValue().isZero())
-                    .map(word -> word.getKey().stream().map(Obj::uriValue).reduce(fURI::extend).orElse(Singleton.f("")).d(word.getValue())));
+            final Predicate<Obj> zero = obj -> Rec.Helper.holdsWalks(obj) && obj.asRec().isEmpty();
+            return word.values().reduce(lhs, (at, slot) -> {
+                final Obj answered = objs(slot.stream().flatMap(member -> isSubWord(slot, member)
+                        ? fold(member.d(cInt.ONE()).asLst(), at).stream().map(folded -> folded.c(c -> c.mult(member.tid().d())))
+                        : member.isCall() && !at.isNoObj()
+                        ? MCode.code(Stream.concat(Stream.of(instB(START_INST_TID, lst(at))), member.d(cInt.ONE()).asCall().insts().stream()).toList())
+                        .apply(noobj()).stream().map(out -> out.c(c -> c.mult(member.tid().d())))
+                        : (at.isNoObj() ? Stream.of(at) : at.stream()).map(obj -> Rec.Helper.holdsWalks(member) && Rec.Helper.holdsWalks(obj)
+                        ? obj.asRec().mult(member.asRec()) : member.apply(obj))));
+                return answered.stream().allMatch(zero) || answered.stream().noneMatch(zero) ? answered : objs(answered.stream().filter(zero.negate()));
+            });
         }
 
         /**
          * THE CONVERSE OF A LST, its span -1 (Claim 21): its letters in the reverse order, each held as it is, since a
          * letter's own converse is never needed, and the sub-words in a brace reversed with it, since a brace splices
-         * them: {@code [x,{[a,b],c}]{-1}} is {@code [{[b,a],c},x]}. Points stay with their letters. The converse is an
+         * them: {@code [x,{[a,b],c}]{-1}} is {@code [{[b,a],c},x]}, as is a lst slot with a point, a brace of equal
+         * sub-words ({@link #isSubWord}). Points stay with their letters. The converse is an
          * involution and reverses a product, (u v)^-1 = v^-1 u^-1, but it is no inverse: {@code [a,b]} times its converse
          * is {@code [a,b,b,a]}.
          */
         private static List<Obj> converse(final List<Obj> slots) {
             return slots.reversed().stream()
-                    .map(slot -> slot.isObjs() ? objs(slot.stream().map(member -> member.isLst() ? member.<Lst>jvm(converse(member.lstValue())) : member)) : slot)
+                    .map(slot -> slot.isObjs() || isSubWord(slot, slot) ? objs(slot.stream().map(member -> isSubWord(slot, member) ? member.<Lst>jvm(converse(member.lstValue())) : member)) : slot)
                     .collect(Collectors.toCollection(ArrayList::new));
         }
 

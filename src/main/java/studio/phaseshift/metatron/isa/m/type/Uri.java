@@ -255,7 +255,7 @@ public interface Uri extends Mono, Comparable<Uri> {
                 // segment, so splitting it here contributes a SECOND empty leading segment and every
                 // authority-bearing expansion renders as `api.com//users`. Dropping that leading empty part fixes all
                 // 6 — but it must be conditional on the template form, because the fURITest template rows
-                // (`<http://api.com//${plus([d])}>`) DEPEND on the doubled form surviving the string round trip.
+                // (`<http://api.com//${mult([d])}>`) DEPEND on the doubled form surviving the string round trip.
                 // Two naive conditions were tried and each regressed those 10 rows; the rule needs both cases in it.
                 // Trace evidence is in this task's history (bash-229): TMPL templatePath=[, /users/${>>id}].
             } else {

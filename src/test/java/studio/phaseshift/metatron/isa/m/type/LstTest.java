@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Optional;
@@ -136,9 +137,30 @@ public class LstTest extends AbstractAlgebraTest {
             "[a,b,c] + [a,d,c] + [a,{-1}d,c]                                              % [a,b,c]",
             // a hole is the zero letter, so no word runs through it
             "[1,noobj] + [2]                                                              % [2]",
-            // the unity's multiples have no letter to hold their mass
-            "[,] + [,]                                                                    % <ERROR>",
-            "[,].neg()                                                                    % <ERROR>",
+            // the unity carries its mass as the sub-word it is, as <> + <> is <{2}>, so its multiples sum and multiply
+            // associatively
+            "[,] + [,]                                                                    % [{2}[,]]",
+            "[,] + [,] + [a]                                                              % [{{2}[,],a}]",
+            "[,].plus([,].plus([a]))                                                      % [{{2}[,],a}]",
+            "[,] * {2}[,]                                                                 % [{2}[,]]",
+            "[,].mult({2}[,]).mult([a])                                                   % [{2}[,],a]",
+            "[,].mult({2}[,]).mult([a]).plus(noobj)                                       % [{2}a]",
+            "[,].mult({2}[,].mult([a]))                                                   % [{2}a]",
+            "[,].neg()                                                                    % [{-1}[,]]",
+            "[,].neg().neg()                                                              % [,]",
+            "[,].plus([,].neg())                                                          % noobj",
+            // a brace of equal sub-words is bulked into one lst with a point, a sub-word with that mass (Definition 11)
+            "[x,{[a,b],[a,b]}]                                                            % [x,{2}[a,b]]",
+            "[x,{[a,b],[a,b]}] + [x,a,b]                                                  % [{3}x,a,b]",
+            "[x,{2}[a,b]] + [x,{-2}[a,b]]                                                 % noobj",
+            "[x,{[a,b],[a,b]},y] + [x,c,y]                                                % [x,{{2}[a,b],c},y]",
+            // the mass never lands on a lst letter: the letter is wrapped as the sub-word that holds it
+            "[[1,2],3] + [[1,2],3]                                                        % [{2}[[1,2]],3]",
+            "[[1,2],3] + [[1,2],3] + [{-1}[[1,2]],3]                                      % [[1,2],3]",
+            "[[1,2],3].plus([[1,2],3].plus([{-1}[[1,2]],3]))                              % [[1,2],3]",
+            "[[1,2],3].neg()                                                              % [{-1}[[1,2]],3]",
+            "[[1,2],3].neg().neg()                                                        % [[1,2],3]",
+            "[{-1}[a,b],c].neg()                                                          % [a,b,c]",
     }, delimiter = '%')
     public void testTheWordRing(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -166,6 +188,10 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2]{-1,1}                                                                  % [{[,],[1,2],[2,1]}]",
             "[1,2]{1,3}                                                                   % [1,2,{[,],[1,2],[1,2,1,2]}]",
             "[noobj]{*}                                                                   % [,]",
+            "[noobj]{1,2}                                                                 % noobj",
+            "[,]{1,2}                                                                     % [{2}[,]]",
+            // a bulked brace reverses as its sub-word
+            "[x,{[a,b],[a,b]}]{-1}                                                        % [{2}[b,a],x]",
             // the point before the brackets counts copies of the whole power, the vid names it, and the zero stays
             "{2}[1,2]{2}                                                                  % {2}[1,2,1,2]",
             "[1,2]{2}@x                                                                   % [1,2,1,2]@x",
@@ -188,10 +214,20 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2]{*}                                                                     % <ERROR>",
             "[1,2]{+}                                                                     % <ERROR>",
             "[1]{-9223372036854775808}                                                    % <ERROR>",
-            // a sum's braces multiply its words, bounded in copies of the lst's own members before they are built
+            // a sum's braces multiply its words, measured before any is built and bounded in copies of the letters the
+            // lst writes, a nested brace's among them, whatever order its letters and braces come in
             "[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n}].plus([x]).count()                % 1",
             "[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v},{w,x}].plus([y]) % <ERROR>",
             "[{a,b}]{12}.plus([y])                                                        % <ERROR>",
+            "[{[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v}],z},{w1,x1},{w2,x2},{w3,x3},{w4,x4},{w5,x5},{w6,x6}].plus([y]) % <ERROR>",
+            "[{[{a,b},{c,d}],z},{e,f}].plus([y]).count()                                  % 1",
+            "[0,1,2,3,4,5,6,7,8,9]{10}.mult([{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v},{w,x}]).plus([y]) % <ERROR>",
+            "[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v},{w,x}].mult([0,1,2,3,4,5,6,7,8,9]{10}).plus([y]) % <ERROR>",
+            // a lst without braces is one word, built once: its sum is linear in its length
+            "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([x]).count()                        % 1",
+            "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([0,1,2,3,4,5,6,7,8,9]{100}.pow(100).neg()) % noobj",
+            // a range is bounded before its powers are built
+            "[0{10},1{10},2{10},3{10},4{10},5{10},6{10},7{10},8{10},9{10},{a,b}]{1,11}    % <ERROR>",
             // the span at run time
             "[1,2].pow(2)                                                                 % [1,2,1,2]",
             "[1,2,3].pow(-1)                                                              % [3,2,1]",
@@ -220,18 +256,33 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,[plus(1)]]>|                                                              % [plus(1)]",
             "[1,noobj,plus(1)]>|                                                          % noobj",
             "[,]>|                                                                        % [,]",
-            // records are steps (Claim 28): a record of data that meets a record of data is their join, so a lst of
-            // records folds to their walk, a record's input joins too, and the record unity [_=>_] passes the walk on
+            "[1,{[plus(1)],[plus(1)]}]>|                                                  % {2}2",
+            // an instruction runs over what reached it as its code runs over a stream: a map on each obj, a reducer on all
+            "[1,{plus(1),plus(2)},sum()]>|                                                % 5",
+            "[1,{plus(1),plus(2)},count()]>|                                              % 2",
+            "[1,{plus(1),plus(2)},{[sum()],[count()]}]>|                                  % {5,2}",
+            "[1,{plus(1),plus(1)},count()]>|                                              % 2",
+            // records are steps (Claim 28): a record that meets a record is their join, whatever they hold, so a lst of
+            // records folds to their product, a record's input joins too, and the record unity [_=>_] passes the walk on
             "[[a=>b],[b=>e]]>|                                                            % [a=>b=>e]",
             "[[a=>b],[b=>e],[e=>f]]>|                                                     % [a=>b=>e=>f]",
             "[[a=>b],[c=>d]]>|                                                            % [=>]",
+            "[[x=>a],{[a=>b],[a=>c]},[b=>e]]>|                                            % [x=>a=>b=>e]",
+            "[[x=>a],{[a=>b],[a=>c]},[c=>e]]>|                                            % [x=>a=>c=>e]",
+            "[[a=>b],{[b=>c],[x=>y]},5]>|                                                 % 5",
+            "[[a=>5],[nat::T=>x]]>|                                                       % [a=>5] * [nat::T=>x]",
+            "[[a=>5],[?>=0=>x]]>|                                                         % [a=>5] * [?>=0=>x]",
+            "[[a=>5],[?>=0=>x]]>|                                                         % [a=>5=>x]",
+            "[[x=>a],[a=>plus(1)]]>|                                                      % [x=>a] * [a=>plus(1)]",
+            "[[x=>a],[a=>plus(1)]]>|                                                      % [x=>a=>plus(1)]",
             "[x=>a]>|[[a=>b],[b=>e]]                                                      % [x=>a=>b=>e]",
             "[[a=>b],[_=>_]]>|                                                            % [a=>b]",
             "[[a=>b],5]>|                                                                 % 5",
             "[2,3,4]>|                                                                    % 4",
-            // a rec that holds code is no record of data: in a fold it applies as any letter, and the projection -< still
-            // runs its code against the lhs
-            "[a=>1]>|[[x=>>>a]]                                                           % [x=>>>a]",
+            // a rec that holds code joins as the product does, running none of it: the projection -< runs its code
+            "[a=>1]>|[[x=>>>a]]                                                           % [a=>1] * [x=>>>a]",
+            "[a=>1]>|[[x=>[>>a]]]                                                         % [a=>1] * [x=>[>>a]]",
+            "[x=>1]>|[[1=>>>a]]                                                           % [x=>1] * [1=>>>a]",
             "[a=>1]-<[x=>>>a]                                                             % [x=>1]",
     }, delimiter = '%')
     public void testTheFold(final String code, final String expected) {
@@ -239,8 +290,10 @@ public class LstTest extends AbstractAlgebraTest {
     }
 
     /// URI IS THE ORACLE (Marko, 2026-11-24): uri::T is already the word ring over segments, and a lst of atoms spells
-    /// a path (Lst.Helper.path, a brace the sum of its members), so the spelling commutes with the ring:
-    /// (l + m).as(uri) is l.as(uri) + m.as(uri), and (l * m).as(uri) is l.as(uri) * m.as(uri).
+    /// a path (its as(uri), a brace the sum of its members), so the spelling commutes with the ring:
+    /// (l + m).as(uri) is l.as(uri) + m.as(uri), and (l * m).as(uri) is l.as(uri) * m.as(uri). Each side is read in the
+    /// uri sum's normal form, sum(), since a uri holds a mass in two places: its product puts the argument's point on
+    /// the uri, {2}<a/b/c>, and its sum in the path, <a/b/c{2}>, which is where a lst's spelling puts it.
     @ParameterizedTest
     @CsvSource(value = {
             "[a,b,c]       % [a,d,c]",
@@ -252,10 +305,14 @@ public class LstTest extends AbstractAlgebraTest {
             "[{a,b},c]     % [a,d]",
             "[a,{[b,c],d}] % [a,e]",
             "[a,b]         % [,]",
+            "[a,b]         % {2}[c]",
+            "{2}[a,b]      % [c]",
+            "[a,{2}b]      % {3}[a,b]",
+            "[x,{2}[a,b]]  % [x,a,b]",
     }, delimiter = '%')
     public void testUriIsTheOracle(final String lhs, final String rhs) {
-        AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".plus(" + rhs + ").as(uri::T)", lhs + ".as(uri::T).plus(" + rhs + ".as(uri::T))");
-        AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".mult(" + rhs + ").as(uri::T)", lhs + ".as(uri::T).mult(" + rhs + ".as(uri::T))");
+        AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".plus(" + rhs + ").as(uri::T).sum()", lhs + ".as(uri::T).plus(" + rhs + ".as(uri::T)).sum()");
+        AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".mult(" + rhs + ").as(uri::T).sum()", lhs + ".as(uri::T).mult(" + rhs + ".as(uri::T)).sum()");
         AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".plus(" + rhs + ").as(uri)", lhs + ".plus(" + rhs + ").as(uri::T)");
     }
 
@@ -267,7 +324,8 @@ public class LstTest extends AbstractAlgebraTest {
         final Lst sum = wide.plus(lst(jnt(151)));
         assertEquals(151L, sum.lstValue().getFirst().stream().count(), () -> "a brace of 150 and a word sum to 151 members: " + sum);
         final Lst narrow = lst(java.util.stream.IntStream.range(0, 12).mapToObj(i -> objs(jnt(2L * i), jnt(2L * i + 1L))).toList());
-        assertThrows(Exception.class, () -> narrow.plus(lst(jnt(-1))), "twelve braces of two are 4096 words from 24 members");
+        final MTronException refused = assertThrows(MTronException.class, () -> narrow.plus(lst(jnt(-1))), "twelve braces of two are 4096 words of 12 letters, written in 24");
+        assertTrue(refused.getMessage().startsWith("a span of 2048 copies unfolds past the typer's bound for lst"), refused::getMessage);
     }
 
     /// THE WORD RING KEEPS ITS LAWS on lsts that hold braces, sub-words, points, holes and letters of every kind, each
@@ -278,7 +336,7 @@ public class LstTest extends AbstractAlgebraTest {
     @Test
     public void testTheWordRingKeepsItsLaws() {
         final List<Lst> samples = Stream.of("[a,b,c]", "[a,d,c]", "[1,2]", "[x,{[a,b],c},y]", "[{2}a,b]", "[[1,2],3]",
-                "[plus(1),{a,b}]", "[a]", "[b,{[,],c}]", "[1,noobj]").map(code -> ObjmtronSerializer.parse(code).asLst()).toList();
+                "[plus(1),{a,b}]", "[a]", "[b,{[,],c}]", "[1,noobj]", "[,]", "[x,{[a,b],[a,b]}]").map(code -> ObjmtronSerializer.parse(code).asLst()).toList();
         final Function<Lst, Lst> normal = x -> Lst.Helper.sum(Stream.of(x));
         final Function<Lst, Lst> converse = x -> Lst.Helper.power(x, cInt.of(-1L));
         final Lst one = lst();
@@ -288,7 +346,8 @@ public class LstTest extends AbstractAlgebraTest {
             checkEquality(LOG, normal.apply(x), normal.apply(zero.plus(x)), true);
             checkEquality(LOG, x, x.mult(one), true);
             checkEquality(LOG, x, one.mult(x), true);
-            assertTrue(x.mult(zero).isNoObj() && zero.mult(x).isNoObj(), () -> "the zero absorbs " + x);
+            checkEquality(LOG, zero, x.mult(zero), true);
+            checkEquality(LOG, zero, zero.mult(x), true);
             checkEquality(LOG, x, converse.apply(converse.apply(x)), true);
             checkEquality(LOG, Lst.Helper.power(x, cInt.of(3L)), Lst.Helper.power(x, cInt.of(2L)).mult(x), true);
             checkEquality(LOG, Lst.Helper.power(x, cInt.of(-2L)), converse.apply(Lst.Helper.power(x, cInt.of(2L))), true);
@@ -350,11 +409,14 @@ public class LstTest extends AbstractAlgebraTest {
             "[a,b,c]>>{{2}<+/>,{15}<0>}>>.cc().sum()                                    % 6",
             "[a,b,c]>><+/>                                                              % {0=>a,1=>b,2=>c}", // should this be uri keyed? (using indexed stream)
             // a trailing '/' names the relation of the whole read, keyed by the whole address (Marko, 2026-11-25), so a read
-            // that runs through a slot is one rel, into a rec, out of a rec, or through lsts alone
+            // that runs through a slot is one rel, into a rec, out of a rec, or through lsts alone. A pattern's read keys
+            // each match by the step it ends at, as a rec's does, where a space keys it by the whole address
             "[[a=>[b=>1]]]>><0/a/b/>                                                    % <0/a/b>=>1",
             "[a=>[[b=>1]]]>>(a/0/b/)                                                    % <a/0/b>=>1",
             "[[1,2]]>><0/1/>                                                            % <0/1>=>2",
             "[[1,2]]>><0/5/>                                                            % noobj",
+            "[[1,2],[3,4]]>><+/1/>                                                      % {<1>=>2,<1>=>4}",
+            "[[1,2]]>><0/+/>                                                            % {0=>1,1=>2}",
             "[a,b,c]>><#>                                                               % {a,b,c}",
             "[a,b,c]>><#/>                                                              % {0=>a,1=>b,2=>c}", // should this be uri keyed? (using indexed stream)
             "[a,b,c]>>0                                                                 % a",
@@ -541,8 +603,9 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2]-<[_,_]>-.sum()                                                                    % [{2}1,2]",
             "[1,2]-<[_,_,_]>-.sum()                                                                  % [{3}1,2]",
             "lst{2}::[{3}1,2].sum()                                                                  % [{6}1,2]",
-            "lst{2}::[[1,2],3].sum()                                                                 % [{2}[1,2],3]",
-            "[[1,2],3]-<[_,_]>-.sum()                                                                % [{2}[1,2],3]",
+            // a lst letter takes no point, since a lst with a point is a brace: it is wrapped as the sub-word that holds it
+            "lst{2}::[[1,2],3].sum()                                                                 % [{2}[[1,2]],3]",
+            "[[1,2],3]-<[_,_]>-.sum()                                                                % [{2}[[1,2]],3]",
             // and its product concatenates the copies
             "lst{2}::[1,2].prod()                                                                    % [1,2,1,2]",
             "[1,2]-<[_,_,_]>-.prod()                                                                 % [1,2,1,2,1,2]",

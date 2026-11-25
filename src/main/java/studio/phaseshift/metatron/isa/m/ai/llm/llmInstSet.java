@@ -349,7 +349,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(CONCEPT).maybe(), "concepts associated with todo",
                                         uri(MESSAGE).maybe(), "messages associated with todo",
                                         uri(REFERENCE).maybe(), "artifacts associated with todo"))
-                                .example("@/agent/todo/1 >>= [reference => +[!*/project/src,!*/project/test]] [-- adding references to a todo --]")
+                                .example("@/agent/todo/1 >>= [reference => _ * [!*/project/src,!*/project/test]] [-- adding references to a todo --]")
                                 .create(),
                         LLM_TOKEN_COUNTER_TOOL_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)

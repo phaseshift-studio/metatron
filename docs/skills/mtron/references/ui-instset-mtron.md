@@ -146,7 +146,7 @@ the referent — never through the widget. The next surface pass (a prompt cycle
 reads it again and draws it, so no per-cell repaint machinery is involved:
 
 ```mtron_pre
-g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.-<[_]),until=>loop()?>8).to(/usr/uidoc/g10)
+g10 -> [,].repeat(code=>_ * ['.'],until=>loop()?>9)-<[_].repeat(code=>_ * (>>0.-<[_]),until=>loop()?>8).to(/usr/uidoc/g10)
 board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
 @/usr/uidoc/board.display()             [-- pin it once --]
 @/usr/uidoc/g10/1/0 >>= '@'             [-- one cell of the REFERENT --]

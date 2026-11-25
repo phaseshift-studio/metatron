@@ -990,8 +990,9 @@ parse. A type used as a step is a filter, and so its own converse (Theorem 14).
 
 - `is()` declares no converse, so `5.{-1}is(gt(3))` stays in limbo where Theorem 14 gives `5.is(gt(3))`. A rule by
   form, every filter its own converse, would cover `is()` and every type used as a step.
-- A lst read as a word: is its converse its reversal, so that `[1,2,3]{-1}` is `[3,2,1]`? `reverse()` is declared an
-  involution, as a converse is. Today `[1,2,3]{-1}` does not parse.
+- A lst read as a word has its reversal for its converse (Marko, 2026-11-25; Claim 21 of
+  ring-theoretic-distributed-structures.md): a span after the brackets is the lst's power, so `[1,2,3]{-1}` is
+  `[3,2,1]`, and `pow(-1)` is the same span at run time. The lst's `reverse()` retired with it.
 - On a rel, mtron's `neg()` swaps the ends, so `(1=>2).neg()` is `2=>1`. The arrow $x \Rightarrow y$ is the matrix
   with a $1$ at row $x$ and column $y$ [2], so the swap is its transpose, the converse
   $(x \Rightarrow y)^{\smile} = y \Rightarrow x$, and not its additive inverse, which is the point `{-1}(1=>2)`.

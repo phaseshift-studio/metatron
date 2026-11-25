@@ -288,7 +288,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         /**
          * THE WALKS A RANGE HOLDS ({@link Rec#mult(Rec)}), each the chain of objects it steps through as a nested rel, with its
          * multiplicity on the outermost and every object inside at point one. A rel steps from its key to the walks of
-         * its range, and a data rec ({@link #holdsWalks}) steps through each of its keys to the walks of that key's value.
+         * its range, and a rec of walks ({@link #holdsWalks}) steps through each of its keys to the walks of that key's value.
          * Any other object, code and a live rec included, ends the walk. The empty rec holds no walk.
          */
         static Stream<Obj> walks(final Obj range) {
@@ -303,32 +303,13 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         }
 
         /**
-         * WHETHER AN OBJ IS A REC OF DATA, the walks through its keys ({@link #walks}, and the merge's
+         * WHETHER AN OBJ IS A REC OF WALKS, the walks through its keys ({@link #walks}, and the merge's
          * {@code Poly.Helper.withWalks}): a plain rec, or a fibered bundle. A live one (a space, a machine, a socket, any
          * component built on a rec) is an atom to both walks, read where it lives; two live recs that collide at one
          * key still merge as recs, as they always have.
          */
         static boolean holdsWalks(final Obj obj) {
             return obj.isRec() && (MRec.class == obj.getClass() || obj instanceof MFiberedRec);
-        }
-
-        /**
-         * WHETHER AN OBJ IS A RECORD OF DATA: a rec of walks ({@link #holdsWalks}) whose walks run through no code, the
-         * identity {@code _} aside, so its unity {@code [_=>_]} is one. A rec that holds code is a program or a pattern
-         * ({@code [x=>>>a]} is the projection {@code -<} runs), so the fold of a lst applies it as any letter, while it
-         * joins two records of data (Claim 28 of ring-theoretic-distributed-structures.md: {@code [[a=>b],[b=>e]]>|} is
-         * {@code [a=>b=>e]}).
-         */
-        static boolean isData(final Obj obj) {
-            return holdsWalks(obj) && walks(obj).allMatch(Helper::runsThroughNoCode);
-        }
-
-        /**
-         * a walk ({@link #walks}) whose keys and end are no code but the identity ({@link #isData})
-         */
-        private static boolean runsThroughNoCode(final Obj walk) {
-            final Obj step = walk.isRel() ? walk.asRel().firstDirect() : walk;
-            return (!step.isObjCall() || isIdentity(step)) && (!walk.isRel() || runsThroughNoCode(walk.asRel().secondDirect()));
         }
 
         /**

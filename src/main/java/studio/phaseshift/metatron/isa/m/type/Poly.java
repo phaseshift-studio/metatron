@@ -646,8 +646,9 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
          * <p>
          * A LST IS AN ATOM OF THE MERGE: two colliding lsts make a bag of lsts, each kept whole —
          * {@code [a=>[1,2,3]] + [a=>[2,3]]} is {@code [a=>{[1,2,3],[2,3]}]} — so the union is commutative and its fold
-         * ({@code sum}) is defined over a bag. Concatenating lst values is a select's {@code +}, said by the expression:
-         * {@code [a=>[1,2,3]]==[a=>+[2,3]]} is {@code [a=>[1,2,3,2,3]]}.
+         * ({@code sum}) is defined over a bag. Concatenating lst values is a select's {@code *}, said by the expression:
+         * {@code [a=>[1,2,3]]==[a=>_ * [2,3]]} is {@code [a=>[1,2,3,2,3]]}, while a select's {@code +} is the lst's sum in
+         * the word ring, {@code [a=>[1,2,3]]==[a=>+[2,3]]} being {@code [a=>[{[,],1},2,3]]}.
          * <p>
          * A COEFFICIENT IS A MULTIPLICITY, read as every access reads it: the outer {@code c} multiplied into what it
          * holds ({@code {2}[a=>2]} holds {@code a=>{2}2}). A bulked operand therefore merges as the copies it stands for —
