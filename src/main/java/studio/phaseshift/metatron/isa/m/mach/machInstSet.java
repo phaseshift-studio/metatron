@@ -1129,7 +1129,7 @@ public class machInstSet extends AbstractInstSet {
                                 .dom(ALL.maybeSome(), "the value the tail starts from: it is the lhs that the cut program was cut off of, gathered whole. A cut that replaces a move states the stream that flows into it where that is known (int for one int, int{4} for four)")
                                 .rng(ALL.maybeSome(), "whatever the tail answers where it lands — at a peer, the one scattered lane, merged")
                                 .argLst(URI_TYPE, "where the tail runs: a machine of this server's tree (`<a>`, `<..>`, `<~>`), or a peer and the place in it to resume at (`<//worker/a>`)",
-                                        T(ALL_STAR), "the tail, as code: it picks up where the chain was cut, and is compiled where it lands. It is code, never one obj, so a tail of one instruction is any count of it (from{2}(...)), as the tail of any longer chain is")
+                                        T(ALL.some()), "the tail, as code: it picks up where the chain was cut, and is compiled where it lands. It is code, never one obj, so a tail of one instruction is any count of it (from{2}(...)), as the tail of any longer chain is")
                                 .desc("""
                                         run the rest of a chain in another machine, compiled by that machine. The
                                         nomadic extractor cuts a chain at its first instruction that changes the
@@ -1137,7 +1137,8 @@ public class machInstSet extends AbstractInstSet {
                                         is never compiled by the machine that cut it. A target in this server's machine
                                         tree switches the current machine there, as a move does, and that machine
                                         compiles and runs the tail: `5.move(<a>).plus(1)` becomes
-                                        `5.cut(<a>, plus(1))`, and `~` stays in the machine a push or a pop made
+                                        `5.cut?<=int(<a>, plus(1))`, the cut's dom the stream that flows into it
+                                        where that is known, and `~` stays in the machine a push or a pop made
                                         current. A target that names a host ships the program to that server — the
                                         lhs and the cut to the tail's place in it, its root when the target names no
                                         machine past the surface the peer was dialed at — through its `eval`, gathered
@@ -1152,10 +1153,10 @@ public class machInstSet extends AbstractInstSet {
                                         a branch's ?timeout compiles onto its cut. The target's ?hop is the budget of
                                         what the cut compiles or ships.""")
                                 .law(Law.nomadic)
-                                .example("5.move(<a>).plus(1)           [-- compiles to 5.cut(<a>, plus(1)): /a compiles plus(1) --]")
+                                .example("5.move(<a>).plus(1)           [-- compiles to 5.cut?<=int(<a>, plus(1)): /a compiles plus(1) --]")
                                 .example("push(b).plus(1)               [-- compiles to push(b).cut(<~>, plus(1)): /b compiles plus(1) --]")
-                                .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut(<//worker>, plus(1)): the worker compiles it --]")
-                                .example("5.move(<a>).plus(1).explain() [-- compiles to 5.cut(<a>, plus(1)).explain(): explained here, nothing runs --]")
+                                .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut?<=int(<//worker>, plus(1)): the worker compiles it --]")
+                                .example("5.move(<a>).plus(1).explain() [-- compiles to 5.cut?<=int(<a>, plus(1)).explain(): explained here, nothing runs --]")
                                 .body((lhs, inst) -> {
                                     // A CUT TIMES ITS RUN (Marko, 2026-11-24: all timeout logic lives in the cut, and a
                                     // move's ?timeout, as a branch's, compiles onto it). The run goes on a virtual::T that
@@ -1399,7 +1400,7 @@ public class machInstSet extends AbstractInstSet {
          *       Both happen to every branch before the first machine change, the one this machine compiles.</li>
          *   <li>THE TAIL ENDS AT HOME: {@code explain()} and {@code profile()} stay after the cut and analyze the chain
          *       where the expression began ({@link #isHome}), so {@code 1.move(<a>).plus(1).explain()} becomes
-         *       {@code 1.cut(<a>, plus(1)).explain()}.</li>
+         *       {@code 1.cut?<=int(<a>, plus(1)).explain()}.</li>
          * </ul>
          * A nomadic instruction that ends the chain has no tail and is left as written, except a move to a host: the
          * move instruction re-homes a thread inside this server and never leaves it, so only a cut reaches a peer, and
@@ -1480,16 +1481,21 @@ public class machInstSet extends AbstractInstSet {
                         // ?timeout is its cut's to keep.
                         // THE CUT'S DOM IS THE STREAM THAT FLOWS INTO THE MOVE (Marko, 2026-11-25: "the rng of the previous
                         // inst should be the dom of the next"). This rewrite mints the cut, so the resolver would bind it to
-                        // the cut's own #{*}. Where the instruction before the move answers the whole stream (a seed, or an
-                        // instruction that gathers or pages it), its resolved rng, times the move's point, is the cut's dom:
-                        // 1.move(<//h>) cuts an int and {1,2,3,4}.move(<//h>) an int{4}. After an instruction that answers
-                        // per obj, the count is not known here, so the cut keeps #{*}: a dom of one obj would run the cut,
-                        // and every fold in its tail, once per obj. Only the chain before the move is resolved here
-                        final Inst flowing = cut.isEmpty() ? null : Rewriter.Helper.contracts(code(new ArrayList<>(cut))).getLast();
-                        final fURI dom = null == flowing || !flowing.tid().hasRng() || !(flowing.isInitial() || flowing.isBatching()) ? null
-                                : flowing.tid().rng().c(c -> c.mult(inst.tid().d()));
+                        // the cut's own #{*}. In a chain that starts from its own seed, where the instruction before the
+                        // move answers the whole stream at once (the seed, or a gather), its resolved rng times its point
+                        // and the move's is the cut's dom: 1.move(<//h>) cuts an int, {1,2,3,4}.move(<//h>) an int{4}, and
+                        // {1,2,3,4}.count{2}().move(<//h>) an int{2}. Anywhere else the count is not known here, so the
+                        // cut keeps #{*} and gathers: after an instruction that answers per obj or per page, a dom of one
+                        // would run the cut, and every fold in its tail, once per answer; a chain with no seed (a branch
+                        // member, compiled without its lhs) only guesses its types; and a dom that may hold nothing (a
+                        // sup, a ;'s empty seed, a move{0}) would never run the cut, or seed it. Only the chain before the
+                        // move is resolved here
+                        final Inst flowing = cut.isEmpty() || !START_INST_TID.equals(cut.getFirst().tid().basePath()) ? null
+                                : Rewriter.Helper.contracts(code(new ArrayList<>(cut))).getLast();
+                        final fURI dom = null == flowing || !flowing.tid().hasRng() || !(flowing.isInitial() || flowing.isGather()) ? null
+                                : flowing.tid().rng().c(c -> c.mult(flowing.tid().d()).mult(inst.tid().d()));
                         final fURI timed = inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID;
-                        final Inst moved = instB(null == dom ? timed : timed.dom(dom), lst(where, tail));
+                        final Inst moved = instB(null == dom || dom.c().isZeroable() ? timed : timed.dom(dom), lst(where, tail));
                         if (!inst.tid().d().isOne() && !cut.isEmpty()) {
                             final Inst before = cut.getLast();
                             cut.set(cut.size() - 1, before.d(before.tid().d().mult(inst.tid().d())).asInst());
@@ -1607,7 +1613,7 @@ public class machInstSet extends AbstractInstSet {
          * THE RETURN HOME (Marko, 2026-11-24): {@code explain()} and {@code profile()}, and the bare
          * {@code profile_collate()} a distribution plan ends a profiled run with, analyze the chain before them where
          * the expression began. A remote stretch ends at them: {@code 1.move(<a>).plus(1).explain()} is
-         * {@code 1.cut(<a>, plus(1)).explain()}, which explains the cut here and runs nothing, and a profile times
+         * {@code 1.cut?<=int(<a>, plus(1)).explain()}, which explains the cut here and runs nothing, and a profile times
          * the cut here, each run starting from home.
          */
         private static boolean isHome(final Inst inst) {
