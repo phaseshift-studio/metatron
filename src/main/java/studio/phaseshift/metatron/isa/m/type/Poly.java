@@ -20,11 +20,13 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MLst;
 import studio.phaseshift.metatron.util.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -745,28 +747,62 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         }
 
         /**
+         * READS ADD AS TERMS DO (a read is linear: Claim 4 of ring-theoretic-distributed-structures.md). The reads of one
+         * address from the terms of one structure (a rec's keys, Rec.at, and a space's entries, Space.Helper) add into
+         * one answer, the merge's normal form of their sum: the recs of data among them, a bag's included, fold onto an
+         * unbulked rec, so a bulked one's copies spread into its own walks and no typed term types the sum, and any
+         * other read gathers beside them. A read that is noobj adds nothing, and a lone read is itself, unrebuilt: a
+         * literal keeps its form until a merge reads it (Marko, 2026-11-24).
+         */
+        public static Obj added(final List<Obj> reads) {
+            final List<Obj> found = reads.stream().filter(read -> !read.isNoObj()).toList();
+            if (found.size() < 2)
+                return found.isEmpty() ? noobj() : found.getFirst();
+            final List<Obj> terms = found.stream().flatMap(Obj::stream).toList();
+            final Obj recs = terms.stream().filter(Rec.Helper::holdsWalks).reduce((Obj) rec(), Helper::mergeObjRecursion);
+            return objs(Stream.concat(terms.stream().filter(term -> !Rec.Helper.holdsWalks(term)),
+                    recs.asRec().isEmpty() ? Stream.empty() : Stream.of(recs)));
+        }
+
+        /**
+         * THE MERGE'S NORMAL FORM OF A VALUE, AS A READ BELOW IT SEES IT ({@link #withWalks}): the recs of data a bag
+         * holds fused into one rec, a bulked rec's multiplicity spread into its walks, and anything else as it is. A read
+         * below a key reads its value in this form (Marko, 2026-11-25, "read the normal form"), so it answers as the
+         * merged value does. A single unbulked value is its own normal form for a read, and is answered as it is.
+         */
+        public static Obj normal(final Obj value) {
+            if (!value.isObjs() && value.c().isOne())
+                return value;
+            final Obj walks = withWalks(value);
+            return null == walks ? noobj() : walks;
+        }
+
+        /**
+         * THE READS BELOW A KEY, one per poly its value holds in the merge's normal form ({@link #normal}). The recs of
+         * a bag read as their one fused rec, and a bulked rec as the rec its copies spread into, so
+         * {@code [a=>{2}[b=>[x=>1]]]} reads {@code a/b} as {@code [x=>{2}1]}, as {@code [a=>[b=>[x=>{2}1]]]} does. A
+         * holder becomes the parent of each poly of data it reads (a plain lst, a rec of walks), so a reference inside
+         * climbs to it; a live poly (a space, a machine, a queue) is not re-parented here, and a walk passes no holder
+         * (the keys an address runs through, in Rec.at and in Space.Helper.within, and the polys Space.Helper.held reads
+         * at an address). Rec.at toggles each value before it reaches here, which parents it, as on main; within toggles
+         * only code, so a live value there keeps its parent.
+         */
+        public static List<Obj> readsBelow(final Obj value, final Obj holder, final Function<Poly<?, ?>, Obj> read) {
+            return normal(value).stream()
+                    .filter(Obj::isPoly)
+                    .map(poly -> read.apply((null == holder
+                            || !(MLst.class == poly.getClass() || Rec.Helper.holdsWalks(poly))
+                            ? poly : poly.parent(holder)).as()))
+                    .toList();
+        }
+
+        /**
          * A value with its coefficient carried into what it holds — the form the union stores, so that a bulked operand
          * and the copies it stands for merge to the same value. A rec pushes it into its entries, all the way down
          * ({@code {2}[b=>[c=>1]]} is {@code [b=>[c=>{2}1]]}), read through its rels so nothing is auto-resolved; anything
          * else keeps it — an atom of the merge, a lst included, whose coefficient already is its multiplicity in an objs
          * set ({@code {2}1}, {@code {2}[1,2]}).
          */
-        /**
-         * READS ADD AS TERMS DO (a read is linear: Claim 4 of ring-theoretic-distributed-structures.md). The reads of one
-         * address from the terms of one structure (a rec's keys, Rec.at, and a space's entries, Space.Helper) added into
-         * one answer: the data recs among them fold into one rec, each entering the merge as its rhs onto an unbulked
-         * rec, so a bulked read's copies spread into its own walks and multiply no other read's; any other read gathers
-         * beside them. A read that is noobj adds nothing, and a lone read is itself, unrebuilt.
-         */
-        public static Obj added(final List<Obj> reads) {
-            final List<Obj> found = reads.stream().filter(read -> !read.isNoObj()).toList();
-            if (found.size() < 2)
-                return found.isEmpty() ? noobj() : found.getFirst();
-            final Obj recs = found.stream().filter(Rec.Helper::holdsWalks).reduce((Obj) rec(), Helper::mergeObjRecursion);
-            return objs(Stream.concat(found.stream().filter(read -> !Rec.Helper.holdsWalks(read)),
-                    recs.asRec().isEmpty() ? Stream.empty() : Stream.of(recs)));
-        }
-
         private static Obj distributed(final Obj value) {
             if (value.c().isOne() || !value.isRec())
                 return value;

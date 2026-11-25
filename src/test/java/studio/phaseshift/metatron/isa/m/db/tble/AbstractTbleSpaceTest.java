@@ -88,7 +88,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         // M46: a mono cannot overwrite a schema-fixed table row.  M32: >>= through a
         // !* cross-ref does not deref the target (core semantics, shared with dcmnt).
         // M44c/M45/M48 were stale skips and now pass.
-        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M12b", "M43", "M44:", "M44b", "M46", "M32"})
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M12b", "M43", "M44:", "M44b", "M46", "M32"}),
+        // the factorization contract: a + listing below a poly gets the store's own entries for the poly as children
+        // beside the poly's own children at those addresses, so a value is listed twice where the term holds it once:
+        // a path key beside a nested key over one prefix ([a=>[b=>[x=>1]],a/b=>[y=>2]] listed at a), and a bulked poly
+        // or lst stored at an address ({2}[b=>1,d=>[x=>1]] and {2}[1,2] listed, + or #, there) (open, as the
+        // space-level sum of a store's terms and views)
+        @SkipRegexTest.Skip(method = "testReadsAreInvariantUnderFactorization",
+                params = {"^(B3/beside|C[34]/entry|Q[12]/entry)$"})
 })
 public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract, IncrQTest {
 

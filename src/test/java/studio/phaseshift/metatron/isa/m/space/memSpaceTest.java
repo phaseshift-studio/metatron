@@ -102,6 +102,29 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
         space2.close();
     }
 
+    /**
+     * A READ THROUGH A STORED LIVE VALUE LEAVES ITS PARENT ALONE: within toggles only code at a key it runs through,
+     * and Poly.Helper.readsBelow parents only polys of data, so reading below a stored space does not point the
+     * space's parent at the rec that holds it (Machine.pop and Component.machine read that link). The read names a
+     * key the space holds, so within answers it; a read that misses falls back to Rec.at, which toggles every value
+     * and so parents it, as on main (open)
+     */
+    @Test
+    public void testAReadThroughALiveValueKeepsItsParent() {
+        final memSpace live = memSpace.of(rec(uri(PATTERN), uri("/live_parent/#")), f("/memory/space/live_parent"));
+        final Obj parent = live.parent();
+        final fURI holder = this.baseURI.extend("holder");
+        try {
+            Machine.write(holder, rec(uri("s"), live));
+            AbstractMetatronTest.checkEquality(LOG, uri("/live_parent/#"),
+                    Machine.read(holder.extend("s").extend(PATTERN)).selfVID(null), true);
+            assertEquals(parent, live.parent());
+        } finally {
+            Machine.write(holder, noobj());
+            live.close();
+        }
+    }
+
     @ParameterizedTest()
     @TestData(value = {
             "/t/code -> ['a' => ['x' => 1, 'y' => 2], 'b' => 'hello']"

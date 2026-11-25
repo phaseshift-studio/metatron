@@ -261,6 +261,58 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>[x=>1],a/b=>2]>>(a/)                                                    % a=>[x=>1,b=>2]",
             "[a=>[b=>[x=>1]],a/b=>[c=>2]]>>(a/b/)                                        % a/b=>[x=>1,c=>2]",
             "[a=>{2}[b=>1],a/c=>3]>>a                                                    % [b=>{2}1,c=>3]",
+            // below a key, the rest reads the key's value in the merge's normal form (Marko, 2026-11-25, "keep the sum";
+            // Poly.Helper.readsBelow): a bag's recs fused into one, a bulked rec's copies spread into its walks. Before
+            // this rule these rows answered otherwise:
+            "[a=>{[b=>[x=>1]],[b=>[y=>2]]}]>>(a/b)                                       % [x=>1,y=>2]",
+            "[a=>{[b=>[x=>1]],[b=>[y=>2]]},a/b=>[z=>3]]>>(a/b)                           % [x=>1,y=>2,z=>3]",
+            "[a=>{2}[b=>1]]>>(a/b)                                                       % {2}1",
+            "[a=>{[b=>[x=>1]],[b=>[x=>1]]}]>>(a/b)                                       % [x=>{2}1]",
+            "[a=>{2}[b=>[x=>1]],a/b/z=>3]>>(a/b)                                         % [x=>{2}1,z=>3]",
+            "[a=>{2}[b=>1]]>><+/b>                                                       % {2}1",
+            "[a=>{[b=>[x=>1]],[b=>[y=>2]]}]>><+/b>                                       % [x=>1,y=>2]",
+            "[a=>{[b=>[x=>[p=>1]]],[b=>[x=>[q=>2]]]}]>>(a/+/x)                           % [p=>1,q=>2]",
+            "[a=>{[b/#=>1],[b/c=>2]}]>>(a/b/c)                                           % 2",
+            "[a=>{[b=>{[x=>1],[y=>2]}],[b=>[z=>3]]}]>>(a/b)                              % [x=>1,y=>2,z=>3]",
+            "[a=>{[x=>1],[y=>2]},a/z=>3]>>a                                              % [x=>1,y=>2,z=>3]",
+            "[a=>{[b=>[x=>1]],[b=>[y=>2]]}]>>(a/+)                                       % [x=>1,y=>2]",
+            // a pattern past the first segment gathers its reads: two keys that match two addresses stay apart
+            "[a=>[b=>[c=>[x=>1]]],a/b=>[d=>[y=>2]]]>>(a/b/+)                             % {[x=>1],[y=>2]}",
+            // terms that cancel answer the address: the patterns answer only an address no key answers
+            "[a=>{-1}[b=>1],a/b=>1]>>(a/b)                                               % noobj",
+            // ... and these pin what it keeps: the term's other layouts, a lone key's literal, a wildcard's reads at
+            // different addresses kept apart, a bulked lst's + read counting its copies once, and a reference below a
+            // key fired from its holder
+            "[a/b/x=>1,a/b/y=>2]>>(a/b)                                                  % [x=>1,y=>2]",
+            "[a=>{[x=>1],[y=>2]}]>>a                                                     % {[x=>1],[y=>2]}",
+            "[a=>[b=>{[x=>1],[y=>2]}]]>>(a/b)                                            % {[x=>1],[y=>2]}",
+            "[a/b=>{[x=>1],[y=>2]}]>>(a/b)                                               % {[x=>1],[y=>2]}",
+            // the terms fold onto an untyped rec, so no typed term types the sum's top, whichever key holds it
+            "[a=>[k=>[rank=>2]],a/k=>scout::[name=>'kai']]>>(a/k)                        % [rank=>2,name=>'kai']",
+            "[a=>[k=>scout::[name=>'kai']],a/k=>[rank=>2]]>>(a/k)                        % [name=>'kai',rank=>2]",
+            "[a=>{[b=>[x=>1]],[b=>[y=>2]]}]>>(a/b/y)                                     % 2",
+            "[a=>{[b=>[x=>1],k=>1],[b=>[x=>1],k=>2]},a/b=>[z=>3]]>>(a/b)                 % [x=>{2}1,z=>3]",
+            "[a=>{[b=>[x=>1]],[c=>[y=>2]]}]>>(a/+)                                       % {[x=>1],[y=>2]}",
+            "[a=>{2}[1,2,3]]>>(a/+)                                                      % {{2}1,{2}2,{2}3}",
+            "[a=>{2}[b=>1]]>>a>>b                                                        % {2}1",
+            "[y=>[c=>7],a=>{[b=>!*<../../y>],[q=>1]},a/b/d=>2]>>(a/b)                    % [c=>7,d=>2]",
+            "[x=>[b=>[c=>1]],a=>!*<../x>,a/b/c=>2]>>(a/b)                                % [c=>{1,2}]",
+            "[x=>[b=>[c=>1]],a=>!*<../x>,a/b/c=>2]>>(a/b/c)                              % {1,2}",
+            // OPEN, the costs of reading the normal form, each as the merge holds it: a reference inside a bulked poly
+            // reads its target after the spread, where the literal's step walk is {2}2; a reference in one poly of a bag
+            // reads the bag's fused rec, the other polys' keys included, where the step walk reads its own poly; and a
+            // step walk maps over a bag one obj at a time, where the path read adds the terms
+            "[a=>{2}[b=>2,c=>!*<../b>]]>>(a/c)                                           % {4}2",
+            "[a=>{2}[b=>2,c=>!*<../b>]].plus([z=>1])>>(a/c)                              % {4}2",
+            "[a=>{2}[b=>2,c=>!*<../b>]]>>a>>c                                            % {2}2",
+            "[a=>{[b=>2,c=>!*<../b>],[b=>3]}]>>(a/c)                                     % {2,3}",
+            "[a=>{[b=>2,c=>!*<../b>],[b=>3]}]>>a>>c                                      % 2",
+            "[a=>{[b=>[x=>1]],[b=>[y=>2]]}]>>a>>b                                        % {[x=>1],[y=>2]}",
+            // OPEN, as before: an index read into a bulked lst counts no copies (Lst.at), where its + read counts them
+            "[a=>{2}[1,2,3]]>>(a/0)                                                      % 1",
+            // OPEN, a regression against main (which answers [x=>1,y=>2] here, as (a/b/c) and the space read do): a
+            // pattern read through two keys that reach one matched address gathers rather than adds
+            "[a=>[b=>[c=>[x=>1]]],a/b=>[c=>[y=>2]]]>>(a/b/+)                             % {[x=>1],[y=>2]}",
             // a value at an interior address with an entry below it: every read keeps every term (Marko, 2026-11-25)
             "[n/m/r=>1,n/m/r/s=>2]>>(n/m)                                                % [r=>{1,[s=>2]}]",
             "[n/m/r=>1,n/m/r/s=>2]>>(n/m/r)                                              % {1,[s=>2]}",
@@ -1036,7 +1088,10 @@ public class RecTest extends AbstractAlgebraTest {
             "*x/a/b/c/d/0                                                                   % {1,4}",
             "*x/a/b/c/d/2                                                                   % {3,[e,f,g]}",
             "*x/a/b/c/d                                                                     % {[1,2,3],[4,5,[e,f,g]]}",
-            "*x/a/b/c                                                                       % {[d=>[1,2,3]],[d=>[4,5,[e,f,g]]]}",
+            // a key's recs are one rec (Marko, 2026-11-25, "keep the sum"), so the two recs read at c add into one,
+            // while the step walk maps over the fan-out one obj at a time
+            "*x/a/b/c                                                                       % [d=>{[1,2,3],[4,5,[e,f,g]]}]",
+            "*x>>a>>b>>c                                                                    % {[d=>[1,2,3]],[d=>[4,5,[e,f,g]]]}",
             // Step-walk equivalent
             "*x==a==b==c==d==0                                                              % {1,4}",
             "*x==a/b/c/d==0                                                                 % {1,4}",

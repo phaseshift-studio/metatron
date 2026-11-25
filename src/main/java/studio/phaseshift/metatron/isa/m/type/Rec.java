@@ -520,6 +520,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                                             autoToggle(arec, e.getValue(), doAuto)))
                                     .map(o -> o.c(c -> c.mult(cKey))) :
                             arec.jvm().values().stream().map(obj -> (Obj) autoToggle(arec, obj, doAuto))
+                                    // a step that hands its values on hands each in the merge's normal form
+                                    // (Poly.Helper.normal); a path key the wildcard would match is not read here
+                                    // (open: [a=>[b=>[x=>1]],a/b=>[y=>2]]>><+/b> is [x=>1], where a/b reads [x=>1,y=>2])
+                                    .map(o -> singleSegment ? o : Poly.Helper.normal(o))
                                     .map(o -> o.c(c -> c.mult(cKey))));
                 } else {
                     // A READ IS LINEAR (Claim 4 of ring-theoretic-distributed-structures.md), and flat, path-keyed and
@@ -527,11 +531,14 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                     // pattern reads every key it meets, and the reads add as the terms do (Poly.Helper.added): the key it
                     // names; each key it runs through, the rest read below it ([a=>[x=>1],a/b=>[c=>2]]>>(a/b/c) is 2, as
                     // [a/b=>[c=>2]]>>(a/b/c) is); and the keys under it, its subtree, a value among them kept (Marko,
-                    // 2026-11-25: [a=>5,a/b=>6]>>a is {5,[b=>6]}). Each key's read stays whole, so a key holding a bag
-                    // reads as its bag, and a trailing '/' names the relation of the whole read, x/ being x=>*x. A key
-                    // whose rest past the address is a pattern is a pattern key ([b/#=>x]>>b is x), and pattern keys
-                    // answer only when no key meets the address, so a key that names the address overrides a pattern. An
-                    // address that holds a pattern past its first segment reads as it always has (open)
+                    // 2026-11-25: [a=>5,a/b=>6]>>a is {5,[b=>6]}). Below a key the rest reads the key's value in the
+                    // merge's normal form (Marko, 2026-11-25, "keep the sum"; Poly.Helper.readsBelow), so
+                    // [a=>{[b=>[x=>1]],[b=>[y=>2]]}] reads a/b as [x=>1,y=>2], as [a/b/x=>1,a/b/y=>2] does. A trailing
+                    // '/' names the relation of the whole read, x/ being x=>*x. A key whose rest past the address is a
+                    // pattern is a pattern key ([b/#=>x]>>b is x), and pattern keys answer only when no key answers the
+                    // address, so a key that names the address overrides a pattern. An address holding a pattern past its
+                    // first segment reads below each key the same way, and its reads gather, as values at the addresses
+                    // they match (open: two keys that reach one matched address gather rather than add)
                     final int length = keyF.segmentLength();
                     final boolean whole = isBranch && !keyF.hasPattern();
                     final List<Obj> reads = new ArrayList<>();
@@ -548,9 +555,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                         if (kF.segmentLength() < length && (v.isPoly() || v.isObjs() || v.isObjCall()) && Space.Helper.runsThrough(kF, keyF)) {
                             // the raw toggle runs the whole path: atDirect stays raw below the key, as on a flat key
                             final Uri rest = uri(isBranch && !whole ? keyF.pretract(kF.segmentLength()).asBranch() : keyF.pretract(kF.segmentLength()).asNode());
-                            reads.add(objs(IteratorUtil.stream(autoToggle(arec, v, doAuto).iterator()).filter(Obj::isPoly)
-                                    .map(o -> o.parent(arec).<Poly<?, ?>>as())
-                                    .map(below -> (Obj) (doAuto ? below.at(rest) : below.atDirect(rest)))));
+                            reads.addAll(Poly.Helper.readsBelow(autoToggle(arec, v, doAuto), arec,
+                                    poly -> doAuto ? poly.at(rest) : poly.atDirect(rest)));
                         } else if (kF.segmentLength() > length && Space.Helper.runsThrough(keyF, kF) && !kF.pretract(length).hasPattern())
                             under.add(new Space.IdObj(kF.pretract(length), v));
                     });
@@ -558,8 +564,9 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                         final Obj subtree = Space.Helper.sum(under);
                         reads.add(isBranch && !whole ? rel(asNode, subtree) : subtree);
                     }
-                    final Obj sum = Poly.Helper.added(reads);
-                    if (sum.isNoObj())
+                    final Obj sum = keyF.hasPattern() ? objs(reads.stream().flatMap(Obj::stream)) : Poly.Helper.added(reads);
+                    // a sum whose terms cancel answered the address; only an address no key answers falls to the patterns
+                    if (sum.isNoObj() && reads.stream().allMatch(Obj::isNoObj))
                         return (OBJ) objs(arec.jvm().entrySet()
                                 .stream()
                                 .filter(kv -> kv.getKey().isUri())

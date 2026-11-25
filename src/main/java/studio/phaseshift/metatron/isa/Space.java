@@ -390,9 +390,11 @@ public interface Space extends Addressable, Rec, Closeable {
                 if (!above.isNoObj()) {
                     // the rest below the base, a bare relative path: a rec's key is a path, never a scheme, a host or a q
                     final fURI rest = address.pretract(base.segmentLength()).asRelative().scheme(null).host(null).qLess();
+                    // what each poly stored there holds below it, read in its normal form (Poly.Helper.readsBelow) one
+                    // poly at a time: the polys of a stream stored at one address are the store's answers there, kept
+                    // apart (a graph answers a step with each element it reaches)
                     final Obj inside = objs(above.stream()
-                            .filter(Obj::isPoly)
-                            .map(poly -> within(poly.as(), rest, walk))
+                            .flatMap(answer -> Poly.Helper.readsBelow(answer, null, poly -> within(poly, rest, walk)).stream())
                             .filter(obj -> !obj.isNoObj())
                             .toList());
                     // an entry above that holds nothing there does not end the search: a store that answers inside its
@@ -420,13 +422,16 @@ public interface Space extends Addressable, Rec, Closeable {
         /**
          * what a poly holds at a relative address. A rec's KEY IS A PATH, whatever obj it is (the int key 0 is the segment
          * 0), compared segment by segment and LITERALLY: a wildcard in a key is a segment of the layout, never a query.
-         * Every key that meets the rest adds, as in Rec.at: the key that is the rest (on a read as Rec.at answers, an
-         * auto_from firing), each key the rest runs through, descended, and the keys under the rest, its subtree. A key
-         * meets the rest literally, so a literal path answers before a wildcard key that would match it (the web
-         * gateway's {@code http/#} beside a dialed {@code http/quarry/8777}). Only when no key meets the rest, and only on
-         * a READ of an address with no wildcard, does the poly answer by its own walk (a position, a wildcard key matching
-         * a concrete address, an auto_from chained through). A WALK stops at what the layout holds: no auto_from fires and
-         * no wildcard key matches deeper, or a key like {@code http/#} would answer every address below it, without end.
+         * Every key that meets the rest adds, as in Rec.at: the key that is the rest; each key the rest runs through, the
+         * rest read below it in the key's value in the merge's normal form (Poly.Helper.readsBelow: a bag's recs fused
+         * into one, a bulked rec's multiplicity spread); and the keys under the rest, its subtree. On a READ of an address
+         * with no wildcard, an auto_from at the key that is the rest, or at a key the rest runs through, fires, and the
+         * polys of data read below a key take its holder as their parent. A key meets the rest literally, so a literal
+         * path answers before a wildcard key that would match it (the web gateway's {@code http/#} beside a dialed
+         * {@code http/quarry/8777}). Only when the keys' sum is noobj, and only on a READ of an address with no wildcard,
+         * does the poly answer by its own walk, Rec.at (a position, a wildcard key matching a concrete address). A WALK
+         * stops at what the layout holds: no auto_from fires and no wildcard key matches deeper, or a key like
+         * {@code http/#} would answer every address below it, without end, and the keys it runs through parent nothing.
          */
         private static Obj within(final Poly<?, ?> poly, final fURI rest, final boolean walk) {
             if (poly.isRec()) {
@@ -441,9 +446,18 @@ public interface Space extends Addressable, Rec, Closeable {
                         // the key's own value, an auto_from firing on a read, as Rec.at's named key: Rec.at itself would
                         // add the keys under it a second time
                         reads.add(walk || rest.hasPattern() ? value : Poly.Helper.autoToggle(poly, value, true));
-                    else if (runsThrough(keyPath, rest))
-                        // a key holding a bag is descended through each poly in it, as a stored stream is (held)
-                        value.stream().filter(Obj::isPoly).forEach(member -> reads.add(within(member.as(), rest.pretract(keyPath.segmentLength()), walk)));
+                    else if (runsThrough(keyPath, rest)) {
+                        // the reads below the key in its value's normal form, as Rec.at's (Poly.Helper.readsBelow). A
+                        // read fires an auto_from there first and parents the polys of data it reads to this poly; a
+                        // walk, or a rest holding a layout wildcard, fires nothing and parents nothing. A value holding
+                        // no code is not toggled, so a live one keeps its parent. The rest names one address (a wildcard
+                        // in it is a segment), so its reads add
+                        final boolean raw = walk || rest.hasPattern();
+                        final Obj holds = raw || value.stream().noneMatch(Obj::isObjCall)
+                                ? value : Poly.Helper.autoToggle(poly, value, true);
+                        reads.addAll(Poly.Helper.readsBelow(holds, raw ? null : poly,
+                                member -> within(member, rest.pretract(keyPath.segmentLength()), walk)));
+                    }
                     else if (runsThrough(rest, keyPath))
                         under.add(IdObj.of(keyPath.pretract(rest.segmentLength()), value));
                 });
@@ -501,9 +515,10 @@ public interface Space extends Addressable, Rec, Closeable {
          * the addresses one level below an address in the logical tree, each with the obj the listing answered for it
          * ({@code null}: derive it). The store lists the level itself with one {@code +}: what is stored there, and — a
          * store that keeps its structure (a trie's nodes, a filesystem's directories) — the interior nodes there, as
-         * noobj. The poly the address holds adds its keys, each slot's obj as it is (the node form resolves it). Only a
-         * level that lists nothing is looked for below, with {@code #}: a store keeping flat keys and no node for the
-         * levels between (Marko, 2026-11-19: + is the everyday step, # is there for mqtt).
+         * noobj. The poly the address holds adds its keys, in the merge's normal form, each slot's obj with the
+         * coefficient its rel carries (the node form resolves it). Only a level that lists nothing is looked for below,
+         * with {@code #}: a store keeping flat keys and no node for the levels between (Marko, 2026-11-19: + is the
+         * everyday step, # is there for mqtt).
          */
         private static Map<fURI, List<Obj>> children(final fURI address, final Function<fURI, Iterator<IdObj>> directReader) {
             final Map<fURI, List<Obj>> children = new LinkedHashMap<>();
@@ -523,12 +538,17 @@ public interface Space extends Addressable, Rec, Closeable {
             // a held poly the store also listed as a child is that child (a graph's step holds the elements it reaches),
             // not a container whose keys are children
             final Set<Obj> listed = children.values().stream().flatMap(List::stream).collect(Collectors.toSet());
-            held(address, directReader, true).stream().filter(Obj::isPoly).filter(poly -> !listed.contains(poly)).forEach(poly -> poly.<Poly<?, ?>>as().indexedStream()
+            // a bulked poly lists its children in the merge's normal form, its multiplicity spread into them
+            held(address, directReader, true).stream().filter(Obj::isPoly).filter(poly -> !listed.contains(poly))
+                    .map(Poly.Helper::normal)
+                    .filter(Obj::isPoly)
+                    .forEach(poly -> poly.<Poly<?, ?>>as().indexedStream()
                     .filter(slot -> null != slot.jvm().get1())
                     .forEach(slot -> {
                         final fURI key = f(slot.jvm().get0().jvm().toString());
                         if (key.segmentLength() > 0)
-                            offer(children, address.extend(key.head(1)), key.segmentLength() == 1 ? List.of(slot.jvm().get1()) : List.of());
+                            // the slot's value with the coefficient its rel carries (a bulked poly's multiplicity)
+                            offer(children, address.extend(key.head(1)), key.segmentLength() == 1 ? List.of(slot.secondDirect()) : List.of());
                     }));
             if (children.isEmpty())
                 directReader.apply(address.extend(fURI.Singleton.ALL)).forEachRemaining(id -> {
@@ -569,12 +589,16 @@ public interface Space extends Addressable, Rec, Closeable {
         }
 
         private static void leavesOf(final fURI at, final Obj obj, final Map<fURI, List<Obj>> leaves) {
-            if (obj.isPoly())
-                obj.<Poly<?, ?>>as().indexedStream()
+            // a value is walked in the merge's normal form, a bag's recs fused and a bulked rec's copies spread, as a
+            // read below it reads it, and each slot carries the coefficient its rel holds (a bulked lst's)
+            final Obj value = Poly.Helper.normal(obj);
+            if (value.isPoly())
+                value.<Poly<?, ?>>as().indexedStream()
                         .filter(slot -> null != slot.jvm().get1())
-                        .forEach(slot -> leavesOf(at.extend(f(slot.jvm().get0().jvm().toString())), slot.jvm().get1(), leaves));
-            else if (!obj.isNoObj())
-                offer(leaves, at, List.of(obj));
+                        .forEach(slot -> leavesOf(at.extend(f(slot.jvm().get0().jvm().toString())),
+                                slot.secondDirect(), leaves));
+            else if (!value.isNoObj())
+                offer(leaves, at, List.of(value));
         }
 
         /**
