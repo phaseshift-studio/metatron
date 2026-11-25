@@ -7,9 +7,9 @@ author: |
 ---
 
 **DRAFT**: This article is being developed alongside a refactor. As of November 24, 2026, metatron implements the
-reference ring and its spans, record merge, and the layout invariance of reads. The record join and the list ring
-(*Containers: Space and Time*) specify the refactor in progress: their examples answer as the text states once it
-lands, and fail until then. The claims are stated precisely but not yet proven, and the notes marked *Directions*
+reference ring and its spans, record merge and join, and the layout invariance of reads. The list ring and the record
+spans (*Containers: Space and Time*) specify the refactor in progress: their examples answer as the text states once
+it lands, and fail until then. The claims are stated precisely but not yet proven, and the notes marked *Directions*
 point to where the work goes next.
 
 # Introduction
@@ -426,24 +426,29 @@ of the value it reached.
 
 $$
 \begin{equation*}
-(a \Rightarrow b) \cdot (h \Rightarrow r) = [\,b \vDash h\,]\;\big(a \Rightarrow r(b)\big),
+(a \Rightarrow b) \cdot (h \Rightarrow r) = [\,b \vDash h\,]\;\big(a \Rightarrow (b \Rightarrow r)\big),
 \end{equation*}
 $$
 
-where $[\,b \vDash h\,]$ is $1$ when the key $h$ is a value equal to $b$, or a predicate that $b$ satisfies, and $0$
-otherwise, and where $r(b)$ is $r$ itself when $r$ is a value, and $r$ applied to $b$, an arrow for each object it
-yields, when $r$ is a program. The join extends bilinearly to records. A predicate's test is a filter: it keeps or
-drops an arrow, and never counts it.
+where $[\,b \vDash h\,]$ is $1$ when the key $h$ is a value $b$ tests as (equal, or a pattern $b$ matches), or a
+program that answers $b$, and $0$ otherwise. The join keeps the middle: its product is the walk
+$a \Rightarrow b \Rightarrow r$. The range $r$ is a value, a program included, and is never run, so
+`[a=>5] * [_=>plus(1)]` is `[a=>5=>plus(1)]`. A span is the object's, so `<b>{5}` is the one object `b/b/b/b/b`,
+and only a key equal to it, or a pattern it matches, meets it. As $\Rightarrow$ nests to the right, a walk ends at its
+innermost range and the join splices there, and a record held at a key is the walks through its keys
+(Definition 9). The join extends bilinearly to records, a point multiplying onto the joined walk. A predicate's test
+is a filter: it keeps or drops an arrow, and never counts it.
 
 **Claim 16 (the record ring).** Records with merge and join form a ring with the empty record $[\Rightarrow]$ as zero
-and the parametric unity $1 \Rightarrow 1$ of [[3]](./parametric-identities-in-ring-theory.md) as unity. On records
-whose keys are values it is the ring of finitely supported matrices over the objects with the parametric unity
-adjoined, and the join is the matrix product. A key that is a predicate $P$ is the diagonal idempotent $\Delta_P$ followed by the arrow's head.
+and the parametric unity $1 \Rightarrow 1$ of [[3]](./parametric-identities-in-ring-theory.md) as unity (`[_=>_]`,
+the walk of length zero at every object). On records whose keys and ranges are values it is the path algebra of the
+graph their arrows draw, and contracting each walk to its endpoints maps it onto the ring of finitely supported
+matrices over the objects with the parametric unity adjoined, the join onto the matrix product. A key that is a predicate $P$ is the diagonal idempotent $\Delta_P$ followed by the arrow's head.
 
 A database engineer has met this ring under other names. A record is a sparse matrix, or a two-column table, and the
-join is the relational join of the first record's values with the second's keys, projected to the outer columns, with
-bag semantics: two routes through different middles are two arrows, so the coefficient of $a \Rightarrow e$ counts the
-routes from $a$ to $e$. A predicate key is a `WHERE` clause, and the unity is the table that maps everything to itself.
+join is the relational join of the first record's values with the second's keys, keeping the joined column, with
+bag semantics: two routes through different middles are two walks, and projecting to the outer columns, the
+contraction, counts them in the coefficient of $a \Rightarrow e$. A predicate key is a `WHERE` clause, and the unity is the table that maps everything to itself.
 
 ```mtron_pre
 [a=>b,c=>d] * [b=>e,d=>f]
@@ -451,8 +456,8 @@ routes from $a$ to $e$. A predicate key is a `WHERE` clause, and the unity is th
 [a=>b,a=>c] * [b=>e,c=>e]
 ```
 
-These answer `[a=>e,c=>f]`; `[1=>3]`, since `2` satisfies the predicate `?>1`; and `[a=>{2}e]`, two routes from `a`
-to `e`. A record negates arrow by arrow, with the point on the value, `[a=>b].neg()` is `[a=>{-1}b]`: a point on both
+These answer `[a=>b=>e,c=>d=>f]`; `[1=>2=>3]`, since `2` satisfies the predicate `?>1` and stays as the middle; and
+`[a=>{b=>e,c=>e}]`, the two routes from `a` to `e`, which contract to `[a=>{2}e]`. A record negates arrow by arrow, with the point on the value, `[a=>b].neg()` is `[a=>{-1}b]`: a point on both
 ends of an arrow would cancel itself.
 
 **Claim 17 (a record's sum forgets its rows).** Merge adds arrows at their keys and keeps no record of which arrows
@@ -486,12 +491,13 @@ where the relation is acyclic.
 [a=>b,b=>c]{+}
 ```
 
-These answer `[b=>a]`, `[a=>c]`, and `[a=>{b,c},b=>c]`, every pair the arrows connect.
+These answer `[b=>a]`, `[a=>b=>c]`, and `[a=>{b,b=>c},b=>c]`, every walk the arrows draw, which contract to every
+pair they connect.
 
 | record                                   | relational and graph practice                       |
 |------------------------------------------|-----------------------------------------------------|
 | merge, $r + s$                           | multimap put, bag union                             |
-| join, $r \cdot s$                        | equi-join of $r$'s values with $s$'s keys, projected |
+| join, $r \cdot s$                        | equi-join of $r$'s values with $s$'s keys, joined column kept |
 | predicate key, $\Delta_P$                | `WHERE` on the key                                  |
 | transpose, $r^{-1}$                      | inverted index                                      |
 | power, $r^{n}$                           | $n$-hop traversal                                   |
@@ -500,13 +506,14 @@ These answer `[b=>a]`, `[a=>c]`, and `[a=>{b,c},b=>c]`, every pair the arrows co
 
 **Directions.**
 
-- *Contracted or slotted.* The join contracts the route $a \Rightarrow b \Rightarrow e$ to $a \Rightarrow e$ and
-  forgets the middle. A list of records keeps it (Claim 28): $[\,r, s\,]$ is the join not yet taken. Is the nested
-  arrow $a \Rightarrow (b \Rightarrow e)$, which keeps the joint, a third spelling of the same thing, the route a graph
-  traversal's `path()` reports?
-- *A join through a nested record.* Read on its leaves, a nested record joins on the values at its full paths, which
-  every layout shares (Claim 5). Read on its keys, it joins on subtrees, which change with the layout. Only the first
-  is layout-invariant.
+- *Contracted or slotted.* Settled: the join keeps the middle, so the nested arrow
+  $a \Rightarrow (b \Rightarrow e)$ is the route a graph traversal's `path()` reports, and contracting it to
+  $a \Rightarrow e$ maps the record ring onto the relation ring. A list of records is still the join not yet taken
+  (Claim 28).
+- *A join through a nested record.* Settled: a nested record is the walks through its keys, so it joins on its leaves,
+  and the layouts need no reconciling. A path key is one object to the join, and a read that addresses the term, a
+  full path or a wildcard, answers alike in either layout (Claim 5), as the tractatus's matrix reads do:
+  `[a/b=>(1=>y)]` and `[a=>(b=>(1=>y))]` both answer `1=>y` at `a/b`.
 - *Matrices.* The relation ring is the ring of finitely supported matrices, so the matrix multiplication of entry M in
   [[4]](./ring-theoretic-distributed-computing.md) is composition in this ring, and that entry's addressed union is the
   indexed sum of the next section.
@@ -683,15 +690,15 @@ tests where two pieces meet.
 | converse, the span $-1$ | reversal      | reversal      | transpose                 | the program run backward                          |
 
 **Claim 28 (records are steps).** An arrow is a guarded step, $(k \Rightarrow v) \mapsto \mathrm{is}(k) \cdot v$:
-keep what equals or satisfies $k$, then answer $v$. This embeds the record ring in the stream ring, merge as branch
-and join as composition. A list of records folds to their join,
+keep what equals or satisfies $k$, then answer $v$. This maps the record ring into the stream ring, merge to branch
+and join to composition, forgetting the middle a walk keeps. A list of records folds to their join,
 $\mathrm{fold}([\,r_1, \ldots, r_n]) = r_1 \cdots r_n$: a program written as a timeline of steps through space.
 
 ```mtron_pre
 [[a=>b],[b=>e]]>|
 ```
 
-This answers `[a=>e]`.
+This answers `[a=>b=>e]`.
 
 A list is a program that does not yet connect: its steps sit side by side until the fold feeds each one's output to the
 next one's input. A record is a step already connected, a lookup table with an arrow per key. Between them they cover
@@ -701,8 +708,8 @@ what a program is: what happens at a moment, and the order of the moments.
 
 - *Arrows as products.* In the object ring of the tractatus [[5]](../tractatus/uri.html), the product of two objects
   is an arrow, $x \cdot y = (x \Rightarrow y)$. A list is then a product of letters with no joint, and the join
-  contracts two arrows at the joint they share. Is the list ring the tensor algebra of the objects and the join its
-  contraction, so that a list being a program not yet connected says that composition is contracted concatenation?
+  splices two arrows at the joint they share. Is the list ring the tensor algebra of the objects and the join its
+  splice, so that a list being a program not yet connected says that composition is contracted concatenation?
 
 # The Mirror
 
@@ -735,7 +742,8 @@ what a program is: what happens at a moment, and the order of the moments.
   cost changes.
 - Records extend a structure through space and lists through time. Their $+$ superposes and their $\cdot$ composes,
   and their converse, the span $-1$, transposes a record and reverses a list or a path.
-- The record ring is the matrix ring. Merge, join, transpose, powers, and closures are the relational and graph
+- The record ring is the path algebra of its keys' graph, and contracting its walks maps it onto the matrix ring.
+  Merge, join, transpose, powers, and closures are the relational and graph
   operations, and a record's sum forgets its rows unless an address keeps them, which also colocates them.
 - The list ring is the reference ring over objects. A list is a program not yet run, and the fold runs it.
 - Lockstep, the slot sum, is space's sum read onto time: it belongs to records, not to lists.

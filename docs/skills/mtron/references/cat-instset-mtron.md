@@ -401,9 +401,12 @@ The keys union, and a key on both sides merges its two values by their kind:
 | anything else, `lst`s too | $x \uplus y$ — appended into a stream | equal values bulk, $5 \uplus 5 = \{2\}5$; a `lst` stays whole |
 
 A `lst` is an **atom** of the merge: two colliding `lst`s make a stream of `lst`s, $[1,2,3] \uplus [2,3]$, never their
-concatenation — the union is commutative, so its fold is defined over a stream. Rec `sum` declares `monoidic` and
-`commutative`, so `law_shard` distributes a rec merge as it distributes a sum of ints: each peer merges its share of
-the recs and the master merges the partial recs. Concatenating `lst` values is said by
+concatenation — the union is commutative, so its fold is defined over a stream. An **empty sub-rec** holds no walk,
+so the merge stores none, at any depth or in a stream, whether copies cancelled it or it arrived empty:
+`[a=>[b=>1]] - [a=>[b=>1]]` and `[a=>[=>]] + [b=>1]` both drop `a`. Dropping only what cancelled would make the
+merge's answer depend on its bracketing. Rec `sum` declares `monoidic` and `commutative`, so `law_shard` distributes
+a rec merge as it distributes a sum of ints: each peer merges its share of the recs and the master merges the
+partial recs. Concatenating `lst` values is said by
 the expression, with a select's `+`: $[1,2,3] \mathbin{+\!\!+} [2,3]$ is `[a=>[1,2,3]]==[a=>+[2,3]]`.
 
 A coefficient is a **multiplicity**, read the way every access reads it — the outer $c$ multiplied into what it holds,

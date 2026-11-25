@@ -774,7 +774,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * <p>
      * Every key is a {@code theory_form::T} (Marko, 2026-11-08), and the {@code ?decq} store refuses a declaration keyed
      * by anything else, so a key spelled the old way ({@code mult_monoid}, {@code concat_monoid}) leaves its carrier
-     * with no algebra here. rec declares its monoid and its commutative monoid apart: a theory refines no other.
+     * with no algebra here. rec, a ring under the merge and the walk join (Marko, 2026-11-24), declares its group, its
+     * monoid and its commutative monoid apart: a theory refines no other.
      */
     @Test
     void testEveryCarrierShipsItsAlgebra() {
@@ -785,7 +786,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertCarrierDeclares(URI_TYPE, "mul_monoid");
         assertCarrierDeclares(BYTES_TYPE, "add_monoid");
         assertCarrierDeclares(LST_TYPE, "add_monoid");
-        assertCarrierDeclares(REC_TYPE, "add_monoid", "add_commutative_monoid");
+        assertCarrierDeclares(REC_TYPE, "ring", "add_group", "add_monoid", "add_commutative_monoid");
         assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "add_monoid", "mul_monoid");
         // the machine's algebra is declared with the /m carriers although its type is mach's (machInstSet builds it)
         assertCarrierDeclares(T(f("/m/mach/machine")), "free_groupoid", "mul_monoid");

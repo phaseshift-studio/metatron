@@ -300,8 +300,9 @@ public class mInstSet extends AbstractInstSet {
      *   <li>GROUP — a monoid with inverses: those two + {@code involution} ({@code a·a⁻¹ = id} for the operation,
      *       {@code inv(inv(a)) = a} for the inverse).</li>
      *   <li>RING — an abelian additive group and a multiplicative monoid distributing over it. The battery is FLAT — a law
-     *       is not attributed to a role — so {@code commutative} is claimed of every operation, true of the commutative
-     *       rings declared here (int, real).</li>
+     *       is not attributed to a role — so a type-level analysis answers {@code commutative}, the +'s law,
+     *       uncheckable on the operation a ring binds as its mul (rec's walk join), while an operation another instance
+     *       binds as its op (code's compose, under mul_monoid) is held to all of it.</li>
      *   <li>FIELD — a commutative ring whose non-zero elements are a multiplicative group: the ring's laws, the extra
      *       structure being the {@code inv} role.</li>
      *   <li>RIG — monoids with distributivity and NO additive inverse: no {@code involution}, and no {@code idempotent}

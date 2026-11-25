@@ -27,24 +27,33 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+import studio.phaseshift.metatron.algebra.AlgebraTool;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.GOT;
+import static studio.phaseshift.metatron.Tokens.MUL;
+import static studio.phaseshift.metatron.Tokens.REASON;
+import static studio.phaseshift.metatron.Tokens.ROLE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MULT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -65,9 +74,11 @@ public class RecTest extends AbstractAlgebraTest {
         return REC_TYPE;
     }
 
+    // one of the sample's ends is its own key (1=>a meets a=>1), so its products with itself hold walks and the
+    // inherited multiplicative rows compare walks, not [=>] with [=>]
     @Override
     protected Obj sample() {
-        return rec(uri("a"), jnt(1), uri("b"), jnt(2), uri("c"), jnt(3));
+        return rec(uri("a"), jnt(1), uri("b"), jnt(2), uri("c"), jnt(3), jnt(1), uri("a"));
     }
 
 
@@ -326,6 +337,162 @@ public class RecTest extends AbstractAlgebraTest {
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * THE WALK JOIN (Marko, 2026-11-24): rec::T's product joins each walk of the lhs to each walk of the argument where
+     * the first ends at an object the second's key meets, KEEPING the middle, so a walk is a right-nested rel. A range
+     * is a value and is never run, code included; only a key acts. A rec range is a walk through each of its keys. The
+     * identity arrow {@code [_=>_]} is the unity, term by term, and the empty rec is the zero. The ring laws themselves
+     * are checked by the inherited {@code declaredInstancesEntailTheirLaws}. Each row: the product % its walks.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            // the join keeps the middle, and builds nothing where an end meets no key
+            "[a=>b] * [b=>c]                                            % [a=>(b=>c)]",
+            "[a=>b] * [x=>c]                                            % [=>]",
+            "[a=>b,c=>d] * [b=>e,d=>f]                                  % [a=>(b=>e),c=>(d=>f)]",
+            "[b=>c] * [a=>b]                                            % [=>]",
+            // a walk extends at its end, its innermost range, so both bracketings build the same walk
+            "[a=>b].mult([b=>c]).mult([c=>d])                           % [a=>(b=>(c=>d))]",
+            "[a=>b].mult([b=>c].mult([c=>d]))                           % [a=>(b=>(c=>d))]",
+            "[a=>(b=>c)] * [c=>d]                                       % [a=>(b=>(c=>d))]",
+            // a key reached by two walks keeps both, where the contracted product would count them, and a range of
+            // several objects joins each
+            "[a=>b,a=>d] * [b=>c,d=>c]                                  % [a=>{(b=>c),(d=>c)}]",
+            "[a=>b] * [b=>{c,d}]                                        % [a=>{(b=>c),(b=>d)}]",
+            "[marko=>{vadas,josh}] * [vadas=>lop,josh=>{ripple,lop}]    % [marko=>{(vadas=>lop),(josh=>ripple),(josh=>lop)}]",
+            // a code key acts by existence: it meets an end it answers, once however many objects it answers, and the
+            // walk keeps the end, not the key
+            "[a=>5] * [?>1=>x]                                          % [a=>(5=>x)]",
+            "[a=>0] * [?>1=>x]                                          % [=>]",
+            "[a=>5] * [plus(1)=>x]                                      % [a=>(5=>x)]",
+            "[a=>'x'] * [plus(1)=>y]                                    % [=>]",
+            "[a=>5] * [-<[plus(1),plus(2)]=>x]                          % [a=>(5=>x)]",
+            // a uri key meets the ends its pattern matches
+            "[a=>b/c] * [b/+=>x]                                        % [a=>(b/c=>x)]",
+            // a range is a value, code included, so it is never run; a code end meets the identity key and no value key
+            "[a=>5] * [_=>plus(1)]                                      % [a=>(5=>plus(1))]",
+            "[a=>'x',b=>2] * [_=>plus(1)]                               % [a=>('x'=>plus(1)),b=>(2=>plus(1))]",
+            "[a=>5] * [_=>{3}plus(1)]                                   % [a=>(5=>{3}plus(1))]",
+            "[a=>plus(1)] * [_=>x]                                      % [a=>(plus(1)=>x)]",
+            "[a=>plus(1)] * [6=>x]                                      % [=>]",
+            "[a=>plus(1)] * [count()=>x]                                % [a=>(plus(1)=>x)]",
+            "[a=>plus(1)] * [neg()=>x]                                  % [=>]",
+            "[a=>5].mult([_=>plus(1)]).mult([6=>x])                     % [=>]",
+            "[a=>5].mult([_=>plus(1)].mult([6=>x]))                     % [=>]",
+            "[a=>5].mult([_=>plus(1)]).mult([_=>x])                     % [a=>(5=>(plus(1)=>x))]",
+            "[a=>5].mult([_=>plus(1)].mult([_=>x]))                     % [a=>(5=>(plus(1)=>x))]",
+            // a rec range is a walk through each of its keys, on either side of the join
+            "[a=>[b=>1]] * [1=>x]                                       % [a=>(b=>(1=>x))]",
+            "[a=>[b=>1],a=>[c=>2]] * [1=>x]                             % [a=>(b=>(1=>x))]",
+            "[a=>[b=>5]] * [?>1=>x]                                     % [a=>(b=>(5=>x))]",
+            "[a=>b] * [b=>[c=>1,d=>2]]                                  % [a=>{(b=>(c=>1)),(b=>(d=>2))}]",
+            "[a=>b].mult([b=>[c=>1]]).plus([a=>b].mult([b=>[d=>2]]))    % [a=>{(b=>(c=>1)),(b=>(d=>2))}]",
+            // points multiply onto the walk's outermost range: the argument's coefficient is its copies', and the
+            // lhs's is the stream's, so it stays on the product
+            "[a=>{2}b] * [b=>{3}c]                                      % [a=>{6}(b=>c)]",
+            "[a=>[b=>{2}1]] * [1=>{3}x]                                 % [a=>{6}(b=>(1=>x))]",
+            "[a=>1] * {2}[1=>c]                                         % [a=>{2}(1=>c)]",
+            "[a=>b] * {2}[b=>c]                                         % [a=>{2}(b=>c)]",
+            "{2}[a=>b] * [b=>c]                                         % {2}[a=>(b=>c)]",
+            "[a=>{2}b].mult([b=>{3}c]).plus([a=>{2}b].mult([b=>{3}c]).neg())  % [=>]",
+            // a bulked lhs of the merge is the stream's over the whole sum, so the product counts both walks twice,
+            // where the summands' products, merged, count one of them twice
+            "[a=>b].mult({2}[b=>c].plus([b=>d]))                        % [a=>{{2}(b=>c),{2}(b=>d)}]",
+            "[a=>{2}(b=>c)] + [a=>(b=>d)]                               % [a=>{{2}(b=>c),(b=>d)}]",
+            // a span is the object's, never the walk's (Marko, 2026-11-24, the free algebra). A uri's is its power, one
+            // object: b⁵ is not b, so only an equal key or a matching pattern meets it. An int's stays on it, so 5{3} is
+            // not 5. A point is the walk's multiplicity
+            "[a=><b>{5}] * [b=>3]                                       % [=>]",
+            "[a=><b>{5}] * [b/b/b/b/b=>3]                               % [a=>(b/b/b/b/b=>3)]",
+            "[a=><b>{5}] * [b/#=>3]                                     % [a=>(b/b/b/b/b=>3)]",
+            "[a=>5{3}] * [5=>x]                                         % [=>]",
+            "[a=>5{3}] * [5{3}=>x]                                      % [a=>(5{3}=>x)]",
+            "[a=>{3}5] * [5=>x]                                         % [a=>{3}(5=>x)]",
+            // the identity arrow is the unity, term by term and on either side; a span is the object's, so {2}_ is
+            // the identity still; the empty rec is the zero
+            "[a=>b] * [_=>_]                                            % [a=>b]",
+            "[_=>_] * [a=>b]                                            % [a=>b]",
+            "[a=>b].mult([a=>b].one())                                  % [a=>b]",
+            "[a=>b].one()                                               % [_=>_]",
+            "[a=>[b=>1]] * [_=>_]                                       % [a=>[b=>1]]",
+            "[a=>b] * [_=>_,_=>c]                                       % [a=>{b,(b=>c)}]",
+            "[_=>_,_=>c] * [b=>d]                                       % [b=>d]",
+            "[a=>b] * [_=>{2}_]                                         % [a=>b]",
+            "[a=>b] * [=>]                                              % [=>]",
+            "[=>] * [a=>b]                                              % [=>]",
+    })
+    public void testTheWalkJoin(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * THE RING IS JUDGED ON WALKS: rec's partner {@code [1=>a,2=>c]} meets the sample's ends, so each multiplicative law
+     * the battery holds compared products that hold walks, never {@code [=>]} with {@code [=>]}. A partner that met
+     * nothing, or a ring that no longer bound the walk join, fails here. Each row: the law % both sides it compared.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "monoidic             % [a=>(1=>(a=>1)),b=>(2=>(c=>3))]",
+            "left_distributive    % [a=>{2}(1=>a),b=>(2=>c),1=>(a=>1)]",
+            "right_distributive   % [a=>(1=>a),1=>{2}(a=>1),2=>(c=>3)]",
+            "unit                 % [a=>1,b=>2,c=>3,1=>a]",
+    })
+    public void testTheRingIsJudgedOnWalks(final String law, final String walks) {
+        AlgebraTool.registerSample(REC_TYPE.tid(), this.sample());
+        final Machine machine = Machine.current().push(f("rec_ring_walks_" + law));
+        try {
+            final List<Obj> held = AlgebraTool.analyzeType(REC_TYPE, List.of(Law.valueOf(law))).holds().<Obj>elements()
+                    .filter(result -> result.asRec().at(uri(ROLE)).equals(uri(MUL)))
+                    .toList();
+            assertEquals(1, held.size(), () -> law + " is held once on the walk join: " + held);
+            held.getFirst().asRec().<Lst>at(uri(GOT)).<Obj>elements()
+                    .forEach(side -> AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse(walks), side, true));
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * THE WALK JOIN DOES NOT COMMUTE, and the analysis says so where it is asked. A type-level analysis answers
+     * {@code commutative} uncheckable on the join, a ring's claim being its +'s, while the merge is held to it; an
+     * analysis of the join alone judges the law and fails it on the sample and its partner.
+     */
+    @Test
+    public void testTheWalkJoinIsJudgedNotCommuting() {
+        AlgebraTool.registerSample(REC_TYPE.tid(), this.sample());
+        final Machine machine = Machine.current().push(f("rec_ring_commute"));
+        try {
+            final AlgebraTool.Report join = AlgebraTool.analyzeTypeInst(REC_TYPE, instB(MULT_INST_TID, lst()), List.of(Law.commutative));
+            assertEquals(1L, join.failed().<Obj>elements().count(), () -> "the join is judged and does not commute: " + join.toRec());
+            final AlgebraTool.Report type = AlgebraTool.analyzeType(REC_TYPE, List.of(Law.commutative));
+            assertTrue(type.ok(), () -> "the type-level claim is the merge's: " + type.toRec());
+            assertEquals(1L, type.uncheckable().<Obj>elements()
+                    .filter(result -> result.asRec().at(uri(ROLE)).equals(uri(MUL)))
+                    .filter(result -> result.asRec().at(uri(REASON)).equals(str("a ring's multiplication need not commute")))
+                    .count(), () -> "the join answers the type-level claim uncheckable: " + type.toRec());
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * THE MERGE KEEPS ITS BRACKETING WITH EMPTY SUB-RECS (Marko, 2026-11-25: maintaining associativity is key). An
+     * empty sub-rec holds no walk, so the merge stores none, whether copies cancelled it or it arrived empty, and
+     * both bracketings of a sum through one answer alike. Merged in Java, so the unit law's rewrite of x + [=>] to x
+     * does not hide the merge.
+     */
+    @Test
+    public void testTheMergeKeepsItsBracketingWithEmptySubRecs() {
+        final Rec empty = rec(uri("a"), rec());
+        final Rec one = rec(uri("a"), rec(uri("b"), jnt(1)));
+        AbstractMetatronTest.checkEquality(LOG, rec(), empty.plus(one).plus(one.neg()), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(), empty.plus(one.plus(one.neg())), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(), empty.plus(empty).plus(empty.neg()), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(), empty.plus(empty.plus(empty.neg())), true);
+        AbstractMetatronTest.checkEquality(LOG, one, empty.plus(one), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), rec()), empty, true);
     }
 
     /**
@@ -934,6 +1101,22 @@ public class RecTest extends AbstractAlgebraTest {
             // nested recs — deep structural merge (recursion into sub-recs)
             "[a=>[b=>1]] + [a=>[c=>2]]                         % [a=>[b=>1,c=>2]]",
             "[a=>[b=>1,c=>2]] + [a=>[b=>3]]                    % [a=>[b=>{1,3},c=>2]]",
+            // an empty sub-rec holds no walk, so the merge stores none, at any depth and from a bag, whether copies
+            // cancelled it or it arrived empty (Marko: maintaining associativity is key); a literal keeps it until
+            // its first merge
+            "[a=>[b=>1]] - [a=>[b=>1]]                         % [=>]",
+            "[a=>[b=>1]].plus([a=>[b=>1]].neg())               % [=>]",
+            "[a=>[b=>1,c=>2]] - [a=>[b=>1]]                    % [a=>[c=>2]]",
+            "[a=>[b=>[c=>1]],d=>2] - [a=>[b=>[c=>1]]]          % [d=>2]",
+            "[a=>[=>]] + [b=>1]                                % [b=>1]",
+            "[a=>[b=>[=>]]] + [c=>1]                           % [c=>1]",
+            "[a=>[b=>[=>],d=>2]] + [c=>1]                      % [a=>[d=>2],c=>1]",
+            "[a=>{1,[=>]}] + [c=>2]                            % [a=>1,c=>2]",
+            // ... but the unit law rewrites x + [=>] to x before any merge runs, so the literal keeps it there
+            "[a=>[=>]] + [=>]                                  % [a=>[=>]]",
+            "[a=>[=>]]                                         % [a=>[=>]]",
+            "[a=>[=>]].plus([a=>[b=>1]]).plus([a=>[b=>1]].neg())   % [=>]",
+            "[a=>[=>]].plus([a=>[=>]]).plus([a=>[=>]].neg())       % [=>]",
             // multi-key
             "[a=>1] + [b=>2] + [c=>3]                          % [a=>1,b=>2,c=>3]",
             // wildcard key _ (doesn't match any literal key → added as new field)

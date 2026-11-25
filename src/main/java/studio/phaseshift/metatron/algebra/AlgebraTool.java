@@ -172,7 +172,10 @@ public final class AlgebraTool {
         partners.put(BYTES_TID.basePath(), bytes(ByteBuffer.wrap(new byte[]{4, 5, 6})));
         partners.put(URI_TID.basePath(), uri(f("/c/d")));
         partners.put(LST_TID.basePath(), lst(jnt(4), jnt(5), jnt(6)));
-        partners.put(REC_TID.basePath(), MRec.rec(uri("c"), jnt(3), uri("d"), jnt(4)));
+        // rec's partner MEETS the probe [a=>1,b=>2]: its keys 1 and 2 are the probe's ends and its end a is a probe key,
+        // so the walk join builds walks both ways ([a=>(1=>a),b=>(2=>c)] one way, [1=>(a=>1)] the other) and
+        // associativity and distributivity are tested on walks, not on [=>] = [=>]
+        partners.put(REC_TID.basePath(), MRec.rec(jnt(1), uri("a"), jnt(2), uri("c")));
         // rel's partner MEETS the probe a=>1 at both ends (a=>1 · 1=>a is a=>a, 1=>a · a=>1 is 1=>1), so composition
         // is tested on arrows: a partner that meets neither end composes to noobj, and every check is noobj = noobj
         partners.put(REL_TID.basePath(), rel(jnt(1), uri("a")));
@@ -197,9 +200,20 @@ public final class AlgebraTool {
                 results.add(Result.unchecked(law, OP, "the type declares no role-bearing operation"));
             return report(type, null, claimed, results);
         }
+        // A RING OWES NO COMMUTING PRODUCT: a type's claims are the laws of its theories, and a ring's commutative is
+        // its +'s, so the operation a ring binds as its mul (rec's walk join) answers it uncheckable here. Asked of
+        // that operation alone (analyzeTypeInst), the law is judged like any other. An operation another instance
+        // binds better (code's compose, an op under mul_monoid) is held to every claim
         final List<Report> reports = new ArrayList<>();
-        for (final Op op : ops)
-            reports.add(analyzeTypeInst(type, op.inst(), claimed));
+        for (final Op op : ops) {
+            if (MUL_ROLES.contains(op.role()) && RING.equals(op.instance()) && claimed.contains(Law.commutative)) {
+                final List<Result> results = new ArrayList<>(check(type, op,
+                        claimed.stream().filter(law -> Law.commutative != law).toList()));
+                results.add(Result.uncheckable(Law.commutative, op.role(), "a ring's multiplication need not commute"));
+                reports.add(report(type, uri(op.inst().tid()), claimed, results));
+            } else
+                reports.add(analyzeTypeInst(type, op.inst(), claimed));
+        }
         return merge(type, reports);
     }
 

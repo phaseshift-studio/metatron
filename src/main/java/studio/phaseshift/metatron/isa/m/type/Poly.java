@@ -20,11 +20,13 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -656,6 +658,13 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
          * COPIES THAT CANCEL ARE GONE. The union of two values is built as a stream, bulked and shrunk, never appended
          * onto the lhs's bag (which the lhs rec still holds): rec minus is the inverse of rec plus, so
          * {@code [b=>{2,[a,b,c]}] - [b=>2]} is {@code [b=>[a,b,c]]}, not a bag holding a zero.
+         * <p>
+         * AN EMPTY SUB-REC IS NO VALUE (Marko, 2026-11-24 and 25: "maintaining associativity is key"). A rec value is
+         * the walks through its keys, so an empty one holds none, and the merge stores none at any depth or in a bag,
+         * whether copies cancelled it or it arrived empty ({@link #withWalks}). {@code [a=>[b=>1]] - [a=>[b=>1]]} and
+         * {@code [a=>[=>]] + [b=>1]} both drop {@code a}. Dropping only what cancelled would make the merge
+         * non-associative: {@code ([a=>[=>]] + [a=>[b=>1]]) - [a=>[b=>1]]} would answer {@code [=>]} and the other
+         * bracketing {@code [a=>[=>]]}. A literal keeps what it is written with until a merge reads it.
          */
         public static Obj mergeObjRecursion(final Obj lhs, final Obj rhs) {
             if (lhs.isRec() && rhs.isRec())
@@ -675,12 +684,47 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
          */
         private static Rec mergeRecRecursion(final Rec lhs, final Rec rhs) {
             final boolean bulked = !rhs.c().isOne();
-            final Map<Obj, Obj> newMap = new LinkedHashMap<>(lhs.recValue());
-            rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v
+            final Map<Obj, Obj> newMap = new LinkedHashMap<>();
+            lhs.d(cInt.ONE()).asRec().elements().forEach(entry -> {
+                final Obj walks = withWalks(entry.secondDirect());
+                if (null != walks)
+                    newMap.put(entry.firstDirect(), walks);
+            });
+            rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> withWalks(null == v
                     ? (bulked ? distributed(o.secondDirect()) : o.secondDirect())
-                    : mergeObjRecursion(distributed(v), distributed(o.secondDirect()))));
+                    : mergeObjRecursion(distributed(v), distributed(o.secondDirect())))));
             // build a fresh rec (not this.jvm()/clone(), which a Space no-ops) and re-tag it in place
             return rec(newMap).self(newMap, lhs.tid(), lhs.vid());
+        }
+
+        /**
+         * A VALUE AS THE WALKS IT HOLDS, the form the merge stores ({@link #mergeObjRecursion}): an empty rec holds no
+         * walk and is dropped at any depth, from a bag too, and anything else is kept as it is. Null when nothing is
+         * left, so the merge drops the key. A value with nothing to drop comes back as itself, unrebuilt. Only a data
+         * rec is walked: a live one (a space, an executor, a socket) is an atom of the merge, read where it lives.
+         */
+        private static Obj withWalks(final Obj value) {
+            if (value.isObjs()) {
+                final List<Obj> original = value.stream().toList();
+                final List<Obj> members = original.stream().map(Helper::withWalks).filter(Objects::nonNull).toList();
+                if (members.isEmpty())
+                    return null;
+                return members.size() == original.size() && IntStream.range(0, members.size()).allMatch(i -> members.get(i) == original.get(i))
+                        ? value : objs(members);
+            }
+            if (!value.isRec() || value.isAddressable() || !(value instanceof MRec))
+                return value;
+            final List<Rel> entries = value.d(cInt.ONE()).asRec().elements().toList();
+            final Map<Obj, Obj> kept = new LinkedHashMap<>();
+            entries.forEach(entry -> {
+                final Obj walks = withWalks(entry.secondDirect());
+                if (null != walks)
+                    kept.put(entry.firstDirect(), walks);
+            });
+            if (kept.isEmpty())
+                return null;
+            return kept.size() == entries.size() && entries.stream().allMatch(entry -> kept.get(entry.firstDirect()) == entry.secondDirect())
+                    ? value : rec(kept).self(kept, value.tid(), value.vid());
         }
 
         /**

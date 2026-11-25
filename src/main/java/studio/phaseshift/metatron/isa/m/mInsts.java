@@ -1029,9 +1029,14 @@ public final class mInsts {
                         })
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(ZERO_INST_TID, "the zero of the rec monoid")
+                InstBuilder.build().tid(ZERO_INST_TID, "the zero of the rec ring, the empty rec: no walk to join")
                         .dom(REC_TID, "the lhs rec").rng(REC_TID, "the empty rec").argLst()
                         .body((lhs, inst) -> lhs.asRec().zero())
+                        .law(Law.unit, Law.idempotent, Law.pure)
+                        .create(),
+                InstBuilder.build().tid(ONE_INST_TID, "the unity of the rec ring, [_=>_]: the identity arrow, the walk of length zero at every object")
+                        .dom(REC_TID, "the lhs rec").rng(REC_TID, "the rec of the identity arrow").argLst()
+                        .body((lhs, inst) -> lhs.asRec().one())
                         .law(Law.unit, Law.idempotent, Law.pure)
                         .create(),
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the order of the lhs rec's entries")
@@ -1106,6 +1111,13 @@ public final class mInsts {
                         .argLst()
                         .body((lhs, _) -> lhs.asRec().neg())
                         .law(Law.involution, Law.pure)
+                        .create(),
+                InstBuilder.build().tid(MULT_INST_TID, "join the lhs rec's walks to the argument rec's arrows, keeping the middle: [a=>b]·[b=>c] is [a=>(b=>c)]")
+                        .dom(REC_TID, "the lhs rec")
+                        .rng(REC_TID, "the walks the join builds")
+                        .argLst(REC_TYPE, "the rec whose arrows extend the lhs rec's walks where they end")
+                        .body((lhs, inst) -> lhs.asRec().mult(inst.arg(0).asRec()))
+                        .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MPLUS_INST_TID, "set the lhs rec's entries from the argument rec, one rel at a time")
                         .dom(REC_TID, "the lhs rec").rng(REC_TID, "the lhs rec with the argument's entries written over it")

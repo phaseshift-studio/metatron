@@ -257,10 +257,26 @@ public final class mTypes {
                                 uri(OP), auto_from_(MULT_INST_TID.dom(REL_TID).rng(REL_TID)).tryToInst(),
                                 uri(ID), rel(id_().tryToInst(), id_().tryToInst())),
                         MONOID_THEORY_TID, null))));
-        // rec: a COMMUTATIVE monoid under deep merge (PLUS), identity the empty rec — merge is keyed, so the
-        // order of the two operands does not change the result. Both structures are declared: a theory refines no
-        // other, so the commutative monoid does not make rec a monoid
+        // rec: a RING (Marko, 2026-11-24). PLUS is the deep merge, a COMMUTATIVE monoid with the empty rec as its
+        // identity (merge is keyed, so the order of the operands does not change the result), and NEG puts the -1
+        // coefficient on each value, so the merge is an abelian group. MULT is the walk join, which keeps the middle,
+        // [a=>b]·[b=>c] is [a=>(b=>c)]: associative but not commutative, with the identity arrow [_=>_], the walk of
+        // length zero, as its unity. No mul_monoid is declared: its op role would outrank the ring's mul when
+        // AlgebraTool binds the join, and an op is held to every law the type claims, add_commutative_monoid's
+        // commutative included, which a ring's product owes none. The monoids are declared too: a theory refines no
+        // other, so the group does not make rec a monoid
         declare(REC_TYPE, rec(mutableMap(
+                uri("ring"), rec(mutableMap(
+                                uri(ADD), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
+                                uri(MUL), auto_from_(MULT_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
+                                uri(Tokens.ZERO), rec(),
+                                uri(Tokens.ONE), rec(id_().tryToInst(), id_().tryToInst())),
+                        RING_THEORY_TID, null),
+                uri("add_group"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
+                                uri(ID), rec(),
+                                uri(INV), auto_from_(NEG_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst()),
+                        GROUP_THEORY_TID, null),
                 uri("add_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
                                 uri(ID), rec()),
