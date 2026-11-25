@@ -43,6 +43,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -301,7 +302,15 @@ public class mParser {
                 // a lst is the axis a value's span unfolds along (Lst.Helper.laid): the literal [3{2}] is [3,3]
                 .map(t -> new MLst(Lst.Helper.laid(pick(t, 2)), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix(Tokens.REC_TID), of('[').trim(), labeled(rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), "a poly entry (a lst or a rec) — a value, key=>value, ',' or ']'"), labeledCloser(of(']').trim(), "']' to close the rec"), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
+        // A SPAN AFTER A REC IS ITS POWER under the walk join (Marko, 2026-11-24, Rec.Helper.power), realized here as a
+        // uri's is in m_uri: [a=>b,b=>c]{2} is [a=>(b=>c)], {-1} the converse, a range or {+} the sum of its powers. The
+        // prefix's tid and the vid go on the power, so a point before the brackets counts copies of the whole power
+        rec_parser.set(seq(m_type_prefix(Tokens.REC_TID), of('[').trim(), labeled(rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), "a poly entry (a lst or a rec) — a value, key=>value, ',' or ']'"), labeledCloser(of(']').trim(), "']' to close the rec"), opt(m_furi_coefficient(), null), m_vid_postfix()).trim().map(t -> {
+            if (null == pick(t, 4))
+                return rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 5));
+            final Rec power = Rec.Helper.power(rec((Map<Obj, Obj>) pick(t, 2)), cInt.of(mParser.<String>pick(t, 4))).tid(mParser.<fURI>pick(t, 0));
+            return null == pick(t, 5) ? power : power.vid(mParser.<fURI>pick(t, 5));
+        }));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
         and_or_parser.set(seq(m_obj(), choice(of("||").trim(), of("&&").trim()), m_obj()).map(t -> {
             final Obj lhs = pick(t, 0);
@@ -1314,7 +1323,8 @@ public class mParser {
      * lst of its copies, and 5{3}@xyz is 5 at xyz/0, xyz/1 and xyz/2. A span is an exact count, {n}: a ranged or negative
      * brace ({?}, {*}, {-1}) is no span, so the value parser leaves it unread: 3{?} reads as 3 and stops at the brace.
      * A uri is the exception (Marko, 2026-11-24): its span is its power, realized when the uri is made (m_uri, MUri), so
-     * it never stays curled, and a quoted uri reads a negative span as well, its converse ({@code <a/b/c>{-1}}).
+     * it never stays curled, and a quoted uri reads a negative span as well, its converse ({@code <a/b/c>{-1}}). So is a
+     * rec, whose span is its power under the walk join ({@code [a=>b]{-1}}, {@code [a=>b,b=>c]{+}}; Rec.Helper.power).
      */
     private static Parser m_value_span() {
         return seq(of('{'), digit().plus().flatten(), of('}')).map(t -> cInt.of(Long.parseLong(mParser.<String>pick(t, 1))));

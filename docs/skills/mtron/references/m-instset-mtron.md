@@ -121,6 +121,9 @@ mounted, and a rewrite is *code*.
 [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b
 [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d
 [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d/e
+[a=>b,b=>c]{2}                [-- a span after the brackets is a power of the walk join: two hops --]
+[a=>b,b=>c]{-1}               [-- a negative span is the converse: each walk reversed --]
+[a=>b,b=>c]{+}                [-- a range is the sum of its powers: {+} is the transitive closure --]
 ```
 
 ### rel::T (relation) — key/value pair

@@ -144,14 +144,15 @@ public class TyperTest extends AbstractMetatronTest {
     }
 
     /**
-     * HOW FAR A SPAN MAY UNFOLD IS THE TYPER'S STATE (Marko, 2026-11-24): {@code unfold=>[uri=>int::T, lst=>int::T]},
-     * 100 each by default. A uri's span unfolds its path into |n| copies ({@code <a>{n}}, {@code pow(n)}, a span it
-     * takes from its lhs), a lst's axis lays a span's copies ({@code [5{n}]}), and a span past its bound fails. A span
-     * of one copy unfolds nothing, so the converse is never refused. Each row: the chain % its value.
+     * HOW FAR A SPAN MAY UNFOLD IS THE TYPER'S STATE (Marko, 2026-11-24):
+     * {@code unfold=>[uri=>int::T, lst=>int::T, rec=>int::T]}, 100 each by default. A uri's span unfolds its path into
+     * |n| copies ({@code <a>{n}}, {@code pow(n)}, a span it takes from its lhs), a lst's axis lays a span's copies
+     * ({@code [5{n}]}), a rec's span joins its powers ({@code [a=>b]{n}}), and a span past its bound fails. A span of
+     * one copy unfolds nothing, so the converse is never refused. Each row: the chain % its value.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "*/compiler/typer/unfold          % [uri=>100,lst=>100]",
+            "*/compiler/typer/unfold          % [uri=>100,lst=>100,rec=>100]",
             "<a>{100}.count()                 % 1",
             "<a>{-100}.count()                % 1",
             "<a>{101}                         % <ERROR>",
@@ -163,7 +164,14 @@ public class TyperTest extends AbstractMetatronTest {
             "\"a\"{101}.as(uri::T)            % <ERROR>",
             "[5{100}]>-.count()               % 100",
             "[5{101}]                         % <ERROR>",
-            "<a/b>.reverse()                  % b/a"})
+            "<a/b>.reverse()                  % b/a",
+            // a rec's span joins its powers within the bound, and an open one stops at the first that holds no walk, so
+            // a cycle's closure fails at the bound
+            "[a=>b]{100}                      % [=>]",
+            "[a=>b]{101}                      % <ERROR>",
+            "[a=>b]{-101}                     % <ERROR>",
+            "[a=>b,b=>a]{+}                   % <ERROR>",
+            "[a=>b,b=>c]{+}                   % [a=>{b,(b=>c)},b=>c]"})
     public void testASpanUnfoldsNoFurtherThanItsBound(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
@@ -182,10 +190,19 @@ public class TyperTest extends AbstractMetatronTest {
             checkCodeParseApply(LOG, "<a>{3}", "<ERROR>");
             checkCodeParseApply(LOG, "a.pow(-3)", "<ERROR>");
             checkCodeParseApply(LOG, "@/compiler/typer/unfold >>= [uri => 'many']", "<ERROR>");
+            // a rec's bound counts the powers a span joins, and an open span's closure is refused at the first power past it
+            ObjmtronSerializer.parse("@/compiler/typer/unfold >>= [rec => 2]").apply();
+            checkCodeParseApply(LOG, "[a=>b,b=>c]{2}", "[a=>(b=>c)]");
+            checkCodeParseApply(LOG, "[a=>b,b=>c]{+}", "[a=>{b,(b=>c)},b=>c]");
+            checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d]{3}", "<ERROR>");
+            checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d]{+}", "<ERROR>");
+            checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d]{-3}", "<ERROR>");
         } finally {
             Machine.current().compiler().typer().at("unfold/uri", jnt(Typer.UNFOLD_DEFAULT), Poly.MUTABLE);
             Machine.current().compiler().typer().at("unfold/lst", jnt(Typer.UNFOLD_DEFAULT), Poly.MUTABLE);
+            Machine.current().compiler().typer().at("unfold/rec", jnt(Typer.UNFOLD_DEFAULT), Poly.MUTABLE);
         }
         checkCodeParseApply(LOG, "<a>{3}", "a/a/a");
+        checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d]{3}", "[a=>(b=>(c=>d))]");
     }
 }

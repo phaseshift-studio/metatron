@@ -724,6 +724,12 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             }
             if (!Rec.Helper.holdsWalks(value))
                 return value;
+            // A BULKED REC'S COPIES ARE ITS WALKS, so its multiplicity is carried into what it holds and the normal form
+            // is one: {2}[b=>1] is stored as [b=>{2}1], the rec two copies merge to
+            if (!value.c().isOne()) {
+                final Obj spread = distributed(value);
+                return spread.isRec() && spread.asRec().isEmpty() ? null : spread;
+            }
             final List<Rel> entries = value.d(cInt.ONE()).asRec().elements().toList();
             final Map<Obj, Obj> kept = new LinkedHashMap<>();
             entries.forEach(entry -> {

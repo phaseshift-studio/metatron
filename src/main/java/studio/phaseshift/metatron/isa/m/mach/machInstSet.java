@@ -605,9 +605,10 @@ public class machInstSet extends AbstractInstSet {
                                         uri(Typer.OBJ_WRITE.name()).maybe(), BOOL_TYPE),
                                         uri(Typer.UNFOLD).maybe(), rec(
                                         uri(Typer.UNFOLD_URI.name()).maybe().asUri(), INT_TYPE,
-                                        uri(Typer.UNFOLD_LST.name()).maybe(), INT_TYPE)), mutableMap(
+                                        uri(Typer.UNFOLD_LST.name()).maybe(), INT_TYPE,
+                                        uri(Typer.UNFOLD_REC.name()).maybe(), INT_TYPE)), mutableMap(
                                         uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)",
-                                        uri(Typer.UNFOLD), "the most copies a span unfolds into, 100 each by default, and a span past its bound fails: uri (a uri's path: <a>{n}, pow(n), a span a uri takes from its lhs), lst (laid along a lst axis: [5{n}], an argument list)"))
+                                        uri(Typer.UNFOLD), "the most copies a span unfolds into, 100 each by default, and a span past its bound fails: uri (a uri's path: <a>{n}, pow(n), a span a uri takes from its lhs), lst (laid along a lst axis: [5{n}], an argument list), rec (the powers a rec's span joins: [a=>b]{n}, a range's powers, {+}'s closure)"))
 
                                 // the typer fills in its rec (check, unfold, verify), so it gets a copy, never the caller's
                                 .constructor(arg -> new BasicTyper(mutableMap(arg.asRec().jvm()), MACH_TYPER_TID, arg.vid()))

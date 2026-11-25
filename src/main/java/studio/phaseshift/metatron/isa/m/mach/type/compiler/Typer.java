@@ -108,6 +108,11 @@ public interface Typer extends Component {
      */
     fURI UNFOLD_LST = f("lst");
     /**
+     * the most powers a rec's span joins: {@code [a=>b]{n}}, each power of a span range, and an open span's powers
+     * ({@code [a=>b]{+}}), which stop at the first that holds no walk, so a cycle's closure fails at the bound.
+     */
+    fURI UNFOLD_REC = f("rec");
+    /**
      * the bound an unfold the state does not name reads.
      */
     long UNFOLD_DEFAULT = 100L;
@@ -359,7 +364,7 @@ public interface Typer extends Component {
 
         /**
          * MAY THIS SPAN UNFOLD? A span of n unfolds into |n| copies, and the bound is the current machine's
-         * {@code /compiler/typer/unfold} entry for {@code carrier} ({@link #UNFOLD_URI}, {@link #UNFOLD_LST}),
+         * {@code /compiler/typer/unfold} entry for {@code carrier} ({@link #UNFOLD_URI}, {@link #UNFOLD_LST}, {@link #UNFOLD_REC}),
          * {@link #UNFOLD_DEFAULT} when the state names none, read raw as the check points are, since it is asked while
          * objs are being built. A span of at most one copy (the unit, the obj itself, its converse) unfolds nothing, so
          * it is never refused and reads no state.

@@ -80,7 +80,8 @@ public class BasicTyper extends MRec implements Typer {
         // the unfold bounds the same way: a given unfold is kept, and a bound it leaves out reads the default
         this.jvm().putIfAbsent(uri(Typer.UNFOLD), rec(mutableMap(
                 uri(Typer.UNFOLD_URI), jnt(Typer.UNFOLD_DEFAULT),
-                uri(Typer.UNFOLD_LST), jnt(Typer.UNFOLD_DEFAULT))));
+                uri(Typer.UNFOLD_LST), jnt(Typer.UNFOLD_DEFAULT),
+                uri(Typer.UNFOLD_REC), jnt(Typer.UNFOLD_DEFAULT))));
         this.jvm().put(uri("verify"), instLambda(lst(ALL_TYPE, T(LST_TID.poly(LAW_TID.maybeSome()))), (_, inst) -> {
             if (inst.arg(0).isObjInst())
                 return AlgebraTool.analyzeTypeInst(inst.arg(0).dom(), inst.arg(0).asInst(), inst.arg(1).orElse(lst()).lstValue().stream().map(u -> Law.valueOf(u.uriValue().name())).toList()).toRec();

@@ -6,10 +6,10 @@ author: |
   Dr. Stynx
 ---
 
-**DRAFT**: This article is being developed alongside a refactor. As of November 24, 2026, metatron implements the
-reference ring and its spans, record merge and join, and the layout invariance of reads. The list ring and the record
-spans (*Containers: Space and Time*) specify the refactor in progress: their examples answer as the text states once
-it lands, and fail until then. The claims are stated precisely but not yet proven, and the notes marked *Directions*
+**DRAFT**: This article is being developed alongside a refactor. As of November 25, 2026, metatron implements the
+reference ring and its spans, record merge, join and spans, and the layout invariance of reads. The list ring
+(*Containers: Space and Time*) specifies the refactor in progress: its examples answer as the text states once it
+lands, and fail until then. The claims are stated precisely but not yet proven, and the notes marked *Directions*
 point to where the work goes next.
 
 # Introduction

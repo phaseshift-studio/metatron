@@ -231,14 +231,16 @@ a
 write (`objWrite`), a predicate test (`typePred`), and the selector before a dynamic resolution (`codeResolve`).
 
 Beside `check`, `~/compiler/typer/unfold` bounds how many copies a span may unfold into, one `int::T` each, 100 by
-default: `uri` for a uri's path (`<a>{n}`, `pow(n)`, a span a uri takes from its lhs) and `lst` for the copies laid
-along a lst axis (`[5{n}]`, an argument list). A span past its bound fails, and a boot profile overrides a bound with
-`typer/unfold => [uri => 1000]`:
+default: `uri` for a uri's path (`<a>{n}`, `pow(n)`, a span a uri takes from its lhs), `lst` for the copies laid
+along a lst axis (`[5{n}]`, an argument list) and `rec` for the powers a rec's span joins (`[a=>b]{n}`, each power of
+a range, the closure `{+}`, which stops at the first power that holds no walk). A span past its bound fails, so a
+cycle's closure does, and a boot profile overrides a bound with `typer/unfold => [uri => 1000]`:
 
 ```mtron_pre
 *~/compiler/typer/unfold
 <a/b>{2}
 [5{3}]
+[a=>b,b=>c]{+}
 ```
 
 ## processor

@@ -248,6 +248,9 @@ public class RecTest extends AbstractAlgebraTest {
             "[a/b=>35]>>x                                                               % noobj",
             "[a/b=>35]>>(a/+)                                                           % 35",
             "[a=>[b/c=>1]]>>(a/b)                                                       % [c=>1]",
+            "[a/b=>[c=>1]]>>(a/b/c)                                                      % 1",
+            "[a=>[b=>[c=>1]]]>>(a/b/c)                                                   % 1",
+            "[b/#=>x]>>b                                                                 % x",
             "{2}[a/b=>35]>>a                                                            % {2}[b=>35]",
             "{2}[a=>[b=>35]]>>a                                                         % {2}[b=>35]",
     }, delimiter = '%')
@@ -392,6 +395,13 @@ public class RecTest extends AbstractAlgebraTest {
             "[x=>a/b] * [a/b=>1]                                        % [x=>(a/b=>1)]",
             "[x=>a] * [a/b=>1,a/c=>2]                                   % [x=>{(a=>(b=>1)),(a=>(c=>2))}]",
             "[x=>b] * [a/b=>35]                                         % [=>]",
+            // each term of the argument is read alone, so terms that overlap each join (the product stays bilinear)
+            "[x=>a] * [a/b=>1,a=>[c=>2]]                                % [x=>{(a=>(b=>1)),(a=>(c=>2))}]",
+            "[x=>b/c] * [b/c=>1,b/+=>2]                                 % [x=>{(b/c=>1),(b/c=>2)}]",
+            // a key the address runs through is descended, and a pattern key matches as a pattern
+            "[x=>a/b/c] * [a/b=>[c=>1]]                                 % [x=>(a/b/c=>1)]",
+            "[y=>b] * [b/#=>x]                                          % [y=>(b=>x)]",
+            "[y=>b] * [b/+=>x]                                          % [=>]",
             "[x=>b] * [a=>[b=>35]]                                      % [=>]",
             // a type key is a predicate, and acts as a code key does
             "[a=>5] * [int::T=>x]                                       % [a=>(5=>x)]",
@@ -450,6 +460,74 @@ public class RecTest extends AbstractAlgebraTest {
     })
     public void testTheWalkJoin(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A REC'S SPAN IS ITS POWER under the walk join (Marko, 2026-11-24: record spans, Claim 18 of
+     * ring-theoretic-distributed-structures.md): r{n} joins n copies of r, r{0} is the unity, a negative span is a power
+     * of the converse, which reverses each walk, and a range is the sum of its powers, an open side running until a
+     * power holds no walk. Each row: the literal % its power.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "[a=>b]{1}                                                  % [a=>b]",
+            "[a=>b]{0}                                                  % [_=>_]",
+            "[=>]{0}                                                    % [_=>_]",
+            "[a=>b,b=>c]{2}                                             % [a=>(b=>c)]",
+            "[a=>b,b=>c]{3}                                             % [=>]",
+            "[a=>b,b=>a]{2}                                             % [a=>(b=>a),b=>(a=>b)]",
+            "[a=>b,b=>a]{4}                                             % [a=>(b=>(a=>(b=>a))),b=>(a=>(b=>(a=>b)))]",
+            // the converse reverses each walk and keeps its multiplicity; the unity is its own
+            "[a=>b]{-1}                                                 % [b=>a]",
+            "[a=>b,b=>c]{-1}                                            % [b=>a,c=>b]",
+            "[a=>(b=>c)]{-1}                                            % [c=>(b=>a)]",
+            "[a=>[b=>c]]{-1}                                            % [c=>(b=>a)]",
+            "[a=>{2}b]{-1}                                              % [b=>{2}a]",
+            "[a=>b,b=>c]{-2}                                            % [c=>(b=>a)]",
+            "[_=>_]{-1}                                                 % [_=>_]",
+            // a range is the sum of its powers, and an open side runs until a power holds no walk
+            "[a=>b,b=>c]{1,2}                                           % [a=>{b,(b=>c)},b=>c]",
+            "[a=>b,b=>c]{+}                                             % [a=>{b,(b=>c)},b=>c]",
+            "[a=>b,b=>c]{*}                                             % [_=>_,a=>{b,(b=>c)},b=>c]",
+            "[a=>b]{?}                                                  % [_=>_,a=>b]",
+            "[=>]{+}                                                    % [=>]",
+            // a negative side is the converse's powers: {-} its closure, and a range across zero sums both sides
+            "[a=>b,b=>c]{-}                                             % [b=>a,c=>{b,(b=>a)}]",
+            "[a=>b,b=>c]{-1,1}                                          % [_=>_,a=>b,b=>{c,a},c=>b]",
+            "[a=>b]{2,1}                                                % <ERROR>",
+            // a point before the brackets counts copies of the whole power
+            "{2}[a=>b]{-1}                                              % {2}[b=>a]",
+            // a key that acts, or a walk that ends at code, has no converse a rec can list
+            "[?>1=>x]{-1}                                               % <ERROR>",
+            "[a=>plus(1)]{-1}                                           % <ERROR>",
+    })
+    public void testRecordSpans(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A REC'S SPANS KEEP THEIR LAWS: the converse is an involution and reverses a join, (r·s)^-1 = s^-1·r^-1, powers add,
+     * r{2}·r = r{3}, and a range is the sum of its powers, r{1,2} = r + r·r.
+     */
+    @Test
+    public void testRecordSpansKeepTheirLaws() {
+        final Rec r = rec(uri("a"), uri("b"), uri("b"), uri("c"));
+        final Rec s = rec(uri("c"), uri("d"), uri("b"), uri("e"));
+        // a cycle with a branch, so every power holds walks and the laws compare products that hold them
+        final Rec t = rec(uri("a"), objs(uri("b"), uri("c")), uri("b"), uri("c"), uri("c"), uri("a"));
+        final cInt converse = cInt.of(-1L);
+        AbstractMetatronTest.checkEquality(LOG, r, Rec.Helper.power(Rec.Helper.power(r, converse), converse), true);
+        AbstractMetatronTest.checkEquality(LOG, t, Rec.Helper.power(Rec.Helper.power(t, converse), converse), true);
+        AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(r.mult(s), converse),
+                Rec.Helper.power(s, converse).mult(Rec.Helper.power(r, converse)), true);
+        AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(t.mult(r), converse),
+                Rec.Helper.power(r, converse).mult(Rec.Helper.power(t, converse)), true);
+        AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(t, cInt.of(3L)), Rec.Helper.power(t, cInt.of(2L)).mult(t), true);
+        AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(t, cInt.of(3L)), t.mult(Rec.Helper.power(t, cInt.of(2L))), true);
+        AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(t, cInt.of(-2L)), Rec.Helper.power(Rec.Helper.power(t, cInt.of(2L)), converse), true);
+        AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(r, cInt.of(1L, 2L)), r.plus(r.mult(r)), true);
+        AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(t, cInt.of(0L, 2L)), t.one().plus(t).plus(t.mult(t)), true);
+        assertFalse(Rec.Helper.power(t, cInt.of(3L)).isEmpty(), "a cycle's third power should hold walks");
     }
 
     /**
@@ -525,6 +603,19 @@ public class RecTest extends AbstractAlgebraTest {
                 atom.plus(one.plus(other)), true);
         // the ring's carrier is the merge's normal form: a literal outside it answers its normal form under the unity
         AbstractMetatronTest.checkEquality(LOG, rec(), empty.mult(empty.one()), true);
+        // a bulked sub-rec is its copies' walks, so the normal form is one and the merge keeps its bracketing
+        final Rec bulked = rec(uri("a"), rec(uri("b"), jnt(1)).c(cInt.of(2L)).asRec());
+        final Rec cancels = rec(uri("a"), rec(uri("c"), jnt(1)));
+        AbstractMetatronTest.checkEquality(LOG, bulked.plus(cancels).plus(cancels.neg()), bulked.plus(cancels.plus(cancels.neg())), true);
+        // terms of the argument that overlap each join, so the product distributes over the merge
+        final Rec x = rec(uri("x"), uri("a"));
+        final Rec y = rec(uri("a/b"), jnt(1));
+        final Rec z = rec(uri("a"), rec(uri("c"), jnt(2)));
+        AbstractMetatronTest.checkEquality(LOG, x.mult(y).plus(x.mult(z)), x.mult(y.plus(z)), true);
+        final Rec ends = rec(uri("x"), uri("b/c"));
+        final Rec exact = rec(uri("b/c"), jnt(1));
+        final Rec pattern = rec(uri("b/+"), jnt(2));
+        AbstractMetatronTest.checkEquality(LOG, ends.mult(exact).plus(ends.mult(pattern)), ends.mult(exact.plus(pattern)), true);
     }
 
     /**
@@ -541,6 +632,12 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkEquality(LOG, rec(uri("b"), jnt(35)), nested.atDirect(uri("a")), true);
         AbstractMetatronTest.checkEquality(LOG, jnt(35), flat.atDirect(uri("a/b")), true);
         AbstractMetatronTest.checkEquality(LOG, jnt(35), nested.atDirect(uri("a/b")), true);
+        // atDirect stays raw down a nested path, as on a flat key
+        final Obj ptr = auto_from_(f("local:src/a_main")).tryToInst();
+        assertTrue(Obj.Helper.getAutoPointer(rec(uri("a"), rec(uri("b"), rec(uri("c"), ptr))).atDirect(uri("a/b/c"))).isPresent(),
+                "atDirect(a/b/c) on a nested rec should return the raw !@ inst");
+        assertTrue(Obj.Helper.getAutoPointer(rec(uri("a/b/c"), ptr).atDirect(uri("a/b/c"))).isPresent(),
+                "atDirect(a/b/c) on a flat rec should return the raw !@ inst");
         AbstractMetatronTest.checkEquality(LOG, rec(), ObjmtronSerializer.parse("[a=>[=>]]").asRec().atDirect(uri("a")), true);
     }
 
@@ -1186,8 +1283,8 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>1] + [a=>{2}1]                                 % [a=>{3}1]",
             "[a=>{2}[b=>1]] + [a=>[b=>2]]                       % [a=>[b=>{1,1,2}]]",
             "[a=>[b=>2]] + [a=>{2}[b=>1]]                       % [a=>[b=>{2,1,1}]]",
-            "[a=>{2}[b=>1]] + [c=>3]                            % [a=>{2}[b=>1],c=>3]",
-            "[c=>3] + [a=>{2}[b=>1]]                            % [c=>3,a=>{2}[b=>1]]",
+            "[a=>{2}[b=>1]] + [c=>3]                            % [a=>[b=>{2}1],c=>3]",
+            "[c=>3] + [a=>{2}[b=>1]]                            % [c=>3,a=>[b=>{2}1]]",
             // a lst is an atom of the merge: colliding lsts make a bag of lsts, each kept whole -- concatenating them
             // is a select's + ([a=>[1,2,3]]==[a=>+[2,3]]), said by the expression
             "[a=>[1,2,3]] + [a=>[2,3]] + [a=>[1,2,3]]           % [a=>{[1,2,3],[2,3],[1,2,3]}]",
