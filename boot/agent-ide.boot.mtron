@@ -17,7 +17,7 @@
                ws   => <ws://0.0.0.0:8555> ],
  log_file => <sqlite:/tmp/log_metatron_agentide.sqlite>
 ]
-[===============]
+[== ========= ==]
 print("{{r}}------------
 {{g}}*{{y}}boot/args{{X}}: ",
       *boot/args,
@@ -67,7 +67,7 @@ print("{{y}}web : ${*boot/args/web/http}  ${*boot/args/web/ws}
 http_client::[host => <http://#>];
 http_client::[host => <https://#>];
 
-[====== THE AGENT IDE WORKSPACE ======]
+[== === THE AGENT IDE WORKSPACE === ==]
 print("{{y}}ide : /usr/${*boot/args/user}/scratch
 {{X}}");
 *<mfs:src/test/resources/scratch/project.ide.mtron>.

@@ -120,7 +120,12 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
         assertEquals(List.of("blue"), rules.get(0).styles());
         assertEquals(".*", rules.get(0).regex());
         assertEquals(List.of("bright-black"), rules.get(rules.size() - 1).styles());
+        // the comment brackets require a space before the text within: [-- note --] and
+        // [== note ==] are comments, while [--flag arg] is a CLI flag and [==x==] is code
+        assertEquals("\\[-- ", rules.get(rules.size() - 2).start());
+        assertEquals(" --]", rules.get(rules.size() - 2).end());
         assertEquals("\\[== ", rules.get(rules.size() - 1).start());
+        assertEquals(" ==]", rules.get(rules.size() - 1).end());
         // every regex the file declares — the dead one included — is a java regex jline can compile
         for (final NanorcToHljs.Rule rule : rules) {
             final String regex = null == rule.start() ? rule.regex() : rule.start() + rule.end();
@@ -186,7 +191,7 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             // reversed: the LAST nanorc rule (the [== comment region) is the FIRST browser mode —
             // nano's later-wins becomes highlight.js's first-mode-wins
             assertTrue(js.contains("const MTRON_RULES = [\n"
-                    + "                { className: 'mtron-nanorc-bright-black', begin: /\\[==/, end: /==]/ },"));
+                    + "                { className: 'mtron-nanorc-bright-black', begin: /\\[== /, end: / ==]/ },"));
             // the posix class expanded to what the browser engine has, and no java leftovers
             assertTrue(js.contains("[A-Za-z0-9_]+X=>"));
             assertFalse(js.contains("[[:alnum:]]"));

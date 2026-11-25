@@ -4,7 +4,7 @@
 [space  => /memory/space,
  log    => info,
  typer/check  => [code_resolve => false]];
-[===============]
+[== ========= ==]
 header2 ->"""      {{r}}PhaseShift Studio Presents
 {{g}}  ___ ___  _  _ ___  ___  _    ___ 
  / __/ _ \| \| / __|/ _ \| |  | __|

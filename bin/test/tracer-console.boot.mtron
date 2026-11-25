@@ -3,7 +3,7 @@
  log            => info,
  tracer/stack   => [mtron_stack  => true,
                     java_stack   => false]]
-[===============]
+[== ========= ==]
 print("{{y}}tracer demo boot{{X}} {{k}}— mtron_stack tracer on (see boot args header){{X}}\n");
 import(/m/web);
 import(/m/sys/ui,ui);

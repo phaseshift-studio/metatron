@@ -329,7 +329,7 @@ claim fd 1 *before* the boot file runs:
  log         => warn,
  mcp         => stdio,
  typer/stage => [code_resolve => false]]
-[===============]
+[== ========= ==]
 import(/m/web);
 import(/m/web,web);
 import(/m/ai/llm);

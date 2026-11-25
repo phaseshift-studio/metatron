@@ -1496,7 +1496,8 @@ function statChip(k, v, title) {
 /* the stats strip is the ACTIVE machine's, not the page's own host: the `at` pill
    names that machine (the authority its tab shows) and sys_stat() is read on it.
    the numbers are cached per instance, so a switch repaints at once and the fresh
-   read lands a beat later. */
+   read lands a beat later. a machine that cannot answer says so rather than leaving
+   a blank (some builds abort the connection on sys_stat — see loadStats). */
 function renderStats(s, instance) {
     const el = $("#topbar-stats");
     if (!el || !instance) return;
@@ -1522,6 +1523,8 @@ function renderStats(s, instance) {
             chips.push(statChip("load", (typeof cpu === "number" ? Math.round(cpu) : cpu) + "%"));
         if (model)
             chips.push(statChip("cpu", (cores ? cores + " cores · " : "") + String(model).split(" w/ ")[0]));
+    } else if (instance.statsError) {
+        chips.push(statChip("stats", "—", "sys_stat() on " + instance.name + ": " + instance.statsError));
     }
     el.replaceChildren(...chips);
 }
@@ -1596,18 +1599,37 @@ function evalMtron(expr) {
     return evalMtronOn(active, expr);
 }
 
-/* sys_stat() on the ACTIVE machine: its numbers, read over its own socket */
+/* sys_stat() on the ACTIVE machine: its numbers, read over its own socket. a machine
+   that cannot answer is REMEMBERED — some builds abort the websocket on sys_stat()
+   (the reply never comes, the connection closes), and the strip must say so instead
+   of staying blank while the poll keeps killing a socket every tick. */
 async function loadStats() {
     if (!active) return;
     const instance = active;
+    let text = "";
+    let problem = null;
     try {
-        const raw = await evalMtronOn(instance, "sys_stat()");
-        if (!raw) return;
-        instance.stats = MtronIO.read(String(raw));
-        if (instance === active) renderStats(instance.stats, instance);
-    } catch (ignored) {
-        /* stats are decorative — a failed read leaves the strip empty, never broken */
+        text = String((await evalMtronOn(instance, "sys_stat()")) || "").trim();
+    } catch (error) {
+        problem = error && error.message ? error.message : String(error);
     }
+    if (text && !/^fail::/.test(text)) {
+        try {
+            instance.stats = MtronIO.read(text);
+        } catch (error) {
+            problem = error && error.message ? error.message : String(error);
+        }
+    } else if (!problem) {
+        problem = text ? text.replace(/^fail::/, "") : "no answer";
+    }
+    if (problem) {
+        instance.stats = null;
+        instance.statsError = problem;
+        instance.statsFailedAt = Date.now();
+    } else {
+        instance.statsError = null;
+    }
+    if (instance === active) renderStats(instance.stats, instance);
 }
 
 /* the topbar's identity: the machine the active tab stands for */
@@ -1678,8 +1700,11 @@ function createInstance(name, endpoint) {
         wsBase: base,
         wsUrl: codecUrl(base),
         readers: new Map(),
-        /* the last sys_stat() this machine answered — the strip repaints from it */
+        /* the last sys_stat() this machine answered — the strip repaints from it —
+           and why it could not answer, when it could not */
         stats: null,
+        statsError: null,
+        statsFailedAt: 0,
         main: main,
         /* DOM handles are cached per instance: detaching a <main> does not
            invalidate a node reference, so they survive every attach/detach. */
@@ -1720,6 +1745,8 @@ function activate(instance) {
     if (!instance) return;
     if (active === instance) {
         syncChrome();
+        /* a re-click retries a machine whose sys_stat() failed */
+        if (active.statsError) loadStats();
         return;
     }
     PAGE_PANEL.replaceChildren(instance.main, PAGE_FOOTER);
@@ -1927,7 +1954,9 @@ async function refresh() {
     try {
         renderIdentity();
         renderActiveStats();
-        loadStats();
+        /* a machine that just aborted sys_stat() is not asked again on the next tick:
+           activation retries it, and so does the poll after a minute */
+        if (active && (!active.statsError || Date.now() - (active.statsFailedAt || 0) > 60000)) loadStats();
     } finally {
         refreshing = false;
     }

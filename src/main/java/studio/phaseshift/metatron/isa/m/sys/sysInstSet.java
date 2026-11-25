@@ -249,8 +249,15 @@ public class sysInstSet extends AbstractInstSet {
                                     uri("os"), str(System.getProperty("os.name", "?") + " " + System.getProperty("os.version", "?")),
                                     uri("arch"), str(System.getProperty("os.arch", "?")),
                                     uri("processor"), jnt(Runtime.getRuntime().availableProcessors()),
-                                    uri("free_jvm"), start_(real(1.0d - ((double) usedMemory / (double) totalMemory))).as_(T(MATH_PERCENT_TID)).apply(),
-                                    uri("free_mach"), start_(real(1.0d - ((double) usedMemory / (double) maxMemory))).as_(T(MATH_PERCENT_TID)).apply(),
+                                    // the percentages are INT percents, built here rather than cast: percent::T
+                                    // refines int::T over 0..100, so casting the free FRACTION to it left
+                                    // percent::0.77 — a percent that is no percent at all — and under the strict
+                                    // typer stage (type_pred => true, the docker profile's default) that cast
+                                    // aborts the whole evaluation, dropping the socket the answer was due on:
+                                    // a remote sys_stat() looked like a dead machine. the byte fields below
+                                    // take the same route (a typed value, not a cast).
+                                    uri("free_jvm"), jnt((long) (100.0d * (1.0d - ((double) usedMemory / (double) totalMemory))), MATH_PERCENT_TID, null),
+                                    uri("free_mach"), jnt((long) (100.0d * (1.0d - ((double) usedMemory / (double) maxMemory))), MATH_PERCENT_TID, null),
                                     uri("thread"), ThreadExecutor.instance().summary(),
                                     // physical machine: memory, cpu, and the root filesystem
                                     uri("total_mem_phys"), mathInstSet.normalizeData(real((double) totalPhys, MATH_BYTE_TID, null)),

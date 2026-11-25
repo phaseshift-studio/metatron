@@ -49,9 +49,9 @@ import(/m/db/tble);
 import(/m/ai/llm);
 import(/m/sys/ui,ui);
 
-[===================================================================]
+[== ============================================================= ==]
 [== 1. the durable record: events and messages live under /usr/dsh ==]
-[===================================================================]
+[== ============================================================= ==]
 [== LOCAL SMOKE TEST: /tmp/dsh.sqlite — no mount, no chown, nothing to lose.     ==]
 [== PRODUCTION: point at the bind mount, e.g. <sqlite:/app/data/dsh.sqlite>,     ==]
 [== with -v /mnt/beast1/metatron-dsh:/app/data and chown 1000:1000 first.        ==]
@@ -72,12 +72,12 @@ memspace::[pattern => </usr/mem/#>,
 [== the boot marker: a tblespace has NO schema until something is written, so ==]
 [== this first write materialises it. An unwritable or misconfigured medium   ==]
 [== now fails HERE, at boot, instead of silently at the first client call.    ==]
-[==[kind  => dsh_boot,
+[== [kind  => dsh_boot,
  name  => dsh.boot.mtron].to(/usr/dsh/event/_?incrq); ==]
 
-[===================================================================]
+[== ============================================================= ==]
 [== 4. the write endpoint: DSH (or any harness) attaches over MCP   ==]
-[===================================================================]
+[== ============================================================= ==]
 [== One primitive and a batch form. `_?incrq` gives every write a fresh vid,  ==]
 [== so the ledger is append-only and vid order IS arrival order.             ==]
 mcp_server::[tool => [
@@ -137,9 +137,9 @@ footer {
    </body>
 <html>
 """@help_html);
-[===================================================================]
+[== ============================================================= ==]
 [== 5. the server: write endpoint, query endpoint, space, files     ==]
-[===================================================================]
+[== ============================================================= ==]
 http_server::[origin => <http://0.0.0.0:8777>,
               route  => [/dsh  => mcp_dsh_mirror,
                          /mcp  => mcp_mtron,
@@ -148,9 +148,9 @@ http_server::[origin => <http://0.0.0.0:8777>,
                          /help => help_html,
                          /     => /fs ]]@~/memory/space/web/http;
 
-[===================================================================]
+[== ============================================================= ==]
 [== 6. a console, so a bad boot is debuggable instead of silent      ==]
-[===================================================================]
+[== ============================================================= ==]
 [== the interactive console on this process's stdin/stdout:           ==]
 [== pass console=>true to boot args to keep it, else boot prints and  ==]
 [== moves on. Mirrors docker.boot.mtron's console line exactly.       ==]

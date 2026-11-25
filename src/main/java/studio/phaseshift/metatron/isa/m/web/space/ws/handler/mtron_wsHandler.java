@@ -164,10 +164,26 @@ public class mtron_wsHandler extends WebSocketRec {
             super.onMessage(conn, message);
             return;
         }
-        final Obj answer = mtron_wsHandler.evaluate(message);
-        // the guard the serializer read applies: an uncaught fail would skip on_message's function, and the client
-        // would wait out its deadline for a reply that is never sent
-        this.onMessage(conn, answer.isFail() ? answer.asFail().caughtTransient() : answer);
+        try {
+            final Obj answer = mtron_wsHandler.evaluate(message);
+            // the guard the serializer read applies: an uncaught fail would skip on_message's function, and the client
+            // would wait out its deadline for a reply that is never sent
+            this.onMessage(conn, answer.isFail() ? answer.asFail().caughtTransient() : answer);
+        } catch (final Throwable t) {
+            // A RECEIVED FRAME IS ALWAYS ANSWERED. An ERROR escaping the frame (a printer's
+            // StackOverflowError, an OOM) went past every Exception guard above to the worker's
+            // guard, which drops the only channel that could carry the fail: the client saw a
+            // closed connection (1006) and no reason at all — a remote sys_stat() looked like a
+            // dead machine. Answer first; the connection survives its own failure.
+            LOG.warn("answered a frame whose evaluation escaped with %s", t.getClass().getName());
+            final Fail failure = fail(t).caughtTransient();
+            try {
+                this.send(failure);
+            } catch (final Throwable ignored) {
+                // the socket is already gone: nothing left to answer on
+            }
+            MTronException.emitStackTrace(failure.jvm());
+        }
     }
 
     /**

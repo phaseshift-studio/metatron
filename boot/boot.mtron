@@ -8,7 +8,7 @@
                   obj_write    => true,
                   code_resolve => false] 
 ]
-[===============]
+[== ========= ==]
 [== inst_rng,type_pred,obj_write] ==]
 [== metatron example boot ==]
 print("""

@@ -84,5 +84,16 @@ public class sysInstSetTest extends AbstractInstSetTest {
         assertTrue(stat.asRec().at(uri("cpu_load")).isReal(), "cpu_load is a real (0..100)");
         assertTrue(stat.asRec().at(uri("cpu_model")).isStr(), "cpu_model is a str");
         assertTrue(stat.asRec().at(uri("processor")).isInt(), "processor is an int");
+        // the two percentages are INT percents (0..100), never the heap fraction that produced
+        // them: percent::T refines int::T, so casting a free fraction to it left percent::0.77
+        // — a percent that is no percent — and under the strict typer stage (type_pred => true,
+        // the docker profile's default) that cast ABORTS the evaluation, dropping the socket a
+        // remote sys_stat() was answering on. both must read as whole percent ints.
+        final Obj freeJvm = stat.asRec().at(uri("free_jvm"));
+        assertTrue(freeJvm.isInt() && freeJvm.intValue().intValue() > 0 && freeJvm.intValue().intValue() <= 100,
+                "free_jvm is a percent int in 0..100: " + freeJvm);
+        final Obj freeMach = stat.asRec().at(uri("free_mach"));
+        assertTrue(freeMach.isInt() && freeMach.intValue().intValue() >= 0 && freeMach.intValue().intValue() <= 100,
+                "free_mach is a percent int in 0..100: " + freeMach);
     }
 }
