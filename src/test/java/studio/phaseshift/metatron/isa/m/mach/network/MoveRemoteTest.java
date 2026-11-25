@@ -142,10 +142,12 @@ public class MoveRemoteTest extends AbstractMetatronTest {
      * THE CUT'S DOM IS THE STREAM THAT FLOWS INTO THE MOVE (Marko, 2026-11-25: "the rng of the previous inst should be
      * the dom of the next"). The extractor mints the cut, so it states that dom where a chain with its own seed hands
      * the move its whole stream at once: the seed's int for one int and int{4} for four, a fold's one int, times the
-     * fold's point and the move's. Anywhere else the count is not known, so the cut keeps its {*} and still gathers, and
-     * the move changes no answer: after an instruction that answers per obj or per page, in a branch member compiled
-     * without its lhs, and where the stream may hold nothing (a sup of nothing, a ;'s empty seed). A cut's tail is code,
-     * never one obj, and never absent. Each row: the expression % its answer.
+     * fold's point and the move's. Anywhere else the count is not known, so the cut keeps its {*} and still gathers: after
+     * an instruction that answers per obj, after a fold that runs a range of times, in a branch member compiled without
+     * its lhs, and where the stream may hold nothing (an empty fold, a ;'s empty seed, a point of zero). Each of those
+     * rows has its twin without the move, which answers the same. A cut's tail is code, any count of it, none included,
+     * and a cut with no tail answers what reaches its place, as a move that ends a chain does. Each row: the expression
+     * % its answer.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -165,14 +167,25 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             // a fold's own point is copies of what flows on, so the cut takes them all
             "{1,2,3,4}.count{2}().move(<//self>).count()                                                          % 2",
             "{1,2,3,4}.count{2}().move(<//self>).count().explain()>>format.has('cut +int[{]2[}]::T ').count()     % 1",
-            // a page, a stream that may hold nothing, a ;'s empty seed and a member with no seed of its own: the cut
-            // keeps {*}, and the move changes no answer
-            "{1,2,3,4}.plus(1).sum?<=int{0,2}().move(<//self>).count()                                            % 1",
+            "{1,2,3,4}.count{2}().count()                                                                         % 2",
+            // a fold run a range of times, a stream that may hold nothing, a ;'s empty seed, a point of zero and a member
+            // with no seed of its own: the cut keeps {*}, and each row answers as its twin without the move does
+            "{1,2,3}.{1,2}count().move(<//self>).count()                                                          % 2",
+            "{1,2,3}.{1,2}count().count()                                                                         % 2",
             "{1,2,3}.is(gt(5)).sup().move(<//self>).count()                                                       % 0",
+            "{1,2,3}.is(gt(5)).sup().count()                                                                      % 0",
+            "{1,2,3}.is(gt(5)).inf().move(<//self>).count()                                                       % 0",
+            "{1,2,3}.is(gt(5)).inf().count()                                                                      % 0",
+            "{1,2,3}.is(gt(5)).mean().move(<//self>).count()                                                      % 0",
+            "{1,2,3}.is(gt(5)).mean().count()                                                                     % 0",
             "5; move(<//self>).count()                                                                            % 0",
+            "5; count()                                                                                           % 0",
+            "5.move{0}(<//self>).count()                                                                          % 0",
             "2.5.branch(sum().move(<//self>).plus(1.0))                                                           % 3.5",
-            // a cut with no tail is no cut
-            "5.cut(<loop://self>)                                                                                 % <ERROR>",
+            "2.5.branch(sum().plus(1.0))                                                                          % 3.5",
+            // a tail of one instruction may run any number of times, none included; with no tail, the lhs answers
+            "5.move(<//self>).{?}plus(1)                                                                          % {5,6}",
+            "5.cut(<loop://self>)                                                                                 % 5",
     }, delimiter = '%')
     void testTheCutsDomIsTheStreamThatFlowsIn(final String mtron, final String answer) {
         checkCodeParseApply(LOG, mtron.trim(), answer.trim());

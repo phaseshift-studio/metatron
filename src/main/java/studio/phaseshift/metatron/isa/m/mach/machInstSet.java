@@ -1129,7 +1129,7 @@ public class machInstSet extends AbstractInstSet {
                                 .dom(ALL.maybeSome(), "the value the tail starts from: it is the lhs that the cut program was cut off of, gathered whole. A cut that replaces a move states the stream that flows into it where that is known (int for one int, int{4} for four)")
                                 .rng(ALL.maybeSome(), "whatever the tail answers where it lands — at a peer, the one scattered lane, merged")
                                 .argLst(URI_TYPE, "where the tail runs: a machine of this server's tree (`<a>`, `<..>`, `<~>`), or a peer and the place in it to resume at (`<//worker/a>`)",
-                                        T(ALL.some()), "the tail, as code: it picks up where the chain was cut, and is compiled where it lands. It is code, never one obj, so a tail of one instruction is any count of it (from{2}(...)), as the tail of any longer chain is")
+                                        T(ALL_STAR), "the tail, as code: it picks up where the chain was cut, and is compiled where it lands. It is code, never one obj, so a tail of one instruction is any count of it, none included (from{2}(...), {?}plus(1)), as the tail of any longer chain is; an absent tail is the empty one, nothing to run, and the cut answers what reaches its place")
                                 .desc("""
                                         run the rest of a chain in another machine, compiled by that machine. The
                                         nomadic extractor cuts a chain at its first instruction that changes the
@@ -1482,20 +1482,23 @@ public class machInstSet extends AbstractInstSet {
                         // THE CUT'S DOM IS THE STREAM THAT FLOWS INTO THE MOVE (Marko, 2026-11-25: "the rng of the previous
                         // inst should be the dom of the next"). This rewrite mints the cut, so the resolver would bind it to
                         // the cut's own #{*}. In a chain that starts from its own seed, where the instruction before the
-                        // move answers the whole stream at once (the seed, or a gather), its resolved rng times its point
-                        // and the move's is the cut's dom: 1.move(<//h>) cuts an int, {1,2,3,4}.move(<//h>) an int{4}, and
-                        // {1,2,3,4}.count{2}().move(<//h>) an int{2}. Anywhere else the count is not known here, so the
-                        // cut keeps #{*} and gathers: after an instruction that answers per obj or per page, a dom of one
-                        // would run the cut, and every fold in its tail, once per answer; a chain with no seed (a branch
-                        // member, compiled without its lhs) only guesses its types; and a dom that may hold nothing (a
-                        // sup, a ;'s empty seed, a move{0}) would never run the cut, or seed it. Only the chain before the
-                        // move is resolved here
+                        // move runs once (a span of one: a range span sums its runs into a stream) and answers the whole
+                        // stream at once (the seed, or a gather: isBatching would admit a pager, whose rng is one page's),
+                        // its resolved rng times its point and the move's is the cut's dom: 1.move(<//h>) cuts an int,
+                        // {1,2,3,4}.move(<//h>) an int{4}, and {1,2,3,4}.count{2}().move(<//h>) an int{2}. Anywhere else
+                        // the count is not known here, so the cut keeps #{*} and gathers: after an instruction that
+                        // answers per obj, a dom of one would run the cut, and every fold in its tail, once per answer;
+                        // a chain with no seed (a branch member, compiled without its lhs) only guesses its types; and a
+                        // dom that may hold nothing (a sup, a ;'s empty seed, a move{0}) would never run the cut, or seed
+                        // it. Only the chain before the move is resolved here
                         final Inst flowing = cut.isEmpty() || !START_INST_TID.equals(cut.getFirst().tid().basePath()) ? null
                                 : Rewriter.Helper.contracts(code(new ArrayList<>(cut))).getLast();
-                        final fURI dom = null == flowing || !flowing.tid().hasRng() || !(flowing.isInitial() || flowing.isGather()) ? null
+                        final fURI flows = null == flowing || !flowing.tid().hasRng() || !flowing.tid().b().isOne()
+                                || !(flowing.isInitial() || flowing.isGather()) ? null
                                 : flowing.tid().rng().c(c -> c.mult(flowing.tid().d()).mult(inst.tid().d()));
+                        final fURI dom = null == flows || flows.isZeroable() ? null : flows;
                         final fURI timed = inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID;
-                        final Inst moved = instB(null == dom || dom.c().isZeroable() ? timed : timed.dom(dom), lst(where, tail));
+                        final Inst moved = instB(null == dom ? timed : timed.dom(dom), lst(where, tail));
                         if (!inst.tid().d().isOne() && !cut.isEmpty()) {
                             final Inst before = cut.getLast();
                             cut.set(cut.size() - 1, before.d(before.tid().d().mult(inst.tid().d())).asInst());
