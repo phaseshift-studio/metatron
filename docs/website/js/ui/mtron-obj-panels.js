@@ -2116,10 +2116,29 @@ function compilerPanel(env, api) {
             status.textContent = "resolving …";
             const resolved = await evalObj(src + "==[!*/compiler/parser]==[!*/compiler/resolver]");
             const resolvedText = textOf(resolved);
+            /* the binder node reads the component's own map once the resolve has
+               run: GenericBinder publishes nothing (its map is local to apply), so
+               the node says what it found and what the map would be */
+            const binderKids = node("div", "binder-kids");
             tree.appendChild(branch(head("|_", "resolver"), [
                 branch(head("|__", "selector"), [code(resolvedText || "noobj")]),
-                branch(head("|__", "binder"), [])
+                branch(head("|__", "binder"), [binderKids])
             ]));
+            binderKids.appendChild(node("div", "compiler-status", "reading the binder …"));
+            api.mtron("*<~/compiler/resolver/binder/generic_binding>").then((text) => {
+                binderKids.textContent = "";
+                const rows = binderRows(text);
+                if (rows.length) {
+                    binderKids.appendChild(binderTable(rows));
+                } else {
+                    binderKids.appendChild(node("div", "cnode-empty",
+                        "no generic bound — this chain bound no generic (the binder publishes what its last "
+                        + "resolve deduced at ~/compiler/resolver/binder/generic_binding)"));
+                }
+            }).catch((error) => {
+                binderKids.textContent = "";
+                binderKids.appendChild(node("div", "cnode-empty", String(error && error.message ? error.message : error)));
+            });
 
             /* 3. the registered rewriters */
             status.textContent = "reading rewriters …";
@@ -2186,6 +2205,48 @@ function compilerPanel(env, api) {
     });
 
     return box;
+}
+
+/* ── the binder's map — a rec of generic => type, as rows ────────────────────
+   the binder works with a Map<fURI,fURI> (A => int, B => str): an all-caps
+   generic name bound to the type it met. GenericBinder publishes what its last
+   resolve deduced into its own rec (ScoringResolver mints one binder per
+   compiler), read at ~/compiler/resolver/binder/generic_binding. */
+function binderRows(text) {
+    const source = String(text == null ? "" : text).trim();
+    if (!source || source === "noobj") return [];
+    /* the reader loops on a truncated spelling (a half-written `[A=>`), and this
+       reads whatever an opt-in probe chose to publish — so only a rec that closes
+       is handed to it. */
+    if (!/[[{]/.test(source) || !/[\]}]$/.test(source)) return [];
+    let rec = null;
+    try {
+        rec = parse(source);
+    } catch (ignored) {
+        return [];
+    }
+    if (!rec || !rec.isRec()) return [];
+    return [...rec.js.entries()].map(([key, value]) => ({
+        key: key.toString(),
+        /* a bound generic names a TYPE, so a uri value reads as `int::T` */
+        value: value && value.isUri() ? value.js.toString() + "::T" : (value && value.isStr() ? value.js : write(value))
+    }));
+}
+
+/* the rows as a table: the generic on the left, the type it bound on the right */
+function binderTable(rows) {
+    const table = node("table", "type-pred binder-table");
+    const tbody = document.createElement("tbody");
+    rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        const key = node("td", "type-pred-key", "");
+        paintSig(key, row.key);
+        tr.appendChild(key);
+        tr.appendChild(node("td", "type-pred-desc", "=> " + row.value));
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    return table;
 }
 
 /* ── /m/code — a code::T card ───────────────────────────────────────────────
@@ -2318,14 +2379,12 @@ function explanationPanel(env, api) {
         return cell;
     }
 
-    /* a type the rec did not record: explanation::T omits a type whose least count
-       is 0, which covers both a literal start (noobj{0}::T) and a reducer's
-       int{*}::T — so the two cannot be told apart here, and a dash is the honest
-       cell (the terminal table derives the name from the inst itself). */
+    /* every dom/rng is recorded now (a least count of 0 no longer drops the key), so
+       this dash is the fallback for an older answer at the same address. */
     function typeCell(value) {
         if (value) return td(value, "exp-type-cell");
         const cell = td("—", "exp-none");
-        cell.title = "not recorded — a type whose least count is 0 is omitted from the rec";
+        cell.title = "not recorded by this machine (an older answer omitted a type whose least count is 0)";
         return cell;
     }
 
@@ -2441,7 +2500,7 @@ function explanationPanel(env, api) {
         type.appendChild(node("code", "exp-dom", model.desc.dom || "—"));
         type.appendChild(node("span", "exp-arrow", "→"));
         type.appendChild(node("code", "exp-rng", model.desc.rng || "—"));
-        if (!model.desc.dom) type.title = "no dom recorded — the chain starts at a literal (noobj{0}::T), or a type whose least count is 0 was omitted";
+        if (!model.desc.dom) type.title = "no dom recorded by this machine (an older answer omitted it; the chain types from its first instruction)";
         head.appendChild(type);
         head.appendChild(node("span", "exp-insts", (model.desc.insts == null ? model.rows.length : model.desc.insts) + " insts"));
         content.appendChild(head);
@@ -2521,4 +2580,4 @@ register("explanation", explanationPanel);
 register("/m/mach/component/compiler", compilerPanel);
 register("compiler", compilerPanel);
 
-export { register, registerParent, resolve, parentOf, panels, parents };
+export { register, registerParent, resolve, parentOf, panels, parents, binderRows };

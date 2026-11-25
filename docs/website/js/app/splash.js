@@ -481,17 +481,20 @@ function createConsole(instance) {
     function evaluate(expr) {
         const framed = framePrefix() + String(expr == null ? "" : expr);
         return connect().then((ws) => new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                ws.removeEventListener("message", answer);
-                reject(new Error("no answer in 30 s"));
-            }, 30000);
-            const answer = async (ev) => {
+            const done = (value, error) => {
                 clearTimeout(timer);
                 ws.removeEventListener("message", answer);
+                cleanup();
+                if (error) reject(error);
+                else resolve(value);
+            };
+            const cleanup = settleOnClose(ws, () => done(null, new Error("connection closed")));
+            const timer = setTimeout(() => done(null, new Error("no answer in 30 s")), 30000);
+            const answer = async (ev) => {
                 try {
-                    resolve(await frameText(ev.data));
+                    done(await frameText(ev.data));
                 } catch (error) {
-                    reject(error);
+                    done(null, error);
                 }
             };
             ws.addEventListener("message", answer);
@@ -665,17 +668,35 @@ function connectReader(mime, base, pool) {
     });
 }
 
+/* A PENDING FRAME SETTLES WHEN ITS SOCKET GOES AWAY. the readers are queued (one
+   socket per codec), so a request whose connection dies must answer at once: a
+   machine whose sys_stat aborts the connection otherwise holds every panel read
+   behind it for the full timeout (15 s), which reads as a page that loads but never
+   reacts. returns the cleanup the normal settle paths call. */
+function settleOnClose(socket, settle) {
+    const gone = () => settle();
+    socket.addEventListener("close", gone, {once: true});
+    socket.addEventListener("error", gone, {once: true});
+    return () => {
+        socket.removeEventListener("close", gone);
+        socket.removeEventListener("error", gone);
+    };
+}
+
 function readVia(mime, vid, base, pool) {
     const reader = readerFor(mime, pool);
     if (reader.cache.has(vid)) return Promise.resolve(reader.cache.get(vid));
     const run = reader.chain.then(() => connectReader(mime, base, pool)).then((socket) => new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-            socket.removeEventListener("message", answer);
-            reject(new Error("no " + mime + " answer in 15 s"));
-        }, 15000);
-        const answer = async (ev) => {
+        const done = (value, error) => {
             clearTimeout(timer);
             socket.removeEventListener("message", answer);
+            cleanup();
+            if (error) reject(error);
+            else resolve(value);
+        };
+        const cleanup = settleOnClose(socket, () => done(null, new Error(mime + " reader closed")));
+        const timer = setTimeout(() => done(null, new Error("no " + mime + " answer in 15 s")), 15000);
+        const answer = async (ev) => {
             const text = await frameText(ev.data);
             let value;
             try {
@@ -684,7 +705,7 @@ function readVia(mime, vid, base, pool) {
                 value = text;
             }
             reader.cache.set(vid, value);
-            resolve(value);
+            done(value);
         };
         socket.addEventListener("message", answer);
         socket.send(vid.charAt(0) === "<" ? "*" + vid : "*<" + vid + ">");
@@ -732,18 +753,21 @@ function evalJsonOn(instance, expr) {
     const mime = "application/json";
     const reader = readerFor(mime, instance.readers);
     const run = reader.chain.then(() => connectReader(mime, instance.wsBase, instance.readers)).then((socket) => new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-            socket.removeEventListener("message", answer);
-            reject(new Error("no json answer in 15 s"));
-        }, 15000);
-        const answer = async (ev) => {
+        const done = (value, error) => {
             clearTimeout(timer);
             socket.removeEventListener("message", answer);
+            cleanup();
+            if (error) reject(error);
+            else resolve(value);
+        };
+        const cleanup = settleOnClose(socket, () => done(null, new Error("connection closed")));
+        const timer = setTimeout(() => done(null, new Error("no json answer in 15 s")), 15000);
+        const answer = async (ev) => {
             const text = await frameText(ev.data);
             try {
-                resolve(JSON.parse(text));
+                done(JSON.parse(text));
             } catch (ignored) {
-                resolve(text);
+                done(text);
             }
         };
         socket.addEventListener("message", answer);
@@ -1195,6 +1219,109 @@ document.addEventListener("keydown", (ev) => {
     }
 });
 
+/* ── input history: up/down on any text field ─────────────────────────────
+   every text field on the page keeps its own little shell history — up for the
+   older entry, down for the newer, and down past the end restores what was being
+   typed. delegated, so a field a panel mints later has it too. a field names its
+   own key with data-history="<key>" (data-history="off" opts out, as the console's
+   REPL does: it keeps its own per-server history). otherwise the key is the panel
+   the field stands in and its place among that panel's fields. entries persist,
+   like the console's. */
+const FIELD_HISTORY_PREFIX = "metatron.field.history.";
+const FIELD_HISTORY_MAX = 50;
+
+function fieldHistoryKey(field) {
+    const declared = field.dataset ? field.dataset.history : null;
+    if (declared) return declared === "off" ? null : declared;
+    const host = field.closest(".mpanel, .obj-card, dialog, section, form") || document.body;
+    const owner = (host.dataset && (host.dataset.tid || host.id))
+        || String(host.className || "").trim() || host.id || "page";
+    const peers = Array.from(host.querySelectorAll("input, textarea"))
+        .filter((el) => !(el.dataset && el.dataset.history === "off"))
+        .filter((el) => el.tagName === "TEXTAREA" || !el.type || el.type === "text" || el.type === "search");
+    return owner + "#" + peers.indexOf(field);
+}
+
+function fieldHistory(key) {
+    try {
+        const entries = JSON.parse(localStorage.getItem(FIELD_HISTORY_PREFIX + key) || "[]");
+        return Array.isArray(entries) ? entries : [];
+    } catch (ignored) {
+        return [];
+    }
+}
+
+function rememberFieldHistory(key, value) {
+    const text = String(value == null ? "" : value).trim();
+    if (!text) return;
+    const entries = fieldHistory(key);
+    if (entries[entries.length - 1] === text) return;
+    entries.push(text);
+    while (entries.length > FIELD_HISTORY_MAX) entries.shift();
+    try {
+        localStorage.setItem(FIELD_HISTORY_PREFIX + key, JSON.stringify(entries));
+    } catch (ignored) {
+        /* a full or disabled store keeps the session's history only */
+    }
+}
+
+document.addEventListener("keydown", (ev) => {
+    const field = ev.target;
+    if (!field || !field.tagName) return;
+    const textual = field.tagName === "TEXTAREA"
+        || (field.tagName === "INPUT" && (!field.type || field.type === "text" || field.type === "search"));
+    if (!textual) return;
+    if (ev.key === "Enter" && !ev.shiftKey && !ev.altKey && !ev.ctrlKey && !ev.metaKey) {
+        const key = fieldHistoryKey(field);
+        if (key) {
+            rememberFieldHistory(key, field.value);
+            field.__history = null;   /* the next up starts from the newest entry */
+        }
+        return;
+    }
+    if (ev.key !== "ArrowUp" && ev.key !== "ArrowDown") return;
+    if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
+    /* in a textarea the arrows are the caret's until they reach the edge */
+    if (field.tagName === "TEXTAREA") {
+        if (field.selectionStart !== field.selectionEnd) return;
+        if (ev.key === "ArrowUp" && field.selectionStart !== 0) return;
+        if (ev.key === "ArrowDown" && field.selectionStart !== field.value.length) return;
+    }
+    const key = fieldHistoryKey(field);
+    if (!key) return;
+    const entries = fieldHistory(key);
+    if (!entries.length) return;
+    /* the cursor and the draft live on the ELEMENT (a cloned card is a new field
+       with a new cursor), while the entries come from the key */
+    const state = field.__history || (field.__history = {cursor: entries.length, draft: field.value});
+    if (ev.key === "ArrowUp") {
+        if (state.cursor >= entries.length) state.draft = field.value;
+        if (state.cursor === 0) {
+            ev.preventDefault();
+            return;
+        }
+        state.cursor -= 1;
+        field.value = entries[state.cursor];
+    } else {
+        if (state.cursor >= entries.length) return;
+        state.cursor += 1;
+        field.value = state.cursor === entries.length ? state.draft : entries[state.cursor];
+    }
+    field.setSelectionRange(field.value.length, field.value.length);
+    ev.preventDefault();
+});
+
+/* a value committed on blur (a press of compile, a table pick) is history too */
+document.addEventListener("change", (ev) => {
+    const field = ev.target;
+    if (!field || !field.tagName) return;
+    const textual = field.tagName === "TEXTAREA"
+        || (field.tagName === "INPUT" && (!field.type || field.type === "text" || field.type === "search"));
+    if (!textual) return;
+    const key = fieldHistoryKey(field);
+    if (key) rememberFieldHistory(key, field.value);
+});
+
 /* the mcp tools card is the first card rendered through the panel mapping */
 /* the mcp_server card is the surface readout of an mcp_client's tool catalog */
 function announceMcpTools(tools) {
@@ -1409,14 +1536,19 @@ function evalMtronOn(instance, expr) {
     const mime = "application/x-mtron";
     const reader = readerFor(mime, instance.readers);
     const run = reader.chain.then(() => connectReader(mime, instance.wsBase, instance.readers)).then((socket) => new Promise((resolve) => {
-        const timer = setTimeout(() => {
-            socket.removeEventListener("message", answer);
-            resolve("");
-        }, 15000);
-        const answer = (ev) => {
+        /* a dead socket answers "" at once, not at the timeout: the reader is
+           queued, so one aborted request (a sys_stat the machine drops) must not
+           stall every panel read behind it */
+        const done = (text) => {
             clearTimeout(timer);
             socket.removeEventListener("message", answer);
-            frameText(ev.data).then((text) => resolve(text)).catch(() => resolve(""));
+            cleanup();
+            resolve(text);
+        };
+        const cleanup = settleOnClose(socket, () => done(""));
+        const timer = setTimeout(() => done(""), 15000);
+        const answer = (ev) => {
+            frameText(ev.data).then((text) => done(text)).catch(() => done(""));
         };
         socket.addEventListener("message", answer);
         socket.send(String(expr));

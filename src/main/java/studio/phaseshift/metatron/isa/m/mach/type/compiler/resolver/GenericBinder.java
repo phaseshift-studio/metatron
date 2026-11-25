@@ -31,13 +31,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.GENERIC_BINDING;
 import static studio.phaseshift.metatron.Tokens.INST_COMPOSITION;
 import static studio.phaseshift.metatron.Tokens.RESOLVE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_GENERIC_BINDER_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -68,7 +71,9 @@ public class GenericBinder extends MRec implements Binder {
     }
 
     public GenericBinder() {
-        this(mutableMap(), MACH_GENERIC_BINDER_TID, null);
+        // concurrent: the rec is published into on every resolve, and read by a probe while a machine
+        // resolves on other threads (see apply)
+        this(new ConcurrentHashMap<>(), MACH_GENERIC_BINDER_TID, null);
     }
 
     public GenericBinder(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -134,6 +139,20 @@ public class GenericBinder extends MRec implements Binder {
             sequence.add(bound);
             // the next call operates on what this one emits
             input = bound.rng();
+        }
+        // PUBLISH THE BINDING THIS PASS DEDUCED (Marko, 2026-11-25). The map is otherwise local to this
+        // call, so nothing — human or panel — can see what a generic became ("A => int::T"). It rides the
+        // binder's own rec at <machine>/compiler/resolver/binder/generic_binding, as ONE put: a reader sees
+        // the whole map or the previous one, never a torn one. The binder is this compiler's own
+        // (ScoringResolver mints it), so the write is machine-local; the rec's map is concurrent because a
+        // machine resolves on many threads. Publishing is diagnostic: a binder built over an immutable rec
+        // simply cannot, and the binding itself is unaffected.
+        try {
+            final Map<Obj, Obj> deduced = mutableMap();
+            generics.forEach((generic, type) -> deduced.put(uri(generic), uri(type)));
+            this.jvm().put(uri(GENERIC_BINDING), rec(deduced));
+        } catch (final UnsupportedOperationException ignored) {
+            // read-only binder rec: nothing to publish into, nothing else to do
         }
         return sequence;
     }

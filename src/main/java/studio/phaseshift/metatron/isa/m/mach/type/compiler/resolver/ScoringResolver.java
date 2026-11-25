@@ -60,7 +60,11 @@ public class ScoringResolver extends MRec implements Resolver {
         super(jvm, tid, vid);
         if (this.at(SELECTOR).isNoObj())
             this.at(SELECTOR, SpecificitySelector.single(), MUTABLE);
+        // THE BINDER IS THE COMPILER'S OWN, not the shared singleton (Marko, 2026-11-25): the binder
+        // publishes the map it deduced into its own rec, and a machine must not read another's. BasicCompiler
+        // already mints its rewriter, resolver and typer per compiler ("only the stateless parser is shared");
+        // the binder was the one stage that leaked.
         if (this.at(BINDER).isNoObj())
-            this.at(BINDER, GenericBinder.single(), MUTABLE);
+            this.at(BINDER, new GenericBinder(), MUTABLE);
     }
 }
