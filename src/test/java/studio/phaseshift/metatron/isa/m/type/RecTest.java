@@ -510,12 +510,18 @@ public class RecTest extends AbstractAlgebraTest {
             "[x=>b/c]{-1}                                               % <ERROR>",
             "[a=>[b/c=>d]]{-1}                                          % <ERROR>",
             "[/a=>b]{-1}                                                % <ERROR>",
-            // the span is realized as the literal is parsed, before the code it holds evaluates, so it holds none but _
-            "[a=>*x,b=>c]{2}                                            % <ERROR>",
+            // nor through a poly: a lst key tests the ends it meets as a pattern, and an end does not test a key
+            "[x=>[b/c]] * [[b/+]=>a]                                    % [x=>([b/c]=>a)]",
+            "[a=>[b/+]] * [[b/c]=>x]                                    % [=>]",
+            "[[b/+]=>a]{-1}                                             % <ERROR>",
+            "[x=>[b/c]]{-1}                                             % <ERROR>",
+            // a power is the product's, so code held as a value joins as the code it is, as in r * r, while a key that
+            // is code would run as the literal is parsed, so a span over one is refused, the identity aside
+            "[a=>*x,b=>c]{2}                                            % [=>]",
+            "[a=>b,b=>plus(1)]{2}                                       % [a=>(b=>plus(1))]",
+            "[a=>[b=>*x]]{2}                                            % [=>]",
             "[*x=>b]{2}                                                 % <ERROR>",
-            "[a=>[b=>*x]]{2}                                            % <ERROR>",
-            "[a=>{b,*x}]{2}                                             % <ERROR>",
-            "[a=>plus(1)]{2}                                            % <ERROR>",
+            "[a=>5,?>1=>x]{2}                                           % <ERROR>",
             "[_=>x]{2}                                                  % [_=>(x=>x)]",
     })
     public void testRecordSpans(final String code, final String expected) {

@@ -346,15 +346,17 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * side sums its powers until one holds no walk, so {@code [a=>b,b=>c]{+}}, the transitive closure, is
          * {@code [a=>{b,(b=>c)},b=>c]}. A finite span past the typer's unfold bound for recs fails, and so does an open
          * one with a power past the bound that holds a walk, as a cycle's closure does, and every power past the first
-         * is bounded by the walks it holds as well, since a cycle with a branch doubles them at every power. The parser
-         * realizes a literal's span here, so a rec literal never holds one, and it does so before code the literal holds
-         * can evaluate (code in a poly may: {@code *x} reads x when the rec is applied), so a span over code other than
-         * the identity is refused rather than joined as the code it is.
+         * is bounded by the copies of the rec's own walks it holds as well, since a cycle with a branch doubles them at
+         * every power. The parser realizes a literal's span here, so a rec literal never holds one. A power is the
+         * product's, so code the rec holds as a value joins as the code it is, as in r·r: a range is a value, never run,
+         * and a literal's code stays code when the rec is applied ({@code [a=>*x,b=>c]{2}} is {@code [=>]}, as
+         * {@code [a=>*x,b=>c] * [a=>*x,b=>c]} is). A key that is code acts, applied to every end it meets, and the parser
+         * runs no code, so a span over a rec with a key that is code, other than the identity, is refused.
          */
         public static Rec power(final Rec rec, final cInt span) {
-            walks(rec).flatMap(walk -> chain(walk.d(cInt.ONE()))).filter(step -> step.isObjCall() && !isIdentity(step)).findFirst()
-                    .ifPresent(code -> {
-                        throw MTronException.of("a rec's span is realized as it is parsed, before the code it holds evaluates, so it holds none: %s", code);
+            rec.d(cInt.ONE()).asRec().elements().map(Rel::firstDirect).filter(key -> key.isObjCall() && !isIdentity(key)).findFirst()
+                    .ifPresent(key -> {
+                        throw MTronException.of("a rec's span is realized as it is parsed, and its key %s is code the join would run", key);
                     });
             final Long low = span.min();
             final Long high = span.max();
@@ -368,11 +370,14 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * the sum of base^k for k from {@code from} to {@code to} ({@link #power}), {@code to} null running until a power
          * holds no walk (every later one holds none). A finite span is bounded once, by its largest power, and an open
          * one by each power that holds a walk, so the empty power that ends a closure is never refused. Every power past
-         * the first is bounded by the walks it holds, so no join starts from more walks than the bound
+         * the first is bounded by its walks too, counted in copies of the base's: a power holds at most the bound's
+         * multiple of them, so the square of a chain, never larger than the chain, passes, while a cycle with a branch,
+         * which doubles its walks at every power, is refused within a few powers
          */
         private static Rec powers(final Rec base, final long from, final Long to) {
             if (null != to)
                 Typer.Helper.unfolds(Typer.UNFOLD_REC, to);
+            final long size = Math.max(1L, walks(base).count());
             Rec sum = rec();
             Rec term = base.one();
             for (long k = 0L; null == to || k <= to; k++) {
@@ -383,7 +388,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                     if (null == to)
                         Typer.Helper.unfolds(Typer.UNFOLD_REC, k);
                     if (k > 1L)
-                        Typer.Helper.unfolds(Typer.UNFOLD_REC, walks(term).count());
+                        Typer.Helper.unfolds(Typer.UNFOLD_REC, Math.ceilDiv(walks(term).count(), size));
                 }
                 if (k >= from)
                     sum = sum.plus(term);
@@ -420,25 +425,19 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         }
 
         /**
-         * an object the converse can move ({@link #converse}): a letter, which a join meets only at itself. Code and a type
-         * meet every object they answer, a pattern every path it matches, and a path of more than one segment the paths
-         * through it and under it, which its own segments, reversed, never meet, so a walk through any of them has no
-         * converse a rec can list: the law (r·s)^-1 = s^-1·r^-1 and flat, path-keyed and nested layouts would disagree
+         * an object the converse can move ({@link #converse}): a letter, a mono a join meets only at itself. Code and a type
+         * meet every object they answer, a poly every end its entries test as (a lst key holding b/+ meets the end
+         * [b/c], while [b/+] meets no key [b/c]), a pattern every path it matches, and a path of more than one segment the
+         * paths through it and under it, which its own segments, reversed, never meet, so a walk through any of them has
+         * no converse a rec can list: the law (r·s)^-1 = s^-1·r^-1 and flat, path-keyed and nested layouts would disagree
          */
         private static Obj letter(final Obj obj) {
-            if (obj.isObjCall() || obj.isType())
-                throw MTronException.of("a walk through code or a type has no converse a rec can list: %s", obj);
+            if (obj.isObjCall() || obj.isType() || obj.isPoly())
+                throw MTronException.of("a walk through code, a type or a poly has no converse a rec can list: %s", obj);
             if (obj.isUri() && (1 != obj.uriValue().segmentLength() || !obj.uriValue().isRelative() || obj.uriValue().isBranch()
                     || obj.uriValue().hasPattern() || obj.uriValue().hasScheme() || obj.uriValue().hasAuthority()))
                 throw MTronException.of("a walk through a path or a pattern has no converse a rec can list: %s", obj);
             return obj;
-        }
-
-        /**
-         * the objects a walk steps through, its end last ({@link #power})
-         */
-        private static Stream<Obj> chain(final Obj walk) {
-            return walk.isRel() ? Stream.concat(Stream.of(walk.asRel().firstDirect()), chain(walk.asRel().secondDirect())) : Stream.of(walk);
         }
 
         /**

@@ -172,10 +172,10 @@ public class TyperTest extends AbstractMetatronTest {
             "[a=>b]{-101}                     % <ERROR>",
             "[a=>b,b=>a]{+}                   % <ERROR>",
             "[a=>b,b=>c]{+}                   % [a=>{b,(b=>c)},b=>c]",
-            // and the walks each power past the first holds, so a cycle with a branch fails as they double: its fifth
-            // power holds 64 walks, its sixth 128
-            "[a=>{a,b},b=>{a,b}]{5}.count()   % 1",
-            "[a=>{a,b},b=>{a,b}]{6}           % <ERROR>",
+            // and each power past the first by the copies of the rec's walks it holds, so a cycle with a branch fails as
+            // they double: of its 4 walks, its seventh power holds 64 copies, its eighth 128
+            "[a=>{a,b},b=>{a,b}]{7}.count()   % 1",
+            "[a=>{a,b},b=>{a,b}]{8}           % <ERROR>",
             "[a=>{a,b},b=>{a,b}]{+}           % <ERROR>"})
     public void testASpanUnfoldsNoFurtherThanItsBound(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
@@ -202,9 +202,12 @@ public class TyperTest extends AbstractMetatronTest {
             checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d]{3}", "<ERROR>");
             checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d]{+}", "<ERROR>");
             checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d]{-3}", "<ERROR>");
-            // and the walks a power past the first holds, while the rec itself, its first power, is never refused
-            checkCodeParseApply(LOG, "[a=>{b,c},b=>d,c=>d]{2}", "[a=>{(b=>d),(c=>d)}]");
-            checkCodeParseApply(LOG, "[a=>{b,c,e},b=>d,c=>d,e=>d]{2}", "<ERROR>");
+            // and each power past the first by the copies of the rec's walks it holds: a chain's square, smaller than the
+            // chain, passes, as does a two-way cycle's at two copies, and a three-way cycle's square, at three, does not
+            checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d,d=>e]{2}", "[a=>(b=>c),b=>(c=>d),c=>(d=>e)]");
+            checkCodeParseApply(LOG, "[a=>{b,c,e},b=>d,c=>d,e=>d]{2}", "[a=>{(b=>d),(c=>d),(e=>d)}]");
+            checkCodeParseApply(LOG, "[a=>{a,b},b=>{a,b}]{2}.count()", "1");
+            checkCodeParseApply(LOG, "[a=>{a,b,c},b=>{a,b,c},c=>{a,b,c}]{2}", "<ERROR>");
             checkCodeParseApply(LOG, "[a=>{b,c,e}]{1}", "[a=>{b,c,e}]");
         } finally {
             Machine.current().compiler().typer().at("unfold/uri", jnt(Typer.UNFOLD_DEFAULT), Poly.MUTABLE);
