@@ -41,7 +41,7 @@ import java.util.Map;
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.GOT;
-import static studio.phaseshift.metatron.Tokens.MUL;
+import static studio.phaseshift.metatron.Tokens.LHS;
 import static studio.phaseshift.metatron.Tokens.REASON;
 import static studio.phaseshift.metatron.Tokens.ROLE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
@@ -595,7 +595,8 @@ public class RecTest extends AbstractAlgebraTest {
     /**
      * THE RING IS JUDGED ON WALKS: rec's partner {@code [1=>a,2=>c]} meets the sample's ends, so each multiplicative law
      * the battery holds compared products that hold walks, never {@code [=>]} with {@code [=>]}. A partner that met
-     * nothing, or a ring that no longer bound the walk join, fails here. Each row: the law % both sides it compared.
+     * nothing, or an algebra that no longer bound the walk join (mul_monoid's op, read by its equations), fails here.
+     * Each row: the law % both sides it compared.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -609,7 +610,7 @@ public class RecTest extends AbstractAlgebraTest {
         final Machine machine = Machine.current().push(f("rec_ring_walks_" + law));
         try {
             final List<Obj> held = AlgebraTool.analyzeType(REC_TYPE, List.of(Law.valueOf(law))).holds().<Obj>elements()
-                    .filter(result -> result.asRec().at(uri(ROLE)).equals(uri(MUL)))
+                    .filter(result -> result.asRec().at(uri(LHS)).strValue().contains(".mult("))
                     .toList();
             assertEquals(1, held.size(), () -> law + " is held once on the walk join: " + held);
             held.getFirst().asRec().<Lst>at(uri(GOT)).<Obj>elements()
@@ -622,8 +623,8 @@ public class RecTest extends AbstractAlgebraTest {
     /**
      * THE WALK JOIN DOES NOT COMMUTE, and the analysis says so where it is asked. A type-level analysis holds an
      * operation to {@code commutative} only when its instruction declares the law (Marko, 2026-11-25): the merge
-     * does and is held to it, the join does not and answers it uncheckable; an analysis of the join alone judges the
-     * law and fails it on the sample and its partner.
+     * does and is held to it, the join, mul_monoid's op, does not and answers it uncheckable; an analysis of the join
+     * alone judges the law and fails it on the sample and its partner.
      */
     @Test
     public void testTheWalkJoinIsJudgedNotCommuting() {
@@ -635,7 +636,6 @@ public class RecTest extends AbstractAlgebraTest {
             final AlgebraTool.Report type = AlgebraTool.analyzeType(REC_TYPE, List.of(Law.commutative));
             assertTrue(type.ok(), () -> "the type-level claim is the merge's: " + type.toRec());
             assertEquals(1L, type.uncheckable().<Obj>elements()
-                    .filter(result -> result.asRec().at(uri(ROLE)).equals(uri(MUL)))
                     .filter(result -> result.asRec().at(uri(REASON)).equals(str("the instruction declares no commutative law")))
                     .count(), () -> "the join answers the type-level claim uncheckable: " + type.toRec());
         } finally {
@@ -1325,8 +1325,10 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>[b=>[=>]]] + [c=>1]                           % [c=>1]",
             "[a=>[b=>[=>],d=>2]] + [c=>1]                      % [a=>[d=>2],c=>1]",
             "[a=>{1,[=>]}] + [c=>2]                            % [a=>1,c=>2]",
-            // ... but the unit law rewrites x + [=>] to x before any merge runs, so the literal keeps it there
+            // ... but the unit law rewrites x + [=>] to x before any merge runs, so the literal keeps it there, and
+            // x * [_=>_] to x before any join runs (mul_monoid), while Rec.mult answers the normal form, [=>]
             "[a=>[=>]] + [=>]                                  % [a=>[=>]]",
+            "[a=>[=>]] * [_=>_]                                % [a=>[=>]]",
             "[a=>[=>]]                                         % [a=>[=>]]",
             "[a=>[=>]].plus([a=>[b=>1]]).plus([a=>[b=>1]].neg())   % [=>]",
             "[a=>[=>]].plus([a=>[=>]]).plus([a=>[=>]].neg())       % [=>]",

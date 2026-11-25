@@ -280,9 +280,10 @@ public final class mTypes {
         // coefficient on each value, so the merge is an abelian group. MULT is the walk join, which keeps the middle,
         // [a=>b]·[b=>c] is [a=>(b=>c)]: associative but not commutative, with the identity arrow [_=>_], the walk of
         // length zero, as its unity. The carrier is the recs in the merge's normal form (no empty sub-rec, a key's recs
-        // one rec): a literal outside it answers its normal form under +, · and the unity, never itself. No mul_monoid
-        // is declared: its id is the unity the rewriter drops (x·[_=>_] is x), while the join answers a literal its
-        // normal form under the unity ([a=>[=>]]·[_=>_] is [=>]), so the drop would keep what the join normalizes.
+        // one rec): a literal outside it answers its normal form under +, · and the unity, never itself. mul_monoid is
+        // declared beside the ring, as lst's and code's are: its id is the unity the rewriter drops (x·[_=>_] is x), so
+        // a literal keeps its written form there ([a=>[=>]]·[_=>_] is [a=>[=>]] in mtron, [=>] through Rec.mult), as
+        // the rewriter's drop of the merge's zero already keeps it ([a=>[=>]] + [=>] is [a=>[=>]]).
         // add_commutative_monoid's commutative holds PLUS alone, the operation that declares Law.commutative
         // (AlgebraTool.analyzeType), never the join. The monoids are declared too: a theory refines no other, so the
         // group does not make rec a monoid
@@ -305,7 +306,11 @@ public final class mTypes {
                 uri("add_commutative_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
                                 uri(ID), rec()),
-                        COMMUTATIVE_MONOID_THEORY_TID, null))));
+                        COMMUTATIVE_MONOID_THEORY_TID, null),
+                uri("mul_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(MULT_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
+                                uri(ID), rec(id_().tryToInst(), id_().tryToInst())),
+                        MONOID_THEORY_TID, null))));
         // code: the function/stream ring — add=branch (parallel split/merge), mul=compose (serial),
         // zero=end (the 0-function, ≡ id{0}::T), one=id (the parametric identity), inv=additive inverse (coeff −1)
         declare(CODE_TYPE, rec(mutableMap(
