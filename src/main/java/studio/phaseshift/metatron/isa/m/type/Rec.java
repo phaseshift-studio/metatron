@@ -347,16 +347,21 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * {@code [a=>{b,(b=>c)},b=>c]}. A finite span past the typer's unfold bound for recs fails, and so does an open
          * one with a power past the bound that holds a walk, as a cycle's closure does, and every power past the first
          * is bounded by the copies of the rec's own walks it holds as well, since a cycle with a branch doubles them at
-         * every power. The parser realizes a literal's span here, so a rec literal never holds one. A power is the
+         * every power, and so is the sum a range builds. The parser realizes a literal's span here, so a rec literal never holds one. A power is the
          * product's, so code the rec holds as a value joins as the code it is, as in r·r: a range is a value, never run,
          * and a literal's code stays code when the rec is applied ({@code [a=>*x,b=>c]{2}} is {@code [=>]}, as
-         * {@code [a=>*x,b=>c] * [a=>*x,b=>c]} is). A key that is code acts, applied to every end it meets, and the parser
-         * runs no code, so a span over a rec with a key that is code, other than the identity, is refused.
+         * {@code [a=>*x,b=>c] * [a=>*x,b=>c]} is). A key that acts runs as the join tests the ends it meets, and the
+         * parser runs no code, so a span is refused over a rec with a key that is code (the identity aside), a type that
+         * is no plain base type (its predicate runs, {@code nat::T}'s {@code ?>=0} on every end, and may read memory
+         * before the statements ahead of it have run), or a poly (it tests an end with its entries, code among them).
          */
         public static Rec power(final Rec rec, final cInt span) {
-            rec.d(cInt.ONE()).asRec().elements().map(Rel::firstDirect).filter(key -> key.isObjCall() && !isIdentity(key)).findFirst()
+            rec.d(cInt.ONE()).asRec().elements().map(Rel::firstDirect)
+                    .filter(key -> (key.isObjCall() && !isIdentity(key)) || key.isPoly()
+                            || (key.isType() && (key.asType().hasPredicate() || !key.asType().isBaseType())))
+                    .findFirst()
                     .ifPresent(key -> {
-                        throw MTronException.of("a rec's span is realized as it is parsed, and its key %s is code the join would run", key);
+                        throw MTronException.of("a rec's span is realized as it is parsed, and its key %s would run as the join tests the ends it meets", key);
                     });
             final Long low = span.min();
             final Long high = span.max();
@@ -372,12 +377,14 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * one by each power that holds a walk, so the empty power that ends a closure is never refused. Every power past
          * the first is bounded by its walks too, counted in copies of the base's: a power holds at most the bound's
          * multiple of them, so the square of a chain, never larger than the chain, passes, while a cycle with a branch,
-         * which doubles its walks at every power, is refused within a few powers
+         * which doubles its walks at every power, is refused within a few powers. So is the sum a range builds, so that
+         * no span realizes more than the bound's multiple of the base's walks, however many powers it sums
          */
         private static Rec powers(final Rec base, final long from, final Long to) {
             if (null != to)
                 Typer.Helper.unfolds(Typer.UNFOLD_REC, to);
             final long size = Math.max(1L, walks(base).count());
+            long held = 0L;
             Rec sum = rec();
             Rec term = base.one();
             for (long k = 0L; null == to || k <= to; k++) {
@@ -387,11 +394,15 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                         break;
                     if (null == to)
                         Typer.Helper.unfolds(Typer.UNFOLD_REC, k);
-                    if (k > 1L)
-                        Typer.Helper.unfolds(Typer.UNFOLD_REC, Math.ceilDiv(walks(term).count(), size));
                 }
-                if (k >= from)
+                final long walks = walks(term).count();
+                if (k > 1L)
+                    Typer.Helper.unfolds(Typer.UNFOLD_REC, Math.ceilDiv(walks, size));
+                if (k >= from) {
                     sum = sum.plus(term);
+                    held += walks;
+                    Typer.Helper.unfolds(Typer.UNFOLD_REC, Math.ceilDiv(held, size));
+                }
             }
             return sum;
         }

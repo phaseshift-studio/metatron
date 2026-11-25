@@ -176,7 +176,9 @@ public class TyperTest extends AbstractMetatronTest {
             // they double: of its 4 walks, its seventh power holds 64 copies, its eighth 128
             "[a=>{a,b},b=>{a,b}]{7}.count()   % 1",
             "[a=>{a,b},b=>{a,b}]{8}           % <ERROR>",
-            "[a=>{a,b},b=>{a,b}]{+}           % <ERROR>"})
+            "[a=>{a,b},b=>{a,b}]{+}           % <ERROR>",
+            // and so does the sum a range builds: the first seven powers together hold 127 copies
+            "[a=>{a,b},b=>{a,b}]{1,7}         % <ERROR>"})
     public void testASpanUnfoldsNoFurtherThanItsBound(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
@@ -207,6 +209,7 @@ public class TyperTest extends AbstractMetatronTest {
             checkCodeParseApply(LOG, "[a=>b,b=>c,c=>d,d=>e]{2}", "[a=>(b=>c),b=>(c=>d),c=>(d=>e)]");
             checkCodeParseApply(LOG, "[a=>{b,c,e},b=>d,c=>d,e=>d]{2}", "[a=>{(b=>d),(c=>d),(e=>d)}]");
             checkCodeParseApply(LOG, "[a=>{a,b},b=>{a,b}]{2}.count()", "1");
+            checkCodeParseApply(LOG, "[a=>{a,b},b=>{a,b}]{1,2}", "<ERROR>");
             checkCodeParseApply(LOG, "[a=>{a,b,c},b=>{a,b,c},c=>{a,b,c}]{2}", "<ERROR>");
             checkCodeParseApply(LOG, "[a=>{b,c,e}]{1}", "[a=>{b,c,e}]");
         } finally {

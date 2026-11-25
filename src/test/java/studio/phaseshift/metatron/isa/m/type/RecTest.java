@@ -523,6 +523,12 @@ public class RecTest extends AbstractAlgebraTest {
             "[*x=>b]{2}                                                 % <ERROR>",
             "[a=>5,?>1=>x]{2}                                           % <ERROR>",
             "[_=>x]{2}                                                  % [_=>(x=>x)]",
+            // and so is one over any key that would run as the join tests an end: a refined type runs its predicate,
+            // and a poly tests with its entries, while a plain base type runs none
+            "[a=>5,int::T[?>1]=>x]{2}                                   % <ERROR>",
+            "[a=>[5],[?>1]=>x]{2}                                       % <ERROR>",
+            "[a=>[1],[1]=>x]{2}                                         % <ERROR>",
+            "[a=>5,int::T=>x]{2}                                        % [a=>(5=>x)]",
     })
     public void testRecordSpans(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

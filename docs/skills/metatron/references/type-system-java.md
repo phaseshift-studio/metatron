@@ -381,8 +381,8 @@ The five sites that unfold a span ask `Typer.Helper.unfolds`, which answers the 
 a uri's path: `mParser.m_uri` for `<w>{n}`, `MUri.clone` for a span a uri takes from its lhs, and `pow(n)`. The fourth is
 `Lst.Helper.laid` for the copies laid along a lst axis. The fifth is `Rec.Helper.power`, which the rec parser calls for
 `[…]{n}`: a finite span is bounded by its largest power, an open one (`{+}`, `{*}`) by each power that holds a walk,
-and every power past the first by the copies of the rec's walks it holds, since a cycle with a branch doubles them at
-every power.
+and every power past the first, and the sum a range builds, by the copies of the rec's walks it holds, since a cycle
+with a branch doubles them at every power.
 A span of one copy (the unit, the obj, its converse) reads no state:
 
 ```java
