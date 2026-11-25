@@ -146,8 +146,10 @@ public class MoveRemoteTest extends AbstractMetatronTest {
      * an instruction that answers per obj, after a fold that runs a range of times, in a branch member compiled without
      * its lhs, where the stream may hold nothing (an empty fold, a ;'s empty seed, a point of zero), and where its count
      * is known only as a range (a move{2,3}, a count{2,3}(), whose split never ended). Each of those rows has its twin
-     * without the move, which answers the same. A cut's tail is code, any count of it, none included, and a cut with no
-     * tail answers nothing: its tail is noobj, the zero (Marko, 2026-11-25). Each row: the expression % its answer.
+     * without the move, which answers the same. A cut's tail is code, any count of it, none included. A cut written with
+     * no tail has the ABSENT tail, noobj, the zero, and answers nothing without shipping anything (Marko, 2026-11-25);
+     * a move that ends a chain compiles to a cut with the EMPTY tail, the unit, which answers its lhs. Each row: the
+     * expression % its answer.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -183,15 +185,23 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             "5; count()                                                                                           % 0",
             "5.move{0}(<//self>).count()                                                                          % 0",
             "{0}5.count()                                                                                         % 0",
+            // a range count keeps {*} (each explain row fails fast where a stated range would never end its split)
+            "5.move{2,3}(<//self>).count().explain()>>format.has('cut +[^ ]+[{][*][}]::T ').count()               % 1",
+            "{2,3}5.move(<//self>).count().explain()>>format.has('cut +[^ ]+[{][*][}]::T ').count()               % 1",
+            "{1,2,3,4}.count{2,3}().move(<//self>).count().explain()>>format.has('cut +[^ ]+[{][*][}]::T ').count() % 1",
             "5.move{2,3}(<//self>).count()                                                                        % 3",
+            "{2,3}5.move(<//self>).count()                                                                        % 3",
             "{2,3}5.count()                                                                                       % 3",
             "{1,2,3,4}.count{2,3}().move(<//self>).count()                                                        % 3",
             "{1,2,3,4}.count{2,3}().count()                                                                       % 3",
             "2.5.branch(sum().move(<//self>).plus(1.0))                                                           % 3.5",
             "2.5.branch(sum().plus(1.0))                                                                          % 3.5",
-            // a tail of one instruction may run any number of times, none included; a cut with no tail answers nothing
+            // a tail of one instruction may run any number of times, none included. The absent tail answers nothing
+            // and ships nothing: to a place no peer is dialed at, the same cut with a tail fails
             "5.move(<//self>).{?}plus(1)                                                                          % {5,6}",
             "5.cut(<loop://self>)                                                                                 % noobj",
+            "5.cut(<loop://undialed>)                                                                             % noobj",
+            "5.cut(<loop://undialed>,plus(1))                                                                     % <ERROR>",
     }, delimiter = '%')
     void testTheCutsDomIsTheStreamThatFlowsIn(final String mtron, final String answer) {
         checkCodeParseApply(LOG, mtron.trim(), answer.trim());
@@ -199,7 +209,7 @@ public class MoveRemoteTest extends AbstractMetatronTest {
 
     /**
      * A MOVE TO A HOST THAT ENDS THE CHAIN IS STILL A CUT: the move instruction never leaves this server, so the cut
-     * ships the lhs with nothing to run, and the peer answers it.
+     * ships the lhs with the empty tail, the unit (never the absent tail, the zero), and the peer answers it.
      */
     @Test
     void testAMoveToAHostThatEndsTheChainShips() {

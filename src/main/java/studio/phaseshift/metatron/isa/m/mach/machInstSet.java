@@ -1158,9 +1158,10 @@ public class machInstSet extends AbstractInstSet {
                                 .example("5.move(<//worker>).plus(1)    [-- compiles to 5.cut?<=int(<//worker>, plus(1)): the worker compiles it --]")
                                 .example("5.move(<a>).plus(1).explain() [-- compiles to 5.cut?<=int(<a>, plus(1)).explain(): explained here, nothing runs --]")
                                 .body((lhs, inst) -> {
-                                    // A CUT WITH NO TAIL ANSWERS THE ZERO (Marko, 2026-11-25): an absent tail arrives as
-                                    // noobj, the ring's zero, so the cut is lhs times 0, and nothing runs anywhere. A tail
-                                    // that may run no times ({?}plus(1)) is no zero, and the empty code is the unit
+                                    // A CUT WITH AN ABSENT TAIL ANSWERS THE ZERO (Marko, 2026-11-25): the tail arrives
+                                    // as noobj, the ring's zero, so the cut is lhs times 0, and nothing runs or ships,
+                                    // before any ?timeout is read. A tail that may run no times ({?}plus(1)) is no zero,
+                                    // and the EMPTY tail, the code a move that ends a chain gets, is the unit
                                     if (inst.arg(1).isNoObj())
                                         return noobj();
                                     // A CUT TIMES ITS RUN (Marko, 2026-11-24: all timeout logic lives in the cut, and a
@@ -1461,8 +1462,9 @@ public class machInstSet extends AbstractInstSet {
                 if (i + 2 == end && CUT_INST_TID.equals(insts.get(i + 1).tid().basePath()))
                     return code;
                 final List<Inst> cut = new ArrayList<>(insts.subList(0, i));
-                // a tail of one instruction is that instruction, as the parser reads cut(<a>, plus(1)); no tail is the
-                // empty code, which the cut ships as nothing to run
+                // a tail of one instruction is that instruction, as the parser reads cut(<a>, plus(1)); a move that ends
+                // the chain has the EMPTY tail, the unit, which the cut ships as nothing to run (never the absent tail,
+                // noobj, the zero, which answers nothing)
                 final Obj tail = last
                         ? code(new ArrayList<>())
                         : code(new ArrayList<>(insts.subList(i + 1, end))).tryToInst();

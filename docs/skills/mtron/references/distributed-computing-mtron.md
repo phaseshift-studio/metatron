@@ -758,8 +758,9 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    hands the move its whole stream at once, an exact count (from the seed, or a gather run once); anywhere else the
    count is not known here (after an instruction that answers per obj or per page, after a fold run a range of times,
    where a count is only a range, in a branch member compiled without its lhs, or where the stream may hold nothing),
-   and the cut keeps `#{*}`, so it still gathers the stream whole. A cut with no tail answers nothing, as its tail is
-   the zero.
+   and the cut keeps `#{*}`, so it still gathers the stream whole. A cut written with no tail has the absent tail,
+   noobj, the zero, and answers nothing; the cut a move that ends a chain compiles to has the empty tail, the unit,
+   and answers its lhs.
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's
