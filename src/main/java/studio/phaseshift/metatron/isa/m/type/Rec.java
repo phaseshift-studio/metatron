@@ -347,7 +347,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * {@code [a=>{b,(b=>c)},b=>c]}. A finite span past the typer's unfold bound for recs fails, and so does an open
          * one with a power past the bound that holds a walk, as a cycle's closure does, and every power past the first
          * is bounded by the copies of the rec's own walks it holds as well, since a cycle with a branch doubles them at
-         * every power, and so is the sum a range builds. The parser realizes a literal's span here, so a rec literal never holds one. A power is the
+         * every power, and so is the whole span a range realizes, its two sides of zero together. The parser realizes a
+         * literal's span here, so a rec literal never holds one. A power is the
          * product's, so code the rec holds as a value joins as the code it is, as in r·r: a range is a value, never run,
          * and a literal's code stays code when the rec is applied ({@code [a=>*x,b=>c]{2}} is {@code [=>]}, as
          * {@code [a=>*x,b=>c] * [a=>*x,b=>c]} is). A key that acts runs as the join tests the ends it meets, and the
@@ -368,7 +369,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
             final Rec ahead = null != high && high < 0L ? rec() : powers(rec, null == low || low < 0L ? 0L : low, high);
             final Rec behind = null != low && low >= 0L ? rec()
                     : powers(converse(rec), null == high || high >= 0L ? 1L : -high, null == low ? null : -low);
-            return ahead.plus(behind);
+            // each side bounds its own sum, and a range across zero sums both: the span is bounded as one
+            final Rec spanned = ahead.plus(behind);
+            Typer.Helper.unfolds(Typer.UNFOLD_REC, Math.ceilDiv(walks(spanned).count(), Math.max(1L, walks(rec).count())));
+            return spanned;
         }
 
         /**
@@ -377,8 +381,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * one by each power that holds a walk, so the empty power that ends a closure is never refused. Every power past
          * the first is bounded by its walks too, counted in copies of the base's: a power holds at most the bound's
          * multiple of them, so the square of a chain, never larger than the chain, passes, while a cycle with a branch,
-         * which doubles its walks at every power, is refused within a few powers. So is the sum a range builds, so that
-         * no span realizes more than the bound's multiple of the base's walks, however many powers it sums
+         * which doubles its walks at every power, is refused within a few powers. So is the sum this side of a range
+         * builds, however many powers it sums; {@link #power} bounds the two sides of zero together
          */
         private static Rec powers(final Rec base, final long from, final Long to) {
             if (null != to)

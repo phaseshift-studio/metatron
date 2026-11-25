@@ -178,7 +178,11 @@ public class TyperTest extends AbstractMetatronTest {
             "[a=>{a,b},b=>{a,b}]{8}           % <ERROR>",
             "[a=>{a,b},b=>{a,b}]{+}           % <ERROR>",
             // and so does the sum a range builds: the first seven powers together hold 127 copies
-            "[a=>{a,b},b=>{a,b}]{1,7}         % <ERROR>"})
+            "[a=>{a,b},b=>{a,b}]{1,7}         % <ERROR>",
+            // and the whole span, its two sides of zero together: a 3-cycle's {-60,60} holds 121 copies of its 3 walks,
+            // though each side alone holds 61 or 60
+            "[a=>b,b=>c,c=>a]{-30,30}.count() % 1",
+            "[a=>b,b=>c,c=>a]{-60,60}         % <ERROR>"})
     public void testASpanUnfoldsNoFurtherThanItsBound(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
