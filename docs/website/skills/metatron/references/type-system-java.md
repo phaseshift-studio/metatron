@@ -377,11 +377,19 @@ before a write, the obj before a type-predicate test, the selector before a dyna
 
 Beside `check`, the typer's `unfold` field bounds how many copies a span may unfold into, one `int::T` per carrier
 (`unfold=>[uri=>100, lst=>100, rec=>100]` by default; a boot profile overrides with `typer/unfold => [uri => 1000]`).
-The five sites that unfold a span ask `Typer.Helper.unfolds`, which answers the span or throws past the bound. Three are
-a uri's path: `mParser.m_uri` for `<w>{n}`, `MUri.clone` for a span a uri takes from its lhs, and `pow(n)`. The fourth is
-`Lst.Helper.laid` for the copies laid along a lst axis. The fifth is `Rec.Helper.power`, which the rec parser calls for
+The sites that unfold a span ask `Typer.Helper.unfolds`, which answers the span or throws past the bound. Three are a
+uri's path: `mParser.m_uri` for `<w>{n}`, `MUri.clone` for a span a uri takes from its lhs, and `pow(n)`. Three are a
+lst's: `Lst.Helper.laid` for the copies laid along a lst axis (`[3{2}]`); `Lst.Helper.power` and its `copies` for a
+lst's span, its power in the word ring (`[1,2]{2}`, `pow(n)` on a lst, and the count a stream's product takes,
+`{n}[a].prod()`), a range bounded by its farthest power and then by the copies all its powers hold, before any is
+built, and its sum by its powers' copies together, as a rec's range is by its powers' walks; and `Lst.Helper.words` for
+the words a sum or `as(uri::T)` expands a lst into, measured before any is built and bounded, as a rec's powers are, by
+the copies of the lst's own letters it holds, each sub-word its copies share held once and each brace they share read
+once, so nested spans of sub-words cannot hide their words.
+The last is `Rec.Helper.power`, which the rec parser calls for
 `[…]{n}`: a finite span is bounded by its largest power, an open one (`{+}`, `{*}`) by each power that holds a walk,
-and every power past the first by the walks it holds, since a cycle with a branch doubles them at every power.
+and every power past the first, and the sum a range builds, by the copies of the rec's walks it holds, since a cycle
+with a branch doubles them at every power.
 A span of one copy (the unit, the obj, its converse) reads no state:
 
 ```java

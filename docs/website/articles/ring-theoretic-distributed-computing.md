@@ -369,35 +369,35 @@ expansion and contraction of each cut in figure 2, and lists `law_shard` among t
 ```mtron
 mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master //local   apply 738.022 ms, 2 places
-       places      2, gathered in 738.022 ms (the master's apply, its gather wait included)
+     master //local   apply 734.372 ms, 2 places
+       places      2, gathered in 734.372 ms (the master's apply, its gather wait included)
        place      objs  apply (ms)   share
-       //0           3      30.167   50.0%  straggler
-       //1           1      30.156   50.0%
-       apply       min 30.156   max 30.167   mean 30.162 (ms)
-       imbalance   1.00 (max ÷ mean apply)
-       efficiency  0.041 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 60.324 ms
-       level 1     2 places, imbalance 1.00
-       critical    //0 30.167 ms
+       //0           3      31.518   51.3%  straggler
+       //1           1      29.965   48.7%
+       apply       min 29.965   max 31.518   mean 30.742 (ms)
+       imbalance   1.03 (max ÷ mean apply)
+       efficiency  0.042 (Σ lane apply ÷ (k × gather wait))
+       tree        depth 1   leaves 2   objs 4   lane time 61.483 ms
+       level 1     2 places, imbalance 1.03
+       critical    //0 31.518 ms
        stage     min (ms)   max (ms)
-       rewrite     35.394     95.218
-       resolve     35.541     95.683
-       apply      738.022   1418.388
+       rewrite     40.087     45.600
+       resolve     40.288     45.822
+       apply      734.372    876.020
        insts     3
        resolve sub-stages (avg ms):
-         inst-resolve         5.018   49.2%
-         generic-binding      4.389   43.0%
-         inst-composition     0.792    7.8%
+         inst-resolve         3.499   44.5%
+         generic-binding      3.781   48.1%
+         inst-composition     0.580    7.4%
        rewrite rules:
                      law_poset           branch_factor       law_shard           law_monoidic        derivation_contractiontheory_unit_removal 
            insts.in  220                 220                 220                 220                 220                 220                 
            insts.out 220                 220                 220                 220                 220                 220                 
-           time(ms)  127.551             87.088              46.562              40.284              36.884              24.368              
-           TOTAL     inst.in 3   inst.out 3   time(ms) 531.663
+           time(ms)  87.355              57.546              28.909              28.557              25.688              17.559              
+           TOTAL     inst.in 3   inst.out 3   time(ms) 363.837
        apply sub-stages (avg ms):
-         split        0.025    0.0%
-         apply      106.766  100.0%
+         split        0.020    0.0%
+         apply       67.196  100.0%
          next         0.007    0.0%
        per-instruction (per iteration):
                      branch    sum       branch    
@@ -405,67 +405,67 @@ mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
            in.coeff  0         2         0         
            out.monad 1         1         1         
            out.coeff 2         1         2         
-           time(ms)  106.766   0.000     0.000     
+           time(ms)  67.196    0.000     0.000     
        flow       monads=25 coeff-sum=25 compression=1.00 processors=10
-       cache     hits=353400 misses=0 hit=100.0%
-       //0   apply 30.167 ms, a leaf, objs 3, straggler
+       cache     hits=345295 misses=0 hit=100.0%
+       //0   apply 31.518 ms, a leaf, objs 3, straggler
          stage     min (ms)   max (ms)
-         rewrite     26.000     29.761
-         resolve     26.175     29.988
-         apply       30.167     39.046
+         rewrite     27.721     29.368
+         resolve     27.935     29.666
+         apply       31.518     33.761
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         3.228   31.4%
-           generic-binding      6.414   62.4%
-           inst-composition     0.643    6.2%
+           inst-resolve         3.421   31.3%
+           generic-binding      6.840   62.5%
+           inst-composition     0.677    6.2%
          rewrite rules:
-                       law_shard           derivation_contractionbranch_factor       law_poset           theory_unit_removal law_monoidic        
+                       law_shard           derivation_contractionlaw_poset           branch_factor       law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  141.116             88.854              9.825               9.104               4.951               4.633               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 273.619
+             time(ms)  141.793             90.907              10.016              9.830               4.577               4.059               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 276.454
          apply sub-stages (avg ms):
-           split        0.008    4.0%
-           apply        0.196   92.5%
-           next         0.007    3.5%
+           split        0.008    3.5%
+           apply        0.222   93.1%
+           next         0.008    3.3%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.020     0.176     0.000     
+             time(ms)  0.023     0.199     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
-         cache     hits=131368 misses=0 hit=100.0%
-       //1   apply 30.156 ms, a leaf, objs 1
+         cache     hits=126931 misses=0 hit=100.0%
+       //1   apply 29.965 ms, a leaf, objs 1
          stage     min (ms)   max (ms)
-         rewrite     27.511     44.789
-         resolve     27.774     44.994
-         apply       30.156     39.413
+         rewrite     26.832     29.509
+         resolve     27.022     29.763
+         apply       29.965     32.306
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         3.582   32.1%
-           generic-binding      6.771   60.7%
-           inst-composition     0.802    7.2%
+           inst-resolve         3.388   32.1%
+           generic-binding      6.444   61.0%
+           inst-composition     0.724    6.9%
          rewrite rules:
                        law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  152.584             92.439              12.022              9.639               4.864               3.895               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 291.585
+             time(ms)  137.981             84.948              10.644              9.414               4.378               3.868               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 266.633
          apply sub-stages (avg ms):
-           split        0.009    3.5%
-           apply        0.225   93.3%
-           next         0.008    3.1%
+           split        0.010    4.1%
+           apply        0.217   92.9%
+           next         0.007    3.0%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.022     0.203     0.000     
+             time(ms)  0.021     0.196     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
-         cache     hits=133443 misses=3 hit=100.0%
+         cache     hits=127681 misses=0 hit=100.0%
    """
 ```
 [To be written: the home instructions in general (what a contract must state for one object to survive them), and the
@@ -725,32 +725,32 @@ that ran, a `branch` and a `sum`, and the time spent at the `branch` waiting on 
 ```mtron
 mtron> 0.{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master //local   apply 576.476 ms, 2 places
-       places      2, gathered in 576.476 ms (the master's apply, its gather wait included)
+     master //local   apply 601.394 ms, 2 places
+       places      2, gathered in 601.394 ms (the master's apply, its gather wait included)
        place      objs  apply (ms)   share
-       //0           3      30.478   49.5%
-       //1           1      31.043   50.5%  straggler
-       apply       min 30.478   max 31.043   mean 30.761 (ms)
+       //0           3      30.479   50.7%  straggler
+       //1           1      29.601   49.3%
+       apply       min 29.601   max 30.479   mean 30.040 (ms)
        imbalance   1.01 (max ÷ mean apply)
-       efficiency  0.053 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 61.521 ms
+       efficiency  0.050 (Σ lane apply ÷ (k × gather wait))
+       tree        depth 1   leaves 2   objs 4   lane time 60.079 ms
        level 1     2 places, imbalance 1.01
-       critical    //1 31.043 ms
+       critical    //0 30.479 ms
        stage     min (ms)   max (ms)
-       rewrite     18.545     52.336
-       resolve     18.681     52.763
-       apply      576.476   1059.042
+       rewrite     19.438     21.221
+       resolve     19.592     21.376
+       apply      601.394    623.820
        insts     1
        resolve sub-stages (avg ms):
-         inst-resolve         1.309   28.6%
-         generic-binding      2.942   64.2%
-         inst-composition     0.332    7.2%
+         inst-resolve         0.887   31.7%
+         generic-binding      1.776   63.5%
+         inst-composition     0.132    4.7%
        rewrite rules:
-                     law_poset           branch_factor       law_shard           law_monoidic        derivation_contractionlaw_idempotent      
+                     law_poset           branch_factor       derivation_contractionlaw_monoidic        law_shard           theory_unit_removal 
            insts.in  50                  50                  50                  50                  50                  50                  
            insts.out 50                  50                  50                  50                  50                  50                  
-           time(ms)  31.925              26.037              11.311              10.234              9.704               6.259               
-           TOTAL     inst.in 1   inst.out 1   time(ms) 139.589
+           time(ms)  24.081              15.132              7.214               6.767               6.729               4.763               
+           TOTAL     inst.in 1   inst.out 1   time(ms) 95.562
        apply sub-stages (avg ms):
          split        0.000    0.0%
          apply        0.000    0.0%
@@ -763,65 +763,65 @@ mtron> 0.{0,3}plus(1).sum().profile()>>format
            out.coeff 0         
            time(ms)  0.000     
        flow       monads=0 coeff-sum=0 compression=0.00 processors=0
-       cache     hits=100199 misses=1 hit=100.0%
-       //0   apply 30.478 ms, a leaf, objs 3
+       cache     hits=98174 misses=1 hit=100.0%
+       //0   apply 30.479 ms, a leaf, objs 3, straggler
          stage     min (ms)   max (ms)
-         rewrite     26.178     30.932
-         resolve     26.366     31.175
-         apply       30.478     33.119
+         rewrite     26.840     29.084
+         resolve     27.041     29.297
+         apply       30.479     35.151
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         3.296   30.8%
-           generic-binding      6.779   63.3%
-           inst-composition     0.627    5.9%
+           inst-resolve         3.579   31.1%
+           generic-binding      7.266   63.1%
+           inst-composition     0.665    5.8%
          rewrite rules:
-                       law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        law_idempotent      
+                       law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  139.295             90.146              9.438               9.192               4.839               3.736               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 270.867
+             time(ms)  138.427             92.849              10.286              9.876               4.722               4.054               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 275.256
          apply sub-stages (avg ms):
-           split        0.007    3.5%
-           apply        0.193   94.9%
-           next         0.003    1.6%
+           split        0.008    3.7%
+           apply        0.214   94.8%
+           next         0.003    1.5%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.021     0.173     0.000     
+             time(ms)  0.023     0.191     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
-         cache     hits=131353 misses=0 hit=100.0%
-       //1   apply 31.043 ms, a leaf, objs 1, straggler
+         cache     hits=126916 misses=0 hit=100.0%
+       //1   apply 29.601 ms, a leaf, objs 1
          stage     min (ms)   max (ms)
-         rewrite     26.167     31.660
-         resolve     26.394     31.927
-         apply       31.043     34.545
+         rewrite     26.314     34.170
+         resolve     26.538     34.445
+         apply       29.601     35.009
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         3.509   31.3%
-           generic-binding      6.968   62.2%
-           inst-composition     0.717    6.4%
+           inst-resolve         3.504   31.6%
+           generic-binding      6.873   62.0%
+           inst-composition     0.702    6.3%
          rewrite rules:
-                       law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        law_idempotent      
+                       law_shard           derivation_contractionbranch_factor       law_poset           law_monoidic        theory_unit_removal 
              insts.in  60                  60                  60                  60                  60                  60                  
              insts.out 60                  60                  60                  60                  60                  60                  
-             time(ms)  143.677             90.410              11.071              9.975               5.257               4.025               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 279.260
+             time(ms)  140.979             88.847              10.618              9.525               4.349               4.076               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 272.981
          apply sub-stages (avg ms):
-           split        0.008    3.6%
-           apply        0.198   94.6%
-           next         0.004    1.8%
+           split        0.007    3.7%
+           apply        0.194   94.8%
+           next         0.003    1.5%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.021     0.177     0.000     
+             time(ms)  0.020     0.174     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
-         cache     hits=132198 misses=0 hit=100.0%
+         cache     hits=127681 misses=0 hit=100.0%
    """
 ```
 A point is an index set too. The point $a\{p\}$ is $p$ copies of one term, and points add across a branch,

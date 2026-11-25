@@ -979,7 +979,7 @@ so the merge stores none, at any depth or in a stream, whether copies cancelled 
 merge's answer depend on its bracketing. Rec <code>sum</code> declares <code>monoidic</code> and <code>commutative</code>, so <code>law_shard</code> distributes
 a rec merge as it distributes a sum of ints: each peer merges its share of the recs and the master merges the
 partial recs. Concatenating <code>lst</code> values is said by
-the expression, with a select's <code>+</code>: \([1,2,3] \mathbin{+\!\!+} [2,3]\) is <code>[a=&gt;[1,2,3]]==[a=&gt;+[2,3]]</code>.</p>
+the expression, with a select's <code>*</code>, the lst's product: \([1,2,3] \cdot [2,3]\) is <code>[a=&gt;[1,2,3]]==[a=&gt;_ * [2,3]]</code>.</p>
 <p>A coefficient is a <strong>multiplicity</strong>, read the way every access reads it — the outer \(c\) multiplied into what it holds,
 \(\{c\}[k \Rightarrow v] = [k \Rightarrow \{c\}v]\), all the way down to the merge's atoms, where \(\{c\}v\) is \(v\)'s
 multiplicity in the stream (a <code>lst</code>'s too). A bulked rec therefore merges as the copies it stands for,
@@ -1026,8 +1026,9 @@ matches every key and a nested pattern descends — so the weekend's totals are 
     puppy=&gt;[km=&gt;[ridge=&gt;12,lake=&gt;5]],
     chelsea=&gt;[km=&gt;[lake=&gt;10]]]
 </code></pre>
-<p>To join the lists rather than stream them, the expression says so — a select's <code>+</code> concatenates the slots:</p>
-<pre><code class="language-mtron">mtron&gt; */usr/walk/sat==[mama=&gt;[visited=&gt;+[acequia,mesa]]]
+<p>To join the lists rather than stream them, the expression says so — a select's <code>*</code> concatenates the slots, as a
+lst's product is its concatenation (a lst's <code>+</code> branches two timelines instead):</p>
+<pre><code class="language-mtron">mtron&gt; */usr/walk/sat==[mama=&gt;[visited=&gt;_ * [acequia,mesa]]]
 ==&gt;[mama=&gt;[visited=&gt;[arroyo,acequia,mesa]]]
 </code></pre>
 <p>A stream of equal recs is one rec with a coefficient, and the merge reads it as the copies it stands for — the bulked

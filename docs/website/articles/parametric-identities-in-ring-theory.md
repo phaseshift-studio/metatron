@@ -360,23 +360,23 @@ $[2, 3] \cdot [\mathrm{one}] = [\mathrm{one}] \cdot [2, 3] = [2, 3]$ and $[2.5] 
 
 ```mtron
 mtron> [2,3].mult([4,5])
-==>[8,10,12,15]
+==>[2,3,4,5]
 mtron> [2,3].mult([one()])
-==>[2,3]
+==>[2,3,one()]
 mtron> [one()].mult([2,3])
-==>[2,3]
+==>[one(),2,3]
 mtron> [2.5].mult([one()])
-==>[2.5]
+==>[2.5,one()]
 mtron> ['a','b'].one()
-==>[one()]
+==>[,]
 ```
 **Live proof.** A lst of arrows composes as a relation, and the parametric one is its unit.
 
 ```mtron
 mtron> [(a=>2),(b=>3)].mult([(2=>x),(3=>y)])
-==>[a=>x,b=>y]
+==>[a=>2,b=>3,2=>x,3=>y]
 mtron> [(a=>2)].mult([one()])
-==>[a=>2]
+==>[a=>2,one()]
 ```
 # Conclusion
 

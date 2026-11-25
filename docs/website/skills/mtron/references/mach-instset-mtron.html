@@ -638,10 +638,10 @@ after which instruction memory answers the address.</p>
      {?}resolver=&gt;resolver::T,
      {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
-           {?}typer=&gt;'the fourth stage — the per-machine...',
-           {?}parser=&gt;'the first stage — source text to o...',
+           {?}resolver=&gt;'the third stage — the walk that th...',
            {?}rewriter=&gt;'the second stage — the code::T to ...',
-           {?}resolver=&gt;'the third stage — the walk that th...'],
+           {?}parser=&gt;'the first stage — source text to o...',
+           {?}typer=&gt;'the fourth stage — the per-machine...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
            'compiler::[rewriter=&gt;fixpoint_rewr...',
@@ -772,9 +772,11 @@ a
 write (<code>objWrite</code>), a predicate test (<code>typePred</code>), and the selector before a dynamic resolution (<code>codeResolve</code>).</p>
 <p>Beside <code>check</code>, <code>~/compiler/typer/unfold</code> bounds how many copies a span may unfold into, one <code>int::T</code> each, 100 by
 default: <code>uri</code> for a uri's path (<code>&lt;a&gt;{n}</code>, <code>pow(n)</code>, a span a uri takes from its lhs), <code>lst</code> for the copies laid
-along a lst axis (<code>[5{n}]</code>, an argument list) and <code>rec</code> for the powers a rec's span joins and the walks each power
-holds (<code>[a=&gt;b]{n}</code>, each power of a range, the closure <code>{+}</code>, which stops at the first power that holds no walk). A
-span past its bound fails, so a cycle's closure does, and a boot profile overrides a bound with
+along a lst axis (<code>[5{n}]</code>, an argument list), a lst's power (<code>[1,2]{n}</code>, <code>pow(n)</code>, <code>{n}[a].prod()</code>) and the
+copies of a lst's own letters it holds that the words a sum or <code>as(uri::T)</code> expands it into come to, a range's powers
+together (<code>[{a,b}]{1,6}</code>), and <code>rec</code> for the powers a rec's span joins and the copies of its walks
+a power, or a range's sum, holds (<code>[a=&gt;b]{n}</code>, each power of a range, the closure <code>{+}</code>, which stops at the first power that holds no
+walk). A span past its bound fails, so a cycle's closure does, and a boot profile overrides a bound with
 <code>typer/unfold =&gt; [uri =&gt; 1000]</code>:</p>
 <pre><code class="language-mtron">mtron&gt; *~/compiler/typer/unfold
 ==&gt;[uri=&gt;100,lst=&gt;100,rec=&gt;100]
@@ -793,9 +795,9 @@ mtron&gt; [a=&gt;b,b=&gt;c]{+}
      {?}tracer=&gt;tracer::T,
      {?}analyzer=&gt;analyzer::T]]@/m/mach/component/processor,
           args=&gt;[
-           {?}state=&gt;'the run state: stop, run or pause',
-           {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
            {?}result=&gt;'the objs the last evaluation produ...',
+           {?}analyzer=&gt;&quot;the processor's statistics (analyz...&quot;,
+           {?}state=&gt;'the run state: stop, run or pause',
            {?}tracer=&gt;&quot;the processor's diagnostics (trace...&quot;,
            computer=&gt;'the computers this processor minte...',
            fail=&gt;&quot;the machine's fail stack: an uncau...&quot;],
@@ -889,12 +891,12 @@ analysis, pulled on demand (the mtron form of a recording rule):</p>
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           code=&gt;&quot;the thread's executing code&quot;,
-           {?}time=&gt;'the datetime::T when the thread wa...',
-           {?}loop=&gt;'delay to repeat code evaluation (d...',
-           {?}timeout=&gt;'how long a read of rhs waits for t...',
-           {?}state=&gt;'current state of the thread',
            {?}result=&gt;'the last result produced by the th...',
+           {?}state=&gt;'current state of the thread',
+           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}loop=&gt;'delay to repeat code evaluation (d...',
+           {?}time=&gt;'the datetime::T when the thread wa...',
+           code=&gt;&quot;the thread's executing code&quot;,
            {?}runtime=&gt;&quot;computes the thread's current runn...&quot;],
           desc=&gt;'the thread base type']
 </code></pre>
@@ -948,11 +950,11 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(2 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}pattern=&gt;'the branch this network answers as...',
-           {?}listener=&gt;'the sockets this machine serves th...',
-           {?}status=&gt;'the health method — an auto inst c...',
-           {?}roster=&gt;'what the system knows, connectionl...',
            {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
+           {?}roster=&gt;'what the system knows, connectionl...',
+           {?}status=&gt;'the health method — an auto inst c...',
+           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}pattern=&gt;'the branch this network answers as...',
            {?}peer=&gt;&quot;machine's own connections, one per...&quot;],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[

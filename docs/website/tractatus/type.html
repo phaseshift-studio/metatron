@@ -999,7 +999,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{b}}m{{c}}e{{y}}t{{y}}a{{y}}T{{b}}r{{y}}o{{g}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}m{{b}}e{{y}}T{{m}}a{{g}}T{{r}}R{{m}}o{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -1360,9 +1360,9 @@ mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.count()     ​5​
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; [1,2,3].reverse()     ​1​
-==&gt;[3,2,1]
+==&gt;fail::[unable to locate inst-f lst::T =&gt; /m/inst/reverse?&lt;=/m/lst()@&lt;1&gt;]
 mtron&gt; [1,2,3].plus([4,5])     ​2​
-==&gt;[1,2,3,4,5]
+==&gt;[{[1,2,3],[4,5]}]
 mtron&gt; [1,2,3].merge()     ​3​
 ==&gt;1
 ==&gt;2

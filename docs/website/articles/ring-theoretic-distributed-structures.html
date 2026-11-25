@@ -657,9 +657,9 @@ whole power, \(c\,u^{n}\): <code>{2}&lt;a/b&gt;{-2}</code> is two copies of <cod
 with it, \((c\,u)^{n} = c^{n}\,u^{n}\) (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Theorem 13): <code>&lt;{2}a/b&gt;{-2}</code> is
 <code>b/a/b/a</code> four times. The locus is also a placement boundary. What sits inside the brackets is one object, stored as a
 unit at one place; a point before them counts copies of the object, which a placement may share out (Claim 10).</p>
-<p>In mtron, the span is written after the closing bracket, <code>&lt;u&gt;{n}</code>, and the instructions <code>reverse()</code> and <code>pow(n)</code> are
-the spans <code>{-1}</code> and <code>{n}</code>. Inside the brackets a uri keeps the fURI's own spelling, <code>{span}path{point}</code>, so <code>&lt;a/b{2}&gt;</code>
-is the path <code>a/b</code> with its own point \(2\), and a bare <code>a/b{2}</code> reads the same way.</p>
+<p>In mtron, the span is written after the closing bracket, <code>&lt;u&gt;{n}</code>, and the instruction <code>pow(n)</code> is the span <code>{n}</code> at
+run time, so <code>pow(-1)</code> is the converse. Inside the brackets a uri keeps the fURI's own spelling, <code>{span}path{point}</code>,
+so <code>&lt;a/b{2}&gt;</code> is the path <code>a/b</code> with its own point \(2\), and a bare <code>a/b{2}</code> reads the same way.</p>
 <p>The converse reverses the path alone. A uri's scheme and authority are not steps of its path, so they stay where they
 are: <code>http://m.com/a/b/c</code> reversed is <code>http://m.com/c/b/a</code>, still rooted at its host, and reversed again it is
 <code>http://m.com/a/b/c</code>. A path with no authority counts its root as a step, which is why <code>/a/b/c</code> reversed ends at the
@@ -1037,11 +1037,13 @@ sum inside the type.</li>
 <p>A list is a timeline: a moment, then the next. It adds as alternatives add, two timelines side by side, and it
 multiplies as time does, one timeline after another.</p>
 <p><strong>Definition 11 (list).</strong> A list is a word of objects, $[x_1, \ldots, x_n] = x_1 \cdots x_n \in
-\mathcal{C}\langle X\rangle$, and the empty list \([\,,]\) is the empty word. A brace in a slot is a sum of letters,
-\([x, \{a, b\}, y] = x\,(a + b)\,y\), a branch at that moment, and a stream of lists is a sum of words. The converse of a
-list reverses its letters, and its span is its power (Definition 3).</p>
-<p><strong>Claim 19 (the list ring).</strong> Lists form the free algebra \(\mathcal{C}\langle X\rangle\), a ring with zero \(0\) and
-unity \([\,,]\): the reference ring over objects instead of segments. A list multiplies by concatenation and adds as a
+\mathcal{C}\langle X\rangle$, and the empty list \([\,,]\) is the empty word. A brace in a slot is a sum at that
+moment, \([x, \{a, b\}, y] = x\,(a + b)\,y\), a branch, and a list in a brace is a sub-word that splices, as a path's
+branch holds sub-paths: \([x, \{[a,b], c\}, y] = x\,(a\,b + c)\,y\). A stream of lists is a sum of words. The converse
+of a list reverses its letters, and its span is its power (Definition 3).</p>
+<p><strong>Claim 19 (the list ring).</strong> Lists form the free algebra \(\mathcal{C}\langle X\rangle\), a ring with zero \(0\), the
+list of one hole <code>[noobj]</code> through which no word runs, and unity \([\,,]\): the reference ring over objects instead of
+segments. A list multiplies by concatenation and adds as a
 path adds, factoring out a common prefix and suffix, \([a,b,c] + [a,d,c] = [a,\{b,d\},c]\), as
 \(a\,b\,c + a\,d\,c = a\,(b + d)\,c\).</p>
 <!-- quarry: Theorem 12; its live proof runs on uris -->
@@ -1054,27 +1056,22 @@ no inverse: \([a,b] \cdot [a,b]^{\smile} = [a,b,b,a]\). A list's converse never 
 has no converse that can be listed, since a constant relates its value to every object
 (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, <em>Negative Spans: the Converse</em>), but a letter is held, not run.</p>
 <pre><code class="language-mtron">mtron&gt; [1,2,3] * [4,5,6]
-==&gt;[4,5,6,8,10,12,12,...(2 more)]
-mtron&gt; [a,b,c] + [a,d,c]
-==&gt;[a,b,c,a,d,c]
-mtron&gt; [1,2,3] + [4,5,6]
 ==&gt;[1,2,3,4,5,6]
+mtron&gt; [a,b,c] + [a,d,c]
+==&gt;[a,{b,d},c]
+mtron&gt; [1,2,3] + [4,5,6]
+==&gt;[{[1,2,3],[4,5,6]}]
 mtron&gt; [1,2,3]{-1}
-==&gt;fail::[parse error at line 1, col 8:
-     [1,2,3]{-1}
-            ^
-     expected an obj]
+==&gt;[3,2,1]
 mtron&gt; [1,2]{2}
-==&gt;fail::[parse error at line 1, col 6:
-     [1,2]{2}
-          ^
-     expected an obj]
+==&gt;[1,2,1,2]
 </code></pre>
-<p>These answer <code>[1,2,3,4,5,6]</code>; <code>[a,{b,d},c]</code>; <code>{[1,2,3],[4,5,6]}</code>, two timelines that share no moment and so stay two;
-<code>[3,2,1]</code>; and <code>[1,2,1,2]</code>. A span after a list's closing bracket is that list's power, while a span on a letter
-repeats the letter in its place: <code>[3{2}]</code> is <code>[3,3]</code>. As with uris, <code>x + y</code> is the instruction <code>plus(y)</code> applied to
-<code>x</code>, so a point on <code>x</code> floats over it (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Theorem 3), and the sum of two
-pointed lists is written as their stream.</p>
+<p>These answer <code>[1,2,3,4,5,6]</code>; <code>[a,{b,d},c]</code>; <code>[{[1,2,3],[4,5,6]}]</code>, two timelines that share no moment, branched at
+the list's one slot, as <code>&lt;1/2/3&gt; + &lt;4/5/6&gt;</code> is <code>&lt;{1/2/3,4/5/6}&gt;</code>; <code>[3,2,1]</code>; and <code>[1,2,1,2]</code>. A span after a list's
+closing bracket is that list's power, while a span on a letter repeats the letter in its place: <code>[3{2}]</code> is <code>[3,3]</code>.
+As with uris, <code>x + y</code> is the instruction <code>plus(y)</code> applied to <code>x</code>, so a point on <code>x</code> floats over it
+(<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Theorem 3), and the sum of two pointed lists is written as their
+stream.</p>
 <p>A list of steps is a program that has not been run: it can be built, spliced, and reversed as a list, and run when it
 is ready.</p>
 <p><strong>Claim 22 (the fold).</strong> The ordered fold, \(\mathrm{fold}\) (<code>&gt;|</code>), is the unique ring homomorphism from the list ring
@@ -1098,8 +1095,10 @@ mtron&gt; {[1,plus(2),plus(3)],[1,mult(2),plus(5)]}&gt;|
 ==&gt;6
 ==&gt;7
 mtron&gt; [1,{plus(2),mult(2)},{plus(3),plus(5)}]&gt;|
-==&gt;plus(3)
-==&gt;plus(5)
+==&gt;6
+==&gt;5
+==&gt;8
+==&gt;7
 </code></pre>
 <p>These answer <code>6</code>; <code>{6,7}</code>, two timelines run as two programs; and <code>{6,8,5,7}</code>. The third has a branch at each step
 instead of two whole timelines, and its fold crosses them: \(1 + 2 + 5\) and \(1 \cdot 2 + 3\) are timelines neither list
@@ -1133,11 +1132,16 @@ key is an address (Claim 17). A moment's address is the history that reaches it:
 share an index, not a past, and superposing them by index reads time as space.</p>
 <p><strong>Directions.</strong></p>
 <ul>
-<li><em>A list in a brace.</em> A path's branch may hold whole sub-paths, <code>&lt;x/{a/b,c/d}/y&gt;</code>, while a list's slot holds a list
-as a letter. Is <code>[x,{[a,b],[c,d]},y]</code> the letter branch \(x\,([a,b] + [c,d])\,y\), which keeps the nesting, or the
-spliced \(x\,(a\,b + c\,d)\,y\) of a path?</li>
-<li><em>A sum that does not factor.</em> Is \([1,2,3] + [4,5,6]\) a stream of two lists, or one list with a branch of sub-lists?
-The list ring also needs a zero inside its type, as the code ring names its own.</li>
+<li><em>A list in a brace.</em> Settled: a path's branch holds whole sub-paths, <code>&lt;x/{a/b,c/d}/y&gt;</code>, and a list in a brace is a
+sub-word, so <code>[x,{[a,b],[c,d]},y]</code> is the spliced \(x\,(a\,b + c\,d)\,y\), while a list outside a brace is a letter.</li>
+<li><em>A sum that does not factor.</em> Settled: \([1,2,3] + [4,5,6]\) is one list with a branch of sub-lists,
+<code>[{[1,2,3],[4,5,6]}]</code>, since a stream of the two would not stay their sum under the next \(+\), which maps over a
+stream.</li>
+<li><em>The list ring's zero.</em> Settled (Marko, 2026-11-25): noobj is not in the list ring's carrier; <code>[noobj]</code> is. No word
+runs through a hole, so the list of one hole is the sum of nothing and of words that cancel, <code>[a,b,c] - [a,b,c]</code> is
+<code>[noobj]</code>, and it absorbs a product, <code>[1,2] * [noobj]</code> is <code>[noobj]</code>. Any list through a hole holds no word, so it
+is the zero too: <code>[1,2] * [noobj,noobj]</code> is <code>[noobj]</code>. A record can name it, so mtron declares the
+list ring, its additive group and its monoids, as it does the record ring's.</li>
 <li><em>Spans on nested lists.</em> The span after an inner list's bracket is that list's power, so <code>[[1,2]{2}]</code> is
 <code>[[1,2,1,2]]</code>, and the outer list's span repeats it, <code>[[1,2]]{2}</code> is <code>[[1,2],[1,2]]</code>. Is the bracket the span
 follows always the one whose ring takes the power?</li>
@@ -1160,10 +1164,9 @@ merge recurses into it.</p>
 <pre><code class="language-mtron">mtron&gt; [a=&gt;[1,2]] + [a=&gt;[1,3]]
 ==&gt;[a=&gt;{[1,2],[1,3]}]
 mtron&gt; [[a=&gt;b],c,d] + [[a=&gt;b],d,e]
-==&gt;[[a=&gt;b],c,d,[a=&gt;b],d,e]
+==&gt;[[a=&gt;b],{[c,d],[d,e]}]
 mtron&gt; [[a=&gt;b],c] * [[b=&gt;e]]
-==&gt;[[a=&gt;b=&gt;e],
-    fail::[inst apply failure: unable to convert rec::T to uri::T [Obj&lt;634&gt;] (at /m/inst/mult) [Obj&lt;634&gt;]]]
+==&gt;[[a=&gt;b],c,[b=&gt;e]]
 </code></pre>
 <p>The first branches two list letters at one key, <code>[a=&gt;{[1,2],[1,3]}]</code>, which the list ring factors to
 <code>[a=&gt;[1,{2,3}]]</code>. The second has a record as a shared first moment, and its sum is
@@ -1191,9 +1194,14 @@ tests where two pieces meet.</p>
 <p><strong>Claim 28 (records are steps).</strong> An arrow is a guarded step, \((k \Rightarrow v) \mapsto \mathrm{is}(k) \cdot v\):
 keep what equals or satisfies \(k\), then answer \(v\). This maps the record ring into the stream ring, merge to branch
 and join to composition, forgetting the middle a walk keeps. A list of records folds to their join,
-\(\mathrm{fold}([\,r_1, \ldots, r_n]) = r_1 \cdots r_n\): a program written as a timeline of steps through space.</p>
+\(\mathrm{fold}([\,r_1, \ldots, r_n]) = r_1 \cdots r_n\): a program written as a timeline of steps through space. The
+join runs no code a record holds as a value, while a key that acts runs as the <code>WHERE</code> it is (Claim 16) on the ends it
+meets, so the fold is the product whatever the records hold. A live record holds no walks and applies as itself,
+running whatever its apply runs: a space passes a value on, and a parser parses a str. A walk through a branch that
+does not connect is the zero, \([\Rightarrow]\), which drops from what the branch answers as it drops from a sum, and a
+branch none of whose walks connects is the zero.</p>
 <pre><code class="language-mtron">mtron&gt; [[a=&gt;b],[b=&gt;e]]&gt;|
-==&gt;[b=&gt;e]
+==&gt;[a=&gt;b=&gt;e]
 </code></pre>
 <p>This answers <code>[a=&gt;b=&gt;e]</code>.</p>
 <p>A list is a program that does not yet connect: its steps sit side by side until the fold feeds each one's output to the

@@ -929,7 +929,7 @@ The following examples demonstrate selection and filtering using multi-segment u
 mtron&gt; *g:V/1/address/home/city     ​2​
 ==&gt;'santa fe'
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
-==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
+==&gt;{6}[address/+/city/=&gt;address/+/city=&gt;noobj]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     ​6​
 ==&gt;{7}'nomansland'
@@ -1012,7 +1012,7 @@ mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
              home=&gt;[city=&gt;'santa fe',state=&gt;NM],
              work=&gt;!*&lt;../home&gt;]]
 mtron&gt; *g:V/1/address/home/city     ​3​
-==&gt;'santa fe'
+==&gt;{2}'santa fe'
 ==&gt;none</code></pre>
 </div>
 </div>

@@ -647,6 +647,14 @@ mtron&gt; [1,2,3]&gt;&gt;0
 ==&gt;1
 mtron&gt; [1,2,3]==[?&gt;1 =&gt; +2]  [-- select with rec::T for predicate keys --]
 ==&gt;[noobj,noobj,5]
+mtron&gt; [1,2,3] * [4,5,6]     [-- the product concatenates: one timeline after another --]
+==&gt;[1,2,3,4,5,6]
+mtron&gt; [a,b,c] + [a,d,c]     [-- the sum branches, the shared prefix and suffix factored out --]
+==&gt;[a,{b,d},c]
+mtron&gt; [1,2]{2}              [-- a span after the brackets is a power: the lst repeated --]
+==&gt;[1,2,1,2]
+mtron&gt; [1,2,3]{-1}           [-- a negative span is the converse: the slots reversed --]
+==&gt;[3,2,1]
 </code></pre>
 <h4>rec::T (<code>[key=&gt;val, ...]</code> — unordered, keyed)</h4>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'marko', age=&gt;29]
@@ -850,7 +858,7 @@ mtron&gt; *a + [b=&gt;2]
 ==&gt;[a=&gt;1,b=&gt;2]
 mtron&gt; *a
 ==&gt;[a=&gt;1]
-mtron&gt; @b + [5,6]
+mtron&gt; @b * [5,6]
 ==&gt;[1,2,3,4,5,6]@b
 mtron&gt; *b
 ==&gt;[1,2,3,4,5,6]

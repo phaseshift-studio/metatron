@@ -250,7 +250,7 @@ the referent — never through the widget. The next surface pass (a prompt cycle
 reads it again and draws it, so no per-cell repaint machinery is involved:
 
 ```mtron
-mtron> g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.-<[_]),until=>loop()?>8).to(/usr/uidoc/g10)
+mtron> g10 -> [,].repeat(code=>_ * ['.'],until=>loop()?>9)-<[_].repeat(code=>_ * (>>0.-<[_]),until=>loop()?>8).to(/usr/uidoc/g10)
 ==>[[
      '.',
      '.',

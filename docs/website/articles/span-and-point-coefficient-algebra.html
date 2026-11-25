@@ -1527,8 +1527,9 @@ parse. A type used as a step is a filter, and so its own converse (Theorem 14).<
 <ul>
 <li><code>is()</code> declares no converse, so <code>5.{-1}is(gt(3))</code> stays in limbo where Theorem 14 gives <code>5.is(gt(3))</code>. A rule by
 form, every filter its own converse, would cover <code>is()</code> and every type used as a step.</li>
-<li>A lst read as a word: is its converse its reversal, so that <code>[1,2,3]{-1}</code> is <code>[3,2,1]</code>? <code>reverse()</code> is declared an
-involution, as a converse is. Today <code>[1,2,3]{-1}</code> does not parse.</li>
+<li>A lst read as a word has its reversal for its converse (Marko, 2026-11-25; Claim 21 of
+ring-theoretic-distributed-structures.md): a span after the brackets is the lst's power, so <code>[1,2,3]{-1}</code> is
+<code>[3,2,1]</code>, and <code>pow(-1)</code> is the same span at run time. The lst's <code>reverse()</code> retired with it.</li>
 <li>On a rel, mtron's <code>neg()</code> swaps the ends, so <code>(1=&gt;2).neg()</code> is <code>2=&gt;1</code>. The arrow \(x \Rightarrow y\) is the matrix
 with a \(1\) at row \(x\) and column \(y\) [2], so the swap is its transpose, the converse
 \((x \Rightarrow y)^{\smile} = y \Rightarrow x\), and not its additive inverse, which is the point <code>{-1}(1=&gt;2)</code>.</li>

@@ -827,21 +827,21 @@ mtron&gt; (a=&gt;2).mult(one())
 one asked of a lst of strs: \([2, 3] \cdot [4, 5] = [8, 10, 12, 15]\),
 \([2, 3] \cdot [\mathrm{one}] = [\mathrm{one}] \cdot [2, 3] = [2, 3]\) and \([2.5] \cdot [\mathrm{one}] = [2.5]\).</p>
 <pre><code class="language-mtron">mtron&gt; [2,3].mult([4,5])
-==&gt;[8,10,12,15]
+==&gt;[2,3,4,5]
 mtron&gt; [2,3].mult([one()])
-==&gt;[2,3]
+==&gt;[2,3,one()]
 mtron&gt; [one()].mult([2,3])
-==&gt;[2,3]
+==&gt;[one(),2,3]
 mtron&gt; [2.5].mult([one()])
-==&gt;[2.5]
+==&gt;[2.5,one()]
 mtron&gt; ['a','b'].one()
-==&gt;[one()]
+==&gt;[,]
 </code></pre>
 <p><strong>Live proof.</strong> A lst of arrows composes as a relation, and the parametric one is its unit.</p>
 <pre><code class="language-mtron">mtron&gt; [(a=&gt;2),(b=&gt;3)].mult([(2=&gt;x),(3=&gt;y)])
-==&gt;[a=&gt;x,b=&gt;y]
+==&gt;[a=&gt;2,b=&gt;3,2=&gt;x,3=&gt;y]
 mtron&gt; [(a=&gt;2)].mult([one()])
-==&gt;[a=&gt;2]
+==&gt;[a=&gt;2,one()]
 </code></pre>
 <h2>Conclusion</h2>
 <p>A ring of data need not hold its identities as values. When the unity a ring needs is an infinite value, such as the

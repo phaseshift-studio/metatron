@@ -1204,8 +1204,15 @@ server's machine tree switches the current machine and compiles the tail there; 
 the cut to the tail's place in that peer, <code>cut(&lt;/path&gt;, tail)</code> (the peer's root when the target names no machine
 past the surface it was dialed at), which the receiver runs as any cut. <code>explain()</code> and <code>profile()</code> are the
 return home: the tail ends before them, so <code>1.move(&lt;a&gt;).plus(1).explain()</code> compiles to
-<code>1.cut(&lt;a&gt;, plus(1)).explain()</code>, explained here with nothing run, and a profile times the cut here, every run
-starting from home.</li>
+<code>1.cut?&lt;=int(&lt;a&gt;, plus(1)).explain()</code>, explained here with nothing run, and a profile times the cut here, every run
+starting from home. The cut's dom is the stream that flows into the move (the rng of the instruction before it is
+the dom of the next), <code>int</code> for <code>1</code> and <code>int{4}</code> for <code>{1,2,3,4}</code>, wherever a chain that starts from its own seed
+hands the move its whole stream at once, an exact count (from the seed, or a gather run once); anywhere else the
+count is not known here (after an instruction that answers per obj or per page, after a fold run a range of times,
+where a count is only a range, in a branch member compiled without its lhs, or where the stream may hold nothing),
+and the cut keeps <code>#{*}</code>, so it still gathers the stream whole. A cut written with no tail has the absent tail,
+noobj, the zero, and answers nothing; the cut a move that ends a chain compiles to has the empty tail, the unit,
+and answers its lhs.</li>
 <li><strong>Liveness gates it.</strong> The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
 place set), and only to targets that <code>serve</code> the route (<code>PlaceResolver.serves</code>: online, and the client overrides the
 placement's

@@ -704,15 +704,15 @@ core::[code=&gt;expensive_computation]            [-- &lt;3&gt; --]</code></pre>
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; */sys/thread/executor/run
 ==&gt;[,]
 mtron&gt; */sys/thread/executor/stop
-==&gt;[!*/sys/thread/42483c2e,
+==&gt;[!*/sys/thread/1a4c87bb,
     !*/sys/thread/main,
-    !*/sys/thread/147466a4]
+    !*/sys/thread/32e12647]
 mtron&gt; */sys/thread/executor/stop/+/source
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           lhs=&gt;noobj,
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:24/23/26/39/960?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:25/13/50/13/118?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;},
           result=&gt;noobj]@/sys/thread/main
 mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
@@ -735,7 +735,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:24/23/26/59/265?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:25/13/50/35/641?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -754,7 +754,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:24/23/26/59/265?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:25/13/50/35/641?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -781,7 +781,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABABA'</code></pre>
+==&gt;'BABABABABAB'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -847,7 +847,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
           rhs=&gt;!λawait(){&lt;j&gt;},
           lhs=&gt;noobj,
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:24/23/26/39/960?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:25/13/50/13/118?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;},
           result=&gt;noobj]@/sys/thread/main
 mtron&gt; */sys/thread/main?docq
@@ -856,7 +856,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:24/23/26/39/960?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:25/13/50/13/118?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>

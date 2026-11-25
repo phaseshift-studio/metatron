@@ -477,7 +477,7 @@ so the merge stores none, at any depth or in a stream, whether copies cancelled 
 merge's answer depend on its bracketing. Rec `sum` declares `monoidic` and `commutative`, so `law_shard` distributes
 a rec merge as it distributes a sum of ints: each peer merges its share of the recs and the master merges the
 partial recs. Concatenating `lst` values is said by
-the expression, with a select's `+`: $[1,2,3] \mathbin{+\!\!+} [2,3]$ is `[a=>[1,2,3]]==[a=>+[2,3]]`.
+the expression, with a select's `*`, the lst's product: $[1,2,3] \cdot [2,3]$ is `[a=>[1,2,3]]==[a=>_ * [2,3]]`.
 
 A coefficient is a **multiplicity**, read the way every access reads it — the outer $c$ multiplied into what it holds,
 $\{c\}[k \Rightarrow v] = [k \Rightarrow \{c\}v]$, all the way down to the merge's atoms, where $\{c\}v$ is $v$'s
@@ -531,10 +531,11 @@ mtron> */usr/walk/sat.plus(*/usr/walk/sun)==[_=>[km=>[_=>sum()],visited=>_]]
     puppy=>[km=>[ridge=>12,lake=>5]],
     chelsea=>[km=>[lake=>10]]]
 ```
-To join the lists rather than stream them, the expression says so — a select's `+` concatenates the slots:
+To join the lists rather than stream them, the expression says so — a select's `*` concatenates the slots, as a
+lst's product is its concatenation (a lst's `+` branches two timelines instead):
 
 ```mtron
-mtron> */usr/walk/sat==[mama=>[visited=>+[acequia,mesa]]]
+mtron> */usr/walk/sat==[mama=>[visited=>_ * [acequia,mesa]]]
 ==>[mama=>[visited=>[arroyo,acequia,mesa]]]
 ```
 A stream of equal recs is one rec with a coefficient, and the merge reads it as the copies it stands for — the bulked

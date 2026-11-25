@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}typer=>'the fourth stage — the per-machine...',
-           {?}parser=>'the first stage — source text to o...',
+           {?}resolver=>'the third stage — the walk that th...',
            {?}rewriter=>'the second stage — the code::T to ...',
-           {?}resolver=>'the third stage — the walk that th...'],
+           {?}parser=>'the first stage — source text to o...',
+           {?}typer=>'the fourth stage — the per-machine...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -269,9 +269,11 @@ write (`objWrite`), a predicate test (`typePred`), and the selector before a dyn
 
 Beside `check`, `~/compiler/typer/unfold` bounds how many copies a span may unfold into, one `int::T` each, 100 by
 default: `uri` for a uri's path (`<a>{n}`, `pow(n)`, a span a uri takes from its lhs), `lst` for the copies laid
-along a lst axis (`[5{n}]`, an argument list) and `rec` for the powers a rec's span joins and the walks each power
-holds (`[a=>b]{n}`, each power of a range, the closure `{+}`, which stops at the first power that holds no walk). A
-span past its bound fails, so a cycle's closure does, and a boot profile overrides a bound with
+along a lst axis (`[5{n}]`, an argument list), a lst's power (`[1,2]{n}`, `pow(n)`, `{n}[a].prod()`) and the
+copies of a lst's own letters it holds that the words a sum or `as(uri::T)` expands it into come to, a range's powers
+together (`[{a,b}]{1,6}`), and `rec` for the powers a rec's span joins and the copies of its walks
+a power, or a range's sum, holds (`[a=>b]{n}`, each power of a range, the closure `{+}`, which stops at the first power that holds no
+walk). A span past its bound fails, so a cycle's closure does, and a boot profile overrides a bound with
 `typer/unfold => [uri => 1000]`:
 
 ```mtron
@@ -294,9 +296,9 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}state=>'the run state: stop, run or pause',
-           {?}analyzer=>"the processor's statistics (analyz...",
            {?}result=>'the objs the last evaluation produ...',
+           {?}analyzer=>"the processor's statistics (analyz...",
+           {?}state=>'the run state: stop, run or pause',
            {?}tracer=>"the processor's diagnostics (trace...",
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
@@ -402,12 +404,12 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           code=>"the thread's executing code",
-           {?}time=>'the datetime::T when the thread wa...',
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}timeout=>'how long a read of rhs waits for t...',
-           {?}state=>'current state of the thread',
            {?}result=>'the last result produced by the th...',
+           {?}state=>'current state of the thread',
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}time=>'the datetime::T when the thread wa...',
+           code=>"the thread's executing code",
            {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
@@ -464,11 +466,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
-           {?}listener=>'the sockets this machine serves th...',
-           {?}status=>'the health method — an auto inst c...',
-           {?}roster=>'what the system knows, connectionl...',
            {?}analyzer=>"the network's statistics (analyzer...",
+           {?}roster=>'what the system knows, connectionl...',
+           {?}status=>'the health method — an auto inst c...',
+           {?}listener=>'the sockets this machine serves th...',
+           {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per..."],
           desc=>"a machine's network: the endpoints...",
           example=>[

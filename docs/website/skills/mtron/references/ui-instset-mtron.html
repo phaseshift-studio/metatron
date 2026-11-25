@@ -745,7 +745,7 @@ the face's row-th line, one-to-one. The grid is read with <code>at()</code>, so 
 referent</strong> (<code>grid=&gt;!*g</code>): the widget is a view over that grid, and the board is mutated by writing
 the referent — never through the widget. The next surface pass (a prompt cycle, a resize, a click)
 reads it again and draws it, so no per-cell repaint machinery is involved:</p>
-<pre><code class="language-mtron">mtron&gt; g10 -&gt; [,].repeat(code=&gt;+['.'],until=&gt;loop()?&gt;9)-&lt;[_].repeat(code=&gt;+(&gt;&gt;0.-&lt;[_]),until=&gt;loop()?&gt;8).to(/usr/uidoc/g10)
+<pre><code class="language-mtron">mtron&gt; g10 -&gt; [,].repeat(code=&gt;_ * ['.'],until=&gt;loop()?&gt;9)-&lt;[_].repeat(code=&gt;_ * (&gt;&gt;0.-&lt;[_]),until=&gt;loop()?&gt;8).to(/usr/uidoc/g10)
 ==&gt;[[
      '.',
      '.',

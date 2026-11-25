@@ -678,7 +678,8 @@ map is ONE entry keyed by its members' path encodings (<code>peer =&gt; [&lt;ws/
 hands it every address below the component, its raw reader included, so the uri tree (<code>&lt;/network&gt;.&gt;&gt;.&gt;&gt;</code>) walks the
 level (the component itself, <code>&lt;vid&gt;/network</code>, is read live like any component); <code>BasicNetwork</code> takes the branch off,
 and its own methods use the relative form. Its raw reader is the store's, and every read is derived from it once, by
-<code>Space.Helper</code> (an interior node reads as its subtree, a member through its map's path key, literal keys first):
+<code>Space.Helper</code> (an interior node reads as its subtree, a member through its map's path key, literal keys first, and
+inside a stored poly every key an address meets adds, as in <code>Rec.at</code>):
 <code>*&lt;/network/+&gt;</code> hands out the maps with the other entries, <code>*&lt;/network/peer&gt;</code> is a read like any other, and
 <code>*&lt;/network/peer/ws/localhost/8555/mtron/origin&gt;</code> walks a member through its map's path key.
 Writes are intercepted on the way: a member is put into its map at its key LITERALLY (a key is an encoded origin, and

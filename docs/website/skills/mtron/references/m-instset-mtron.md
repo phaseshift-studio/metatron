@@ -127,6 +127,14 @@ mtron> [1,2,3]>>0
 ==>1
 mtron> [1,2,3]==[?>1 => +2]  [-- select with rec::T for predicate keys --]
 ==>[noobj,noobj,5]
+mtron> [1,2,3] * [4,5,6]     [-- the product concatenates: one timeline after another --]
+==>[1,2,3,4,5,6]
+mtron> [a,b,c] + [a,d,c]     [-- the sum branches, the shared prefix and suffix factored out --]
+==>[a,{b,d},c]
+mtron> [1,2]{2}              [-- a span after the brackets is a power: the lst repeated --]
+==>[1,2,1,2]
+mtron> [1,2,3]{-1}           [-- a negative span is the converse: the slots reversed --]
+==>[3,2,1]
 ```
 ### rec::T (`[key=>val, ...]` — unordered, keyed)
 
@@ -367,7 +375,7 @@ mtron> *a + [b=>2]
 ==>[a=>1,b=>2]
 mtron> *a
 ==>[a=>1]
-mtron> @b + [5,6]
+mtron> @b * [5,6]
 ==>[1,2,3,4,5,6]@b
 mtron> *b
 ==>[1,2,3,4,5,6]
