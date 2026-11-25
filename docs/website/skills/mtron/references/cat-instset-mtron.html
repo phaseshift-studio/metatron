@@ -827,7 +827,7 @@ code <em>in place</em>: the local laws below (\(\mathrm{op} (\mathrm{id}) \leads
 <tr><td><code>form_map_unwrap</code> (/m)</td><td><code>form = mapper</code> declared by the operation <code>map</code> wraps</td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
 <tr><td><code>derivation_contraction</code> (/m)</td><td>the <code>derivation</code> of the contract the carrier dispatches to</td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
 <tr><td><code>branch_collapse</code> (/m)</td><td>the additive op of the code ring's theory (<code>branch</code>)</td><td>\(\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})\) — equal terms collapse, summing the coefficients</td></tr>
-<tr><td><code>branch_inline</code> (/m)</td><td>the additive op of the code ring's theory, with a single member</td><td>\(a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c\), \(\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}\), \(\mathrm{S}(x) \leadsto \mathrm{map}(x)\)</td></tr>
+<tr><td><code>branch_inline</code> (/m)</td><td>the additive op of the code ring's theory, with a single member that is one lane running here: a lane keyed to another place, a member that changes machines (a move, cut, push or pop to another machine anywhere in it; a stay, to <code>&lt;~&gt;</code> or <code>&lt;.&gt;</code>, inlines), a positional <code>?split</code> and a designator key (<code>&lt;peer&gt;</code>, <code>&lt;#&gt;</code>) stay branches</td><td>\(a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c\), \(\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}\), \(\mathrm{S}(x) \leadsto \mathrm{map}(x)\)</td></tr>
 <tr><td><code>map_float</code> (/m)</td><td>a value or a type argument whose point is exact</td><td>\(\mathrm{map}(x\{c\}) \leadsto \mathrm{map}\{c\}(x)\) — the point floats off the argument, so <code>branch(int::T,int::T)</code> compiles to <code>map{2}(int::T)</code></td></tr>
 <tr><td><code>law_shard</code> (/m)</td><td><code>form = reducer</code> with a <code>combiner</code> declaring <code>monoidic</code>, <code>commutative</code> + a dialed peer</td><td>the seed partitions, each peer folds its shard, and the master recombines the partials through the <code>combiner</code> (Thm 19) — <code>sum</code>, <code>prod</code>, <code>count</code>, <code>order</code>, rec <code>sum</code> (distributed rec merging), and a keyed <code>group</code> pointwise (see <em>the deep merge</em>)</td></tr>
 <tr><td><code>law_bsp</code> (/m)</td><td>a whole-frontier <code>repeat?&lt;=A{*}</code> whose code is pure and floatable, + a dialed peer</td><td>each pass deals the frontier over the dialed peers and merges home (entry N's superstep)</td></tr>
@@ -869,7 +869,7 @@ not the value an expression computes. A rewrite's declared
 argument <em>is</em> its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
 place, and its body is where they hold: the gate it applies them under is written beside them, not picked by a key. A
 law's rule is stated in the name <code>op</code>, the instruction that claims the law: <code>law_involution</code> carries
-<code>[op.op =&gt; ]</code>, and <code>law_idempotent</code> and <code>law_monoidic</code> both carry <code>[op.op =&gt; op]</code>, told apart by the law whose
+<code>[op.op =&gt; ε]</code>, and <code>law_idempotent</code> and <code>law_monoidic</code> both carry <code>[op.op =&gt; op]</code>, told apart by the law whose
 claimants bind <code>op</code> and by the gate that reads it. Every claimant binds <code>op</code> to
 its own term (<code>neg</code>, <code>ucase</code>, <code>sum</code>, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared <code>involution</code> — <code>neg</code>, <code>inv</code>, <code>not</code>, <code>reverse</code>,
@@ -973,9 +973,12 @@ The keys union, and a key on both sides merges its two values by their kind:</p>
 </tbody>
 </table>
 <p>A <code>lst</code> is an <strong>atom</strong> of the merge: two colliding <code>lst</code>s make a stream of <code>lst</code>s, \([1,2,3] \uplus [2,3]\), never their
-concatenation — the union is commutative, so its fold is defined over a stream. Rec <code>sum</code> declares <code>monoidic</code> and
-<code>commutative</code>, so <code>law_shard</code> distributes a rec merge as it distributes a sum of ints: each peer merges its share of
-the recs and the master merges the partial recs. Concatenating <code>lst</code> values is said by
+concatenation — the union is commutative, so its fold is defined over a stream. An <strong>empty sub-rec</strong> holds no walk,
+so the merge stores none, at any depth or in a stream, whether copies cancelled it or it arrived empty:
+<code>[a=&gt;[b=&gt;1]] - [a=&gt;[b=&gt;1]]</code> and <code>[a=&gt;[=&gt;]] + [b=&gt;1]</code> both drop <code>a</code>. Dropping only what cancelled would make the
+merge's answer depend on its bracketing. Rec <code>sum</code> declares <code>monoidic</code> and <code>commutative</code>, so <code>law_shard</code> distributes
+a rec merge as it distributes a sum of ints: each peer merges its share of the recs and the master merges the
+partial recs. Concatenating <code>lst</code> values is said by
 the expression, with a select's <code>+</code>: \([1,2,3] \mathbin{+\!\!+} [2,3]\) is <code>[a=&gt;[1,2,3]]==[a=&gt;+[2,3]]</code>.</p>
 <p>A coefficient is a <strong>multiplicity</strong>, read the way every access reads it — the outer \(c\) multiplied into what it holds,
 \(\{c\}[k \Rightarrow v] = [k \Rightarrow \{c\}v]\), all the way down to the merge's atoms, where \(\{c\}v\) is \(v\)'s

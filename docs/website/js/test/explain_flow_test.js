@@ -54,7 +54,7 @@ test('explanation table — a recorded no-object type reads as a type, never a d
     /* the shape current machines send: dom recorded even when its least count is 0,
        so a literal start's dom is the no-object type (Marko, 2026-11-25) */
     const model = modelOf(`/m/inst/explain/explanation::[per_inst=>[[op=>start,dom=>noobj,rng=>int,args=>[1],f=>'<j>',form=>initial,c_dom=>0,c_rng=>1,c_out=>1],[op=>sum,dom=>int,rng=>int,args=>[,],f=>'<j>',form=>reducer,c_dom=>0,c_rng=>1,c_out=>1]]]`);
-    assert.equal(model.rows[0].dom, 'noobj::T');
+    assert.equal(model.rows[0].dom, 'noobj{0}::T');
     assert.equal(model.rows[0].rng, 'int::T');
     assert.equal(model.rows[1].dom, 'int::T');
 });
@@ -71,7 +71,7 @@ test('explanation table — a distributed chain keeps its cut args and records n
     const model = modelOf('[per_inst=>' + DISTRIBUTED + ']');
     assert.equal(model.rows.length, 2);
     assert.equal(model.rows[0].op, 'branch');
-    assert.equal(model.rows[0].dom, null);       // the rec cannot tell noobj{0}::T from int{*}::T
+    assert.equal(model.rows[0].dom, null);       // the key is dropped; the panel renders noobj{0}::T for it
     assert.equal(model.rows[0].rng, null);
     assert.equal(model.rows[0].form, 'standard');
     assert.ok(model.rows[0].args.includes('cut(ws://localhost:1111?hop=1'), model.rows[0].args);

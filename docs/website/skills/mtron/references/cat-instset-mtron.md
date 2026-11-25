@@ -316,7 +316,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `form_map_unwrap` (/m)   | `form = mapper` declared by the operation `map` wraps                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` (/m) | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
 | `branch_collapse` (/m)   | the additive op of the code ring's theory (`branch`)                                        | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
-| `branch_inline` (/m)     | the additive op of the code ring's theory, with a single member                             | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
+| `branch_inline` (/m)     | the additive op of the code ring's theory, with a single member that is one lane running here: a lane keyed to another place, a member that changes machines (a move, cut, push or pop to another machine anywhere in it; a stay, to `<~>` or `<.>`, inlines), a positional `?split` and a designator key (`<peer>`, `<#>`) stay branches | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
 | `map_float` (/m)         | a value or a type argument whose point is exact                                             | $\mathrm{map}(x\{c\}) \leadsto \mathrm{map}\{c\}(x)$ — the point floats off the argument, so `branch(int::T,int::T)` compiles to `map{2}(int::T)`                                                                        |
 | `law_shard` (/m)         | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a dialed peer      | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
 | `law_bsp` (/m)           | a whole-frontier `repeat?<=A{*}` whose code is pure and floatable, + a dialed peer          | each pass deals the frontier over the dialed peers and merges home (entry N's superstep)                                                                                                                                                            |
@@ -359,7 +359,7 @@ not the value an expression computes. A rewrite's declared
 argument *is* its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
 place, and its body is where they hold: the gate it applies them under is written beside them, not picked by a key. A
 law's rule is stated in the name `op`, the instruction that claims the law: `law_involution` carries
-`[op.op => ]`, and `law_idempotent` and `law_monoidic` both carry `[op.op => op]`, told apart by the law whose
+`[op.op => ε]`, and `law_idempotent` and `law_monoidic` both carry `[op.op => op]`, told apart by the law whose
 claimants bind `op` and by the gate that reads it. Every claimant binds `op` to
 its own term (`neg`, `ucase`, `sum`, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
@@ -471,9 +471,12 @@ The keys union, and a key on both sides merges its two values by their kind:
 | anything else, `lst`s too | $x \uplus y$ — appended into a stream | equal values bulk, $5 \uplus 5 = \{2\}5$; a `lst` stays whole |
 
 A `lst` is an **atom** of the merge: two colliding `lst`s make a stream of `lst`s, $[1,2,3] \uplus [2,3]$, never their
-concatenation — the union is commutative, so its fold is defined over a stream. Rec `sum` declares `monoidic` and
-`commutative`, so `law_shard` distributes a rec merge as it distributes a sum of ints: each peer merges its share of
-the recs and the master merges the partial recs. Concatenating `lst` values is said by
+concatenation — the union is commutative, so its fold is defined over a stream. An **empty sub-rec** holds no walk,
+so the merge stores none, at any depth or in a stream, whether copies cancelled it or it arrived empty:
+`[a=>[b=>1]] - [a=>[b=>1]]` and `[a=>[=>]] + [b=>1]` both drop `a`. Dropping only what cancelled would make the
+merge's answer depend on its bracketing. Rec `sum` declares `monoidic` and `commutative`, so `law_shard` distributes
+a rec merge as it distributes a sum of ints: each peer merges its share of the recs and the master merges the
+partial recs. Concatenating `lst` values is said by
 the expression, with a select's `+`: $[1,2,3] \mathbin{+\!\!+} [2,3]$ is `[a=>[1,2,3]]==[a=>+[2,3]]`.
 
 A coefficient is a **multiplicity**, read the way every access reads it — the outer $c$ multiplied into what it holds,

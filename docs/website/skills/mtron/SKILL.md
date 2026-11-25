@@ -102,6 +102,19 @@ mtron.
 . **absolute**: a uri with a `/` prefix -- `/a/b`. . **relative**: with no `/` prefix -- `a/b`.
 . **branch** : a uri with a `/` suffix -- `a/b/`. . **node** : with no `/` suffix -- `a/b`.
 
+A uri's form is also its scope, so the form decides where a write lands:
+
+| form                       | scope                                                                      |
+|----------------------------|----------------------------------------------------------------------------|
+| `ws://host:8555/a/b`       | across physical machines, through a dialed peer                            |
+| `/a/b`                     | the machines of one JVM, where a mounted space indexes the path            |
+| `a/b`                      | the machine's variable stack, shared by its threads                        |
+| `inst(a/b=>int::T){...}`   | an instruction's argument uri: local to the thread that applies it         |
+
+The writes above land because the first example mounted a `memspace` at `/a/#`. An absolute write needs a space that
+indexes its path, and so does a write to a uri with a scheme or a host (`mydb:people/1`). A plain relative write
+(`a -> 5`) lands on the variable stack, while `~/a` first resolves to an absolute uri under the machine's own vid.
+
 ## mtron crud cheat-sheet
 
 |      do       | mtron sugar      | mtron inst                | what it does                                |
@@ -112,6 +125,19 @@ mtron.
 | update anchor | `*/a >>= [d=>5]` | `update?A{?}<=#(A{?}::T)` | update a copy of the obj from `a`           |
 | update anchor | `@/a >>= [d=>5]` | `update?A{?}<=#(A{?}::T)` | update the obj at `a`                       |
 
+`->` takes the next obj alone. `b -> 4.plus(8)` stores `4`, and the `.plus(8)` applies to what the write returns, not
+to what it stores. To store a computed value, compute it first and write it last with `to()`:
+
+```mtron
+mtron> b -> 4.plus(8)
+==>12
+mtron> *b
+==>4
+mtron> 4.plus(8).to(c)
+==>12
+mtron> *c
+==>12
+```
 . `*` is a **clone reference**. `*a` copies the referent, where subsequent mutations do not affect the source obj.
 
 ```mtron
@@ -194,6 +220,11 @@ have a `lst::T` realization (the keys are stripped and value order determines ar
 inst?dom<=rng(arg1,arg2,...)     { body }
 inst?dom<=rng(k1=>v1,k2=>v2,...) { body }
 ```
+
+An argument slot with a `{*}` coefficient takes every argument the call gives: a slot declared `uri{*}::T` binds both
+labels of `out(knows,created)`, and the instruction's Java body reads it as `inst.args().orElse(lst()).values()`,
+never `inst.arg(0)`. Names are uris: edge labels, rec keys, places and types are all uris, and a `str` is data, never
+a name.
 
 **IMPORTANT**: mtron sugar can make the language appear complex. Realize that every expression is a fluent chain of
 nested
@@ -280,6 +311,27 @@ mtron> {1,1,1,2,2,3}.plus(2)
 mtron> {1,1,1,2,2,3}.plus(2).sum()
 ==>22
 ```
+Where a brace stands decides what it means:
+
+| written       | reading                                                                                       |
+|---------------|-----------------------------------------------------------------------------------------------|
+| `{2}plus(1)`  | before the name: unrolls in a row, so this is `plus(1).plus(1)`                               |
+| `sum{2}()`    | between the name and the parentheses: parallel copies, so `{1,2,3}.sum{2}()` is `{2}6`        |
+| `plus(1){+7}` | after the arguments: the instruction's body, not a coefficient                                |
+| `{1,2}?>5`    | glued to a prefix sugar: that sugar's leading brace, so this is `{1,2}is(gt(5))` with no lhs  |
+| `{1,2}.?>5`   | after a dot: the literal `{1,2}`, filtered                                                    |
+| `?hop={0}3`   | in a query value, `{x}y` reads before a bare `{0}`: the value is `{0}3`, and `{0}` alone is noobj |
+
+The stream sugars `-<`, `>-` and `-<|` are the exception to the glued rule: they read a glued brace as their lhs.
+
+```mtron
+mtron> 1.plus(1){7}       [-- 7: the body answers 7 --]
+==>7
+mtron> 1.plus(1){+7}      [-- 8: the body +7 applies to the lhs; the (1) goes unused --]
+==>8
+mtron> {1,2}.?>1          [-- 2: dotted, the sugar filters the literal --]
+==>2
+```
 **Symmetry reduction** -- `>-` sums the coefficients of identical objs; a negative
 coefficient is the interference:
 
@@ -288,7 +340,7 @@ mtron> [{2}5,{3}5,7]>-     [-- constructive --]
 ==>{5}5
 ==>7
 mtron> [{2}5,{-2}5,7]>-    [-- destructive: the 5s cancel --]
-==>fail::[lhs range does not match inst domain: lst::T => lst[{*}A{*}]::T [/m/inst/merge?<=/m/lst[{*}A{*}]()@<1>]]
+==>7
 ```
 **Map, filter, projection, and reduce** (language reference section 8):
 

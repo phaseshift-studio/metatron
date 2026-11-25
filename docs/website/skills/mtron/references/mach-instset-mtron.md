@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}resolver=>'the third stage — the walk that th...',
-           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
-           {?}typer=>'the fourth stage — the per-machine...'],
+           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}resolver=>'the third stage — the walk that th...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -267,6 +267,23 @@ The stages query the state through `Typer.Helper`: the processor before invoking
 a
 write (`objWrite`), a predicate test (`typePred`), and the selector before a dynamic resolution (`codeResolve`).
 
+Beside `check`, `~/compiler/typer/unfold` bounds how many copies a span may unfold into, one `int::T` each, 100 by
+default: `uri` for a uri's path (`<a>{n}`, `pow(n)`, a span a uri takes from its lhs), `lst` for the copies laid
+along a lst axis (`[5{n}]`, an argument list) and `rec` for the powers a rec's span joins and the walks each power
+holds (`[a=>b]{n}`, each power of a range, the closure `{+}`, which stops at the first power that holds no walk). A
+span past its bound fails, so a cycle's closure does, and a boot profile overrides a bound with
+`typer/unfold => [uri => 1000]`:
+
+```mtron
+mtron> *~/compiler/typer/unfold
+==>[uri=>100,lst=>100,rec=>100]
+mtron> <a/b>{2}
+==>a/b/a/b
+mtron> [5{3}]
+==>[5,5,5]
+mtron> [a=>b,b=>c]{+}
+==>[a=>{b,b=>c},b=>c]
+```
 ## processor
 
 ```mtron
@@ -277,10 +294,10 @@ mtron> */m/mach/component/processor?docq
      {?}tracer=>tracer::T,
      {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
-           {?}tracer=>"the processor's diagnostics (trace...",
-           {?}result=>'the objs the last evaluation produ...',
-           {?}analyzer=>"the processor's statistics (analyz...",
            {?}state=>'the run state: stop, run or pause',
+           {?}analyzer=>"the processor's statistics (analyz...",
+           {?}result=>'the objs the last evaluation produ...',
+           {?}tracer=>"the processor's diagnostics (trace...",
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
           desc=>'the processor contract of machine:...']
@@ -385,13 +402,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}timeout=>'how long a read of rhs waits for t...',
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}time=>'the datetime::T when the thread wa...',
            code=>"the thread's executing code",
-           {?}runtime=>"computes the thread's current runn...",
+           {?}time=>'the datetime::T when the thread wa...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}state=>'current state of the thread',
            {?}result=>'the last result produced by the th...',
-           {?}state=>'current state of the thread'],
+           {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
 | key       | value                                        |
@@ -448,11 +465,11 @@ mtron> */m/mach/component/network?docq
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
            {?}pattern=>'the branch this network answers as...',
-           {?}peer=>"machine's own connections, one per...",
-           {?}analyzer=>"the network's statistics (analyzer...",
-           {?}roster=>'what the system knows, connectionl...',
+           {?}listener=>'the sockets this machine serves th...',
            {?}status=>'the health method — an auto inst c...',
-           {?}listener=>'the sockets this machine serves th...'],
+           {?}roster=>'what the system knows, connectionl...',
+           {?}analyzer=>"the network's statistics (analyzer...",
+           {?}peer=>"machine's own connections, one per..."],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[machine=>[lab=>...',
@@ -564,17 +581,17 @@ network as `memspace::[pattern=>xyz/#]` indexes into memory.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>[pattern=>ws://localhost:8555/mtron,
-    host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    ...(1 more)]
+==>ws_client::[pattern=>ws://localhost:8555/mtron,
+               host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               ...(1 more)]
 ```
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
 its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three, and so does an
@@ -692,8 +709,9 @@ reference.
 ## distribution
 
 Distribution ships code over a client (`ws`, `http`, `mcp`) and returns values. `law_shard`
-([the category graph](cat-instset-mtron.md)) emits $\mathrm{branch}(p_i \Rightarrow \mathrm{start}(\mathit{part}_i)
-\cdot \mathit{program}, \ldots) \cdot \mathit{combiner}$; each lane runs on its own virtual thread, so the latency is
+([the category graph](cat-instset-mtron.md)) emits $\mathrm{branch}(\mathrm{cut}(p_i, \mathrm{start}(\mathit{part}_i)
+\cdot \mathit{program}), \ldots) \cdot \mathit{combiner}$, each lane the cut its $\mathrm{move}(p_i)$ compiles to and a
+home lane the program alone; each lane runs on its own virtual thread, so the latency is
 $\max_i \mathrm{RTT}_i$ rather than $\sum_i \mathrm{RTT}_i$. The layouts are catalogued in
 [distributed computing](distributed-computing-mtron.md).
 

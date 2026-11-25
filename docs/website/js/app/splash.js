@@ -1,4 +1,5 @@
 import * as MtronEnvelope from '../sdk/mtron-envelope.js';
+import { parse as parseValue } from '../sdk/obj_mtron_serializer.js';
 import * as MtronIO from '../sdk/mtron-io.js';
 import * as MtronObjPanels from '../ui/mtron-obj-panels.js';
 import { typesetMath } from '../ui/mathjax.js';
@@ -933,6 +934,7 @@ function mountObjPanel(objCard, host, env) {
         read: (vid) => vid ? readJsonOn(owner, vid) : Promise.resolve(null),
         view: (url) => activateEndpoint(url),
         instance: owner.wsBase,
+        fsspaces: () => owner.fsspaces || [],
         mtron: (expr) => evalMtronOn(owner, expr),
         open: (env) => inspectReference(env || {}),
         at: (text) => {
@@ -1529,6 +1531,38 @@ function renderActiveStats() {
     if (active) renderStats(active.stats, active);
 }
 
+/* ── the machine's file systems ───────────────────────────────────────────
+   a fsspace names a SCHEME (its pattern, e.g. mfs:#) over a host directory (its
+   route). the page searches for them when it loads, so a load/save picker can offer
+   the choice; the query answers an OBJS of fsspace recs, which the serializer parses.
+   the scheme is the machine's own name for its file system (mfs: on one, fs: on
+   another), so it is discovered, never assumed. */
+const FSSPACE_QUERY = "/memory/space.{1,3}mult(+).*_.??(fsspace::T)";
+
+function fsspaceOf(rec) {
+    const field = (name) => {
+        for (const [key, value] of rec.js) if (key.toString() === name) return value;
+        return null;
+    };
+    const pattern = field("pattern");
+    if (!pattern) return null;
+    const scheme = String(pattern).replace(/#.*$/, "").replace(/:$/, "").trim();
+    if (!scheme) return null;
+    const route = field("route");
+    const root = route && route.isRec && route.isRec() ? [...route.js.values()].map((value) => String(value))[0] : null;
+    const vid = rec.vid ? rec.vid.toString() : null;
+    return {scheme: scheme, root: root || null, vid: vid, name: vid ? vid.split("/").pop() : scheme};
+}
+
+async function loadFsspaces(instance) {
+    const text = String((await evalMtronOn(instance, FSSPACE_QUERY)) || "").trim();
+    if (!text || text === "noobj" || /^fail::/.test(text)) return [];
+    const value = parseValue(text);
+    if (!value) return [];
+    const members = value.isObjs && value.isObjs() ? [...value.js] : [value];
+    return members.map(fsspaceOf).filter(Boolean);
+}
+
 /* evaluate one expression on the x-mtron (structural) socket — unit- and
    vid-preserving; the json codec drops tids/vids, so the stats strip and
    the panels that need the raw machine form read through here. */
@@ -1694,6 +1728,14 @@ function activate(instance) {
     /* the stats strip is this machine's: its cached numbers now, a fresh read next */
     renderActiveStats();
     loadStats();
+    /* its file systems: discovered once, so a load/save picker can offer them */
+    if (!instance.fsspaces) {
+        instance.fsspaces = [];
+        loadFsspaces(instance).then((spaces) => {
+            instance.fsspaces = spaces;
+        }).catch(() => {
+        });
+    }
     instance.page.show(instance.page.view);
     restyleTabs();
     pointAt(instance);
@@ -1946,8 +1988,13 @@ if (homeSource) {
         line("err", "page load: " + (error && error.message ? error.message : error));
     });
 } else {
-    /* no source in the url: load the saved default page, falling back to the static page */
-    home.page.loadPage(home.page.PAGE).catch(() => {
+    /* no source in the url: load the saved default page, falling back to the static page.
+       a failure MUST be said out loud: an empty grid with no message is indistinguishable
+       from a page still loading, and it hid a real one (a grouped card that failed the
+       splash_card type check, so the default page parsed nowhere on a machine whose typer
+       checks type predicates) */
+    home.page.loadPage(home.page.PAGE).catch((error) => {
+        line("err", "page load: " + (error && error.message ? error.message : error));
     });
 }
 
@@ -2422,5 +2469,73 @@ $$(".page-tabs .popup-tab").forEach((button) => button.addEventListener("click",
     if (saveCancel) saveCancel.addEventListener("click", () => {
         const dialog = $("#save-as");
         if (dialog) dialog.close();
+    });
+})();
+
+/* ── open: a page from this machine's file systems ────────────────────────
+   the fsspace panel mounts in the dialog with a SELECT hook, so a click picks an
+   address and reads nothing; the dialog's open button loads what was picked. the
+   tree starts at the directory of the page on screen, and its space picker is the
+   list the page discovered when it loaded (api.fsspaces). */
+(function wireOpenPage() {
+    const trigger = $("#page-open");
+    const dialog = $("#open-page");
+    if (!trigger || !dialog) return;
+    const host = $("#open-page-tree");
+    const chosen = $("#open-page-path");
+    const ok = $("#open-page-ok");
+    let selected = null;
+
+    const reset = () => {
+        selected = null;
+        if (host) host.textContent = "";
+        if (ok) ok.disabled = true;
+        if (chosen) chosen.textContent = "no page chosen";
+    };
+
+    trigger.addEventListener("click", async () => {
+        if (!active) return;
+        reset();
+        if (!dialog.open) dialog.showModal();
+        const factory = MtronObjPanels && MtronObjPanels.resolve ? MtronObjPanels.resolve("/m/sys/space/fsspace") : null;
+        if (!factory) {
+            if (chosen) chosen.textContent = "the file system panel is not available";
+            return;
+        }
+        const page = String(active.page.PAGE || "");
+        const dir = page.lastIndexOf("/") > 0 ? page.slice(0, page.lastIndexOf("/")) : ".";
+        const panel = await factory({
+            tid: "/m/sys/space/fsspace",
+            vid: dir,
+            raw: ""
+        }, {
+            mtron: (expr) => evalMtronOn(active, expr),
+            fsspaces: () => active.fsspaces || [],
+            select: (uri) => {
+                selected = uri;
+                if (ok) ok.disabled = false;
+                if (chosen) chosen.textContent = uri;
+            }
+        });
+        if (host) host.appendChild(panel);
+    });
+
+    const cancel = $("#open-page-cancel");
+    if (cancel) cancel.addEventListener("click", () => {
+        dialog.close();
+        reset();
+    });
+    dialog.addEventListener("close", reset);
+
+    const form = $("#open-page-form");
+    if (form) form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        const uri = selected;
+        if (!uri || !active) return;
+        dialog.close();
+        reset();
+        active.page.loadPage(uri).catch((error) => {
+            line("err", "page load: " + (error && error.message ? error.message : error));
+        });
     });
 })();

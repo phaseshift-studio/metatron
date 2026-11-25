@@ -1214,6 +1214,158 @@ dialog.save-as .actions {
     letter-spacing: -.02em;
 }
 
+/* ── fsspace panel: the machine's file system as a directory tree ──────────
+   a directory read answers nested recs (one read = the skeleton); files are lazy
+   refs, read only when clicked. the space's NAME is the machine's (mfs:/fs:). */
+.fs-panel {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+/* the open-page dialog: the fsspace tree picks, the footer opens what was picked */
+dialog.save-as.open-page {
+    width: min(760px, 94vw);
+}
+
+.open-page-tree {
+    max-height: 56vh;
+    overflow: auto;
+}
+
+.open-page-chosen {
+    overflow: hidden;
+    color: var(--faint);
+    font: 10px/1.5 var(--mono);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fs-space {
+    width: 100%;
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--fg);
+    font: 11px/1.4 var(--mono);
+    padding: .25rem .35rem;
+    margin-bottom: .1rem;
+}
+
+.fs-path {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .1rem 0 .15rem;
+}
+
+.fs-path input {
+    flex: 1;
+    min-width: 0;
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--fg);
+    font: 11px/1.4 var(--mono);
+    padding: .3rem .45rem;
+}
+
+.fs-path input:focus {
+    outline: none;
+    border-color: var(--mred);
+}
+
+.fs-path .fs-go {
+    flex: none;
+}
+
+.fs-note {
+    min-height: 0;
+    color: var(--faint);
+    font: 10px/1.4 var(--mono);
+}
+
+.fs-body {
+    overflow: auto;
+    max-height: 46vh;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .25rem .3rem;
+}
+
+.fs-tree {
+    display: flex;
+    flex-direction: column;
+}
+
+/* one row per entry: a click asks the machine whether it holds entries (a directory
+   opens, a file is read/picked), so the marker is `▸` until the answer is known. */
+.fs-entry {
+    display: flex;
+    flex-direction: column;
+}
+
+.fs-row {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    padding: .06rem .25rem;
+    color: var(--fg);
+    font: 11px/1.5 var(--mono);
+    text-align: left;
+    cursor: pointer;
+}
+
+.fs-row::before {
+    content: "▸";
+    width: .7rem;
+    color: var(--faint);
+    font-size: 9px;
+}
+
+.fs-entry.open > .fs-row::before {
+    content: "▾";
+}
+
+.fs-entry[data-kind="file"] > .fs-row::before {
+    content: "·";
+    text-align: center;
+}
+
+.fs-row:hover,
+.fs-entry.picked > .fs-row {
+    background: var(--panel-hi);
+}
+
+.fs-entry.picked > .fs-row {
+    box-shadow: inset 0 0 0 1px var(--mred);
+}
+
+.fs-row.busy {
+    opacity: .55;
+}
+
+.fs-entry > .fs-children {
+    display: none;
+    flex-direction: column;
+    margin-left: .55rem;
+    padding-left: .35rem;
+    border-left: 1px solid var(--line);
+}
+
+.fs-entry.open > .fs-children {
+    display: flex;
+}
+
+.fs-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* ── explain panel: the instruction table + the derived data-flow widget ────
    the table is explanation::T's per_inst (the COMPILED chain); the flow is the
    topology extension's `flow`, drawn locally — the machine's `format` is a lazy

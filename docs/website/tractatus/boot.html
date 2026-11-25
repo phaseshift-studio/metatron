@@ -579,23 +579,23 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 ==&gt;[stdin=&gt;block(/sys/io/stdin?str&lt;=(){&lt;j&gt;}),
     stdout=&gt;/sys/io/stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;}]
 ==&gt;[executor=&gt;thread_executor::[
-     stop=&gt;[!*/sys/thread/288fa412],
+     stop=&gt;[!*/sys/thread/42483c2e],
      run=&gt;[!*/sys/thread/main]]@/sys/thread/executor,
-    &lt;288fa412&gt;=&gt;virtual::[
-     code=&gt;λ(#{*}::T){&lt;j&gt;},
-     rhs=&gt;!λawait(){&lt;j&gt;},
-     lhs=&gt;noobj,
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.11:24/05/55/22/014?tz=-0700&gt;,
-     runtime=&gt;!λ(){&lt;j&gt;},
-     result=&gt;noobj]@/sys/thread/288fa412,
     main=&gt;core::[
      code=&gt;λ(#{*}::T){&lt;j&gt;},
      rhs=&gt;!λawait(){&lt;j&gt;},
      lhs=&gt;noobj,
      state=&gt;run,
-     time=&gt;datetime::&lt;//2026.11:24/05/55/22/089?tz=-0700&gt;,
-     runtime=&gt;!λ(){&lt;j&gt;}]@/sys/thread/main]
+     time=&gt;datetime::&lt;//2026.11:24/23/26/39/960?tz=-0700&gt;,
+     runtime=&gt;!λ(){&lt;j&gt;}]@/sys/thread/main,
+    &lt;42483c2e&gt;=&gt;virtual::[
+     code=&gt;λ(#{*}::T){&lt;j&gt;},
+     rhs=&gt;!λawait(){&lt;j&gt;},
+     lhs=&gt;noobj,
+     state=&gt;stop,
+     time=&gt;datetime::&lt;//2026.11:24/23/26/39/882?tz=-0700&gt;,
+     runtime=&gt;!λ(){&lt;j&gt;},
+     result=&gt;noobj]@/sys/thread/42483c2e]
 ==&gt;[PATH=&gt;'/home/killswitch/.local/bin:/home/...',
     XAUTHORITY=&gt;'/home/killswitch/.Xauthority',
     XMODIFIERS=&gt;'@im=ibus',

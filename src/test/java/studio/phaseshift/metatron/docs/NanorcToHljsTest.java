@@ -181,8 +181,8 @@ public class NanorcToHljsTest extends AbstractMetatronTest {
             assertTrue(subset.contains("(?!^mtron>)"));
             // BOTH arrays resolve in the reversed (later-wins) order — the subset lost its reversal
             // once and the int rule beat the green 0x inside every result body
-            assertTrue(subset.trim().startsWith("{ className: 'mtron-nanorc-bright-black', begin: /\\[==/, end: /==]/ }"));
-            assertTrue(full.trim().startsWith("{ className: 'mtron-nanorc-bright-black', begin: /\\[==/, end: /==]/ }"));
+            assertTrue(subset.trim().startsWith("{ className: 'mtron-nanorc-bright-black', begin: /\\[== /, end: / ==]/ }"));
+            assertTrue(full.trim().startsWith("{ className: 'mtron-nanorc-bright-black', begin: /\\[== /, end: / ==]/ }"));
             // reversed: the LAST nanorc rule (the [== comment region) is the FIRST browser mode —
             // nano's later-wins becomes highlight.js's first-mode-wins
             assertTrue(js.contains("const MTRON_RULES = [\n"

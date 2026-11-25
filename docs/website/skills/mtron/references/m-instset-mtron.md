@@ -33,6 +33,10 @@ mtron> /foo/bar    [-- uri (path literal) --]
 ==>/foo/bar
 mtron> a           [-- uri (bare name — no angle brackets if alphanumeric) --]
 ==>a
+mtron> <a/b/c>{2}  [-- uri (a span after the brackets is a power: the path repeated) --]
+==>a/b/c/a/b/c
+mtron> <a/b/c>{-1} [-- uri (a negative span is the converse: the path reversed) --]
+==>c/b/a
 mtron> 0x0F        [-- bytes (hex literal) --]
 ==>0x0f
 mtron> noobj       [-- "no obj" (empty, none) --]
@@ -74,8 +78,8 @@ have actually cost someone an afternoon.
 | `tid`           | the type constraining it (the same value's tid is `int`)                                               |
 | `origin`        | a service's full address: `scheme://host:port`. The unit peers are keyed by and dialed at              |
 | `authority`     | `host:port` — an origin without the scheme. `hasAuthority()` demands **both** host and port            |
-| `host`          | the host alone. The wire's gate: an address with a host is *someone else's to answer* (`Network.read`) |
-| `isPrefixed()`  | scheme, no host — the vocabulary's slot (`math:cos`)                                                   |
+| `host`          | the host alone. The wire's gate: an address with a host is *someone else's to answer* (`Network.read`). An empty authority (`file:///a`, printed with its `//`) has none |
+| `isPrefixed()`  | scheme, no host — the vocabulary's slot (`math:cos`), and an empty authority (`file:///a`)              |
 | `isAddressed()` | just `hasHost()` — says nothing about ports or schemes                                                 |
 | `isHosted()`    | host, **no scheme, no port** — the network name slot (`//ginger/a`)                                    |
 | `noobj`         | the empty answer. A read that matches nothing returns it; a write of it is the universal close         |
@@ -136,6 +140,12 @@ mtron> [a=>1,b=>2]>>a
 mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b
 mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d
 mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d/e
+mtron> [a=>b,b=>c]{2}                [-- a span after the brackets is a power of the walk join: two hops --]
+==>[a=>b=>c]
+mtron> [a=>b,b=>c]{-1}               [-- a negative span is the converse: each walk reversed --]
+==>[b=>a,c=>b]
+mtron> [a=>b,b=>c]{+}                [-- a range is the sum of its powers: {+} is the transitive closure --]
+==>[a=>{b,b=>c},b=>c]
 ```
 ### rel::T (relation) — key/value pair
 
@@ -745,6 +755,19 @@ mtron> ?>1        [-- check if greater than 1 --]
 mtron> ?<5        [-- check if less than 5 --]
 mtron> ?int::T    [-- check if type is int --]
 ```
+`?x` is `isa(x)`. The comparison prefixes are filter sugar, `is(…)` around their instruction: `?=`, `?!=`, `?>`,
+`?>=`, `?<`, `?<=`, and `?~` for `is(sorta(…))` (`?>5` is `is(gt(5))`; `??` alone is `sorta`). So `int::T[?gt(5)]` asks
+whether an obj is an instance of the instruction `gt(5)`, and the filter is `int::T[?>5]`. A rec after `?` is a
+structural type matched open-world: `?[name=>'marko']` passes any rec that holds that field, whatever else it holds,
+and a field's value can itself be a predicate (`?[age=>?>30]`).
+
+```mtron
+mtron> {3,6,9}.?>5                                [-- 6, 9: the filter sugar --]
+==>6
+==>9
+mtron> [name=>'marko',age=>29].?[name=>'marko']   [-- the rec: age is extra, and the match is open-world --]
+==>[name=>'marko',age=>29]
+```
 ---
 
 ## 22. code pattern matching
@@ -866,6 +889,10 @@ nothing, so it defines no type. So:
 | `;`       | `end()`          | sequence separator       |
 | `?type`   | `isa(type)`      | type/condition check     |
 | `==`      | `select()`       | structural select        |
+
+A brace glued to a prefix sugar is that sugar's leading brace, as `{2}` is in `{2}plus(1)`: `{1,2}?>5` is
+`{1,2}is(gt(5))` with no lhs, while `{1,2}.?>5` filters the literal `{1,2}`. The stream sugars `-<`, `>-` and `-<|`
+are the exception: they read a glued brace as their lhs.
 
 ---
 

@@ -1508,7 +1508,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .tid(RANGE_INST_TID)
                             .dom(A.maybeSome(), "any objs")
                             .rng(A.maybeSome(), "a window of the lhs objs")
-                            .argLst(INT_TYPE, "the starting offset", isa_(INT_TYPE).else_(jnt(0)).tryToInst(), "the window length (defaults to 0)")
+                            .argLst(INT_TYPE, "the starting offset", isa_(INT_TYPE).else_(jnt(1)).tryToInst(), "the window length (defaults to 1)")
                             .desc("a windowing function \\(f(X, i, n) \\mapsto X'\\): the objs starting at offset i for a span of n")
                             .body((lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0())
                             .create(),

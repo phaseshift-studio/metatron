@@ -9,7 +9,7 @@ description: |
   rules are /m's, and so are `law_shard` and `law_bsp` since 2026-11-24; `law_bsp`, the superstep of entry N, is `Bsp`).
   One row per pattern (A–W): its algebraic law (the latex), the mtron
   you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif).
-  A play button marks a pattern implemented today. A span range is a **second index set** (the *run partition*), documented
+  A play button plays a pattern's recorded cast; a ✅ in the taxonomy tree marks it implemented. A span range is a **second index set** (the *run partition*), documented
   below with the seed partition it complements.
   TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a
   distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's
@@ -119,11 +119,12 @@ form: `[h,1]` is a **chain** (one child per node, `monoidic` alone, order preser
 The arity **caps the fan-out**: each node takes the first `w` lanes of the emitter's lane order (home-first, then the
 resolution order — deterministic, never rotated per node), still clamped by `min(shares, seed)`. A node with fewer live
 targets takes what there is. The **form is restated, never the number**: the emitted lane's budget is the same arity
-with the height decremented (`{2}3 ⇒ {2}2 ⇒ {2}1 ⇒ 0`, `[3,1] ⇒ [2,1] ⇒ [1,1]`). It is stated on the lane's **first
-instruction** — the `start(part)` of a seeded lane, the first run instruction otherwise — so a human and a re-planning
-peer read the metadata in one place. A leaf states the bare `?hop=0`; no copied instruction is stripped of a budget it
-carries (the earliest statement wins, so the head is authoritative); and the master states none (its head is the
-layout's `branch`).
+with the height decremented (`{2}3 ⇒ {2}2 ⇒ {2}1 ⇒ 0`, `[3,1] ⇒ [2,1] ⇒ [1,1]`). A shipped lane states it on its
+**move's target**, `cut(<//peer?hop={2}2>, …)`, and the cut hands it to the program it ships, on that program's first
+instruction; a home lane, which has no move, states it on its **first instruction** — the `start(part)` of a seeded
+lane, the first run instruction otherwise. So a re-planning peer reads the budget in one place, the head of what it
+runs. A leaf states the bare `?hop=0`; no copied instruction is stripped of a budget it carries (the earliest statement
+wins, so the head is authoritative); and the master states none (its head is the layout's `branch`).
 
 ### `?place` — where
 
@@ -159,8 +160,8 @@ An unreadable `?split` is refused loudly (the key and the text), never defaulted
 
 ### the run partition — a span range is an index set (menu entry V)
 
-`?split` partitions the **seed**; a span range partitions the **run** — menu entry **V**, the *generative run*. (`P`,
-"computed seeds", is its sibling over a generated *data* index space; V's index is the exponent.) A coefficient `{m,n}`
+`?split` partitions the **seed**; a span range partitions the **run** — menu entry **V**, the *generative run*. (Computed
+seeds (P) is its sibling over a generated *data* index space; the generative run's index is the exponent.) A coefficient `{m,n}`
 on an instruction is the sum of its unrolls, `a^[m,n] = a^m + … + a^n`, and the unrolls are independent terms — so when
 the seed is a singleton and the run carries a closed range, `law_shard` factors the **unroll index**: one lane per
 distinct place, each carrying the **whole** seed and the run with its span narrowed to that place's share (`{p_i,q_i}`,
@@ -235,7 +236,9 @@ of round trips a lane's share costs, not how the index set was split.
 ## the menu
 
 The centerpiece: every pattern, the law that makes it sound, and what it does; then the mtron each one rewrites.
-A ▶ play button = implemented today (it plays the pattern's cast); no play button = the law is sound but the lowering is not yet written.
+A ▶ play button plays the pattern's recorded cast. What is implemented is a ✅ in the taxonomy tree below, which the
+legend dates; a pattern can be done before it has a cast. The key letters index the menu: in prose for a reader, name
+the pattern and keep its letter in parentheses, as in *the generative run (V)*.
 
 | key   | play                                                                                                 | pattern                     | law                                                                                                                                | description                                                                                       |
 |-------|------------------------------------------------------------------------------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
@@ -268,7 +271,10 @@ A ▶ play button = implemented today (it plays the pattern's cast); no play but
 Each pattern's **pre-write** motif, the mtron before the rewrite fires, and its **rewrite**, the emitted layout: one
 `branch` keyed by place (`s_i` a lane's program, `p_i` a peer, `part_i` the factor of the seed bulk the branch deals
 lane `i`). The names are placeholders and the rows are schemas, not literal runs; a cell in plain prose describes a motif no
-single expression shows.
+single expression shows. A lane is a move (`Law.nomadic`): the planner emits `<p_i> => s_i` as the cut its move compiles
+to, `cut(<p_i?hop=n>, s_i)`, its budget on the target, and a home lane as its program alone, its budget on its head.
+A lane's share is the bias on the branch, `?split=[local,{2}ws://p_1:8555,ws://p_2:8555]`, read per lane: a point on a cut would be
+copies of its answer. The rows write the keyed spelling, which reads the same.
 
 | key   | pre-write                                                          | rewrite                                                                                            |
 |-------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
@@ -296,7 +302,7 @@ single expression shows.
 | **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK     |
 | **W** | `{1,…,8}.complex_computation()`                                    | `branch?<={0}(<p_i> => start?hop=0(part_i).complex_computation(), …)`, and no combiner             |
 
-**Legend.** ▶ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
+**Legend.** The dates behind the tree's ✅ (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 — a
 **singleton** seed and a **closed** span range — and 2026-11-18 every cut plans its run; see *the run partition*). `P`
 is the data-index-space sibling of `V`: same "nothing ships" spirit, but its index is a generated *data* space, while
@@ -368,7 +374,8 @@ The four top branches read the two axes of `docs/design/distributed-patterns-thr
 - **composite & substrate** builds on the rest: `N` iterates a dealt superstep (`law_bsp`), `R` writes results to a spatial
   address, `M` decomposes into O / A / G over three index splits, `I` lowers the plan's axes to a layout.
 
-Implemented is a ▶ play button in the table, a ✅ (green) in the tree; white = the law holds, the lowering is unwritten.
+Implemented is a ✅ (green) in this tree, dated in the legend above; white = the law holds, the lowering is unwritten.
+A ▶ in the menu plays a recorded cast, which a done pattern may not have yet.
 
 ## the implemented layouts, spelled out
 
@@ -398,7 +405,10 @@ partials through the combiner: the chain **expands** into one lane per place and
 - **A run partition replicates the seed and narrows the exponent.** A seeded lane carries the whole seed and its own
   subrange of the unroll index; there is no branch lhs, so neither the stream nor the barrier applies. After a cut the
   seed is computed, so the branch copies it to every lane (`branch?<=T{*}&split=copy(…)`). See *the run partition*.
-- A place with n shares is keyed `?split={n}part`, and `?split=copy` hands every lane the whole seed.
+- Under the seed axis, a peer with n shares is one lane whose demand in the branch's bias is n
+  (`branch?split=[local,{n}ws://p_i:8555](…)`, the peer named by its authority, the keyed spelling's `?split={n}part`), and home's n shares are n home lanes,
+  `local` one share apiece; shares of one apiece are a plain `?split=part`. Under the run axis and `?split=copy`, each
+  place is one lane, and a copy hands every lane the whole seed.
 - A lane ships raw. The master's compiler never binds a lane; each is compiled where it runs (server side for a host,
   by that machine's compiler for a machine path).
 
@@ -438,9 +448,12 @@ merge that re-reads the multiplicity, so two `1`s in different shards merge into
 ### D — parallel fan-out (virtual-threaded lanes, max RTT)
 
 Every keyed lane of the branch is a `virtual::T`, submitted before any is awaited — each returns immediately and waits
-on its own thread, and the branch then awaits each lane through its `rhs`. The master pays **max RTT, not Σ RTT**. A remote lane ships its program through its place's `eval` (the client's mini-instset override),
-bound when the lane runs rather than when the plan is made, and the result hangs off `rhs` as a lazy `auto` over the
-future.
+on its own thread, and the branch then awaits each lane through its `rhs`. The master pays **max RTT, not Σ RTT**. A
+keyed lane is a move (`Law.nomadic`): `<p> => program` runs as the cut `move(<p>).program` compiles to, so the cut
+routes it, a remote lane shipping its program through its place's `eval` (the client's mini-instset override), bound
+when the lane runs rather than when the plan is made, and the result hangs off `rhs` as a lazy `auto` over the future.
+A lane that is one `from(</x>)` or one `to(</x>)` of one obj, at the peer itself, goes through the place's door
+instead, so a client that runs no program is a place too.
 
 ### E — tree reduction (`?hop=height{arity}`)
 
@@ -454,8 +467,10 @@ on p_1:    branch?<={0}&split=part(<p_2> => start?hop={2}0({1,3,5,7}).plus(1).su
 The axis resolves per run, in chain order — the first statement among the run's own instructions wins, else the axis
 the run before it resolved, else the plan's tree route (default height 1, the star). A statement governs from where it
 stands onward: `start?hop=0(…)` keeps a whole chain home, while `?hop=0` on the last fold keeps only that run home. The
-`?place` and `?split` axes resolve the same way. A peer re-plans its part because applying a code compiles it
-(`Machine.applyCode`). The lane restates the form, never the number (see *?hop*): `{2}2 ⇒ {2}1 ⇒ 0`. A chain (`[h,1]`)
+`?place` and `?split` axes resolve the same way. A peer re-plans its part because applying a code compiles it:
+`Machine.evaluate(lhs, code)` runs a code of more than one instruction through the machine's compiler, and a shipped
+lane arrives as such a code, `start?hop=…(part)` followed by its run. The lane restates the form, never the number
+(see *?hop*): `{2}2 ⇒ {2}1 ⇒ 0`. A chain (`[h,1]`)
 hands the whole part to one child, so the tree is a line.
 `?hops` is the deprecated pre-singular spelling of the same key: it is read for one cycle, `?hop` wins at the same
 position (both keys on one instruction), and the earliest statement wins across positions.
@@ -683,6 +698,9 @@ instruction is still bare when `law_shard` runs, before resolution, so it stays 
 
 ## how the entries compose
 
+This section composes the menu's keys, so it writes them as letters. Outside an index like this one, name the
+pattern and keep its letter in parentheses.
+
 - **E applies to every A-fold**, and to G, J, K and L: any combiner recombines at any interior node, and a K lane
   re-planned below the root absorbs its select again.
 - **D multiplies everything** — its absence made distribution slower, not wrong.
@@ -730,8 +748,9 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    instruction set's rules) cuts the chain at the first of them. A move becomes `cut(<target>, tail)` and a push or a
    pop is followed by `cut(<~>, tail)`, so `law_shard` and `law_bsp` plan only what runs here, and the tail is
    compiled by the machine it lands in, over that machine's own peers (reach is not inherited). A cut into this
-   server's machine tree switches the current machine and compiles the tail there; a cut to a host ships the program,
-   and the receiver's own extractor cuts the `move(</path>)` it arrives with. `explain()` and `profile()` are the
+   server's machine tree switches the current machine and compiles the tail there; a cut to a host ships the lhs and
+   the cut to the tail's place in that peer, `cut(</path>, tail)` (the peer's root when the target names no machine
+   past the surface it was dialed at), which the receiver runs as any cut. `explain()` and `profile()` are the
    return home: the tail ends before them, so `1.move(<a>).plus(1).explain()` compiles to
    `1.cut(<a>, plus(1)).explain()`, explained here with nothing run, and a profile times the cut here, every run
    starting from home.

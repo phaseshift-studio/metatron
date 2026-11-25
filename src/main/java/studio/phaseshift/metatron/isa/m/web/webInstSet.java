@@ -119,8 +119,8 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI OBJ_XSV_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_xsv");
     public static final fURI OBJ_ZIP_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_zip");
 
-    public static final fURI SPLASH_PAGE = WEB_ISA_TID.extend("splash_page");
-    public static final fURI SPLASH_CARD = SPLASH_PAGE.extend("splash_card");
+    public static final fURI SPLASH_PAGE_TID = WEB_ISA_TID.extend("splash_page");
+    public static final fURI SPLASH_CARD_TID = SPLASH_PAGE_TID.extend("splash_card");
 
     public static Type MIME_OBJ_TYPE = TypeBuilder.build()
             .tid(URI_TID)
@@ -399,9 +399,16 @@ public class webInstSet extends AbstractInstSet {
                                 .create(),
                         TypeBuilder.build()
                                 .tid(REC_TID)
-                                .vid(SPLASH_CARD)
+                                .vid(SPLASH_CARD_TID)
+                                // A CARD IS A LEAF OR A GROUP (Marko, 2026-11-25): a leaf names the object's
+                                // type (tid) and draws it; a GROUP names its CHILD CARDS (card) under a label.
+                                // tid was required, so a grouped page (the default page groups 'core' and
+                                // 'server') failed this predicate — invisible while the typer's type_pred check
+                                // is off, fatal once it is on, where the whole splash_page fails to parse and
+                                // the page renders no cards. both shapes are accepted; a card carries one of them.
                                 .isaPredicate(rec(
-                                        uri(TID), URI_TYPE,
+                                        uri(TID).maybe().asUri(), URI_TYPE,
+                                        uri(CARD).maybe(), T(LST_TID.poly(SPLASH_CARD_TID.maybeSome())),
                                         uri(VID).maybe(), URI_TYPE,
                                         uri(LABEL).maybe(), STR_TYPE,
                                         uri(VIEW).maybe(), union_(uri(MTRON), uri(JSON), uri(PANEL)),
@@ -411,10 +418,10 @@ public class webInstSet extends AbstractInstSet {
                                 .create(),
                         TypeBuilder.build()
                                 .tid(REC_TID)
-                                .vid(SPLASH_PAGE)
+                                .vid(SPLASH_PAGE_TID)
                                 .isaPredicate(rec(
                                         uri(TITLE), STR_TYPE,
-                                        uri(LAYOUT), T(LST_TID.poly(SPLASH_CARD.maybeSome()))))
+                                        uri(LAYOUT), T(LST_TID.poly(SPLASH_CARD_TID.maybeSome()))))
                                 .create(),
                         docWrap(HTTP_SERVER_TYPE, """
                                         an http server as this machine's presence: it serves this machine's routes through an http(s)://host:port socket.

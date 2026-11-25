@@ -2249,6 +2249,212 @@ function binderTable(rows) {
     return table;
 }
 
+/* ── fsspace::T — the machine's file system as a directory tree ─────────────
+   LISTED BY ADDRESS, NEVER DEREFERENCED: a directory is
+       <mfs:path>.{0,2}>>.take(n)
+   — the space's uri spine, ONE read for the ground, its children and its
+   grandchildren. so a child that has children is a DIRECTORY, and the rows are
+   names only: nothing here reads an obj, and listing therefore never evaluates a
+   file. a click is the only read, and a file that is a program is evaluated by it.
+
+   THE SPACE'S NAME IS THE MACHINE'S: booger names its file system mfs:, ginger and
+   chibi fs:. the page discovers the machine's fsspaces when it loads (api.fsspaces)
+   and this panel offers them; a bare path is prefixed with the chosen scheme. */
+function fsspacePanel(env, api) {
+    const box = node("div", "mpanel fs-panel");
+    const spaces = (api && api.fsspaces ? api.fsspaces() : []) || [];
+    const schemeOf = (uri) => {
+        const at = String(uri || "").indexOf(":");
+        return at > 0 ? String(uri).slice(0, at) : null;
+    };
+    let scheme = schemeOf(env && env.vid) || (spaces[0] && spaces[0].scheme) || "mfs";
+
+    /* the parent of an address on the spine: one segment up, or the space root (scheme:.) */
+    const parentOf = (uri) => {
+        const text = String(uri);
+        const at = text.indexOf(":");
+        const name = text.slice(0, at);
+        const path = text.slice(at + 1).replace(/\/+$/, "");
+        if (!path || path === ".") return null;
+        const cut = path.lastIndexOf("/");
+        return name + ":" + (cut > 0 ? path.slice(0, cut) : ".");
+    };
+
+    const picker = spaces.length ? document.createElement("select") : null;
+    if (picker) {
+        picker.className = "fs-space";
+        picker.title = "this machine's file systems";
+        spaces.forEach((space) => {
+            const option = document.createElement("option");
+            option.value = space.scheme;
+            option.textContent = space.scheme + ":  " + (space.root || space.vid || "");
+            picker.appendChild(option);
+        });
+        picker.value = scheme;
+        picker.addEventListener("change", () => {
+            scheme = picker.value;
+            show(".");
+        });
+        box.appendChild(picker);
+    }
+
+    const form = node("form", "fs-path");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.spellcheck = false;
+    input.autocapitalize = "off";
+    input.dataset.history = "fs.path";
+    input.placeholder = "boot/space/web";
+    const go = node("button", "primary fs-go", "go");
+    go.type = "submit";
+    form.appendChild(input);
+    form.appendChild(go);
+    box.appendChild(form);
+    const note = node("div", "fs-note", "");
+    box.appendChild(note);
+    const body = node("div", "fs-body");
+    box.appendChild(body);
+
+    const groundOf = (given) => {
+        const text = String(given == null ? "" : given).trim();
+        if (/^[a-z]+:/.test(text)) {
+            scheme = schemeOf(text) || scheme;
+            return text;
+        }
+        return scheme + ":" + (text || ".");
+    };
+
+    /* one spine read, ONE HOP: the ground and its children, as addresses. `{0,2}` is NOT
+       used here: it walks INTO a file (default.mtron/title), which parses the file —
+       listing must never do that. so a listing is names only, and whether an entry is a
+       directory is asked per click, with the same one-hop read. */
+    const spine = async (uri) => {
+        try {
+            const text = String((await api.mtron("<" + uri + ">.{0,1}>>.take(600)")) || "").trim();
+            if (!text || text === "noobj" || /^fail::/.test(text)) return null;
+            const value = parse(text);
+            if (!value) return null;
+            const members = value.isObjs && value.isObjs() ? [...value.js] : [value];
+            return members.map((m) => m && m.isUri && m.isUri() ? m.js.toString() : String(m));
+        } catch (ignored) {
+            return null;
+        }
+    };
+
+    /* the last path segment; a child of the space root has none, so the name is what
+       follows the scheme (mfs:boot -> boot) */
+    const nameOf = (uri) => {
+        const at = uri.indexOf(":");
+        const cut = uri.lastIndexOf("/");
+        return cut > at ? uri.slice(cut + 1) : uri.slice(at + 1);
+    };
+
+    const entriesOf = async (uri) => {
+        const all = await spine(uri);
+        if (!all) return null;
+        return all
+            .filter((child) => child !== uri && parentOf(child) === uri)
+            .map((child) => ({uri: child, name: nameOf(child)}))
+            .filter((row) => row.name && row.name.charAt(0) !== ".")
+            .sort((a, b) => a.name.localeCompare(b.name));
+    };
+
+    /* a directory's own one-hop spine holds more than itself; a file's holds only the file.
+       the read is the same shape as a listing, so asking costs no parse. */
+    const holdsEntries = async (uri) => {
+        const all = await spine(uri);
+        return !!all && all.length > 1;
+    };
+
+    const pick = (row, uri, name) => {
+        if (api.select) {
+            const tree = row.closest(".fs-tree");
+            if (tree) tree.querySelectorAll(".fs-entry.picked").forEach((picked) => picked.classList.remove("picked"));
+            row.classList.add("picked");
+            api.select(uri);
+            return;
+        }
+        if (api.open) api.open({vid: uri, raw: uri, shortTid: name});
+    };
+
+    const rowFor = (name, uri) => {
+        const row = node("div", "fs-entry");
+        /* a NAME decides first: an entry with an extension is a FILE, never probed, so a
+           click on a page is a pick and not a read. a dotless entry is asked once, when
+           it is clicked, because only a read can tell a directory from a leaf. */
+        if (name.includes(".")) row.dataset.kind = "file";
+        const line = node("button", "fs-row", "");
+        line.type = "button";
+        line.appendChild(node("span", "fs-name", name));
+        const children = node("div", "fs-children");
+        row.appendChild(line);
+        row.appendChild(children);
+        let grown = false;
+        line.addEventListener("click", async () => {
+            if (row.dataset.kind === "file") {
+                pick(row, uri, name);
+                return;
+            }
+            if (row.dataset.kind === "dir") {
+                row.classList.toggle("open");
+                return;
+            }
+            line.classList.add("busy");
+            const dir = await holdsEntries(uri);
+            line.classList.remove("busy");
+            if (!dir) {
+                row.dataset.kind = "file";
+                pick(row, uri, name);
+                return;
+            }
+            row.dataset.kind = "dir";
+            row.classList.add("open");
+            if (grown) return;
+            grown = true;
+            const rows = await entriesOf(uri);
+            if (!rows) {
+                children.appendChild(node("div", "mpanel-empty", "no listing"));
+                return;
+            }
+            if (!rows.length) {
+                children.appendChild(node("div", "mpanel-empty", "empty directory"));
+                return;
+            }
+            rows.forEach((child) => children.appendChild(rowFor(child.name, child.uri)));
+        });
+        return row;
+    };
+
+    const show = async (given) => {
+        const uri = groundOf(given);
+        input.value = uri;
+        body.textContent = "";
+        note.textContent = "listing " + uri + " …";
+        const rows = await entriesOf(uri);
+        body.textContent = "";
+        if (!rows) {
+            note.textContent = "";
+            body.appendChild(node("div", "mpanel-empty", "no listing at " + uri));
+            return;
+        }
+        note.textContent = rows.length + " entries · addresses only; a click expands or picks";
+        if (!rows.length) {
+            body.appendChild(node("div", "mpanel-empty", "empty directory"));
+            return;
+        }
+        const tree = node("div", "fs-tree");
+        rows.forEach((row) => tree.appendChild(rowFor(row.name, row.uri)));
+        body.appendChild(tree);
+    };
+
+    form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        show(input.value.trim() || ".");
+    });
+
+    return show(env && env.vid ? env.vid : ".").then(() => box);
+}
+
 /* ── /m/code — a code::T card ───────────────────────────────────────────────
    a text dump never names its type, so the `?` mark belongs only to explicit code
    interaction panels; a code CARD is already that surface, and there the way to
@@ -2379,22 +2585,19 @@ function explanationPanel(env, api) {
         return cell;
     }
 
-    /* every dom/rng is recorded now (a least count of 0 no longer drops the key), so
-       this dash is the fallback for an older answer at the same address. */
+    /* a dom/rng the machine records as noobj is OMITTED from the rec (domRngValue drops a
+       least count of 0), and reading that absent key answers noobj{0} — metatron's own
+       spelling. the cell shows it rather than a glyph of mine. */
     function typeCell(value) {
         if (value) return td(value, "exp-type-cell");
-        const cell = td("—", "exp-none");
-        cell.title = "not recorded by this machine (an older answer omitted a type whose least count is 0)";
-        return cell;
+        return td("noobj{0}::T", "exp-type-cell");
     }
 
     /* a coefficient as the rec records it: the LEAST COUNT it admits, so a {*} or
-       a {0,3} in the terminal table may read as {0} here */
+       a {0,3} in the terminal table may read as {0} here; absent is the machine's noobj */
     function coefCell(value) {
         if (value) return td(value, "exp-coef-cell");
-        const cell = td("—", "exp-none exp-coef-cell");
-        cell.title = "no least count recorded (the coefficient is unbounded below)";
-        return cell;
+        return td("noobj", "exp-coef-cell");
     }
 
     function argsCell(row) {
@@ -2497,10 +2700,10 @@ function explanationPanel(env, api) {
         }
         const head = node("div", "exp-head");
         const type = node("span", "exp-type");
-        type.appendChild(node("code", "exp-dom", model.desc.dom || "—"));
+        /* an absent desc.dom/rng is the machine's noobj{0}: show its spelling, not a glyph */
+        type.appendChild(node("code", "exp-dom", model.desc.dom || "noobj{0}::T"));
         type.appendChild(node("span", "exp-arrow", "→"));
-        type.appendChild(node("code", "exp-rng", model.desc.rng || "—"));
-        if (!model.desc.dom) type.title = "no dom recorded by this machine (an older answer omitted it; the chain types from its first instruction)";
+        type.appendChild(node("code", "exp-rng", model.desc.rng || "noobj{0}::T"));
         head.appendChild(type);
         head.appendChild(node("span", "exp-insts", (model.desc.insts == null ? model.rows.length : model.desc.insts) + " insts"));
         content.appendChild(head);
@@ -2570,6 +2773,9 @@ function explanationPanel(env, api) {
         return box;
     });
 }
+
+register("/m/sys/space/fsspace", fsspacePanel);
+register("fsspace", fsspacePanel);
 
 register("/m/code", codePanel);
 register("code", codePanel);

@@ -608,6 +608,21 @@ mtron.</p>
 <h4>uri categories</h4>
 <p>. <strong>absolute</strong>: a uri with a <code>/</code> prefix -- <code>/a/b</code>. . <strong>relative</strong>: with no <code>/</code> prefix -- <code>a/b</code>.
 . <strong>branch</strong> : a uri with a <code>/</code> suffix -- <code>a/b/</code>. . <strong>node</strong> : with no <code>/</code> suffix -- <code>a/b</code>.</p>
+<p>A uri's form is also its scope, so the form decides where a write lands:</p>
+<table>
+<thead>
+<tr><th>form</th><th>scope</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ws://host:8555/a/b</code></td><td>across physical machines, through a dialed peer</td></tr>
+<tr><td><code>/a/b</code></td><td>the machines of one JVM, where a mounted space indexes the path</td></tr>
+<tr><td><code>a/b</code></td><td>the machine's variable stack, shared by its threads</td></tr>
+<tr><td><code>inst(a/b=&gt;int::T){...}</code></td><td>an instruction's argument uri: local to the thread that applies it</td></tr>
+</tbody>
+</table>
+<p>The writes above land because the first example mounted a <code>memspace</code> at <code>/a/#</code>. An absolute write needs a space that
+indexes its path, and so does a write to a uri with a scheme or a host (<code>mydb:people/1</code>). A plain relative write
+(<code>a -&gt; 5</code>) lands on the variable stack, while <code>~/a</code> first resolves to an absolute uri under the machine's own vid.</p>
 <h3>mtron crud cheat-sheet</h3>
 <table>
 <thead>
@@ -621,6 +636,17 @@ mtron.</p>
 <tr><td align="center">update anchor</td><td><code>@/a &gt;&gt;= [d=&gt;5]</code></td><td><code>update?A{?}&lt;=#(A{?}::T)</code></td><td>update the obj at <code>a</code></td></tr>
 </tbody>
 </table>
+<p><code>-&gt;</code> takes the next obj alone. <code>b -&gt; 4.plus(8)</code> stores <code>4</code>, and the <code>.plus(8)</code> applies to what the write returns, not
+to what it stores. To store a computed value, compute it first and write it last with <code>to()</code>:</p>
+<pre><code class="language-mtron">mtron&gt; b -&gt; 4.plus(8)
+==&gt;12
+mtron&gt; *b
+==&gt;4
+mtron&gt; 4.plus(8).to(c)
+==&gt;12
+mtron&gt; *c
+==&gt;12
+</code></pre>
 <p>. <code>*</code> is a <strong>clone reference</strong>. <code>*a</code> copies the referent, where subsequent mutations do not affect the source obj.</p>
 <pre><code class="language-mtron">mtron&gt; /a -&gt; 5
 ==&gt;5
@@ -703,6 +729,10 @@ have a <code>lst::T</code> realization (the keys are stripped and value order de
 <pre><code class="language-mtron">inst?dom&lt;=rng(arg1,arg2,...)     { body }
 inst?dom&lt;=rng(k1=&gt;v1,k2=&gt;v2,...) { body }
 </code></pre>
+<p>An argument slot with a <code>{*}</code> coefficient takes every argument the call gives: a slot declared <code>uri{*}::T</code> binds both
+labels of <code>out(knows,created)</code>, and the instruction's Java body reads it as <code>inst.args().orElse(lst()).values()</code>,
+never <code>inst.arg(0)</code>. Names are uris: edge labels, rec keys, places and types are all uris, and a <code>str</code> is data, never
+a name.</p>
 <p><strong>IMPORTANT</strong>: mtron sugar can make the language appear complex. Realize that every expression is a fluent chain of
 nested
 instruction calls. Append <code>.explain()</code> to any expression to get its structured explanation — the expression-level head
@@ -778,13 +808,35 @@ mtron&gt; /a.repeat(code=&gt;&gt;&gt;, until=&gt;loop()?&gt;2, emit=&gt;false)
 mtron&gt; {1,1,1,2,2,3}.plus(2).sum()
 ==&gt;22
 </code></pre>
+<p>Where a brace stands decides what it means:</p>
+<table>
+<thead>
+<tr><th>written</th><th>reading</th></tr>
+</thead>
+<tbody>
+<tr><td><code>{2}plus(1)</code></td><td>before the name: unrolls in a row, so this is <code>plus(1).plus(1)</code></td></tr>
+<tr><td><code>sum{2}()</code></td><td>between the name and the parentheses: parallel copies, so <code>{1,2,3}.sum{2}()</code> is <code>{2}6</code></td></tr>
+<tr><td><code>plus(1){+7}</code></td><td>after the arguments: the instruction's body, not a coefficient</td></tr>
+<tr><td><code>{1,2}?&gt;5</code></td><td>glued to a prefix sugar: that sugar's leading brace, so this is <code>{1,2}is(gt(5))</code> with no lhs</td></tr>
+<tr><td><code>{1,2}.?&gt;5</code></td><td>after a dot: the literal <code>{1,2}</code>, filtered</td></tr>
+<tr><td><code>?hop={0}3</code></td><td>in a query value, <code>{x}y</code> reads before a bare <code>{0}</code>: the value is <code>{0}3</code>, and <code>{0}</code> alone is noobj</td></tr>
+</tbody>
+</table>
+<p>The stream sugars <code>-&lt;</code>, <code>&gt;-</code> and <code>-&lt;|</code> are the exception to the glued rule: they read a glued brace as their lhs.</p>
+<pre><code class="language-mtron">mtron&gt; 1.plus(1){7}       [-- 7: the body answers 7 --]
+==&gt;7
+mtron&gt; 1.plus(1){+7}      [-- 8: the body +7 applies to the lhs; the (1) goes unused --]
+==&gt;8
+mtron&gt; {1,2}.?&gt;1          [-- 2: dotted, the sugar filters the literal --]
+==&gt;2
+</code></pre>
 <p><strong>Symmetry reduction</strong> -- <code>&gt;-</code> sums the coefficients of identical objs; a negative
 coefficient is the interference:</p>
 <pre><code class="language-mtron">mtron&gt; [{2}5,{3}5,7]&gt;-     [-- constructive --]
 ==&gt;{5}5
 ==&gt;7
 mtron&gt; [{2}5,{-2}5,7]&gt;-    [-- destructive: the 5s cancel --]
-==&gt;fail::[lhs range does not match inst domain: lst::T =&gt; lst[{*}A{*}]::T [/m/inst/merge?&lt;=/m/lst[{*}A{*}]()@&lt;1&gt;]]
+==&gt;7
 </code></pre>
 <p><strong>Map, filter, projection, and reduce</strong> (language reference section 8):</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4}.map(+2)

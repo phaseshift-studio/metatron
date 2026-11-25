@@ -969,7 +969,7 @@ mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(throw()),max=&gt;
 mtron&gt; 15.band(10,20)     ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)     ​7​
-==&gt;fail::[noobj]@/processor/fail/6
+==&gt;fail::[noobj]@/processor/fail/5
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 mtron&gt; 15.band(10,20)     ​8​
 ==&gt;15

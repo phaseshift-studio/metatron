@@ -803,7 +803,8 @@ if (predObj.isRec()) {
 <p>There is no global registry: the type-check state is the <code>typer::T</code> stage's own rec, at <code>/compiler/typer/check</code>. It is
 one <code>bool::T</code> per check point, grouped under <code>check</code> so the typer can grow other features beside them (and so a point
 can later become a finer realization than true/false):</p>
-<pre><code>typer::[check=&gt;[code_resolve=&gt;false, inst_rng=&gt;true, inst_dom=&gt;true, type_pred=&gt;true, obj_write=&gt;true], verify=&gt;…]
+<pre><code>typer::[check=&gt;[code_resolve=&gt;false, inst_rng=&gt;true, inst_dom=&gt;true, type_pred=&gt;true, obj_write=&gt;true],
+        unfold=&gt;[uri=&gt;100, lst=&gt;100, rec=&gt;100], verify=&gt;…]
 </code></pre>
 <p>The boot default is every point on except <code>code_resolve</code>; a boot profile names only the points it overrides
 (<code>typer/check =&gt; [code_resolve =&gt; true]</code>).</p>
@@ -821,6 +822,17 @@ Machine.current().compiler().typer().at(&quot;check/inst_dom&quot;, BOOL_TRUE, P
 </code></pre>
 <p>Enforcement sites ask the gateway (<code>Typer.Helper</code>), never a static set: the processor before invoking, the space
 before a write, the obj before a type-predicate test, the selector before a dynamic resolution.</p>
+<p>Beside <code>check</code>, the typer's <code>unfold</code> field bounds how many copies a span may unfold into, one <code>int::T</code> per carrier
+(<code>unfold=&gt;[uri=&gt;100, lst=&gt;100, rec=&gt;100]</code> by default; a boot profile overrides with <code>typer/unfold =&gt; [uri =&gt; 1000]</code>).
+The five sites that unfold a span ask <code>Typer.Helper.unfolds</code>, which answers the span or throws past the bound. Three are
+a uri's path: <code>mParser.m_uri</code> for <code>&lt;w&gt;{n}</code>, <code>MUri.clone</code> for a span a uri takes from its lhs, and <code>pow(n)</code>. The fourth is
+<code>Lst.Helper.laid</code> for the copies laid along a lst axis. The fifth is <code>Rec.Helper.power</code>, which the rec parser calls for
+<code>[…]{n}</code>: a finite span is bounded by its largest power, an open one (<code>{+}</code>, <code>{*}</code>) by each power that holds a walk,
+and every power past the first by the walks it holds, since a cycle with a branch doubles them at every power.
+A span of one copy (the unit, the obj, its converse) reads no state:</p>
+<pre><code class="language-java">fURI.Helper.power(path, Typer.Helper.unfolds(Typer.UNFOLD_URI, n));   // &lt;w&gt;{n}: |n| copies of the path, or a fail
+Rec.Helper.power(rec, cInt.of(2L));                                     // [a=&gt;b,b=&gt;c]{2}: the join's square, [a=&gt;(b=&gt;c)]
+</code></pre>
 <h3>Common gotchas</h3>
 <ol>
 <li>

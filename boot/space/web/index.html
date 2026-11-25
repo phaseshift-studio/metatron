@@ -130,6 +130,7 @@
             <div class="status-line">
                 <span class="page-name">splash_page</span>
                 <span class="page-vid">mfs:boot/space/web/default.mtron</span>
+                <button type="button" class="page-save" id="page-open" title="open a page from this machine's file systems">open…</button>
                 <button type="button" class="page-save" id="page-save">save as…</button>
             </div>
             <div class="status-meta">
@@ -239,6 +240,19 @@
         <div class="actions">
             <button type="button" class="ghost" id="save-as-cancel">cancel</button>
             <button type="submit" class="primary" id="save-as-ok">save</button>
+        </div>
+    </form>
+</dialog>
+<dialog class="save-as open-page" id="open-page" aria-labelledby="open-page-title">
+    <form id="open-page-form">
+        <header><h2 id="open-page-title">open page</h2></header>
+        <div class="body">
+            <div id="open-page-tree" class="open-page-tree"></div>
+            <p class="open-page-chosen" id="open-page-path">no page chosen</p>
+        </div>
+        <div class="actions">
+            <button type="button" class="ghost" id="open-page-cancel">cancel</button>
+            <button type="submit" class="primary" id="open-page-ok" disabled>open</button>
         </div>
     </form>
 </dialog>

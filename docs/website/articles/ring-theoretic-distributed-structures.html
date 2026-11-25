@@ -523,74 +523,150 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="article-doc">
         <h1 class="article-title mb-1">Ring Theoretic Distributed Structures</h1>
-        <small class="article-subtitle">A data structure is a term of a ring of references. Its layouts are the factorizations of the term, and the laws that distribute a program decide where its data may be split.</small>
+        <small class="article-subtitle">A data structure is a term of a ring of references. Records extend it through space and lists through time, its layouts are the factorizations of the term, and the laws that distribute a program decide where its data may be split.</small>
         <div class="article-author">Dr. Marko A. Rodriguez<br>Dr. Stynx</div>
     </div>
     <div class="article-body">
-<p><strong>DRAFT</strong>: This article is a formal scaffold. Its definitions are settled. Its claims are stated precisely but not yet
-proven or demonstrated, and the notes marked <em>Directions</em> point to where the work goes next. As of November 23, 2026,
-metatron implements the reference ring, record merge, and the layout invariance of reads.</p>
+<p><strong>DRAFT</strong>: This article is being developed alongside a refactor. As of November 25, 2026, metatron implements the
+reference ring and its spans, record merge, join and spans, and the layout invariance of reads. The list ring
+(<em>Polys: Space and Time</em>) specifies the refactor in progress: its examples answer as the text states once it lands,
+and fail until then. The claims are stated precisely but not yet proven, and the notes marked <em>Directions</em>
+point to where the work goes next.</p>
 <h2>Introduction</h2>
 <p>In Ring Theoretic Distributed Computing <a href="./ring-theoretic-distributed-computing.html">[4]</a>, a program is a term of the
 stream ring. Its \(+\) branches a stream into computations that share nothing, its \(\cdot\) composes them in series, and
 distribution stops only where a reduce function contracts a stream. This article reads data the same way. A data
-structure is a term of a ring of references, whose \(+\) branches an address into independent references and whose
-\(\cdot\) extends an address. A layout of the structure, whether nested, flat, or anything between, is a factorization
-of the term.</p>
-<p>Both readings answer one question: where may a term be split? For a program, the answer lies in the distributive laws
-of its functions; for data, in the distributive laws of its references. Factoring a program shares work, and
-factoring data shares an address. Expanding a program parallelizes it, and expanding data partitions it. A reduce is
-where a program must synchronize, and an overwrite is where data must.</p>
-<p>The sections define the reference ring, structures and their reads, layouts, placements across machines, and writes
-and deletes. They then read the containers (records, lists, and relations) as branches of arrows, and the last
-section sets the two articles side by side. The definitions are settled. The claims are numbered and stated, and
-proving them is the work ahead.</p>
+structure is a term of a ring of <em>references</em>, whose \(+\) branches an address into independent references and whose
+\(\cdot\) extends an address. The question a distributed store asks is the one a distributed program asks: where may the
+term be split?</p>
+<p>The answer is distributivity again. The record <code>[a=&gt;[b=&gt;1,c=&gt;2]]</code> stores two values under the paths \(a\,b\) and
+\(a\,c\), and as a term it is \(a \cdot (b + c)\): one address, \(a\), couples \(b\) and \(c\) into a single structure. The
+stream <code>{[a=&gt;[b=&gt;1]],[a=&gt;[c=&gt;2]]}</code> is the term \(a\,b + a\,c\): two structures that share nothing but the letter \(a\).
+Distributivity makes the two terms equal, so the two structures answer every read alike, yet they are stored
+differently. The product is a <em>dependent</em> relationship: whatever holds \(a\) holds \(b\) and \(c\) with it. The sum is
+<em>independent</em>: \(a\,b\) may sit in a document store in Japan and \(a\,c\) in a file in Ohio, and a read of every child of
+\(a\) still answers \(\{1, 2\}\), only at a different cost in time and space <a href="../tractatus/uri.html">[5]</a>.</p>
+<p>\[
+\begin{equation*}
+\underbrace{a \cdot (b + c)}_{\text{colocated}} \;=\; \underbrace{a\,b + a\,c}_{\text{placeable apart}}
+\end{equation*}
+\]</p>
+<!-- figure source: images/ring-theoretic-distributed-structures/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
+<p><img src="images/ring-theoretic-distributed-structures/fig-01.svg" alt="figure 1" /></p>
+<p>Factoring data colocates it, and expanding data partitions it, just as factoring a program shares work and expanding a
+program parallelizes it. A reduce is where a program must synchronize, and an overwrite is where data must.</p>
+<p>Expanding repeats the address the two values share: \(a\) is written once in \(a \cdot (b + c)\) and twice in
+\(a\,b + a\,c\), once in each summand, so that each summand is whole wherever it is put. Database practice calls this
+<em>denormalization</em>: data repeated so that each part can be read where it lies, without a join that reaches the others.
+Distributed stores denormalize for that reason, and the ring tells the free repetition from the costly one.
+Distributivity repeats a factor, never a value. Each of \(1\) and \(2\) is still stored once, so the two layouts are one
+term and answer every read alike (Claim 5). Replication repeats a whole term, \(x + x = 2\,x\), which is another term:
+a fold over it answers as over the original only when the fold cannot count copies, that is, when it is idempotent
+(Claim 9). Either repetition is paid for at writes: a delete at \(a\) must reach every place that holds a term below
+\(a\) (Claim 12).</p>
+<p>The sections define the reference ring and its spans, structures and their reads, layouts, placements across machines,
+and writes and deletes. They then read the polys every program builds: records, which extend a structure through
+space, and lists, which extend it through time, and set both beside paths and programs. The last section sets the two
+articles side by side.</p>
 <h2>The Reference Ring</h2>
-<p>::: <strong>Definition 1</strong> (Paths). Let \(\Sigma\) be a set of <em>segments</em>. A <em>path</em> is a word \(u = \sigma_1 \cdots \sigma_n\)
-over \(\Sigma\), and the empty word \(\varepsilon\) is the empty path. Paths multiply by concatenation, \(u \cdot v = uv\),
-so the paths form the free monoid \(\Sigma^*\).
-:::</p>
-<p>::: <strong>Definition 2</strong> (Reference ring). Let \(\mathcal{C}\) be the coefficients of <a href="./stream-ring-theory.html">[1]</a>, a
+<p><strong>Definition 1 (paths).</strong> Let \(\Sigma\) be a set of <em>segments</em>. A <em>path</em> is a word \(u = \sigma_1 \cdots \sigma_n\) over
+\(\Sigma\), and the empty word \(\varepsilon\) is the empty path. Paths multiply by concatenation, \(u \cdot v = uv\), so the
+paths form the free monoid \(\Sigma^*\).</p>
+<p><strong>Definition 2 (reference ring).</strong> Let \(\mathcal{C}\) be the coefficients of <a href="./stream-ring-theory.html">[1]</a>, a
 commutative ring with unity. A <em>reference</em> is a finite sum \(a = \sum_i c_i\,u_i\) of paths with coefficients, and the
-empty sum is \(0\). References add coefficientwise and multiply path by path,
-\[
+empty sum is \(0\). References add coefficientwise and multiply path by path,</p>
+<p>\[
 \begin{equation*}
 \Big(\sum_i c_i\,u_i\Big) \cdot \Big(\sum_j d_j\,v_j\Big) = \sum_{i,j} (c_i d_j)\,(u_i v_j),
 \end{equation*}
-\]
-and they form the set \(\mathcal{U} = \mathcal{C}\langle\Sigma\rangle\).
-:::</p>
+\]</p>
+<p>and they form the set \(\mathcal{U} = \mathcal{C}\langle\Sigma\rangle\).</p>
 <p>\(\mathcal{U}\) is the free algebra on \(\Sigma\): polynomials whose variables are segments that do not commute. Its \(+\)
 is the <em>branch</em>, \(a + b = \{a, b\}\), and its \(\cdot\) is <em>extension</em>, \(a \cdot b = a/b\), as in the tractatus
 <a href="../tractatus/uri.html">[5]</a>.</p>
-<p>::: <strong>Proposition 1</strong> (The reference ring). \(\langle\mathcal{U}, +, \cdot\rangle\) is a ring with zero \(0\) and unity
+<!-- figure source: images/ring-theoretic-distributed-structures/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
+<p><img src="images/ring-theoretic-distributed-structures/fig-02.svg" alt="figure 2" /></p>
+<p>Figure 2 draws the product of Definition 2. A segment is drawn with its coefficient, a sum as its terms side by side,
+and a product as its factors one after the other. On the left, the product of two sums is two branches in series, and
+a route from the left end to the right takes one term of each factor. Multiplying out lists the routes. On the right
+is the sum of the four products, and each route's coefficient is the product of the coefficients it passes, so \(2a\)
+followed by \(3d\) is \(6\,a\,d\) (Claim 1). Read from right to left, the figure factors. The four routes allow it because
+they form the grid \(\{a, b\} \times \{c, d\}\) (Claim 2) and their coefficients form a product table, one number for
+each first segment times one for each second, which the cross products confirm: \(2 \cdot 3 = 6 \cdot 1\).</p>
+<p><strong>Proposition 1 (the reference ring).</strong> \(\langle\mathcal{U}, +, \cdot\rangle\) is a ring with zero \(0\) and unity
 \(\varepsilon\). Its \(\cdot\) distributes over \(+\) on both sides and is not commutative when \(\Sigma\) has two or more
-segments.
-:::</p>
-<p>::: <em>Proof.</em> \(\mathcal{U}\) is the monoid ring of the free monoid \(\Sigma^*\) [8]. ◻
-:::</p>
-<p><strong>Live proof.</strong> Paths that share a prefix and a suffix factor around what differs, \(abd + acd = a\,(b + c)\,d\).
-Paths that share nothing stay whole, and extension distributes over a branch.</p>
+segments.</p>
+<p><em>Proof.</em> \(\mathcal{U}\) is the monoid ring of the free monoid \(\Sigma^*\) [8]. ◻</p>
+<p>The laws of the ring are the engineering of addresses. A branch inside a path is a factored sum: <code>a/{b,c}/d</code> stands for
+the two paths \(a\,b\,d\) and \(a\,c\,d\), written once. Paths that share a prefix and a suffix factor around what differs,
+\(a\,b\,d + a\,c\,d = a\,(b + c)\,d\); paths that share nothing stay whole; and extension distributes over a branch.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;/a/b/d&gt; + &lt;/a/c/d&gt;
 ==&gt;&lt;/a/{b,c}/d&gt;
 mtron&gt; &lt;/a/b&gt; + &lt;/c/d&gt;
 ==&gt;&lt;/{a/b,c/d}&gt;
-mtron&gt; &lt;/a/b&gt;.mult(&lt;/c/d&gt;)
+mtron&gt; &lt;/a/b&gt; * &lt;/c/d&gt;
 ==&gt;/a/b/c/d
-mtron&gt; &lt;/a/{b,c}/d&gt;.mult(&lt;/e&gt;)
+mtron&gt; &lt;/a/{b,c}/d&gt; * &lt;/e&gt;
 ==&gt;&lt;/a/{b,c}/d/e&gt;
 </code></pre>
 <p>In mtron, a uri is written in angle brackets, and a branch <code>{b,c}</code> inside a path is a factored sum. <code>plus</code> and <code>mult</code>
 are \(+\) and \(\cdot\), the empty uri <code>&lt;&gt;</code> is \(\varepsilon\), and <code>noobj</code> is \(0\).</p>
-<p>::: <strong>Claim 1</strong> (Points multiply along a path). \((c\,u)(d\,v) = (cd)\,uv\), so a coefficient on any segment of a path
-is a coefficient on the whole path.
-:::</p>
+<p><strong>Claim 1 (points multiply along a path).</strong> \((c\,u)(d\,v) = (cd)\,uv\), so a coefficient on any segment of a path is a
+coefficient on the whole path.</p>
 <!-- quarry: Proposition 1, with its live proof -->
-<p>::: <strong>Claim 2</strong> (Rectangular factors). Distinct paths \(u_1, \ldots, u_n\) of length \(m\) sum to a product of branches
+<p>A coefficient counts copies of a whole path wherever it is written: a path through a doubled segment is a doubled path.</p>
+<p><strong>Claim 2 (rectangular factors).</strong> Distinct paths \(u_1, \ldots, u_n\) of length \(m\) sum to a product of branches
 \(\big(\sum_{\sigma \in S_1} \sigma\big) \cdots \big(\sum_{\sigma \in S_m} \sigma\big)\) if and only if
-\(\{u_1, \ldots, u_n\} = S_1 \times \cdots \times S_m\).
-:::</p>
+\(\{u_1, \ldots, u_n\} = S_1 \times \cdots \times S_m\).</p>
 <!-- quarry: Proposition 2, with its live proof -->
+<p>In practice, a set of addresses is one factored uri exactly when it is a grid: <code>{a,b}/{c,d}</code> is the four paths \(ac\),
+\(ad\), \(bc\) and \(bd\), and any other set needs a sum of such grids.</p>
+<h3>Spans</h3>
+<p>A coefficient written after a uri's brackets is a <em>span</em>, and a span is a power: the path repeated, end to end. A
+negative span runs the path backward.</p>
+<p><strong>Definition 3 (converse and span).</strong> The <em>converse</em> of a path reverses its segments,
+\((\sigma_1 \cdots \sigma_n)^{\smile} = \sigma_n \cdots \sigma_1\), and extends to references additively, conjugating a
+complex coefficient. The <em>span</em> \(n \in \mathbb{Z}\) of a reference \(a\) is the power \(a^{n}\): the product of \(n\) copies
+of \(a\) for \(n &gt; 0\), the empty path \(\varepsilon\) for \(n = 0\), and \((a^{\smile})^{-n}\) for \(n &lt; 0\), as a negative span
+is the converse in <a href="./span-and-point-coefficient-algebra.html">[2]</a> (Definition 5).</p>
+<p><strong>Claim 3 (the reference ring is a \(*\)-ring).</strong> The converse is an involution, \((a^{\smile})^{\smile} = a\), that
+reverses products, \((a\,b)^{\smile} = b^{\smile}\,a^{\smile}\), and preserves sums. It is no inverse:
+\(u\,u^{\smile} \neq \varepsilon\) for every path \(u \neq \varepsilon\), so \(u^{m}\,u^{n} = u^{m+n}\) holds only when \(m\)
+and \(n\) share a sign.</p>
+<p>An engineer meets the converse as a route walked back. The walk <code>/a/b/c</code> from the root, reversed, is <code>c/b/a/</code>, which
+ends at the root, and the graph walk <code>OUT/created/IN</code>, reversed, is <code>IN/created/OUT</code>. A route followed by its reverse
+is a round trip, not a standstill: <code>a/b</code> and then <code>b/a</code> is <code>a/b/b/a</code>, just as following an edge out and back in reaches
+a vertex's siblings rather than the vertex alone (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Corollary 9).</p>
+<pre><code class="language-mtron">mtron&gt; &lt;a/b/c&gt;{2}
+==&gt;a/b/c/a/b/c
+mtron&gt; &lt;a/b/c&gt;{-1}
+==&gt;c/b/a
+mtron&gt; &lt;/a/b/c&gt;{-1}
+==&gt;c/b/a/
+mtron&gt; &lt;http://m.com/a/b/c&gt;{-1}
+==&gt;&lt;http://m.com/c/b/a&gt;
+mtron&gt; &lt;a/b&gt; * &lt;a/b&gt;{-1}
+==&gt;a/b/b/a
+mtron&gt; {2}&lt;a/b&gt;{-2}
+==&gt;{2}b/a/b/a
+mtron&gt; &lt;{2}a/b&gt;{-2}
+==&gt;&lt;b/a/b/a{4}&gt;
+</code></pre>
+<p>The brackets mark the <em>locus</em> of a coefficient. A point before them belongs to the object and is applied once to the
+whole power, \(c\,u^{n}\): <code>{2}&lt;a/b&gt;{-2}</code> is two copies of <code>b/a/b/a</code>. A point inside them belongs to the path and runs
+with it, \((c\,u)^{n} = c^{n}\,u^{n}\) (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Theorem 13): <code>&lt;{2}a/b&gt;{-2}</code> is
+<code>b/a/b/a</code> four times. The locus is also a placement boundary. What sits inside the brackets is one object, stored as a
+unit at one place; a point before them counts copies of the object, which a placement may share out (Claim 10).</p>
+<p>In mtron, the span is written after the closing bracket, <code>&lt;u&gt;{n}</code>, and the instructions <code>reverse()</code> and <code>pow(n)</code> are
+the spans <code>{-1}</code> and <code>{n}</code>. Inside the brackets a uri keeps the fURI's own spelling, <code>{span}path{point}</code>, so <code>&lt;a/b{2}&gt;</code>
+is the path <code>a/b</code> with its own point \(2\), and a bare <code>a/b{2}</code> reads the same way.</p>
+<p>The converse reverses the path alone. A uri's scheme and authority are not steps of its path, so they stay where they
+are: <code>http://m.com/a/b/c</code> reversed is <code>http://m.com/c/b/a</code>, still rooted at its host, and reversed again it is
+<code>http://m.com/a/b/c</code>. A path with no authority counts its root as a step, which is why <code>/a/b/c</code> reversed ends at the
+root. A parent step <code>..</code> that the path cannot fold away has no converse, since it does not name the step it undoes.
+A span is a power wherever it lands on a uri, not only where it is written: a computation that leaves a span on a uri,
+as <code>'a.b'{3}.as(uri::T)</code> does, yields <code>a.b/a.b/a.b</code>. A uri never holds a span it has not realized, so it is written as
+it reads.</p>
 <p><strong>Directions.</strong></p>
 <ul>
 <li><em>Rank.</em> A product of branches is a rank-one tensor, and Claim 2 says when a sum of paths is one. The fewest
@@ -602,22 +678,58 @@ acyclic graph: the minimal automaton of the structure's paths, whose states are 
 it?</li>
 </ul>
 <h2>Structures and Reads</h2>
-<p>::: <strong>Definition 3</strong> (Structure). Let \(X\) be the objects of <a href="./stream-ring-theory.html">[1]</a>. A <em>structure</em> is a finite
-sum of arrows from paths to objects,
-\[
+<p><strong>Definition 4 (structure).</strong> Let \(X\) be the objects of <a href="./stream-ring-theory.html">[1]</a>. A <em>structure</em> is a finite
+sum of arrows from paths to objects,</p>
+<p>\[
 \begin{equation*}
 D = \sum_i c_i\,(u_i \Rightarrow x_i), \qquad u_i \in \Sigma^*,\quad x_i \in X,
 \end{equation*}
-\]
-where an arrow into the zero is no arrow, \(u \Rightarrow 0 = 0\). A reference extends a structure on the left,
+\]</p>
+<p>where an arrow into the zero is no arrow, \(u \Rightarrow 0 = 0\). A reference extends a structure on the left,
 \(p \cdot (u \Rightarrow x) = (pu \Rightarrow x)\), bilinearly, and the structures form a left \(\mathcal{U}\)-module
-\(\mathcal{D}\).
-:::</p>
+\(\mathcal{D}\).</p>
 <p>An arrow \(u \Rightarrow x\) stores the object \(x\) at the address \(u\). Its coefficient is the number of copies stored
-there, the <em>point</em> of <a href="./span-and-point-coefficient-algebra.html">[2]</a>.</p>
-<p>::: <strong>Definition 4</strong> (Read). The <em>read</em> of \(D\) at a path \(p\), the <em>subtree</em> of \(D\) at \(p\), and the <em>part</em> of \(D\) below
-\(p\) are
-\[
+there, the <em>point</em> of <a href="./span-and-point-coefficient-algebra.html">[2]</a>. A key-value store is a structure whose arrows
+leave flat keys, a document store one whose arrows leave paths into nested documents, and a file system one whose
+arrows leave directory paths. So is every store that keeps objects at addresses. A relational database is a structure
+whose arrows leave a table, a row's key, and a column, and end at the cell where the row and the column cross. An HTML
+or XML page is one whose arrows leave its nested tags and each child's place among its siblings, and a YAML, JSON, or
+TOML file one whose arrows leave nested keys and list indices. A spreadsheet, a matrix, a property graph, a triple
+store, a wide-column store, an object store, the domain name system, a directory service, a message broker's topics
+(whose wildcards, <code>+</code> and <code>#</code>, metatron's paths borrow), a web service's resources, a time series, and a git repository
+are structures too, and each one's addresses are paths:</p>
+<table>
+<thead>
+<tr><th>space</th><th>its arrows leave</th><th>an arrow</th></tr>
+</thead>
+<tbody>
+<tr><td>key-value store</td><td>a flat key</td><td><code>/session_42 =&gt; 'marko'</code></td></tr>
+<tr><td>document store</td><td>a path into nested documents</td><td><code>/people/marko/address/city =&gt; 'Santa Fe'</code></td></tr>
+<tr><td>file system</td><td>directories, then a file's name</td><td><code>/home/marko/todo.txt =&gt; 'sail south'</code></td></tr>
+<tr><td>relational database</td><td>a table, a row's key, a column</td><td><code>/person/42/name =&gt; 'marko'</code></td></tr>
+<tr><td>spreadsheet</td><td>a sheet, a column, a row</td><td><code>/budget/B/7 =&gt; 120.0</code></td></tr>
+<tr><td>HTML, XML</td><td>nested tags, and each child's position</td><td><code>/html/body/div/0/p/2 =&gt; 'ahoy'</code></td></tr>
+<tr><td>YAML, JSON, TOML</td><td>nested keys and list indices</td><td><code>/database/replicas/0/port =&gt; 5432</code></td></tr>
+<tr><td>matrix, tensor</td><td>one index per axis</td><td><code>/m/0/2 =&gt; 7</code></td></tr>
+<tr><td>property graph</td><td>a vertex, then a property or an edge's label</td><td><code>/g/V/1/knows =&gt; {/g/V/2,/g/V/4}</code></td></tr>
+<tr><td>triple store (RDF)</td><td>a subject, then a predicate</td><td><code>/marko/knows =&gt; josh</code></td></tr>
+<tr><td>wide-column store [23]</td><td>a row key, a column family, a qualifier</td><td><code>/com.cnn.www/anchor/cnnsi.com =&gt; 'CNN'</code></td></tr>
+<tr><td>object store</td><td>a bucket, then a key whose slashes it keeps flat</td><td><code>/photos/2026/11/sunset.png =&gt; 0x89504E47</code></td></tr>
+<tr><td>domain name system</td><td>its labels, read from the root</td><td><code>/com/example/www =&gt; '203.0.113.7'</code></td></tr>
+<tr><td>directory (LDAP)</td><td>a distinguished name, read from the root</td><td><code>/com/example/people/marko/mail =&gt; 'marko@example.com'</code></td></tr>
+<tr><td>message topics (MQTT)</td><td>topic levels</td><td><code>/home/kitchen/temperature =&gt; 21.5</code></td></tr>
+<tr><td>web resources (REST)</td><td>collections and identifiers</td><td><code>/users/42/orders/7/total =&gt; 19.99</code></td></tr>
+<tr><td>time series</td><td>a metric, a series, a timestamp</td><td><code>/cpu/host1/1795564800 =&gt; 0.42</code></td></tr>
+<tr><td>git repository</td><td>a ref, or a commit and a path in its tree</td><td><code>/refs/heads/main =&gt; '4b472e6'</code></td></tr>
+</tbody>
+</table>
+<p>Two of them spell their paths backward. A domain name and a distinguished name write the leaf first,
+<code>www.example.com</code>, so the path is the converse of the spelling (Definition 3). An edge of the graph ends at another
+vertex's address, so a traversal reads through a value into the structure again, which is the join of records
+(Definition 10). The definition does not tell them apart, and that is its purpose: one algebra for every space.</p>
+<p><strong>Definition 5 (read).</strong> The <em>read</em> of \(D\) at a path \(p\), the <em>subtree</em> of \(D\) at \(p\), and the <em>part</em> of \(D\) below
+\(p\) are</p>
+<p>\[
 \begin{equation*}
 D(p) = \sum_{u_i = p} c_i\,x_i,
 \qquad
@@ -625,13 +737,16 @@ p^{-1}D = \sum_{u_i = p\,v_i} c_i\,(v_i \Rightarrow x_i),
 \qquad
 \pi_p(D) = \sum_{u_i = p\,v_i} c_i\,(u_i \Rightarrow x_i).
 \end{equation*}
-\]
-A <em>wildcard</em> reads every child, \(D(p \ast q) = \sum_{\sigma \in \Sigma} D(p\,\sigma\,q)\).
-:::</p>
-<p>::: <strong>Claim 3</strong> (Reads are linear). For structures \(D, E\) and paths \(p, q\): \((D + E)(p) = D(p) + E(p)\),
-\(p^{-1}(D + E) = p^{-1}D + p^{-1}E\), \((pq)^{-1}D = q^{-1}(p^{-1}D)\), and \(p^{-1}(p \cdot D) = D\).
-:::</p>
+\]</p>
+<p>A <em>wildcard</em> reads every child, \(D(p \ast q) = \sum_{\sigma \in \Sigma} D(p\,\sigma\,q)\).</p>
+<p>The read is a lookup, the subtree is a change of directory to \(p\), and the part is everything below \(p\) with its
+address kept. A wildcard reads a whole level: on a matrix stored row by row, <code>*m/0/+</code> is the first row and <code>*m/+/0</code> the
+first column.</p>
+<p><strong>Claim 4 (reads are linear).</strong> For structures \(D, E\) and paths \(p, q\): \((D + E)(p) = D(p) + E(p)\),
+\(p^{-1}(D + E) = p^{-1}D + p^{-1}E\), \((pq)^{-1}D = q^{-1}(p^{-1}D)\), and \(p^{-1}(p \cdot D) = D\).</p>
 <!-- quarry: Theorem 2, with its live proof (referential distributivity through recs) -->
+<p>Linearity is the license to fan a read out. A read of a structure split across places is the sum of the reads of its
+parts: each place answers for what it holds, and the answers add.</p>
 <p><strong>Directions.</strong></p>
 <ul>
 <li><em>Derivatives.</em> The subtree \(p^{-1}D\) is a left quotient, Brzozowski's derivative [6] taken by a whole path. His
@@ -644,30 +759,45 @@ the structure, \(p \cdot p^{-1}D = \pi_p(D)\). Is there a calculus of data in wh
 differentiate?</li>
 </ul>
 <h2>Layouts</h2>
-<p>::: <strong>Definition 5</strong> (Layout). A <em>layout</em> of a structure \(D\) is a sum \(D = O_1 + \cdots + O_m\) of <em>objects</em>, each an
-expression stored as one unit. Two layouts are <em>equivalent</em> when they denote the same structure.
-:::</p>
+<p><strong>Definition 6 (layout).</strong> A <em>layout</em> of a structure \(D\) is a sum \(D = O_1 + \cdots + O_m\) of <em>objects</em>, each an
+expression stored as one unit. Two layouts are <em>equivalent</em> when they denote the same structure.</p>
 <p>A matrix \(m\) with entries \(a_{ij}\) has an entry-wise, a row-wise, and a nested layout, which are equivalent by
-distributivity:
-\[
+distributivity:</p>
+<p>\[
 \begin{equation*}
 \sum_{i,j} \big(m\,i\,j \Rightarrow a_{ij}\big)
 \;=\; \sum_{i} m\,i \cdot \Big(\sum_{j} \big(j \Rightarrow a_{ij}\big)\Big)
 \;=\; m \cdot \Big(\sum_{i} i \cdot \sum_{j} \big(j \Rightarrow a_{ij}\big)\Big).
 \end{equation*}
 \]</p>
-<p>::: <strong>Claim 4</strong> (Layout invariance). Equivalent layouts give the same answer to every read, subtree, and wildcard
-read.
-:::</p>
+<p>The first stores every entry as its own object, the second one object per row, and the third the whole matrix as one
+object. A column read answers alike in the row-wise layout <code>m</code> and the nested layout <code>n</code>:</p>
+<pre><code class="language-mtron">mtron&gt; m/0 -&gt; [0,1,2,3]
+==&gt;[0,1,2,3]
+mtron&gt; m/1 -&gt; [4,5,6,7]
+==&gt;[4,5,6,7]
+mtron&gt; n -&gt; [[0,1,2,3],[4,5,6,7]]
+==&gt;[[0,1,2,3],[4,5,6,7]]
+mtron&gt; *m/+/0
+==&gt;0
+==&gt;4
+mtron&gt; *n/+/0
+==&gt;0
+==&gt;4
+</code></pre>
+<p><strong>Claim 5 (layout invariance).</strong> Equivalent layouts give the same answer to every read, subtree, and wildcard
+read.</p>
 <!-- quarry: Theorem 3; the tractatus runs the three matrix layouts live -->
-<p>::: <strong>Claim 5</strong> (What a layout shows). The number of objects in a layout is not a function of the structure it
-denotes.
-:::</p>
+<p>This is the guarantee a distributed store needs to move data without breaking its clients. Re-factor the term, by
+splitting a document into keys or gathering keys into a document, and no read changes. Only the cost of a read
+changes, which the tractatus tabulates for the three matrix layouts <a href="../tractatus/uri.html">[5]</a>.</p>
+<p><strong>Claim 6 (what a layout shows).</strong> The number of objects in a layout is not a function of the structure it
+denotes.</p>
 <!-- quarry: Proposition 3, with its live proof (counts 1 and 2; the sum of the expanded layout is the nested one) -->
 <p><strong>Directions.</strong></p>
 <ul>
 <li><em>Layout-safe instructions.</em> An operation survives every change of layout exactly when it factors through the
-structure. Reads do. Counting objects, ordering them, and measuring a container's length do not. Is this the same
+structure. Reads do. Counting objects, ordering them, and measuring a poly's length do not. Is this the same
 partition of the instruction set as the floatable runs and the cuts of
 <a href="./ring-theoretic-distributed-computing.html">[4]</a>?</li>
 <li><em>Cost.</em> A read's cost accumulates along a path, and a planner keeps the cheapest layout. A factorization is priced
@@ -676,33 +806,36 @@ cheapest factorization of a term generalizes choosing the cheapest parenthesizat
 programming solves [15].</li>
 </ul>
 <h2>Placement</h2>
-<p>::: <strong>Definition 6</strong> (Placement). A <em>placement</em> of a structure \(D\) over places \(1, \ldots, k\) assigns each object of a
+<p><strong>Definition 7 (placement).</strong> A <em>placement</em> of a structure \(D\) over places \(1, \ldots, k\) assigns each object of a
 layout to one place. Place \(j\) holds \(D_j\), so \(D = D_1 + \cdots + D_k\). The maps \(\pi_j\) that keep each place's
-arrows form a complete set of orthogonal idempotents [8]:
-\[
+arrows form a complete set of orthogonal idempotents [8]:</p>
+<p>\[
 \begin{equation*}
 \pi_1 + \cdots + \pi_k = 1, \qquad \pi_i\,\pi_j = 0 \;\; (i \neq j), \qquad \pi_j^2 = \pi_j.
 \end{equation*}
-\]
-:::</p>
-<p>::: <strong>Claim 6</strong> (The data shard identity). For a placement, a path \(p\), and a cut \(r\) of
+\]</p>
+<p>The idempotents are the shard predicates of a store: every arrow is held at exactly one place.</p>
+<p><strong>Claim 7 (the data shard identity).</strong> For a placement, a path \(p\), and a cut \(r\) of
 <a href="./ring-theoretic-distributed-computing.html">[4]</a> with combiner \(C(r)\),
-\(D(p)\,r = \big(D_1(p)\,r + \cdots + D_k(p)\,r\big)\;C(r)\).
-:::</p>
+\(D(p)\,r = \big(D_1(p)\,r + \cdots + D_k(p)\,r\big)\;C(r)\).</p>
 <!-- quarry: Theorem 4 -->
-<p>::: <strong>Claim 7</strong> (Factoring colocates). A placement holds an object \(p \cdot (E + F)\) at a single place. The
+<p>Read from right to left, the identity sends the program to the data: each place folds what it holds at \(p\), and the
+partials meet at home. This is entry B of the menu in <a href="./ring-theoretic-distributed-computing.html">[4]</a>, the data-local
+shard.</p>
+<p><strong>Claim 8 (factoring colocates).</strong> A placement holds an object \(p \cdot (E + F)\) at a single place. The
 equivalent layout with the two objects \(p \cdot E\) and \(p \cdot F\) admits every placement of the first, and also
-those that hold the two apart.
-:::</p>
+those that hold the two apart.</p>
 <!-- quarry: Theorem 5 -->
-<p>::: <strong>Claim 8</strong> (Replication needs idempotence). Suppose two places hold a common part \(R\). A commutative monoid fold
+<p>The object is the unit of placement, so the product in a term is what keeps data together. <code>[a=&gt;[b=&gt;1,c=&gt;2]]</code> is one
+object and lives at one place. Its expansion is two objects that a placement may send to two continents, and every
+read of the pair answers as before (Claim 5).</p>
+<p><strong>Claim 9 (replication needs idempotence).</strong> Suppose two places hold a common part \(R\). A commutative monoid fold
 over the sum of their reads answers as it would over \(D\) alone, for every \(R\), if and only if it is idempotent,
-\(x \oplus x = x\).
-:::</p>
+\(x \oplus x = x\).</p>
 <!-- quarry: Theorem 6, with its live proof ({1,1} is {2}1; sup answers 1) -->
-<p>::: <strong>Claim 9</strong> (A point is a share). For \(n = n_1 + n_2\),
-\(n\,(p \Rightarrow x) = n_1\,(p \Rightarrow x) + n_2\,(p \Rightarrow x)\).
-:::</p>
+<p>A maximum over two replicas of a part is the maximum; a sum over them counts the part twice.</p>
+<p><strong>Claim 10 (a point is a share).</strong> For \(n = n_1 + n_2\),
+\(n\,(p \Rightarrow x) = n_1\,(p \Rightarrow x) + n_2\,(p \Rightarrow x)\).</p>
 <!-- quarry: Proposition 4 -->
 <p><strong>Directions.</strong></p>
 <ul>
@@ -712,42 +845,37 @@ relation between addresses, and its blocks \(\pi_i D \pi_j\) with \(i \neq j\) h
 place \(j\). Is the communication cost of a placement the mass of its off-diagonal blocks? Is the best placement then
 a minimum cut of the reference graph [16], approximated from its spectrum [17]?</li>
 <li><em>Overlapping shares.</em> The deal of <a href="./ring-theoretic-distributed-computing.html">[4]</a> needs only
-\(\sum_j \pi_j = 1\), while a placement needs orthogonality too. Shares that overlap are replication, and Claim 8
+\(\sum_j \pi_j = 1\), while a placement needs orthogonality too. Shares that overlap are replication, and Claim 9
 states what it costs. What does a deal with overlapping shares compute?</li>
-<li><em>Entry B.</em> Read from right to left, Claim 6 sends the program to the data: each place folds what it holds. This is
-entry B of the menu in <a href="./ring-theoretic-distributed-computing.html">[4]</a>, the data-local shard, which <code>law_shard</code>
-does not yet lower.</li>
+<li><em>Entry B.</em> <code>law_shard</code> does not yet lower Claim 7.</li>
 </ul>
 <h2>Writes and Deletes</h2>
-<p>::: <strong>Definition 7</strong> (Writes). A <em>write</em> adds, \(D \mapsto D + E\). A <em>delete</em> at a path \(p\) removes the part below it,
+<p><strong>Definition 8 (writes).</strong> A <em>write</em> adds, \(D \mapsto D + E\). A <em>delete</em> at a path \(p\) removes the part below it,
 \(\delta_p = 1 - \pi_p\). An <em>overwrite</em> stores \(x\) at \(p\) alone,
-\(\omega_{p,x}(D) = \delta_p(D) + (p \Rightarrow x)\).
-:::</p>
-<p>::: <strong>Claim 10</strong> (Sums commute, overwrites do not). Writes commute. For overwrites at one path,
-\(\omega_{p,y} \circ \omega_{p,x} = \omega_{p,y}\), so the order of two overwrites decides the result.
-:::</p>
+\(\omega_{p,x}(D) = \delta_p(D) + (p \Rightarrow x)\).</p>
+<p><strong>Claim 11 (sums commute, overwrites do not).</strong> Writes commute. For overwrites at one path,
+\(\omega_{p,y} \circ \omega_{p,x} = \omega_{p,y}\), so the order of two overwrites decides the result.</p>
 <!-- quarry: Theorem 7, with its live proof (plus in either order; update keeps the last) -->
-<p>::: <strong>Claim 11</strong> (Two ways to delete). A delete distributes over a placement,
+<p>Writes that are sums need no coordination: replicas that receive them in any order agree, which is the reading of
+conflict-free replicated data types as sums [9]. Two overwrites racing on one path need an order.</p>
+<p><strong>Claim 12 (two ways to delete).</strong> A delete distributes over a placement,
 \(\delta_p(D_1 + \cdots + D_k) = \delta_p(D_1) + \cdots + \delta_p(D_k)\), and needs to know nothing about what it
-removes. A subtraction \(D - c\,(p \Rightarrow x)\) removes an arrow only when it knows the arrow.
-:::</p>
+removes. A subtraction \(D - c\,(p \Rightarrow x)\) removes an arrow only when it knows the arrow.</p>
 <!-- quarry: Theorem 8, with the two live deletes: a sum with the anti-object, and >>= [b=>none] -->
-<p>::: <strong>Claim 12</strong> (The zero names no delete). Since \(k \Rightarrow 0 = 0\), the record \([k \Rightarrow 0]\) is the empty
-record, and writing it changes nothing.
-:::</p>
+<p><strong>Claim 13 (the zero names no delete).</strong> Since \(k \Rightarrow 0 = 0\), the record \([k \Rightarrow 0]\) is the empty
+record, and writing it changes nothing.</p>
 <!-- quarry: Proposition 5, with its live proof ([b=>noobj] is [=>]; >>= [b=>none] deletes) -->
 <p><code>none</code> is a scar: a mark outside the ring that an update reads as \(\delta_k\), because the ring's own zero cannot say
 <em>delete</em>. The ring may have a delete of its own.</p>
-<p>::: <strong>Claim 13</strong> (A delete is an idempotent). Read records as relations (Definition 8), and take the parametric unity
+<p><strong>Claim 14 (a delete is an idempotent).</strong> Read records as relations (Definition 9), and take the parametric unity
 \(1 \Rightarrow 1\) of <a href="./parametric-identities-in-ring-theory.html">[3]</a>. Then
 \(\big((1 \Rightarrow 1) - (k \Rightarrow k)\big) \cdot D = \delta_k(D)\), and
-\((1 \Rightarrow 1) - (k \Rightarrow k)\) is idempotent.
-:::</p>
+\((1 \Rightarrow 1) - (k \Rightarrow k)\) is idempotent.</p>
 <!-- quarry: Theorem 9. Live today: [(b=>b)].mult([(a=>1),(b=>2)]) keeps b. The difference waits on an arrow's coefficient being placed once ([{-1}(b=>b)] prints [{-1}b=>{-1}b]). -->
 <p><strong>Directions.</strong></p>
 <ul>
 <li><em>Traces.</em> Two writes commute when they touch disjoint paths, or when both are sums. A log of writes, taken up to
-swapping independent neighbours, is a Mazurkiewicz trace [18]. Do replicas converge exactly when they hold the same
+swapping independent neighbors, is a Mazurkiewicz trace [18]. Do replicas converge exactly when they hold the same
 trace? Is the coordination-free fragment exactly the additive one? That would be a data analogue of the CALM
 theorem [19], with conflict-free replicated data types [9] as its sums.</li>
 <li><em>Relational algebra.</em> A type is a predicate, and a predicate \(P\) is a diagonal idempotent,
@@ -755,58 +883,267 @@ theorem [19], with conflict-free replicated data types [9] as its sums.</li>
 deletes, composing with a bijection renames, and composing with a relation joins. Are Codd's operators [7] the
 relation ring acting on structures?</li>
 <li><em>Complement.</em> Tarski's algebra of relations [20] has union, composition, converse, identity, and complement. The
-relation ring has union, composition, and identity, and <a href="./span-and-point-coefficient-algebra.html">[2]</a> reaches the
-converse through negative spans. The complement of a key, \((1 \Rightarrow 1) - (k \Rightarrow k)\), exists
-because the unity is parametric. Is the scar the missing complement?</li>
+record ring of the next section has union, composition, identity, and the converse as its span \(-1\) (Claim 18). The
+complement of a key, \((1 \Rightarrow 1) - (k \Rightarrow k)\), exists because the unity is parametric. Is the scar
+the missing complement?</li>
 </ul>
-<h2>Containers as Branches of Arrows</h2>
-<p>A container is a branch of arrows. A record is the <em>named</em> branch, whose arrows leave keys. A list read by its
-positions is the <em>indexed</em> branch, whose arrows leave positions. Both are relations, so the relation ring of
-<a href="./parametric-identities-in-ring-theory.html">[3]</a> is their common algebra.</p>
+<h2>Polys: Space and Time</h2>
+<blockquote>
+<p><strong>Monos, polys, and calls.</strong> metatron's type system has three kinds of object. A <em>mono</em> is one value: a <code>bool</code>, an
+<code>int</code>, a <code>real</code>, a <code>str</code>, a <code>uri</code>, or <code>bytes</code>. A <em>call</em> computes: an <code>inst</code> or a <code>code</code>. A <em>poly</em> binds objects
+together: a <code>rec</code>, a <code>lst</code>, or a <code>rel</code>, the single arrow a record sums. The tractatus calls the polys <em>polynomial data
+structures</em> <a href="../tractatus/poly.html">[22]</a>, and the name is exact. A polynomial is a sum of terms, each a coefficient
+times a product of variables. A record is such a sum,
+\([a \Rightarrow 1, b \Rightarrow 2] = (a \Rightarrow 1) + (b \Rightarrow 2)\) (Definition 9). A list is such a
+product, \([x, y, z] = x\,y\,z\), a monomial whose variables do not commute (Definition 11), and a brace in a slot
+makes it a sum, \([x, \{y, z\}] = x\,y + x\,z\). In both, a coefficient counts a term's copies, the point of
+<a href="./span-and-point-coefficient-algebra.html">[2]</a>. The variables are objects of every kind, polys included, and a
+poly's operations read a variable only by equality or a predicate (Claim 27). A uri is a mono, one address, though
+its own value is a polynomial in segments (Definition 2).</p>
+</blockquote>
+<p>A record and a list are the polys that collect, and every program builds both. They extend a structure in two
+directions. A
+record extends it through <em>space</em>. It is a branch of arrows out of its keys, so its comma is a \(+\), and two records
+superpose wherever their keys meet. A list extends it through <em>time</em>. It is a word of objects, so its comma is a
+\(\cdot\): a timeline whose moments follow one another. In both, \(+\) branches and \(\cdot\) composes.</p>
+<p>In both, too, the operations rearrange structure only. A poly compares what it holds, by equality or by a
+predicate, and never applies its contents' own operations: adding two lists of numbers never adds a number. The
+contents' operations enter at one place, where a poly is run as a program (Claim 22).</p>
+<table>
+<thead>
+<tr><th>poly</th><th>extends through</th><th>its comma</th><th>\(+\)</th><th>\(\cdot\)</th><th>converse</th></tr>
+</thead>
+<tbody>
+<tr><td>record <code>[k=&gt;v, …]</code></td><td>space</td><td>\(+\)</td><td>merge</td><td>join</td><td>transpose</td></tr>
+<tr><td>list <code>[x, y, …]</code></td><td>time</td><td>\(\cdot\)</td><td>branch</td><td>concatenation</td><td>reversal</td></tr>
+</tbody>
+</table>
 <h3>Records</h3>
-<p>::: <strong>Definition 8</strong> (Record). A record is the sum of the arrows out of its keys,
+<p><strong>Definition 9 (record).</strong> A record is the sum of the arrows out of its keys,
 \([k_1 \Rightarrow v_1, \ldots, k_n \Rightarrow v_n] = \sum_i (k_i \Rightarrow v_i)\). A record nested at a key extends
-the key, \(\big(k \Rightarrow [j \Rightarrow v]\big) = (kj \Rightarrow v)\).
-:::</p>
-<p>::: <strong>Claim 14</strong> (Merge is the sum). Records merge the way structures add. Below a shared key they merge,
+the key, \(\big(k \Rightarrow [j \Rightarrow v]\big) = (kj \Rightarrow v)\).</p>
+<p><strong>Claim 15 (merge is the sum).</strong> Records merge the way structures add. Below a shared key they merge,
 \((k \Rightarrow E) + (k \Rightarrow F) = k \cdot (E + F)\); at a shared address their values branch; and a key into the
-zero vanishes. Merge is a commutative monoid whose identity is the empty record.
-:::</p>
+zero vanishes. Merge is a commutative monoid whose identity is the empty record.</p>
 <!-- quarry: Theorem 10, with its live proof -->
+<p>Merge is what a multimap does: put two records together, and a key they share holds both values.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;b,c=&gt;d] + [b=&gt;e,d=&gt;f]
+==&gt;[a=&gt;b,c=&gt;d,b=&gt;e,d=&gt;f]
+mtron&gt; [a=&gt;b] + [a=&gt;c]
+==&gt;[a=&gt;{b,c}]
+mtron&gt; [a=&gt;[x=&gt;1]] + [a=&gt;[y=&gt;2]]
+==&gt;[a=&gt;[x=&gt;1,y=&gt;2]]
+</code></pre>
+<p>The first answers <code>[a=&gt;b,c=&gt;d,b=&gt;e,d=&gt;f]</code>. The second branches the values at the shared key, <code>[a=&gt;{b,c}]</code>, and the
+third merges below it, <code>[a=&gt;[x=&gt;1,y=&gt;2]]</code>, because a nested record extends its key.</p>
+<p>The record's product is a lookup through two records: follow an arrow out of a key, then continue along the arrow out
+of the value it reached.</p>
+<p><strong>Definition 10 (join).</strong> For arrows \(a \Rightarrow b\) and \(h \Rightarrow r\),</p>
+<p>\[
+\begin{equation*}
+(a \Rightarrow b) \cdot (h \Rightarrow r) = [\,b \vDash h\,]\;\big(a \Rightarrow (b \Rightarrow r)\big),
+\end{equation*}
+\]</p>
+<p>where \([\,b \vDash h\,]\) is \(1\) when the second record holds \(h\) at \(b\)'s address (the key, a path through it, or a
+stored pattern \(b\) matches, read as every read is, in any layout), or when \(h\) is a program or a type that answers
+\(b\), and \(0\) otherwise. The join keeps the middle: its product is the walk
+\(a \Rightarrow b \Rightarrow r\). The range \(r\) is a value, a program included, and is never run, so
+<code>[a=&gt;5] * [_=&gt;plus(1)]</code> is <code>[a=&gt;5=&gt;plus(1)]</code>. A span is the object's, so <code>&lt;b&gt;{5}</code> is the one object <code>b/b/b/b/b</code>,
+and only a key equal to it, or a pattern it matches, meets it. As \(\Rightarrow\) nests to the right, a walk ends at its
+innermost range and the join splices there, and a record held at a key is the walks through its keys
+(Definition 9). The join extends bilinearly to records, a point multiplying onto the joined walk. A predicate's test
+is a filter: it keeps or drops an arrow, and never counts it.</p>
+<p><strong>Claim 16 (the record ring).</strong> Records in merge's normal form (no empty record held at a key, a key's records merged
+into one) form a ring under merge and join, with the empty record \([\Rightarrow]\) as zero
+and the parametric unity \(1 \Rightarrow 1\) of <a href="./parametric-identities-in-ring-theory.html">[3]</a> as unity (<code>[_=&gt;_]</code>,
+the walk of length zero at every object). On records whose keys and ranges are values it is the path algebra of the
+graph their arrows draw, and contracting each walk to its endpoints maps it onto the ring of finitely supported
+matrices over the objects with the parametric unity adjoined, the join onto the matrix product. A key that is a predicate \(P\) is the diagonal idempotent \(\Delta_P\) followed by the arrow's head.</p>
+<p>A database engineer has met this ring under other names. A record is a sparse matrix, or a two-column table, and the
+join is the relational join of the first record's values with the second's keys, keeping the joined column, with
+bag semantics: two routes through different middles are two walks, and projecting to the outer columns, the
+contraction, counts them in the coefficient of \(a \Rightarrow e\). A predicate key is a <code>WHERE</code> clause, and the unity is the table that maps everything to itself.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;b,c=&gt;d] * [b=&gt;e,d=&gt;f]
+==&gt;[a=&gt;b=&gt;e,c=&gt;d=&gt;f]
+mtron&gt; [1=&gt;2] * [?&gt;1=&gt;3]
+==&gt;[1=&gt;2=&gt;3]
+mtron&gt; [a=&gt;b,a=&gt;c] * [b=&gt;e,c=&gt;e]
+==&gt;[a=&gt;{b=&gt;e,c=&gt;e}]
+</code></pre>
+<p>These answer <code>[a=&gt;b=&gt;e,c=&gt;d=&gt;f]</code>; <code>[1=&gt;2=&gt;3]</code>, since <code>2</code> satisfies the predicate <code>?&gt;1</code> and stays as the middle; and
+<code>[a=&gt;{b=&gt;e,c=&gt;e}]</code>, the two routes from <code>a</code> to <code>e</code>, which contract to <code>[a=&gt;{2}e]</code>. A record negates arrow by arrow, with the point on the value, <code>[a=&gt;b].neg()</code> is <code>[a=&gt;{-1}b]</code>: a point on both
+ends of an arrow would cancel itself.</p>
+<p><strong>Claim 17 (a record's sum forgets its rows).</strong> Merge adds arrows at their keys and keeps no record of which arrows
+arrived together: if \(r'\) and \(s'\) exchange the values of \(r\) and \(s\) at a shared key, then \(r + s = r' + s'\). Arrows
+stay together only below a shared address, as in \((p \Rightarrow r) + (q \Rightarrow s)\), and the address that keeps
+them together also colocates them (Claim 8).</p>
+<pre><code class="language-mtron">mtron&gt; [name=&gt;marko,age=&gt;29] + [name=&gt;josh,age=&gt;32]
+==&gt;[name=&gt;{marko,josh},age=&gt;{29,32}]
+mtron&gt; [name=&gt;marko,age=&gt;32] + [name=&gt;josh,age=&gt;29]
+==&gt;[name=&gt;{marko,josh},age=&gt;{32,29}]
+</code></pre>
+<p>Both answer <code>[name=&gt;{marko,josh},age=&gt;{29,32}]</code>: which name went with which age is gone. In space an address is all a
+value has, so this is right. Two records stay two rows only when they are filed under two row keys, the primary key of
+a table, and that key is also what keeps each row in one place.</p>
+<p><strong>Claim 18 (the record converse).</strong> The converse of a record transposes its arrows,
+\(\big(\sum_i (k_i \Rightarrow v_i)\big)^{\smile} = \sum_i (v_i \Rightarrow k_i)\), an involution that reverses joins.
+A record's span is its power under the join: \(r^{2}\) reaches two arrows away, \(r^{0}\) is the unity, and \(r^{-1}\) is
+the transpose. A span range is the sum of its powers (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Definition 3),
+so \(r^{[1,\infty)}\) is the transitive closure, finite when some power of \(r\) is zero, as it is when \(r\) has no cycle. A
+key that is a predicate has no converse a record can list: it relates its value to every object the predicate admits.</p>
+<p>The transpose is an inverted index, filing each key under the value it held. The square is the two-hop query, friends
+of friends, and the closure is reachability. On a cycle the closure counts routes without end, so it is finite only
+where the relation is acyclic.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;b]{-1}
+==&gt;[b=&gt;a]
+mtron&gt; [a=&gt;b,b=&gt;c]{2}
+==&gt;[a=&gt;b=&gt;c]
+mtron&gt; [a=&gt;b,b=&gt;c]{+}
+==&gt;[a=&gt;{b,b=&gt;c},b=&gt;c]
+</code></pre>
+<p>These answer <code>[b=&gt;a]</code>, <code>[a=&gt;b=&gt;c]</code>, and <code>[a=&gt;{b,b=&gt;c},b=&gt;c]</code>, every walk the arrows draw, which contract to every
+pair they connect.</p>
+<table>
+<thead>
+<tr><th>record</th><th>relational and graph practice</th></tr>
+</thead>
+<tbody>
+<tr><td>merge, \(r + s\)</td><td>multimap put, bag union</td></tr>
+<tr><td>join, \(r \cdot s\)</td><td>equi-join of \(r\)'s values with \(s\)'s keys, joined column kept</td></tr>
+<tr><td>predicate key, \(\Delta_P\)</td><td><code>WHERE</code> on the key</td></tr>
+<tr><td>transpose, \(r^{-1}\)</td><td>inverted index</td></tr>
+<tr><td>power, \(r^{n}\)</td><td>\(n\)-hop traversal</td></tr>
+<tr><td>closure, \(r^{[1,\infty)}\)</td><td>transitive closure, reachability</td></tr>
+<tr><td>complement, \((1 \Rightarrow 1) - \Delta_P\)</td><td>delete the keys in \(P\) (Claim 14)</td></tr>
+</tbody>
+</table>
 <p><strong>Directions.</strong></p>
 <ul>
-<li><em>Join.</em> As relations, records compose, \([a \Rightarrow 1] \cdot [1 \Rightarrow x] = [a \Rightarrow x]\): a lookup
-through two records, the one-step join. mtron does not yet define the product of two records.</li>
+<li><em>Contracted or slotted.</em> Settled: the join keeps the middle, so the nested arrow
+\(a \Rightarrow (b \Rightarrow e)\) is the route a graph traversal's <code>path()</code> reports, and contracting it to
+\(a \Rightarrow e\) maps the record ring onto the relation ring. A list of records is still the join not yet taken
+(Claim 28).</li>
+<li><em>A join through a nested record.</em> Settled: a nested record is the walks through its keys, so it joins on its leaves,
+and the join reads its argument by address, as every read does (Claim 5), so its layout does not matter:
+<code>[x=&gt;a] * [a/b=&gt;1]</code> and <code>[x=&gt;a] * [a=&gt;[b=&gt;1]]</code> both answer <code>[x=&gt;a=&gt;b=&gt;1]</code>.</li>
+<li><em>Matrices.</em> The relation ring is the ring of finitely supported matrices, so the matrix multiplication of entry M in
+<a href="./ring-theoretic-distributed-computing.html">[4]</a> is composition in this ring, and that entry's addressed union is the
+indexed sum of the next section.</li>
+<li><em>A zero inside the type.</em> Today a sum of relations is a stream of relations, which leaves the type. The code ring
+names its zero as an instruction that outputs nothing. A relation's zero could be named the same way, keeping its
+sum inside the type.</li>
 </ul>
 <h3>Lists</h3>
-<p>::: <strong>Definition 9</strong> (Indexed list). Read by its positions, a list is the sum of the arrows out of them,
-\([x_0, \ldots, x_{n-1}] = \sum_{i &lt; n} (i \Rightarrow x_i)\).
-:::</p>
-<p>::: <strong>Definition 10</strong> (Word list). Read as a word, a list is the product of its slots,
-\([x_1, \ldots, x_n] = x_1 \cdots x_n \in \mathcal{C}\langle X\rangle\).
-:::</p>
-<p>::: <strong>Claim 15</strong> (The indexed ring). Indexed lists add slot by slot and multiply by composition,
+<p>A list is a timeline: a moment, then the next. It adds as alternatives add, two timelines side by side, and it
+multiplies as time does, one timeline after another.</p>
+<p><strong>Definition 11 (list).</strong> A list is a word of objects, $[x_1, \ldots, x_n] = x_1 \cdots x_n \in
+\mathcal{C}\langle X\rangle$, and the empty list \([\,,]\) is the empty word. A brace in a slot is a sum of letters,
+\([x, \{a, b\}, y] = x\,(a + b)\,y\), a branch at that moment, and a stream of lists is a sum of words. The converse of a
+list reverses its letters, and its span is its power (Definition 3).</p>
+<p><strong>Claim 19 (the list ring).</strong> Lists form the free algebra \(\mathcal{C}\langle X\rangle\), a ring with zero \(0\) and
+unity \([\,,]\): the reference ring over objects instead of segments. A list multiplies by concatenation and adds as a
+path adds, factoring out a common prefix and suffix, \([a,b,c] + [a,d,c] = [a,\{b,d\},c]\), as
+\(a\,b\,c + a\,d\,c = a\,(b + d)\,c\).</p>
+<!-- quarry: Theorem 12; its live proof runs on uris -->
+<p>A list and a uri are one algebra over two alphabets: a uri is a word of segments, a list a word of objects. What holds
+for paths holds for lists: rectangular factors (Claim 2), points along a path (Claim 1), and the converse (Claim 3).</p>
+<p><strong>Claim 20 (structure, not objects).</strong> The list ring reads its letters only by equality. No sum, product, or converse
+of lists applies a letter's own operations.</p>
+<p><strong>Claim 21 (the list converse).</strong> Lists with the reversal form a \(*\)-ring, as paths do (Claim 3), and the converse is
+no inverse: \([a,b] \cdot [a,b]^{\smile} = [a,b,b,a]\). A list's converse never needs a letter's. A value run as a step
+has no converse that can be listed, since a constant relates its value to every object
+(<a href="./span-and-point-coefficient-algebra.html">[2]</a>, <em>Negative Spans: the Converse</em>), but a letter is held, not run.</p>
+<pre><code class="language-mtron">mtron&gt; [1,2,3] * [4,5,6]
+==&gt;[4,5,6,8,10,12,12,...(2 more)]
+mtron&gt; [a,b,c] + [a,d,c]
+==&gt;[a,b,c,a,d,c]
+mtron&gt; [1,2,3] + [4,5,6]
+==&gt;[1,2,3,4,5,6]
+mtron&gt; [1,2,3]{-1}
+==&gt;fail::[parse error at line 1, col 8:
+     [1,2,3]{-1}
+            ^
+     expected an obj]
+mtron&gt; [1,2]{2}
+==&gt;fail::[parse error at line 1, col 6:
+     [1,2]{2}
+          ^
+     expected an obj]
+</code></pre>
+<p>These answer <code>[1,2,3,4,5,6]</code>; <code>[a,{b,d},c]</code>; <code>{[1,2,3],[4,5,6]}</code>, two timelines that share no moment and so stay two;
+<code>[3,2,1]</code>; and <code>[1,2,1,2]</code>. A span after a list's closing bracket is that list's power, while a span on a letter
+repeats the letter in its place: <code>[3{2}]</code> is <code>[3,3]</code>. As with uris, <code>x + y</code> is the instruction <code>plus(y)</code> applied to
+<code>x</code>, so a point on <code>x</code> floats over it (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Theorem 3), and the sum of two
+pointed lists is written as their stream.</p>
+<p>A list of steps is a program that has not been run: it can be built, spliced, and reversed as a list, and run when it
+is ready.</p>
+<p><strong>Claim 22 (the fold).</strong> The ordered fold, \(\mathrm{fold}\) (<code>&gt;|</code>), is the unique ring homomorphism from the list ring
+into the stream ring of <a href="./ring-theoretic-distributed-computing.html">[4]</a> that sends each letter to the step it denotes,
+a value to the constant that answers it and an instruction to itself:</p>
+<p>\[
+\begin{equation*}
+\mathrm{fold}(u\,v) = \mathrm{fold}(u)\,\mathrm{fold}(v), \qquad
+\mathrm{fold}(u + v) = \mathrm{fold}(u) + \mathrm{fold}(v), \qquad
+\mathrm{fold}([\,,]) = 1.
+\end{equation*}
+\]</p>
+<p>A brace in a slot folds to a branch, and a program is a list modulo the laws of its steps. The homomorphism holds up to
+the cuts of <a href="./ring-theoretic-distributed-computing.html">[4]</a>: before a reduce, a branch folds to one reduction of the
+merged stream, while the list ring distributes it. The fold commutes with the converse only where each step is its own
+converse, as a filter is (<a href="./span-and-point-coefficient-algebra.html">[2]</a>, Theorem 14). Otherwise
+\(\mathrm{fold}(w)^{\smile}\) is the fold of the reversed list with each step replaced by its converse.</p>
+<pre><code class="language-mtron">mtron&gt; [1,plus(2),plus(3)]&gt;|
+==&gt;6
+mtron&gt; {[1,plus(2),plus(3)],[1,mult(2),plus(5)]}&gt;|
+==&gt;6
+==&gt;7
+mtron&gt; [1,{plus(2),mult(2)},{plus(3),plus(5)}]&gt;|
+==&gt;plus(3)
+==&gt;plus(5)
+</code></pre>
+<p>These answer <code>6</code>; <code>{6,7}</code>, two timelines run as two programs; and <code>{6,8,5,7}</code>. The third has a branch at each step
+instead of two whole timelines, and its fold crosses them: \(1 + 2 + 5\) and \(1 \cdot 2 + 3\) are timelines neither list
+held (Claim 26).</p>
+<p>Written to a space, a list is laid out by its positions, as a matrix's rows are in <em>Layouts</em>: its moments become
+addresses.</p>
+<p><strong>Definition 12 (layout of a list).</strong> Laid out, a list is the sum of the arrows out of its positions,
+\([x_0, \ldots, x_{n-1}] \mapsto \sum_{i&lt;n} (i \Rightarrow x_i)\).</p>
+<p>A list is one object, and its order is a dependency, so a placement holds it whole (Claim 8). Laid out, its positions
+are independent arrows that a placement may separate, and a read of the timeline needs every position back.</p>
+<p><strong>Claim 23 (the indexed ring).</strong> Laid-out lists add slot by slot and multiply by composition,
 \((u \cdot v)_i = v_{u_i}\). Their zero is the empty list, and a slot holding the zero is no slot. Their unity is the
-parametric unity \(1 \Rightarrow 1\), which no list is.
-:::</p>
+parametric unity \(1 \Rightarrow 1\), which no list is.</p>
 <!-- quarry: Theorem 11, with its live proof (composition through lists of arrows) -->
-<p>::: <strong>Claim 16</strong> (The word ring). Word lists multiply by concatenation, with the empty list as unity. They add as paths
-add, factoring out a common prefix and suffix, and a branch in a slot is a sum of words.
-:::</p>
-<!-- quarry: Theorem 12; its live proof runs on uris, since a list adds by concatenation today -->
-<p>::: <strong>Claim 17</strong> (Linear and multilinear). An indexed list is linear in its slots and a word list is multilinear:
-\([c\,x_1, \ldots, c\,x_n]\) is \(c\,[x_1, \ldots, x_n]\) in the indexed ring and \(c^{n}\,[x_1, \ldots, x_n]\) in the
-word ring.
-:::</p>
+<p><strong>Claim 24 (linear and multilinear).</strong> A laid-out list is linear in its slots and a list is multilinear:
+\([c\,x_1, \ldots, c\,x_n]\) is \(c\,[x_1, \ldots, x_n]\) in the indexed ring and \(c^{n}\,[x_1, \ldots, x_n]\) in the list
+ring. A list therefore negates as a whole, \(-[x_1, \ldots, x_n] = (-1)\,[x_1, \ldots, x_n]\), while a point \(-1\) on
+every slot multiplies it by \((-1)^{n}\).</p>
 <!-- quarry: Proposition 6, with the live proof of how mtron lays out a negated span -->
-<p>::: <strong>Claim 18</strong> (No hybrid ring). On lists that keep their empty slots, let \(\oplus\) be the slot sum of the indexed
-ring and \(\otimes\) the concatenation of the word ring. The two share the empty list as their identity, so together
+<p><strong>Claim 25 (no hybrid ring).</strong> On lists that keep their empty slots, let \(\oplus\) be the slot sum of the indexed
+ring and \(\otimes\) the concatenation of the list ring. The two share the empty list as their identity, so together
 they form no ring, and \(\otimes\) distributes over \(\oplus\) on neither side. They satisfy the interchange law
-\((a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes d)\) whenever \(|a| = |b|\).
-:::</p>
+\((a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes d)\) whenever \(|a| = |b|\).</p>
 <!-- quarry: Theorem 13, with the Clifford-monoid and well-definedness clauses -->
+<p><strong>Claim 26 (lockstep is no sum).</strong> The slot sum, read back as words, advances two lists slot against slot:
+\([x_1, \ldots, x_n] \oplus [x_1, \ldots, x_n] = 2^{n}\,[x_1, \ldots, x_n]\), where a sum doubles, and \(u \oplus v\)
+holds every timeline that crosses from \(u\) to \(v\) between slots. It is lockstep, the synchronous product of SCCS [10],
+and it lives outside the list ring.</p>
+<p>Lockstep is the right sum for space and the wrong one for time. A record merges the values at a shared key because a
+key is an address (Claim 17). A moment's address is the history that reaches it: slot \(i\) of \(u\) and slot \(i\) of \(v\)
+share an index, not a past, and superposing them by index reads time as space.</p>
 <p><strong>Directions.</strong></p>
 <ul>
+<li><em>A list in a brace.</em> A path's branch may hold whole sub-paths, <code>&lt;x/{a/b,c/d}/y&gt;</code>, while a list's slot holds a list
+as a letter. Is <code>[x,{[a,b],[c,d]},y]</code> the letter branch \(x\,([a,b] + [c,d])\,y\), which keeps the nesting, or the
+spliced \(x\,(a\,b + c\,d)\,y\) of a path?</li>
+<li><em>A sum that does not factor.</em> Is \([1,2,3] + [4,5,6]\) a stream of two lists, or one list with a branch of sub-lists?
+The list ring also needs a zero inside its type, as the code ring names its own.</li>
+<li><em>Spans on nested lists.</em> The span after an inner list's bracket is that list's power, so <code>[[1,2]{2}]</code> is
+<code>[[1,2,1,2]]</code>, and the outer list's span repeats it, <code>[[1,2]]{2}</code> is <code>[[1,2],[1,2]]</code>. Is the bracket the span
+follows always the one whose ring takes the power?</li>
+<li><em>Strings.</em> A string is a word of characters and adds by concatenation today, which is the list ring's product. Does
+it follow lists?</li>
+<li><em>Lockstep's name.</em> Lockstep deserves an operation of its own. What does mtron call it?</li>
 <li><em>Positions as exponents.</em> A third reading sends position \(i\) to the monomial \(t^{i}\), so a list becomes a
 polynomial in \(t\): lists add slot by slot and multiply by convolution. mtron's slot product is this convolution with
 its terms ungrouped.</li>
@@ -814,26 +1151,60 @@ its terms ungrouped.</li>
 that keeps each word's own order [21]. A sorted merge picks the one sorted interleaving of two sorted runs. Does
 <code>kmerge</code>, and with it the causal law of top-k in <a href="./ring-theoretic-distributed-computing.html">[4]</a>, live in the
 shuffle algebra?</li>
-<li><em>Lockstep.</em> The hybrid's slot sum advances two lists slot against slot, the way the synchronous product of SCCS
-advances two processes step against step [10], and a slot cancelled by its inverse is an idle step. Its sums form a
-Clifford monoid [11]. Does lockstep composition deserve an operation of its own, outside the ring?</li>
-<li><em>Naming.</em> Which ring's operations a list names \(+\) and \(\cdot\) is still open. Today a list adds by concatenation,
-which is the word ring's product.</li>
 </ul>
-<h3>Relations</h3>
-<p>::: <strong>Definition 11</strong> (Relation ring). The relations of <a href="./parametric-identities-in-ring-theory.html">[3]</a> are the
-finite sums of arrows between objects. They add as sums and multiply by composition, with the parametric unity
-\(1 \Rightarrow 1\).
-:::</p>
-<p>Records and indexed lists are the relations whose arrows leave keys and positions.</p>
+<h3>Polys in Polys</h3>
+<p>A poly may hold anything, other polys included, and its operations do not look inside what it holds.</p>
+<p><strong>Claim 27 (polys hold letters).</strong> A poly's sum, product, and converse read what its slots hold only by
+equality or a predicate. A record held at a key is the exception that is none: it extends the key (Definition 9), so
+merge recurses into it.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;[1,2]] + [a=&gt;[1,3]]
+==&gt;[a=&gt;{[1,2],[1,3]}]
+mtron&gt; [[a=&gt;b],c,d] + [[a=&gt;b],d,e]
+==&gt;[[a=&gt;b],c,d,[a=&gt;b],d,e]
+mtron&gt; [[a=&gt;b],c] * [[b=&gt;e]]
+==&gt;[[a=&gt;b=&gt;e],
+    fail::[inst apply failure: unable to convert rec::T to uri::T [Obj&lt;634&gt;] (at /m/inst/mult) [Obj&lt;634&gt;]]]
+</code></pre>
+<p>The first branches two list letters at one key, <code>[a=&gt;{[1,2],[1,3]}]</code>, which the list ring factors to
+<code>[a=&gt;[1,{2,3}]]</code>. The second has a record as a shared first moment, and its sum is
+\([a \Rightarrow b]\,(c\,d + d\,e)\): the record appears once, neither doubled, as lockstep would have it, nor merged
+into a neighbor, which would apply a record's operation from inside a list. The third concatenates,
+<code>[[a=&gt;b],c,[b=&gt;e]]</code>, and the records' join waits for a fold.</p>
+<h3>Polys and Code</h3>
+<p>Paths, lists, records, and programs are four readings of one ring pattern. Each has a branch for its \(+\), a way of
+following one thing with another for its \(\cdot\), and a converse for its span \(-1\). They differ in what the product
+tests where two pieces meet.</p>
+<table>
+<thead>
+<tr><th> </th><th>list (time)</th><th>path</th><th>record (space)</th><th>program <a href="./ring-theoretic-distributed-computing.html">[4]</a></th></tr>
+</thead>
+<tbody>
+<tr><td>its comma</td><td>\(\cdot\)</td><td>\(\cdot\) (<code>/</code>)</td><td>\(+\)</td><td>\(\cdot\) (<code>.</code>)</td></tr>
+<tr><td>\(+\)</td><td>branch</td><td>branch</td><td>merge</td><td>branch</td></tr>
+<tr><td>\(\cdot\)</td><td>concatenation</td><td>extension</td><td>join</td><td>composition</td></tr>
+<tr><td>tested at the joint</td><td>nothing</td><td>nothing</td><td>the value against the key</td><td>the range against the domain</td></tr>
+<tr><td>zero</td><td>\(0\)</td><td>\(0\)</td><td>\([\Rightarrow]\)</td><td>the step that answers nothing</td></tr>
+<tr><td>unity</td><td>\([\,,]\)</td><td>\(\varepsilon\)</td><td>\(1 \Rightarrow 1\)</td><td>the identity</td></tr>
+<tr><td>converse, the span \(-1\)</td><td>reversal</td><td>reversal</td><td>transpose</td><td>the program run backward</td></tr>
+</tbody>
+</table>
+<p><strong>Claim 28 (records are steps).</strong> An arrow is a guarded step, \((k \Rightarrow v) \mapsto \mathrm{is}(k) \cdot v\):
+keep what equals or satisfies \(k\), then answer \(v\). This maps the record ring into the stream ring, merge to branch
+and join to composition, forgetting the middle a walk keeps. A list of records folds to their join,
+\(\mathrm{fold}([\,r_1, \ldots, r_n]) = r_1 \cdots r_n\): a program written as a timeline of steps through space.</p>
+<pre><code class="language-mtron">mtron&gt; [[a=&gt;b],[b=&gt;e]]&gt;|
+==&gt;[b=&gt;e]
+</code></pre>
+<p>This answers <code>[a=&gt;b=&gt;e]</code>.</p>
+<p>A list is a program that does not yet connect: its steps sit side by side until the fold feeds each one's output to the
+next one's input. A record is a step already connected, a lookup table with an arrow per key. Between them they cover
+what a program is: what happens at a moment, and the order of the moments.</p>
 <p><strong>Directions.</strong></p>
 <ul>
-<li><em>Matrices.</em> The relation ring is the ring of finitely supported matrices, so the matrix multiplication of entry M
-in <a href="./ring-theoretic-distributed-computing.html">[4]</a> is composition in this ring, and that entry's addressed union is
-the indexed sum.</li>
-<li><em>A zero inside the type.</em> Today a sum of relations is a stream of relations, which leaves the type. The code ring
-names its zero as an instruction that outputs nothing. A relation's zero could be named the same way, keeping its
-sum inside the type.</li>
+<li><em>Arrows as products.</em> In the object ring of the tractatus <a href="../tractatus/uri.html">[5]</a>, the product of two objects
+is an arrow, \(x \cdot y = (x \Rightarrow y)\). A list is then a product of letters with no joint, and the join
+splices two arrows at the joint they share. Is the list ring the tensor algebra of the objects and the join its
+splice, so that a list being a program not yet connected says that composition is contracted concatenation?</li>
 </ul>
 <h2>The Mirror</h2>
 <table>
@@ -843,13 +1214,14 @@ sum inside the type.</li>
 <tbody>
 <tr><td>term</td><td>a program in the stream ring</td><td>a structure in the reference ring</td></tr>
 <tr><td>\(+\)</td><td>branch: placement is free</td><td>branch: placement is free</td></tr>
-<tr><td>\(\cdot\)</td><td>composition in series</td><td>extension, which colocates (Claim 7)</td></tr>
-<tr><td>linear part</td><td>the floatable run</td><td>the read (Claim 3)</td></tr>
-<tr><td>synchronization</td><td>the cut, a reduce</td><td>the overwrite (Claim 10)</td></tr>
-<tr><td>identity</td><td>the shard identity</td><td>the data shard identity (Claim 6)</td></tr>
+<tr><td>\(\cdot\)</td><td>composition in series</td><td>extension, which colocates (Claim 8)</td></tr>
+<tr><td>linear part</td><td>the floatable run</td><td>the read (Claim 4)</td></tr>
+<tr><td>synchronization</td><td>the cut, a reduce</td><td>the overwrite (Claim 11)</td></tr>
+<tr><td>identity</td><td>the shard identity</td><td>the data shard identity (Claim 7)</td></tr>
 <tr><td>partition</td><td>the deal, \(\sum_j \pi_j = 1\)</td><td>the placement, orthogonal idempotents</td></tr>
-<tr><td>redundancy</td><td>entry H</td><td>replication needs idempotence (Claim 8)</td></tr>
-<tr><td>invariance</td><td>the answer at every hop and schedule</td><td>every read in every layout (Claim 4)</td></tr>
+<tr><td>redundancy</td><td>entry H</td><td>replication needs idempotence (Claim 9)</td></tr>
+<tr><td>invariance</td><td>the answer at every hop and schedule</td><td>every read in every layout (Claim 5)</td></tr>
+<tr><td>converse</td><td>the program run backward <a href="./span-and-point-coefficient-algebra.html">[2]</a></td><td>the path and the list reversed, the record transposed (Claims 3, 18, 21)</td></tr>
 </tbody>
 </table>
 <p><strong>Directions.</strong></p>
@@ -857,6 +1229,23 @@ sum inside the type.</li>
 <li><em>A module.</em> Programs act on data: a read, a fold, and a write are each a function applied to a structure. If
 structures form a module over the code ring, then the data shard identity is the computing shard identity acting
 through the module. &quot;Data and code compile alike&quot; would then be a theorem rather than an analogy.</li>
+</ul>
+<h2>Conclusion</h2>
+<p><strong>NOTES</strong>:</p>
+<ul>
+<li>Data distributes by the same reading as programs. A structure is a term of the reference ring, \(+\) is independence
+and \(\cdot\) is dependence, and factoring colocates while expanding partitions.</li>
+<li>Every layout of a structure is a factorization of one term, so every read answers alike in every layout; only its
+cost changes.</li>
+<li>Records extend a structure through space and lists through time. Their \(+\) superposes and their \(\cdot\) composes,
+and their converse, the span \(-1\), transposes a record and reverses a list or a path.</li>
+<li>The record ring is the path algebra of its keys' graph, and contracting its walks maps it onto the matrix ring.
+Merge, join, transpose, powers, and closures are the relational and graph
+operations, and a record's sum forgets its rows unless an address keeps them, which also colocates them.</li>
+<li>The list ring is the reference ring over objects. A list is a program not yet run, and the fold runs it.</li>
+<li>Lockstep, the slot sum, is space's sum read onto time: it belongs to records, not to lists.</li>
+<li>[To be written: what is open — a list in a brace, a sum that does not factor, spans on nested lists, and the
+tensor reading of arrows.]</li>
 </ul>
 <h2>References</h2>
 <ol>
@@ -892,6 +1281,10 @@ and Security of Distributed Systems (SSS 2011), Lecture Notes in Computer Scienc
 63(9), pages 72–81, 2020.</li>
 <li>Tarski, A., &quot;On the Calculus of Relations,&quot; Journal of Symbolic Logic 6(3), pages 73–89, 1941.</li>
 <li>Ree, R., &quot;Lie Elements and an Algebra Associated with Shuffles,&quot; Annals of Mathematics 68(2), pages 210–220, 1958.</li>
+<li>&quot;<a href="../tractatus/poly.html">Polynomial Data Structures</a>,&quot; the metatron tractatus.</li>
+<li>Chang, F., Dean, J., Ghemawat, S., Hsieh, W.C., Wallach, D.A., Burrows, M., Chandra, T., Fikes, A., Gruber, R.E.,
+&quot;Bigtable: A Distributed Storage System for Structured Data,&quot; 7th USENIX Symposium on Operating Systems Design and
+Implementation (OSDI 2006), pages 205–218, 2006.</li>
 </ol>
 
     </div>

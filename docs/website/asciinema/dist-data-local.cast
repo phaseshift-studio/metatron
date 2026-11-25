@@ -1,4 +1,4 @@
-{"version":3,"term":{"cols":118,"rows":30,"type":"xterm-256color"}}
+{"version":3,"term":{"cols":111,"rows":30,"type":"xterm-256color"}}
 # generated from mini-tutorials.md — edit the source, not this recording
 [0.35,"o","       "]
 [0.03,"o","["]
@@ -562,4 +562,4 @@
 [0.03,"o","("]
 [0.03,"o",")"]
 [0.12,"o","\r\n"]
-[0.3,"o","==>fail::[inst apply failure: /m/inst/eval is not reachable from /.: no peer is dialed at //0 (at /m/inst/branch@1)]\r\n"]
+[0.3,"o","==>fail::[inst apply failure: //0 is not reachable from /.: no peer is dialed at //0 (at /m/mach/inst/cut@1)]\r\n"]

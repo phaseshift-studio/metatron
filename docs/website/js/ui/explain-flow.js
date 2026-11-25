@@ -46,13 +46,12 @@ function text(obj) {
     return write(obj);
 }
 
-/* a type field as the table spells it, or null when the machine did not RECORD it.
-   absent is NOT the same as noobj: a present no-object type is a type (a literal
-   start's dom) and reads noobj::T — the machine records it as the uri `noobj` or as
-   the empty obj, and both are the same answer. */
+/* a type field as the table spells it, or null when the rec omits it. the two are the
+   same answer read two ways: domRngValue drops a least count of 0, and reading that
+   absent key answers noobj{0} — metatron's own spelling, so the cell shows noobj{0}::T. */
 function typeName(obj) {
-    if (obj == null) return null;          // the key is absent: an older answer
-    if (obj.isNoObj()) return 'noobj::T';  // present, and the type IS no-object
+    if (obj == null) return null;                // absent: metatron answers noobj{0}
+    if (obj.isNoObj()) return 'noobj{0}::T';     // present, and the type IS no-object
     if (!obj.isUri()) return null;
     return obj.js.toString() + '::T';
 }

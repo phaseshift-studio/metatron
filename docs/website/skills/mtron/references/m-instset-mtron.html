@@ -552,6 +552,10 @@ mtron&gt; /foo/bar    [-- uri (path literal) --]
 ==&gt;/foo/bar
 mtron&gt; a           [-- uri (bare name — no angle brackets if alphanumeric) --]
 ==&gt;a
+mtron&gt; &lt;a/b/c&gt;{2}  [-- uri (a span after the brackets is a power: the path repeated) --]
+==&gt;a/b/c/a/b/c
+mtron&gt; &lt;a/b/c&gt;{-1} [-- uri (a negative span is the converse: the path reversed) --]
+==&gt;c/b/a
 mtron&gt; 0x0F        [-- bytes (hex literal) --]
 ==&gt;0x0f
 mtron&gt; noobj       [-- &quot;no obj&quot; (empty, none) --]
@@ -592,8 +596,8 @@ have actually cost someone an afternoon.</p>
 <tr><td><code>tid</code></td><td>the type constraining it (the same value's tid is <code>int</code>)</td></tr>
 <tr><td><code>origin</code></td><td>a service's full address: <code>scheme://host:port</code>. The unit peers are keyed by and dialed at</td></tr>
 <tr><td><code>authority</code></td><td><code>host:port</code> — an origin without the scheme. <code>hasAuthority()</code> demands <strong>both</strong> host and port</td></tr>
-<tr><td><code>host</code></td><td>the host alone. The wire's gate: an address with a host is <em>someone else's to answer</em> (<code>Network.read</code>)</td></tr>
-<tr><td><code>isPrefixed()</code></td><td>scheme, no host — the vocabulary's slot (<code>math:cos</code>)</td></tr>
+<tr><td><code>host</code></td><td>the host alone. The wire's gate: an address with a host is <em>someone else's to answer</em> (<code>Network.read</code>). An empty authority (<code>file:///a</code>, printed with its <code>//</code>) has none</td></tr>
+<tr><td><code>isPrefixed()</code></td><td>scheme, no host — the vocabulary's slot (<code>math:cos</code>), and an empty authority (<code>file:///a</code>)</td></tr>
 <tr><td><code>isAddressed()</code></td><td>just <code>hasHost()</code> — says nothing about ports or schemes</td></tr>
 <tr><td><code>isHosted()</code></td><td>host, <strong>no scheme, no port</strong> — the network name slot (<code>//ginger/a</code>)</td></tr>
 <tr><td><code>noobj</code></td><td>the empty answer. A read that matches nothing returns it; a write of it is the universal close</td></tr>
@@ -654,6 +658,12 @@ mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a
 mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b
 mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d
 mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d/e
+mtron&gt; [a=&gt;b,b=&gt;c]{2}                [-- a span after the brackets is a power of the walk join: two hops --]
+==&gt;[a=&gt;b=&gt;c]
+mtron&gt; [a=&gt;b,b=&gt;c]{-1}               [-- a negative span is the converse: each walk reversed --]
+==&gt;[b=&gt;a,c=&gt;b]
+mtron&gt; [a=&gt;b,b=&gt;c]{+}                [-- a range is the sum of its powers: {+} is the transitive closure --]
+==&gt;[a=&gt;{b,b=&gt;c},b=&gt;c]
 </code></pre>
 <h4>rel::T (relation) — key/value pair</h4>
 <pre><code class="language-mtron">mtron&gt; name=&gt;'marko'
@@ -1143,6 +1153,17 @@ mtron&gt; ?&gt;1        [-- check if greater than 1 --]
 mtron&gt; ?&lt;5        [-- check if less than 5 --]
 mtron&gt; ?int::T    [-- check if type is int --]
 </code></pre>
+<p><code>?x</code> is <code>isa(x)</code>. The comparison prefixes are filter sugar, <code>is(…)</code> around their instruction: <code>?=</code>, <code>?!=</code>, <code>?&gt;</code>,
+<code>?&gt;=</code>, <code>?&lt;</code>, <code>?&lt;=</code>, and <code>?~</code> for <code>is(sorta(…))</code> (<code>?&gt;5</code> is <code>is(gt(5))</code>; <code>??</code> alone is <code>sorta</code>). So <code>int::T[?gt(5)]</code> asks
+whether an obj is an instance of the instruction <code>gt(5)</code>, and the filter is <code>int::T[?&gt;5]</code>. A rec after <code>?</code> is a
+structural type matched open-world: <code>?[name=&gt;'marko']</code> passes any rec that holds that field, whatever else it holds,
+and a field's value can itself be a predicate (<code>?[age=&gt;?&gt;30]</code>).</p>
+<pre><code class="language-mtron">mtron&gt; {3,6,9}.?&gt;5                                [-- 6, 9: the filter sugar --]
+==&gt;6
+==&gt;9
+mtron&gt; [name=&gt;'marko',age=&gt;29].?[name=&gt;'marko']   [-- the rec: age is extra, and the match is open-world --]
+==&gt;[name=&gt;'marko',age=&gt;29]
+</code></pre>
 <hr />
 <h3>22. code pattern matching</h3>
 <p>Code is data. A <code>poly</code> holds code without running it (<code>[plus(1).mult(2)]</code>), and <code>==[...]</code> applies an instruction to that
@@ -1255,6 +1276,9 @@ and die there; in one shared machine their definitions collide.</li>
 <tr><td><code>==</code></td><td><code>select()</code></td><td>structural select</td></tr>
 </tbody>
 </table>
+<p>A brace glued to a prefix sugar is that sugar's leading brace, as <code>{2}</code> is in <code>{2}plus(1)</code>: <code>{1,2}?&gt;5</code> is
+<code>{1,2}is(gt(5))</code> with no lhs, while <code>{1,2}.?&gt;5</code> filters the literal <code>{1,2}</code>. The stream sugars <code>-&lt;</code>, <code>&gt;-</code> and <code>-&lt;|</code>
+are the exception: they read a glued brace as their lhs.</p>
 <hr />
 <h3>24. expression evaluation model</h3>
 <ol>

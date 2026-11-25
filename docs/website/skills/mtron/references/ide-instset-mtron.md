@@ -94,16 +94,15 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
      Calculator=>λ(){<j>},
      EchoTest=>λ(){<j>}],
     code=>[,],
-    idx=>[=>],
     command=>[
      mvn_build=>!ide:command('mvn -f src/test/resources/scratch ...'),
      mvn_clean=>!ide:command('mvn -f src/test/resources/scratch ...'),
      mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>millis::848.0,
+            runtime=>millis::839.0,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/27ab5cdc]
+            output=>!*/sys/tmp/71884574]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -117,7 +116,6 @@ mtron> tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str:
    │   ├─ mvn_build
    │   ├─ mvn_clean
    │   └─ mvn_exec
-   ├─ idx
    ├─ root
    └─ src
        ├─ Calculator
