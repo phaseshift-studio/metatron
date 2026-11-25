@@ -1288,14 +1288,20 @@ public class mInstSet extends AbstractInstSet {
                             final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
                             if (null == op)
                                 return code;
+                            final List<fURI> nomadic = Law.Helper.claimants(Law.nomadic).stream().map(term -> term.tid().basePath()).toList();
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(code.insts().size());
                             for (final Inst inst : code.insts()) {
                                 // A POSITIONAL SPLIT IS NO ONE-TERM SUM EITHER: its lone lane runs on a thread of its own, and
                                 // its ?split is checked where it runs (BranchInst#split refuses one it cannot perform), both of
                                 // which an inlined member would skip
+                                // A LONE MEMBER THAT CHANGES MACHINES IS NO ONE-TERM SUM: the branch's merge returns home (Marko,
+                                // 2026-11-24), where an inlined move or cut would leave the caller where the member moved. And a
+                                // keyed branch is one term only while its key is one lane (a designator may name none, or several)
                                 if (op.basePath().equals(inst.tid().basePath()) && 1 == inst.args().count() && inst.tid().b().isOne() && !Inst.Helper.hasRemoteLane(inst)
-                                        && (inst.args().isRec() || !inst.tid().hasQ(SPLIT))) {
+                                        && (inst.args().isRec() ? 1 == BranchInst.lanes(inst).size() : !inst.tid().hasQ(SPLIT))
+                                        && BranchInst.program(inst.args().isRec() ? BranchInst.lanes(inst).getFirst().member() : inst.arg(0)).stream()
+                                        .noneMatch(member -> nomadic.contains(member.tid().basePath()))) {
                                     final Obj lone = inst.args().isRec() ? BranchInst.lanes(inst).getFirst().member() : inst.arg(0);
                                     final cInt c = inst.c();
                                     final Obj member;

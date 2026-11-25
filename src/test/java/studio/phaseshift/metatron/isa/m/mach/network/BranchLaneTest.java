@@ -299,20 +299,31 @@ public class BranchLaneTest extends AbstractMetatronTest {
         try {
             final Obj answer = Machine.Helper.evalAt(Machine.current(), () -> Machine.parse(
                     "{1,2,3,4,5,6}.branch?<=int{*}&split=[{**}//left](move(<loop://left>).count(),count())").apply(noobj()));
-            AbstractMetatronTest.checkEquality(LOG, bool(true),
-                    bool(answer.stream().anyMatch(obj -> obj.isFail() && obj.toString().contains("a lane's share is one or more"))), true);
+            final String failures = answer.stream().filter(Obj::isFail).map(Obj::toString).reduce("", String::concat);
+            org.junit.jupiter.api.Assertions.assertTrue(failures.contains("a lane's share is one or more"),
+                    () -> "refused by name, not " + failures + " (answered " + answer + ")");
         } finally {
             Machine.current().network().drop(f("loop://left"));
         }
     }
 
     /**
-     * A LAYOUT ITS LANES REFUSE STILL COMPILES: a split the branch cannot perform is refused where the branch runs, so
-     * the compiler, which reads a layout's lanes to leave its home lanes as written, compiles the chain as it stands.
+     * WHAT A BRANCH COMPILES TO, its instructions by name, rewritten only and never run. A layout its lanes refuse (a
+     * split it cannot perform) compiles as it stands, refused where it runs, and no rule drops its pass for it: a lone
+     * refused key is not inlined while the lone branch after it is, and the move after a refused keyed branch is still cut.
+     * A lone member that changes machines is never inlined: the branch's merge returns home, where an inlined cut would
+     * leave the caller wherever it moved. Each row: the chain % its compiled instructions.
      */
-    @Test
-    public void testARefusedLayoutStillCompiles() {
-        AbstractMetatronTest.checkCodeRewrite(LOG, "{1,2,3}.branch?<=int{*}&split=halves(count(),count())", "start().branch()", null, true);
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.branch?<=int{*}&split=halves(count(),count())                         % start().branch()",
+            "5.branch(<~?split=halves> => plus(1)).branch(plus(2))                         % start().branch().plus()",
+            "5.branch(</a?split=part> => plus(1),</b> => plus(2)).move(</c>).plus(1)       % start().branch().cut()",
+            "1.branch(<~> => move(<branch_away>).plus(1))                                 % start().branch()",
+            "1.branch(plus(2))                                                             % start().plus()",
+    }, delimiter = '%')
+    public void testWhatABranchCompilesTo(final String chain, final String compiled) {
+        AbstractMetatronTest.checkCodeRewrite(LOG, chain.trim(), compiled.trim(), null, true);
     }
 
     /**
@@ -405,8 +416,10 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slower?timeout=10> => plus(1))", "2");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(move?timeout=10(<loop://slower>).plus(1),plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?timeout=10(<~> => sleep(second::6.0))", "1");
-            // a home key whose program starts with a timed move keeps that time on the cut that keeps it home
+            // a home key whose program starts with a timed move keeps that time on the cut that keeps it home, and one whose
+            // head names home stays bare, its later timed move in sight of the lane's wait
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => move?timeout=10(<loop://slower>).plus(1),<loop://slower?timeout=10> => plus(2))", "{2,3}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~> => move(<~>).move?timeout=10(<loop://slower>).plus(1),<loop://slower?timeout=10> => plus(2))", "{2,3}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<~?timeout=10> => sleep(second::6.0),<loop://slower?timeout=10> => plus(1))", "{1,2}");
             AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch?<=int{*}&split=part(plus(1).move?timeout=10(<loop://slower>).plus(1))", "3");
         } finally {
@@ -609,6 +622,7 @@ public class BranchLaneTest extends AbstractMetatronTest {
             "5.branch(move(<branch_away>).map(*<~/branch/where>),*<~/branch/where>)   % {2,1}",
             "5.branch?<=int{*}(move(<branch_away>).plus(1),*<~/branch/where>)         % {6,1}",
             "5.branch(<branch_away> => *<~/branch/where>,<~> => *<~/branch/where>)    % {2,1}",
+            "5.branch(<~> => move(<branch_away>).plus(1)).map(*<~/branch/where>)       % 1",
     }, delimiter = '%')
     public void testTheMergeIsAReturnHome(final String mtron, final String answer) {
         final Machine root = Machine.current();

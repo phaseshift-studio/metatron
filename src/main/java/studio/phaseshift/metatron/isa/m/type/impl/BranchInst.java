@@ -150,11 +150,12 @@ public class BranchInst extends MInst {
                 final List<fURI> places = PEER.equals(key.qLess().toString()) || HASH_FURI.equals(key.qLess())
                         ? PlaceResolver.resolve(PlaceSet.of(uri(key.qLess())), Env.snapshot()).stream().map(PlaceResolver.ResolvedPlace::authority).toList()
                         : Collections.singletonList(home(key) ? null : key.qLess());
-                // a home program that itself starts with a move or a cut would read as a lane at that place once its key
-                // is gone, so a cut that stays keeps it home, as it times a home key's program, and it keeps the head's
-                // ?timeout when the key states none, so the lane's thread still waits as long as the head may run
-                final boolean leaves = !program.isEmpty() && (MOVE_INST_TID.equals(program.getFirst().tid().basePath())
-                        || CUT_INST_TID.equals(program.getFirst().tid().basePath()));
+                // a home program whose head names another place would read as a lane there once its key is gone, so a cut
+                // that stays keeps it home, as it times a home key's program, and it keeps the head's ?timeout when the key
+                // states none, so the lane's thread still waits as long as the head may run. A head that names home or a
+                // computed place reads as home already, and stays bare, every later timed move in sight of the lane
+                final fURI headed = program.isEmpty() ? null : headed(program.getFirst());
+                final boolean leaves = null != headed && !home(headed);
                 final fURI stay = !leaves || null != key.q(TIMEOUT) || !program.getFirst().tid().hasQ(TIMEOUT) ? cut
                         : CUT_INST_TID.q(TIMEOUT, program.getFirst().tid().q(TIMEOUT));
                 return places.stream().map(at -> {
@@ -174,18 +175,26 @@ public class BranchInst extends MInst {
         final Obj split = split(branch.tid().q(SPLIT));
         return branch.args().<Obj>elements().filter(member -> !uri(LHS).equals(member)).map(member -> {
             final List<Inst> insts = program(member);
-            final Inst head = insts.isEmpty() ? null : insts.getFirst();
-            final fURI base = null == head ? null : head.tid().basePath();
-            // move() is move(<..>); a target computed when the move runs names no place here
-            final fURI place = CUT_INST_TID.equals(base) ? head.arg(0).uriValue()
-                    : MOVE_INST_TID.equals(base) && head.arg(0).isUri() ? head.arg(0).uriValue()
-                    : MOVE_INST_TID.equals(base) && head.arg(0).isNoObj() ? fURI.Singleton.f("..")
-                    : null;
+            final fURI place = insts.isEmpty() ? null : headed(insts.getFirst());
             final boolean lane = null != place && !home(place);
             return new Lane(lane ? place : null,
-                    null == place ? insts : CUT_INST_TID.equals(base) ? program(head.arg(1)) : insts.subList(1, insts.size()),
+                    null == place ? insts : CUT_INST_TID.equals(insts.getFirst().tid().basePath()) ? program(insts.getFirst().arg(1))
+                            : insts.subList(1, insts.size()),
                     share(split, lane ? place : null), member);
         }).toList();
+    }
+
+    /**
+     * The place a member's head names when it is a move, or the cut a move compiles to: {@code move()} is
+     * {@code move(<..>)}, and a target computed when the move runs names no place here ({@code null}, as for any other
+     * head).
+     */
+    private static fURI headed(final Inst head) {
+        final fURI base = head.tid().basePath();
+        return CUT_INST_TID.equals(base) ? head.arg(0).uriValue()
+                : MOVE_INST_TID.equals(base) && head.arg(0).isUri() ? head.arg(0).uriValue()
+                : MOVE_INST_TID.equals(base) && head.arg(0).isNoObj() ? fURI.Singleton.f("..")
+                : null;
     }
 
     /**

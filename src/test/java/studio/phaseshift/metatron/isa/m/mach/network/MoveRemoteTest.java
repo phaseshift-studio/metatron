@@ -139,17 +139,6 @@ public class MoveRemoteTest extends AbstractMetatronTest {
     }
 
     /**
-     * A KEYED BRANCH ITS LANES REFUSE (mixed copy and part keys) STAYS KEYED, AND THE CHAIN AFTER IT IS STILL CUT: the
-     * branch refuses where it runs, and the move after it still compiles to its cut, where a refusal thrown while the
-     * chain compiled left the whole chain as written. Rewritten only, never run.
-     */
-    @Test
-    void testARefusingKeyedBranchLeavesTheChainCut() {
-        checkCodeRewrite(LOG, "5.branch(<//self/a?split=part> => plus(1),<//self/b> => plus(2)).move(<//self/c>).plus(1)",
-                "start().branch().cut()", null, true);
-    }
-
-    /**
      * A MOVE TO A HOST THAT ENDS THE CHAIN IS STILL A CUT: the move instruction never leaves this server, so the cut
      * ships the lhs with nothing to run, and the peer answers it.
      */

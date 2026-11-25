@@ -873,12 +873,14 @@ public interface Inst extends Call {
          * move, or the cut it compiles to, or a key, naming a peer (a host) or another local machine (a path,
          * {@code </abc>}); only {@code <~>} and {@code <.>} name the machine the code runs on. That lane is compiled and
          * run where its cut carries it, and the branch's merge is a return home, so a rewrite here neither inlines it
-         * nor looks inside it.
+         * nor looks inside it. A branch whose lanes refuse (a split it cannot perform) answers true as well: it is no lone
+         * home lane, and it refuses where it runs.
          */
         public static boolean hasRemoteLane(final Inst inst) {
             if (!BRANCH_INST_TID.equals(inst.tid().basePath()))
                 return false;
-            // a branch its lanes refuse (a split it cannot perform) is no lone home lane to inline: it refuses where it runs
+            // a branch its lanes refuse (a split it cannot perform) answers true too: it is no lone home lane to inline,
+            // as it refuses where it runs
             try {
                 return BranchInst.lanes(inst).stream().anyMatch(lane -> !lane.home());
             } catch (final MTronException e) {

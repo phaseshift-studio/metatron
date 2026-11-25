@@ -1503,8 +1503,8 @@ public class machInstSet extends AbstractInstSet {
          * A KEYED BRANCH IS SUGAR (Law.nomadic, stage 3; Marko, 2026-11-24: "whole lane at p straight to cut"): each key
          * {@code <p> => program} is the lane {@code cut(<p>, program)}, whole at p (its own explain() or profile() run
          * there), the key's {@code ?timeout} the cut's and its {@code ?hop} the target's, and a home key ({@code <~>},
-         * {@code <.>}) is its program, in a cut that stays when it states a timeout or when the program starts with a move
-         * or a cut, which would otherwise read as a lane at that place ({@link BranchInst#lanes}). The
+         * {@code <.>}) is its program, in a cut that stays when it states a timeout or when the program's head names
+         * another place, which would otherwise read as a lane there ({@link BranchInst#lanes}). The
          * keys' splits become the branch's: all copy (or none) is the whole lhs to every lane; all part is an even part
          * or, where the shares differ, the BIAS naming each lane's place, {@code {w}local} or its authority.
          * Mixed copy and part keys are refused (Marko: "default"), where the branch runs ({@link BranchInst#lanes}); such a
