@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.web.type;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -28,6 +29,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.Map;
+
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,8 +76,14 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
         // AN INSTRUCTION'S HEAD IS WRITTEN AS THE MTRON SERIALIZER WRITES IT ({span}name{point}?typing&query), without the
         // tid's args=[...] signature, which the parser mints again from the arguments. Written whole, <tid>(...), the head
         // did not parse once a tid carried that signature (</m/inst/plus?args=[/m/int]>), so no instruction read back
-        final String head = obj.isInst() ? ObjmtronSerializer.single().generateInstHead(new StringBuilder(), obj.asInst()).toString() : "<" + obj.tid() + ">::";
-        return (head + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
+        // A SCALAR IS {point}value{span}, as the mtron serializer writes it: m_int, m_real, m_str, m_bool and m_bytes read a
+        // value's span from the brace after it, ONE when nothing trails, so a span written into the tid, <{3}/m/int>::2,
+        // read back as 2. A uri's tid is written whole: a brace after a uri's brackets is its power (m_uri), and a ranged
+        // span stays on its tid (MUri.clone)
+        final boolean trails = obj.isMono() && !obj.isUri() && !obj.tid().b().isOne();
+        final String head = obj.isInst() ? ObjmtronSerializer.single().generateInstHead(new StringBuilder(), obj.asInst()).toString()
+                : "<" + (trails ? obj.tid().b(cInt.ONE()) : obj.tid()) + ">::";
+        return (head + objString + (trails ? "{" + obj.tid().b() + "}" : "") + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
     }
 
     @Override
@@ -94,15 +103,17 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeFail(final Fail fail) {
-        final Throwable cause = fail.jvm().getCause();
-        return ByteBuffer.wrap(handleIds(fail, "['" + fail.message()
-                + (null == cause ? "" : ("," + cause.getMessage()))
-                + "']").getBytes());
+        // A FAIL IS WRITTEN AS THE MTRON SERIALIZER WRITES IT, fail::[level][cause]…@vid with each level's message a str,
+        // which m_fail reads. m_fail opens only on fail:: or /m/fail::, so </m/fail>::['message,cause'] read back as a
+        // parse error, its brackets a lst typed fail ("[arraylist] is not a fail::T")
+        return ByteBuffer.wrap(ObjmtronSerializer.single().writeFail(fail).getBytes());
     }
 
     @Override
     public ByteBuffer writeStr(final Str str) {
-        return ByteBuffer.wrap(handleIds(str, "'" + str.strValue() + "'").getBytes());
+        // QUOTED AS THE MTRON SERIALIZER QUOTES A STR, its delimiter one the value does not hold and an escape where none
+        // is safe: wrapped in ' and escaped nothing, an apostrophe or a closing backslash ended the str early
+        return ByteBuffer.wrap(handleIds(str, ObjmtronSerializer.single().writeStr(str(str.strValue()))).getBytes());
     }
 
     @Override
