@@ -808,7 +808,7 @@ public final class mInsts {
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(MULT_INST_TID, "concatenate the argument lst onto the lhs lst: the word ring's product, with the unity [,]")
-                        .dom(LST_TID, "the lhs lst").rng(LST_TID.maybe(), "the concatenation, the zero [noobj] when either is the zero, noobj when either is noobj")
+                        .dom(LST_TID, "the lhs lst").rng(LST_TID.maybe(), "the concatenation, the zero [noobj] when either holds no word, noobj when either is noobj")
                         .argLst(T(LST_TID.c(cInt.ANY())), "the lst to follow the lhs lst, its point on the product's first letter")
                         .body((lhs, inst) -> lhs.asLst().mult(inst.arg(0).asLst()))
                         .desc("a product function \\(f(x, y) \\mapsto xy\\): one timeline after another, \\([1,2] \\cdot [3] = [1,2,3]\\)")

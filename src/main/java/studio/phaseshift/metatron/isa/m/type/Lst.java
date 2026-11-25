@@ -193,8 +193,11 @@ public interface Lst extends Poly<Lst, List<Obj>> {
      * THE ZERO OF THE WORD RING, {@code [noobj]}, the lst of a hole (Marko, 2026-11-25: "noobj is not in the carrier set
      * of lst::T. [noobj] is."): no word runs through a hole, so it is the sum of nothing and what a sum answers when its
      * words cancel ({@link Helper#sum}), it absorbs a product on either side ({@link #mult}), and every power of it is
-     * itself but the unity. noobj, nothing, stays the stream's: a product with noobj is noobj. The empty lst
-     * {@code [,]} is the unity ({@link #one()}).
+     * itself but the unity. Any lst through a hole holds no word, so it is the zero too: a product with it, and a
+     * power of it past one copy, answer {@code [noobj]}, its normal form, as the sum does, so
+     * {@code [1,2] * [noobj,noobj]} is {@code [noobj]}, while the unity, the converse and the negation keep it as it is
+     * written. noobj, nothing, stays the stream's: a product with noobj is noobj. The empty lst {@code [,]} is the
+     * unity ({@link #one()}).
      */
     @Override
     default Lst zero() {
@@ -204,9 +207,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
     /**
      * THE WORD RING'S PRODUCT, concatenation: one timeline after another, {@code [1,2,3] * [4,5,6]} is
      * {@code [1,2,3,4,5,6]}, with the empty lst as its unity ({@link #one()}) and the zero absorbing it on either side:
-     * {@code [1,2] * [noobj]} is {@code [noobj]} ({@link #zero()}), while any other lst through a hole concatenates as
-     * written, a lst that holds no word, whose sum is the zero. It splices the slots as they are, braces included, so it
-     * distributes over the sum on both sides, and it applies none of its letters' operations:
+     * {@code [1,2] * [noobj]} is {@code [noobj]} ({@link #zero()}), and so is a product with any lst through a hole,
+     * which holds no word: {@code [1,2] * [noobj,noobj]} is {@code [noobj]}. The unity passes a lst on as it is
+     * written, {@code [1,noobj] * [,]} is {@code [1,noobj]}, as the rewriter drops it. It splices the slots as they are,
+     * braces included, so it distributes over the sum on both sides, and it applies none of its letters' operations:
      * {@code [[a=>b],c] * [[b=>e]]} is {@code [[a=>b],c,[b=>e]]}, the records' join left to a fold. This lst's own point
      * floats over it, and the argument's multiplies into the product's first letter, as a lst is multilinear in its
      * letters (Claim 24). A product with noobj, nothing, is nothing.
@@ -214,7 +218,8 @@ public interface Lst extends Poly<Lst, List<Obj>> {
     default Lst mult(final Lst rhs) {
         if (this.isNoObj() || rhs.isNoObj())
             return lst_noobj();
-        if (Helper.isZero(this.lstValue()) || Helper.isZero(rhs.lstValue()))
+        if (!this.lstValue().isEmpty() && !(rhs.lstValue().isEmpty() && rhs.tid().d().isOne())
+                && (Helper.isZero(this.lstValue()) || Helper.isZero(rhs.lstValue())))
             return this.jvm(this.zero().lstValue());
         final List<Obj> slots = new ArrayList<>(this.lstValue());
         slots.addAll(rhs.lstValue());
@@ -535,11 +540,12 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         }
 
         /**
-         * THE ZERO ITSELF, {@code [noobj]} ({@link Lst#zero()}): the lst of one hole, which absorbs a product
-         * ({@link Lst#mult}) and is every power of itself but the unity ({@link #copies})
+         * A LST THAT HOLDS NO WORD IS THE ZERO ({@link Lst#zero()}): a hole, noobj, where every word must pass, as
+         * {@code [noobj]}, {@code [noobj,noobj]} and {@code [1,noobj]} are ({@link #measure}), so a product with it
+         * ({@link Lst#mult}) and a power of it past one copy ({@link #copies}) answer {@code [noobj]}, as the sum does
          */
         private static boolean isZero(final List<Obj> slots) {
-            return 1 == slots.size() && slots.getFirst().isNoObj();
+            return 0L == measure(slots, new IdentityHashMap<>())[0];
         }
 
         /**
@@ -615,8 +621,8 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         private static Lst copies(final Lst lst, final long n) {
             if (Long.MIN_VALUE == n)
                 throw MTronException.of("%s has no power at %s: the span has no positive counterpart", lst, n);
-            if (0L != n && isZero(lst.lstValue()))
-                return lst;
+            if (Math.abs(n) > 1L && isZero(lst.lstValue()))
+                return lst.jvm(lst.zero().lstValue());
             Typer.Helper.unfolds(Typer.UNFOLD_LST, n);
             final List<Obj> word = n < 0L ? converse(lst.lstValue(), new IdentityHashMap<>()) : lst.lstValue();
             final List<Obj> slots = new ArrayList<>();

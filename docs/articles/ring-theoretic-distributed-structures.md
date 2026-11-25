@@ -713,7 +713,8 @@ share an index, not a past, and superposing them by index reads time as space.
   stream.
 - *The list ring's zero.* Settled (Marko, 2026-11-25): noobj is not in the list ring's carrier; `[noobj]` is. No word
   runs through a hole, so the list of one hole is the sum of nothing and of words that cancel, `[a,b,c] - [a,b,c]` is
-  `[noobj]`, and it absorbs a product, `[1,2] * [noobj]` is `[noobj]`. A record can name it, so mtron declares the
+  `[noobj]`, and it absorbs a product, `[1,2] * [noobj]` is `[noobj]`. Any list through a hole holds no word, so it
+  is the zero too: `[1,2] * [noobj,noobj]` is `[noobj]`. A record can name it, so mtron declares the
   list ring, its additive group and its monoids, as it does the record ring's.
 - *Spans on nested lists.* The span after an inner list's bracket is that list's power, so `[[1,2]{2}]` is
   `[[1,2,1,2]]`, and the outer list's span repeats it, `[[1,2]]{2}` is `[[1,2],[1,2]]`. Is the bracket the span

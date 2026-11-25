@@ -88,7 +88,9 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2].zero()                                                                 % [noobj]",
             // the zero is [noobj], the lst of a hole (Marko, 2026-11-25: noobj is not in the carrier set of lst::T, [noobj]
             // is), an element of lst::T as the unity is: it absorbs a product on either side and is every power of
-            // itself but the unity, while any other lst through a hole holds no word and concatenates as written
+            // itself but the unity; any lst through a hole holds no word, so it is the zero too: a product with it and
+            // a power of it past one copy answer [noobj], its normal form, as the sum does, while the unity (which the
+            // rewriter drops), the converse and the negation keep it as it is written
             "[1,2].zero().isa(lst::T)                                                     % [noobj]",
             "[1,2].one().isa(lst::T)                                                      % [,]",
             "[1,2] * [noobj]                                                              % [noobj]",
@@ -96,7 +98,16 @@ public class LstTest extends AbstractAlgebraTest {
             "[noobj]{3}                                                                   % [noobj]",
             "[noobj]{0}                                                                   % [,]",
             "[noobj] + [1,2]                                                              % [1,2]",
-            "[1,noobj] * [2]                                                              % [1,noobj,2]",
+            "[1,noobj] * [2]                                                              % [noobj]",
+            "[1,2,4] * [noobj,noobj]                                                      % [noobj]",
+            "[noobj,noobj] * [1,2,4]                                                      % [noobj]",
+            "[1,noobj] * [,]                                                              % [1,noobj]",
+            "[,] * [1,noobj]                                                              % [1,noobj]",
+            "[noobj,noobj]{2}                                                             % [noobj]",
+            "[1,noobj]{-1}                                                                % [noobj,1]",
+            "[1,noobj]{1}                                                                 % [1,noobj]",
+            "[1,noobj]{0}                                                                 % [,]",
+            "[1,noobj].neg()                                                              % [{-1}1,noobj]",
             // the difference is the sum with the additive inverse
             "[a,b,c] - [a,b,c]                                                            % [noobj]",
             "[a,b,c] - [a,d,c]                                                            % [a,{b,{-1}d},c]",
