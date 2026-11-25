@@ -360,6 +360,28 @@ public class LstTest extends AbstractAlgebraTest {
                 () -> assertThrows(MTronException.class, () -> unbounded.plus(lst(jnt(-1))))), "1024 braces of two in a bulked brace");
         final String saturated = Long.MAX_VALUE / 2048L + 1L + " copies unfold past the typer's bound for lst";
         assertEquals(saturated, beyond.getMessage().substring(0, Math.min(saturated.length(), beyond.getMessage().length())));
+        // a lst letter weighs the letters it unfolds into, so 100 references to one nest of two spans of 100, made
+        // without a span, stand for 2·10^6 letters held in 398, and are refused before a letter is hashed
+        final Obj nest = ObjmtronSerializer.parse("[[x,y]{100}]{100}");
+        final Lst references = lst(new java.util.ArrayList<>(java.util.Collections.nCopies(100, nest)));
+        final MTronException weighed = assertThrows(MTronException.class, () -> references.plus(lst(jnt(-1))));
+        final String letters = "5026 copies unfold past the typer's bound for lst";
+        assertEquals(letters, weighed.getMessage().substring(0, Math.min(letters.length(), weighed.getMessage().length())));
+        // the converse reverses a brace or a sub-word once, however many slots hold it, so its copies still share it
+        for (final String shared : List.of("[{-1}[x,y]{100}]{100}", "[{1,2}]{100}")) {
+            final java.util.Set<Obj> distinct = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+            distinct.addAll(Lst.Helper.power(ObjmtronSerializer.parse(shared).asLst(), cInt.of(-1L)).lstValue());
+            assertEquals(1, distinct.size(), () -> shared + " reversed shares its one slot");
+        }
+        // an expansion stops at an interrupt, as a timeout's is, the flag left set for whoever owns the thread
+        Thread.currentThread().interrupt();
+        try {
+            final MTronException stopped = assertThrows(MTronException.class, () -> ObjmtronSerializer.parse("[a,b]").asLst().plus(ObjmtronSerializer.parse("[c]").asLst()));
+            final String interrupted = "the words of 2 slots were interrupted as they were built";
+            assertEquals(interrupted, stopped.getMessage().substring(0, Math.min(interrupted.length(), stopped.getMessage().length())));
+        } finally {
+            Thread.interrupted();
+        }
         // a lst without braces is one word, extended in place: its sum is linear in its length, where a copy of the word
         // per slot took minutes at this length
         final Lst longest = lst(java.util.stream.IntStream.range(0, 200_000).mapToObj(i -> (Obj) jnt(i % 10)).toList());
@@ -369,34 +391,45 @@ public class LstTest extends AbstractAlgebraTest {
 
     /// THE WORDS ARE BOUNDED BEFORE THEY ARE BUILT, in whatever order a hole, a mass-only {2}[,] and an unbounded
     /// sub-word come, a sub-word of a brace that is no word included, as the sum, as(uri::T), a range's powers and the
-    /// converse reach them, and nested spans, whose copies share one sub-word, are bounded by the letters they hold,
-    /// each shared sub-word once, so five spans of 100 over [x,y] are 2·10^10 letters held in 200. Built, each would
-    /// exhaust the heap, so each runs under a timeout, the measure, the expansion and the converse stopping when it
-    /// interrupts them. <BOUND> is the refusal of the typer's bound for lsts.
+    /// converse reach them. A span's copies share every lst they hold, so nested spans, sub-words or letters, are refused
+    /// as they are built, by the letters they stand for against those they hold: the third of [x,y]'s spans of 100 stands
+    /// for 2·10^6 letters held in 398. Built, each would exhaust the heap, so each runs under a timeout, the expansion
+    /// stopping when it interrupts it. <BOUND n> is the refusal of the typer's bound for lsts, at n copies.
     @ParameterizedTest
     @CsvSource(value = {
-            "[{a,b}]{100}.pow(11).mult([{2}[,]]).plus([y])                                % <BOUND>",
+            "[{a,b}]{100}.pow(11).mult([{2}[,]]).plus([y])                                % <BOUND 4190537045367913>",
             "[{a,b}]{100}.pow(11).mult([noobj]).plus([y])                                 % [y]",
             "[{a,b}]{100}.pow(11).mult([y,noobj]).plus([y])                               % [y]",
-            "[{2}[{2}[{a,b}]{100}]{11}] + [y]                                             % <BOUND>",
-            "[{2}[,],{2}[{2}[{a,b}]{100}]{11}] + [y]                                      % <BOUND>",
+            "[{2}[{2}[{a,b}]{100}]{11}] + [y]                                             % <BOUND 43920819223117981>",
+            "[{2}[,],{2}[{2}[{a,b}]{100}]{11}] + [y]                                      % <BOUND 43712663681776189>",
             "[noobj,{2}[{2}[{a,b}]{100}]{11}] + [y]                                       % [y]",
             "[{[{2}[{a,b}]{50},noobj],c}] + [y]                                           % [{c,y}]",
-            "[{2}[{2}[{a,b}]{100}]{11}].as(uri::T)                                        % <BOUND>",
-            "[{2}[{2}[{a,b}]{100}]{11}]{1,2}                                              % <BOUND>",
-            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100} + [y]                 % <BOUND>",
-            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.as(uri::T)            % <BOUND>",
-            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{1,2}                       % <BOUND>",
-            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.pow(-1) + [y]         % <BOUND>",
-            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.pow(-1).count()       % 1",
-            // a shared sub-word is held once: 200 letters held in 100 expand, while 250,000 held in 100 are refused
+            "[{2}[{2}[{a,b}]{100}]{11}].as(uri::T)                                        % <BOUND 43920819223117981>",
+            "[{2}[{2}[{a,b}]{100}]{11}]{1,2}                                              % <BOUND 43920819223117981>",
+            // nested spans are refused as they are built, sub-words or letters, wherever they are next used
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100} + [y]                 % <BOUND 5026>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.as(uri::T)            % <BOUND 5026>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{1,2}                       % <BOUND 5026>",
+            "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.pow(-1) + [y]         % <BOUND 5026>",
+            "[[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}] + [y]               % <BOUND 5026>",
+            "{[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100},z}                   % <BOUND 5026>",
+            "[[[[[x,y]{100}]{100}]{100}]{100}]{100} + [y]                                 % <BOUND 5026>",
+            "[[[[[x,y]{100}]{100}]{100}]{100}]{100}.as(uri::T)                            % <BOUND 5026>",
+            "[[[[[[x,y]{100}]{100}]{100}]{100}]{100}]{1,2}                                % <BOUND 5026>",
+            "[{-1}[{-1}[x,y]{50}]{50}]{50} + [y]                                          % <BOUND 1263>",
+            // two spans of 100 hold their 20,000 letters in 299, 67 copies, so they sum, sub-word or letter
+            "[{-1}[{-1}[x,y]{100}]{100}].plus([{-1}[{-1}[x,y]{100}]{100}].neg())          % noobj",
+            "[[[x,y]{100}]{100}].plus([[[x,y]{100}]{100}].neg())                          % noobj",
+            // a lst holds its own letters the first time and one, a reference, at every later place: so
+            // [{-1}[a,b]]{100}.pow(2) holds its 400 letters in 201, and [{-1}[x,y]{50}]{100} its 10,000 in 199
+            "[{-1}[a,b]]{100}.pow(2).plus([{-1}[a,b]]{100}.pow(2).neg())                  % noobj",
+            "[{-1}[x,y]{50}]{100}.plus([{-1}[x,y]{50}]{100}.neg())                        % noobj",
             "[{-1}[x,y]{50}]{2}.plus([{-1}[x,y]{50}]{2}.neg())                            % noobj",
-            "[{-1}[{-1}[x,y]{50}]{50}]{50} + [y]                                          % <BOUND>",
     }, delimiter = '%')
     public void testTheWordsAreBoundedBeforeTheyAreBuilt(final String code, final String expected) {
         final Machine machine = Machine.current();
         assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> {
-            if (!"<BOUND>".equals(expected.trim()))
+            if (!expected.trim().startsWith("<BOUND "))
                 AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
             else {
                 String refusal;
@@ -406,7 +439,8 @@ public class LstTest extends AbstractAlgebraTest {
                     refusal = String.valueOf(e.getMessage());
                 }
                 final String bound = refusal;
-                assertTrue(bound.contains(" copies unfold past the typer's bound for lst"), () -> code + " => " + bound);
+                final String copies = expected.trim().substring("<BOUND ".length(), expected.trim().length() - 1) + " copies unfold past the typer's bound for lst";
+                assertTrue(bound.contains(copies), () -> code + " => " + bound);
             }
             return noobj();
         }), code);

@@ -105,9 +105,10 @@ public interface Typer extends Component {
     fURI UNFOLD_URI = f(URI);
     /**
      * the most copies a lst unfolds into: a span laid along a lst axis ({@code [5{n}]}, an argument list), a lst's power
-     * ({@code [1,2]{n}}, {@code pow(n)}, and a range's, by its farthest power and by the copies all its powers hold), and
-     * the words a sum or {@code as(uri::T)} expands a lst into, in copies of the letters the lst holds, each sub-word a
-     * span's copies share held once ({@code Lst.Helper.words}).
+     * ({@code [1,2]{n}}, {@code pow(n)}, and a range's, by its farthest power and by the copies all its powers hold), the
+     * letters a power stands for, in copies of the letters it holds, as its copies share every lst ({@code
+     * Lst.Helper.copies}), and the words a sum or {@code as(uri::T)} expands a lst into, in the same copies
+     * ({@code Lst.Helper.words}).
      */
     fURI UNFOLD_LST = f("lst");
     /**
@@ -372,7 +373,7 @@ public interface Typer extends Component {
          * {@code /compiler/typer/unfold} entry for {@code carrier} ({@link #UNFOLD_URI}, {@link #UNFOLD_LST}, {@link #UNFOLD_REC}),
          * {@link #UNFOLD_DEFAULT} when the state names none, read raw as the check points are, since it is asked while
          * objs are being built. A span of at most one copy (the unit, the obj itself, its converse, which reverses each
-         * sub-word a lst holds once) unfolds nothing, so it is never refused and reads no state.
+         * brace and sub-word a lst holds once) unfolds nothing, so it is never refused and reads no state.
          *
          * @param carrier what the span unfolds into
          * @param span    the span

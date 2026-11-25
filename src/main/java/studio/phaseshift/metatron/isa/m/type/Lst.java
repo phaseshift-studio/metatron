@@ -449,16 +449,16 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * that splice (Marko, 2026-11-25): {@code [x,{[a,b],c}]} is {@code x a b + x c}, as {@code <x/{a/b,c}>} is. A
          * brace of equal sub-words is bulked into one lst with a point ({@link #isSubWord}), spliced with that mass:
          * {@code [x,{[a,b],[a,b]}]} is {@code 2 x a b}. A hole, noobj, is the zero letter, so no word runs through it.
-         * A brace multiplies the words, and a span shares one sub-word among all its copies, so a short literal can hold
-         * more letters than memory: the words are measured before any is built ({@link #measure}) and bounded by the
-         * typer's unfold for lsts, in copies of the letters the lst holds ({@link #held}): a brace of many members is as
-         * many words, linear in the lst, while k braces of two are 2^k words of k letters, held in 2k, and five nested
-         * spans of 100, [{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}, one word of 2·10^10 letters, held in 200. A
-         * lst with a hole is no word at all, so none is built, however many its braces before the hole would make.
+         * A brace multiplies the words, and a span's copies share one sub-lst, so a lst can stand for more letters than
+         * memory holds: the words are measured before any is built ({@link #measure}), a lst letter weighing the letters it
+         * unfolds into ({@link #size}), as hashing and writing it walk them, and bounded by the typer's unfold for lsts,
+         * in copies of the letters the lst holds ({@link #held}): a brace of many members is as many words, linear in the
+         * lst, while k braces of two are 2^k words of k letters, held in 2k. A lst with a hole is no word at all, so none
+         * is built, however many its braces before the hole would make.
          */
         private static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
             final Map<Obj, long[]> measured = new IdentityHashMap<>();
-            final long[] measure = measure(slots, measured);
+            final long[] measure = measure(slots, measured, new IdentityHashMap<>());
             if (0L == measure[0])
                 return new LinkedHashMap<>();
             Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.ceilDiv(Math.max(measure[0], measure[1]),
@@ -471,32 +471,42 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         /**
          * the words a lst's slots are, measured before any is built ({@link #words}): how many, and how many letters they
          * hold together. A slot of m moments makes w words of l letters m w words of m l letters and w times the moments'
-         * letters, and a hole, a slot of no moment, makes no word. Each sub-word is measured once, however many slots hold
-         * it ({@code measured}, by identity), as a span's copies share theirs. Counted in saturating longs, as the word
-         * count can pass any long: a product with a zero factor is zero, whatever the other, and one past a long's range
-         * is the long's largest, past the bound, so no measure is undefined, and a hole is no word in whatever order it
-         * meets an unbounded count
+         * letters, and a hole, a slot of no moment, makes no word, while a lst letter weighs the letters it unfolds into
+         * ({@link #size}). Each sub-word is measured once, however many slots hold it ({@code measured}, by identity), as
+         * a span's copies share theirs, so the measure walks what the lst holds and no more. Counted in saturating longs,
+         * as the word count can pass any long: a product with a zero factor is zero, whatever the other, and one past a
+         * long's range is the long's largest, past the bound, so no measure is undefined, and a hole is no word in
+         * whatever order it meets an unbounded count
          */
-        private static long[] measure(final List<Obj> slots, final Map<Obj, long[]> measured) {
+        private static long[] measure(final List<Obj> slots, final Map<Obj, long[]> measured, final Map<Obj, Long> sized) {
             return slots.stream()
-                    .map(slot -> {
-                        if (Thread.currentThread().isInterrupted())
-                            throw MTronException.of("the words of %s slots were interrupted as they were measured", slots.size());
-                        return slot.stream()
-                                .map(member -> isSubWord(slot, member) ? measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured)) : new long[]{1L, 1L})
-                                .reduce(new long[]{0L, 0L}, (a, b) -> new long[]{saturatedAdd(a[0], b[0]), saturatedAdd(a[1], b[1])});
-                    })
+                    .map(slot -> slot.stream()
+                            .map(member -> isSubWord(slot, member) ? measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured, sized))
+                                    : new long[]{1L, member.isLst() ? Math.max(1L, sized.computeIfAbsent(member, lst -> size(lst.lstValue(), sized))) : 1L})
+                            .reduce(new long[]{0L, 0L}, (a, b) -> new long[]{saturatedAdd(a[0], b[0]), saturatedAdd(a[1], b[1])}))
                     .reduce(new long[]{1L, 0L}, (at, slot) -> new long[]{saturatedMultiply(at[0], slot[0]),
                             saturatedAdd(saturatedMultiply(at[1], slot[0]), saturatedMultiply(at[0], slot[1]))});
         }
 
         /**
-         * the letters a lst holds in memory ({@link #words}): each slot's letters, and each sub-word's once, however many
-         * slots hold it ({@code seen}, by identity), so a span's copies of a sub-word hold its letters once
+         * the letters a lst's slots unfold into ({@link #measure}, {@link #copies}): each letter one, and each lst they
+         * hold, a letter or a sub-word, the letters it unfolds into at every place that holds it, each lst counted once
+         * ({@code sized}, by identity)
+         */
+        private static long size(final List<Obj> slots, final Map<Obj, Long> sized) {
+            return slots.stream().flatMap(Obj::stream)
+                    .map(member -> member.isLst() ? sized.computeIfAbsent(member, lst -> size(lst.lstValue(), sized)) : 1L)
+                    .reduce(0L, (a, b) -> saturatedAdd(a, b));
+        }
+
+        /**
+         * the letters a lst holds in memory ({@link #words}, {@link #copies}): each slot's letters, and each lst it holds,
+         * a letter or a sub-word, its own the first time, and one, a reference, at every later place that holds it
+         * ({@code seen}, by identity), so a span's copies of a lst hold its letters once
          */
         private static long held(final List<Obj> slots, final Set<Obj> seen) {
             return slots.stream()
-                    .flatMap(slot -> slot.stream().map(member -> !isSubWord(slot, member) ? 1L : seen.add(member) ? held(member.lstValue(), seen) : 0L))
+                    .flatMap(slot -> slot.stream().map(member -> member.isLst() && seen.add(member) ? Math.max(1L, held(member.lstValue(), seen)) : 1L))
                     .reduce(0L, (a, b) -> saturatedAdd(a, b));
         }
 
@@ -513,7 +523,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                     throw MTronException.of("the words of %s slots were interrupted as they were built", slots.size());
                 final List<Map.Entry<List<Obj>, cInt>> moments = slot.stream().flatMap(member -> !isSubWord(slot, member)
                         ? Stream.of(Map.<List<Obj>, cInt>entry(List.of(member.d(cInt.ONE())), member.tid().d()))
-                        : 0L == measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured))[0] ? Stream.empty()
+                        : 0L == measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured, new IdentityHashMap<>()))[0] ? Stream.empty()
                         : expand(member.lstValue(), member.tid().d(), measured).stream()).toList();
                 final List<Map.Entry<List<Obj>, cInt>> longer = words.stream().flatMap(word -> moments.stream().map(moment -> {
                     final List<Obj> letters = 1 == moments.size() ? word.getKey() : new ArrayList<>(word.getKey());
@@ -587,7 +597,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
 
         /**
          * the lst's exact power n ({@link #power}): n copies of it, of its converse for a negative n, bounded by the
-         * typer's unfold for lsts
+         * typer's unfold for lsts. The copies share every lst the lst holds, so the lst they make holds one copy's lsts
+         * and stands for n times their letters, nested spans multiplying it: it is bounded, as the words are, in copies of
+         * the letters it holds ({@link #size}, {@link #held}), so no span builds a lst whose walk, a hash, a write or a
+         * sum, outruns its memory by more than the bound: [[[x,y]{100}]{100}]{100} holds 398 letters for 2·10^6
          */
         private static Lst copies(final Lst lst, final long n) {
             if (Long.MIN_VALUE == n)
@@ -597,6 +610,8 @@ public interface Lst extends Poly<Lst, List<Obj>> {
             final List<Obj> slots = new ArrayList<>();
             for (long i = 0L; i < Math.abs(n); i++)
                 slots.addAll(word);
+            Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.ceilDiv(size(slots, new IdentityHashMap<>()),
+                    Math.max(1L, held(slots, Collections.newSetFromMap(new IdentityHashMap<>())))));
             return lst.jvm(slots);
         }
 
@@ -625,7 +640,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                 final Obj answered = objs(slot.stream().flatMap(member -> isSubWord(slot, member)
                         ? fold(member.d(cInt.ONE()).asLst(), at).stream().map(folded -> folded.c(c -> c.mult(member.tid().d())))
                         : member.isCall() && !at.isNoObj()
-                        ? Code.wrapStart(at, MCode.code(member.d(cInt.ONE()).asCall().insts())).apply(at.isMonad() ? at : noobj())
+                        ? Code.wrapStart(at, MCode.code(member.d(cInt.ONE()).asCall().insts())).apply(noobj())
                         .stream().map(out -> out.c(c -> c.mult(member.tid().d())))
                         : (at.isNoObj() ? Stream.of(at) : at.stream()).map(obj -> Rec.Helper.holdsWalks(member) && Rec.Helper.holdsWalks(obj)
                         ? obj.asRec().mult(member.asRec()) : member.apply(obj))));
@@ -638,20 +653,17 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * THE CONVERSE OF A LST, its span -1 (Claim 21): its letters in the reverse order, each held as it is, since a
          * letter's own converse is never needed, and the sub-words in a brace reversed with it, since a brace splices
          * them: {@code [x,{[a,b],c}]{-1}} is {@code [{[b,a],c},x]}, as is a lst slot with a point, a brace of equal
-         * sub-words ({@link #isSubWord}). Points stay with their letters. A sub-word is reversed once however many slots
-         * hold it ({@code reversed}, by identity), so the converse writes the slots the lst holds, sharing what it shares,
-         * and never the letters a span's copies stand for. The converse is an
+         * sub-words ({@link #isSubWord}). Points stay with their letters. A brace or a sub-word is reversed once however
+         * many slots hold it ({@code reversed}, by identity), so the converse writes the slots the lst holds, sharing the
+         * braces and sub-words it shares, and never the letters a span's copies stand for. The converse is an
          * involution and reverses a product, (u v)^-1 = v^-1 u^-1, but it is no inverse: {@code [a,b]} times its converse
          * is {@code [a,b,b,a]}.
          */
         private static List<Obj> converse(final List<Obj> slots, final Map<Obj, Obj> reversed) {
+            final Function<Obj, Obj> word = sub -> reversed.computeIfAbsent(sub, lst -> lst.<Lst>jvm(converse(lst.lstValue(), reversed)));
             return slots.reversed().stream()
-                    .map(slot -> {
-                        if (Thread.currentThread().isInterrupted())
-                            throw MTronException.of("the converse of %s slots was interrupted", slots.size());
-                        return slot.isObjs() || isSubWord(slot, slot) ? objs(slot.stream().map(member -> isSubWord(slot, member)
-                                ? reversed.computeIfAbsent(member, sub -> sub.<Lst>jvm(converse(sub.lstValue(), reversed))) : member)) : slot;
-                    })
+                    .map(slot -> slot.isObjs() ? reversed.computeIfAbsent(slot, brace -> objs(brace.stream().map(member -> isSubWord(brace, member) ? word.apply(member) : member)))
+                            : isSubWord(slot, slot) ? word.apply(slot) : slot)
                     .collect(Collectors.toCollection(ArrayList::new));
         }
 
