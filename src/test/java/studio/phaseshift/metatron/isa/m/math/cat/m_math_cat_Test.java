@@ -98,12 +98,6 @@ public class m_math_cat_Test extends mInstSetTest {
             "\"\".plus(\"\")                        % start(\"\")                  % \"\"",
             "\"test\".plus(\"\").plus(\"123\")      % start(\"test\").plus(\"123\") % \"test123\"",
 
-            // plus_zero_rewrite tests - Lst (list concatenation with empty list)
-            "[1,2,3].plus([,])                      % start([1,2,3])               % [1,2,3]",
-            "[a,b].plus([,])                        % start([a,b])                 % [a,b]",
-            "[,].plus([,])                          % start([,])                   % [,]",
-            "[1,2].plus([,]).plus([3,4])            % start([1,2]).plus([3,4])     % [1,2,3,4]",
-
             // plus_zero_rewrite tests - Rec (record merging with empty record)
             "[a=>1,b=>2].plus([=>])                 % start([a=>1,b=>2])           % [a=>1,b=>2]",
             "[x=>y].plus([=>])                      % start([x=>y])                % [x=>y]",
@@ -128,13 +122,13 @@ public class m_math_cat_Test extends mInstSetTest {
             "-5.5.mult(1.0)                         % start(-5.5)                  % -5.5",
             "5.0.mult(1.0).mult(3.0)                % start(5.0).mult(3.0)         % 15.0",
 
-            // mult_one_rewrite tests - Lst (Cartesian product with smart identity)
-            // Lst.mult() performs Cartesian product: [a,b] × [c,d] = [[a,c], [a,d], [b,c], [b,d]]
-            // The identity is [id()] - a list containing the id() instruction
-            // Note: The mult_one_rewrite doesn't currently work for Lst because the matcher
-            // checks equality at match-time, and [id(noobj)] != [id()] due to domain differences
-            // The mult() method itself handles the identity case correctly at runtime
-            // Skipping these tests for now - they would require enhancing the rewrite matcher
+            // mult_one_rewrite tests - Lst (the word ring's concatenation, with the empty lst as its unity; its sum's
+            // zero is noobj, which no plus argument rewrites away)
+            "[1,2,3].mult([,])                      % start([1,2,3])               % [1,2,3]",
+            "[a,b].mult([,])                        % start([a,b])                 % [a,b]",
+            "[,].mult([,])                          % start([,])                   % [,]",
+            "[1,2].mult([,]).mult([3,4])            % start([1,2]).mult([3,4])     % [1,2,3,4]",
+            "[1,2].plus([,])                        % start([1,2]).plus([,])       % [{[,],[1,2]}]",
 
             // Combined rewrites (plus_zero + mult_one)
             "5.plus(0).mult(1)                      % start(5)                     % 5",
@@ -142,7 +136,7 @@ public class m_math_cat_Test extends mInstSetTest {
             "{1,2,3}.count().else(0).plus(0)        % {1,2,3}.count()              % 3",
             "5.0.plus(0.0).mult(1.0)                % start(5.0)                   % 5.0",
             "\"hello\".plus(\"\").plus(\"world\")   % start(\"hello\").plus(\"world\") % \"helloworld\"",
-            "[1,2].plus([,]).plus([3])              % start([1,2]).plus([3])       % [1,2,3]",
+            "[1,2].mult([,]).mult([3])              % start([1,2]).mult([3])       % [1,2,3]",
             "[a=>1].plus([=>]).plus([b=>2])         % start([a=>1]).plus([b=>2])   % [a=>1,b=>2]",
 
             // split_collapse_rewrite tests (ring-theoretic branch collapsing)

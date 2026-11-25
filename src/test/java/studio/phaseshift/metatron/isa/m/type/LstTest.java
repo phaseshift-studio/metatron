@@ -31,10 +31,14 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -43,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_fro
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -59,33 +64,234 @@ public class LstTest extends AbstractAlgebraTest {
         return lst(jnt(1), jnt(2), jnt(3));
     }
 
-    /// THE SLOT PRODUCT — a lst multiplies as the ordered sum of its slots: every slot of the lhs by every slot of the
-    /// argument, lhs-major, each by its own type's product. The unit is [one()], one slot holding the one()
-    /// instruction, the one of whatever slot it meets, so it is the unit for lsts of every slot type. The empty lst
-    /// annihilates, and a product that is noobj is no slot: a lst of arrows is a relation, its product composition.
+    /// THE WORD RING (Marko, 2026-11-24 and 11-25; Claims 19 and 20 of ring-theoretic-distributed-structures.md): a lst
+    /// is a word of objects, a timeline. It multiplies by concatenation, with the empty lst as its unity and noobj as its
+    /// zero, and it adds as a path adds: the prefix and suffix its words share around one brace of what lies between,
+    /// sorted, so lsts that share no moment are one lst whose slot branches them. Neither operation applies a letter's
+    /// own: letters are read only by equality. A sum keeps its mass on its letters, as a lst is multilinear in them
+    /// (Claim 24), and the lhs's own point floats over it (Theorem 3).
     @ParameterizedTest
     @CsvSource(value = {
-            "2.mult(one())                                                                % 2",
-            "true.mult(one())                                                             % true",
-            "(a=>2).mult(one())                                                           % (a=>2)",
-            "[2,3].mult([4,5])                                                            % [8,10,12,15]",
-            "[2,3] * [4,5]                                                                % [8,10,12,15]",
-            "[true,false].mult([false,true])                                              % [false,true,false,false]",
-            "[2,3].mult([one()])                                                          % [2,3]",
-            "[one()].mult([2,3])                                                          % [2,3]",
-            "[2.5].mult([one()])                                                          % [2.5]",
-            "[1,2].mult([])                                                               % [,]",
-            "[].mult([1,2])                                                               % [,]",
-            "[1,2].mult([3,4]).mult([5,6])                                                % [1,2].mult([3,4].mult([5,6]))",
-            "[1].plus([2]).mult([3,4])                                                    % [1].mult([3,4]).plus([2].mult([3,4]))",
-            "[1,2].one()                                                                  % [one()]",
+            // the product: concatenation, its unity [,], and the zero absorbing
+            "[1,2,3] * [4,5,6]                                                            % [1,2,3,4,5,6]",
+            "[1,2,3].mult([4,5,6])                                                        % [1,2,3,4,5,6]",
+            "[,] * [1,2]                                                                  % [1,2]",
+            "[1,2] * [,]                                                                  % [1,2]",
+            "[1,2].one()                                                                  % [,]",
             "['a','b'].one()                                                              % [1,2].one()",
-            "[(a=>2),(b=>3)].mult([(2=>x),(3=>y)])                                        % [(a=>x),(b=>y)]",
-            "[(a=>2)].mult([(id()=>id())])                                                % [(a=>2)]",
-            "[(a=>2)].mult([one()])                                                       % [(a=>2)]",
+            "[1,2] * noobj                                                                % noobj",
+            "[1,2].zero()                                                                 % noobj",
+            "[1,2].mult([3]).mult([4,5])                                                  % [1,2].mult([3].mult([4,5]))",
+            "[1,{2,3}] * [{4,5},6]                                                        % [1,{2,3},{4,5},6]",
+            "[a,b] * {2}[c]                                                               % [{2}a,b,c]",
+            // never a letter's own product
+            "[2,3] * [4,5]                                                                % [2,3,4,5]",
+            "[true] * [false]                                                             % [true,false]",
+            "[(a=>2)].mult([(2=>x)])                                                      % [(a=>2),(2=>x)]",
+            "[[a=>b],c] * [[b=>e]]                                                        % [[a=>b],c,[b=>e]]",
+            // the sum: the shared prefix and suffix around a brace of what lies between
+            "[a,b,c] + [a,d,c]                                                            % [a,{b,d},c]",
+            "[a,b] + [c,b]                                                                % [{a,c},b]",
+            "[a,b] + [a,c]                                                                % [a,{b,c}]",
+            "[1,2,3] + [4,5,6]                                                            % [{[1,2,3],[4,5,6]}]",
+            "[1,2,3] + [3,2,1]                                                            % [{[1,2,3],[3,2,1]}]",
+            "[a] + [a,b]                                                                  % [a,{[,],b}]",
+            "[1,2,3] + [2,3]                                                              % [{[,],1},2,3]",
+            "[a,{b,d},c] + [a,e,c]                                                        % [a,{b,d,e},c]",
+            "[{a,b},{c,d}] + [x]                                                          % [{[a,c],[a,d],[b,c],[b,d],x}]",
+            "[x,{[a,b],c},y] + [x,d,y]                                                    % [x,{[a,b],c,d},y]",
+            "[1,2] + noobj                                                                % [1,2]",
+            // commutative: the brace is sorted, a middle before the middles it begins
+            "[a,d,c] + [a,b,c]                                                            % [a,{b,d},c]",
+            "[4,5,6] + [1,2,3]                                                            % [{[1,2,3],[4,5,6]}]",
+            "[a,b,a,b] + [a,b]                                                            % [a,b,{[,],[a,b]}]",
+            // never a letter's own sum
+            "[1] + [2]                                                                    % [{1,2}]",
+            "['a'] + ['b']                                                                % [{'a','b'}]",
+            "[[a=>b],c,d] + [[a=>b],d,e]                                                  % [[a=>b],{[c,d],[d,e]}]",
+            "[plus(1),mult(2)] + [plus(1),plus(3)]                                        % [plus(1),{mult(2),plus(3)}]",
+            // a lst letter stays a letter: alone in a middle, it is a sub-word of one letter
+            "[[1,2]] + [3]                                                                % [{3,[[1,2]]}]",
+            "[[1,2],3] + [[1,2],4]                                                        % [[1,2],{3,4}]",
+            "[x,{[a,b]},y] + [x,c,y]                                                      % [x,{[[a,b]],c},y]",
+            // a sum's mass on its letters (Claim 24): the argument counts by its point, and the lhs's floats
+            "[a,b] + [a,b]                                                                % [{2}a,b]",
+            "[a,b] + [a,b] + [a,b]                                                        % [{3}a,b]",
+            "[a,b,c] + {2}[a,d,c]                                                         % [a,{b,{2}d},c]",
+            "[{2}a,b] + [a,{2}b]                                                          % [{4}a,b]",
+            "[1,2] + {2}[1,2]                                                             % [{3}1,2]",
+            "[a] + [a] + [a,b]                                                            % [a,{{2}[,],b}]",
+            "{2}[1,2] + [1,2]                                                             % {2}[{2}1,2]",
+            "lst{2}::[1,2].plus([3])                                                      % lst{2}::[{[1,2],3}]",
+            "[1].plus(lst{2}::[2,3])                                                      % [{1,{2}[2,3]}]",
+            "[1].plus([{3}2])                                                             % [{1,{3}2}]",
+            // the additive inverse: -1 on the first letter, so a lst and its negation sum to the zero
+            "[1,2,3].neg()                                                                % [{-1}1,2,3]",
+            "[1,2,3].neg().neg()                                                          % [1,2,3]",
+            "[{a,b},c].neg().neg()                                                        % [{a,b},c]",
+            "[{a,b},c].plus([{a,b},c].neg())                                              % noobj",
+            "[1,2,3].plus([1,2,3].neg())                                                  % noobj",
+            "[{-1}1,2] + [1,2]                                                            % noobj",
+            "[a,b] + [a,{-1}b]                                                            % noobj",
+            "[a,b,c] + [a,d,c] + [a,{-1}d,c]                                              % [a,b,c]",
+            // a hole is the zero letter, so no word runs through it
+            "[1,noobj] + [2]                                                              % [2]",
+            // the unity's multiples have no letter to hold their mass
+            "[,] + [,]                                                                    % <ERROR>",
+            "[,].neg()                                                                    % <ERROR>",
     }, delimiter = '%')
-    public void testSlotProduct(final String code, final String expected) {
+    public void testTheWordRing(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /// A LST'S SPAN IS ITS POWER (Marko, 2026-11-25; Definition 11): a span after the closing bracket is the lst
+    /// concatenated n times, the unity at zero, and a negative span the converse's power; a range is the sum of its
+    /// powers. pow(n) is the same span at run time. A span on a letter inside the brackets still repeats that letter
+    /// in place (Lst.Helper.laid). The copies are bounded by the typer's unfold for lsts, a range's summed over its
+    /// powers, and an open side over a lst that holds a word never ends, so it is refused at the bound.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2]{2}                                                                     % [1,2,1,2]",
+            "[1,2]{1}                                                                     % [1,2]",
+            "[1,2]{0}                                                                     % [,]",
+            "[1,2,3]{-1}                                                                  % [3,2,1]",
+            "[1,2]{-2}                                                                    % [2,1,2,1]",
+            "[,]{3}                                                                       % [,]",
+            "[,]{-1}                                                                      % [,]",
+            "[a,{b,c}]{2}                                                                 % [a,{b,c},a,{b,c}]",
+            "[{2}a,b]{2}                                                                  % [{2}a,b,{2}a,b]",
+            // a range is the sum of its powers
+            "[a]{1,2}                                                                     % [a,{[,],a}]",
+            "[a]{0,2}                                                                     % [{[,],a,[a,a]}]",
+            "[1,2]{-1,1}                                                                  % [{[,],[1,2],[2,1]}]",
+            "[1,2]{1,3}                                                                   % [1,2,{[,],[1,2],[1,2,1,2]}]",
+            "[noobj]{*}                                                                   % [,]",
+            // the point before the brackets counts copies of the whole power, the vid names it, and the zero stays
+            "{2}[1,2]{2}                                                                  % {2}[1,2,1,2]",
+            "[1,2]{2}@x                                                                   % [1,2,1,2]@x",
+            "lst::[1,2]{2}                                                                % [1,2,1,2]",
+            // a span on a letter inside the brackets repeats it in place, and the brackets' span powers the lst
+            "[3{2}]                                                                       % [3,3]",
+            "[3{2}]{2}                                                                    % [3,3,3,3]",
+            "[{2}3]                                                                       % [{2}3]",
+            "[[1,2]{2}]                                                                   % [[1,2,1,2]]",
+            "[[1,2]]{2}                                                                   % [[1,2],[1,2]]",
+            // the bound
+            "[1,2]{100}>-.count()                                                         % 200",
+            "[1,2]{101}                                                                   % <ERROR>",
+            "[1,2]{-101}                                                                  % <ERROR>",
+            "[1]{1,13}.count()                                                            % 1",
+            "[1]{1,14}                                                                    % <ERROR>",
+            "[1]{-14,-1}                                                                  % <ERROR>",
+            "[1]{0,10}.count()                                                            % 1",
+            "[1]{-10,10}                                                                  % <ERROR>",
+            "[1,2]{*}                                                                     % <ERROR>",
+            "[1,2]{+}                                                                     % <ERROR>",
+            "[1]{-9223372036854775808}                                                    % <ERROR>",
+            // a sum's braces multiply its words, bounded in copies of the lst's own members before they are built
+            "[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n}].plus([x]).count()                % 1",
+            "[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v},{w,x}].plus([y]) % <ERROR>",
+            "[{a,b}]{12}.plus([y])                                                        % <ERROR>",
+            // the span at run time
+            "[1,2].pow(2)                                                                 % [1,2,1,2]",
+            "[1,2,3].pow(-1)                                                              % [3,2,1]",
+            "[1,2].pow(0)                                                                 % [,]",
+            "[1,2].pow(101)                                                               % <ERROR>",
+    }, delimiter = '%')
+    public void testSpans(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /// THE FOLD IS THE RING HOMOMORPHISM (Claim 22): it runs a lst as the program its letters denote, a value as the
+    /// constant that answers it and an instruction as itself, so fold(u v) = fold(u) fold(v), fold(u + v) =
+    /// fold(u) + fold(v), and fold([,]) is the identity. A brace is a branch, and a lst in it a sub-word, folded whole.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,plus(2),plus(3)]>|                                                        % 6",
+            "{[1,plus(2),plus(3)],[1,mult(2),plus(5)]}>|                                  % {6,7}",
+            "[1,{plus(2),mult(2)},{plus(3),plus(5)}]>|                                    % {6,8,5,7}",
+            "[1,{[plus(2),plus(3)],[mult(2),plus(5)]}]>|                                  % {6,7}",
+            "[1,plus(2),plus(3)].plus([1,mult(2),plus(5)])                                % [1,{[mult(2),plus(5)],[plus(2),plus(3)]}]",
+            "[1,{[mult(2),plus(5)],[plus(2),plus(3)]}]>|                                  % {7,6}",
+            "[1].mult([plus(2),plus(3)])>|                                                % 6",
+            "[1,{[,],plus(1)}]>|                                                          % {1,2}",
+            "[1,{{2}[plus(1)],plus(10)}]>|                                                % {{2}2,11}",
+            "[{1,2},plus(1)]>|                                                            % {2,3}",
+            "[1,[plus(1)]]>|                                                              % [plus(1)]",
+            "[1,noobj,plus(1)]>|                                                          % noobj",
+            "[,]>|                                                                        % [,]",
+    }, delimiter = '%')
+    public void testTheFold(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /// URI IS THE ORACLE (Marko, 2026-11-24): uri::T is already the word ring over segments, and a lst of atoms spells
+    /// a path (Lst.Helper.path, a brace the sum of its members), so the spelling commutes with the ring:
+    /// (l + m).as(uri) is l.as(uri) + m.as(uri), and (l * m).as(uri) is l.as(uri) * m.as(uri).
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a,b,c]       % [a,d,c]",
+            "[a,b,c]       % [x,y]",
+            "[a]           % [a,b]",
+            "[a,b]         % [c,b]",
+            "[a,b,c]       % [a,b,c]",
+            "[a,{b,d},c]   % [a,e,c]",
+            "[{a,b},c]     % [a,d]",
+            "[a,{[b,c],d}] % [a,e]",
+            "[a,b]         % [,]",
+    }, delimiter = '%')
+    public void testUriIsTheOracle(final String lhs, final String rhs) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".plus(" + rhs + ").as(uri::T)", lhs + ".as(uri::T).plus(" + rhs + ".as(uri::T))");
+        AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".mult(" + rhs + ").as(uri::T)", lhs + ".as(uri::T).mult(" + rhs + ".as(uri::T))");
+        AbstractMetatronTest.checkCodeParseApply(LOG, lhs + ".plus(" + rhs + ").as(uri)", lhs + ".plus(" + rhs + ").as(uri::T)");
+    }
+
+    /// THE SUM'S BOUND IS ITS BRACES', NOT ITS SIZE: a brace of many members is as many words, linear in the lst, so it
+    /// sums however wide it is, while braces that multiply the words are refused before the words are built.
+    @Test
+    public void testTheSumIsBoundedByItsBracesNotItsSize() {
+        final Lst wide = lst(objs(java.util.stream.IntStream.rangeClosed(1, 150).mapToObj(i -> (Obj) jnt(i)).toList()));
+        final Lst sum = wide.plus(lst(jnt(151)));
+        assertEquals(151L, sum.lstValue().getFirst().stream().count(), () -> "a brace of 150 and a word sum to 151 members: " + sum);
+        final Lst narrow = lst(java.util.stream.IntStream.range(0, 12).mapToObj(i -> objs(jnt(2L * i), jnt(2L * i + 1L))).toList());
+        assertThrows(Exception.class, () -> narrow.plus(lst(jnt(-1))), "twelve braces of two are 4096 words from 24 members");
+    }
+
+    /// THE WORD RING KEEPS ITS LAWS on lsts that hold braces, sub-words, points, holes and letters of every kind, each
+    /// side compared in the sum's normal form (a product concatenates as written): + is associative and commutative with
+    /// the zero as its identity, * is associative with [,] as its unity and the zero absorbing, * distributes over + on
+    /// both sides, the converse is an involution that reverses a product and distributes over a sum, and a span's powers
+    /// add, a range being the sum of its powers.
+    @Test
+    public void testTheWordRingKeepsItsLaws() {
+        final List<Lst> samples = Stream.of("[a,b,c]", "[a,d,c]", "[1,2]", "[x,{[a,b],c},y]", "[{2}a,b]", "[[1,2],3]",
+                "[plus(1),{a,b}]", "[a]", "[b,{[,],c}]", "[1,noobj]").map(code -> ObjmtronSerializer.parse(code).asLst()).toList();
+        final Function<Lst, Lst> normal = x -> Lst.Helper.sum(Stream.of(x));
+        final Function<Lst, Lst> converse = x -> Lst.Helper.power(x, cInt.of(-1L));
+        final Lst one = lst();
+        final Lst zero = lst().zero();
+        for (final Lst x : samples) {
+            checkEquality(LOG, normal.apply(x), normal.apply(x.plus(zero)), true);
+            checkEquality(LOG, normal.apply(x), normal.apply(zero.plus(x)), true);
+            checkEquality(LOG, x, x.mult(one), true);
+            checkEquality(LOG, x, one.mult(x), true);
+            assertTrue(x.mult(zero).isNoObj() && zero.mult(x).isNoObj(), () -> "the zero absorbs " + x);
+            checkEquality(LOG, x, converse.apply(converse.apply(x)), true);
+            checkEquality(LOG, Lst.Helper.power(x, cInt.of(3L)), Lst.Helper.power(x, cInt.of(2L)).mult(x), true);
+            checkEquality(LOG, Lst.Helper.power(x, cInt.of(-2L)), converse.apply(Lst.Helper.power(x, cInt.of(2L))), true);
+            checkEquality(LOG, Lst.Helper.power(x, cInt.of(1L, 2L)), x.plus(x.mult(x)), true);
+            for (final Lst y : samples) {
+                checkEquality(LOG, x.plus(y), y.plus(x), true);
+                checkEquality(LOG, normal.apply(converse.apply(x.mult(y))), normal.apply(converse.apply(y).mult(converse.apply(x))), true);
+                checkEquality(LOG, normal.apply(converse.apply(x.plus(y))), normal.apply(converse.apply(x).plus(converse.apply(y))), true);
+                for (final Lst z : samples) {
+                    checkEquality(LOG, x.plus(y).plus(z), x.plus(y.plus(z)), true);
+                    checkEquality(LOG, x.mult(y).mult(z), x.mult(y.mult(z)), true);
+                    checkEquality(LOG, normal.apply(x.mult(y.plus(z))), x.mult(y).plus(x.mult(z)), true);
+                    checkEquality(LOG, normal.apply(y.plus(z).mult(x)), y.mult(x).plus(z.mult(x)), true);
+                }
+            }
+        }
     }
 
     @ParameterizedTest
@@ -130,6 +336,12 @@ public class LstTest extends AbstractAlgebraTest {
             "{10}[a,b,c]>>{{2}<+/>,{15}<0>}>>                                           % {{20}a,{20}b,{20}c}",
             "[a,b,c]>>{{2}<+/>,{15}<0>}>>.cc().sum()                                    % 6",
             "[a,b,c]>><+/>                                                              % {0=>a,1=>b,2=>c}", // should this be uri keyed? (using indexed stream)
+            // a trailing '/' names the relation of the whole read, keyed by the whole address (Marko, 2026-11-25), so a read
+            // that runs through a slot is one rel, into a rec, out of a rec, or through lsts alone
+            "[[a=>[b=>1]]]>><0/a/b/>                                                    % <0/a/b>=>1",
+            "[a=>[[b=>1]]]>>(a/0/b/)                                                    % <a/0/b>=>1",
+            "[[1,2]]>><0/1/>                                                            % <0/1>=>2",
+            "[[1,2]]>><0/5/>                                                            % noobj",
             "[a,b,c]>><#>                                                               % {a,b,c}",
             "[a,b,c]>><#/>                                                              % {0=>a,1=>b,2=>c}", // should this be uri keyed? (using indexed stream)
             "[a,b,c]>>0                                                                 % a",
@@ -311,13 +523,16 @@ public class LstTest extends AbstractAlgebraTest {
             "lst::[1,2,3]>-.sum?int<=int{*}()                                                        % 6",
             "lst::[1,2,3]>-.sum().sum()                                                              % 6",
             "lst::[1,2,3]>-.sum()                                                                    % 6",
-            // the lst fold reads a bulked lst into its slots, once -- a lst is slot-oriented, never a bag of copies
-            "lst{2}::[1,2].sum()                                                                     % [{2}1,{2}2]",
-            "[1,2]-<[_,_]>-.sum()                                                                    % [{2}1,{2}2]",
-            "[1,2]-<[_,_,_]>-.sum()                                                                  % [{3}1,{3}2]",
-            "lst{2}::[{3}1,2].sum()                                                                  % [{6}1,{2}2]",
-            "lst{2}::[[1,2],3].sum()                                                                 % [{2}[1,2],{2}3]",
-            "[[1,2],3]-<[_,_]>-.sum()                                                                % [{2}[1,2],{2}3]",
+            // a bulked lst sums as the copies it stands for, the word ring keeping their mass on the first letter
+            "lst{2}::[1,2].sum()                                                                     % [{2}1,2]",
+            "[1,2]-<[_,_]>-.sum()                                                                    % [{2}1,2]",
+            "[1,2]-<[_,_,_]>-.sum()                                                                  % [{3}1,2]",
+            "lst{2}::[{3}1,2].sum()                                                                  % [{6}1,2]",
+            "lst{2}::[[1,2],3].sum()                                                                 % [{2}[1,2],3]",
+            "[[1,2],3]-<[_,_]>-.sum()                                                                % [{2}[1,2],3]",
+            // and its product concatenates the copies
+            "lst{2}::[1,2].prod()                                                                    % [1,2,1,2]",
+            "[1,2]-<[_,_,_]>-.prod()                                                                 % [1,2,1,2,1,2]",
     }, delimiter = '%')
     public void testCoefficients(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -351,7 +566,7 @@ public class LstTest extends AbstractAlgebraTest {
             "*/sys/tmp/lst_test/0 >>= -[b=>2]                                    % [a=>2,b=>{[a,b,c],{-1}2}]",
             "@/sys/tmp/lst_test/0 >>= +[b=>2]                                    % [a=>2,b=>{2,[a,b,c]}]",
             "@/sys/tmp/lst_test/0 >>= -[b=>2]                                    % [a=>2,b=>[a,b,c]]",
-            "@/sys/tmp/lst_test/0 >>= [b=>+[d,e]]                                % [a=>2,b=>[a,b,c,d,e]]",
+            "@/sys/tmp/lst_test/0 >>= [b=>_ * [d,e]]                             % [a=>2,b=>[a,b,c,d,e]]",
             "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c,d,e]]",
             "@/sys/tmp/lst_test/0 >>= [b=>-[a,d]]                                % [a=>2,b=>[b,c,e]]",
             "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[b,c,e]]",
@@ -390,19 +605,27 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /// THE CONVERSE (Claim 21), the span -1 after the brackets and pow(-1) at run time (Marko, 2026-11-25: the bolt-on
+    /// reverse() is retired): the letters in the reverse order, each held as it is, a nested lst being a letter, and a
+    /// brace's sub-words reversed with it. It is an involution and reverses a product, but it is no inverse.
     @ParameterizedTest
     @CsvSource(value = {
-            "[a,b,c].reverse()                                                   % [c,b,a]",
-            "[12,bac,25,45,\"_245\"].reverse()                                   % [\"_245\",45,25,bac,12]",
-            "[abc,def,ghi].reverse()                                             % [ghi,def,abc]",
-            "['abc','def','ghi'].reverse()==[reverse(),reverse(),reverse()]      % ['ihg','fed','cba']",
-            "[a,[b,c],[d,e]].reverse()                                           % [[d,e],[b,c],a]",
-            "[a,[b,c],[d,e]].reverse()==[reverse(),reverse(),reverse()]          % [[e,d],[c,b],a]",
-            "[a,[b,c],[d,e]].reverse()==[reverse(),>-.count(),reverse()]         % [[e,d],2,a]",
-            "[,].reverse()                                                       % [,]",
-            "[a].reverse()                                                       % [a]",
-            "[a,b].reverse().reverse()                                           % [a,b]",
-            "[a,[b,c],[d,e]].reverse()==[reverse(),reverse(),reverse()]         % [[e,d],[c,b],a]",
+            "[a,b,c]{-1}                                                         % [c,b,a]",
+            "[12,bac,25,45,\"_245\"]{-1}                                         % [\"_245\",45,25,bac,12]",
+            "[abc,def,ghi].pow(-1)                                               % [ghi,def,abc]",
+            "['abc','def','ghi'].pow(-1)==[reverse(),reverse(),reverse()]        % ['ihg','fed','cba']",
+            "[a,[b,c],[d,e]]{-1}                                                 % [[d,e],[b,c],a]",
+            "[a,[b,c],[d,e]].pow(-1)==[pow(-1),pow(-1),pow(-1)]                  % [[e,d],[c,b],a]",
+            "[a,[b,c],[d,e]].pow(-1)==[pow(-1),>-.count(),pow(-1)]               % [[e,d],2,a]",
+            "[,]{-1}                                                             % [,]",
+            "[a]{-1}                                                             % [a]",
+            "[a,b].pow(-1).pow(-1)                                               % [a,b]",
+            "[x,{[a,b],[c,d]},y]{-1}                                             % [y,{[b,a],[d,c]},x]",
+            "[{2}a,b]{-1}                                                        % [b,{2}a]",
+            "[plus(1),mult(2)]{-1}                                               % [mult(2),plus(1)]",
+            "[a,b].mult([a,b].pow(-1))                                           % [a,b,b,a]",
+            "[a,b].mult([c]).pow(-1)                                             % [c].pow(-1).mult([a,b].pow(-1))",
+            "[a,b].reverse()                                                     % <ERROR>",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -444,21 +667,20 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /// PLUS IS THE WORD RING'S SUM, never an append (Marko, 2026-11-25): an append is the product. The argument counts by
+    /// its point, as a uri's does, which retires the 11-17 refusal of a bulked argument, while a stream of lsts is still
+    /// no argument for one plus.
     @ParameterizedTest
     @CsvSource(value = {
-            "[1,2,3].plus([4,5])                                                 % [1,2,3,4,5]",
-            "[a,b].plus([c])                                                     % [a,b,c]",
-            "[,].plus([a])                                                       % [a]",
-            "[a].plus([,])                                                       % [a]",
-            "[,].plus([,])                                                       % [,]",
-            // coefficients: the lhs's is the stream's, so it stays on the lst. ONE LST APPENDS ONE LST (Marko,
-            // 2026-11-17): lst{2}::[2,3] is two lsts, {[2,3],[2,3]}, no argument for one, as {2,4} is none for int plus,
-            // while a lst whose index holds two 2s is one lst
-            "lst{2}::[1,2].plus([3])                                             % lst{2}::[1,2,3]",
-            "[1].plus(lst{2}::[2,3])                                             % <ERROR>",
-            "[1].plus(lst{2}::[{3}2])                                            % <ERROR>",
+            "[1,2,3].plus([4,5])                                                 % [{[1,2,3],[4,5]}]",
+            "[a,b].plus([c])                                                     % [{[a,b],c}]",
+            "[,].plus([a])                                                       % [{[,],a}]",
+            "[a].plus([,])                                                       % [{[,],a}]",
+            "[1,2,3].mult([4,5])                                                 % [1,2,3,4,5]",
+            "[,].mult([,])                                                       % [,]",
+            "lst{2}::[1,2].plus([3])                                             % lst{2}::[{[1,2],3}]",
+            "[1].plus(lst{2}::[{3}2])                                            % [{1,{6}2}]",
             "[1].plus({[2,3],[4]})                                               % <ERROR>",
-            "[1].plus([{3}2])                                                    % [1,{3}2]",
     }, delimiter = '%')
     public void testPlus(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

@@ -62,7 +62,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public Poly args() {
-        return lst().zero();
+        return lst();
         //throw MTronException.of("%s has no accessible arguments", this);
     }
 

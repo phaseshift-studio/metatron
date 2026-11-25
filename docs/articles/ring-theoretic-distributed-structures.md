@@ -162,9 +162,9 @@ with it, $(c\,u)^{n} = c^{n}\,u^{n}$ ([[2]](./span-and-point-coefficient-algebra
 `b/a/b/a` four times. The locus is also a placement boundary. What sits inside the brackets is one object, stored as a
 unit at one place; a point before them counts copies of the object, which a placement may share out (Claim 10).
 
-In mtron, the span is written after the closing bracket, `<u>{n}`, and the instructions `reverse()` and `pow(n)` are
-the spans `{-1}` and `{n}`. Inside the brackets a uri keeps the fURI's own spelling, `{span}path{point}`, so `<a/b{2}>`
-is the path `a/b` with its own point $2$, and a bare `a/b{2}` reads the same way.
+In mtron, the span is written after the closing bracket, `<u>{n}`, and the instruction `pow(n)` is the span `{n}` at
+run time, so `pow(-1)` is the converse. Inside the brackets a uri keeps the fURI's own spelling, `{span}path{point}`,
+so `<a/b{2}>` is the path `a/b` with its own point $2$, and a bare `a/b{2}` reads the same way.
 
 The converse reverses the path alone. A uri's scheme and authority are not steps of its path, so they stay where they
 are: `http://m.com/a/b/c` reversed is `http://m.com/c/b/a`, still rooted at its host, and reversed again it is
@@ -596,9 +596,10 @@ A list is a timeline: a moment, then the next. It adds as alternatives add, two 
 multiplies as time does, one timeline after another.
 
 **Definition 11 (list).** A list is a word of objects, $[x_1, \ldots, x_n] = x_1 \cdots x_n \in
-\mathcal{C}\langle X\rangle$, and the empty list $[\,,]$ is the empty word. A brace in a slot is a sum of letters,
-$[x, \{a, b\}, y] = x\,(a + b)\,y$, a branch at that moment, and a stream of lists is a sum of words. The converse of a
-list reverses its letters, and its span is its power (Definition 3).
+\mathcal{C}\langle X\rangle$, and the empty list $[\,,]$ is the empty word. A brace in a slot is a sum at that
+moment, $[x, \{a, b\}, y] = x\,(a + b)\,y$, a branch, and a list in a brace is a sub-word that splices, as a path's
+branch holds sub-paths: $[x, \{[a,b], c\}, y] = x\,(a\,b + c)\,y$. A stream of lists is a sum of words. The converse
+of a list reverses its letters, and its span is its power (Definition 3).
 
 **Claim 19 (the list ring).** Lists form the free algebra $\mathcal{C}\langle X\rangle$, a ring with zero $0$ and
 unity $[\,,]$: the reference ring over objects instead of segments. A list multiplies by concatenation and adds as a
@@ -626,11 +627,12 @@ has no converse that can be listed, since a constant relates its value to every 
 [1,2]{2}
 ```
 
-These answer `[1,2,3,4,5,6]`; `[a,{b,d},c]`; `{[1,2,3],[4,5,6]}`, two timelines that share no moment and so stay two;
-`[3,2,1]`; and `[1,2,1,2]`. A span after a list's closing bracket is that list's power, while a span on a letter
-repeats the letter in its place: `[3{2}]` is `[3,3]`. As with uris, `x + y` is the instruction `plus(y)` applied to
-`x`, so a point on `x` floats over it ([[2]](./span-and-point-coefficient-algebra.md), Theorem 3), and the sum of two
-pointed lists is written as their stream.
+These answer `[1,2,3,4,5,6]`; `[a,{b,d},c]`; `[{[1,2,3],[4,5,6]}]`, two timelines that share no moment, branched at
+the list's one slot, as `<1/2/3> + <4/5/6>` is `<{1/2/3,4/5/6}>`; `[3,2,1]`; and `[1,2,1,2]`. A span after a list's
+closing bracket is that list's power, while a span on a letter repeats the letter in its place: `[3{2}]` is `[3,3]`.
+As with uris, `x + y` is the instruction `plus(y)` applied to `x`, so a point on `x` floats over it
+([[2]](./span-and-point-coefficient-algebra.md), Theorem 3), and the sum of two pointed lists is written as their
+stream.
 
 A list of steps is a program that has not been run: it can be built, spliced, and reversed as a list, and run when it
 is ready.
@@ -703,11 +705,12 @@ share an index, not a past, and superposing them by index reads time as space.
 
 **Directions.**
 
-- *A list in a brace.* A path's branch may hold whole sub-paths, `<x/{a/b,c/d}/y>`, while a list's slot holds a list
-  as a letter. Is `[x,{[a,b],[c,d]},y]` the letter branch $x\,([a,b] + [c,d])\,y$, which keeps the nesting, or the
-  spliced $x\,(a\,b + c\,d)\,y$ of a path?
-- *A sum that does not factor.* Is $[1,2,3] + [4,5,6]$ a stream of two lists, or one list with a branch of sub-lists?
-  The list ring also needs a zero inside its type, as the code ring names its own.
+- *A list in a brace.* Settled: a path's branch holds whole sub-paths, `<x/{a/b,c/d}/y>`, and a list in a brace is a
+  sub-word, so `[x,{[a,b],[c,d]},y]` is the spliced $x\,(a\,b + c\,d)\,y$, while a list outside a brace is a letter.
+- *A sum that does not factor.* Settled: $[1,2,3] + [4,5,6]$ is one list with a branch of sub-lists,
+  `[{[1,2,3],[4,5,6]}]`, since a stream of the two would not stay their sum under the next $+$, which maps over a
+  stream. The list ring still needs a zero inside its type, as the code ring names its own: the zero is noobj, which no
+  record can name, so mtron declares only the list's multiplicative monoid, as it does a uri's.
 - *Spans on nested lists.* The span after an inner list's bracket is that list's power, so `[[1,2]{2}]` is
   `[[1,2,1,2]]`, and the outer list's span repeats it, `[[1,2]]{2}` is `[[1,2],[1,2]]`. Is the bracket the span
   follows always the one whose ring takes the power?

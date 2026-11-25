@@ -60,7 +60,7 @@ public class ProcessorScriptTest extends AbstractMetatronTest {
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "*~/processor/q.>>.?~analq::T.count()               % 0                  [-- no analq processor yet --]",
-            "[STATE] @~/processor/q >>= +[analq::T]",
+            "[STATE] @~/processor/q >>= mult([analq::T])",
             "*~/processor/q.>>.?~analq::T.count()               % 1                  [-- the update landed on the live processor --]",
             "*~/processor/q?analq.?/m/mach/analysis::T.count()   % 1                  [-- the attached processor answers at the branch --]",
             "[STATE] /processor/q -> noobj",

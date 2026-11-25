@@ -352,8 +352,8 @@ public class catInstSetTest extends AbstractInstSetTest {
             "|inv?real<=real(real::T).as(morphism::T)>>analysis>>inverse     % /m/inst/inv?rng=/m/real&dom=/m/real",
             "|not?bool<=bool(bool::T).as(morphism::T)>>analysis>>inverse     % /m/inst/not?rng=/m/bool&dom=/m/bool",
             "|reverse?str<=str(str::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/str&dom=/m/str",
-            "|reverse?lst<=lst(lst::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/lst&dom=/m/lst",
-            "|reverse?uri<=uri(uri::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/uri&dom=/m/uri",
+            // lst's and uri's reverse() are retired for the span -1 (Marko, 2026-11-25); lst's neg is an involution
+            "|neg?lst<=lst(lst::T).as(morphism::T)>>analysis>>inverse        % /m/inst/neg?rng=/m/lst&dom=/m/lst",
             "|reverse?rec<=rec(rec::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/rec&dom=/m/rec",
             "|neg?code<=code(code::T).as(morphism::T)>>analysis>>inverse     % /m/inst/neg?rng=/m/code&dom=/m/code",
     }, delimiter = '%')
@@ -775,7 +775,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * Every key is a {@code theory_form::T} (Marko, 2026-11-08), and the {@code ?decq} store refuses a declaration keyed
      * by anything else, so a key spelled the old way ({@code mult_monoid}, {@code concat_monoid}) leaves its carrier
      * with no algebra here. rec, a ring under the merge and the walk join (Marko, 2026-11-24), declares its group, its
-     * monoid and its commutative monoid apart: a theory refines no other.
+     * monoid and its commutative monoid apart: a theory refines no other. lst, the word ring (Marko, 2026-11-25), declares
+     * its concatenation monoid as uri does, its sum's zero being noobj, which no rec can name.
      */
     @Test
     void testEveryCarrierShipsItsAlgebra() {
@@ -785,7 +786,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertCarrierDeclares(STR_TYPE, "add_monoid");
         assertCarrierDeclares(URI_TYPE, "mul_monoid");
         assertCarrierDeclares(BYTES_TYPE, "add_monoid");
-        assertCarrierDeclares(LST_TYPE, "add_monoid");
+        assertCarrierDeclares(LST_TYPE, "mul_monoid");
         assertCarrierDeclares(REC_TYPE, "ring", "add_group", "add_monoid", "add_commutative_monoid");
         assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "add_monoid", "mul_monoid");
         // the machine's algebra is declared with the /m carriers although its type is mach's (machInstSet builds it)
@@ -1634,15 +1635,16 @@ public class catInstSetTest extends AbstractInstSetTest {
      * AN EQUATION SPEAKS WHERE ITS CONTRACT RUNS (carrier selection, Marko 2026-11-08) — {@code derivation_contraction}
      * folds a run back only where the carrier flowing into it dispatches the derived op to the contract that declares
      * the equation ({@link Law.Helper#selects}). Each row's chain is rewritten as the rule leaves it, then evaluated.
-     * Contracted elsewhere, a chain that fails as written (int has no {@code inv}, lst no {@code neg}) answered another
-     * op's value: {@code 7.div(2)}, or the lst {@code minus} that removes slots.
+     * Contracted elsewhere, a chain answered another op's value: {@code 7.div(2)} where int has no {@code inv}, or the
+     * lst {@code minus} that removes slots where the chain is the word ring's sum with a negated word.
      */
     @ParameterizedTest
     @CsvSource(value = {
             // int's truncating div declares no equation, and real's div ≡ mult·inv does not speak for an int
             "7.mult(2.inv())                          % start(7).mult(2.inv())                          % <ERROR>",
-            // lst's minus removes slots and declares none: int's minus ≡ plus·neg does not speak for a lst
-            "[1,2,3].plus([2].neg())                  % start([1,2,3]).plus([2].neg())                  % <ERROR>",
+            // lst's minus removes slots and declares none: int's minus ≡ plus·neg does not speak for a lst, so the chain
+            // runs as written, the word ring's sum of [1,2,3] and -[2]
+            "[1,2,3].plus([2].neg())                  % start([1,2,3]).plus([2].neg())                  % [{[1,2,3],{-1}2}]",
             // the declaring contract runs, so its equation folds back
             "6.0.mult(2.0.inv())                      % start(6.0).div(2.0)                             % 3.0",
             // a refinement runs its ancestor's contract: nat dispatches minus to int's, so int's equation speaks

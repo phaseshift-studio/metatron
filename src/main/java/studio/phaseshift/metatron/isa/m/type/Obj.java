@@ -1774,7 +1774,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .rng(ALL.maybeSome(), "the result of applying the arg to the lhs")
                             .argLst(T(LST_TID.maybe()), "the inst to apply to the lhs")
                             .desc("an auto function \\(f(x) \\mapsto x'\\): the arg applied to the lhs (sugar'd !)")
-                            .body((lhs, inst) -> inst.arg(0).orElse(lhs).asLst().values().reduce(lhs, (a, b) -> b.apply(a)))
+                            .body((lhs, inst) -> Lst.Helper.fold(inst.arg(0).orElse(lhs).asLst(), lhs))
                             .create(),
                     InstBuilder.build()
                             .tid(AT_INST_TID)

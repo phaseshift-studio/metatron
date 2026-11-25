@@ -164,7 +164,7 @@ public class TyperTest extends AbstractMetatronTest {
             "\"a\"{101}.as(uri::T)            % <ERROR>",
             "[5{100}]>-.count()               % 100",
             "[5{101}]                         % <ERROR>",
-            "<a/b>.reverse()                  % b/a",
+            "<a/b>.pow(-1)                    % b/a",
             // a rec's span joins its powers within the bound, and an open one stops at the first that holds no walk, so
             // a cycle's closure fails at the bound
             "[a=>b]{100}                      % [=>]",

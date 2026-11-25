@@ -664,7 +664,9 @@ public class RelTest extends AbstractAlgebraTest {
             "(marko=>josh) * (josh => id())                                     % (marko=>josh)",
             "(marko=>'josh') * (?str::T => id())                                % (marko=>'josh')",
             "(a=>2).mult((?int::T => branch(plus(1),plus(2))))                  % {(a=>3),(a=>4)}",
-            "[(a=>2)] * [(?int::T => branch(plus(1),plus(2)))]                  % [(a=>3),(a=>4)]",
+            // a lst of arrows is a word of letters (Marko, 2026-11-25), so its product concatenates them and never
+            // composes them: the arrows compose under their own product
+            "[(a=>2)] * [(?int::T => branch(plus(1),plus(2)))]                  % [(a=>2),(?int::T => branch(plus(1),plus(2)))]",
             "(1=>2).mult((?int::T => plus(1))).mult((3=>x))                     % (1=>x)",
             "(1=>2).mult((?int::T => plus(1)).mult((3=>x)))                     % (1=>x)",
             "(1=>2).mult((?int::T => plus(1)).mult((4=>x)))                     % noobj",

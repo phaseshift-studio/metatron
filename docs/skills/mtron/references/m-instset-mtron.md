@@ -110,6 +110,10 @@ mounted, and a rewrite is *code*.
 [,]                   [-- empty lst --]
 [1,2,3]>>0  
 [1,2,3]==[?>1 => +2]  [-- select with rec::T for predicate keys --]
+[1,2,3] * [4,5,6]     [-- the product concatenates: one timeline after another --]
+[a,b,c] + [a,d,c]     [-- the sum branches, the shared prefix and suffix factored out --]
+[1,2]{2}              [-- a span after the brackets is a power: the lst repeated --]
+[1,2,3]{-1}           [-- a negative span is the converse: the slots reversed --]
 ```
 
 ### rec::T (`[key=>val, ...]` — unordered, keyed)

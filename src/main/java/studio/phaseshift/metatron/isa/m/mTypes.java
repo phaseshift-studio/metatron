@@ -35,7 +35,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.one_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -233,19 +232,15 @@ public final class mTypes {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID)).tryToInst(),
                                 uri(ID), bytes(new byte[0])),
                         MONOID_THEORY_TID, null))));
-        // lst: a NON-commutative monoid under concatenation (PLUS), identity the empty lst — [a]+[b] is [a,b]
-        // while [b]+[a] is [b,a], which is why the theory is monoid, not commutative_monoid — and a monoid under the
-        // slot product (MULT), [x,y]·[a,b] is [x·a,x·b,y·a,y·b] by each slot type's own product, whose identity is
-        // [one()]: one slot holding the one() instruction, the one of whatever slot it meets. The product distributes
-        // over concatenation on the right only (on the left, up to order), so the two monoids are declared apart
+        // lst: the WORD RING (Marko, 2026-11-25), the free algebra over objects, declared as uri's is: a monoid under
+        // concatenation (MULT), [1,2]·[3] is [1,2,3], identity the empty lst [,]. PLUS is the ring's sum, which factors
+        // a shared prefix and suffix, [a,b,c] + [a,d,c] is [a,{b,d},c], but its zero is noobj, which a rec cannot name
+        // (it drops a noobj entry), and noobj runs no plus, so 0 + x answers 0; the ring waits for a zero named as an
+        // instruction, as code names end
         declare(LST_TYPE, rec(mutableMap(
-                uri("add_monoid"), rec(mutableMap(
-                                uri(OP), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
-                                uri(ID), lst()),
-                        MONOID_THEORY_TID, null),
                 uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
-                                uri(ID), lst(one_().tryToInst())),
+                                uri(ID), lst()),
                         MONOID_THEORY_TID, null))));
         // rel: a monoid under composition (MULT), (a=>b)·(b=>c) is a=>c, whose identity is the parametric unity
         // id()=>id() — the identity instruction at both ends, standing for the diagonal relation. Arrows that do not

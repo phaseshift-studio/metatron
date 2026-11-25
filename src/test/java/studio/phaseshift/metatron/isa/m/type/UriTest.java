@@ -200,14 +200,19 @@ public class UriTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * THE CONVERSE AT RUN TIME IS {@code pow(-1)} (Marko, 2026-11-25): the span a literal's {@code <w>{-1}} realizes, so
+     * a computed uri reverses its path the same way, and the bolt-on {@code reverse()} is retired.
+     */
     @ParameterizedTest
     @CsvSource(value = {
-            "/a/b/c.reverse()                 % c/b/a/",
-            "aaa/bbb/ccc.reverse()            % ccc/bbb/aaa",
-            "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a>",
-            "a.reverse()                      % a",
-            "a/b.reverse()                    % b/a",
-            "/a.reverse()                     % a/",
+            "/a/b/c.pow(-1)                   % c/b/a/",
+            "aaa/bbb/ccc.pow(-1)              % ccc/bbb/aaa",
+            "<http://m.com/a/b/c>.pow(-1)     % <http://m.com/c/b/a>",
+            "a.pow(-1)                        % a",
+            "a/b.pow(-1)                      % b/a",
+            "/a.pow(-1)                       % a/",
+            "a/b.reverse()                    % <ERROR>",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -219,8 +224,8 @@ public class UriTest extends AbstractAlgebraTest {
      * which on paths with no host is an involution that reverses a product and distributes over a sum (its Claim 3).
      * It reverses the path alone (Marko, 2026-11-24), so a scheme and a host stay and a uri with a host keeps its root
      * in front, and a parent step the fold keeps has none. A uri retyped onto an exact span, as an answer is when it
-     * takes its lhs's ({@code 'a.b'{3}.as(uri::T)}), holds the power the same way. The bolt-ons are the oracle:
-     * {@code {-1}} is {@code reverse()} and {@code {n}} is {@code pow(n)}. The brackets mark the locus: the obj's point
+     * takes its lhs's ({@code 'a.b'{3}.as(uri::T)}), holds the power the same way. {@code pow(n)} is the span at run
+     * time, so {@code {-1}} is {@code pow(-1)} and {@code {n}} is {@code pow(n)}. The brackets mark the locus: the obj's point
      * before them is on the run ({@code c·aⁿ}), a point inside runs with the path ({@code (ca)ⁿ}, span-and-point
      * Theorems 7 and 13), and a converse is no inverse.
      */
@@ -239,7 +244,7 @@ public class UriTest extends AbstractAlgebraTest {
             // the path alone reverses: a scheme and an authority stay, and a host keeps its root in front
             "<http://m.com/a/b/c>{-1}    % <http://m.com/c/b/a>",
             "<http://m.com/c/b/a>{-1}    % <http://m.com/a/b/c>",
-            "<http://m.com/a/b/c>{-1}.reverse() % <http://m.com/a/b/c>",
+            "<http://m.com/a/b/c>{-1}.pow(-1) % <http://m.com/a/b/c>",
             "<http://m.com/a/b/c/>{-1}   % <http://m.com/c/b/a/>",
             "<http://m.com/>{-1}         % <http://m.com/>",
             "<test:a/b/c>{-1}            % <test:c/b/a>",
@@ -249,21 +254,21 @@ public class UriTest extends AbstractAlgebraTest {
             // no converse: a parent step the fold keeps names no step to undo, and a span with no positive counterpart
             "<../a>.count()              % 1",
             "<../a>{-1}                  % <ERROR>",
-            "<../a>.reverse()            % <ERROR>",
-            // reverse() declares the involution law, so the rewriter cancels a pair before it runs: a kept .. reversed
-            // twice is itself, though reversed once it has no spelling
-            "<../a>.reverse().reverse()  % <../a>",
+            "<../a>.pow(-1)              % <ERROR>",
+            // pow(n) declares no involution, so no rewrite cancels a pair before it runs: a kept .. has no converse,
+            // reversed twice or once
+            "<../a>.pow(-1).pow(-1)      % <ERROR>",
             "<a>{-9223372036854775808}   % <ERROR>",
-            // the bolt-ons agree: reverse() is {-1} and pow(n) is {n}, pow(-1) now the converse too
-            "a/b/c.reverse()             % c/b/a",
-            "<a/b/c>{-1}.reverse()       % a/b/c",
-            "</a/b/c>{-1}.reverse()      % /a/b/c",
+            // the span at run time agrees: pow(n) is {n}, so pow(-1) is the converse
+            "a/b/c.pow(-1).pow(-1)       % a/b/c",
+            "<a/b/c>{-1}.pow(-1)         % a/b/c",
+            "</a/b/c>{-1}.pow(-1)        % /a/b/c",
             "a/b/c.pow(2)                % a/b/c/a/b/c",
             "a/b/c.pow(-1)               % c/b/a",
             "a/b/c.pow(-2)               % c/b/a/c/b/a",
             // the converse reads the value, not the spelling (dot segments fold first), and it is additive
             "<a/x/../b/c>{-1}            % c/b/a",
-            "<a/x/../b/c>.reverse()      % c/b/a",
+            "<a/x/../b/c>.pow(-1)        % c/b/a",
             "<a/{b/c,d}>{-1}             % <{c/b,d}/a>",
             "<a/{x/../b,c}>{-1}          % <{b,c}/a>",
             "<a/{./b,c}>{-1}             % <{b,c}/a>",

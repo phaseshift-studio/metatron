@@ -74,7 +74,7 @@ public class NetworkComponentScriptTest extends AbstractMetatronTest {
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "*~/network/q.>>.?~analq::T.count()                % 0                  [-- no analq processor yet --]",
-            "[STATE] @~/network/q >>= +[analq::T]",
+            "[STATE] @~/network/q >>= mult([analq::T])",
             "*~/network/q.>>.?~analq::T.count()                % 1                  [-- the update landed on the live network --]",
             "*~/network/q?analq.?/m/mach/analysis::T.count()    % 1                  [-- the attached processor answers at the branch --]",
             "[STATE] /network/q -> noobj",

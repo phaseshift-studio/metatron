@@ -231,8 +231,8 @@ public class BootLoaderCLITest extends AbstractMetatronTest {
     @CsvSource(value = {
             "3       % _ + 5       % 8           % identity _ binds pipe value",
             "3       % + 5         % 8           % no _ needed, lhs is pipe",
-            "[1,2]   % _ + [a]   % [1,2,a]   % list concatenation via pipe",
-            "[1,2]   % + [a]     % [1,2,a]   % list concat without _",
+            "[1,2]   % _ * [a]   % [1,2,a]   % list concatenation via pipe",
+            "[1,2]   % mult([a]) % [1,2,a]   % list concat without _ (a prefix * dereferences)",
             "hello   % _           % 'hello'     % identity returns pipe value",
     }, delimiter = '%')
     void testPipeInput(String stdinStr, String expr, String expected, String desc) {

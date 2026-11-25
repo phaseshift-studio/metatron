@@ -604,12 +604,6 @@ public final class mInsts {
                         .law(Law.pure)
                         .inverse(AS_INST_TID.dom(REC_TID).rng(URI_TID))
                         .create(),
-                InstBuilder.build().tid(REVERSE_INST_TID, "reverse the path of the lhs uri")
-                        .dom(URI_TID, "the uri to reverse").rng(URI_TID, "the uri with its path reversed")
-                        .argLst()
-                        .body((lhs, inst) -> lhs.jvm(fURI.Helper.power(lhs.uriValue(), -1)))
-                        .law(Law.involution, Law.pure)
-                        .create(),
                 InstBuilder.build().tid(MERGE_INST_TID, "merge a uri stream into a single uri")
                         .dom(URI_TID.maybeSome(), "zero or more uris")
                         .rng(URI_TID, "a single merged uri")
@@ -768,16 +762,10 @@ public final class mInsts {
     }
 
     /**
-     * {@code lst::T}'s operations: the slot monoid, the selectors, and the folds.
+     * {@code lst::T}'s operations: the word ring, the selectors, and the folds.
      */
     public static Set<Inst> lsts_insts() {
         return new LinkedHashSet<>(List.of(
-                InstBuilder.build().tid(REVERSE_INST_TID, "reverse the slots of the lhs lst")
-                        .dom(LST_TID, "the lst to reverse").rng(LST_TID, "the lst with its slots reversed")
-                        .argLst()
-                        .body((lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed()))
-                        .law(Law.involution, Law.pure)
-                        .create(),
                /* InstBuilder.build().tid(MAP_INST_TID, "apply arg to every element of lhs lst")
                         .dom(LST_TID, "the lhs lst containing elements to map")
                         .rng(LST_TID, "the lhs lst with mapped elements")
@@ -786,29 +774,32 @@ public final class mInsts {
                         .law(Law.pure)
                         .form(Inst.Form.mapper)
                         .create(), */
-                InstBuilder.build().tid(ZERO_INST_TID, "the zero of the lst monoid")
-                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the empty lst")
+                InstBuilder.build().tid(ZERO_INST_TID, "the zero of the lst word ring: noobj, what a sum of cancelling lsts answers")
+                        .dom(LST_TID, "the lhs lst").rng(LST_TID.zero(), "noobj, typed as a lst")
                         .argLst()
                         .body((lhs, _) -> lhs.asLst().zero())
                         .law(Law.unit, Law.idempotent, Law.pure)
                         .create(),
-                InstBuilder.build().tid(ONE_INST_TID, "the one of the lst slot product: one slot holding the one() instruction")
-                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the one lst")
+                InstBuilder.build().tid(ONE_INST_TID, "the unity of the lst word ring: the empty lst [,], the identity of concatenation")
+                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the empty lst")
                         .argLst()
                         .body((lhs, _) -> lhs.asLst().one())
                         .law(Law.idempotent, Law.pure)
                         .create(),
-                InstBuilder.build().tid(PLUS_INST_TID, "append the slots of the argument lst onto the slots of the lhs lst")
-                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the concatenated lst")
-                        .argLst(LST_TYPE, "the lst to append")
-                        // ONE LST APPENDS ONE LST (Marko, 2026-11-17): lst{2}::[2,3] is two lsts, {[2,3],[2,3]}, never a lst
-                        // whose slots hold two of each, and two lsts are no argument for one, as {2,4} is none for int plus
-                        .body((lhs, inst) -> {
-                            if (!inst.arg(0).c().isOne())
-                                throw MTronException.of(Obj.xxxValue, inst.arg(0).toCleanString(), T(inst.arg(0).tid()), LST_TYPE);
-                            return lhs.jvm(Stream.concat(lhs.<Obj>elements(), inst.arg(0).<Obj>elements()).map(o -> ((Obj) o).clone().<Obj>as()).collect(CommonUtil.ListCollector.single()));
-                        })
-                        .law(Law.monoidic, Law.pure)
+                // THE WORD RING'S SUM (Marko, 2026-11-25): the argument counts by its point, as a uri's does, so the 11-17
+                // refusal of a bulked argument ("one lst appends one lst") is retired with the append it guarded
+                InstBuilder.build().tid(PLUS_INST_TID, "add the argument lst to the lhs lst in the word ring: one lst, their shared prefix and suffix around a brace of what differs")
+                        .dom(LST_TID, "the lhs lst").rng(LST_TID.maybe(), "the sum, noobj when its words cancel")
+                        .argLst(T(LST_TID.maybe()), "the lst to add")
+                        .body((lhs, inst) -> lhs.asLst().plus(inst.arg(0).asLst()))
+                        .desc("a branch function \\(f(x, y) \\mapsto x + y\\): two timelines as one lst, \\([a,b,c] + [a,d,c] = [a,\\{b,d\\},c]\\)")
+                        .law(Law.monoidic, Law.commutative, Law.pure)
+                        .create(),
+                InstBuilder.build().tid(NEG_INST_TID, "the additive inverse of the lhs lst: -1 on its first letter, a lst being multilinear in its letters")
+                        .dom(LST_TID, "a lst").rng(LST_TID, "the additive inverse")
+                        .argLst()
+                        .body((lhs, _) -> lhs.asLst().neg())
+                        .law(Law.involution, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "remove the slots of the argument lst from the lhs lst")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID, "the lst with the argument slots removed")
@@ -820,11 +811,12 @@ public final class mInsts {
                         })
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(MULT_INST_TID, "multiply every slot of the lhs lst by every slot of the argument lst, each by its own product")
-                        .dom(LST_TID, "the lhs lst").rng(LST_TID, "the lst of slot products, lhs-major")
-                        .argLst(LST_TYPE, "the lst to multiply by")
+                InstBuilder.build().tid(MULT_INST_TID, "concatenate the argument lst onto the lhs lst: the word ring's product, with the unity [,]")
+                        .dom(LST_TID, "the lhs lst").rng(LST_TID.maybe(), "the concatenation, noobj when either is the zero")
+                        .argLst(T(LST_TID.maybe()), "the lst to follow the lhs lst")
                         .body((lhs, inst) -> lhs.asLst().mult(inst.arg(0).asLst()))
-                        .law(Law.pure)
+                        .desc("a product function \\(f(x, y) \\mapsto xy\\): one timeline after another, \\([1,2] \\cdot [3] = [1,2,3]\\)")
+                        .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(SPLIT_INST_TID, "split the lhs into the slots of the lst the argument inst builds")
                         .dom(A, "the obj to split")
@@ -878,11 +870,21 @@ public final class mInsts {
                         .body((lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.elements().flatMap(Obj::elements))).stream().toList()))
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(SUM_INST_TID, "append a lst stream into a single lst")
-                        .dom(LST_TID.maybeSome(), "zero or more lsts").rng(LST_TID, "a single plus reduced lst")
+                InstBuilder.build().tid(SUM_INST_TID, "add a lst stream into a single lst in the word ring")
+                        .dom(LST_TID.maybeSome(), "zero or more lsts").rng(LST_TID.maybe(), "a single plus reduced lst, noobj when its words cancel")
+                        .argLst()
+                        .seed(Lst.lst_noobj())
+                        // the stream summed at once, its words expanded once (Lst.Helper.sum), as a uri stream is
+                        .body((lhs, inst) -> Lst.Helper.sum(lhs.stream().map(Obj::asLst)))
+                        .law(Law.monoidic, Law.commutative, Law.pure)
+                        .create(),
+                // the product of a lst stream is their concatenation in arrival order, as a uri stream's is its
+                // extension, a bulked lst counting as the power its point makes it, so it declares no commutative law
+                InstBuilder.build().tid(PROD_INST_TID, "concatenate a lst stream into a single lst: the word ring's product")
+                        .dom(LST_TID.maybeSome(), "zero or more lsts").rng(LST_TID, "a single mult reduced lst")
                         .argLst()
                         .seed(lst())
-                        .body((lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()))
+                        .body((lhs, inst) -> lhs.stream().map(Obj::asLst).reduce(lst(), (a, b) -> a.mult(Lst.Helper.power(b.d(cInt.ONE()).asLst(), b.tid().d()))))
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(ZIP_INST_TID, "interleave lst argument with lhs lst")
@@ -934,17 +936,12 @@ public final class mInsts {
                         })
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(POW_INST_TID, "pair every slot of the lhs lst with every slot of the argument lst the argument number of times")
-                        .dom(LST_TID, "the base lst").rng(LST_TID, "the repeated lst")
-                        .argLst(INT_TYPE, "the number of repetitions")
-                        .body((lhs, inst) -> {
-                            int pow = inst.arg(0).intValue().intValue();
-                            Lst l = lhs.clone(lhs.jvm(), lhs.tid(), null);
-                            for (int i = 0; i < pow; i++) {
-                                l = l.jvm(l.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList());
-                            }
-                            return lhs.jvm(l);
-                        })
+                // THE SPAN AT RUN TIME (Marko, 2026-11-25): pow(n) is the power a literal's [l]{n} realizes, so pow(-1) is
+                // the converse of a computed lst, which reverse() was
+                InstBuilder.build().tid(POW_INST_TID, "concatenate the lhs lst onto itself the argument number of times, its converse for a negative number (the span [l]{n})")
+                        .dom(LST_TID, "the base lst").rng(LST_TID, "the lst's power")
+                        .argLst(T(INT_TID), "the power: zero is [,], and a negative number repeats the converse, the slots reversed")
+                        .body((lhs, inst) -> Lst.Helper.power(lhs.asLst(), cInt.of(inst.arg(0).intValue())))
                         .law(Law.pure)
                         .create(),
                 // lst<->rec IS NOT PRESERVING IN EITHER DIRECTION -- a pair maps to a rel and a lst of rels maps to

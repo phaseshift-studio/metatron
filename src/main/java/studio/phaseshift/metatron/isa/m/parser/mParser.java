@@ -294,13 +294,23 @@ public class mParser {
                 m_lst(),
                 m_uri(),
                 m_objs()));
+        // a lst is the axis a value's span unfolds along (Lst.Helper.laid): the literal [3{2}] is [3,3]. A SPAN AFTER A
+        // LST IS ITS POWER in the word ring (Marko, 2026-11-25, Lst.Helper.power), realized here as a rec's is:
+        // [1,2]{2} is [1,2,1,2], {-1} the converse, a range the sum of its powers. The prefix's tid and the vid go on
+        // the power, so a point before the brackets counts copies of the whole power, and the zero stays the zero
         lst_parser.set(seq(m_type_prefix(Tokens.LST_TID),
                 of('[').trim(),
                 labeled(lst_internal(), "an lst entry — a value, or an inst"),
                 labeledCloser(of(']').trim(), "']' to close the lst"),
+                opt(m_furi_coefficient(), null),
                 m_vid_postfix())
-                // a lst is the axis a value's span unfolds along (Lst.Helper.laid): the literal [3{2}] is [3,3]
-                .map(t -> new MLst(Lst.Helper.laid(pick(t, 2)), pick(t, 0), pick(t, 4))));
+                .map(t -> {
+                    final List<Obj> entries = Lst.Helper.laid(pick(t, 2));
+                    if (null == pick(t, 4))
+                        return new MLst(entries, pick(t, 0), pick(t, 5));
+                    final Lst power = Lst.Helper.power(lst(entries), cInt.of(mParser.<String>pick(t, 4)));
+                    return power.isNoObj() ? power : new MLst(power.lstValue(), pick(t, 0), pick(t, 5));
+                }));
 
         // A SPAN AFTER A REC IS ITS POWER under the walk join (Marko, 2026-11-24, Rec.Helper.power), realized here as a
         // uri's is in m_uri: [a=>b,b=>c]{2} is [a=>(b=>c)], {-1} the converse, a range or {+} the sum of its powers. The

@@ -1399,7 +1399,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
         /**
          * THE POWER OF A PATH (Marko, 2026-11-24), the one algorithm behind a uri's span ({@code <w>{n}}, realized where
-         * the uri is made), {@code pow(n)} and {@code reverse()}: n copies of the path concatenated, the unit {@code <>}
+         * the uri is made) and {@code pow(n)}, its run-time spelling: n copies of the path concatenated, the unit {@code <>}
          * at zero, and a negative n the converse taken n times. The converse reverses the path alone and reads its
          * value, not its spelling: each term of the uri's branches, its dot segments folded ({@code a/x/../b/c}
          * reverses as {@code a/b/c} does, and so does a branch's {@code {x/../b,c}}), reversed, and the terms summed

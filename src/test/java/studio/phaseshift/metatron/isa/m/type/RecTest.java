@@ -752,8 +752,10 @@ public class RecTest extends AbstractAlgebraTest {
             "[first=>abc,second=>def,third=>ghi].reverse()                                   % [third=>ghi,second=>def,first=>abc]",
             "[a=>'abc',b=>'def',c=>'ghi'].reverse()==[_=>reverse()]                          % [c=>'ihg',b=>'fed',a=>'cba']",
             "[a=>x,b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()                                   % [e=>[f=>3,g=>4],b=>[c=>1,d=>2],a=>x]",
-            "[a=>x,b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()==[_=>reverse()]                   % [e=>[g=>4,f=>3],b=>[d=>2,c=>1],a=>x]",
-            "[a=>x,b=>[c=>1,d=>2],e=>y].reverse()==[_=>reverse()]                            % [e=>y,b=>[d=>2,c=>1],a=>x]",
+            // a str and a rec still reverse, while a uri's reverse() is retired for its span -1 (Marko, 2026-11-25)
+            "[a=>'x',b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()==[_=>reverse()]                 % [e=>[g=>4,f=>3],b=>[d=>2,c=>1],a=>'x']",
+            "[a=>'x',b=>[c=>1,d=>2],e=>'y'].reverse()==[_=>reverse()]                        % [e=>'y',b=>[d=>2,c=>1],a=>'x']",
+            "[a=>x/y].reverse()==[_=>pow(-1)]                                                % [a=>y/x]",
             "[=>].reverse()                                                                  % [=>]",
             "[a=>1].reverse()                                                                % [a=>1]",
             //   "[a=>1,b=>2].reverse().reverse()                                                 % [a=>1,b=>2]",
@@ -1345,11 +1347,12 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>{2}[b=>1]] + [c=>3]                            % [a=>[b=>{2}1],c=>3]",
             "[c=>3] + [a=>{2}[b=>1]]                            % [c=>3,a=>[b=>{2}1]]",
             // a lst is an atom of the merge: colliding lsts make a bag of lsts, each kept whole -- concatenating them
-            // is a select's + ([a=>[1,2,3]]==[a=>+[2,3]]), said by the expression
+            // is a select's * ([a=>[1,2,3]]==[a=>_ * [2,3]]), said by the expression, while a select's + is the lst's sum
             "[a=>[1,2,3]] + [a=>[2,3]] + [a=>[1,2,3]]           % [a=>{[1,2,3],[2,3],[1,2,3]}]",
             "[a=>[1,2,3]] + [a=>[2,3]]                          % [a=>{[1,2,3],[2,3]}]",
             "[a=>[b=>[1]]] + [a=>[b=>[2],c=>[3]]]               % [a=>[b=>{[1],[2]},c=>[3]]]",
-            "[a=>[1,2,3]]==[a=>+[2,3]]                          % [a=>[1,2,3,2,3]]",
+            "[a=>[1,2,3]]==[a=>_ * [2,3]]                       % [a=>[1,2,3,2,3]]",
+            "[a=>[1,2,3]]==[a=>+[2,3]]                          % [a=>[{[,],1},2,3]]",
     }, delimiter = '%')
     public void testRecPlus(final String expression, final String expected) {
         final Obj result = ObjmtronSerializer.parse(expression).apply();
@@ -1521,8 +1524,8 @@ public class RecTest extends AbstractAlgebraTest {
             // state                     % update           % fetch % expected
             "[l=>[1,2,3]]@x             % @x/l >>= [9,8]   % *x    % [l=>[9,8]]@x",
             "[l=>['a','b','c']]@x        % @x/l >>= ['x','y'] % *x  % [l=>['x','y']]@x",
-            "[l=>[1,2,3]]@x             % @x/l >>= +[4,5]   % *x    % [l=>[1,2,3,4,5]]@x",
-            "[l=>['a','b']]@x            % @x/l >>= +['c','d'] % *x % [l=>['a','b','c','d']]@x",
+            "[l=>[1,2,3]]@x             % @x/l >>= mult([4,5])   % *x    % [l=>[1,2,3,4,5]]@x",
+            "[l=>['a','b']]@x            % @x/l >>= mult(['c','d']) % *x % [l=>['a','b','c','d']]@x",
             "[l=>[1,2,3]]@x             % @x/l >>= [,]      % *x    % [l=>[,]]@x",
             "[l=>[1,'a',2.5]]@x          % @x/l >>= [true,false] % *x % [l=>[true,false]]@x",
     }, delimiter = '%')
@@ -1537,10 +1540,10 @@ public class RecTest extends AbstractAlgebraTest {
     @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
             // state                       % update                 % fetch % expected
-            "[l=>[1,[1,2,3],3]]@x          % @x/l/1 >>= +[11,22,33] % *x    % [l=>[1,[1,2,3,11,22,33],3]]@x",
-            "[l=>['a',['b','c'],'d']]@x     % @x/l/1 >>= +['e','f']  % *x    % [l=>['a',['b','c','e','f'],'d']]@x",
-            "[l=>[1,[2,[3,4],5],6]]@x       % @x/l/1/1 >>= +[7,8]    % *x    % [l=>[1,[2,[3,4,7,8],5],6]]@x",
-            "[l=>[1,[r=>[2,3]],4]]@x        % @x/l/1/r >>= +[5]       % *x    % [l=>[1,[r=>[2,3,5]],4]]@x",
+            "[l=>[1,[1,2,3],3]]@x          % @x/l/1 >>= mult([11,22,33]) % *x    % [l=>[1,[1,2,3,11,22,33],3]]@x",
+            "[l=>['a',['b','c'],'d']]@x     % @x/l/1 >>= mult(['e','f'])  % *x    % [l=>['a',['b','c','e','f'],'d']]@x",
+            "[l=>[1,[2,[3,4],5],6]]@x       % @x/l/1/1 >>= mult([7,8])    % *x    % [l=>[1,[2,[3,4,7,8],5],6]]@x",
+            "[l=>[1,[r=>[2,3]],4]]@x        % @x/l/1/r >>= mult([5])      % *x    % [l=>[1,[r=>[2,3,5]],4]]@x",
     }, delimiter = '%')
     void nested_lstInLstInRec_append(final String state, final String update, final String fetch, final String expected) {
         final Obj stored = Machine.read(f(fetch));
@@ -1587,9 +1590,9 @@ public class RecTest extends AbstractAlgebraTest {
     @Training(instruction = "when {{{state}}} has been defined, what is the result of {{{update}}}?", output = "{{{expected}}}")
     @CsvSource(value = {
             // state                       % update                  % expected
-            "[l=>[1,[1,2,3],3]]@r          % @r/l/1 >>= +[11,22,33]  % [1,2,3,11,22,33]",
-            "[l=>[1,[2,[3,4],5],6]]@r       % @r/l/1/1 >>= +[7,8]     % [3,4,7,8]",
-            "[l=>['a',['b','c'],'d']]@r     % @r/l/1 >>= +['e']        % ['b','c','e']",
+            "[l=>[1,[1,2,3],3]]@r          % @r/l/1 >>= mult([11,22,33])  % [1,2,3,11,22,33]",
+            "[l=>[1,[2,[3,4],5],6]]@r       % @r/l/1/1 >>= mult([7,8])     % [3,4,7,8]",
+            "[l=>['a',['b','c'],'d']]@r     % @r/l/1 >>= mult(['e'])       % ['b','c','e']",
             "[l=>[1,[1,2,3],3]]@r          % @r/l/1 >>= [99]           % [99]",
     }, delimiter = '%')
     void nested_updateResultValue(final String state, final String update, final String expected) {

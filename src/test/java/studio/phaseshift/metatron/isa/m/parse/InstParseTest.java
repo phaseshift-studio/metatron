@@ -82,7 +82,8 @@ public class InstParseTest extends AbstractMetatronTest {
             "\"abc\".plus(\"def\")% \"abcdef\"",
             // a uri sum counts in its value (abc + abc is abc{2}) and this uri's {0,2} floats over it: still {0,4} abcs
             "uri{0,2}::abc.plus?uri{*}<=(uri::abc)% uri{0,2}::abc{2}",
-            "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",
+            "[a,b,c].mult([d,e,f])% [a,b,c,d,e,f]",
+            "[a,b,c].plus([a,d,c])% [a,{b,d},c]",
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testPlusInst(final String expression, final String expectedResult) {
@@ -120,10 +121,11 @@ public class InstParseTest extends AbstractMetatronTest {
             "{5.1,-5.1}.sum()                             % 0.0",
             "{real{10}::1.1}.sum()                        % 11.0",
             /// ////////////////////////////////////////////////
-            "{[,],[,],[,]}.sum()                          % [,]",
-            "{[,],[,],[1]}.sum()                          % [1]",
-            "{[1],[2],[3]}.sum()                          % [1,2,3]",
-            "{[1,2],[2,4],[3,2,2]}.sum()                  % [1,2,2,4,3,2,2]",
+            "{[,],[,],[,]}.prod()                         % [,]",
+            "{[,],[,],[1]}.prod()                         % [1]",
+            "{[1],[2],[3]}.prod()                         % [1,2,3]",
+            "{[1,2],[2,4],[3,2,2]}.prod()                 % [1,2,2,4,3,2,2]",
+            "{[1,2],[2,4],[3,2,2]}.sum()                  % [{[1,2],[2,4],[3,2,2]}]",
             "[1,2,3]_/sum()\\_                            % [6]",
     }, delimiter = '%')
     public void testSumInst(final String expression, final String expectedResult) {

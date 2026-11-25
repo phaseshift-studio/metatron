@@ -61,7 +61,7 @@ public class MemoryScriptTest extends AbstractMetatronTest {
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "*~/memory/q.>>.?~analq::T.count()                 % 0                  [-- no analq processor yet --]",
-            "[STATE] @~/memory/q >>= +[analq::T]",
+            "[STATE] @~/memory/q >>= mult([analq::T])",
             "*~/memory/q.>>.?~analq::T.count()                 % 1                  [-- the update landed on the live memory --]",
             "*~/memory/q?analq.?/m/mach/analysis::T.count()     % 1                  [-- the attached processor answers at the branch --]",
             "[STATE] /memory/q -> noobj",
