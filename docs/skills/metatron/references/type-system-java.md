@@ -381,10 +381,9 @@ The sites that unfold a span ask `Typer.Helper.unfolds`, which answers the span 
 uri's path: `mParser.m_uri` for `<w>{n}`, `MUri.clone` for a span a uri takes from its lhs, and `pow(n)`. Three are a
 lst's: `Lst.Helper.laid` for the copies laid along a lst axis (`[3{2}]`); `Lst.Helper.power` and its `copies` for a
 lst's span, its power in the word ring (`[1,2]{2}`, and `pow(n)` on a lst), a range bounded by its farthest power and
-then by the copies all its powers hold, before any is built, and by the letters its copies stand for against those
-they hold, as the copies share every lst; and `Lst.Helper.words` for the words a sum or `as(uri::T)` expands a lst into,
-measured before any is built, a lst letter weighing the letters it unfolds into, and bounded in copies of the letters
-the lst holds, each lst its copies share held once, so nested spans cannot hide their letters.
+then by the copies all its powers hold, before any is built; and `Lst.Helper.words` for the words a sum or `as(uri::T)`
+expands a lst into, measured before any is built and bounded, as a rec's powers are, by the copies of the lst's own
+letters it holds, each sub-word its copies share held once, so nested spans of sub-words cannot hide their words.
 The last is `Rec.Helper.power`, which the rec parser calls for
 `[…]{n}`: a finite span is bounded by its largest power, an open one (`{+}`, `{*}`) by each power that holds a walk,
 and every power past the first, and the sum a range builds, by the copies of the rec's walks it holds, since a cycle
