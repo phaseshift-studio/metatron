@@ -220,6 +220,19 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,[plus(1)]]>|                                                              % [plus(1)]",
             "[1,noobj,plus(1)]>|                                                          % noobj",
             "[,]>|                                                                        % [,]",
+            // records are steps (Claim 28): a record of data that meets a record of data is their join, so a lst of
+            // records folds to their walk, a record's input joins too, and the record unity [_=>_] passes the walk on
+            "[[a=>b],[b=>e]]>|                                                            % [a=>b=>e]",
+            "[[a=>b],[b=>e],[e=>f]]>|                                                     % [a=>b=>e=>f]",
+            "[[a=>b],[c=>d]]>|                                                            % [=>]",
+            "[x=>a]>|[[a=>b],[b=>e]]                                                      % [x=>a=>b=>e]",
+            "[[a=>b],[_=>_]]>|                                                            % [a=>b]",
+            "[[a=>b],5]>|                                                                 % 5",
+            "[2,3,4]>|                                                                    % 4",
+            // a rec that holds code is no record of data: in a fold it applies as any letter, and the projection -< still
+            // runs its code against the lhs
+            "[a=>1]>|[[x=>>>a]]                                                           % [x=>>>a]",
+            "[a=>1]-<[x=>>>a]                                                             % [x=>1]",
     }, delimiter = '%')
     public void testTheFold(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

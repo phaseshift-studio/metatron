@@ -547,13 +547,18 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * as the program it is and counted once by its point, so the fold of a sum is the sum of the folds:
          * {@code [1,{[plus(2),plus(3)],[mult(2),plus(5)]}]>|} is {@code {6,7}}, as
          * {@code {[1,plus(2),plus(3)],[1,mult(2),plus(5)]}>|} is. A step after a branch applies to each obj the branch
-         * answered, as a stream's steps do, and nothing is still one input, so a constant answers it.
+         * answered, as a stream's steps do, and nothing is still one input, so a constant answers it. A record of data
+         * that meets a record of data is their join, a record's product (Claim 28, Rec.Helper.isData), so a lst of
+         * records folds to their walk: {@code [[a=>b],[b=>e]]>|} is {@code [a=>b=>e]}, while a rec that holds code applies
+         * as any letter does.
          */
         public static Obj fold(final Lst word, final Obj lhs) {
+            final BiFunction<Obj, Obj, Obj> step = (letter, obj) -> Rec.Helper.isData(obj) && Rec.Helper.isData(letter)
+                    ? obj.asRec().mult(letter.asRec()) : letter.apply(obj);
             return word.values().reduce(lhs, (at, slot) -> objs((at.isNoObj() ? Stream.of(at) : at.stream())
-                    .flatMap(obj -> !slot.isObjs() ? slot.apply(obj).stream() : slot.stream().flatMap(member -> member.isLst()
+                    .flatMap(obj -> !slot.isObjs() ? step.apply(slot, obj).stream() : slot.stream().flatMap(member -> member.isLst()
                             ? fold(member.d(cInt.ONE()).asLst(), obj).stream().map(folded -> folded.c(c -> c.mult(member.tid().d())))
-                            : member.apply(obj).stream()))));
+                            : step.apply(member, obj).stream()))));
         }
 
         /**

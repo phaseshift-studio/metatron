@@ -313,6 +313,25 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         }
 
         /**
+         * WHETHER AN OBJ IS A RECORD OF DATA: a rec of walks ({@link #holdsWalks}) whose walks run through no code, the
+         * identity {@code _} aside, so its unity {@code [_=>_]} is one. A rec that holds code is a program or a pattern
+         * ({@code [x=>>>a]} is the projection {@code -<} runs), so the fold of a lst applies it as any letter, while it
+         * joins two records of data (Claim 28 of ring-theoretic-distributed-structures.md: {@code [[a=>b],[b=>e]]>|} is
+         * {@code [a=>b=>e]}).
+         */
+        static boolean isData(final Obj obj) {
+            return holdsWalks(obj) && walks(obj).allMatch(Helper::runsThroughNoCode);
+        }
+
+        /**
+         * a walk ({@link #walks}) whose keys and end are no code but the identity ({@link #isData})
+         */
+        private static boolean runsThroughNoCode(final Obj walk) {
+            final Obj step = walk.isRel() ? walk.asRel().firstDirect() : walk;
+            return (!step.isObjCall() || isIdentity(step)) && (!walk.isRel() || runsThroughNoCode(walk.asRel().secondDirect()));
+        }
+
+        /**
          * THE WALKS THE ARGUMENT HOLDS AT AN END ({@link Rec#mult(Rec)}), term by term, so terms that overlap each join
          * and the product stays bilinear. A term whose key is a value is read at a uri end by address, as at()/atDirect()
          * read (Marko, 2026-11-24): an exact key, a path, an interior subtree, a stored pattern, so a term's layout does
