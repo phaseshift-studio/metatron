@@ -752,8 +752,11 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    the cut to the tail's place in that peer, `cut(</path>, tail)` (the peer's root when the target names no machine
    past the surface it was dialed at), which the receiver runs as any cut. `explain()` and `profile()` are the
    return home: the tail ends before them, so `1.move(<a>).plus(1).explain()` compiles to
-   `1.cut(<a>, plus(1)).explain()`, explained here with nothing run, and a profile times the cut here, every run
-   starting from home.
+   `1.cut?<=int(<a>, plus(1)).explain()`, explained here with nothing run, and a profile times the cut here, every run
+   starting from home. The cut's dom is the stream that flows into the move (the rng of the instruction before it is
+   the dom of the next), `int` for `1` and `int{4}` for `{1,2,3,4}`, wherever the instruction before the move answers
+   the whole stream (a seed, or a fold); after one that answers per obj the count is not known here, and the cut keeps
+   `#{*}`, so it still gathers the stream whole.
 6. **Liveness gates it.** The rule is a live out-edge only where it moves the code: over dialed peers (or a stated
    place set), and only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the
    placement's

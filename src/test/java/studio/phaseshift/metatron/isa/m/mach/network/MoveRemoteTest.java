@@ -81,17 +81,17 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             "move(</.>)"}, oneTime = true)
     @ParameterizedTest
     @CsvSource(value = {
-            "5.move(<//self/a>).plus(1).mult(2)                                                                                  % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                  % 12",
-            "5.move(<//self/a>).mult(2).plus(1)                                                                                  % start(5).cut(<loop://self/a>,mult(2).plus(1))                                                                                  % 11",
-            "{1,2,3}.move(<//self/a>).mult(2).plus(1).sum()                                                                      % start({1,2,3}).cut(<loop://self/a>,mult(2).plus(1).sum())                                                                      % 15",
+            "5.move(<//self/a>).plus(1).mult(2)                                                                                  % start(5).cut?<=int(<loop://self/a>,plus(1).mult(2))                                                                                  % 12",
+            "5.move(<//self/a>).mult(2).plus(1)                                                                                  % start(5).cut?<=int(<loop://self/a>,mult(2).plus(1))                                                                                  % 11",
+            "{1,2,3}.move(<//self/a>).mult(2).plus(1).sum()                                                                      % start({1,2,3}).cut?<=int{3}(<loop://self/a>,mult(2).plus(1).sum())                                                                      % 15",
             // THE TAIL SHIPS VERBATIM, nested moves and all: `move(<//self/b>)` keeps the name, because the machine
             // that lands the tail is the one that resolves it. Here the loop peer IS this machine, so the name
             // resolves against the same table and /b is the seeded frame -- the answer is unchanged either way.
-            "{1,2,3}.move(<//self/a>).mult(2).plus(1).sum().move(<//self/b>).plus(7).plus(1)                                % start({1,2,3}).cut(<loop://self/a>,mult(2).plus(1).sum().move(<//self/b>).plus(7).plus(1))                                % 23",
+            "{1,2,3}.move(<//self/a>).mult(2).plus(1).sum().move(<//self/b>).plus(7).plus(1)                                % start({1,2,3}).cut?<=int{3}(<loop://self/a>,mult(2).plus(1).sum().move(<//self/b>).plus(7).plus(1))                                % 23",
             // ... INCLUDING ONE NESTED IN A CODE ARGUMENT, which the extractor never walks: a branch's arguments
             // are the receiver's to re-plan too. The `loop://self/c` beside it is spelled out, so this row pins
             // that BOTH spellings survive untouched.
-            "{1,2,3}.move(<//self/a>).branch(move(<//self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod() % start({1,2,3}).cut(<loop://self/a>,branch(move(<//self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod()) % 9767520",
+            "{1,2,3}.move(<//self/a>).branch(move(<//self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod() % start({1,2,3}).cut?<=int{3}(<loop://self/a>,branch(move(<//self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod()) % 9767520",
             // A MEMBER THAT IS ONE CUT ANSWERS THE PEER'S RESULT: the rewriter descends into a branch's members, so
             // move(<//self/b>).mult(2).plus(1) becomes the lone inst cut(<loop://self/b>,mult(2).plus(1)), and the branch
             // applies it as an inst. The cut answered its shipping code, unrun, and the branch handed that code on as a value.
@@ -104,26 +104,26 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             "5.branch(<~?split={2}part> => plus(1),<//self/b?split=part> => mult(2))                                                  % start(5).branch?split=[{2}local](plus(1),cut(<loop://self/b>,mult(2)))                                                     % 6",
             // THE CUT'S TARGET IS THE SENDER'S TO RESOLVE -- the one thing that IS aligned: `self:/a` (the ISA slot)
             // and `//self/a` (the network slot) are two spellings of one peer, and both ship as loop://self/a.
-            "5.move(<self:/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
+            "5.move(<self:/a>).plus(1).mult(2)                                                                                        % start(5).cut?<=int(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
             // ... AND THE SAME TARGET FROM THE OTHER SLOT: the authority spelling resolves through the network's
             // table (`self:` through the ISA's), so `//self/a` ends at the very same cut.
-            "5.move(<//self/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
+            "5.move(<//self/a>).plus(1).mult(2)                                                                                        % start(5).cut?<=int(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
             // ... AND A LOCAL MOVE IS A CUT TOO (Law.nomadic, Marko 2026-11-24): code is never compiled past a machine
             // change, so the tail is the cut's, compiled by the machine the move lands in. `..` from the root
             // saturates at the root, which is where every row starts -- checkCodeRewrite re-stands the caller's
             // machine before each evaluation, so no earlier row can leave the thread somewhere else.
-            "5.move(<..>).plus(1)                                                                                                     % start(5).cut(<..>,plus(1))                                                                                               % 6",
+            "5.move(<..>).plus(1)                                                                                                     % start(5).cut?<=int(<..>,plus(1))                                                                                               % 6",
             // A BARE MOVE IS A MOVE UP, and the extractor runs before every other rule: the tail is as written
-            "5.move().plus(1)                                                                                                         % start(5).cut(<..>,plus(1))                                                                                               % 6",
-            "5.move(<a>).plus(0)                                                                                                      % start(5).cut(<a>,plus(0))                                                                                                % 5",
+            "5.move().plus(1)                                                                                                         % start(5).cut?<=int(<..>,plus(1))                                                                                               % 6",
+            "5.move(<a>).plus(0)                                                                                                      % start(5).cut?<=int(<a>,plus(0))                                                                                                % 5",
             // THE CUT GATHERS ITS STREAM (dom A{*}), and a tail of one instruction maps over all of it
-            "{1,2,3}.move(<..>).plus(1)                                                                                               % start({1,2,3}).cut(<..>,plus(1))                                                                                         % {2,3,4}",
+            "{1,2,3}.move(<..>).plus(1)                                                                                               % start({1,2,3}).cut?<=int{3}(<..>,plus(1))                                                                                         % {2,3,4}",
             // THE TAIL IS COMPILED BY THE MACHINE IT LANDS IN: only /b's network calls loop://self `//only`, so the
             // move inside the tail reaches the peer only because /b compiled it (the root would ship to a name it never
             // declared). A tail of one instruction too: /b compiles move(<//only/c>) into the cut that reaches the peer,
             // where run as it was written, a move instruction cannot leave this server
-            "5.move(<b>).move(<//only/c>).plus(1)                                                                                     % start(5).cut(<b>,move(<//only/c>).plus(1))                                                                               % 6",
-            "5.move(<b>).move(<//only/c>)                                                                                             % start(5).cut(<b>,move(<//only/c>))                                                                                       % 5",
+            "5.move(<b>).move(<//only/c>).plus(1)                                                                                     % start(5).cut?<=int(<b>,move(<//only/c>).plus(1))                                                                               % 6",
+            "5.move(<b>).move(<//only/c>)                                                                                             % start(5).cut?<=int(<b>,move(<//only/c>))                                                                                       % 5",
     }, delimiter = '%')
     void testMoveRewrite(final String code, final String expected, final String expectedResult) {
         // REACH IS PER MACHINE, and every frame the shipped program STANDS IN needs the dial: the first move drops
@@ -136,6 +136,34 @@ public class MoveRemoteTest extends AbstractMetatronTest {
         // A NAME ONLY /b DECLARED: a prefix row lands in its own level's table, so the root has no //only
         Machine.Helper.evalAt(f("/b"), () -> Machine.current().network().registerPrefix(f("only"), f("loop://self")));
         checkCodeRewrite(LOG, code, expected, expectedResult, false);
+    }
+
+    /**
+     * THE CUT'S DOM IS THE STREAM THAT FLOWS INTO THE MOVE (Marko, 2026-11-25: "the rng of the previous inst should be
+     * the dom of the next"). The extractor mints the cut, so it states that dom where the instruction before the move
+     * answers the whole stream: the seed's int for one int and int{4} for four, a fold's one int, and the seed's count
+     * times the move's point. After an instruction that answers per obj the count is not known, so the cut keeps its
+     * {*} and still gathers, and the count in its tail counts four, never one per obj. Each row: the expression % its
+     * answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.move(<//self>).plus(2).explain()>>format.has('cut +int::T ').count()                                % 1",
+            "{1,2,3,4}.move(<//self>).plus(2).explain()>>format.has('cut +int[{]4[}]::T ').count()                 % 1",
+            "1.move(<//self>).plus(2).explain()>>per_inst>>1>>c_dom                                               % 1",
+            "{1,2,3,4}.move(<//self>).plus(2).explain()>>per_inst>>1>>c_dom                                       % 4",
+            "{1,2,3,4}.count().move(<//self>).plus(2).explain()>>format.has('cut +int::T ').count()                % 1",
+            "5.move{3}(<//self>).count().explain()>>format.has('cut +int[{]3[}]::T ').count()                      % 1",
+            "{1,2,3,4}.plus(1).move(<//self>).count().explain()>>format.has('cut +int[{][*][}]::T ').count()        % 1",
+            "{1,2,3,4}.move(<//self>).count()                                                                     % 4",
+            "{1,2,3,4}.plus(1).move(<//self>).count()                                                             % 4",
+            "5.move{3}(<//self>).count()                                                                          % 3",
+            "{1,2,3,4}.count().move(<//self>).plus(2)                                                             % 6",
+            // the tail is code, never one obj, so a tail of one instruction with a point binds against the stated dom
+            "5.move(<//self>).plus{2}(1)                                                                          % {2}6",
+    }, delimiter = '%')
+    void testTheCutsDomIsTheStreamThatFlowsIn(final String mtron, final String answer) {
+        checkCodeParseApply(LOG, mtron.trim(), answer.trim());
     }
 
     /**

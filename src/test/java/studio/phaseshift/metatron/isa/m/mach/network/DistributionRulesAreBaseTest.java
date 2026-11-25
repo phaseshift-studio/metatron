@@ -263,9 +263,9 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "5.move(<a>).plus(1).explain()       % start(5).cut(<a>,plus(1)).explain()",
-            "5.move(<a>).plus(1).profile()       % start(5).cut(<a>,plus(1)).profile()",
-            "5.move(<a>).plus(1).explain()>>format % start(5).cut(<a>,plus(1)).explain()>>format",
+            "5.move(<a>).plus(1).explain()       % start(5).cut?<=int(<a>,plus(1)).explain()",
+            "5.move(<a>).plus(1).profile()       % start(5).cut?<=int(<a>,plus(1)).profile()",
+            "5.move(<a>).plus(1).explain()>>format % start(5).cut?<=int(<a>,plus(1)).explain()>>format",
             "5.push(<a>).plus(1).explain()       % start(5).push(<a>).cut(<~>,plus(1)).explain()",
             "5.move(<a>).explain()               % start(5).move(<a>).explain()",
             "5.cut(<a>,plus(1)).mult(2)          % start(5).cut(<a>,plus(1)).cut(<~>,mult(2))",
@@ -322,15 +322,16 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     /**
      * A SPAN WALKS AND A POINT MULTIPLIES (Marko, 2026-11-24: {@code {3}move(<..>)} walks up a tree of machines). A move
      * in this server's tree that carries either stays a move, followed by {@code cut(<~>, tail)}; a host target is
-     * absolute, so its span is idempotent, and its point rides on the instruction before it. The rule is applied twice,
-     * as the fixpoint applies it. Each row: the chain % what the nomadic extractor leaves.
+     * absolute, so its span is idempotent, and its point rides on the instruction before it, so the cut gathers that
+     * many ({@code cut?<=int{3}}). The rule is applied twice, as the fixpoint applies it. Each row: the chain % what the
+     * nomadic extractor leaves.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "5.{2}move(<..>).plus(1)                    % start(5).{2}move(<..>).cut(<~>,plus(1))",
             "5.move{3}(<a>).plus(1)                     % start(5).move{3}(<a>).cut(<~>,plus(1))",
-            "5.move{3}(<loop://sibling:8555>).plus(1)   % start{3}(5).cut(<loop://sibling:8555>,plus(1))",
-            "5.{2}move(<loop://sibling:8555>).plus(1)   % start(5).cut(<loop://sibling:8555>,plus(1))",
+            "5.move{3}(<loop://sibling:8555>).plus(1)   % start{3}(5).cut?<=int{3}(<loop://sibling:8555>,plus(1))",
+            "5.{2}move(<loop://sibling:8555>).plus(1)   % start(5).cut?<=int(<loop://sibling:8555>,plus(1))",
     }, delimiter = '%')
     void testASpanWalksAndAPointMultiplies(final String mtron, final String extracted) {
         final Inst rule = rule("nomadic_extract");

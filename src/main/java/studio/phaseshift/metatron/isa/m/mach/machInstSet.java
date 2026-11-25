@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analysis;
 import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.*;
@@ -1125,10 +1126,10 @@ public class machInstSet extends AbstractInstSet {
                                 })
                                 .create(),
                         InstBuilder.build().tid(CUT_INST_TID)
-                                .dom(ALL.maybeSome(), "the value the tail starts from: it is the lhs that the cut program was cut off of")
+                                .dom(ALL.maybeSome(), "the value the tail starts from: it is the lhs that the cut program was cut off of, gathered whole. A cut that replaces a move states the stream that flows into it where that is known (int for one int, int{4} for four)")
                                 .rng(ALL.maybeSome(), "whatever the tail answers where it lands — at a peer, the one scattered lane, merged")
                                 .argLst(URI_TYPE, "where the tail runs: a machine of this server's tree (`<a>`, `<..>`, `<~>`), or a peer and the place in it to resume at (`<//worker/a>`)",
-                                        ALL_TYPE, "the tail, as code: it picks up where the chain was cut, and is compiled where it lands")
+                                        T(ALL_STAR), "the tail, as code: it picks up where the chain was cut, and is compiled where it lands. It is code, never one obj, so a tail of one instruction is any count of it (from{2}(...)), as the tail of any longer chain is")
                                 .desc("""
                                         run the rest of a chain in another machine, compiled by that machine. The
                                         nomadic extractor cuts a chain at its first instruction that changes the
@@ -1476,9 +1477,19 @@ public class machInstSet extends AbstractInstSet {
                         // the instruction before the move, and the tail's folds count it (5.move{3}(<//h>).count() is 3).
                         // WITH NOTHING BEFORE IT the point stays on the cut, a branch member's head, where it is copies
                         // of what the lane answers (Marko, 2026-11-24: "cut{2}() will duplicate data"); and the move's
-                        // ?timeout is its cut's to keep
-                        final Inst moved = instB(inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID,
-                                lst(where, tail));
+                        // ?timeout is its cut's to keep.
+                        // THE CUT'S DOM IS THE STREAM THAT FLOWS INTO THE MOVE (Marko, 2026-11-25: "the rng of the previous
+                        // inst should be the dom of the next"). This rewrite mints the cut, so the resolver would bind it to
+                        // the cut's own #{*}. Where the instruction before the move answers the whole stream (a seed, or an
+                        // instruction that gathers or pages it), its resolved rng, times the move's point, is the cut's dom:
+                        // 1.move(<//h>) cuts an int and {1,2,3,4}.move(<//h>) an int{4}. After an instruction that answers
+                        // per obj, the count is not known here, so the cut keeps #{*}: a dom of one obj would run the cut,
+                        // and every fold in its tail, once per obj. Only the chain before the move is resolved here
+                        final Inst flowing = cut.isEmpty() ? null : Rewriter.Helper.contracts(code(new ArrayList<>(cut))).getLast();
+                        final fURI dom = null == flowing || !flowing.tid().hasRng() || !(flowing.isInitial() || flowing.isBatching()) ? null
+                                : flowing.tid().rng().c(c -> c.mult(inst.tid().d()));
+                        final fURI timed = inst.tid().hasQ(TIMEOUT) ? CUT_INST_TID.q(TIMEOUT, inst.tid().q(TIMEOUT)) : CUT_INST_TID;
+                        final Inst moved = instB(null == dom ? timed : timed.dom(dom), lst(where, tail));
                         if (!inst.tid().d().isOne() && !cut.isEmpty()) {
                             final Inst before = cut.getLast();
                             cut.set(cut.size() - 1, before.d(before.tid().d().mult(inst.tid().d())).asInst());
