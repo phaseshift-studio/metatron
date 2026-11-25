@@ -324,7 +324,7 @@ Three mtron mechanics the pattern leans on (each has bitten before):
   captured as *literal source* unless you wrap the rec in `-<`; the split `... .inst(payload=>_){ *payload>>>send(...)}
   ` then hands the evaluated rec to the sender, working around the evaluator's nested-call depth limit.
 * **subscriptions are in-memory.** A `?subq` registration lives only for the life of the VM — re-enable it at boot and
-  re-inject it into the space that holds it after a crash (`<space vid> >>= [q=>+[subq::[=>]]]`, then re-register the
+  re-inject it into the space that holds it after a crash (`<space vid> >>= [q=>mult([subq::[=>]])]`, then re-register the
   `sub::`), no restart.
 
 The `?subq` framework is declared on a space the same way as any other q-proc — `memspace::[pattern => /usr/#, q => [subq::[=>]]]`

@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import static com.google.common.math.LongMath.saturatedAdd;
+import static com.google.common.math.LongMath.saturatedMultiply;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -453,10 +455,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * A lst with a hole is no word at all, so none is built, however many its braces before the hole would make.
          */
         private static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
-            final double[] measure = measure(slots);
-            if (0.0d == measure[0])
+            final long[] measure = measure(slots);
+            if (0L == measure[0])
                 return new LinkedHashMap<>();
-            Typer.Helper.unfolds(Typer.UNFOLD_LST, (long) Math.ceil(Math.max(measure[0], measure[1]) / Math.max(1.0d, measure[2])));
+            Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.ceilDiv(Math.max(measure[0], measure[1]), Math.max(1L, measure[2])));
             final Map<List<Obj>, cInt> words = new LinkedHashMap<>();
             expand(slots, coefficient).forEach(word -> words.merge(word.getKey(), word.getValue(), cInt::plus));
             return words;
@@ -466,29 +468,33 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * the words a lst's slots are, measured before any is built ({@link #words}): how many, how many letters they hold
          * together, and how many letters the slots write, a sub-word's own among them. A slot of m moments makes w words
          * of l letters m w words of m l letters and w times the moments' letters, and a hole, a slot of no moment, makes
-         * no word, so it never multiplies a count past a double's range: counted in doubles, a measure past a long's
-         * range is infinite, and so past the bound
+         * no word. Counted in saturating longs, as the word count can pass any long: a product with a zero factor is
+         * zero, whatever the other, and one past a long's range is the long's largest, past the bound, so no measure is
+         * undefined, and a hole is no word in whatever order it meets an unbounded count
          */
-        private static double[] measure(final List<Obj> slots) {
+        private static long[] measure(final List<Obj> slots) {
             return slots.stream()
                     .map(slot -> slot.stream()
-                            .map(member -> isSubWord(slot, member) ? measure(member.lstValue()) : new double[]{1.0d, 1.0d, 1.0d})
-                            .reduce(new double[]{0.0d, 0.0d, 0.0d}, (a, b) -> new double[]{a[0] + b[0], a[1] + b[1], a[2] + b[2]}))
-                    .reduce(new double[]{1.0d, 0.0d, 0.0d}, (at, slot) -> 0.0d == slot[0] ? new double[]{0.0d, 0.0d, at[2] + slot[2]}
-                            : new double[]{at[0] * slot[0], at[1] * slot[0] + (0.0d == slot[1] ? 0.0d : at[0] * slot[1]), at[2] + slot[2]});
+                            .map(member -> isSubWord(slot, member) ? measure(member.lstValue()) : new long[]{1L, 1L, 1L})
+                            .reduce(new long[]{0L, 0L, 0L}, (a, b) -> new long[]{saturatedAdd(a[0], b[0]), saturatedAdd(a[1], b[1]), saturatedAdd(a[2], b[2])}))
+                    .reduce(new long[]{1L, 0L, 0L}, (at, slot) -> new long[]{saturatedMultiply(at[0], slot[0]),
+                            saturatedAdd(saturatedMultiply(at[1], slot[0]), saturatedMultiply(at[0], slot[1])), saturatedAdd(at[2], slot[2])});
         }
 
         /**
          * the words of a lst's slots as they are built ({@link #words}), each its own letters at point one with its
          * coefficient, like words merged after: a slot of one moment extends every word in place, so a lst without braces
-         * is one word built once, linear in its length, and a slot of many moments copies each word once per moment
+         * is one word built once, linear in its length, and a slot of many moments copies each word once per moment. Once
+         * a hole leaves no word, no later slot is read, and a sub-word that is no word ({@link #measure}) is never built
          */
         private static List<Map.Entry<List<Obj>, cInt>> expand(final List<Obj> slots, final cInt coefficient) {
             final List<Map.Entry<List<Obj>, cInt>> words = new ArrayList<>(List.of(Map.<List<Obj>, cInt>entry(new ArrayList<>(), coefficient)));
             for (final Obj slot : slots) {
-                final List<Map.Entry<List<Obj>, cInt>> moments = slot.stream().flatMap(member -> isSubWord(slot, member)
-                        ? expand(member.lstValue(), member.tid().d()).stream()
-                        : Stream.of(Map.<List<Obj>, cInt>entry(List.of(member.d(cInt.ONE())), member.tid().d()))).toList();
+                if (words.isEmpty())
+                    return words;
+                final List<Map.Entry<List<Obj>, cInt>> moments = slot.stream().flatMap(member -> !isSubWord(slot, member)
+                        ? Stream.of(Map.<List<Obj>, cInt>entry(List.of(member.d(cInt.ONE())), member.tid().d()))
+                        : 0L == measure(member.lstValue())[0] ? Stream.empty() : expand(member.lstValue(), member.tid().d()).stream()).toList();
                 final List<Map.Entry<List<Obj>, cInt>> longer = words.stream().flatMap(word -> moments.stream().map(moment -> {
                     final List<Obj> letters = 1 == moments.size() ? word.getKey() : new ArrayList<>(word.getKey());
                     letters.addAll(moment.getKey());
@@ -587,8 +593,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * join, a record's product, so a lst of them folds to their product (Claim 28): {@code [[a=>b],[b=>e]]>|} is
          * {@code [a=>b=>e]}, and {@code [[a=>b],[c=>d]]>|} the zero, the empty rec. The join runs no code a record holds
          * as a value ({@code [[x=>a],[a=>plus(1)]]>|} is {@code [x=>a=>plus(1)]}), while a key that acts, code or a type,
-         * runs as a WHERE on the ends it meets, as in the product. A live rec, a space or a machine, holds no walks, so it
-         * applies as a constant. The zero drops from a stream that holds anything else, and a stream of zeros is the zero,
+         * runs as a WHERE on the ends it meets, as in the product. A live rec holds no walks, so it applies as itself,
+         * running whatever its apply runs: a space, a network among them, passes a value on and runs the code it meets
+         * ({@code Space.Helper.resolveApply}), a parser parses a str, and a thread starts with the fold's value as its
+         * lhs. The zero drops from a stream that holds anything else, and a stream of zeros is the zero,
          * as in a sum: {@code [[x=>a],{[a=>b],[a=>c]},[b=>e]]>|} is {@code [x=>a=>b=>e]}, and
          * {@code [[x=>a],{[b=>c],[d=>e]}]>|} is {@code [=>]}.
          */

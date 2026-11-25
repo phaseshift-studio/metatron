@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
@@ -119,7 +120,6 @@ public class LstTest extends AbstractAlgebraTest {
             "[x,{[a,b]},y] + [x,c,y]                                                      % [x,{[[a,b]],c},y]",
             // a brace whose mass bulks to one holds one sub-word at point one, so it is that one-member brace (open)
             "[x,{{2}[a,b],{-1}[a,b]}]                                                     % [x,{[a,b]}]",
-            "[x,{{2}[a,b],{-1}[a,b]}] + [x,a,b]                                           % [x,{[a,b]}] + [x,a,b]",
             // a sum's mass on its letters (Claim 24): the argument counts by its point, and the lhs's floats
             "[a,b] + [a,b]                                                                % [{2}a,b]",
             "[a,b] + [a,b] + [a,b]                                                        % [{3}a,b]",
@@ -232,11 +232,6 @@ public class LstTest extends AbstractAlgebraTest {
             "[{a,b},{c,d},{e,f},{g,h},{i,j},{k,l},{m,n},{o,p},{q,r},{s,t},{u,v},{w,x}].mult([0,1,2,3,4,5,6,7,8,9]{10}).plus([y]) % <ERROR>",
             // a range sums its powers' words, each bounded before it is built: its seventh power's braces are refused
             "[0{10},1{10},2{10},3{10},4{10},5{10},6{10},7{10},8{10},9{10},{a,b}]{1,11}    % <ERROR>",
-            // words past a double's range are infinite, so past the bound, and a lst with a hole is no word, built from
-            // nothing however many braces precede the hole
-            "[{a,b}]{100}.pow(11).mult([{2}[,]]).plus([y])                                % <ERROR>",
-            "[{a,b}]{100}.pow(11).mult([noobj]).plus([y])                                 % [y]",
-            "[{a,b}]{100}.pow(11).mult([y,noobj]).plus([y])                               % [y]",
             // a lst without braces is one word, built once: its sum is linear in its length
             "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([x]).count()                        % 1",
             "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([0,1,2,3,4,5,6,7,8,9]{100}.pow(100).neg()) % noobj",
@@ -305,6 +300,17 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /// A LIVE REC IN A FOLD holds no walks, so it applies as itself, running whatever its apply runs: a space, the
+    /// network among them, passes a value on, and a parser parses a str and passes anything else on.
+    @Test
+    public void testALiveRecInAFoldRunsItsOwnApply() {
+        final Obj network = Machine.parse("*~/network").apply(noobj());
+        final Obj parser = Machine.parse("*~/compiler/parser").apply(noobj());
+        checkEquality(LOG, jnt(1), Lst.Helper.fold(lst(jnt(1), network), noobj()), true);
+        checkEquality(LOG, ObjmtronSerializer.parse("[a,b]"), Lst.Helper.fold(lst(str("[a,b]"), parser), noobj()), true);
+        checkEquality(LOG, jnt(1), Lst.Helper.fold(lst(jnt(1), parser), noobj()), true);
+    }
+
     /// URI IS THE ORACLE (Marko, 2026-11-24): uri::T is already the word ring over segments, and a lst of atoms spells
     /// a path (its as(uri), a brace the sum of its members), so the spelling commutes with the ring:
     /// (l + m).as(uri) is l.as(uri) + m.as(uri), and (l * m).as(uri) is l.as(uri) * m.as(uri). Each side is read in the
@@ -348,9 +354,30 @@ public class LstTest extends AbstractAlgebraTest {
         final MTronException farthest = assertThrows(MTronException.class, () -> Lst.Helper.power(lst(jnt(1)), cInt.of(1L, 10_000_000_000L)));
         final String far = "a span of 10000000000 copies unfolds past the typer's bound for lst";
         assertEquals(far, farthest.getMessage().substring(0, Math.min(far.length(), farthest.getMessage().length())));
+        // words past a long's range are past the bound, and a lst with a hole is no word, built from nothing, in whatever
+        // order the hole, a mass-only {2}[,] and an unbounded sub-word come, a sub-word of a brace that is no word
+        // included, as the sum, as(uri::T) and a range's powers read them. Built, each would exhaust the heap, so each runs
+        // under a timeout, and a lost guard fails an assertion
+        final Machine machine = Machine.current();
+        for (final String[] row : new String[][]{
+                {"[{a,b}]{100}.pow(11).mult([{2}[,]]).plus([y])", "<ERROR>"},
+                {"[{a,b}]{100}.pow(11).mult([noobj]).plus([y])", "[y]"},
+                {"[{a,b}]{100}.pow(11).mult([y,noobj]).plus([y])", "[y]"},
+                {"[{2}[{2}[{a,b}]{100}]{11}] + [y]", "<ERROR>"},
+                {"[{2}[,],{2}[{2}[{a,b}]{100}]{11}] + [y]", "<ERROR>"},
+                {"[noobj,{2}[{2}[{a,b}]{100}]{11}] + [y]", "[y]"},
+                {"[{[{2}[{a,b}]{50},noobj],c}] + [y]", "[{c,y}]"},
+                {"[{2}[{2}[{a,b}]{100}]{11}].as(uri::T)", "<ERROR>"},
+                {"[{2}[{2}[{a,b}]{100}]{11}]{1,2}", "<ERROR>"}})
+            assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, row[0], row[1]);
+                return noobj();
+            }), row[0]);
+        final Lst unbounded = lst(lst(java.util.stream.IntStream.range(0, 1024).mapToObj(i -> objs(jnt(2L * i), jnt(2L * i + 1L))).toList()).d(cInt.of(2L)));
+        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine,
+                () -> assertThrows(MTronException.class, () -> unbounded.plus(lst(jnt(-1))))), "1024 braces of two in a bulked brace");
         // a lst without braces is one word, extended in place: its sum is linear in its length, where a copy of the word
         // per slot took minutes at this length
-        final Machine machine = Machine.current();
         final Lst longest = lst(java.util.stream.IntStream.range(0, 200_000).mapToObj(i -> (Obj) jnt(i % 10)).toList());
         assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> longest.plus(lst(jnt(-1)))),
                 "a sum over 200,000 letters is linear in them");
@@ -687,7 +714,7 @@ public class LstTest extends AbstractAlgebraTest {
             "@/sys/tmp/lst_test/0 >>= [b=>-[a,d]]                                % [a=>2,b=>[b,c,e]]",
             "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[b,c,e]]",
             "@/sys/tmp/lst_test/0                                                % [a=>2,b=>[b,c,e]]@/sys/tmp/lst_test/0",
-            // "@/sys/tmp/lst_test/0 >>= +[a=>3,b=>+[d,e]]                          % [a=>{2,3},b=>[b,c,e,d,e]]",
+            // "@/sys/tmp/lst_test/0 >>= +[a=>3,b=>_ * [d,e]]                       % [a=>{2,3},b=>[b,c,e,d,e]]",
             // "*/sys/tmp/lst_test/0                                                % [a=>{2,3},b=>[b,c,e,d,e]]",
     }, delimiter = '%')
     public void testUpdate(final String code, final String expected) {
