@@ -78,8 +78,8 @@ $a\,b\,d + a\,c\,d = a\,(b + c)\,d$; paths that share nothing stay whole; and ex
 ```mtron_pre
 </a/b/d> + </a/c/d>
 </a/b> + </c/d>
-</a/b>.mult(</c/d>)
-</a/{b,c}/d>.mult(</e>)
+</a/b> * </c/d>
+</a/{b,c}/d> * </e>
 ```
 
 In mtron, a uri is written in angle brackets, and a branch `{b,c}` inside a path is a factored sum. `plus` and `mult`
@@ -127,7 +127,7 @@ a vertex's siblings rather than the vertex alone ([[2]](./span-and-point-coeffic
 <a/b/c>{-1}
 </a/b/c>{-1}
 <http://m.com/a/b/c>{-1}
-<a/b>.mult(<a/b>{-1})
+<a/b> * <a/b>{-1}
 {2}<a/b>{-2}
 <{2}a/b>{-2}
 ```
@@ -430,8 +430,9 @@ $$
 \end{equation*}
 $$
 
-where $[\,b \vDash h\,]$ is $1$ when the key $h$ is a value $b$ tests as (equal, or a pattern $b$ matches), or a
-program that answers $b$, and $0$ otherwise. The join keeps the middle: its product is the walk
+where $[\,b \vDash h\,]$ is $1$ when the second record holds $h$ at $b$'s address (the key, a path through it, or a
+stored pattern $b$ matches, read as every read is, in any layout), or when $h$ is a program or a type that answers
+$b$, and $0$ otherwise. The join keeps the middle: its product is the walk
 $a \Rightarrow b \Rightarrow r$. The range $r$ is a value, a program included, and is never run, so
 `[a=>5] * [_=>plus(1)]` is `[a=>5=>plus(1)]`. A span is the object's, so `<b>{5}` is the one object `b/b/b/b/b`,
 and only a key equal to it, or a pattern it matches, meets it. As $\Rightarrow$ nests to the right, a walk ends at its
@@ -439,7 +440,8 @@ innermost range and the join splices there, and a record held at a key is the wa
 (Definition 9). The join extends bilinearly to records, a point multiplying onto the joined walk. A predicate's test
 is a filter: it keeps or drops an arrow, and never counts it.
 
-**Claim 16 (the record ring).** Records with merge and join form a ring with the empty record $[\Rightarrow]$ as zero
+**Claim 16 (the record ring).** Records in merge's normal form (no empty record held at a key, a key's records merged
+into one) form a ring under merge and join, with the empty record $[\Rightarrow]$ as zero
 and the parametric unity $1 \Rightarrow 1$ of [[3]](./parametric-identities-in-ring-theory.md) as unity (`[_=>_]`,
 the walk of length zero at every object). On records whose keys and ranges are values it is the path algebra of the
 graph their arrows draw, and contracting each walk to its endpoints maps it onto the ring of finitely supported
@@ -511,9 +513,8 @@ pair they connect.
   $a \Rightarrow e$ maps the record ring onto the relation ring. A list of records is still the join not yet taken
   (Claim 28).
 - *A join through a nested record.* Settled: a nested record is the walks through its keys, so it joins on its leaves,
-  and the layouts need no reconciling. A path key is one object to the join, and a read that addresses the term, a
-  full path or a wildcard, answers alike in either layout (Claim 5), as the tractatus's matrix reads do:
-  `[a/b=>(1=>y)]` and `[a=>(b=>(1=>y))]` both answer `1=>y` at `a/b`.
+  and the join reads its argument by address, as every read does (Claim 5), so its layout does not matter:
+  `[x=>a] * [a/b=>1]` and `[x=>a] * [a=>[b=>1]]` both answer `[x=>a=>b=>1]`.
 - *Matrices.* The relation ring is the ring of finitely supported matrices, so the matrix multiplication of entry M in
   [[4]](./ring-theoretic-distributed-computing.md) is composition in this ring, and that entry's addressed union is the
   indexed sum of the next section.

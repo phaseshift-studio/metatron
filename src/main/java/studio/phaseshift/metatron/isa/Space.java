@@ -472,7 +472,7 @@ public interface Space extends Addressable, Rec, Closeable {
          * an address holding a value with entries below it reads as its entries (uri.adoc: {@code *n/m} answers
          * {@code [r=>[s=>2]]}); the stored objs are never mutated (each step answers a new rec)
          */
-        private static Obj nest(final List<IdObj> entries) {
+        public static Obj nest(final List<IdObj> entries) {
             Rec tree = rec();
             for (final IdObj entry : entries.stream().sorted(Comparator.comparingInt(entry -> entry.furi().segmentLength())).toList())
                 tree = tree.at(uri(entry.furi()), entry.obj());
@@ -563,7 +563,7 @@ public interface Space extends Addressable, Rec, Closeable {
          * whether {@code prefix} is a proper prefix of {@code address}, segment by segment and literally — in a layout a
          * wildcard is a segment like any other ({@code hasPrefix} would read it as a pattern)
          */
-        private static boolean runsThrough(final fURI prefix, final fURI address) {
+        public static boolean runsThrough(final fURI prefix, final fURI address) {
             // the scheme and authority first, as hasPrefix asks them: an empty path (a store's root, mongo:) prefixes
             // only the addresses of its own store, never every path
             return (!prefix.hasScheme() || prefix.scheme().equals(address.scheme()))

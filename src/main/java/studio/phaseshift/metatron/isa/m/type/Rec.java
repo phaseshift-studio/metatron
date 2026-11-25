@@ -22,6 +22,8 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -184,12 +186,15 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
      * steps on (a nested rel is a path, 2026-11-13), a rec range steps through each of its keys ({@code [a=>[b=>1]]}
      * holds the walk {@code a=>b=>1}, the trie reading the merge keeps), and any other range ends the walk, CODE
      * INCLUDED: a range is a value and is never run, so {@code [a=>5]·[_=>plus(1)]} is {@code [a=>(5=>plus(1))]}. A
-     * span is the object's, never the walk's: {@code <b>{5}} is the one uri {@code b/b/b/b/b}. Only a key acts
-     * ({@link Helper#splice}): a code key meets an object it answers ({@code ?>1} meets 5 and not 0), the identity
-     * {@code _} meets every object, and any other key a value that tests as it. As {@code =>} nests to the right, the
-     * join splices at the innermost range, so joined walks concatenate and the product is associative: the path algebra
-     * of the keys' graph. An identity term {@code _=>_} adds no step, so the other term passes as it is, scaled, and
-     * {@code [_=>_]} is the unity ({@link #one()}); the empty rec, with no walk to join, is the zero.
+     * span is the object's, never the walk's: {@code <b>{5}} is the one uri {@code b/b/b/b/b}. A walk reads the argument
+     * at its end BY ADDRESS, as at()/atDirect() read ({@link Helper#steps}; Marko, 2026-11-24), so flat, path-keyed and
+     * nested arguments join alike: {@code [x=>a]·[a/b=>1]} is {@code [x=>(a=>(b=>1))]}. Only an acting key (code, a
+     * type) meets an end it answers ({@code ?>1} meets 5 and not 0), and the identity {@code _} meets every end. As
+     * {@code =>} nests to the right, the join splices at the innermost range, so joined walks concatenate and the
+     * product is associative: the path algebra of the keys' graph. An identity term {@code _=>_} adds no step, so the
+     * other term passes as it is, scaled, and {@code [_=>_]} is the unity ({@link #one()}); the empty rec, with no walk
+     * to join, is the zero. The ring is that of the recs the merge normalizes (no empty sub-rec, a key's recs one rec):
+     * on a literal that holds an empty sub-rec, {@code [a=>[=>]]·[_=>_]} is its normal form {@code [=>]}.
      * <p>
      * MULTIPLICITIES ARE POINTS, and they multiply onto the joined walk's outermost range, never onto a key. A rec's own
      * coefficient is read as the merge reads it: this rec's is the stream's and stays on the product, and the argument's
@@ -199,23 +204,26 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
      * counts both walks: {@code [a=>b]·({2}[b=>c] + [b=>d])} is {@code [a=>{{2}(b=>c),{2}(b=>d)}]}.
      */
     default Rec mult(final Rec rhs) {
-        final List<Rel> nexts = rhs.elements().toList();
-        return this.d(cInt.ONE()).asRec().elements().flatMap(arrow -> nexts.stream().flatMap(next -> {
-            // the argument's arrow carries its rec's coefficient on its own point: its copies, taken off the key
-            final cInt copies = next.tid().d();
-            final Rel right = next.d(cInt.ONE()).asRel();
-            return arrow.secondDirect().stream().flatMap(value -> right.secondDirect().stream().flatMap(range -> {
-                if (rel(right.firstDirect(), range).isOne())
-                    return Stream.of(rec(arrow.firstDirect(), value.d(value.tid().d().mult(copies).mult(range.tid().d()))));
-                if (rel(arrow.firstDirect(), value).isOne())
-                    return Stream.of(rec(right.firstDirect(), range.d(range.tid().d().mult(copies).mult(value.tid().d()))));
-                final List<Obj> steps = Helper.walks(range).toList();
-                return Helper.walks(value).flatMap(walk -> steps.stream().map(step -> {
-                    final Obj spliced = Helper.splice(walk.d(cInt.ONE()), right.firstDirect(), step.d(cInt.ONE()));
-                    return spliced.isNoObj() ? rec() :
-                            rec(arrow.firstDirect(), spliced.d(copies.mult(walk.tid().d()).mult(step.tid().d())));
-                }));
-            }));
+        // the argument at point one: its own coefficient is its copies, multiplied onto every walk it joins
+        final Rec right = rhs.d(cInt.ONE()).asRec();
+        final cInt copies = rhs.tid().d();
+        final List<Rel> nexts = right.elements().toList();
+        final List<Rel> acting = nexts.stream()
+                .filter(next -> next.firstDirect().isObjCall() || next.firstDirect().isType())
+                .toList();
+        return this.d(cInt.ONE()).asRec().elements().flatMap(arrow -> arrow.secondDirect().stream().flatMap(value -> {
+            if (rel(arrow.firstDirect(), value).isOne())
+                return nexts.stream().flatMap(next -> next.secondDirect().stream().map(range ->
+                        rec(next.firstDirect(), range.d(range.tid().d().mult(copies).mult(value.tid().d())))));
+            final Stream<Rec> passed = acting.stream().flatMap(next -> next.secondDirect().stream()
+                    .filter(range -> rel(next.firstDirect(), range).isOne())
+                    .map(range -> rec(arrow.firstDirect(), value.d(value.tid().d().mult(copies).mult(range.tid().d())))));
+            final Stream<Rec> joined = Helper.walks(value).flatMap(walk -> {
+                final Obj unit = walk.d(cInt.ONE());
+                return Helper.steps(right, acting, Helper.end(unit)).map(step -> rec(arrow.firstDirect(),
+                        Helper.spliced(unit, step.d(cInt.ONE())).d(copies.mult(walk.tid().d()).mult(step.tid().d()))));
+            });
+            return Stream.concat(passed, joined);
         })).reduce(this.zero(), Rec::plus).d(this.tid().d()).asRec();
     }
 
@@ -277,13 +285,13 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         /**
          * THE WALKS A RANGE HOLDS ({@link Rec#mult(Rec)}), each the chain of objects it steps through as a nested rel, with its
          * multiplicity on the outermost and every object inside at point one. A rel steps from its key to the walks of
-         * its range, and a rec steps through each of its keys to the walks of that key's value. Any other object, code
-         * included, ends the walk. The empty rec holds no walk.
+         * its range, and a data rec ({@link #holdsWalks}) steps through each of its keys to the walks of that key's value.
+         * Any other object, code and a live rec included, ends the walk. The empty rec holds no walk.
          */
         static Stream<Obj> walks(final Obj range) {
             return range.stream().flatMap(member -> {
                 final Obj unit = member.d(cInt.ONE());
-                if (!unit.isRel() && !unit.isRec())
+                if (!unit.isRel() && !holdsWalks(unit))
                     return Stream.of(member);
                 return (unit.isRel() ? Stream.of(unit.asRel()) : unit.asRec().elements())
                         .flatMap(step -> walks(step.secondDirect()).map(rest ->
@@ -292,24 +300,46 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         }
 
         /**
-         * A walk spliced at its end to a step ({@link Rec#mult(Rec)}), both at point one: the walk with the step after its
-         * last object when that object meets the key, else noobj. The identity {@code _} meets every object, code
-         * included. It answers whatever it is given, but the processor resolves no {@code id()} on an instruction, so
-         * {@code [a=>plus(1)]·[_=>x]} joins by this clause alone. Any other code key meets an object it answers:
-         * {@code ?>1} answers 5 and not 0, and on an instruction {@code count()} answers while {@code neg()},
-         * {@code plus(1)} and {@code ?>1} do not. Any other key is a value, and meets a value that tests as it
-         * (equality, a uri pattern's matches), never an instruction, which {@link Obj#test} would pass on its
-         * coefficient alone.
+         * WHETHER AN OBJ IS A REC OF DATA, the walks through its keys ({@link #walks}, and the merge's
+         * {@code Poly.Helper.withWalks}): a plain rec. A live one (a space, a machine, a socket, any component built on
+         * a rec) is an atom, read where it lives and never walked or rebuilt.
          */
-        static Obj splice(final Obj walk, final Obj key, final Obj step) {
-            if (walk.isRel()) {
-                final Obj spliced = splice(walk.asRel().secondDirect(), key, step);
-                return spliced.isNoObj() ? spliced : rel(walk.asRel().firstDirect(), spliced);
-            }
-            final boolean meets = key.isObjCall()
-                    ? key.asCall().isOne() || !key.apply(walk).isNothing()
-                    : !walk.isObjCall() && walk.test(key);
-            return meets ? rel(walk, step) : noobj();
+        static boolean holdsWalks(final Obj obj) {
+            return obj.isRec() && MRec.class == obj.getClass();
+        }
+
+        /**
+         * THE WALKS THE ARGUMENT HOLDS AT AN END ({@link Rec#mult(Rec)}), read as at()/atDirect() read (Marko,
+         * 2026-11-24): what it holds at the end's address (an exact key, a path, an interior subtree, a stored pattern),
+         * so its layout does not matter, and the range of every acting key (code, a type) that answers the end. The
+         * identity {@code _} answers every end, code included: the processor resolves no {@code id()} on an instruction,
+         * so {@code [a=>plus(1)]·[_=>x]} joins by this clause alone. An end that is code has no address, so only an acting
+         * key meets it: {@code count()} answers an instruction, while {@code neg()}, {@code plus(1)} and {@code ?>1} do
+         * not. An identity term is passed whole by the product, never joined.
+         */
+        static Stream<Obj> steps(final Rec right, final List<Rel> acting, final Obj end) {
+            final Stream<Obj> addressed = end.isObjCall() ? Stream.empty() : walks(right.atDirect(end));
+            final Stream<Obj> answered = acting.stream()
+                    .filter(next -> (next.firstDirect().isObjCall()
+                            && next.firstDirect().asCall().tryToInst().tid().path().equals(ID_INST_TID.path()))
+                            || !next.firstDirect().apply(end).isNothing())
+                    .flatMap(next -> next.secondDirect().stream().filter(range -> !rel(next.firstDirect(), range).isOne()))
+                    .flatMap(Helper::walks);
+            return Stream.concat(addressed, answered);
+        }
+
+        /**
+         * a walk's last object ({@link Rec#mult(Rec)})
+         */
+        static Obj end(final Obj walk) {
+            return walk.isRel() ? end(walk.asRel().secondDirect()) : walk;
+        }
+
+        /**
+         * a walk at point one with a step after its last object ({@link Rec#mult(Rec)})
+         */
+        static Obj spliced(final Obj walk, final Obj step) {
+            return walk.isRel() ? rel(walk.asRel().firstDirect(), spliced(walk.asRel().secondDirect(), step)) : rel(walk, step);
         }
 
         public static Obj typeToRec(final Obj maybeType, final Supplier<Obj> notType) {
@@ -361,25 +391,18 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                             rel(asNode, autoToggle(arec, arec.jvm().get(asNode), doAuto)) :
                             autoToggle(arec, arec.jvm().get(asNode), doAuto)).c(c -> c.mult(cKey));
                 } else { // this.recValue().containsKey(uri(step))
-                    if (singleSegment && !isBranch && !doAuto) {
-                        // A single-segment atDirect key may name a leaf of a deep
-                        // (full-path) keyed rec.  If exactly one stored key has that
-                        // node name, return its raw value directly (no pattern-
-                        // collection wrapper); several matches stay an objs; none
-                        // falls through.  (at() keeps its historical semantics so
-                        // structural reads/type-matching are unaffected.)
-                        final java.util.List<Map.Entry<Obj, Obj>> named = arec.jvm().entrySet().stream()
-                                .filter(kv -> kv.getKey().isUri())
-                                .filter(kv -> step.equals(kv.getKey().uriValue().asNode().name()))
-                                .toList();
-                        if (named.size() == 1)
-                            return (OBJ) autoToggle(arec, named.get(0).getValue(), doAuto).c(c -> c.mult(cKey));
-                        else if (named.size() > 1)
-                            return (OBJ) objs(named.stream()
-                                    .map(kv -> autoToggle(arec, kv.getValue(), doAuto).c(c -> c.mult(cKey))));
-                    }
                     final Obj temp = autoToggle(arec, arec.jvm().getOrDefault(uri(step), noobj()), doAuto);
                     if (temp.isNoObj()) {
+                        // AN INTERIOR ADDRESS READS AS ITS SUBTREE (Marko, 2026-11-24: [a/b=>35]>>a is [b=>35]), as a
+                        // space reads one (Space.Helper.within): flat, path-keyed and nested recs are one term
+                        final List<Space.IdObj> under = arec.jvm().entrySet().stream()
+                                .filter(kv -> kv.getKey().isUri() && Space.Helper.runsThrough(keyF, kv.getKey().uriValue()))
+                                .map(kv -> new Space.IdObj(kv.getKey().uriValue().pretract(keyF.segmentLength()), kv.getValue()))
+                                .toList();
+                        if (!under.isEmpty()) {
+                            final Obj subtree = Space.Helper.nest(under);
+                            return (OBJ) (isBranch ? rel(asNode, subtree) : subtree).c(c -> c.mult(cKey));
+                        }
                         return (OBJ) objs(arec.jvm().entrySet()
                                 .stream()
                                 .filter(kv -> kv.getKey().isUri())

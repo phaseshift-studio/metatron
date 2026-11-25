@@ -1058,22 +1058,24 @@ public class LstTest extends AbstractAlgebraTest {
     }
 
     /**
-     * at/atDirect correlate on lists (mirrors the Rec deep-keyed regression): when a
-     * list element is itself a deep-keyed rec, the full uri path 0/Echo must surface
-     * the raw !@ pointer under atDirect — the atToggle doAuto toggle must propagate
-     * through the whole path, not just the first segment.  (Lst uri access wraps its
-     * results in an objs, so check by streaming.)
+     * at/atDirect correlate on lists (mirrors RecTest#testAtDirectReadsADeepKeyedRecByItsPath): when a list element is
+     * itself a deep-keyed rec, its full uri path 0/usr/marko/Echo must surface the raw !@ pointer under atDirect, the
+     * atToggle doAuto toggle propagating through the whole path, not just the first segment. The element's leaf name
+     * alone, 0/Echo, names no key, as on the nested form. (Lst uri access wraps its results in an objs, so check by
+     * streaming.)
      */
     @Test
     public void testAtDirectDeepPathRespectsRawToggle() {
         final Obj ptr = auto_from_(f("local:src/a_main")).tryToInst();
         final Lst l = lst(rec(uri("usr/marko/Echo"), ptr));
-        final Obj direct = l.atDirect(uri("0/Echo"));
-        LOG.info("atDirect(uri('0/Echo')) -> %s", direct);
+        final Obj direct = l.atDirect(uri("0/usr/marko/Echo"));
+        LOG.info("atDirect(uri('0/usr/marko/Echo')) -> %s", direct);
         final boolean rawPointer = direct.stream()
                 .map(Obj.Helper::getAutoPointer).anyMatch(Optional::isPresent);
         assertTrue(rawPointer,
-                "atDirect('0/Echo') should surface the raw !@ inst of the deep element, got: " + direct);
+                "atDirect('0/usr/marko/Echo') should surface the raw !@ inst of the deep element, got: " + direct);
+        assertTrue(l.atDirect(uri("0/Echo")).stream().noneMatch(obj -> Obj.Helper.getAutoPointer(obj).isPresent()),
+                "atDirect('0/Echo') names no key of the deep element, got: " + l.atDirect(uri("0/Echo")));
     }
 
     /**

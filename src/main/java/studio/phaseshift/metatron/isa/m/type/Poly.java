@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.*;
 
 import java.util.*;
@@ -664,7 +663,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
          * whether copies cancelled it or it arrived empty ({@link #withWalks}). {@code [a=>[b=>1]] - [a=>[b=>1]]} and
          * {@code [a=>[=>]] + [b=>1]} both drop {@code a}. Dropping only what cancelled would make the merge
          * non-associative: {@code ([a=>[=>]] + [a=>[b=>1]]) - [a=>[b=>1]]} would answer {@code [=>]} and the other
-         * bracketing {@code [a=>[=>]]}. A literal keeps what it is written with until a merge reads it.
+         * bracketing {@code [a=>[=>]]}. A KEY'S RECS ARE ONE REC, for the same reason: recs side by side in a bag fuse,
+         * so a rec arriving at a bag merges with the rec it holds, and {@code [a=>1] + [a=>[b=>1]] + [a=>[c=>2]]} is
+         * {@code [a=>{1,[b=>1,c=>2]}]} however it is bracketed. A literal keeps what it is written with until a merge
+         * reads it (Marko, 2026-11-24: normalize in the merge), so the ring's carrier is the recs in this normal form.
          */
         public static Obj mergeObjRecursion(final Obj lhs, final Obj rhs) {
             if (lhs.isRec() && rhs.isRec())
@@ -700,19 +702,27 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         /**
          * A VALUE AS THE WALKS IT HOLDS, the form the merge stores ({@link #mergeObjRecursion}): an empty rec holds no
          * walk and is dropped at any depth, from a bag too, and anything else is kept as it is. Null when nothing is
-         * left, so the merge drops the key. A value with nothing to drop comes back as itself, unrebuilt. Only a data
-         * rec is walked: a live one (a space, an executor, a socket) is an atom of the merge, read where it lives.
+         * left, so the merge drops the key. A value with nothing to drop comes back as itself, unrebuilt. Only a rec of
+         * data is walked ({@link Rec.Helper#holdsWalks}): a live one is an atom of the merge, read where it lives.
          */
         private static Obj withWalks(final Obj value) {
             if (value.isObjs()) {
                 final List<Obj> original = value.stream().toList();
                 final List<Obj> members = original.stream().map(Helper::withWalks).filter(Objects::nonNull).toList();
+                // A KEY'S RECS ARE ONE REC: recs side by side in a bag fuse, each multiplicity carried into what it holds
+                final List<Obj> recs = members.stream().filter(Rec.Helper::holdsWalks).toList();
+                if (recs.size() > 1) {
+                    final Obj fused = withWalks(recs.stream().map(Helper::distributed).reduce(Helper::mergeObjRecursion).orElseThrow());
+                    final List<Obj> kept = Stream.concat(members.stream().filter(member -> !Rec.Helper.holdsWalks(member)),
+                            Stream.ofNullable(fused)).toList();
+                    return kept.isEmpty() ? null : objs(kept);
+                }
                 if (members.isEmpty())
                     return null;
                 return members.size() == original.size() && IntStream.range(0, members.size()).allMatch(i -> members.get(i) == original.get(i))
                         ? value : objs(members);
             }
-            if (!value.isRec() || value.isAddressable() || !(value instanceof MRec))
+            if (!Rec.Helper.holdsWalks(value))
                 return value;
             final List<Rel> entries = value.d(cInt.ONE()).asRec().elements().toList();
             final Map<Obj, Obj> kept = new LinkedHashMap<>();

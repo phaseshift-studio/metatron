@@ -236,6 +236,20 @@ public class RecTest extends AbstractAlgebraTest {
             "{2}[a=>1,b=>2,c=>3]>>{a,b,c}.<<                                            % {6}[a=>1,b=>2,c=>3]",
             "{2}[a=>1,b=>2,c=>{4}3]>>c                                                  % {8}3",
             // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
+            // AN INTERIOR ADDRESS READS AS ITS SUBTREE (Marko, 2026-11-24), as a space reads one: flat, path-keyed and
+            // nested recs are one term, so a path key's prefix answers what the nested rec holds there
+            "[a/b=>35]>>a                                                               % [b=>35]",
+            "[a=>[b=>35]]>>a                                                            % [b=>35]",
+            "[a/b=>35,a/c=>7,d=>1]>>a                                                   % [b=>35,c=>7]",
+            "[a/b/c=>1]>>(a/b)                                                          % [c=>1]",
+            "[a/b/c=>1]>>a                                                              % [b=>[c=>1]]",
+            "[a/b/c=>1,a/d=>2]>>a                                                       % [b=>[c=>1],d=>2]",
+            "[a/b=>35]>>(a/b)                                                           % 35",
+            "[a/b=>35]>>x                                                               % noobj",
+            "[a/b=>35]>>(a/+)                                                           % 35",
+            "[a=>[b/c=>1]]>>(a/b)                                                       % [c=>1]",
+            "{2}[a/b=>35]>>a                                                            % {2}[b=>35]",
+            "{2}[a=>[b=>35]]>>a                                                         % {2}[b=>35]",
     }, delimiter = '%')
     public void testAt(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -371,6 +385,17 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>5] * [-<[plus(1),plus(2)]=>x]                          % [a=>(5=>x)]",
             // a uri key meets the ends its pattern matches
             "[a=>b/c] * [b/+=>x]                                        % [a=>(b/c=>x)]",
+            // a walk reads the argument at its end by address, so flat, path-keyed and nested arguments join alike
+            "[x=>a] * [a/b=>1]                                          % [x=>(a=>(b=>1))]",
+            "[x=>a] * [a=>[b=>1]]                                       % [x=>(a=>(b=>1))]",
+            "[x=>a/b] * [a=>[b=>1]]                                     % [x=>(a/b=>1)]",
+            "[x=>a/b] * [a/b=>1]                                        % [x=>(a/b=>1)]",
+            "[x=>a] * [a/b=>1,a/c=>2]                                   % [x=>{(a=>(b=>1)),(a=>(c=>2))}]",
+            "[x=>b] * [a/b=>35]                                         % [=>]",
+            "[x=>b] * [a=>[b=>35]]                                      % [=>]",
+            // a type key is a predicate, and acts as a code key does
+            "[a=>5] * [int::T=>x]                                       % [a=>(5=>x)]",
+            "[a=>'x'] * [int::T=>x]                                     % [=>]",
             // a range is a value, code included, so it is never run; a code end meets the identity key and no value key
             "[a=>5] * [_=>plus(1)]                                      % [a=>(5=>plus(1))]",
             "[a=>'x',b=>2] * [_=>plus(1)]                               % [a=>('x'=>plus(1)),b=>(2=>plus(1))]",
@@ -492,7 +517,31 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkEquality(LOG, rec(), empty.plus(empty).plus(empty.neg()), true);
         AbstractMetatronTest.checkEquality(LOG, rec(), empty.plus(empty.plus(empty.neg())), true);
         AbstractMetatronTest.checkEquality(LOG, one, empty.plus(one), true);
-        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), rec()), empty, true);
+        // a key's recs are one rec, so a rec arriving at a bag that holds a rec merges with it either way round
+        final Rec atom = rec(uri("a"), jnt(1));
+        final Rec other = rec(uri("a"), rec(uri("c"), jnt(2)));
+        AbstractMetatronTest.checkEquality(LOG, atom.plus(one).plus(other), atom.plus(one.plus(other)), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), objs(jnt(1), rec(uri("b"), jnt(1), uri("c"), jnt(2)))),
+                atom.plus(one.plus(other)), true);
+        // the ring's carrier is the merge's normal form: a literal outside it answers its normal form under the unity
+        AbstractMetatronTest.checkEquality(LOG, rec(), empty.mult(empty.one()), true);
+    }
+
+    /**
+     * A READ ANSWERS ALIKE IN EVERY LAYOUT, atDirect as at(): a flat path key, a nested rec and a path through both read
+     * the same, and a single segment names its own key, never the leaf of a deeper one (the join reads by atDirect).
+     */
+    @Test
+    public void testAtDirectReadsEveryLayoutAlike() {
+        final Rec flat = rec(uri("a/b"), jnt(35));
+        final Rec nested = rec(uri("a"), rec(uri("b"), jnt(35)));
+        AbstractMetatronTest.checkEquality(LOG, noobj(), flat.atDirect(uri("b")), true);
+        AbstractMetatronTest.checkEquality(LOG, noobj(), nested.atDirect(uri("b")), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("b"), jnt(35)), flat.atDirect(uri("a")), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("b"), jnt(35)), nested.atDirect(uri("a")), true);
+        AbstractMetatronTest.checkEquality(LOG, jnt(35), flat.atDirect(uri("a/b")), true);
+        AbstractMetatronTest.checkEquality(LOG, jnt(35), nested.atDirect(uri("a/b")), true);
+        AbstractMetatronTest.checkEquality(LOG, rec(), ObjmtronSerializer.parse("[a=>[=>]]").asRec().atDirect(uri("a")), true);
     }
 
     /**
@@ -1117,6 +1166,9 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>[=>]]                                         % [a=>[=>]]",
             "[a=>[=>]].plus([a=>[b=>1]]).plus([a=>[b=>1]].neg())   % [=>]",
             "[a=>[=>]].plus([a=>[=>]]).plus([a=>[=>]].neg())       % [=>]",
+            // a key's recs are one rec: a rec arriving at a bag merges with the rec the bag holds
+            "[a=>1].plus([a=>[b=>1]]).plus([a=>[c=>2]])            % [a=>{1,[b=>1,c=>2]}]",
+            "[a=>[b=>1],a=>[c=>2]] + [d=>1]                        % [a=>[b=>1,c=>2],d=>1]",
             // multi-key
             "[a=>1] + [b=>2] + [c=>3]                          % [a=>1,b=>2,c=>3]",
             // wildcard key _ (doesn't match any literal key → added as new field)
@@ -1391,28 +1443,22 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * Regression: atDirect(key) with a single-segment key on a rec whose map keys are
-     * deeper (multi-segment) uris must still return the raw stored value (e.g. a raw
-     * !* / !@ auto pointer) rather than falling into atToggle's pattern-collection
-     * branch and returning an objs/derived wrapper.
-     */
-    /**
-     * atDirect on a rec keyed by full (multi-segment) uris: a single-segment key that
-     * uniquely names a stored key's leaf must return that raw stored value — it must
-     * not silently return noobj / a pattern wrapper.  (Tree-style loaders key recs by
-     * the child's full path, and callers address children by node name.)
+     * atDirect on a rec keyed by full (multi-segment) uris reads it as every layout reads it (Marko, 2026-11-24, choosing
+     * this over the node-name lookup tree_widget's xref once added): a child is addressed by its full path, and the raw
+     * stored value comes back unfired (a !@ auto pointer stays a pointer). A single segment names its own key, never a
+     * deeper key's leaf, so {@code Echo} answers nothing here as it does on the nested form, and an interior address answers
+     * its subtree with the pointer still raw.
      */
     @Test
-    public void testAtDirectSingleSegmentOnDeepKeyedRec() {
+    public void testAtDirectReadsADeepKeyedRecByItsPath() {
         final Obj ptr = auto_from_(f("local:src/a_main")).tryToInst();
         final Rec r = rec(uri("usr/marko/Echo"), ptr);
-        final Obj direct = r.atDirect(uri("Echo"));
-        LOG.info("atDirect(uri('Echo')) on deep-keyed rec -> %s", direct);
-        assertTrue(Obj.Helper.getAutoPointer(direct).isPresent(),
-                "atDirect(uri('Echo')) should find the unique deep key 'usr/marko/Echo', got: " + direct);
-        // the full-path key form must keep working too
         assertTrue(Obj.Helper.getAutoPointer(r.atDirect(uri("usr/marko/Echo"))).isPresent(),
                 "atDirect(full path key) should return the raw !@ inst, got: " + r.atDirect(uri("usr/marko/Echo")));
+        AbstractMetatronTest.checkEquality(LOG, noobj(), r.atDirect(uri("Echo")), true);
+        final Obj subtree = r.atDirect(uri("usr/marko"));
+        assertTrue(Obj.Helper.getAutoPointer(subtree.asRec().atDirect(uri("Echo"))).isPresent(),
+                "atDirect(interior address) should answer the subtree with the raw !@ inst, got: " + subtree);
     }
 
     /**
