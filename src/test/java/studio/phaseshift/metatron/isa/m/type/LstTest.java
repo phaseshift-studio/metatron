@@ -361,6 +361,17 @@ public class LstTest extends AbstractAlgebraTest {
                 () -> assertThrows(MTronException.class, () -> unbounded.plus(lst(jnt(-1))))), "1024 braces of two in a bulked brace");
         final String saturated = Long.MAX_VALUE / 2048L + 1L + " copies unfold past the typer's bound for lst";
         assertEquals(saturated, beyond.getMessage().substring(0, Math.min(saturated.length(), beyond.getMessage().length())));
+        // a brace is read once however many slots hold it, as building their copies wrote it once: 10^6 slots that share
+        // one brace of 1000 members are measured in their slots, where reading its members at every slot read 10^9, and
+        // held in 10^9 references, so the words they stand for are refused at the saturated measure over them
+        final Obj thousand = objs(java.util.stream.IntStream.rangeClosed(1, 1000).mapToObj(i -> (Obj) jnt(i)).toList());
+        final Lst oneBrace = Lst.Helper.power(Lst.Helper.power(Lst.Helper.power(lst(thousand), cInt.of(100L)), cInt.of(100L)), cInt.of(100L));
+        final MTronException refusedShared = assertTimeoutPreemptively(Duration.ofSeconds(10), () -> Machine.Helper.evalAt(machine, () -> {
+            checkEquality(LOG, lst(jnt(-1)), oneBrace.mult(lst(noobj())).plus(lst(jnt(-1))), true);
+            return assertThrows(MTronException.class, () -> oneBrace.plus(lst(jnt(-1))));
+        }), "10^6 slots that share one brace of 1000 members");
+        final String held = Long.MAX_VALUE / 1_000_000_000L + 1L + " copies unfold past the typer's bound for lst";
+        assertEquals(held, refusedShared.getMessage().substring(0, Math.min(held.length(), refusedShared.getMessage().length())));
         // a lst letter is one letter, as the sum lays it out, so 100 references to one nest of two spans of 100 sum
         final Obj nest = ObjmtronSerializer.parse("[[x,y]{100}]{100}");
         final Lst references = lst(new java.util.ArrayList<>(java.util.Collections.nCopies(100, nest)));
@@ -428,7 +439,17 @@ public class LstTest extends AbstractAlgebraTest {
             "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.as(uri::T)            % <BOUND 33557047>",
             "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{1,2}                       % <BOUND 402415>",
             "[{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}.pow(-1) + [y]         % <BOUND 33557047>",
+            "[{-1}[{-1}[x,y]{50}]{50}]{50}.count()                                        % 1",
             "[{-1}[{-1}[x,y]{50}]{50}]{50} + [y]                                          % <BOUND 1263>",
+            // a power's words are bounded by the copies of the letters that power holds, and a range's sum by its
+            // powers' copies together, as a rec's range is by its powers' walks: [{a,b}]{k} is 2^(k-1) copies, so the
+            // seventh power sums alone, and the first seven together, 127 copies, are refused
+            "[{a,b}]{7}.plus([y])>-.count()                                               % 129",
+            "[{a,b}]{8}.plus([y])                                                         % <BOUND 128>",
+            "[{a,b}]{1,6}>-.count()                                                       % 126",
+            "[{a,b}]{1,7}                                                                 % <BOUND 127>",
+            // a lst letter is one letter however many it holds: 256 words of 9 letters held in 17
+            "[[x,y]{100}].mult([{a,b}]{8}) + [y]                                          % <BOUND 136>",
             // two spans of 100 over a sub-word hold its 20,000 letters in 299, 67 copies, so they sum, while a lst letter
             // is one letter, as the sum lays it out, however many it holds
             "[{-1}[{-1}[x,y]{100}]{100}].plus([{-1}[{-1}[x,y]{100}]{100}].neg())          % noobj",

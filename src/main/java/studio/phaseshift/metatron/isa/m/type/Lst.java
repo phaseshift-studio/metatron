@@ -459,31 +459,40 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          */
         private static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
             final Map<Obj, long[]> measured = new IdentityHashMap<>();
-            final long[] measure = measure(slots, measured);
-            if (0L == measure[0])
+            if (0L == Typer.Helper.unfolds(Typer.UNFOLD_LST, unfolded(slots, measured)))
                 return new LinkedHashMap<>();
-            Typer.Helper.unfolds(Typer.UNFOLD_LST, Math.ceilDiv(Math.max(measure[0], measure[1]),
-                    Math.max(1L, held(slots, Collections.newSetFromMap(new IdentityHashMap<>())))));
             final Map<List<Obj>, cInt> words = new LinkedHashMap<>();
             expand(slots, coefficient, measured).forEach(word -> words.merge(word.getKey(), word.getValue(), cInt::plus));
             return words;
         }
 
         /**
+         * the copies of the lst's own letters it holds ({@link #held}) that its words come to ({@link #measure}), the
+         * typer's unfold for lsts reading them ({@link #words}, a range's sum in {@link #power}): none for a lst that is
+         * no word, and one at least for a lst that is
+         */
+        private static long unfolded(final List<Obj> slots, final Map<Obj, long[]> measured) {
+            final long[] measure = measure(slots, measured);
+            return 0L == measure[0] ? 0L : Math.ceilDiv(Math.max(measure[0], measure[1]), Math.max(1L, held(slots, new IdentityHashMap<>())));
+        }
+
+        /**
          * the words a lst's slots are, measured before any is built ({@link #words}): how many, and how many letters they
          * hold together. A slot of m moments makes w words of l letters m w words of m l letters and w times the moments'
          * letters, and a hole, a slot of no moment, makes no word, while a lst letter is one letter, as the sum lays it
-         * out. Each sub-word is measured once, however many slots hold it ({@code measured}, by identity), as a span's
-         * copies share theirs, so the measure walks what the lst holds and no more. Counted in saturating longs,
-         * as the word count can pass any long: a product with a zero factor is zero, whatever the other, and one past a
-         * long's range is the long's largest, past the bound, so no measure is undefined, and a hole is no word in
-         * whatever order it meets an unbounded count
+         * out. Each brace and each sub-word is measured once, however many slots hold it ({@code measured}, by identity),
+         * as a span's copies share them, so the measure reads each slot once and the members of each brace and the slots
+         * of each sub-word once, as building the lst wrote them. Counted in saturating longs, as the word count can pass
+         * any long: a product with a zero factor is zero, whatever the other, and one past a long's range is the long's
+         * largest, past the bound, so no measure is undefined, and a hole is no word in whatever order it meets an
+         * unbounded count
          */
         private static long[] measure(final List<Obj> slots, final Map<Obj, long[]> measured) {
+            final Function<Obj, long[]> moments = slot -> slot.stream()
+                    .map(member -> isSubWord(slot, member) ? measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured)) : new long[]{1L, 1L})
+                    .reduce(new long[]{0L, 0L}, (a, b) -> new long[]{saturatedAdd(a[0], b[0]), saturatedAdd(a[1], b[1])});
             return slots.stream()
-                    .map(slot -> slot.stream()
-                            .map(member -> isSubWord(slot, member) ? measured.computeIfAbsent(member, sub -> measure(sub.lstValue(), measured)) : new long[]{1L, 1L})
-                            .reduce(new long[]{0L, 0L}, (a, b) -> new long[]{saturatedAdd(a[0], b[0]), saturatedAdd(a[1], b[1])}))
+                    .map(slot -> slot.isObjs() ? measured.computeIfAbsent(slot, moments) : moments.apply(slot))
                     .reduce(new long[]{1L, 0L}, (at, slot) -> new long[]{saturatedMultiply(at[0], slot[0]),
                             saturatedAdd(saturatedMultiply(at[1], slot[0]), saturatedMultiply(at[0], slot[1]))});
         }
@@ -491,12 +500,21 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         /**
          * the lst's own letters it holds ({@link #words}), laid out as the sum lays them: each letter one, a lst letter
          * among them, and each sub-word its own letters the first time and one, a reference, at every later place that
-         * holds it ({@code seen}, by identity), so a span's copies of a sub-word hold its letters once
+         * holds it, so a span's copies of a sub-word hold its letters once. A brace held before holds its members as
+         * references, as many as it has, so its members are read once however many slots hold it ({@code seen}, by
+         * identity, what a later place holds)
          */
-        private static long held(final List<Obj> slots, final Set<Obj> seen) {
-            return slots.stream()
-                    .flatMap(slot -> slot.stream().map(member -> isSubWord(slot, member) && seen.add(member) ? Math.max(1L, held(member.lstValue(), seen)) : 1L))
-                    .reduce(0L, (a, b) -> saturatedAdd(a, b));
+        private static long held(final List<Obj> slots, final Map<Obj, Long> seen) {
+            return slots.stream().map(slot -> {
+                if (seen.containsKey(slot))
+                    return seen.get(slot);
+                final long first = slot.stream()
+                        .map(member -> isSubWord(slot, member) && null == seen.putIfAbsent(member, 1L) ? Math.max(1L, held(member.lstValue(), seen)) : 1L)
+                        .reduce(0L, (a, b) -> saturatedAdd(a, b));
+                if (slot.isObjs())
+                    seen.put(slot, slot.stream().count());
+                return first;
+            }).reduce(0L, (a, b) -> saturatedAdd(a, b));
         }
 
         /**
@@ -570,7 +588,11 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * keeps the lst's own point once, outside it. Every power of a lst that holds no word is the zero but the unity, so
          * only the lst itself is read for one, and every power of a lst that holds a word holds one, so an open side never
          * ends and is refused at the bound. A range is bounded before any of its powers is built, by the typer's unfold
-         * for lsts: its farthest power, then the copies all of them hold, both sides of zero together.
+         * for lsts: its farthest power, then the copies all of them hold, both sides of zero together. Its sum is bounded
+         * before any of its words is built, as a rec's range is by the walks its powers hold together
+         * (Rec.Helper.power): each power's words come to copies of the letters that power holds ({@link #words}), and the
+         * powers' copies together are bounded, so {@code [{a,b}]{1,7}}, 254 words, 127 copies of [{a,b}]'s two, is
+         * refused, while each of its powers alone sums.
          */
         public static Lst power(final Lst lst, final cInt span) {
             final Long low = span.min();
@@ -581,7 +603,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                 return (null == low || low <= 0L) && (null == high || high >= 0L) ? lst() : lst_noobj();
             Typer.Helper.unfolds(Typer.UNFOLD_LST, null == low || null == high ? Long.MAX_VALUE : Math.max(Math.abs(Math.max(low, -Long.MAX_VALUE)), Math.abs(high)));
             Typer.Helper.unfolds(Typer.UNFOLD_LST, LongStream.rangeClosed(low, high).map(Math::abs).sum());
-            return Helper.sum(LongStream.rangeClosed(low, high).mapToObj(k -> copies(lst, k)));
+            final List<Lst> powers = LongStream.rangeClosed(low, high).mapToObj(k -> copies(lst, k)).toList();
+            powers.stream().map(power -> unfolded(power.lstValue(), new IdentityHashMap<>()))
+                    .reduce(0L, (together, more) -> Typer.Helper.unfolds(Typer.UNFOLD_LST, saturatedAdd(together, more)));
+            return Helper.sum(powers.stream());
         }
 
         /**

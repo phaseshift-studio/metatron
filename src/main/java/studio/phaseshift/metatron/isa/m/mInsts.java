@@ -881,7 +881,9 @@ public final class mInsts {
                 // the product of a lst stream is their concatenation, as a uri stream's is its extension, so it declares
                 // no commutative law. A stream bulks equal lsts, so it holds them in the order it first meets each, a
                 // bulked lst counting as many copies as its point, as {2,{2}3}.prod() is 2*3*3: {[1],[2],[1]}.prod() is
-                // [1,1,2]. A point there is a count, never a span, so one that counts no copy is refused
+                // [1,1,2]. A point there is a count, never a span, so one that counts no copy is refused, and the copies one
+                // counts are the lst's power, bounded as a span's are (Typer.UNFOLD_LST): {101}[a].prod() is refused as
+                // [a]{101} is, while {{50}[a],{51}[b]}.prod() answers, as [a]{50} * [b]{51} does
                 InstBuilder.build().tid(PROD_INST_TID, "concatenate a lst stream into a single lst: the word ring's product")
                         .dom(LST_TID.maybeSome(), "zero or more lsts").rng(LST_TID, "a single mult reduced lst")
                         .argLst()

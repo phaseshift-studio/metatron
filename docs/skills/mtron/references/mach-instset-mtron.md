@@ -232,7 +232,9 @@ write (`objWrite`), a predicate test (`typePred`), and the selector before a dyn
 
 Beside `check`, `~/compiler/typer/unfold` bounds how many copies a span may unfold into, one `int::T` each, 100 by
 default: `uri` for a uri's path (`<a>{n}`, `pow(n)`, a span a uri takes from its lhs), `lst` for the copies laid
-along a lst axis (`[5{n}]`, an argument list) and `rec` for the powers a rec's span joins and the copies of its walks
+along a lst axis (`[5{n}]`, an argument list), a lst's power (`[1,2]{n}`, `pow(n)`, `{n}[a].prod()`) and the
+copies of a lst's own letters it holds that the words a sum or `as(uri::T)` expands it into come to, a range's powers
+together (`[{a,b}]{1,6}`), and `rec` for the powers a rec's span joins and the copies of its walks
 a power, or a range's sum, holds (`[a=>b]{n}`, each power of a range, the closure `{+}`, which stops at the first power that holds no
 walk). A span past its bound fails, so a cycle's closure does, and a boot profile overrides a bound with
 `typer/unfold => [uri => 1000]`:

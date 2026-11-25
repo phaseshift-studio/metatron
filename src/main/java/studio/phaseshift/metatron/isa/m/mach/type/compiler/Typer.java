@@ -105,9 +105,11 @@ public interface Typer extends Component {
     fURI UNFOLD_URI = f(URI);
     /**
      * the most copies a span lays along a lst axis ({@code [5{n}]}, an argument list), and a lst's span unfolds as its
-     * power ({@code [1,2]{n}}, {@code pow(n)}). As {@link #UNFOLD_REC} does a rec's, it also bounds the sum a range builds
-     * and the words a sum or {@code as(uri::T)} expands a lst into, by the copies of the lst's own letters it holds,
-     * since its braces multiply its words and a span's copies share its sub-words ({@code Lst.Helper.words}).
+     * power ({@code [1,2]{n}}, {@code pow(n)}), as does the count a stream's product takes for a lst's power
+     * ({@code {n}[a].prod()} is {@code [a]{n}}). As {@link #UNFOLD_REC} does a rec's, it also bounds the words a sum or
+     * {@code as(uri::T)} expands a lst into, by the copies of the lst's own letters it holds, since its braces multiply
+     * its words and a span's copies share its sub-words ({@code Lst.Helper.words}), and the sum a range builds, by its
+     * powers' copies together.
      */
     fURI UNFOLD_LST = f("lst");
     /**
