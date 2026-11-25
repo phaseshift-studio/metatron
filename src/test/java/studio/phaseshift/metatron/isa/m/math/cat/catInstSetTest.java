@@ -786,7 +786,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertCarrierDeclares(STR_TYPE, "add_monoid");
         assertCarrierDeclares(URI_TYPE, "mul_monoid");
         assertCarrierDeclares(BYTES_TYPE, "add_monoid");
-        assertCarrierDeclares(LST_TYPE, "mul_monoid");
+        assertCarrierDeclares(LST_TYPE, "ring", "add_group", "add_monoid", "add_commutative_monoid", "mul_monoid");
         assertCarrierDeclares(REC_TYPE, "ring", "add_group", "add_monoid", "add_commutative_monoid");
         assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "add_monoid", "mul_monoid");
         // the machine's algebra is declared with the /m carriers although its type is mach's (machInstSet builds it)

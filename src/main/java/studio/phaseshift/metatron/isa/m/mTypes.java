@@ -232,12 +232,35 @@ public final class mTypes {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID)).tryToInst(),
                                 uri(ID), bytes(new byte[0])),
                         MONOID_THEORY_TID, null))));
-        // lst: the WORD RING (Marko, 2026-11-25), the free algebra over objects, declared as uri's is: a monoid under
-        // concatenation (MULT), [1,2]·[3] is [1,2,3], identity the empty lst [,]. PLUS is the ring's sum, which factors
-        // a shared prefix and suffix, [a,b,c] + [a,d,c] is [a,{b,d},c], but its zero is noobj, which a rec cannot name
-        // (it drops a noobj entry), and noobj runs no plus, so 0 + x answers 0; the ring waits for a zero named as an
-        // instruction, as code names end
+        // lst: the WORD RING (Marko, 2026-11-25), the free algebra over objects. PLUS is the sum, which factors a shared
+        // prefix and suffix, [a,b,c] + [a,d,c] is [a,{b,d},c], keyed by the words alone, so the order of the operands
+        // does not change it, and NEG puts -1 on a lst's first letter, so the sum is an abelian group. Its zero is
+        // [noobj], the lst of a hole, through which no word runs ("noobj is not in the carrier set of lst::T. [noobj]
+        // is."), so a rec names it. MULT is concatenation, [1,2]·[3] is [1,2,3]: associative, not commutative, with the
+        // empty lst [,] as its unity, and the zero absorbs it. mul_monoid is declared beside the ring, as code's is: its
+        // id is the unity the rewriter drops (x·[,] is x, as written). add_commutative_monoid's commutative holds PLUS
+        // alone, the operation that declares Law.commutative (AlgebraTool.analyzeType), never concatenation. The
+        // monoids are declared too: a theory refines no other, so the group does not make lst a monoid
         declare(LST_TYPE, rec(mutableMap(
+                uri("ring"), rec(mutableMap(
+                                uri(ADD), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
+                                uri(MUL), auto_from_(MULT_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
+                                uri(Tokens.ZERO), lst(noobj()),
+                                uri(Tokens.ONE), lst()),
+                        RING_THEORY_TID, null),
+                uri("add_group"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
+                                uri(ID), lst(noobj()),
+                                uri(INV), auto_from_(NEG_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst()),
+                        GROUP_THEORY_TID, null),
+                uri("add_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
+                                uri(ID), lst(noobj())),
+                        MONOID_THEORY_TID, null),
+                uri("add_commutative_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
+                                uri(ID), lst(noobj())),
+                        COMMUTATIVE_MONOID_THEORY_TID, null),
                 uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
                                 uri(ID), lst()),
@@ -258,9 +281,11 @@ public final class mTypes {
         // [a=>b]·[b=>c] is [a=>(b=>c)]: associative but not commutative, with the identity arrow [_=>_], the walk of
         // length zero, as its unity. The carrier is the recs in the merge's normal form (no empty sub-rec, a key's recs
         // one rec): a literal outside it answers its normal form under +, · and the unity, never itself. No mul_monoid
-        // is declared: its op role would outrank the ring's mul when AlgebraTool binds the join, and an op is held to
-        // every law the type claims, add_commutative_monoid's commutative included, which a ring's product owes none.
-        // The monoids are declared too: a theory refines no other, so the group does not make rec a monoid
+        // is declared: its id is the unity the rewriter drops (x·[_=>_] is x), while the join answers a literal its
+        // normal form under the unity ([a=>[=>]]·[_=>_] is [=>]), so the drop would keep what the join normalizes.
+        // add_commutative_monoid's commutative holds PLUS alone, the operation that declares Law.commutative
+        // (AlgebraTool.analyzeType), never the join. The monoids are declared too: a theory refines no other, so the
+        // group does not make rec a monoid
         declare(REC_TYPE, rec(mutableMap(
                 uri("ring"), rec(mutableMap(
                                 uri(ADD), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),

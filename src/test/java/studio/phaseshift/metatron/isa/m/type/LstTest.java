@@ -70,8 +70,8 @@ public class LstTest extends AbstractAlgebraTest {
     }
 
     /// THE WORD RING (Marko, 2026-11-24 and 11-25; Claims 19 and 20 of ring-theoretic-distributed-structures.md): a lst
-    /// is a word of objects, a timeline. It multiplies by concatenation, with the empty lst as its unity and noobj as its
-    /// zero, and it adds as a path adds: the prefix and suffix its words share around one brace of what lies between,
+    /// is a word of objects, a timeline. It multiplies by concatenation, with the empty lst as its unity and [noobj], the
+    /// lst of a hole, as its zero, and it adds as a path adds: the prefix and suffix its words share around one brace of what lies between,
     /// sorted, so lsts that share no moment are one lst whose slot branches them. Neither operation applies a letter's
     /// own: letters are read only by equality. A sum keeps its mass on its letters, as a lst is multilinear in them
     /// (Claim 24), and the lhs's own point floats over it (Theorem 3).
@@ -85,7 +85,23 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2].one()                                                                  % [,]",
             "['a','b'].one()                                                              % [1,2].one()",
             "[1,2] * noobj                                                                % noobj",
-            "[1,2].zero()                                                                 % noobj",
+            "[1,2].zero()                                                                 % [noobj]",
+            // the zero is [noobj], the lst of a hole (Marko, 2026-11-25: noobj is not in the carrier set of lst::T, [noobj]
+            // is), an element of lst::T as the unity is: it absorbs a product on either side and is every power of
+            // itself but the unity, while any other lst through a hole holds no word and concatenates as written
+            "[1,2].zero().isa(lst::T)                                                     % [noobj]",
+            "[1,2].one().isa(lst::T)                                                      % [,]",
+            "[1,2] * [noobj]                                                              % [noobj]",
+            "[noobj] * [1,2]                                                              % [noobj]",
+            "[noobj]{3}                                                                   % [noobj]",
+            "[noobj]{0}                                                                   % [,]",
+            "[noobj] + [1,2]                                                              % [1,2]",
+            "[1,noobj] * [2]                                                              % [1,noobj,2]",
+            // the difference is the sum with the additive inverse
+            "[a,b,c] - [a,b,c]                                                            % [noobj]",
+            "[a,b,c] - [a,d,c]                                                            % [a,{b,{-1}d},c]",
+            "[a,b,c] - [noobj]                                                            % [a,b,c]",
+            "[noobj] - [a,b,c]                                                            % [a,b,c].neg()",
             "[1,2].mult([3]).mult([4,5])                                                  % [1,2].mult([3].mult([4,5]))",
             "[1,{2,3}] * [{4,5},6]                                                        % [1,{2,3},{4,5},6]",
             "[a,b] * {2}[c]                                                               % [{2}a,b,c]",
@@ -136,10 +152,10 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2,3].neg()                                                                % [{-1}1,2,3]",
             "[1,2,3].neg().neg()                                                          % [1,2,3]",
             "[{a,b},c].neg().neg()                                                        % [{a,b},c]",
-            "[{a,b},c].plus([{a,b},c].neg())                                              % noobj",
-            "[1,2,3].plus([1,2,3].neg())                                                  % noobj",
-            "[{-1}1,2] + [1,2]                                                            % noobj",
-            "[a,b] + [a,{-1}b]                                                            % noobj",
+            "[{a,b},c].plus([{a,b},c].neg())                                              % [noobj]",
+            "[1,2,3].plus([1,2,3].neg())                                                  % [noobj]",
+            "[{-1}1,2] + [1,2]                                                            % [noobj]",
+            "[a,b] + [a,{-1}b]                                                            % [noobj]",
             "[a,b,c] + [a,d,c] + [a,{-1}d,c]                                              % [a,b,c]",
             "[{-1}a] + [{-1}b]                                                            % [{a,b}].neg()",
             "[{-1}a] + [{-1}b] + [a]                                                      % [{-1}b]",
@@ -156,11 +172,11 @@ public class LstTest extends AbstractAlgebraTest {
             "[,].mult({2}[,].mult([a]))                                                   % [{2}a]",
             "[,].neg()                                                                    % [{-1}[,]]",
             "[,].neg().neg()                                                              % [,]",
-            "[,].plus([,].neg())                                                          % noobj",
+            "[,].plus([,].neg())                                                          % [noobj]",
             // a brace of equal sub-words is bulked into one lst with a point, a sub-word with that mass (Definition 11)
             "[x,{[a,b],[a,b]}]                                                            % [x,{2}[a,b]]",
             "[x,{[a,b],[a,b]}] + [x,a,b]                                                  % [{3}x,a,b]",
-            "[x,{2}[a,b]] + [x,{-2}[a,b]]                                                 % noobj",
+            "[x,{2}[a,b]] + [x,{-2}[a,b]]                                                 % [noobj]",
             "[x,{[a,b],[a,b]},y] + [x,c,y]                                                % [x,{{2}[a,b],c},y]",
             // the mass never lands on a lst letter: the letter is wrapped as the sub-word that holds it
             "[[1,2],3] + [[1,2],3]                                                        % [{2}[[1,2]],3]",
@@ -196,7 +212,7 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2]{-1,1}                                                                  % [{[,],[1,2],[2,1]}]",
             "[1,2]{1,3}                                                                   % [1,2,{[,],[1,2],[1,2,1,2]}]",
             "[noobj]{*}                                                                   % [,]",
-            "[noobj]{1,2}                                                                 % noobj",
+            "[noobj]{1,2}                                                                 % [noobj]",
             "[,]{1,2}                                                                     % [{2}[,]]",
             // a bulked brace reverses as its sub-word
             "[x,{[a,b],[a,b]}]{-1}                                                        % [{2}[b,a],x]",
@@ -235,7 +251,7 @@ public class LstTest extends AbstractAlgebraTest {
             "[0{10},1{10},2{10},3{10},4{10},5{10},6{10},7{10},8{10},9{10},{a,b}]{1,11}    % <ERROR>",
             // a lst without braces is one word, built once: its sum is linear in its length
             "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([x]).count()                        % 1",
-            "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([0,1,2,3,4,5,6,7,8,9]{100}.pow(100).neg()) % noobj",
+            "[0,1,2,3,4,5,6,7,8,9]{100}.pow(100).plus([0,1,2,3,4,5,6,7,8,9]{100}.pow(100).neg()) % [noobj]",
             // a range is bounded by its farthest power, then by the copies all of them hold, before any is built
             "[1]{1,10000000000}                                                           % <ERROR>",
             // the span at run time
@@ -425,6 +441,7 @@ public class LstTest extends AbstractAlgebraTest {
             "[{2}[{2}[{a,b}]{100}]{11}] + [y]                                             % <BOUND 43920819223117981>",
             "[{2}[,],{2}[{2}[{a,b}]{100}]{11}] + [y]                                      % <BOUND 43712663681776189>",
             "[noobj,{2}[{2}[{a,b}]{100}]{11}] + [y]                                       % [y]",
+            "[{2}[{2}[{a,b}]{100}]{11},noobj] + [y]                                       % [y]",
             "[{[{2}[{a,b}]{50},noobj],c}] + [y]                                           % [{c,y}]",
             "[{2}[{2}[{a,b}]{100}]{11}].as(uri::T)                                        % <BOUND 43920819223117981>",
             "[{2}[{2}[{a,b}]{100}]{11}]{1,2}                                              % <BOUND 43920819223117981>",
@@ -452,16 +469,16 @@ public class LstTest extends AbstractAlgebraTest {
             "[[x,y]{100}].mult([{a,b}]{8}) + [y]                                          % <BOUND 136>",
             // two spans of 100 over a sub-word hold its 20,000 letters in 299, 67 copies, so they sum, while a lst letter
             // is one letter, as the sum lays it out, however many it holds
-            "[{-1}[{-1}[x,y]{100}]{100}].plus([{-1}[{-1}[x,y]{100}]{100}].neg())          % noobj",
-            "[[[x,y]{100}]{100}].plus([[[x,y]{100}]{100}].neg())                          % noobj",
+            "[{-1}[{-1}[x,y]{100}]{100}].plus([{-1}[{-1}[x,y]{100}]{100}].neg())          % [noobj]",
+            "[[[x,y]{100}]{100}].plus([[[x,y]{100}]{100}].neg())                          % [noobj]",
             "[{a,b},[[x,y]{100}]{100}] + [y]                                              % [{[a,[[x,y]{100}]{100}],[b,[[x,y]{100}]{100}],y}]",
             // a sub-word holds its own letters the first time and one, a reference, at every later place:
             // [{-1}[a,b]]{100}.pow(2) holds its 400 letters in 201, where references held at nothing held 2 and refused
             // it, and [{-1}[x,y]{50}]{100} its 10,000 in 199, where a held of the lst's own letters alone, none, refuses it
-            "[{-1}[a,b]]{100}.pow(2).plus([{-1}[a,b]]{100}.pow(2).neg())                  % noobj",
-            "[{-1}[x,y]{50}]{100}.plus([{-1}[x,y]{50}]{100}.neg())                        % noobj",
+            "[{-1}[a,b]]{100}.pow(2).plus([{-1}[a,b]]{100}.pow(2).neg())                  % [noobj]",
+            "[{-1}[x,y]{50}]{100}.plus([{-1}[x,y]{50}]{100}.neg())                        % [noobj]",
             // a shared sub-word under the bound sums
-            "[{-1}[x,y]{50}]{2}.plus([{-1}[x,y]{50}]{2}.neg())                            % noobj",
+            "[{-1}[x,y]{50}]{2}.plus([{-1}[x,y]{50}]{2}.neg())                            % [noobj]",
     }, delimiter = '%')
     public void testTheWordsAreBoundedBeforeTheyAreBuilt(final String code, final String expected) {
         final Machine machine = Machine.current();
@@ -812,9 +829,10 @@ public class LstTest extends AbstractAlgebraTest {
             "@/sys/tmp/lst_test/0 >>= -[b=>2]                                    % [a=>2,b=>[a,b,c]]",
             "@/sys/tmp/lst_test/0 >>= [b=>_ * [d,e]]                             % [a=>2,b=>[a,b,c,d,e]]",
             "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c,d,e]]",
-            "@/sys/tmp/lst_test/0 >>= [b=>-[a,d]]                                % [a=>2,b=>[b,c,e]]",
-            "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[b,c,e]]",
-            "@/sys/tmp/lst_test/0                                                % [a=>2,b=>[b,c,e]]@/sys/tmp/lst_test/0",
+            "@/sys/tmp/lst_test/0 >>= [b=>+[x]]                                  % [a=>2,b=>[{[a,b,c,d,e],x}]]",
+            "@/sys/tmp/lst_test/0 >>= [b=>-[x]]                                  % [a=>2,b=>[a,b,c,d,e]]",
+            "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c,d,e]]",
+            "@/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c,d,e]]@/sys/tmp/lst_test/0",
             // "@/sys/tmp/lst_test/0 >>= +[a=>3,b=>_ * [d,e]]                       % [a=>{2,3},b=>[b,c,e,d,e]]",
             // "*/sys/tmp/lst_test/0                                                % [a=>{2,3},b=>[b,c,e,d,e]]",
     }, delimiter = '%')

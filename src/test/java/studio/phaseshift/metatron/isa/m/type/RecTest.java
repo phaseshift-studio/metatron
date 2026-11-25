@@ -476,6 +476,11 @@ public class RecTest extends AbstractAlgebraTest {
             "[_=>_] * [a=>b]                                            % [a=>b]",
             "[a=>b].mult([a=>b].one())                                  % [a=>b]",
             "[a=>b].one()                                               % [_=>_]",
+            // the zero and the unity are elements of rec::T, and a sum of no rec is the zero
+            "[a=>b].zero().isa(rec::T)                                  % [=>]",
+            "[a=>b].one().isa(rec::T)                                   % [_=>_]",
+            "[a=>b] - [a=>b]                                            % [=>]",
+            "[a=>b].neg().neg()                                         % [a=>b]",
             "[a=>[b=>1]] * [_=>_]                                       % [a=>[b=>1]]",
             "[a=>b] * [_=>_,_=>c]                                       % [a=>{b,(b=>c)}]",
             "[_=>_,_=>c] * [b=>d]                                       % [b=>d]",
@@ -615,9 +620,10 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * THE WALK JOIN DOES NOT COMMUTE, and the analysis says so where it is asked. A type-level analysis answers
-     * {@code commutative} uncheckable on the join, a ring's claim being its +'s, while the merge is held to it; an
-     * analysis of the join alone judges the law and fails it on the sample and its partner.
+     * THE WALK JOIN DOES NOT COMMUTE, and the analysis says so where it is asked. A type-level analysis holds an
+     * operation to {@code commutative} only when its instruction declares the law (Marko, 2026-11-25): the merge
+     * does and is held to it, the join does not and answers it uncheckable; an analysis of the join alone judges the
+     * law and fails it on the sample and its partner.
      */
     @Test
     public void testTheWalkJoinIsJudgedNotCommuting() {
@@ -630,7 +636,7 @@ public class RecTest extends AbstractAlgebraTest {
             assertTrue(type.ok(), () -> "the type-level claim is the merge's: " + type.toRec());
             assertEquals(1L, type.uncheckable().<Obj>elements()
                     .filter(result -> result.asRec().at(uri(ROLE)).equals(uri(MUL)))
-                    .filter(result -> result.asRec().at(uri(REASON)).equals(str("a ring's multiplication need not commute")))
+                    .filter(result -> result.asRec().at(uri(REASON)).equals(str("the instruction declares no commutative law")))
                     .count(), () -> "the join answers the type-level claim uncheckable: " + type.toRec());
         } finally {
             machine.pop();

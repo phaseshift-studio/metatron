@@ -601,8 +601,9 @@ moment, $[x, \{a, b\}, y] = x\,(a + b)\,y$, a branch, and a list in a brace is a
 branch holds sub-paths: $[x, \{[a,b], c\}, y] = x\,(a\,b + c)\,y$. A stream of lists is a sum of words. The converse
 of a list reverses its letters, and its span is its power (Definition 3).
 
-**Claim 19 (the list ring).** Lists form the free algebra $\mathcal{C}\langle X\rangle$, a ring with zero $0$ and
-unity $[\,,]$: the reference ring over objects instead of segments. A list multiplies by concatenation and adds as a
+**Claim 19 (the list ring).** Lists form the free algebra $\mathcal{C}\langle X\rangle$, a ring with zero $0$, the
+list of one hole `[noobj]` through which no word runs, and unity $[\,,]$: the reference ring over objects instead of
+segments. A list multiplies by concatenation and adds as a
 path adds, factoring out a common prefix and suffix, $[a,b,c] + [a,d,c] = [a,\{b,d\},c]$, as
 $a\,b\,c + a\,d\,c = a\,(b + d)\,c$.
 
@@ -709,8 +710,11 @@ share an index, not a past, and superposing them by index reads time as space.
   sub-word, so `[x,{[a,b],[c,d]},y]` is the spliced $x\,(a\,b + c\,d)\,y$, while a list outside a brace is a letter.
 - *A sum that does not factor.* Settled: $[1,2,3] + [4,5,6]$ is one list with a branch of sub-lists,
   `[{[1,2,3],[4,5,6]}]`, since a stream of the two would not stay their sum under the next $+$, which maps over a
-  stream. The list ring still needs a zero inside its type, as the code ring names its own: the zero is noobj, which no
-  record can name, so mtron declares only the list's multiplicative monoid, as it does a uri's.
+  stream.
+- *The list ring's zero.* Settled (Marko, 2026-11-25): noobj is not in the list ring's carrier; `[noobj]` is. No word
+  runs through a hole, so the list of one hole is the sum of nothing and of words that cancel, `[a,b,c] - [a,b,c]` is
+  `[noobj]`, and it absorbs a product, `[1,2] * [noobj]` is `[noobj]`. A record can name it, so mtron declares the
+  list ring, its additive group and its monoids, as it does the record ring's.
 - *Spans on nested lists.* The span after an inner list's bracket is that list's power, so `[[1,2]{2}]` is
   `[[1,2,1,2]]`, and the outer list's span repeats it, `[[1,2]]{2}` is `[[1,2],[1,2]]`. Is the bracket the span
   follows always the one whose ring takes the power?

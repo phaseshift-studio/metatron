@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.algebra;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -90,6 +92,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * census a declared law is held to.
  */
 public final class AlgebraTool {
+
+    private static final GraphittyLogger LOG = Graphitty.log(AlgebraTool.class);
 
     private AlgebraTool() {
     }
@@ -200,19 +204,31 @@ public final class AlgebraTool {
                 results.add(Result.unchecked(law, OP, "the type declares no role-bearing operation"));
             return report(type, null, claimed, results);
         }
-        // A RING OWES NO COMMUTING PRODUCT: a type's claims are the laws of its theories, and a ring's commutative is
-        // its +'s, so the operation a ring binds as its mul (rec's walk join) answers it uncheckable here. Asked of
-        // that operation alone (analyzeTypeInst), the law is judged like any other. An operation another instance
-        // binds better (code's compose, an op under mul_monoid) is held to every claim
+        // COMMUTATIVITY IS THE INSTRUCTION'S OWN LAW (Marko, 2026-11-25): a type's claims are the laws of its theories,
+        // and a commutative one is about the operation that declares it. Every operation's x·y = y·x is run, and its
+        // instruction's Law.commutative reads the verdict: a declared law is judged like any other, so a wrong one
+        // fails, one verified but undeclared is warned of (a declaration forgotten), and an operation that declares
+        // none and does not commute answers it uncheckable, as lst's and rec's products do (concatenation and the walk
+        // join, beside a plus that declares it). A claim no bound instruction declares is the type's alone, so it is
+        // judged on every operation and an over-claim is still exposed (str's concatenation). Asked of one operation
+        // alone (analyzeTypeInst), the law is judged like any other
+        final boolean declared = ops.stream().anyMatch(op -> Law.Helper.declares(op.inst(), type, Law.commutative));
         final List<Report> reports = new ArrayList<>();
         for (final Op op : ops) {
-            if (MUL_ROLES.contains(op.role()) && RING.equals(op.instance()) && claimed.contains(Law.commutative)) {
-                final List<Result> results = new ArrayList<>(check(type, op,
-                        claimed.stream().filter(law -> Law.commutative != law).toList()));
-                results.add(Result.uncheckable(Law.commutative, op.role(), "a ring's multiplication need not commute"));
-                reports.add(report(type, uri(op.inst().tid()), claimed, results));
-            } else
+            if (!claimed.contains(Law.commutative)) {
                 reports.add(analyzeTypeInst(type, op.inst(), claimed));
+                continue;
+            }
+            final boolean declares = Law.Helper.declares(op.inst(), type, Law.commutative);
+            final List<Result> results = new ArrayList<>(check(type, op, claimed.stream().filter(law -> Law.commutative != law).toList()));
+            for (final Result commutes : check(type, op, List.of(Law.commutative))) {
+                if (Verdict.holds == commutes.verdict() && !declares)
+                    LOG.warn("commutativity verified but %s doesn't declare commutativity", op.inst().tid());
+                results.add(Verdict.failed == commutes.verdict() && !declares && declared
+                        ? Result.uncheckable(Law.commutative, op.role(), "the instruction declares no commutative law")
+                        : commutes);
+            }
+            reports.add(report(type, uri(op.inst().tid()), claimed, results));
         }
         return merge(type, reports);
     }

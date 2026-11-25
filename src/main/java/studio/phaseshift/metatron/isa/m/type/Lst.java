@@ -41,12 +41,8 @@ import static com.google.common.math.LongMath.saturatedMultiply;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -182,30 +178,44 @@ public interface Lst extends Poly<Lst, List<Obj>> {
     default Lst plus(final Lst rhs) {
         if (this.isNoObj())
             return Helper.sum(Stream.of(rhs));
-        final Lst sum = Helper.sum(Stream.of(this.d(cInt.ONE()).asLst(), rhs));
-        return sum.isNoObj() ? sum : this.jvm(sum.lstValue());
+        return this.jvm(Helper.sum(Stream.of(this.d(cInt.ONE()).asLst(), rhs)).lstValue());
     }
 
     /**
-     * THE ZERO OF THE WORD RING, noobj typed as a lst ({@link #lst_noobj()}): the sum of nothing, what a sum answers
-     * when its words cancel, and what absorbs a product. The empty lst {@code [,]} is the unity ({@link #one()}).
+     * THE WORD RING'S DIFFERENCE, the sum with the argument's additive inverse ({@link #neg}): {@code [a,b,c] - [a,b,c]}
+     * is the zero, and {@code [a,b,c] - [a,d,c]} is {@code [a,{b,{-1}d},c]}.
+     */
+    default Lst minus(final Lst rhs) {
+        return this.plus(rhs.neg());
+    }
+
+    /**
+     * THE ZERO OF THE WORD RING, {@code [noobj]}, the lst of a hole (Marko, 2026-11-25: "noobj is not in the carrier set
+     * of lst::T. [noobj] is."): no word runs through a hole, so it is the sum of nothing and what a sum answers when its
+     * words cancel ({@link Helper#sum}), it absorbs a product on either side ({@link #mult}), and every power of it is
+     * itself but the unity. noobj, nothing, stays the stream's: a product with noobj is noobj. The empty lst
+     * {@code [,]} is the unity ({@link #one()}).
      */
     @Override
     default Lst zero() {
-        return lst_noobj();
+        return lst(noobj());
     }
 
     /**
      * THE WORD RING'S PRODUCT, concatenation: one timeline after another, {@code [1,2,3] * [4,5,6]} is
-     * {@code [1,2,3,4,5,6]}, with the empty lst as its unity ({@link #one()}) and the zero absorbing it. It splices the
-     * slots as they are, braces included, so it distributes over the sum on both sides, and it applies none of its
-     * letters' operations: {@code [[a=>b],c] * [[b=>e]]} is {@code [[a=>b],c,[b=>e]]}, the records' join left to a
-     * fold. This lst's own point floats over it, and the argument's multiplies into the product's first letter, as a
-     * lst is multilinear in its letters (Claim 24).
+     * {@code [1,2,3,4,5,6]}, with the empty lst as its unity ({@link #one()}) and the zero absorbing it on either side:
+     * {@code [1,2] * [noobj]} is {@code [noobj]} ({@link #zero()}), while any other lst through a hole concatenates as
+     * written, a lst that holds no word, whose sum is the zero. It splices the slots as they are, braces included, so it
+     * distributes over the sum on both sides, and it applies none of its letters' operations:
+     * {@code [[a=>b],c] * [[b=>e]]} is {@code [[a=>b],c,[b=>e]]}, the records' join left to a fold. This lst's own point
+     * floats over it, and the argument's multiplies into the product's first letter, as a lst is multilinear in its
+     * letters (Claim 24). A product with noobj, nothing, is nothing.
      */
     default Lst mult(final Lst rhs) {
         if (this.isNoObj() || rhs.isNoObj())
             return lst_noobj();
+        if (Helper.isZero(this.lstValue()) || Helper.isZero(rhs.lstValue()))
+            return this.jvm(this.zero().lstValue());
         final List<Obj> slots = new ArrayList<>(this.lstValue());
         slots.addAll(rhs.lstValue());
         return this.jvm(Helper.scaled(slots, rhs.tid().d()).lstValue());
@@ -235,26 +245,6 @@ public interface Lst extends Poly<Lst, List<Obj>> {
     }
 
     public static final class LstType {
-
-        /*
-         * WHAT REMAINS HERE, and why: the `as` conversions that declare nothing (lst->uri/lst/code). They are
-         * registered with instC, so none stages a `?decq` claim -- no law, no inverse. lst<->rec preserves nothing in
-         * EITHER direction (the round trip re-keys and reorders what it carries), so both directions declare NO
-         * inverse, and lst->rec lives in mInsts.lsts_insts() beside the lst operations.
-         */
-        public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(
-                    // THE PATH A LST OF ATOMS SPELLS, the word ring's embedding in the uri ring ([a,b,c].as(uri) is a/b/c):
-                    // the uri sum of its words, each word its letters' segments with its coefficient for the point, so the
-                    // sum a lst factors is the sum a uri factors, [a,{b,d},c] spelling <a/{b,d}/c>
-                    instC(AS_INST_TID.dom(LST_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(fURI.Helper.sum(Helper.words(lhs.asLst().lstValue(), cInt.ONE())
-                            .entrySet().stream()
-                            .filter(word -> !word.getValue().isZero())
-                            .map(word -> word.getKey().stream().map(Obj::uriValue).reduce(fURI::extend).orElse(Singleton.f("")).d(word.getValue()))))),
-                    instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(boundOrDeclared(lhs.asLst(), inst.arg(0).vidOrTid())).c(c -> c.mult(lhs.c()))),
-                    instC(AS_INST_TID.dom(LST_TID).rng(CODE_TID), lst(T(CODE_TID)), (lhs, inst) -> MCode.code(lhs.asLst().jvm().stream().flatMap(o -> o.isCall() ? o.asCall().insts().stream() : map_(o).tryToInst().insts().stream()).toList()).c(c -> c.mult(lhs.c())))
-            ));
-        }
 
         /**
          * A SLOT IS A VARIABLE WHEN IT IS SPELLED AS ONE: {@code A} — or {@code A{2}} — is a generic, which is
@@ -414,7 +404,8 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * one lst, the prefix and suffix every word shares around one brace of the middles, sorted by their text. A
          * middle of one letter is that letter, and any other is a sub-word lst. So is one letter that is itself a lst,
          * wrapped as {@code [[x,y]]}, since a brace splices the lsts it holds. A single word is written alone, its
-         * coefficient on its first letter ({@link #scaled}), and a sum of nothing, or of words that cancel, is the zero.
+         * coefficient on its first letter ({@link #scaled}), and a sum of nothing, or of words that cancel, is the zero,
+         * {@code [noobj]} ({@link Lst#zero()}).
          * Summing a stream at once is the fold of {@link Lst#plus} without re-expanding each partial sum.
          */
         public static Lst sum(final Stream<Lst> lsts) {
@@ -422,7 +413,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
             lsts.forEach(lst -> words(lst.lstValue(), lst.tid().d()).forEach((word, c) -> words.merge(word, c, cInt::plus)));
             final List<Map.Entry<List<Obj>, cInt>> live = words.entrySet().stream().filter(word -> !word.getValue().isZero()).toList();
             if (live.isEmpty())
-                return lst_noobj();
+                return lst(noobj());
             if (1 == live.size())
                 return scaled(live.getFirst().getKey(), live.getFirst().getValue());
             final List<List<Obj>> letters = live.stream().map(Map.Entry::getKey).toList();
@@ -457,7 +448,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
          * over a sub-word, [{-1}[{-1}[{-1}[{-1}[x,y]{100}]{100}]{100}]{100}]{100}, one word of 2·10^10 letters, held in 596.
          * A lst with a hole is no word at all, so none is built, however many its braces before the hole would make.
          */
-        private static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
+        public static Map<List<Obj>, cInt> words(final List<Obj> slots, final cInt coefficient) {
             final Map<Obj, long[]> measured = new IdentityHashMap<>();
             if (0L == Typer.Helper.unfolds(Typer.UNFOLD_LST, unfolded(slots, measured)))
                 return new LinkedHashMap<>();
@@ -544,6 +535,14 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         }
 
         /**
+         * THE ZERO ITSELF, {@code [noobj]} ({@link Lst#zero()}): the lst of one hole, which absorbs a product
+         * ({@link Lst#mult}) and is every power of itself but the unity ({@link #copies})
+         */
+        private static boolean isZero(final List<Obj> slots) {
+            return 1 == slots.size() && slots.getFirst().isNoObj();
+        }
+
+        /**
          * A LST WITH A POINT IS A BRACE: a brace of equal sub-words is bulked into one lst with a point,
          * {@code {[a,b],[a,b]}} being {@code {2}[a,b]}, so a lst slot whose point is not one is a sub-word with that mass,
          * as a lst member of a brace is, while a lst slot at point one is a letter: {@code [[a,b]]} is the word of one
@@ -600,7 +599,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
             if (null != low && low.equals(high))
                 return copies(lst, low);
             if (words(lst.lstValue(), cInt.ONE()).values().stream().allMatch(cInt::isZero))
-                return (null == low || low <= 0L) && (null == high || high >= 0L) ? lst() : lst_noobj();
+                return (null == low || low <= 0L) && (null == high || high >= 0L) ? lst() : lst(noobj());
             Typer.Helper.unfolds(Typer.UNFOLD_LST, null == low || null == high ? Long.MAX_VALUE : Math.max(Math.abs(Math.max(low, -Long.MAX_VALUE)), Math.abs(high)));
             Typer.Helper.unfolds(Typer.UNFOLD_LST, LongStream.rangeClosed(low, high).map(Math::abs).sum());
             final List<Lst> powers = LongStream.rangeClosed(low, high).mapToObj(k -> copies(lst, k)).toList();
@@ -616,6 +615,8 @@ public interface Lst extends Poly<Lst, List<Obj>> {
         private static Lst copies(final Lst lst, final long n) {
             if (Long.MIN_VALUE == n)
                 throw MTronException.of("%s has no power at %s: the span has no positive counterpart", lst, n);
+            if (0L != n && isZero(lst.lstValue()))
+                return lst;
             Typer.Helper.unfolds(Typer.UNFOLD_LST, n);
             final List<Obj> word = n < 0L ? converse(lst.lstValue(), new IdentityHashMap<>()) : lst.lstValue();
             final List<Obj> slots = new ArrayList<>();
