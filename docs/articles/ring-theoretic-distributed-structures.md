@@ -8,8 +8,8 @@ author: |
 
 **DRAFT**: This article is being developed alongside a refactor. As of November 25, 2026, metatron implements the
 reference ring and its spans, record merge, join and spans, and the layout invariance of reads. The list ring
-(*Containers: Space and Time*) specifies the refactor in progress: its examples answer as the text states once it
-lands, and fail until then. The claims are stated precisely but not yet proven, and the notes marked *Directions*
+(*Polys: Space and Time*) specifies the refactor in progress: its examples answer as the text states once it lands,
+and fail until then. The claims are stated precisely but not yet proven, and the notes marked *Directions*
 point to where the work goes next.
 
 # Introduction
@@ -35,13 +35,26 @@ $$
 \end{equation*}
 $$
 
+<!-- figure source: images/ring-theoretic-distributed-structures/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
+![figure 1](images/ring-theoretic-distributed-structures/fig-01.svg)
+
 Factoring data colocates it, and expanding data partitions it, just as factoring a program shares work and expanding a
 program parallelizes it. A reduce is where a program must synchronize, and an overwrite is where data must.
 
+Expanding repeats the address the two values share: $a$ is written once in $a \cdot (b + c)$ and twice in
+$a\,b + a\,c$, once in each summand, so that each summand is whole wherever it is put. Database practice calls this
+*denormalization*: data repeated so that each part can be read where it lies, without a join that reaches the others.
+Distributed stores denormalize for that reason, and the ring tells the free repetition from the costly one.
+Distributivity repeats a factor, never a value. Each of $1$ and $2$ is still stored once, so the two layouts are one
+term and answer every read alike (Claim 5). Replication repeats a whole term, $x + x = 2\,x$, which is another term:
+a fold over it answers as over the original only when the fold cannot count copies, that is, when it is idempotent
+(Claim 9). Either repetition is paid for at writes: a delete at $a$ must reach every place that holds a term below
+$a$ (Claim 12).
+
 The sections define the reference ring and its spans, structures and their reads, layouts, placements across machines,
-and writes and deletes. They then read the two containers every program builds: records, which extend a structure
-through space, and lists, which extend it through time, and set both beside paths and programs. The last section sets
-the two articles side by side.
+and writes and deletes. They then read the polys every program builds: records, which extend a structure through
+space, and lists, which extend it through time, and set both beside paths and programs. The last section sets the two
+articles side by side.
 
 # The Reference Ring
 
@@ -64,6 +77,17 @@ and they form the set $\mathcal{U} = \mathcal{C}\langle\Sigma\rangle$.
 $\mathcal{U}$ is the free algebra on $\Sigma$: polynomials whose variables are segments that do not commute. Its $+$
 is the *branch*, $a + b = \{a, b\}$, and its $\cdot$ is *extension*, $a \cdot b = a/b$, as in the tractatus
 [[5]](../tractatus/uri.html).
+
+<!-- figure source: images/ring-theoretic-distributed-structures/fig-02.tex (the PDF surface typesets it; the svg is its render) -->
+![figure 2](images/ring-theoretic-distributed-structures/fig-02.svg)
+
+Figure 2 draws the product of Definition 2. A segment is drawn with its coefficient, a sum as its terms side by side,
+and a product as its factors one after the other. On the left, the product of two sums is two branches in series, and
+a route from the left end to the right takes one term of each factor. Multiplying out lists the routes. On the right
+is the sum of the four products, and each route's coefficient is the product of the coefficients it passes, so $2a$
+followed by $3d$ is $6\,a\,d$ (Claim 1). Read from right to left, the figure factors. The four routes allow it because
+they form the grid $\{a, b\} \times \{c, d\}$ (Claim 2) and their coefficients form a product table, one number for
+each first segment times one for each second, which the cross products confirm: $2 \cdot 3 = 6 \cdot 1$.
 
 **Proposition 1 (the reference ring).** $\langle\mathcal{U}, +, \cdot\rangle$ is a ring with zero $0$ and unity
 $\varepsilon$. Its $\cdot$ distributes over $+$ on both sides and is not commutative when $\Sigma$ has two or more
@@ -178,8 +202,39 @@ $\mathcal{D}$.
 An arrow $u \Rightarrow x$ stores the object $x$ at the address $u$. Its coefficient is the number of copies stored
 there, the *point* of [[2]](./span-and-point-coefficient-algebra.md). A key-value store is a structure whose arrows
 leave flat keys, a document store one whose arrows leave paths into nested documents, and a file system one whose
-arrows leave directory paths. The definition does not tell them apart, and that is its purpose: one algebra for every
-space.
+arrows leave directory paths. So is every store that keeps objects at addresses. A relational database is a structure
+whose arrows leave a table, a row's key, and a column, and end at the cell where the row and the column cross. An HTML
+or XML page is one whose arrows leave its nested tags and each child's place among its siblings, and a YAML, JSON, or
+TOML file one whose arrows leave nested keys and list indices. A spreadsheet, a matrix, a property graph, a triple
+store, a wide-column store, an object store, the domain name system, a directory service, a message broker's topics
+(whose wildcards, `+` and `#`, metatron's paths borrow), a web service's resources, a time series, and a git repository
+are structures too, and each one's addresses are paths:
+
+| space                  | its arrows leave                                 | an arrow                                                |
+|------------------------|--------------------------------------------------|---------------------------------------------------------|
+| key-value store        | a flat key                                       | `/session_42 => 'marko'`                                |
+| document store         | a path into nested documents                     | `/people/marko/address/city => 'Santa Fe'`              |
+| file system            | directories, then a file's name                  | `/home/marko/todo.txt => 'sail south'`                  |
+| relational database    | a table, a row's key, a column                   | `/person/42/name => 'marko'`                            |
+| spreadsheet            | a sheet, a column, a row                         | `/budget/B/7 => 120.0`                                  |
+| HTML, XML              | nested tags, and each child's position           | `/html/body/div/0/p/2 => 'ahoy'`                        |
+| YAML, JSON, TOML       | nested keys and list indices                     | `/database/replicas/0/port => 5432`                     |
+| matrix, tensor         | one index per axis                               | `/m/0/2 => 7`                                           |
+| property graph         | a vertex, then a property or an edge's label     | `/g/V/1/knows => {/g/V/2,/g/V/4}`                       |
+| triple store (RDF)     | a subject, then a predicate                      | `/marko/knows => josh`                                  |
+| wide-column store [23] | a row key, a column family, a qualifier          | `/com.cnn.www/anchor/cnnsi.com => 'CNN'`                |
+| object store           | a bucket, then a key whose slashes it keeps flat | `/photos/2026/11/sunset.png => 0x89504E47`              |
+| domain name system     | its labels, read from the root                   | `/com/example/www => '203.0.113.7'`                     |
+| directory (LDAP)       | a distinguished name, read from the root         | `/com/example/people/marko/mail => 'marko@example.com'` |
+| message topics (MQTT)  | topic levels                                     | `/home/kitchen/temperature => 21.5`                     |
+| web resources (REST)   | collections and identifiers                      | `/users/42/orders/7/total => 19.99`                     |
+| time series            | a metric, a series, a timestamp                  | `/cpu/host1/1795564800 => 0.42`                         |
+| git repository         | a ref, or a commit and a path in its tree        | `/refs/heads/main => '4b472e6'`                         |
+
+Two of them spell their paths backward. A domain name and a distinguished name write the leaf first,
+`www.example.com`, so the path is the converse of the spelling (Definition 3). An edge of the graph ends at another
+vertex's address, so a traversal reads through a value into the structure again, which is the join of records
+(Definition 10). The definition does not tell them apart, and that is its purpose: one algebra for every space.
 
 **Definition 5 (read).** The *read* of $D$ at a path $p$, the *subtree* of $D$ at $p$, and the *part* of $D$ below
 $p$ are
@@ -263,7 +318,7 @@ denotes.
 **Directions.**
 
 - *Layout-safe instructions.* An operation survives every change of layout exactly when it factors through the
-  structure. Reads do. Counting objects, ordering them, and measuring a container's length do not. Is this the same
+  structure. Reads do. Counting objects, ordering them, and measuring a poly's length do not. Is this the same
   partition of the instruction set as the floatable runs and the cuts of
   [[4]](./ring-theoretic-distributed-computing.md)?
 - *Cost.* A read's cost accumulates along a path, and a planner keeps the cheapest layout. A factorization is priced
@@ -380,18 +435,31 @@ $(1 \Rightarrow 1) - (k \Rightarrow k)$ is idempotent.
   complement of a key, $(1 \Rightarrow 1) - (k \Rightarrow k)$, exists because the unity is parametric. Is the scar
   the missing complement?
 
-# Containers: Space and Time
+# Polys: Space and Time
 
-A record and a list are the two containers every program builds, and they extend a structure in two directions. A
+> **Monos, polys, and calls.** metatron's type system has three kinds of object. A *mono* is one value: a `bool`, an
+> `int`, a `real`, a `str`, a `uri`, or `bytes`. A *call* computes: an `inst` or a `code`. A *poly* binds objects
+> together: a `rec`, a `lst`, or a `rel`, the single arrow a record sums. The tractatus calls the polys *polynomial data
+> structures* [[22]](../tractatus/poly.html), and the name is exact. A polynomial is a sum of terms, each a coefficient
+> times a product of variables. A record is such a sum,
+> $[a \Rightarrow 1, b \Rightarrow 2] = (a \Rightarrow 1) + (b \Rightarrow 2)$ (Definition 9). A list is such a
+> product, $[x, y, z] = x\,y\,z$, a monomial whose variables do not commute (Definition 11), and a brace in a slot
+> makes it a sum, $[x, \{y, z\}] = x\,y + x\,z$. In both, a coefficient counts a term's copies, the point of
+> [[2]](./span-and-point-coefficient-algebra.md). The variables are objects of every kind, polys included, and a
+> poly's operations read a variable only by equality or a predicate (Claim 27). A uri is a mono, one address, though
+> its own value is a polynomial in segments (Definition 2).
+
+A record and a list are the polys that collect, and every program builds both. They extend a structure in two
+directions. A
 record extends it through *space*. It is a branch of arrows out of its keys, so its comma is a $+$, and two records
 superpose wherever their keys meet. A list extends it through *time*. It is a word of objects, so its comma is a
 $\cdot$: a timeline whose moments follow one another. In both, $+$ branches and $\cdot$ composes.
 
-In both, too, the operations rearrange structure only. A container compares what it holds, by equality or by a
+In both, too, the operations rearrange structure only. A poly compares what it holds, by equality or by a
 predicate, and never applies its contents' own operations: adding two lists of numbers never adds a number. The
-contents' operations enter at one place, where a container is run as a program (Claim 22).
+contents' operations enter at one place, where a poly is run as a program (Claim 22).
 
-| container          | extends through | its comma | $+$    | $\cdot$       | converse  |
+| poly               | extends through | its comma | $+$    | $\cdot$       | converse  |
 |--------------------|-----------------|-----------|--------|---------------|-----------|
 | record `[k=>v, …]` | space           | $+$       | merge  | join          | transpose |
 | list `[x, y, …]`   | time            | $\cdot$   | branch | concatenation | reversal  |
@@ -654,11 +722,11 @@ share an index, not a past, and superposing them by index reads time as space.
   `kmerge`, and with it the causal law of top-k in [[4]](./ring-theoretic-distributed-computing.md), live in the
   shuffle algebra?
 
-## Containers in Containers
+## Polys in Polys
 
-A container may hold anything, other containers included, and its operations do not look inside what it holds.
+A poly may hold anything, other polys included, and its operations do not look inside what it holds.
 
-**Claim 27 (containers hold letters).** A container's sum, product, and converse read what its slots hold only by
+**Claim 27 (polys hold letters).** A poly's sum, product, and converse read what its slots hold only by
 equality or a predicate. A record held at a key is the exception that is none: it extends the key (Definition 9), so
 merge recurses into it.
 
@@ -674,7 +742,7 @@ $[a \Rightarrow b]\,(c\,d + d\,e)$: the record appears once, neither doubled, as
 into a neighbor, which would apply a record's operation from inside a list. The third concatenates,
 `[[a=>b],c,[b=>e]]`, and the records' join waits for a fold.
 
-## Containers and Code
+## Polys and Code
 
 Paths, lists, records, and programs are four readings of one ring pattern. Each has a branch for its $+$, a way of
 following one thing with another for its $\cdot$, and a converse for its span $-1$. They differ in what the product
@@ -785,3 +853,7 @@ what a program is: what happens at a moment, and the order of the moments.
     63(9), pages 72–81, 2020.
 20. Tarski, A., "On the Calculus of Relations," Journal of Symbolic Logic 6(3), pages 73–89, 1941.
 21. Ree, R., "Lie Elements and an Algebra Associated with Shuffles," Annals of Mathematics 68(2), pages 210–220, 1958.
+22. "[Polynomial Data Structures](../tractatus/poly.html)," the metatron tractatus.
+23. Chang, F., Dean, J., Ghemawat, S., Hsieh, W.C., Wallach, D.A., Burrows, M., Chandra, T., Fikes, A., Gruber, R.E.,
+    "Bigtable: A Distributed Storage System for Structured Data," 7th USENIX Symposium on Operating Systems Design and
+    Implementation (OSDI 2006), pages 205–218, 2006.
