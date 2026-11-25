@@ -380,7 +380,8 @@ Beside `check`, the typer's `unfold` field bounds how many copies a span may unf
 The five sites that unfold a span ask `Typer.Helper.unfolds`, which answers the span or throws past the bound. Three are
 a uri's path: `mParser.m_uri` for `<w>{n}`, `MUri.clone` for a span a uri takes from its lhs, and `pow(n)`. The fourth is
 `Lst.Helper.laid` for the copies laid along a lst axis. The fifth is `Rec.Helper.power`, which the rec parser calls for
-`[…]{n}`: a finite span is bounded by its largest power, and an open one (`{+}`, `{*}`) by each power that holds a walk.
+`[…]{n}`: a finite span is bounded by its largest power, an open one (`{+}`, `{*}`) by each power that holds a walk,
+and every power past the first by the walks it holds, since a cycle with a branch doubles them at every power.
 A span of one copy (the unit, the obj, its converse) reads no state:
 
 ```java

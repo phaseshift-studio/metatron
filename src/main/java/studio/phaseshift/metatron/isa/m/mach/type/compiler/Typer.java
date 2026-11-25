@@ -109,7 +109,8 @@ public interface Typer extends Component {
     fURI UNFOLD_LST = f("lst");
     /**
      * the most powers a rec's span joins: {@code [a=>b]{n}}, each power of a span range, and an open span's powers
-     * ({@code [a=>b]{+}}), which stop at the first that holds no walk, so a cycle's closure fails at the bound.
+     * ({@code [a=>b]{+}}), which stop at the first that holds no walk, so a cycle's closure fails at the bound. It also
+     * bounds the walks each power past the first holds, since a cycle with a branch doubles them at every power.
      */
     fURI UNFOLD_REC = f("rec");
     /**

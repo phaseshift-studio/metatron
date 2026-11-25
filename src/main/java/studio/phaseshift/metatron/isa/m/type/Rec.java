@@ -327,8 +327,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
             return nexts.stream().flatMap(next -> {
                 final Obj key = next.firstDirect();
                 if (key.isObjCall() || key.isType())
-                    return (key.isObjCall() && key.asCall().tryToInst().tid().path().equals(ID_INST_TID.path()))
-                            || !key.apply(end).isNothing()
+                    return isIdentity(key) || !key.apply(end).isNothing()
                             ? next.secondDirect().stream().filter(range -> !rel(key, range).isOne()).flatMap(Helper::walks)
                             : Stream.empty();
                 if (end.isObjCall())
@@ -346,10 +345,17 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * {@code [a=>b]{-1}} is {@code [b=>a]}. A span range is the sum of its powers: {@code {1,2}} is r + r·r. An open
          * side sums its powers until one holds no walk, so {@code [a=>b,b=>c]{+}}, the transitive closure, is
          * {@code [a=>{b,(b=>c)},b=>c]}. A finite span past the typer's unfold bound for recs fails, and so does an open
-         * one with a power past the bound that holds a walk, as a cycle's closure does. The parser realizes a literal's
-         * span here, so a rec literal never holds one.
+         * one with a power past the bound that holds a walk, as a cycle's closure does, and every power past the first
+         * is bounded by the walks it holds as well, since a cycle with a branch doubles them at every power. The parser
+         * realizes a literal's span here, so a rec literal never holds one, and it does so before code the literal holds
+         * can evaluate (code in a poly may: {@code *x} reads x when the rec is applied), so a span over code other than
+         * the identity is refused rather than joined as the code it is.
          */
         public static Rec power(final Rec rec, final cInt span) {
+            walks(rec).flatMap(walk -> chain(walk.d(cInt.ONE()))).filter(step -> step.isObjCall() && !isIdentity(step)).findFirst()
+                    .ifPresent(code -> {
+                        throw MTronException.of("a rec's span is realized as it is parsed, before the code it holds evaluates, so it holds none: %s", code);
+                    });
             final Long low = span.min();
             final Long high = span.max();
             final Rec ahead = null != high && high < 0L ? rec() : powers(rec, null == low || low < 0L ? 0L : low, high);
@@ -361,7 +367,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         /**
          * the sum of base^k for k from {@code from} to {@code to} ({@link #power}), {@code to} null running until a power
          * holds no walk (every later one holds none). A finite span is bounded once, by its largest power, and an open
-         * one by each power that holds a walk, so the empty power that ends a closure is never refused
+         * one by each power that holds a walk, so the empty power that ends a closure is never refused. Every power past
+         * the first is bounded by the walks it holds, so no join starts from more walks than the bound
          */
         private static Rec powers(final Rec base, final long from, final Long to) {
             if (null != to)
@@ -375,6 +382,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                         break;
                     if (null == to)
                         Typer.Helper.unfolds(Typer.UNFOLD_REC, k);
+                    if (k > 1L)
+                        Typer.Helper.unfolds(Typer.UNFOLD_REC, walks(term).count());
                 }
                 if (k >= from)
                     sum = sum.plus(term);
@@ -385,32 +394,59 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         /**
          * THE CONVERSE OF A REC, its span -1 (Claim 18): each walk reversed, its multiplicity kept, so
          * {@code [a=>(b=>c)]{-1}} is {@code [c=>(b=>a)]}, and the converse reverses a join: (r·s)^-1 is s^-1·r^-1. The
-         * unity is its own converse. A key that acts (code, a type) has no converse a rec can list, for it relates its
-         * range to every object it answers, and neither has a walk that ends at code, whose converse would make the code
-         * a key that acts. This rec's own coefficient is the stream's, as in the product.
+         * unity is its own converse. It reverses a walk letter by letter ({@link #letter}), so a walk through code, a
+         * type, a pattern, or a path of more than one segment has no converse a rec can list. A nested rec's converse is
+         * its walks reversed, so its converse's converse is its walks, the same structure written as walks:
+         * {@code [a=>[b=>c]]} comes back as {@code [a=>(b=>c)]}. This rec's own coefficient is the stream's, as in the
+         * product.
          */
         static Rec converse(final Rec rec) {
             return rec.d(cInt.ONE()).asRec().elements().flatMap(arrow -> arrow.secondDirect().stream().flatMap(value -> {
-                final Obj key = arrow.firstDirect();
-                if (rel(key, value).isOne())
-                    return Stream.of(rec(key, value));
-                if (key.isObjCall() || key.isType())
-                    throw MTronException.of("a key that acts has no converse a rec can list: %s", key);
+                if (rel(arrow.firstDirect(), value).isOne())
+                    return Stream.of(rec(arrow.firstDirect(), value));
                 return walks(value).map(walk -> {
-                    final Rel back = reversed(walk.d(cInt.ONE()), key);
-                    if (back.firstDirect().isObjCall() || back.firstDirect().isType())
-                        throw MTronException.of("a walk that ends at code has no converse a rec can list: %s", back.firstDirect());
-                    return rec(back.firstDirect(), back.secondDirect().d(walk.tid().d()));
+                    final Rel back = reversed(walk.d(cInt.ONE()), letter(arrow.firstDirect()));
+                    return rec(letter(back.firstDirect()), back.secondDirect().d(walk.tid().d()));
                 });
             })).reduce(rec(), Rec::plus).d(rec.tid().d()).asRec();
         }
 
         /**
          * a walk reversed onto what came before it ({@link #converse}): its end becomes the key, and the rest runs back
-         * to {@code back}
+         * to {@code back}, each object it moves a letter
          */
         private static Rel reversed(final Obj walk, final Obj back) {
-            return walk.isRel() ? reversed(walk.asRel().secondDirect(), rel(walk.asRel().firstDirect(), back)) : rel(walk, back);
+            return walk.isRel() ? reversed(walk.asRel().secondDirect(), rel(letter(walk.asRel().firstDirect()), back)) : rel(walk, back);
+        }
+
+        /**
+         * an object the converse can move ({@link #converse}): a letter, which a join meets only at itself. Code and a type
+         * meet every object they answer, a pattern every path it matches, and a path of more than one segment the paths
+         * through it and under it, which its own segments, reversed, never meet, so a walk through any of them has no
+         * converse a rec can list: the law (r·s)^-1 = s^-1·r^-1 and flat, path-keyed and nested layouts would disagree
+         */
+        private static Obj letter(final Obj obj) {
+            if (obj.isObjCall() || obj.isType())
+                throw MTronException.of("a walk through code or a type has no converse a rec can list: %s", obj);
+            if (obj.isUri() && (1 != obj.uriValue().segmentLength() || !obj.uriValue().isRelative() || obj.uriValue().isBranch()
+                    || obj.uriValue().hasPattern() || obj.uriValue().hasScheme() || obj.uriValue().hasAuthority()))
+                throw MTronException.of("a walk through a path or a pattern has no converse a rec can list: %s", obj);
+            return obj;
+        }
+
+        /**
+         * the objects a walk steps through, its end last ({@link #power})
+         */
+        private static Stream<Obj> chain(final Obj walk) {
+            return walk.isRel() ? Stream.concat(Stream.of(walk.asRel().firstDirect()), chain(walk.asRel().secondDirect())) : Stream.of(walk);
+        }
+
+        /**
+         * the identity {@code _}, matched by its path, so {@link Rel#one()}'s id over A counts too ({@link #steps},
+         * {@link #power})
+         */
+        static boolean isIdentity(final Obj obj) {
+            return obj.isObjCall() && obj.asCall().tryToInst().tid().path().equals(ID_INST_TID.path());
         }
 
         /**
@@ -479,9 +515,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                     final Obj temp = autoToggle(arec, arec.jvm().getOrDefault(uri(step), noobj()), doAuto);
                     if (temp.isNoObj()) {
                         // FLAT, PATH-KEYED AND NESTED RECS ARE ONE TERM (Marko, 2026-11-24: [a/b=>35]>>a is [b=>35]), so
-                        // a key the address runs through is descended, the longest first ([a/b=>[c=>1]]>>(a/b/c) is 1),
-                        // and an interior address reads as its subtree, as Space.Helper.within reads both. A key whose
-                        // rest past the address is a pattern is a pattern key, left to the match below ([b/#=>x]>>b is x)
+                        // when no key holds the address's first segment, a key the address runs through is descended, the
+                        // longest first ([a/b=>[c=>1]]>>(a/b/c) is 1), and an interior address reads as its subtree. A key
+                        // whose rest past the address is a pattern is a pattern key, left to the match below ([b/#=>x]>>b
+                        // is x). A first segment that is a key is read first, and alone: [a=>[x=>1],a/b=>[c=>2]]>>(a/b/c)
+                        // is noobj, where Space.Helper.within descends a/b (open)
                         final Map.Entry<Obj, Obj> through = arec.jvm().entrySet().stream()
                                 .filter(kv -> kv.getKey().isUri() && kv.getValue().isPoly()
                                         && kv.getKey().uriValue().segmentLength() < keyF.segmentLength()

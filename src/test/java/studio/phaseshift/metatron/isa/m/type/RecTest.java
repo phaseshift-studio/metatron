@@ -500,6 +500,23 @@ public class RecTest extends AbstractAlgebraTest {
             // a key that acts, or a walk that ends at code, has no converse a rec can list
             "[?>1=>x]{-1}                                               % <ERROR>",
             "[a=>plus(1)]{-1}                                           % <ERROR>",
+            "[int::T=>x]{-1}                                            % <ERROR>",
+            "[_=>c]{-1}                                                 % <ERROR>",
+            // nor does a walk through a pattern or a path, which a join meets beyond itself
+            "[b/+=>a]{-1}                                               % <ERROR>",
+            "[<+>=>a]{-1}                                               % <ERROR>",
+            "[a=><#>]{-1}                                               % <ERROR>",
+            "[a/b=>c]{-1}                                               % <ERROR>",
+            "[x=>b/c]{-1}                                               % <ERROR>",
+            "[a=>[b/c=>d]]{-1}                                          % <ERROR>",
+            "[/a=>b]{-1}                                                % <ERROR>",
+            // the span is realized as the literal is parsed, before the code it holds evaluates, so it holds none but _
+            "[a=>*x,b=>c]{2}                                            % <ERROR>",
+            "[*x=>b]{2}                                                 % <ERROR>",
+            "[a=>[b=>*x]]{2}                                            % <ERROR>",
+            "[a=>{b,*x}]{2}                                             % <ERROR>",
+            "[a=>plus(1)]{2}                                            % <ERROR>",
+            "[_=>x]{2}                                                  % [_=>(x=>x)]",
     })
     public void testRecordSpans(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -518,6 +535,9 @@ public class RecTest extends AbstractAlgebraTest {
         final cInt converse = cInt.of(-1L);
         AbstractMetatronTest.checkEquality(LOG, r, Rec.Helper.power(Rec.Helper.power(r, converse), converse), true);
         AbstractMetatronTest.checkEquality(LOG, t, Rec.Helper.power(Rec.Helper.power(t, converse), converse), true);
+        // a nested rec's converse is its walks reversed, so its converse's converse is its walks: the same structure
+        AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse("[a=>(b=>c)]"),
+                Rec.Helper.power(Rec.Helper.power(ObjmtronSerializer.parse("[a=>[b=>c]]").asRec(), converse), converse), true);
         AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(r.mult(s), converse),
                 Rec.Helper.power(s, converse).mult(Rec.Helper.power(r, converse)), true);
         AbstractMetatronTest.checkEquality(LOG, Rec.Helper.power(t.mult(r), converse),
