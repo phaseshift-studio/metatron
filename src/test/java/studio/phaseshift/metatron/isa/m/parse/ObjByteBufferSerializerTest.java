@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.parse;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractSerializerTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjByteBufferSerializer;
@@ -28,6 +29,10 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -130,12 +135,15 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
     /**
      * A VALUE READS BACK AS ITSELF. A scalar is {@code {point}value{span}}: its span trails it, where m_int, m_real,
      * m_str, m_bool and m_bytes read it (ONE when nothing trails), so the span the tid prefix carried, {@code
-     * <{3}/m/int>::2}, read back as {@code 2}. A str is quoted as the mtron serializer quotes it, its delimiter one the
-     * value does not hold and an escape where none is safe: wrapped in {@code '} and escaped nothing, an apostrophe or a
-     * closing backslash ended it early. A lst lays a span out ({@code [3{2}]} is {@code [3,3]}), so a spanned value stands
-     * in a rec or a rel here, which keep it.
+     * <{3}/m/int>::2}, read back as {@code 2}. A named type's scalar trails its span too. A uri keeps its span in the
+     * prefix, and no row holds one: with type_pred on, as here, a uri read with a span on its tid fails its type check
+     * ({@code <{*}/m/uri>::<a/b>} is not a {@code {*}uri::T}). A str is quoted as the mtron serializer quotes it, its
+     * delimiter one the value does not hold and an escape where none is safe: wrapped in {@code '} and escaped nothing,
+     * an apostrophe or a closing backslash ended it early. A lst lays a span out ({@code [3{2}]} is {@code [3,3]}), so a
+     * spanned value stands in a rec or a rel here, which keep it.
      */
     @ParameterizedTest
+    @TestData(value = {"int::T[is(gt(0))]@nat"})
     @CsvSource(delimiter = '%', quoteCharacter = '`', value = {
             // a span on each kind whose parser reads one, beside a point, before a vid, and inside a rec and a rel
             "2{3}",
@@ -148,6 +156,9 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
             "2{3}@/a/b",
             "[a=>2{3},b=>'c'{2}]",
             "(a=>2{3})",
+            // a named type's span, alone and beside its point
+            "nat::5{3}",
+            "nat{2}::5{3}",
             // an apostrophe, both quote kinds (triple quoted, then ending on a quote), a closing backslash, an escape
             "\"it's\"",
             "\"\"\"it's a \"quoted\" word\"\"\"",
@@ -168,29 +179,35 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
     }
 
     /**
-     * A FAIL READS BACK AS ITSELF. It is written as the mtron serializer writes it, {@code fail::[level][cause]…@vid}
-     * with each level's message a str, which m_fail reads: the tid prefix, {@code </m/fail>::}, is no spelling m_fail
-     * reads, so a fail read back as a parse error, its brackets a lst typed fail ("[arraylist] is not a fail::T") and its
-     * message and its cause one raw str joined by a comma. That writer leaves out a level whose message the level above already quotes ("inst apply
-     * failure: the dial timed out" caused by "the dial timed out"), so such a fail reads back without that cause, and a
-     * fail's equality compares its cause: no row holds one.
+     * A FAIL READS BACK AS ITSELF, every level of it. It is written as the mtron serializer writes it, {@code
+     * fail::[level][cause]…@vid} with each level's message a str, which m_fail reads: the tid prefix, {@code
+     * </m/fail>::}, is no spelling m_fail reads, so a fail read back as a parse error, its brackets a lst typed fail
+     * ("[arraylist] is not a fail::T") and its message and its cause one raw str joined by a comma. That writer leaves
+     * out a level whose message the level above already quotes ("inst apply failure: the dial timed out" caused by "the
+     * dial timed out"), so such a fail reads back without it, and a caught fail reads back uncaught (m_fail has no
+     * caught spelling): no row holds either. A row is the fail's messages, outermost first, split at {@code |}.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             // one level: prose, the grammar's own syntax in it, an apostrophe, and a comma (the old level separator)
-            "the dial timed out                                                       %",
-            "inst apply failure: a [value] unable to convert uri::T (at /m/inst/plus) %",
-            "it's not a peer                                                          %",
-            "no peer answered, the trip timed out                                     %",
-            // two levels, each its own bracket
-            "no peer answered                                                         % the dial timed out",
-            "it's \"unreachable\"                                                       % the dial timed out",
+            "the dial timed out",
+            "inst apply failure: a [value] unable to convert uri::T (at /m/inst/plus)",
+            "it's not a peer",
+            "no peer answered, the trip timed out",
+            // two levels and three, each its own bracket
+            "no peer answered | the dial timed out",
+            "it's \"unreachable\" | the dial timed out",
+            "no peer answered | the dial timed out | the socket closed",
     })
-    void testAFailReadsBackAsItself(final String message, final String cause) {
-        final Fail failed = fail(null == cause ? MTronException.of(message) : MTronException.of(MTronException.of(cause), message));
-        // A ROW THAT IS NOT THE FAIL IT NAMES TESTS NO FAIL: its message and its cause are the row's
-        assertEquals(message, failed.message(), () -> "the row's fail says " + failed);
-        assertEquals(cause, failed.cause().map(Fail::message).orElse(null), () -> "the row's fail is caused by " + failed);
+    void testAFailReadsBackAsItself(final String row) {
+        final List<String> messages = Arrays.stream(row.split("\\|")).map(String::strip).toList();
+        // built as m_fail builds a read fail: the root first, each level above it wrapping the chain so far (a sequential
+        // stream never combines)
+        final MTronException chain = messages.reversed().stream().skip(1).reduce(MTronException.of(messages.getLast()),
+                (cause, message) -> MTronException.of(cause, message), (inner, outer) -> outer);
+        final Fail failed = fail(chain);
+        // A ROW THAT IS NOT THE FAIL IT NAMES TESTS NO FAIL: its levels are the row's
+        assertEquals(messages, levels(failed), () -> "the row's fail is " + failed);
         this.idem(failed);
     }
 
@@ -198,7 +215,7 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
      * THIS SERIALIZER'S CLOSURE, run on every row it round-trips, the inherited corpus included: what it writes it reads
      * back as the obj, equal and node for node the same ({@link #nodes}: whole tid, span, point and vid), and writes again
      * as the same text. A code is compared as a code: a one-instruction program parses to the bare instruction. A fail
-     * reads back as a fail, and equality says whether it is the fail written.
+     * reads back as a fail with every level's message: a fail's equality reads one cause deep.
      */
     @Override
     protected void idem(final Obj obj) {
@@ -208,7 +225,16 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
         assertFalse(read.isFail() && !obj.isFail(), () -> "the text did not read back: " + text + " => " + read);
         final Obj back = obj.isCode() ? read.asCode() : read;
         checkEquality(LOG, obj, back, true);
+        if (obj.isFail())
+            assertEquals(levels(obj.asFail()), levels(back.asFail()), () -> "every level of the fail reads back: " + text);
         assertEquals(nodes(obj), nodes(back), () -> "every node keeps its tid, span, point and vid: " + text);
         assertEquals(text, new String(this.serializer.write(back).array()), () -> "the text is a fixpoint: " + text);
+    }
+
+    /**
+     * A fail's messages, outermost first: its own, then each cause's.
+     */
+    private static List<String> levels(final Fail fail) {
+        return Stream.iterate(fail, Objects::nonNull, level -> level.cause().orElse(null)).map(Fail::message).toList();
     }
 }

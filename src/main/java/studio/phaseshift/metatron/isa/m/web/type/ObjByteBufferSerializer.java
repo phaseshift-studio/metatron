@@ -76,10 +76,11 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
         // AN INSTRUCTION'S HEAD IS WRITTEN AS THE MTRON SERIALIZER WRITES IT ({span}name{point}?typing&query), without the
         // tid's args=[...] signature, which the parser mints again from the arguments. Written whole, <tid>(...), the head
         // did not parse once a tid carried that signature (</m/inst/plus?args=[/m/int]>), so no instruction read back
-        // A SCALAR IS {point}value{span}, as the mtron serializer writes it: m_int, m_real, m_str, m_bool and m_bytes read a
-        // value's span from the brace after it, ONE when nothing trails, so a span written into the tid, <{3}/m/int>::2,
-        // read back as 2. A uri's tid is written whole: a brace after a uri's brackets is its power (m_uri), and a ranged
-        // span stays on its tid (MUri.clone)
+        // A SCALAR IS {point}value{span}: m_int, m_real, m_str, m_bool and m_bytes read a value's span from the brace
+        // after it, ONE when nothing trails, so a span written into the tid, <{3}/m/int>::2, read back as 2. A named
+        // type's scalar trails its span too (the mtron serializer trails one only for a base type), and an
+        // instruction's span is in its head. A uri keeps its whole tid: a brace after a uri's brackets is its power
+        // (m_uri), and a ranged span stays on its tid (MUri.clone)
         final boolean trails = obj.isMono() && !obj.isUri() && !obj.tid().b().isOne();
         final String head = obj.isInst() ? ObjmtronSerializer.single().generateInstHead(new StringBuilder(), obj.asInst()).toString()
                 : "<" + (trails ? obj.tid().b(cInt.ONE()) : obj.tid()) + ">::";
