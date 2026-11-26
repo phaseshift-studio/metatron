@@ -130,7 +130,6 @@ docSpace.of(
 // Read a document
 *mongo:users/507f1f77bcf86cd799439011
 ==> [
-  _id => '507f1f77bcf86cd799439011',
   name => 'John Doe',
   email => 'john@example.com',
   addressId => !*mongo:addresses/123  // Lazy reference
@@ -139,7 +138,6 @@ docSpace.of(
 // Traverse reference
 *mongo:users/507f1f77bcf86cd799439011>>addressId
 ==> [
-  _id => '123',
   city => 'Paris',
   country => 'France'
 ]

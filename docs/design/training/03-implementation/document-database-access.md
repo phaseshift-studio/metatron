@@ -66,14 +66,12 @@ Like SQL foreign keys, document references use `auto_from` instructions:
 ```
 *mongo:orders/123
 ==> [
-  _id => '123',
   customerId => !*mongo:customers/456,  // auto_from instruction
   items => [...]
 ]
 
 *mongo:orders/123>>customerId
 ==> [
-  _id => '456',
   name => 'Acme Corp',
   ...
 ]

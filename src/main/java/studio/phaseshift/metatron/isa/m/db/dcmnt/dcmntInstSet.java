@@ -207,9 +207,11 @@ public class dcmntInstSet extends AbstractInstSet {
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_limit"),
                                 // MongoDB's find().limit(0) means "no limit" (returns everything), unlike SQL LIMIT 0
-                                // (returns nothing), so the zero case is guarded
+                                // (returns nothing), so the zero case is guarded. limit takes an int: the cast alone
+                                // cut take(4294967297) to limit(1)
                                 (space, dp, limit) -> 0 == limit ? noobj() : readDocuments(space, dp.collection(),
-                                        space.getDatabase().getCollection(dp.collection()).find().limit((int) limit)),
+                                        space.getDatabase().getCollection(dp.collection()).find()
+                                                .limit((int) Math.min(limit, Integer.MAX_VALUE))),
                                 dcmntInstSet::readsDocuments
                         ),
 
@@ -227,7 +229,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 },
                                 MQLRewriteUtils.PREDICATE_JOINER,
                                 MQLRewriteUtils.CONDITION_FORMATTER,
-                                dcmntInstSet::readsDocuments
+                                dcmntInstSet::filtersSeenFields
                         ),
 
                         // Optimize: mql_where.count() → MongoDB countDocuments(filter)
@@ -257,9 +259,10 @@ public class dcmntInstSet extends AbstractInstSet {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
                                     // MongoDB's limit(0) means "no limit", as mql_limit guards for the unfiltered
-                                    // take(0): the filtered one returned every match
+                                    // take(0): the filtered one returned every match. A take past an int is no limit
                                     return 0 == limit ? noobj() : readDocuments(space, dp.collection(),
-                                            space.getDatabase().getCollection(dp.collection()).find(filter).limit((int) limit));
+                                            space.getDatabase().getCollection(dp.collection()).find(filter)
+                                                    .limit((int) Math.min(limit, Integer.MAX_VALUE)));
                                 }
                         ),
 
@@ -301,54 +304,33 @@ public class dcmntInstSet extends AbstractInstSet {
     // ==================== Helper Methods for Rewrites ====================
 
     /**
-     * Stamp a document with its collection's Type.  A bare
-     * {@code rec::T} is not a refinement of the collection's type, so a
-     * document read by a native rewrite must be typed to its collection to
-     * remain a valid instance of the collection schema.  The type is read with
-     * {@link SchemaSpace.Helper#type}, as the SQL plans read theirs: the declared
-     * type, else the schema instset's own read, which infers it.  A scan of
-     * {@code space.schema().types()} found only what a read had inferred before,
-     * so a first query's documents went untyped (2026-11-25).  No-op when the
-     * collection has no type.
-     */
-    private static Obj typeDocument(final Obj document, final Type collectionType) {
-        // Only type a document the collection type actually accepts: a value stored
-        // at an entry (dcmntSpace wraps it) is no document, and a document another
-        // client wrote need not fit the type.  Stamping a non-instance would make
-        // the native rewrites fail their result-type check.
-        return collectionType == null || !document.test(collectionType)
-                ? document : document.tid(collectionType.vid());
-    }
-
-    /**
      * THE DOCUMENTS A FIND ANSWERS, EACH READ AS THE WALK READS IT (2026-11-26): through
      * {@link dcmntSpace#processDocument}, so its {@code _id} is stripped, a value stored at an entry is unwrapped and a
-     * reference is read as one, at the vid the walk gives it, typed to its collection. The plans read the raw document:
-     * their documents kept the {@code _id} the walk strips, a stored value read as the document that wraps it, and a
-     * document holding a reference failed, as the driver decodes one as a {@code DBRef} that {@code toBsonDocument}
-     * has no codec for.
+     * reference is read as one. The plans read the raw document: their documents kept the {@code _id} the walk strips,
+     * a stored value read as the document that wraps it, and a document holding a reference failed, as the driver
+     * decodes one as a {@code DBRef} that {@code toBsonDocument} has no codec for. A document whose {@code _id} is null
+     * is skipped, as the walk skips it; the plans threw on it.
+     * <p>
+     * Each document gets the vid the walk gives it (space pattern, then collection, then id): the scheme-less
+     * {@code DataPath.spaceURI()} made one like {@code users/user1}, which routes to the root memSpace rather than back
+     * to this space. And each is stamped with its collection's type, since a bare {@code rec::T} is no refinement of
+     * it, read with {@link SchemaSpace.Helper#type} as the SQL plans read theirs: the declared type, else the schema
+     * instset's own read, which infers it. A scan of {@code space.schema().types()} found only what a read had
+     * inferred before, so a first query's documents went untyped (2026-11-25). Only a document the type accepts is
+     * stamped: a value stored at an entry is no document, and a document another client wrote need not fit the type,
+     * and stamping a non-instance would make the plans fail their result-type check.
      */
     private static Obj readDocuments(final dcmntSpace space, final String collectionName,
                                      final FindIterable<Document> found) {
         final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
-        return objs(IteratorUtil.stream(found.iterator()).map(doc -> {
-            final Object docId = doc.get(ID_FIELD_STRING);
-            final String idStr = docId instanceof org.bson.types.ObjectId oid
-                    ? oid.toHexString() : docId.toString();
-            return typeDocument(space.processDocument(doc).selfVID(documentVID(space, collectionName, idStr)),
-                    collectionType);
-        }));
-    }
-
-    /**
-     * The external VID of a document, built exactly the way the generic dcmnt
-     * read path builds it (space pattern, then collection, then id).  Using the
-     * scheme-less {@code DataPath.spaceURI()} instead produced a VID like
-     * {@code users/user1}, which routes to the root memSpace rather than back to
-     * this space.
-     */
-    private static fURI documentVID(final dcmntSpace space, final String collectionName, final String id) {
-        return space.pattern().retractPattern().extend(collectionName).extend(id);
+        return objs(IteratorUtil.stream(found.iterator())
+                .filter(doc -> null != doc.get(ID_FIELD_STRING))
+                .map(doc -> {
+                    final Obj document = space.processDocument(doc).selfVID(
+                            space.pattern().retractPattern().extend(collectionName).extend(dcmntSpace.idToString(doc)));
+                    return null == collectionType || !document.test(collectionType)
+                            ? document : document.tid(collectionType.vid());
+                }));
     }
 
     /**
@@ -387,13 +369,32 @@ public class dcmntInstSet extends AbstractInstSet {
      * sub-document's values) is not representable either: {@code $sum: "$+"} and {@code $sum: "$points.+"} silently
      * aggregated to 0. Nor is an index below the field ({@code tags/0}, {@code tags/-1}, the walk's own index test,
      * CommonUtil.isInt): an aggregation path reads it as a field named 0, where the walk takes a lst's element.
-     * Declining lets the walk answer those paths.
+     * Nor is a field no read of a document answers (dcmntSpace.HIDDEN_FIELDS) when a shift reads it off the documents:
+     * {@code +>><_id>.sum()} failed loudly on the ids and {@code +>><__mtron_v>.sum()} added the stored values, where
+     * the walk, whose documents hold neither, answers 0. A path names the stored field itself: the walk lists the
+     * entries and reads each one's field through dcmntSpace's projected read, so {@code +/_id} is a field of strs (its
+     * sum fails loudly, as any str field's does) and {@code +/__mtron_v} sums as the walk sums. Declining lets the walk
+     * answer those paths.
      */
     private static boolean summablePath(final dcmntSpace space, final List<Inst> matches) {
         if (!readsDocuments(space, matches))
             return false;
         final DataPath dp = DBRewriteBuilder.fieldPath(space, matches);
-        return null != dp && (!dp.hasExtension() || dp.extension().segments().stream().noneMatch(CommonUtil::isInt));
+        return null != dp && (!dp.hasExtension() || dp.extension().segments().stream().noneMatch(CommonUtil::isInt))
+                && (!dcmntSpace.HIDDEN_FIELDS.contains(dp.field())
+                || space.dataPath(space.redirect(matches.getFirst().arg(0).uriValue(), true)).hasField());
+    }
+
+    /**
+     * A FILTER READS ONLY WHAT THE WALK SEES (2026-11-26): the where plans pick documents by their stored fields, so a
+     * predicate on a field no read answers (dcmntSpace.HIDDEN_FIELDS) picked documents the walk cannot:
+     * {@code +.isa([<_id>=>'1'])} answered item1's document and its count 1, where the walk, whose documents hold no
+     * {@code _id}, answers noobj and 0. mql_where_count and mql_where_limit rewrite mql_where, so they decline with it.
+     */
+    private static boolean filtersSeenFields(final dcmntSpace space, final List<Inst> matches) {
+        final Obj predicate = matches.get(1).arg(0);
+        return readsDocuments(space, matches) && (!predicate.isRec() || predicate.asRec().elements()
+                .noneMatch(field -> field.first().isUri() && dcmntSpace.HIDDEN_FIELDS.contains(field.first().uriValue().name())));
     }
 
     /**

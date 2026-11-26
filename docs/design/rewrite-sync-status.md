@@ -36,7 +36,7 @@
 ### docdbSpace (MongoDB)
 **File**: `/src/main/java/studio/phaseshift/metatron/isa/doc/dcmntInstSet.java`
 
-- Uses `readDocumentsAsObjs()` helper for limit
+- Uses the `readDocuments()` helper for limit, where and where+limit
 - Uses `collection.find().limit(1).first()` for has
 - Uses `parseMongoFilter()` to convert SQL-like WHERE clauses to BSON filters
 - Parses same format: `field = value`, `field > value`, `field IS NOT NULL`, `... AND ...`

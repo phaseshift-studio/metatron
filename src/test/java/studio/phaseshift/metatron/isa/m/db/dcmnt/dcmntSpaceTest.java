@@ -1490,27 +1490,46 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     /**
      * A PLAN READS A DOCUMENT AS THE WALK DOES (2026-11-26), through dcmntSpace.processDocument: Mongo's {@code _id} is
      * stripped (the entry's address carries it), a value stored at an entry is unwrapped, and a reference is read as
-     * one. mql_limit, mql_where, mql_where_limit and mql_select read the raw document, so {@code >><_id>} answered the
-     * ids where the walk answers noobj, wrapped/x read as the rec that stores its 5, and arenas/1 failed (the driver
-     * decodes a reference as a DBRef, which toBsonDocument has no codec for). The root type (rec, by default) refuses an
-     * int at a collection's entry, so an int reaches a collection as wrapped/x's 5 does: written while wrapped is no
-     * collection, it waits in the flat namespace, and wrapped/y's write makes wrapped one and moves it in, wrapped
-     * (AbstractDataPathSpace.migrateFlatToStructured). arenas/1 refers to locations/1. The rows are
-     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
+     * one. mql_limit, mql_where, mql_where_limit and mql_select read the raw document, so {@code >>{<_id>,name}}
+     * answered each document's id beside its name, wrapped/x read as the rec that stores its 5, and arenas/1 failed (the
+     * driver decodes a reference as a DBRef, which toBsonDocument has no codec for). The root type (rec, by default)
+     * refuses an int at a collection's entry, so an int reaches a collection as wrapped/x's 5 does: written while
+     * wrapped is no collection, it waits in the flat namespace, and wrapped/y's write makes wrapped one and moves it in,
+     * wrapped (AbstractDataPathSpace.migrateFlatToStructured). arenas/1 refers to locations/1. nulls holds another
+     * client's document whose {@code _id} is null, which the walk skips and the plans threw on. A take past an int was
+     * cut to its low 32 bits, take(4294967297) to limit(1). NO PLAN FILTERS OR SUMS THE DOCUMENTS BY A FIELD THEIR READ
+     * HIDES (dcmntSpace.HIDDEN_FIELDS): the where plans picked documents by {@code _id}, {@code __mtron_v} or
+     * {@code __mtron_tid}, and the sum of a shift aggregated them, where the walk's documents hold none of them; the
+     * select plan answers those shifts now. A path names the stored field, which the walk reads as stored, so
+     * {@code +/__mtron_v} keeps its sum, and {@code +/_id}, a field of strs, fails loudly
+     * (testAFieldOfNoNumbersFailsLoudly). The rows are {@code code % what the walk answers % the op the plan reads
+     * with}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', quoteCharacter = '^', value = {
-            "*mongo:rewrite_test/+.take(2)>><_id>                       % noobj        % mql_limit",
-            "*mongo:rewrite_test/+.isa([value=>?>8])>><_id>             % noobj        % mql_where",
-            "*mongo:rewrite_test/+.isa([value=>?>5]).take(2)>><_id>     % noobj        % mql_where_limit",
-            "*mongo:rewrite_test/+>><_id>                               % noobj        % mql_select",
-            "*mongo:rewrite_test/+>>{<_id>,name}.count()                % 10           % mql_select",
-            "*mongo:wrapped/+.take(20).isa(int::T).count()              % 1            % mql_limit",
-            "*mongo:wrapped/+>><__mtron_v>                              % noobj        % mql_select",
-            "*mongo:arenas/+.take(1)>>name                              % 'main_stage' % mql_limit",
-            "*mongo:arenas/+.isa([name=>'main_stage'])>>venue>>name     % 'downtown'   % mql_where",
-            "*mongo:arenas/+.isa([name=>'main_stage']).take(1)>>name    % 'main_stage' % mql_where_limit",
-            "*mongo:arenas/+>>venue>>name                               % 'downtown'   % mql_select",
+            "*mongo:rewrite_test/+.take(2)>>{<_id>,name}.count()                    % 2            % mql_limit",
+            "*mongo:rewrite_test/+.isa([value=>?>8])>>{<_id>,name}.count()          % 2            % mql_where",
+            "*mongo:rewrite_test/+.isa([value=>?>5]).take(2)>>{<_id>,name}.count()  % 2            % mql_where_limit",
+            "*mongo:rewrite_test/+>>{<_id>,name}.count()                            % 10           % mql_select",
+            "*mongo:wrapped/+.take(20).isa(int::T).count()                          % 1            % mql_limit",
+            "*mongo:wrapped/+>>{<__mtron_v>,n}.count()                              % 1            % mql_select",
+            "*mongo:arenas/+.take(1)>>name                                          % 'main_stage' % mql_limit",
+            "*mongo:arenas/+.isa([name=>'main_stage'])>>venue>>name                 % 'downtown'   % mql_where",
+            "*mongo:arenas/+.isa([name=>'main_stage']).take(1)>>name                % 'main_stage' % mql_where_limit",
+            "*mongo:arenas/+>>venue>>name                                           % 'downtown'   % mql_select",
+            "*mongo:nulls/+.take(5)>>n.sum()                                        % 2            % mql_limit",
+            "*mongo:nulls/+.isa([n=>?>0])>>n.sum()                                  % 2            % mql_where",
+            "*mongo:nulls/+.isa([n=>?>0]).take(5)>>n.sum()                          % 2            % mql_where_limit",
+            "*mongo:rewrite_test/+.take(4294967297).count()                         % 10           % mql_limit",
+            "*mongo:rewrite_test/+.isa([value=>?>5]).take(4294967297).count()       % 5            % mql_where_limit",
+            "*mongo:rewrite_test/+.isa([<_id>=>'1'])>>name                          % noobj        % from",
+            "*mongo:rewrite_test/+.isa([<_id>=>'1']).count()                        % 0            % from",
+            "*mongo:rewrite_test/+.isa([<__mtron_tid>=>'rec']).count()              % 0            % from",
+            "*mongo:wrapped/+.isa([<__mtron_v>=>5]).count()                         % 0            % from",
+            "*mongo:rewrite_test/+>><_id>.sum()                                     % 0            % mql_select",
+            "*mongo:wrapped/+>><__mtron_v>.sum()                                    % 0            % mql_select",
+            "*mongo:rewrite_test/+>><__mtron_tid>.sum()                             % 0            % mql_select",
+            "*<mongo:wrapped/+/__mtron_v>.sum()                                     % 5            % mql_sum",
     })
     public void testAPlanReadsADocumentAsTheWalk(final String code, final String expected, final String reads) {
         ObjmtronSerializer.parse("mongo:wrapped/x -> 5").apply();
@@ -1519,6 +1538,14 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         Machine.write(f("mongo:arenas/1"), rec(
                 uri(NAME), str("main_stage"),
                 uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            // the migration stored wrapped/x's 5 wrapped, so the rows over wrapped read a stored value
+            assertEquals(1, db.getCollection("wrapped").countDocuments(new Document(dcmntSpace.MTRON_VALUE_FIELD, 5)));
+            db.getCollection("nulls").insertMany(List.of(
+                    new Document("_id", null).append("n", 1),
+                    new Document("_id", "a").append("n", 2)));
+        }
         try {
             checkCodeParseApply(LOG, code, expected);
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
@@ -1530,6 +1557,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                 client.getDatabase(DB_NAME).getCollection("arenas").drop();
                 client.getDatabase(DB_NAME).getCollection("locations").drop();
                 client.getDatabase(DB_NAME).getCollection("wrapped").drop();
+                client.getDatabase(DB_NAME).getCollection("nulls").drop();
             }
             // and the flat entry, should the migration have left it
             ObjmtronSerializer.parse("mongo:wrapped/x -> noobj").apply();
@@ -1660,6 +1688,8 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             "*mongo:typed/+/when.sum()    % mql_sum",
             "*mongo:typed/+/mixed.sum()   % mql_sum",
             "*mongo:typed/+/blank.sum()   % mql_sum",
+            "*<mongo:rewrite_test/+/_id>.sum()    % mql_sum",
+            "*<mongo:rewrite_test/+/_id>.mean()   % mql_mean",
     })
     public void testAFieldOfNoNumbersFailsLoudly(final String code, final String reads) {
         try (final MongoClient client = MongoClients.create(connectionString)) {

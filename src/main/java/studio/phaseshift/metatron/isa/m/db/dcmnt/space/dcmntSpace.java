@@ -144,6 +144,13 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
      */
     public static final String MTRON_VALUE_FIELD = "__mtron_v";
     /**
+     * The stored fields no read of a document answers: {@link #processDocument} strips the {@code _id} and unwraps a
+     * value stored under {@code __mtron_v}, and the serializer's readRec takes the nominal tid from {@code __mtron_tid}.
+     * A native plan that filtered or summed one of them off the documents answered what the walk cannot see, so
+     * dcmntInstSet's plans decline them there. A path that names one reads it as stored (the projected field read).
+     */
+    public static final Set<String> HIDDEN_FIELDS = Set.of(ID_FIELD, MTRON_VALUE_FIELD, ObjBSONSerializer.MTRON_TID_FIELD);
+    /**
      * Reserved collection name for the flat key-value address space, mirroring
      * tbleSpace's {@code kv_store} table.  URIs whose first segment is this name
      * are stored as {@code {_id: <full relative path>, __mtron_v: <any Obj>}}
@@ -668,10 +675,10 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
 
     /**
      * Recursively convert {@code com.mongodb.DBRef} objects to embedded {@code {$ref, $id}}
-     * Documents. In-memory MongoDB (bwaldvogel) deserializes the DBRef pattern into the
-     * legacy DBRef class which lacks a BSON codec and causes {@code toBsonDocument()} to
-     * throw. Real MongoDB drivers keep them as plain nested Documents, so this is a no-op
-     * in production.
+     * Documents. The driver's default registry (MongoClientSettings, through
+     * DocumentToDBRefTransformer) decodes the DBRef pattern into the legacy DBRef class,
+     * which {@code toBsonDocument()}'s own registry has no codec for, so it throws: against
+     * any server, not only the in-memory one the tests run.
      */
     public static Object normalizeDBRefs(final Object value) {
         if (value instanceof com.mongodb.DBRef dbref) {
@@ -700,8 +707,8 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
      * {@code __mtron_tid} field — restoring the nominal TID (e.g. {@code chicken::T})
      * that was written alongside the document fields for round-trip fidelity.
      * <p>
-     * The read of every document: the walk's, and dcmntInstSet's native plans', so a plan
-     * answers the documents the walk answers.
+     * The walk reads a document through it, and so do dcmntInstSet's native plans, which
+     * decline to filter or sum the documents by a field it hides ({@link #HIDDEN_FIELDS}).
      */
     public Obj processDocument(final Document doc) {
         final Document normalized = (Document) normalizeDBRefs(doc);
@@ -814,7 +821,7 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
      * Safely extract a document's {@code _id} value as a string,
      * supporting both ObjectId and plain String IDs.
      */
-    private static String idToString(final Document doc) {
+    public static String idToString(final Document doc) {
         final Object id = doc.get(ID_FIELD);
         return id instanceof ObjectId ? ((ObjectId) id).toHexString() : id != null ? id.toString() : "";
     }
