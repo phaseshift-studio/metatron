@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.sys.type;
 import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
@@ -69,10 +70,6 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
      * how many ended threads, of those not named, {@code stop} keeps listed (Marko, 2026-11-25)
      */
     public static final int HISTORY = 100;
-    /**
-     * where a minted thread is filed below its machine (mThread.CURRENT_SYS_THREAD, ~/sys/thread/<id>)
-     */
-    private static final fURI THREAD_REGISTRY = f("/sys/thread");
 
     private fURI vid;
     private final ExecutorService service;
@@ -174,7 +171,7 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
      * Intercepts {@code Runnable} submissions (e.g. from 3rd-party libraries) and
      * wraps them in a one-shot {@link CoreThread} so they gain full metatron
      * visibility: a VID, lifecycle tracking, and exposure through
-     * {@code &#42;/sys/thread/active} / {@code &#42;/sys/thread/inactive}.
+     * {@code &#42;/sys/thread/executor/run} / {@code &#42;/sys/thread/executor/stop}.
      */
     @Override
     public void execute(@NonNull Runnable command) {
@@ -195,7 +192,8 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
      * Execute a metatron {@code AbstractThread} through this executor.
      * Idempotent: if the thread has already been executed (tracked by vid),
      * this call is a no-op.  On first execution the thread is added to the
-     * {@code active} list; on completion it moves to {@code inactive}.
+     * {@code run} list; on completion it moves to {@code stop}, which keeps the newest {@link #HISTORY} ended threads
+     * and every named one.
      * Both lists are exposed via the Rec jvm for mtron URI queries.
      */
     public void execute(final AbstractThread thread) {
@@ -224,18 +222,21 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
                 BootLoader.CURRENT_THREAD.set(previous);
                 run.lstValue().remove(pointer);
                 // THE HISTORY IS BOUNDED (Marko, 2026-11-25): stop keeps the newest HISTORY ended threads and every named
-                // one. A dropped thread filed at the thread registry (~/sys/thread/<id>) is deleted there, so its record
-                // goes with it; a computer's record is its processor's, which keeps a history of its own
+                // one. A dropped thread that minted its vid is deleted there, and so is its doc, which holds the thread
+                // (docWrap): the record alone frees nothing. A computer's record is its processor's, kept or dropped there
                 for (final Obj dropped : this.stopped.offer(pointer, thread.named()))
-                    Obj.Helper.getAutoPointer(dropped)
-                            .filter(address -> address.retract(1).tail(2).asAbsolute().equals(THREAD_REGISTRY))
-                            .ifPresent(address -> {
-                                try {
-                                    Machine.write(address, noobj());
-                                } catch (final Exception e) {
-                                    // gone already, or its machine popped since: the history is bounded either way
-                                }
-                            });
+                    Obj.Helper.getAutoPointer(dropped).ifPresent(address -> {
+                        try {
+                            if (Machine.read(address) instanceof AbstractThread ended && ended.minted()) {
+                                final Obj deleted = Machine.write(address, noobj());
+                                if (deleted.isFail())
+                                    this.logger().debug("unable to delete the record of %s: %s", address, deleted);
+                                QCollection.docDrop(address);
+                            }
+                        } catch (final Exception e) {
+                            this.logger().debug("unable to delete the record of %s: %s", address, e.getMessage());
+                        }
+                    });
             }
         };
 

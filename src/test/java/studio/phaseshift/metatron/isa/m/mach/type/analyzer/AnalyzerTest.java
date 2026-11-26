@@ -432,7 +432,7 @@ public class AnalyzerTest extends AbstractMetatronTest {
     /**
      * Record a change on a metatron thread of its own, which is where an evaluation records (the processor counts each
      * run on the thread that runs it), and hear {@code component}'s publication: its source is the analyzer's address,
-     * and the recording thread is the source of no thread. Answers the analyzer's address.
+     * and the recording thread, which starts no thread itself, is the source of none. Answers the analyzer's address.
      */
     private static fURI publishedFromItsAnalyzer(final Machine machine, final String component, final Runnable record)
             throws Exception {
@@ -480,9 +480,9 @@ public class AnalyzerTest extends AbstractMetatronTest {
 
     /**
      * AN EVALUATION IS THE SOURCE OF NO THREAD FOR BEING COUNTED. The processor counts each run on the thread that runs
-     * it, and the publication that count schedules is the processor analyzer's: code evaluated on a metatron thread is
-     * the source only of the threads it starts itself. The machine is let go quiet first, so the run's count is the one
-     * that schedules the publication.
+     * it, and the publication that count schedules is the processor analyzer's: code that starts no thread of its own,
+     * evaluated on a metatron thread, is the source of none. The machine is let go quiet first, so the run's count is the
+     * one that schedules the publication.
      */
     @ParameterizedTest
     @CsvSource(value = {"1.plus(1)", "{1,2,3}.plus(1)", "[1,2,3].sum()"}, delimiter = '%')

@@ -51,15 +51,16 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * {@link BasicSwarmComputer} per {@link #apply(Code)} and indexes it. Zero Java fields; the computers index lives in
  * the Rec jvm map under {@code computer}, keyed by each computer's number: a computer is written at
  * {@code ~/processor/computer/<n>} when it is minted, and that write is the indexing. The index is a bounded history
- * ({@link FIFORec}): every running computer and the newest {@link #HISTORY} ended ones.
+ * ({@link FIFORec}): every running computer and the newest {@link #HISTORY} of the rest.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class BasicSwarmProcessor extends MRec implements Processor {
 
     /**
-     * how many ended computers the index keeps (Marko, 2026-11-25): every running one stays, and past these the eldest
-     * ended one is dropped, its fails and its profile with it
+     * how many computers that are not running the index keeps (Marko, 2026-11-25): every running one stays, and past
+     * these the eldest of the rest is dropped, its fails and its profile with it. A computer minted and not yet started
+     * is not running, so it counts among the rest
      */
     public static final int HISTORY = 100;
     private static final Predicate<Obj> RUNNING = obj -> obj instanceof BasicSwarmComputer computer && computer.isRunning();

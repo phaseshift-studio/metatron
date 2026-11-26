@@ -320,6 +320,9 @@ coefficient-summing view), and `ListMonad` the list-backed queue.
 `mThread` is the unified lifecycle contract (`stop`/`pause`/`resume`/`state`/`apply`/`applyAsync`/`result`/`future`).
 `AbstractThread` implements it over an `MRec` + `FutureObj` and hands async work to `ThreadExecutor`; `VirtualThread`
 and `CoreThread` are the two concrete platform strategies. A worker publishes where it ended via `landedPerspective()`.
+`ThreadExecutor`'s `stop` list is a bounded history (`FIFOLst`, Marko 2026-11-25): the newest 100 ended threads whose
+vid was minted, and every named one (`AbstractThread.named()`: made with its vid). A minted thread dropped from it is
+deleted at its vid, and so is its doc, which holds the thread (`QCollection.docDrop`).
 
 ## Bootstrap and the type hierarchy
 
@@ -372,10 +375,10 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
 - **Fails are filed in the processor** (Marko, 2026-11-04), through the machine's space's `incrq`: a fail raised outside any
   evaluation at `~/processor/fail/_?incrq`, and an evaluation's at `~/processor/computer/<n>/fail/_?incrq`, under the
   computer that ran it. The processor indexes its computers by number (`computer => [<n> => computer::[…]]`): a
-  computer is written at `~/processor/computer/<n>` when it is minted, and that write is the indexing. The index is a
-  bounded history (`FIFORec`, Marko 2026-11-25): every running computer and the newest 100 ended ones. So the
+  computer is written at `~/processor/computer/<n>` when it is minted, and that write is the indexing. So the
   processor is per machine: `push()` mints the child's own, of its parent's architecture, beside its memory, ISA and
-  network levels.
+  network levels. The index is a bounded history (`FIFORec`, Marko 2026-11-25): every running computer and the newest
+  100 of the rest, a computer minted and not yet started among them.
 
 ## Migration state (why it reads as two systems at once)
 

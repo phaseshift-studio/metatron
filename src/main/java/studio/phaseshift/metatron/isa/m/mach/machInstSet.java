@@ -44,6 +44,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
@@ -341,7 +342,7 @@ public class machInstSet extends AbstractInstSet {
                                         uri(TRACER).maybe(), "the processor's diagnostics (tracer::T), as the compiler's typer is its type checking: a pushed machine's processor carries a copy of its parent's",
                                         uri(ANALYZER).maybe(), "the processor's statistics (analyzer::T), the machine's evaluations at ~/processor/analyzer/analysis: eval counts each run as it starts, time times it to its end, fail counts each fail filed. With profile=>true each evaluation is profiled into an analyzer of its own, held by its computer at ~/processor/computer/<n>/analyzer (apply, flow, per_inst, resolve, rewrite, repeat, cache). Written noobj, it is switched off"))
                                 .slots(mutableMap(
-                                        uri(COMPUTER), "the computers this processor minted, one per evaluation, by number: computer/<n>, every running one and the newest 100 ended ones; an evaluation's uncaught fails are filed in its computer's stack, computer/<n>/fail, and a profiled evaluation's statistics are its computer's analyzer, computer/<n>/analyzer",
+                                        uri(COMPUTER), "the computers this processor minted, one per evaluation, by number: computer/<n>, every running one and the newest " + BasicSwarmProcessor.HISTORY + " of the rest; an evaluation's uncaught fails are filed in its computer's stack, computer/<n>/fail, and a profiled evaluation's statistics are its computer's analyzer, computer/<n>/analyzer",
                                         uri("fail"), "the machine's fail stack: an uncaught fail raised outside any evaluation, keyed by ?incrq; read with @ to keep each fail's address, so that catching it removes it"))
                                 .create(),
                         MACH_SWARM_PROCESSOR_TYPE = TypeBuilder.build()
@@ -910,7 +911,7 @@ public class machInstSet extends AbstractInstSet {
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)
-                                .vid(THREAD_EXECUTOR_TID, "the gateway interface for all threads in metatron")
+                                .vid(THREAD_EXECUTOR_TID, "the gateway interface for all threads in metatron: run lists the running threads, and stop the newest " + ThreadExecutor.HISTORY + " ended threads whose vid was minted, and every named one; a minted thread dropped from stop is deleted at its vid, with its doc")
                                 .isaPredicate(rec(uri(RUN), lst(), uri(STOP), lst())).create(),
                         MACH_CORE_THREAD_TYPE = TypeBuilder.build()
                                 .tid(MACH_THREAD_TID)

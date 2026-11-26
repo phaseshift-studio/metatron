@@ -74,8 +74,10 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable,
      */
     private boolean ended = false;
     /**
-     * A NAMED THREAD was given its vid by its creator (main, console_statusline, a virtual::T written at an address),
-     * where any other took a fresh ~/sys/thread/<id>: the executor's bounded history never drops a named thread.
+     * A NAMED THREAD was made with its vid (main, console_statusline, supervisor_thread, a virtual::T made at an
+     * address), where any other minted a fresh ~/sys/thread/<id>: fixed when the thread is made, so a minted thread
+     * later written elsewhere stays minted. The executor's history never drops a named thread, so the named ones it
+     * keeps grow with the consoles and supervised levels that name them.
      */
     private final boolean named;
     protected final FutureObj<Obj> future = new FutureObj<>();
@@ -169,10 +171,18 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable,
     }
 
     /**
-     * whether this thread was given its vid by its creator, rather than minted one
+     * whether the executor's history keeps this thread for good: it was made with its vid
      */
     public boolean named() {
         return this.named;
+    }
+
+    /**
+     * whether this thread minted its vid, ~/sys/thread/<id>: its record there is its own, so the executor deletes it,
+     * and its doc, once the thread leaves the history
+     */
+    public final boolean minted() {
+        return !this.named;
     }
 
     // ======================== Cloning ========================

@@ -264,9 +264,8 @@ separate axes of a machine.
 | `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`; `noobj` written at it switches it off, at `analysis/<probe>` mutes that probe; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
 
 Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`; the processor keeps every running
-computer and the newest 100 that have ended, so an older computer (its fails and profile with it) reads `noobj`. The
-processor holds the fail
-stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
+computer and the newest 100 of the rest (one minted and not yet started among them), so an older computer, its fails and
+profile with it, reads `noobj`. The processor holds the fail stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
 evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught, so it is used as a value through
 `catch(_)`. A read with `@` keeps each fail's address, so catching it removes it; `*` returns a detached copy.
 
@@ -356,7 +355,10 @@ analysis, pulled on demand (the mtron form of a recording rule):
 | `result`  | the last result                              |
 
 `thread::T` is the base, and `core::T` (a platform thread) and `virtual::T` (a virtual thread) are its strategies, e.g.
-`core::[code=>…,loop=>second::1.0]@~/sys/thread/…`. Evaluation runs on virtual threads by default.
+`core::[code=>…,loop=>second::1.0]@~/sys/thread/…`. Evaluation runs on virtual threads by default. The executor lists
+the running threads under `/sys/thread/executor/run` and the ended ones under `/sys/thread/executor/stop`, which keeps the
+newest 100 whose vid was minted (`~/sys/thread/<id>`) and every thread made at an address of its own; a minted thread
+dropped from it is deleted at its vid, its doc with it.
 
 ## memory (data memory)
 

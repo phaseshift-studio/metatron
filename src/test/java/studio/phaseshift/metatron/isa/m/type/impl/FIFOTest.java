@@ -24,14 +24,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,14 +52,18 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.Tokens.STOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.mach.type.thread.mThread.CURRENT_SYS_THREAD;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -75,6 +82,32 @@ public class FIFOTest extends AbstractMetatronTest {
 
     private static List<Obj> strs(final String csv) {
         return names(csv).stream().map(name -> (Obj) str(name)).toList();
+    }
+
+    /**
+     * wait for a thread to be listed under stop: offered last, so it is the newest member the history holds
+     */
+    private static void awaitListedAsEnded(final fURI vid) {
+        final long deadline = System.currentTimeMillis() + 5_000;
+        while (!listedThreads(STOP).contains(vid)) {
+            assertTrue(System.currentTimeMillis() < deadline, () -> "listed as ended: " + vid);
+            CommonUtil.sleepThread(2);
+        }
+    }
+
+    /**
+     * end {@code count} minted threads one after another, each listed under stop before the next starts, so they are
+     * offered in the order they are answered
+     */
+    private static List<fURI> endMintedThreads(final int count) throws Exception {
+        final List<fURI> minted = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            final VirtualThread thread = VirtualThread.virtual(instLambda(_ -> noobj()));
+            thread.applyAsync().get(5, TimeUnit.SECONDS);
+            awaitListedAsEnded(thread.vid());
+            minted.add(thread.vid());
+        }
+        return minted;
     }
 
     /**
@@ -105,6 +138,17 @@ public class FIFOTest extends AbstractMetatronTest {
     }
 
     /**
+     * A PIN IS AN ARRIVAL, NOT A VALUE: of two equal members offered, the first pinned, the second is the one to go.
+     */
+    @Test
+    void shouldPinAnArrivalNotAValue() {
+        final FIFOLst history = new FIFOLst(0);
+        assertEquals(List.of(), history.offer(str("ember"), true), "a pinned member stays past the cap");
+        assertEquals(List.of(str("ember")), history.offer(str("ember"), false), "an equal one offered unpinned goes");
+        assertEquals(List.of(str("ember")), history.lstValue(), "and the pinned one is kept");
+    }
+
+    /**
      * OFFERS FROM MANY THREADS AT ONCE lose nothing and keep the bound: every member offered is kept or dropped exactly
      * once, and the cap holds once they are done.
      */
@@ -128,13 +172,15 @@ public class FIFOTest extends AbstractMetatronTest {
 
     /**
      * A FIFORec KEEPS EVERY LIVE ENTRY AND THE NEWEST {@code cap} OF THE REST, by key, in the order they arrived; a
-     * rewritten key keeps its place, and a write in place keeps the history the rec it was. The rows are
+     * rewritten key keeps its place, and a write in place is the history itself. The rows are
      * {@code cap % written % live % kept}.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             "2 % ember,flint,slate        %                   % flint,slate",
             "2 % ember,flint,slate,tinder % ember             % ember,slate,tinder",
+            "2 % ember,flint,ember        %                   % ember,flint",
+            "2 % ember,flint,ember,slate  %                   % flint,slate",
             "1 % ember,flint,ember        %                   % ember",
             "0 % ember,flint              % flint             % flint",
             "3 % ember,flint              %                   % ember,flint",
@@ -142,10 +188,9 @@ public class FIFOTest extends AbstractMetatronTest {
     })
     void shouldKeepTheLiveAndTheNewestOfTheRest(final int cap, final String written, final String live, final String kept) {
         final Set<Obj> lives = Set.copyOf(strs(live));
-        Rec history = new FIFORec(cap, lives::contains);
+        final Rec history = new FIFORec(cap, lives::contains);
         for (final String name : names(written))
-            history = history.at(uri(name), str(name), Poly.MUTABLE);
-        assertInstanceOf(FIFORec.class, history, "a write in place keeps the history");
+            assertSame(history, history.at(uri(name), str(name), Poly.MUTABLE), "a write in place is the history itself");
         assertEquals(names(kept).stream().map(name -> (Obj) uri(name)).toList(), List.copyOf(history.recValue().keySet()));
     }
 
@@ -155,54 +200,74 @@ public class FIFOTest extends AbstractMetatronTest {
      */
     @Test
     void shouldTrimOnlyAnArrival() {
-        Rec history = new FIFORec(1, _ -> false);
-        history = history.at(uri("ember"), rec(), Poly.MUTABLE);
-        history = history.at(uri("ember/flare"), str("bright"), Poly.MUTABLE);
+        final Rec history = new FIFORec(1, _ -> false);
+        history.at(uri("ember"), rec(), Poly.MUTABLE);
+        history.at(uri("ember/flare"), str("bright"), Poly.MUTABLE);
         assertEquals(List.of(uri("ember")), List.copyOf(history.recValue().keySet()), "a write below a kept entry drops nothing");
-        assertEquals(str("bright"), history.<Rec>at(uri("ember")).at(uri("flare")), "and lands");
+        checkEquality(LOG, str("bright"), history.<Rec>at(uri("ember")).at(uri("flare")), true);
         final Rec copy = history.at(uri("flint"), rec(), Poly.IMMUTABLE);
         assertEquals(List.of(uri("ember")), List.copyOf(history.recValue().keySet()), "a copy leaves the history as it was");
         assertEquals(List.of(uri("flint")), List.copyOf(copy.recValue().keySet()), "and is trimmed itself");
     }
 
     /**
-     * THE EXECUTOR KEEPS THE NEWEST {@link ThreadExecutor#HISTORY} ENDED THREADS AND EVERY NAMED ONE: a minted thread
-     * past the history is dropped from stop and deleted at its vid, and a named thread that ended first is still listed,
-     * and still read, after more minted threads than the history holds have ended behind it.
+     * THE EXECUTOR KEEPS THE NEWEST {@link ThreadExecutor#HISTORY} ENDED THREADS AND EVERY NAMED ONE: a minted thread past
+     * the history is dropped from stop and deleted at its vid, and its doc with it, since the doc holds the thread; a
+     * named thread that ended first is still listed, and still read, after more minted threads than the history holds
+     * have ended behind it.
      */
     @Test
     void shouldKeepTheNewestEndedThreadsAndEveryNamedOne() throws Exception {
         final VirtualThread named = VirtualThread.virtual(instLambda(_ -> noobj()),
                 CURRENT_SYS_THREAD.extend("fifo_kiln_" + System.nanoTime()));
         named.applyAsync().get(5, TimeUnit.SECONDS);
-        assertTrue(awaitsStopped(named.vid(), 5_000), "the named thread ends");
-        final List<fURI> minted = new ArrayList<>();
-        for (int i = 0; i < ThreadExecutor.HISTORY + 20; i++) {
-            final VirtualThread thread = VirtualThread.virtual(instLambda(_ -> noobj()));
-            thread.applyAsync().get(5, TimeUnit.SECONDS);
-            minted.add(thread.vid());
-        }
-        for (final fURI vid : minted)
-            assertTrue(awaitsStopped(vid, 5_000), () -> "each ends: " + vid);
+        awaitListedAsEnded(named.vid());
+        final VirtualThread documented = QCollection.docWrap(VirtualThread.virtual(instLambda(_ -> noobj())), "a kiln's spark");
+        documented.applyAsync().get(5, TimeUnit.SECONDS);
+        awaitListedAsEnded(documented.vid());
+        assertInstanceOf(VirtualThread.class, Machine.read(documented.vid().addQ(DOCQ)).orElse(rec0()).at(uri(OBJ)),
+                "a documented thread's doc holds the thread");
+        final List<fURI> minted = endMintedThreads(ThreadExecutor.HISTORY + 20);
         final List<fURI> stopped = listedThreads(STOP);
         assertTrue(minted.stream().filter(stopped::contains).count() <= ThreadExecutor.HISTORY,
                 () -> "no more than the history is listed: " + minted.stream().filter(stopped::contains).count());
-        // the eldest twenty had a hundred and more end behind them
         for (final fURI vid : minted.subList(0, 20)) {
             assertFalse(stopped.contains(vid), () -> "an eldest thread is dropped: " + vid);
-            assertTrue(Machine.read(vid).isNoObj(), () -> "and deleted at its vid: " + vid);
+            checkEquality(LOG, noobj(), Machine.read(vid), true);
         }
+        assertFalse(stopped.contains(documented.vid()), "the documented thread is dropped");
+        checkEquality(LOG, noobj(), Machine.read(documented.vid()), true);
+        checkEquality(LOG, noobj(), Machine.read(documented.vid().addQ(DOCQ)).orElse(rec0()).at(uri(OBJ)), true);
         assertTrue(stopped.contains(named.vid()), "the named thread is still listed");
         assertInstanceOf(VirtualThread.class, Machine.read(named.vid()), "and still read at its vid");
     }
 
     /**
-     * A PROCESSOR KEEPS EVERY RUNNING COMPUTER AND THE NEWEST {@link BasicSwarmProcessor#HISTORY} ENDED ONES: past the
-     * history the eldest ended computer is dropped from {@code ~/processor/computer}, while a run that outlasts them all
-     * keeps its computer indexed.
+     * A COMPUTER RUN ON A THREAD OF ITS OWN (as a console line runs) IS NEVER NAMED: it leaves the executor's history as
+     * a minted thread does, and its record, its processor's to keep or drop, is not deleted with it.
      */
     @Test
-    void shouldKeepEveryRunningComputerAndTheNewestEndedOnes() throws Exception {
+    void shouldDropAnAsyncComputerFromTheThreadsAndLeaveItsRecordToItsProcessor() throws Exception {
+        final Machine machine = Machine.current().push(f("async_computer"));
+        try {
+            final AbstractThread computer = (AbstractThread) machine.processor().apply(MCode.of(List.of(instLambda(obj -> obj))));
+            computer.applyAsync(jnt(1)).get(5, TimeUnit.SECONDS);
+            awaitListedAsEnded(computer.vid());
+            endMintedThreads(ThreadExecutor.HISTORY + 20);
+            assertFalse(listedThreads(STOP).contains(computer.vid()), "the computer leaves the thread history");
+            assertInstanceOf(Computer.class, Machine.read(computer.vid()), "and its record stays its processor's");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * A PROCESSOR KEEPS EVERY RUNNING COMPUTER AND THE NEWEST {@link BasicSwarmProcessor#HISTORY} OF THE REST: past the
+     * history the eldest computer that is not running is dropped from {@code ~/processor/computer}, a run that outlasts
+     * them all keeps its computer indexed, and once that run has ended its computer goes next.
+     */
+    @Test
+    void shouldKeepEveryRunningComputerAndTheNewestOfTheRest() throws Exception {
         final Machine machine = Machine.current().push(f("computer_history"));
         final CountDownLatch release = new CountDownLatch(1);
         try {
@@ -216,7 +281,8 @@ public class FIFOTest extends AbstractMetatronTest {
                 }
                 return obj;
             }))));
-            VirtualThread.virtual(instLambda(_ -> walk.apply(jnt(1)))).applyAsync();
+            final VirtualThread walker = VirtualThread.virtual(instLambda(_ -> walk.apply(jnt(1))));
+            walker.applyAsync();
             assertTrue(underway.await(5, TimeUnit.SECONDS), "the run is under way");
             final List<fURI> ended = new ArrayList<>();
             for (int i = 0; i < BasicSwarmProcessor.HISTORY + 20; i++) {
@@ -224,11 +290,15 @@ public class FIFOTest extends AbstractMetatronTest {
                 computer.apply(jnt(i));
                 ended.add(computer.vid());
             }
-            assertFalse(Machine.read(walk.vid()).isNoObj(), "a running computer is never dropped");
+            assertInstanceOf(Computer.class, Machine.read(walk.vid()), "a running computer is never dropped");
             assertTrue(ended.stream().filter(vid -> !Machine.read(vid).isNoObj()).count() <= BasicSwarmProcessor.HISTORY,
-                    "no more than the history of ended computers is kept");
-            assertTrue(Machine.read(ended.getFirst()).isNoObj(), "the eldest ended computer is dropped");
-            assertFalse(Machine.read(ended.getLast()).isNoObj(), "and the newest is kept");
+                    "no more than the history of the rest is kept");
+            checkEquality(LOG, noobj(), Machine.read(ended.getFirst()), true);
+            assertInstanceOf(Computer.class, Machine.read(ended.getLast()), "and the newest is kept");
+            release.countDown();
+            walker.future().get(5, TimeUnit.SECONDS);
+            machine.processor().apply(MCode.of(List.of(instLambda(obj -> obj)))).apply(jnt(0));
+            checkEquality(LOG, noobj(), Machine.read(walk.vid()), true);
         } finally {
             release.countDown();
             machine.pop();

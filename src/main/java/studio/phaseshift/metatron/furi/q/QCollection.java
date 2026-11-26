@@ -1278,7 +1278,7 @@ public final class QCollection {
                 ? Machine.current().memory().getSpaceFor(objID) : null;
         if (null == objSpace)
             return doc;
-        final Optional<QProc> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<QProc>as).findAny();
+        final Optional<QProc> docq = docqOf(objSpace);
         if (docq.isEmpty()) {
             if (objSpace.hasVID())// && !obj.tid().equals(NOOBJ_TID))
                 objSpace.logger().warn("no doc query attachment mounted on %s for %s", objSpace, objID);
@@ -1288,6 +1288,22 @@ public final class QCollection {
             docq.get().at(OBJ).<Space>as().write(objID, doc);
         }
         return doc;
+    }
+
+    /**
+     * DROP THE DOC docWrap filed for the obj at {@code vid}, on the same direct path, never the door. A doc holds the obj
+     * it documents ({@code obj => <the obj>}), so an obj deleted at its vid is still held for as long as its doc stays.
+     */
+    public static void docDrop(final fURI vid) {
+        if (Machine.current().memory().hasSpaceFor(vid))
+            docqOf(Machine.current().memory().getSpaceFor(vid)).ifPresent(docq -> docq.at(OBJ).<Space>as().write(vid, noobj()));
+    }
+
+    /**
+     * the doc query attached to {@code space}: where docWrap files the docs of the objs that space holds
+     */
+    private static Optional<QProc> docqOf(final Space space) {
+        return space.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<QProc>as).findAny();
     }
 
     public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc,
