@@ -173,6 +173,19 @@ public class UriTest extends AbstractAlgebraTest {
             "<a/b>.plus(<c/d>).minus(<c/d>)              % <a/b>",
             "<a/b>.neg().neg()                           % <a/b>",
             "<noobj>.neg()                               % <noobj>",
+            // a negative point on any segment negates its term (Marko: /a/b/c + /a/{-1}b/c), so the ring has its
+            // inverses in the points, and the cancelled sum still flows: on a zero address, noobj, the /x would be lost.
+            // neg answers the sum's normal form, the point written last: /a/{-1}b/c is another spelling of the same
+            // term, which a sum reads alike and equality keeps apart until resolve() (Marko, 2026-11-08)
+            "</a/b/c>.plus(</a/{-1}b/c>)                 % <noobj>",
+            "</a/b/c>.plus(</a/{-1}b/c>).plus(</x>)      % </x>",
+            "</a/b/c>.neg()                              % </a/b/c{-1}>",
+            "</a/b/c>.neg().plus(</a/{-1}b/c>)           % </a/b/c{-2}>",
+            // the obj's coefficient is not the address's point (Marko: {-1}<a/b/c> is different than <{-1}a/b/c>):
+            // neg negates the point, while a coefficient on the lhs floats over the sum, so it cancels nothing
+            "<a/b/c>.plus(<{-1}a/b/c>)                   % <noobj>",
+            "<a/b/c>.neg().plus(<{-1}a/b/c>)             % <a/b/c{-2}>",
+            "{-1}<a/b/c>.plus(<a/b/c>)                   % {-1}<a/b/c{2}>",
             "<a/b>.mult(<c/d>.plus(<a/b>))               % <a/b/{a/b,c/d}>",
             "<a/b>.mult(<c/d>).plus(<a/b>.mult(<a/b>))   % <a/b/{a/b,c/d}>",
     }, delimiter = '%')
