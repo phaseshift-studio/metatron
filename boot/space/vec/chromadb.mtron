@@ -4,12 +4,12 @@
      up --wait) before the space is built.
      args (the caller supplies the defaults from boot/args):
        saddr, sport, simg
-     each document that brings no embedding is embedded by the model the space
-     names in its embedq definition: whatever the caller wrote to
-     /sys/model/embed before this file is read, a model or the spec it is built
-     from (provider, protocol, host, llm).  the first such write builds it and
-     keeps it in the embedq in place of the spec, and a build that fails fails
-     its write and leaves the spec, so the next write builds again.  the space
+     each document that brings no embedding is embedded by the model at
+     /sys/model/embed, which the space's embedq references and reads at each
+     write: a model written there takes the place of the last without a
+     remount, and the vectors an earlier model embedded stay as they were.
+     the caller builds the model there (a spec there is built at every write).
+     with nothing there, such a write fails naming the reference.  the space
      mounts with no model server running ==]
 |inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T){
   print("chromadb: pulling container from ${!*simg}").

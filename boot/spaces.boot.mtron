@@ -1,8 +1,9 @@
 [== spaces.boot.mtron — the docker boot profile.
      metatron is installed on the host (the curl installer); this boot needs
-     DOCKER from the system, and for embed: writes an ollama serving the model
-     boot/args/ollama names, pulled (the space mounts without one, and a write
-     that brings no embedding fails).  every space backend runs as a container aggregated through
+     DOCKER from the system, and for embed: an ollama serving the model
+     boot/args/ollama names, pulled, when the boot runs: the boot builds the
+     model then.  the space mounts without one, and a write that brings no
+     embedding fails until a model is written to /sys/model/embed.  every space backend runs as a container aggregated through
      dckrspace, and each backend gets its space registered on top:
 
        metatron:#   tble space   mariadb  container (127.0.0.1:3308 -> 3306)
@@ -86,8 +87,8 @@ print("{{y}}gremlin : grph space\n{{X}}");
                                    sport => !*boot/args/gremlin/port,
                                    simg  => !*boot/args/gremlin/image);
 print("{{y}}chromadb: vec space\n{{X}}");
-[== the model spec the embed: space's embedq names, at the known address the module reads ==]
-</sys/model/embed> -> *boot/args/ollama;
+[== the embedding model, built from its spec at the address the embed: space's embedq references ==]
+*boot/args/ollama.as(model::T).to(/sys/model/embed);
 <fs:boot/space/vec/chromadb.mtron>(saddr => !*boot/args/chroma/host,
                                    sport => !*boot/args/chroma/port,
                                    simg  => !*boot/args/chroma/image);

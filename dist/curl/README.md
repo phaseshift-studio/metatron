@@ -63,8 +63,9 @@ bin/metatron -b boot/spaces.boot.mtron "[log=>info]"
 Ports, images, credentials and more are boot args — see the file's header.
 
 The `embed:#` space embeds each document it stores with an ollama model, named by the boot args `ollama/host`
-(default `http://127.0.0.1:11434`) and `ollama/llm` (default `qwen3-embedding:4b`). The space mounts without an ollama,
-and a write that brings no embedding fails until one answers with that model pulled (`ollama pull qwen3-embedding:4b`).
+(default `http://127.0.0.1:11434`) and `ollama/llm` (default `qwen3-embedding:4b`). The boot builds the model at
+`/sys/model/embed` when it runs, so the ollama must answer then, with that model pulled (`ollama pull qwen3-embedding:4b`).
+The space mounts without one, and a write that brings no embedding fails until a model is written to `/sys/model/embed`.
 
 ## Alternatives
 

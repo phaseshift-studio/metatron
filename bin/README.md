@@ -70,7 +70,8 @@ console::[=>]@/usr/ui/console;
 `drstynx.boot.mtron` is an example of a local full-console boot.
 `boot/spaces.boot.mtron` is the docker boot — mariadb/gremlin/chromadb
 backends as containers via dckrspace, then this local console (docker is the
-host requirement, plus an ollama serving the embedding model for `embed:` writes).
+host requirement, plus an ollama serving the embedding model when the boot runs, which builds the model
+for `embed:` writes then).
 
 ### 4. ttyd / web terminal — a console in the browser (historical / future route)
 

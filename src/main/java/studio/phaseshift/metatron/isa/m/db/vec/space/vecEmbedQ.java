@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -61,8 +62,9 @@ public class vecEmbedQ extends BaseQ {
 
     /**
      * @param space the space whose embeddings this reads
-     * @param model the model the space embeds with, or the spec it is built from, as its embedq definition names it
-     *              (embedq::[model=>...]); noobj when it names none, and then the space's config function embeds
+     * @param model the reference to the model the space embeds with, as its embedq definition writes it
+     *              (embedq::[model=>!*<location>]), kept unresolved; noobj when it names none, and then the space's
+     *              config function embeds
      */
     public vecEmbedQ(final vecSpace space, final Obj model) {
         super(buildJvm(space, model), EMBEDQ_PATTERN, EMBEDQ_TID);
@@ -104,20 +106,19 @@ public class vecEmbedQ extends BaseQ {
     }
 
     /**
-     * the embedding of doc by the model this embedq names. The first embedding builds the model from its spec (a cast
-     * to model::T, which builds nothing for an obj already typed model::T) and keeps it here in place of the spec, so
-     * a space mounts with no model server running. The cast and the keep run under this embedq's lock, so writes that
-     * race to the first embedding build the model once. A build that fails answers its fail, and the spec stays for the
-     * next write. Both calls go through the machine (the instruction set defining model::T and embed already depends
-     * on this one), so the cast and embed are resolved as mtron resolves them
+     * the embedding of doc by the model this embedq references. The reference is resolved at each embedding (reading
+     * embedq>>model), so the model is whatever is at its location then: a model written there takes the place of the
+     * last without a remount, and the vectors an earlier model embedded stay as they were (Marko, 2026-11-26). Nothing
+     * is held here. The model is cast to model::T, which builds nothing for an obj already typed model::T and builds a
+     * model from a spec, again at every embedding, so the caller builds the model at the location. A build that fails
+     * answers its fail, and a reference that reads nothing answers a fail naming it. Both calls go through the machine
+     * (the instruction set defining model::T and embed already depends on this one), so they resolve as mtron resolves
      */
     public Obj embed(final Obj doc) {
-        final Obj model;
-        synchronized (this) {
-            model = Machine.evaluate(this.at(uri(MODEL)), Parser.Helper.toCode(Machine.parse("as(model::T)")));
-            if (!model.isFail())
-                this.at(uri(MODEL), model, MUTABLE);
-        }
+        final Obj named = this.at(uri(MODEL));
+        if (named.isNoObj())
+            return fail("the embedq's model, %s, reads no model", this.recValue().get(uri(MODEL)));
+        final Obj model = Machine.evaluate(named, Parser.Helper.toCode(Machine.parse("as(model::T)")));
         if (model.isFail())
             return model;
         // the document reaches embed as it is: an inst computes a value argument against its lhs, which expands a str's
