@@ -36,6 +36,13 @@ public final class Tokens {
         // do nothing
     }
 
+    // poly tokens
+    public static final String FIFO = "fifo";
+    public static final String ARRAY = "array";
+    public static final String TREE = "tree";
+    public static final String HASH = "hash";
+
+
     // furi tokens
     public static final fURI LOCALHOST = f("localhost");
     public static final String LAMBDA = "λ";
@@ -120,7 +127,6 @@ public final class Tokens {
     public static final String BLOCK = "block";
     public static final String AI = "ai";
     public static final String TIME = "time";
-    public static final String HASH = "hash";
     public static final String POSTGRESQL = "postgresql";
     public static final String ENTRY = "entry";
     public static final String RAG = "rag";

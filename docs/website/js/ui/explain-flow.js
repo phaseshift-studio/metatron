@@ -26,6 +26,7 @@
  * holds them; the widget is the only browser part.
  */
 import { write } from '../sdk/obj_mtron_serializer.js';
+import { ICONS } from './mtron-dom.js';
 
 /* one field of a rec by key name — a rec's keys are fURIs, so compare the path */
 function field(rec, name) {
@@ -340,26 +341,33 @@ function topologyWidget(topology, api) {
 function explainBadge(codeText, api) {
     const code = String(codeText == null ? '' : codeText).trim();
     if (!code || code === 'noobj' || code.indexOf('fail::') === 0) return null;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'code-ask';
-    button.textContent = '?';
-    button.title = 'explain this code';
-    button.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!api || !api.open) return;
-        /* the panel reads env.expr, so it is handed the explain CHAIN; the field
-           it seeds shows the expression (it strips the `.explain()`) */
-        api.open({
-            tid: '/m/inst/explain/explanation',
-            vid: null,
-            raw: '',
-            shortTid: 'explanation',
-            expr: code + '.explain()'
+    const mark = (kind, glyph, title, expr, tid, shortTid) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = kind;
+        /* a mark is a character OR a drawn glyph — the icon vocabulary decides which */
+        if (String(glyph).charAt(0) === '<') button.innerHTML = glyph;
+        else button.textContent = glyph;
+        button.title = title;
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!api || !api.open) return;
+            /* each panel reads env.expr, so it is handed the CHAIN it renders; the
+               explain field strips its own `.explain()` to show the expression */
+            api.open({tid: tid, vid: null, raw: '', shortTid: shortTid, expr: expr});
         });
-    });
-    return button;
+        return button;
+    };
+    /* ONE MARK PER MEANING: `?` is explain and stays explain; the beaker is the
+       profile of the same code — two icons side by side, never a menu behind one */
+    const wrap = document.createElement('div');
+    wrap.className = 'code-asks';
+    wrap.appendChild(mark('code-ask', '?', 'explain this code', code + '.explain()',
+        '/m/inst/explain/explanation', 'explanation'));
+    wrap.appendChild(mark('code-profile', ICONS.profile.mark, ICONS.profile.title, code + '.profile()',
+        '/m/inst/profile/profiling', 'profiling'));
+    return wrap;
 }
 
 registerExplainExtension('topology', topologyWidget);

@@ -37,8 +37,19 @@ const BOOK_SVG = '<svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="t
     + '<path d="M8 4.1C6.7 3.1 5 2.7 2.9 2.8v9.2C5 11.9 6.7 12.3 8 13.3c1.3-1 3-1.4 5.1-1.3V2.8C11 2.7 9.3 3.1 8 4.1Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>'
     + '<path d="M8 4.1v9.2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
 
+/* the stopwatch: drawn, not typed — the character U+23F1 is missing from the mono
+   fonts this page falls back to (it rendered as a dot), so the profile mark is the
+   same inline-SVG pattern as the book: currentColor, theme-following, always there */
+const STOPWATCH_SVG = '<svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true" focusable="false">'
+    + '<circle cx="8" cy="9.1" r="5" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+    + '<path d="M8 9.1V6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>'
+    + '<path d="M5.9 2.2h4.2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>'
+    + '<path d="M8 2.2v1.9" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+    + '</svg>';
+
 const ICONS = {
     explain: {mark: '?', title: 'explain'},
+    profile: {mark: STOPWATCH_SVG, title: 'profile (where the time went)', html: true},
     docq: {mark: BOOK_SVG, title: 'documentation (?docq)', html: true},
     decq: {mark: 'a*b', title: 'algebraic declaration (?decq)'}
 };

@@ -305,6 +305,12 @@ code {
     color: var(--dim);
 }
 
+/* the server's boot file: the umber red is the accent this page gives the things that
+   name the machine (page names, panel titles), so it carries the weight of the fact */
+#boot-file {
+    color: var(--mred);
+}
+
 /* ── physical machine stats strip ─────────────────────────
    one slim row of read-only chips between the brand and the page tabs;
    the values are polled from sys_stat() on the page's refresh cycle, so
@@ -384,7 +390,6 @@ main {
     font-size: 13px;
     font-weight: 600;
     letter-spacing: .09em;
-    text-transform: uppercase;
     color: var(--fg);
 }
 
@@ -468,7 +473,6 @@ th {
     font-weight: 500;
     font-size: 10.5px;
     letter-spacing: .11em;
-    text-transform: uppercase;
     border-bottom: 1px solid var(--line);
     padding-bottom: .3rem;
 }
@@ -596,7 +600,6 @@ td.st {
     color: var(--faint);
     font-size: 9.5px;
     letter-spacing: .04em;
-    text-transform: uppercase;
 }
 
 .console-head .mime {
@@ -838,7 +841,6 @@ ol.tools .empty {
 .pending .label {
     color: var(--red-hi);
     letter-spacing: .08em;
-    text-transform: uppercase;
     font-size: 10.5px;
 }
 
@@ -949,7 +951,6 @@ dialog.popup h2 {
     margin: 0;
     font-size: 12px;
     letter-spacing: .09em;
-    text-transform: uppercase;
 }
 
 dialog.popup .meta {
@@ -989,7 +990,6 @@ dialog.save-as h2 {
     margin: 0;
     font-size: 12px;
     letter-spacing: .09em;
-    text-transform: lowercase;
 }
 
 dialog.save-as .body {
@@ -1050,7 +1050,6 @@ dialog.save-as .actions {
     font: inherit;
     font-size: 10px;
     letter-spacing: .05em;
-    text-transform: lowercase;
     cursor: pointer;
 }
 
@@ -1278,10 +1277,20 @@ dialog.save-as .actions {
     position: relative;
 }
 
-.code-ask {
+/* the marks a code carries: one per meaning, in a row — `?` explains, the beaker
+   profiles. the row is what sits at the wrap's corner, so neither mark owns the
+   position (they used to stack on the same 3px/3px spot). */
+.code-asks {
     position: absolute;
     top: 3px;
     right: 3px;
+    display: flex;
+    gap: 3px;
+    align-items: center;
+}
+
+.code-ask,
+.code-profile {
     width: 15px;
     height: 15px;
     padding: 0;
@@ -1290,11 +1299,24 @@ dialog.save-as .actions {
     background: var(--panel-hi);
     color: var(--faint);
     font: 10px/1 var(--mono);
+    line-height: 1;
     cursor: pointer;
     opacity: .55;
 }
 
-.code-ask:hover {
+.code-profile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.code-profile svg {
+    width: 10px;
+    height: 10px;
+}
+
+.code-ask:hover,
+.code-profile:hover {
     opacity: 1;
     color: var(--fg);
     border-color: var(--mred);
@@ -1318,7 +1340,6 @@ dialog.save-as .actions {
     color: var(--faint);
     font-size: 10px;
     letter-spacing: .04em;
-    text-transform: uppercase;
 }
 
 .code-head .code-explain {
@@ -1746,7 +1767,6 @@ dialog.save-as.open-page {
     color: var(--fg);
     font-size: 11px;
     letter-spacing: .04em;
-    text-transform: uppercase;
 }
 
 .exp-ext-kind {
@@ -2021,7 +2041,6 @@ dialog.save-as.open-page {
     color: var(--mred);
     font-size: 10.5px;
     letter-spacing: .05em;
-    text-transform: lowercase;
 }
 
 .type-pred {
@@ -3053,6 +3072,22 @@ button.machine-tile:focus-visible {
     overflow: visible;
 }
 
+/* INSIDE THE DIALOG that concession cannot hold: the dialog's height is fixed (dragged,
+   or capped at 100vh) and it clips nothing, so a panel taller than the dialog painted
+   its rows BELOW the dialog's background. the view scrolls instead — a panel that owns
+   an inner scroller (the console's log, the table's grid) keeps clipping the view. */
+dialog.popup[open] .popup-out.panel-view {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+dialog.popup[open] .popup-out.panel-view:has(> .console-panel),
+dialog.popup[open] .popup-out.panel-view:has(> .tblespace) {
+    display: flex;
+    overflow: hidden;
+}
+
 /* a card with an explicit row span pins its height to that many rows and lets
    the body scroll (the slim red scrollbar) instead of stretching the grid row */
 .obj-card[data-row] {
@@ -3111,7 +3146,6 @@ button.machine-tile:focus-visible {
     color: var(--fg);
     font-size: 11.5px;
     letter-spacing: .07em;
-    text-transform: uppercase;
 }
 
 .multi-card-body {
@@ -3501,7 +3535,6 @@ footer .license {
     letter-spacing: .02em;
     padding: .12rem .42rem;
     cursor: pointer;
-    text-transform: lowercase;
     white-space: nowrap;
     flex: none;
 }
@@ -3557,7 +3590,6 @@ footer .license {
     color: var(--fg);
     font-size: 12px;
     letter-spacing: .14em;
-    text-transform: uppercase;
     white-space: nowrap;
 }
 
@@ -3818,7 +3850,6 @@ dialog.save-as.cluster textarea {
     color: var(--faint);
     font: 9.5px/1.4 var(--mono);
     letter-spacing: .12em;
-    text-transform: uppercase;
 }
 
 .mcp-tool {
@@ -3978,4 +4009,227 @@ dialog.save-as.cluster textarea {
     background: #070a0f;
     color: var(--fg);
     font: 10px/1.3 var(--mono);
+}
+
+/* ── the profiling panel: the machine's timings, table by table ──────────── */
+.prof-panel {
+    gap: .2rem;
+}
+
+.prof-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .1rem 0 .35rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.prof-title {
+    color: var(--mred);
+    font: 11.5px/1.4 var(--mono);
+}
+
+.prof-machine {
+    overflow: hidden;
+    margin-left: auto;
+    color: var(--faint);
+    font: 10px/1.4 var(--mono);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.prof-insts {
+    color: var(--faint);
+    font: 10px/1.4 var(--mono);
+}
+
+.prof-sec {
+    margin: .5rem 0 .1rem;
+    color: var(--faint);
+    font: 9.5px/1.4 var(--mono);
+    letter-spacing: .12em;
+}
+
+.prof-table {
+    width: 100%;
+    border-collapse: collapse;
+    font: 10.5px/1.5 var(--mono);
+}
+
+.prof-table th {
+    padding: .2rem .3rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--faint);
+    font-weight: normal;
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* a numeric column's header sits over its numbers, not over the space to their left:
+   the data cells are right-aligned, so the header is too (every column after the key) */
+.prof-table th:not(:first-child) {
+    text-align: right;
+}
+
+.prof-table td {
+    padding: .12rem .3rem;
+    border-bottom: 1px solid var(--line-soft, rgba(255, 255, 255, .04));
+}
+
+.prof-k {
+    color: var(--fg);
+}
+
+/* a uri in a profiling table: the machine named it, so it opens */
+.prof-ref {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--line-hi);
+}
+
+.prof-ref:hover {
+    color: var(--fg);
+    text-decoration-color: var(--mred);
+}
+
+.prof-num {
+    color: var(--faint);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.prof-note {
+    color: var(--faint);
+    font: 10px/1.5 var(--mono);
+}
+
+.prof-format {
+    max-height: 22rem;
+    margin: 0;
+    overflow: auto;
+    padding: .4rem .55rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #070a0f;
+    color: var(--fg);
+    font: 10px/1.45 var(--mono);
+    white-space: pre;
+}
+
+/* ── the obj modal's trail: ‹ [pick] › at the bottom left ──────────────────
+   history is navigation, not an action on the object, so it sits at the far end of
+   the actions row (margin-right:auto) rather than among pin/copy/close. */
+.popup-nav {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    min-width: 0;
+    margin-right: auto;
+}
+
+.popup-nav .popup-prev,
+.popup-nav .popup-next {
+    flex: none;
+    width: 1.35rem;
+    padding: 0;
+    font: 12px/1.5 var(--mono);
+}
+
+.popup-picks {
+    flex: 0 1 auto;
+    min-width: 7rem;
+    max-width: 18rem;
+    padding: .18rem .3rem;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #070a0f;
+    color: var(--fg);
+    font: 10.5px/1.4 var(--mono);
+}
+
+.popup-picks:disabled {
+    color: var(--faint);
+    opacity: .6;
+}
+
+/* the log markup's tones: the same letters the Java side writes ({{r}}…{{X}}) */
+.line .g-r { color: var(--bad); }
+.line .g-g { color: var(--ok); }
+.line .g-y { color: var(--warn); }
+.line .g-b { color: var(--link); }
+.line .g-m { color: #c678dd; }
+.line .g-c { color: #56b6c2; }
+.line .g-w { color: var(--fg); }
+
+/* which boot file the server runs: its NAME here, the whole address in the tooltip */
+.console-head .boot {
+    color: var(--faint);
+    font: 10px/1.4 var(--mono);
+    white-space: nowrap;
+}
+
+/* the page menu: ☰ opens the layout sidepanel. an auxiliary control, so it is a mark,
+   not a word — and it leads the header rather than sitting among the page's actions. */
+.page-menu {
+    flex: none;
+    /* the topbar-left column stacks brand, stats and tabs, so centring the mark would
+       drop it to the stats row — it belongs on the brand's line */
+    align-self: flex-start;
+    margin-top: .15rem;
+    padding: .1rem .3rem;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: none;
+    color: var(--faint);
+    font: 15px/1 var(--mono);
+    cursor: pointer;
+}
+
+.page-menu:hover,
+.page-menu[aria-expanded="true"] {
+    color: var(--fg);
+    border-color: var(--line);
+}
+
+/* ── the profiling panel's rule groups: one accordion per prefix ────────── */
+.prof-group {
+    overflow: hidden;
+    margin: .15rem 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+
+.prof-group-head {
+    display: flex;
+    gap: .5rem;
+    align-items: baseline;
+    padding: .25rem .5rem;
+    background: rgba(255, 255, 255, .02);
+    color: var(--faint);
+    font: 10px/1.5 var(--mono);
+    cursor: pointer;
+    list-style: none;
+}
+
+.prof-group-head::-webkit-details-marker {
+    display: none;
+}
+
+.prof-group-name {
+    color: var(--mred);
+    font-size: 10.5px;
+}
+
+.prof-group-meta {
+    margin-left: auto;
+}
+
+.prof-group[open] .prof-group-head {
+    border-bottom: 1px solid var(--line);
 }

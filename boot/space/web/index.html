@@ -107,6 +107,8 @@
 <body>
 <header class="topbar">
     <div class="topbar-inner">
+        <button type="button" class="page-menu" id="page-layout" title="layout · the page as a project tree"
+                aria-label="layout" aria-controls="sidepanel">☰</button>
         <div class="topbar-left">
             <div class="brand">
                 <svg class="rings" viewBox="0 0 64 64" role="img" aria-label="three interlocking rings">
@@ -130,14 +132,13 @@
             <div class="status-line">
                 <span class="page-name">splash_page</span>
                 <span class="page-vid">mfs:boot/space/web/default.mtron</span>
-                <button type="button" class="page-save" id="page-layout" title="the page as a project tree">layout</button>
                 <button type="button" class="page-save" id="page-open" title="open a page from this machine's file systems">open…</button>
                 <button type="button" class="page-save" id="page-save">save as…</button>
             </div>
+            <!-- a server-wide fact: which boot file the server on screen was started
+                 with. the name is here, the whole address is the tooltip. -->
             <div class="status-meta">
-                served by <code>http_server::T</code>
-                <span class="sep">·</span> data from <span id="instance">this machine</span>
-                <a href="#" id="instance-local" hidden title="back to this page's own machine">local</a>
+                boot <code id="boot-file" title="the boot file this server was started with">…</code>
             </div>
         </div>
     </div>

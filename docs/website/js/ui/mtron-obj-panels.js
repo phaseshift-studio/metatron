@@ -1356,6 +1356,242 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
        holds. The client does NOT carry resources or prompts — the mcp SERVER does
        (mcp_server::[tool, resource, prompt]) and nothing connects them through to the
        client yet — so those two menus are placeholders that say exactly that. */
+    /* ── profiling::T — where the time went ────────────────────────────────────
+       the machine's own timings: a min/max per stage (rewrite, resolve, apply), the
+       resolve and apply sub-stages with their share of their stage, every rewrite rule
+       with the sizes it saw and what it cost, the per-instruction table, the flow and
+       cache counters — and the machine's rendered `>>format` text, the same table the
+       console prints. read by address when the card has one, else from the expression
+       the card was opened with (how a compiler's profile mark opens it). */
+    register("/m/inst/profile/profiling", async function (env, api) {
+        const box = node("div", "mpanel prof-panel");
+        const note = node("div", "mpanel-empty", "reading the profile …");
+        box.appendChild(note);
+        const source = env.vid ? "*<" + env.vid + ">" : String(env.expr || env.raw || "").trim();
+        if (!source) {
+            note.textContent = "no profile to read";
+            return box;
+        }
+        const field = (rec, name) => {
+            if (!rec || !rec.isRec || !rec.isRec()) return null;
+            for (const [key, value] of rec.js) if (key.toString() === name) return value;
+            return null;
+        };
+        const num = (obj) => {
+            if (obj == null || (obj.isNoObj && obj.isNoObj())) return null;
+            const n = Number(obj.js);
+            return Number.isFinite(n) ? n : null;
+        };
+        const ms = (value) => (value == null ? "—" : value.toFixed(3));
+        const pct = (value) => (value == null ? "" : value.toFixed(1) + "%");
+        let profile = null;
+        try {
+            const text = String((await api.mtron(source)) || "").trim();
+            const value = parse(text);
+            profile = value && value.isRec && value.isRec() ? value
+                : (value && value.isObjs && value.isObjs() ? [...value.js].find((m) => m && m.isRec && m.isRec()) : null);
+        } catch (problem) {
+            note.textContent = "cannot read the profile: " + (problem && problem.message ? problem.message : problem);
+            return box;
+        }
+        if (!profile) {
+            note.textContent = "no profile at " + source;
+            return box;
+        }
+        note.remove();
+
+        const head = node("div", "prof-head");
+        head.appendChild(node("span", "prof-title", "profiling"));
+        const machine = field(profile, "machine");
+        if (machine) head.appendChild(node("span", "prof-machine", String(machine)));
+        const insts = num(field(profile, "insts"));
+        if (insts != null) head.appendChild(node("span", "prof-insts", insts + " insts"));
+        box.appendChild(head);
+
+        const section = (title) => {
+            box.appendChild(node("div", "prof-sec", title));
+        };
+        const tableOf = (headers, rows) => {
+            const table = node("table", "prof-table");
+            const thead = document.createElement("thead");
+            const hr = document.createElement("tr");
+            headers.forEach((label) => hr.appendChild(node("th", "", label)));
+            thead.appendChild(hr);
+            table.appendChild(thead);
+            const tbody = document.createElement("tbody");
+            rows.forEach((cells) => {
+                const tr = document.createElement("tr");
+                cells.forEach((cell, index) => {
+                    const td = node("td", index ? "prof-num" : "prof-k");
+                    /* a cell that carries an element is a uri the machine named */
+                    if (cell && cell.nodeType === 1) td.appendChild(cell);
+                    else td.textContent = String(cell == null ? "—" : cell);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            return table;
+        };
+
+        /* EVERY URI IS CLICKABLE: a rule and an instruction are named by uri, so their
+           names open like the table's uri cells do (shift-click goes to ?docq) */
+        const uriLink = (text, vid) => {
+            const label = String(text == null ? "" : text);
+            const button = node("button", "prof-ref", label);
+            button.type = "button";
+            button.title = vid + " · click to open · shift-click for ?docq";
+            button.addEventListener("click", (ev) => {
+                if (ev.shiftKey) api.open({vid: vid + "?docq", shortTid: "docs"});
+                else api.open({vid: vid, raw: vid});
+            });
+            return button;
+        };
+
+        /* stages: a min and a max each */
+        const stage = field(profile, "stage");
+        const stages = stage && stage.isRec && stage.isRec() ? [...stage.js] : [];
+        if (stages.length) {
+            section("stages");
+            box.appendChild(tableOf(["stage", "min (ms)", "max (ms)"],
+                stages.map(([key, value]) => [key.toString(), ms(num(field(value, "min"))), ms(num(field(value, "max")))])));
+        }
+
+        /* a sub-stage table: value + its share of the stage */
+        const subStages = (rec, title) => {
+            const entries = rec && rec.isRec && rec.isRec() ? [...rec.js] : [];
+            if (!entries.length) return;
+            section(title);
+            const total = entries.reduce((sum, [, value]) => sum + (num(value) || 0), 0);
+            box.appendChild(tableOf([title, "avg (ms)", "share"],
+                entries.map(([key, value]) => {
+                    const time = num(value);
+                    return [key.toString(), ms(time), total ? pct((100 * (time || 0)) / total) : ""];
+                })));
+        };
+        subStages(field(profile, "resolve"), "resolve sub-stages");
+        subStages(field(profile, "apply"), "apply sub-stages");
+
+        /* REWRITE RULES, FOLDED BY PREFIX: a rule's name is relative, so the machine's
+           rewrite tables supply the addresses — the instset's own reference lists the sets,
+           each set's `inst/rewrite/+` answers its rules' vids, and a vid's
+           retract(1) is the accordion key (/m/db/grph/inst/rewrite for gremlin_where,
+           /m/db/tble/inst/rewrite for sql_where). */
+        const rewrite = field(profile, "rewrite");
+        const rules = rewrite ? field(rewrite, "rules") : null;
+        const ruleRows = rules && rules.isLst && rules.isLst() ? [...rules.js] : [];
+        if (ruleRows.length) {
+            section("rewrite rules");
+            const paths = (text) => {
+                const seen = new Set();
+                (String(text == null ? "" : text).match(/\/[A-Za-z0-9_.\/-]+/g) || []).forEach((path) => seen.add(path));
+                return [...seen];
+            };
+            const prefixByRule = new Map();
+            try {
+                const setText = String((await api.mtron("*/instset>>reference")) || "");
+                const sets = paths(setText);
+                const answers = await Promise.all(sets.map((set) =>
+                    api.mtron("*<" + set + "/inst/rewrite/+>").catch(() => "")));
+                answers.forEach((answer) => {
+                    paths(answer).forEach((vid) => {
+                        /* a vid carries its signature as a query: the address is the path */
+                        const path = vid.split("?")[0];
+                        if (!/\/inst\/rewrite\/[^/]+$/.test(path)) return;
+                        prefixByRule.set(f(path).name(), f(path).retract(1).toString());
+                    });
+                });
+            } catch (ignored) {
+                /* no map: every rule folds under one group */
+            }
+            const groups = new Map();
+            ruleRows.forEach((rule) => {
+                const name = String(field(rule, "name") || "?");
+                const prefix = prefixByRule.get(name) || "—";
+                if (!groups.has(prefix)) groups.set(prefix, []);
+                groups.get(prefix).push({
+                    name: name, vid: prefixByRule.get(name) ? prefix + "/" + name : name,
+                    in: num(field(rule, "in")), out: num(field(rule, "out")), time: num(field(rule, "time"))
+                });
+            });
+            const ordered = [...groups.entries()]
+                .map(([prefix, rows]) => ({
+                    prefix: prefix, rows: rows.sort((a, b) => (b.time || 0) - (a.time || 0)),
+                    time: rows.reduce((sum, row) => sum + (row.time || 0), 0)
+                }))
+                .sort((a, b) => b.time - a.time);
+            ordered.forEach((group) => {
+                const fold = document.createElement("details");
+                fold.className = "prof-group";
+                /* the biggest spender starts open; the rest are one click away */
+                fold.open = group === ordered[0];
+                const head = document.createElement("summary");
+                head.className = "prof-group-head";
+                head.appendChild(node("span", "prof-group-name", group.prefix));
+                head.appendChild(node("span", "prof-group-meta",
+                    group.rows.length + (group.rows.length === 1 ? " rule" : " rules") + " · " + ms(group.time) + " ms"));
+                fold.appendChild(head);
+                fold.appendChild(tableOf(["rule", "insts in", "insts out", "time (ms)"],
+                    group.rows.map((rule) => [uriLink(rule.name, rule.vid), rule.in, rule.out, ms(rule.time)])));
+                box.appendChild(fold);
+            });
+            const total = rewrite ? field(rewrite, "total") : null;
+            if (total) {
+                box.appendChild(node("div", "prof-note",
+                    "total · insts in " + (num(field(total, "in")) ?? "—")
+                    + " · out " + (num(field(total, "out")) ?? "—")
+                    + " · " + ms(num(field(total, "time"))) + " ms"));
+            }
+        }
+
+        /* the per-instruction table: what each instruction moved */
+        const perInst = field(profile, "per_inst");
+        const instRows = perInst && perInst.isLst && perInst.isLst() ? [...perInst.js] : [];
+        if (instRows.length) {
+            section("per instruction");
+            box.appendChild(tableOf(["instruction", "monad in", "coeff in", "monad out", "coeff out", "time (ms)"],
+                instRows.map((row) => [
+                    uriLink(String(field(row, "name") || "?"), String(field(row, "name") || "?")),
+                    num(field(row, "monad_in")), num(field(row, "c_in")),
+                    num(field(row, "monad_out")), num(field(row, "c_out")),
+                    ms(num(field(row, "time")))
+                ])));
+        }
+
+        /* flow and cache: one line each */
+        const flow = field(profile, "flow");
+        if (flow) {
+            section("flow");
+            box.appendChild(node("div", "prof-note",
+                "monads " + (num(field(flow, "monads")) ?? "—")
+                + " · coeff-sum " + (num(field(flow, "c_sum")) ?? "—")
+                + " · compression " + (num(field(flow, "compression")) ?? "—")
+                + " · processors " + (num(field(flow, "processors")) ?? "—")));
+        }
+        const cache = field(profile, "cache");
+        if (cache) {
+            section("cache");
+            const hit = num(field(cache, "hit_rate"));
+            box.appendChild(node("div", "prof-note",
+                "hits " + (num(field(cache, "hits")) ?? "—")
+                + " · misses " + (num(field(cache, "misses")) ?? "—")
+                + " · hit rate " + (hit == null ? "—" : (hit * 100).toFixed(1) + "%")));
+        }
+
+        /* the machine's own rendering, exactly the text the console's `>>format` prints */
+        const formatBox = node("pre", "prof-format", "reading the formatted table …");
+        section("format");
+        box.appendChild(formatBox);
+        try {
+            const text = String((await api.mtron(env.vid ? "*<" + env.vid + ">>>format" : source + ">>format")) || "").trim();
+            const value = parse(text);
+            formatBox.textContent = value && value.isStr && value.isStr() ? value.js : text;
+        } catch (problem) {
+            formatBox.textContent = "no formatted table: " + (problem && problem.message ? problem.message : problem);
+        }
+        return box;
+    });
+
     register("/m/web/mcp/mcp_client", async function (env, api) {
         const box = node("div", "mpanel mcp-panel");
         const note = node("div", "mpanel-empty", "reading the client …");
@@ -2297,10 +2533,22 @@ function compilerPanel(env, api) {
     });
     explainBtn.disabled = true;
     explainBtn.classList.add("compiler-explain");
+    /* the same chain, timed: the profile mark joins the explain mark, and the panel it
+       opens behaves the same way (read the rec, table by table, plus `>>format`) */
+    const profileBtn = iconButton("profile", () => {
+        const expr = input.value.trim();
+        if (!expr) return;
+        api.open({tid: "/m/inst/profile/profiling", vid: null, raw: "", shortTid: "profiling", expr: expr + ".profile()"});
+    });
+    if (profileBtn) {
+        profileBtn.disabled = true;
+        profileBtn.classList.add("compiler-profile");
+    }
     form.appendChild(input);
     form.appendChild(formBtn);
     form.appendChild(runBtn);
     form.appendChild(explainBtn);
+    if (profileBtn) form.appendChild(profileBtn);
     box.appendChild(form);
 
     const tree = node("div", "compiler-tree");
@@ -2424,6 +2672,7 @@ function compilerPanel(env, api) {
             const parsedText = textOf(parsed);
             tree.appendChild(branch(head("_", "parser"), [code(parsedText || "noobj")]));
             explainBtn.disabled = false;   /* it compiled: now it can be explained */
+            if (profileBtn) profileBtn.disabled = false;
 
             /* 2. resolve */
             status.textContent = "resolving …";

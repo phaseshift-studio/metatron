@@ -116,7 +116,6 @@ public class mInstSet extends AbstractInstSet {
 
     public static final Type REC_TYPE = mTypes.REC_TYPE;
 
-
     /**
      * Cache for fully resolved instructions when ALL arguments are literals (non-call objects).
      * Key: "lhsType|instBasePath|args" - includes lhs type, instruction name, and literal args

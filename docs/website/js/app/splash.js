@@ -461,10 +461,48 @@ function createConsole(instance) {
     }
     REPL.cursor = REPL.commands.length;
 
+    /* the LOG/LITERAL markup the Java side writes inside its strings: `{{r}}…{{X}}`
+       opens a tone and {{X}} (or {{/r}}) closes it. it is not mtron syntax, so the
+       highlighter escapes it as text — a raw line paints it instead. */
+    const GRAFFITI = /\{\{([a-zX]|\/[a-z])\}\}/g;
+    const TONES = {r: "g-r", g: "g-g", y: "g-y", b: "g-b", m: "g-m", c: "g-c", w: "g-w"};
+    function graffiti(el, text) {
+        let at = 0;
+        let tone = null;
+        let span = null;
+        const write = (chunk) => {
+            if (!chunk) return;
+            if (!tone) {
+                (span || el).appendChild(document.createTextNode(chunk));
+                return;
+            }
+            if (!span) {
+                span = document.createElement("span");
+                span.className = tone;
+                el.appendChild(span);
+            }
+            span.appendChild(document.createTextNode(chunk));
+        };
+        const flush = () => { span = null; };
+        String(text).replace(GRAFFITI, (token, code, index) => {
+            write(String(text).slice(at, index));
+            if (code === "X" || code.charAt(0) === "/") {
+                tone = null;
+                flush();
+            } else {
+                tone = TONES[code] || null;
+                flush();
+            }
+            at = index + token.length;
+            return token;
+        });
+        write(String(text).slice(at));
+    }
     function line(kind, text) {
         const el = document.createElement("span");
         el.className = "line " + kind;
-        paint(el, text, kind);
+        if (kind === "raw") graffiti(el, text);
+        else paint(el, text, kind);
         if (kind === "res")
             annotateObjects(el, text, (obj) => openNested(obj));
         out.appendChild(el);
@@ -472,9 +510,55 @@ function createConsole(instance) {
         out.scrollTop = out.scrollHeight;
     }
 
-    function welcome() {
-        /* the console's whole preamble: what goes in, what comes out */
+    /* a one-shot x-mtron read on this instance — the console's own preamble must not
+       go through the REPL socket (its answers are printed as results) */
+    function readOnce(expr) {
+        return new Promise((resolve, reject) => {
+            const ws = new WebSocket(codecUrl(instance.wsBase, "application/x-mtron", "application/x-mtron"));
+            const timer = setTimeout(() => { try { ws.close(); } catch (ignored) { } reject(new Error("read timeout")); }, 5000);
+            ws.onopen = () => ws.send(expr);
+            ws.onmessage = (ev) => {
+                clearTimeout(timer);
+                try { ws.close(); } catch (ignored) { }
+                resolve(ev.data);
+            };
+            ws.onerror = () => {
+                clearTimeout(timer);
+                reject(new Error("read failed"));
+            };
+        });
+    }
+
+    async function header() {
+        /* the console's whole preamble: its banner (the console object's own header),
+           then what goes in and what comes out */
         out.textContent = "";
+        try {
+            const text = String((await readOnce("*</usr/marko/console/header>")) || "").trim();
+            const value = parseValue(text);
+            const banner = value && value.isStr && value.isStr() ? value.js : "";
+            String(banner).split("\n").forEach((row) => {
+                if (row.trim()) line("raw", row);
+            });
+        } catch (ignored) {
+            /* a machine without a console header just gets the codec line */
+        }
+        try {
+            const text = String((await readOnce("*boot/file")) || "").trim();
+            const value = parseValue(text);
+            const uri = value && value.isUri && value.isUri() ? value.js : null;
+            const path = uri ? String(uri) : "";
+            /* the uri's own name() — the same answer `*boot/file.name()` gives */
+            const name = uri && typeof uri.name === "function"
+                ? String(uri.name())
+                : (path.split("/").filter(Boolean).pop() || "");
+            if (name) {
+                instance.boot = {name: name, path: path};
+                if (instance === active) paintBoot(instance);
+            }
+        } catch (ignored) {
+            /* a server that answers no boot file keeps the placeholder */
+        }
         line("sys", "in " + instance.inMime + "  ·  out " + instance.outMime);
     }
 
@@ -631,7 +715,7 @@ function createConsole(instance) {
     });
 
     instance.clearButton.addEventListener("click", () => {
-        welcome();
+        header();
         instance.expr.focus();
     });
 
@@ -649,7 +733,7 @@ function createConsole(instance) {
             instance.expr.value = REPL.cursor === REPL.commands.length ? "" : REPL.commands[REPL.cursor];
         } else if (ev.key === "l" && (ev.ctrlKey || ev.metaKey)) {
             ev.preventDefault();
-            welcome();
+            header();
         }
     });
 
@@ -683,8 +767,8 @@ function createConsole(instance) {
 
     setDot(instance.dConsole, "down");
     instance.mConsole.textContent = "not connected";
-    welcome();
-    return Object.assign(REPL, {line, welcome, connect, evaluate, evaluateThen, run, remember});
+    header();
+    return Object.assign(REPL, {line, header, connect, evaluate, evaluateThen, run, remember});
 }
 
 /* the ACTIVE instance's console — the names the page code and the panels call */
@@ -1187,7 +1271,88 @@ const modalHost = {
 };
 const modalObjCard = emptyObjCard();
 
+/* ── the obj modal's trail: ‹ [pick] › ────────────────────────────────────
+   every object the modal shows is pushed onto a trail; the marks walk it and the pick
+   jumps anywhere in it, so a chain of uri clicks can be retreated. it sits at the
+   dialog's bottom LEFT (the actions row's far end) because history is navigation, not
+   an action on the object in front of you. */
+const modalTrail = [];
+let modalAt = -1;
+const modalNav = {prev: null, pick: null, next: null};
+const trailLabel = (env) => {
+    const name = env.shortTid || env.label || (env.vid ? String(env.vid).split("/").filter(Boolean).pop() : "") || env.tid || "obj";
+    const at = env.vid ? String(env.vid) : (env.tid ? String(env.tid) : "");
+    return at && at !== name ? name + "  ·  " + at : String(name);
+};
+function paintTrail() {
+    if (!modalNav.pick) return;
+    modalNav.pick.textContent = "";
+    modalTrail.forEach((entry, index) => modalNav.pick.appendChild(new Option(trailLabel(entry), String(index))));
+    modalNav.pick.value = String(Math.max(0, modalAt));
+    modalNav.prev.disabled = modalAt <= 0;
+    modalNav.next.disabled = modalAt < 0 || modalAt >= modalTrail.length - 1;
+    modalNav.pick.disabled = modalTrail.length < 2;
+}
+function rememberModal(env) {
+    const last = modalTrail[modalAt];
+    const same = last && last.tid === env.tid && last.vid === env.vid && last.expr === env.expr;
+    if (same) return;
+    modalTrail.splice(modalAt + 1);
+    modalTrail.push({tid: env.tid || null, vid: env.vid || null, raw: env.raw || "", shortTid: env.shortTid || null, expr: env.expr || null});
+    modalAt = modalTrail.length - 1;
+    paintTrail();
+}
+function goModal(index) {
+    if (index < 0 || index >= modalTrail.length) return;
+    modalAt = index;
+    paintTrail();
+    inspectObjCard(modalObjCard, modalHost, modalTrail[index], {open: true});
+}
+(function wireModalTrail() {
+    const dialog = $("#popup");
+    const actions = dialog && dialog.querySelector(".actions");
+    if (!actions) return;
+    const nav = document.createElement("div");
+    nav.className = "popup-nav";
+    const prev = document.createElement("button");
+    prev.type = "button";
+    prev.className = "ghost popup-prev";
+    prev.textContent = "\u2039";
+    prev.title = "previous modal";
+    const pick = document.createElement("select");
+    pick.className = "popup-picks";
+    pick.title = "modals you have looked at in this session";
+    const next = document.createElement("button");
+    next.type = "button";
+    next.className = "ghost popup-next";
+    next.textContent = "\u203a";
+    next.title = "next modal";
+    nav.appendChild(prev);
+    nav.appendChild(pick);
+    nav.appendChild(next);
+    actions.insertBefore(nav, actions.firstChild);
+    modalNav.prev = prev;
+    modalNav.pick = pick;
+    modalNav.next = next;
+    prev.addEventListener("click", () => goModal(modalAt - 1));
+    next.addEventListener("click", () => goModal(modalAt + 1));
+    pick.addEventListener("change", () => goModal(Number(pick.value)));
+    paintTrail();
+})();
+
+/* WHICH BOOT FILE THE SERVER ON SCREEN RUNS — a server-wide fact, so it lives in the
+   page bar (one element) and is painted for whichever instance is active: the NAME in
+   the text, the whole address in the tooltip. read once per instance, remembered on it. */
+function paintBoot(instance) {
+    const el = $("#boot-file");
+    if (!el) return;
+    const boot = instance && instance.boot;
+    el.textContent = boot ? boot.name : "…";
+    el.title = boot ? boot.path : "the boot file this server was started with";
+}
+
 function inspectReference(env) {
+    rememberModal(env);
     inspectObjCard(modalObjCard, modalHost, env, {open: true});
 }
 
@@ -1721,6 +1886,7 @@ function renderIdentity() {
     if (!active) return;
     active.wsEp.textContent = active.wsBase;
     active.wsEp.title = active.wsUrl;
+    paintBoot(active);
     const instanceEl = $("#instance");
     if (instanceEl) {
         instanceEl.textContent = active.name || "this machine";
@@ -1734,9 +1900,15 @@ function renderIdentity() {
             activateEndpoint("");
         };
     }
+    /* the shell's own meta names the boot file it was served from: the fast path for the
+       local machine, until its live `*boot/file` answers (the meta describes the shell,
+       not whichever server is on screen) */
     const boot = metaContent("metatron:boot");
     const bootEl = $("#boot-file");
-    if (boot && bootEl) bootEl.textContent = boot;
+    if (boot && bootEl && !(active && active.boot) && instanceIsLocal(active)) {
+        bootEl.textContent = boot.split("/").filter(Boolean).pop() || boot;
+        bootEl.title = boot;
+    }
 }
 
 /* a bind wildcard (0.0.0.0 / ::) is the machine's own address, not a dialable
@@ -2066,24 +2238,45 @@ $("#popup-close").addEventListener("click", () => $("#popup").close());
    the box is a release, not a click-off (the two ends of a drag are one gesture) */
 $("#popup").addEventListener("click", (ev) => {
     const el = ev.currentTarget;
+    /* the target says where the click STARTED: anything inside the dialog's content is
+       not a click-off, even when the click itself re-rendered the dialog shorter and the
+       old point now falls outside its box (that used to close it) */
+    if (ev.target !== el) return;
     if (el.dataset.resizing) return;
     if (Date.now() - Number(el.dataset.resizedAt || 0) < 400) return;
-    const rect = el.getBoundingClientRect();
-    if (ev.clientX < rect.left || ev.clientX > rect.right ||
-        ev.clientY < rect.top || ev.clientY > rect.bottom) {
-        el.close();
-    }
+    el.close();
 });
 $("#popup").addEventListener("close", () => {
     setDot($("#popup-dot"), "");
     modalObjCard.history = [];
     updateBack(modalObjCard, modalHost);
 });
+/* COPY THE DATA, NOT THE PIXELS: a panel view is rendered nodes, and its textContent
+   has no separators between cells (a table came out as `stagesrewrite1.9…`). So a
+   panel — and any tab with no text of its own — copies the object's own mtron text,
+   which is the machine's spelling and pastes straight back into the console; the text
+   views copy themselves. */
 $("#popup-copy").addEventListener("click", async () => {
     const button = $("#popup-copy");
+    button.title = "copy the object's data (its mtron text)";
+    const views = (modalObjCard && modalObjCard.views) || {};
+    const tab = (modalObjCard && modalObjCard.tab) || "mtron";
+    const view = tab === "json" && views.json ? views.json : views.mtron;
+    /* the fallbacks are what actually reproduces the object: the expression it was
+       opened with (a panel opened from `x.profile()` holds no shell text), then the
+       address a read would use */
+    const env = (modalObjCard && modalObjCard.env) || {};
+    const text = (view && view.text != null && String(view.text).trim())
+        ? String(view.text)
+        : (env.expr ? String(env.expr) : (env.vid ? "*<" + env.vid + ">" : ""));
+    if (!text.trim()) {
+        line("err", "nothing copyable in this view");
+        return;
+    }
     try {
-        await navigator.clipboard.writeText($("#popup-out").textContent);
+        await navigator.clipboard.writeText(text);
         button.textContent = "copied";
+        button.title = view && view.text ? "copied the " + (view === views.json ? "json" : "mtron") + " text" : "copied what reproduces this object";
     } catch (ignored) {
         line("err", "clipboard unavailable");
     }
@@ -2879,14 +3072,18 @@ $$(".page-tabs .popup-tab").forEach((button) => button.addEventListener("click",
         aside.appendChild(treeBox);
         aside.appendChild(foot);
         document.body.appendChild(aside);
+        /* a shell older than this script gets the same mark in the same place: ☰ leads
+           the header, it does not sit among the page's actions */
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "page-save";
+        button.className = "page-menu";
         button.id = "page-layout";
-        button.textContent = "layout";
-        button.title = "the page as a project tree";
-        const before = $("#page-open") || $("#page-save");
-        if (before && before.parentElement) before.parentElement.insertBefore(button, before);
+        button.textContent = "\u2630";
+        button.title = "layout · the page as a project tree";
+        button.setAttribute("aria-label", "layout");
+        button.setAttribute("aria-controls", "sidepanel");
+        const inner = document.querySelector(".topbar-inner");
+        if (inner) inner.insertBefore(button, inner.firstChild);
         else document.body.appendChild(button);
         return aside;
     }
@@ -3104,6 +3301,8 @@ $$(".page-tabs .popup-tab").forEach((button) => button.addEventListener("click",
 
     const show = (open) => {
         panel.classList.toggle("open", open);
+        /* the mark says whether the panel it leads is showing */
+        toggle.setAttribute("aria-expanded", String(open));
         if (open) render();
     };
 
