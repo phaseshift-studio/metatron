@@ -165,11 +165,6 @@ public class ChromaV2Client implements VectorDBClient {
     }
 
     @Override
-    public void add(final fURI collectionId, final fURI collectionVID, final EntityData[] entities) throws Exception {
-        post(collPath(collectionId).extend("add").toString(), createBody(entities, collectionVID));
-    }
-
-    @Override
     public void upsert(final fURI collectionId, final fURI collectionVID, final EntityData... entities) throws Exception {
         post(collPath(collectionId).extend("upsert").toString(), createBody(entities, collectionVID));
     }

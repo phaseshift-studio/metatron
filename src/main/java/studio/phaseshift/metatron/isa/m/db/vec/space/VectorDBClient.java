@@ -130,11 +130,6 @@ public interface VectorDBClient {
     // ---- Document operations ----
 
     /**
-     * Add documents to a collection (embeddings computed from document text).
-     */
-    void add(final fURI collectionId, final fURI collectionVID, final EntityData... entities) throws Exception;
-
-    /**
      * Upsert documents into a collection.
      */
     void upsert(fURI collectionId, final fURI collectionVID, final EntityData... entities) throws Exception;
