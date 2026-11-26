@@ -363,13 +363,16 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 final Obj rawObj = isAlreadyEmbedded ? obj.asRec().at(OBJ) : obj;
                 final Obj embedded = isAlreadyEmbedded ? obj.asRec().at(EMBED) : this.sjvm().embeddingFunction(f(dp.collection())).apply(obj);
                 final Rec metadata = isAlreadyEmbedded ? obj.asRec().at(META).orElse(rec0()) : rec0();
-                // a failed embedding is its own failure (a model that could not be built, say), and an answer that is no
-                // lst of reals is no embedding: neither is cast first (the client casts each element to a real), where it
-                // would surface as a class cast naming neither
+                // a failed embedding is its own failure (a model that could not be built, say), and an embedding that is no
+                // lst of reals, an empty one included, is no embedding: neither is cast first (the client casts each element
+                // to a real), where it would surface as a class cast naming neither. a refusal names the embedding's source,
+                // the write that carried it or the function that answered it
                 if (embedded.isFail())
                     throw embedded.asFail().asException();
-                if (!embedded.isLst() || !embedded.lstValue().stream().allMatch(Obj::isReal))
-                    throw MTronException.of("the embedding function of collection %s answered %s, not an embedding", dp.collection(), embedded);
+                if (!embedded.isLst() || embedded.lstValue().isEmpty() || !embedded.lstValue().stream().allMatch(Obj::isReal))
+                    throw isAlreadyEmbedded
+                            ? MTronException.of("the embedding written to %s is %s, not an embedding", aligned, embedded)
+                            : MTronException.of("the embedding function of collection %s answered %s, not an embedding", dp.collection(), embedded);
                 final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(id), rawObj, metadata, embedded.asLst());
                 this.sjvm().upsert(collId, f(dp.collection()), entity);
                 LOG.debug("wrote: %s => %s", collId, entity);

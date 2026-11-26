@@ -172,25 +172,29 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
     }
 
     /**
-     * an embedding function whose range admits any answer: a write it answers with no lst of reals for fails, naming the
-     * answer as no embedding, where a cast of the answer (or of an element, in the client) would fail it with a class
-     * cast that names neither
+     * an embedding that is no lst of reals, an empty one included, fails its write and names its source: the function
+     * that answered it (here one whose range admits any answer) or the write that carried it. A cast of it, or of an
+     * element in the client, would fail the write with a class cast that names neither
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "\"flat\"",
-            "3",
-            "[\"flat\"]",
-            "[1,2]",
+            "\"flat\"   % [n=>3]                             % the embedding function of collection pile answered",
+            "3          % [n=>3]                             % the embedding function of collection pile answered",
+            "[\"flat\"] % [n=>3]                             % the embedding function of collection pile answered",
+            "[1,2]      % [n=>3]                             % the embedding function of collection pile answered",
+            "[,]        % [n=>3]                             % the embedding function of collection pile answered",
+            "[0.5,0.25] % [obj=>\"spark\",embed=>[1,2]]      % the embedding written to",
+            "[0.5,0.25] % [obj=>\"spark\",embed=>[\"flat\"]] % the embedding written to",
     })
-    void testAnEmbeddingFunctionThatAnswersNoEmbeddingFailsTheWrite(final String answer) {
+    void testAnEmbeddingThatIsNoLstOfRealsFailsItsWriteNamingItsSource(final String answer, final String document, final String refusal) {
         try {
             ObjmtronSerializer.parse("<" + endpoint + ">.-<[pattern => flatembed:#, host => <" + endpoint + ">, " +
                     "driver => <studio.phaseshift.metatron.isa.m.db.vec.space.ChromaV2Client>, q => [embedq::[=>]], " +
                     "route => -< [flatembed: => <>], config => [embed => [# => inst?#{?}<=#{?}(doc=>#::T){ " + answer + " }]]]" +
                     "@</memory/space/vec/flatembed>.as(vecspace::T)").apply();
-            final Obj flat = ObjmtronSerializer.parse("<flatembed:pile/volta> -> [n=>3]").apply();
-            assertTrue(flat.isFail() && flat.toString().contains("not an embedding"), answer + " is no embedding: " + flat);
+            final Obj written = ObjmtronSerializer.parse("<flatembed:pile/volta> -> " + document).apply();
+            assertTrue(written.isFail() && written.toString().contains(refusal) && written.toString().contains("not an embedding"),
+                    document + " under a function answering " + answer + " fails naming its source: " + written);
         } finally {
             unmount(f("/memory/space/vec/flatembed"));
         }
