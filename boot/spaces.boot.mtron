@@ -87,7 +87,7 @@ print("{{y}}chromadb: vec space\n{{X}}");
 print("{{y}}probing the backends\n{{X}}");
 metatron:welcome -> [note=>'metatron docker boot', n=>1];
 print("g:          |V|=", *g:V.count(), " |E|=", *g:E.count(), "\n");
-embed:notes -> [msg=>'metatron docker boot', n=>1];
+embed:notes/welcome -> [msg=>'metatron docker boot', n=>1];
 [== console ==]
 console::[header=>!*boot/args/header]@/usr/avatar/console;
 ["",

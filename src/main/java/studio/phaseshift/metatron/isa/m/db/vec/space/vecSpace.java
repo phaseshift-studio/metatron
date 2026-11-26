@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -60,7 +61,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * <h3>Storage model</h3>
  * <p>Every value written to the space is serialized via
- * {@link ObjmtronSerializer} and stored as the ChromaDB document text.
+ * {@link ObjmtronSerializer} and stored as the ChromaDB document text,
+ * the document named by its path below the collection: {@code vctr:test/s/a}
+ * is the document {@code s/a} of the collection {@code test}.
  * The embedding is generated from the serialized form so type information
  * (e.g. {@code jnt::345}) is preserved in the vector representation.
  * On read, documents are deserialized back to the original typed Obj.</p>
@@ -179,6 +182,14 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
         };
     }
 
+    /**
+     * the id a collection gives the document at an address: the address's path below its collection, relative and
+     * bare ({@code test/s/a} is {@code s/a}). The writer, the reader and ?embedq name a document by it alone
+     */
+    public static String documentId(final fURI aligned) {
+        return aligned.qLess().asNode().pretract(1).asRelative().scheme(null).host(null).toString();
+    }
+
     @Override
     public InstSet schema() {
         return this.schemaInstset;
@@ -272,16 +283,27 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 if (!dp.hasCollection()) return IteratorUtil.of();
 
                 final fURI collId = resolveCollectionId(dp.collection(), false);
-                final String docId = aligned.toString();
-                // ── wildcard entry → all documents, each at its address in the space (a collection names a document
-                //    by its id; the space by the collection's address and that id) ──
-                if (dp.entryIsWildcard()) {
-                    final fURI level = pattern.asNode().retract(1);
-                    final VectorDBClient.GetResult all = this.sjvm().getAll(collId);
-                    return all.entities().stream().map(e -> IdObj.of(level.extend(e.id()), e.obj())).iterator();
+                // ONLY WHAT IS STORED (as AbstractMemorySpace reads): a collection names a document by its path below
+                // the collection, so a pattern answers every document whose address it matches, and an address the
+                // document stored at it. Space.Helper derives the rest: a poly's insides, an interior address, + and #
+                final fURI node = pattern.qLessExceptDomRng().asNode();
+                if (node.hasPattern()) {
+                    final List<IdObj> stored = this.sjvm().getAll(collId).entities().stream()
+                            .map(e -> IdObj.of(Space.Helper.routeToSpace(aligned.qLess().head(1).extend(e.id()), this.routes()), e.obj()))
+                            .toList();
+                    final Stream<IdObj> matched = stored.stream().filter(id -> id.furi().test(node));
+                    // a level listed with + also answers its interior nodes, as noobj (as AbstractMemorySpace lists): a
+                    // document below a child of the level lays that child out, so the uri walk lists a level from + alone
+                    final fURI level = node.retract(1);
+                    if (!"+".equals(node.name()) || level.hasPattern())
+                        return matched.iterator();
+                    return Stream.concat(matched, stored.stream()
+                            .filter(id -> id.furi().segmentLength() > level.segmentLength() + 1 && Space.Helper.runsThrough(level, id.furi()))
+                            .map(id -> id.furi().head(level.segmentLength() + 1))
+                            .distinct()
+                            .map(child -> IdObj.of(child, noobj()))).iterator();
                 }
-                // ── exact entry: what is stored at the address asked ──
-                final VectorDBClient.GetResult result = this.sjvm().get(collId, List.of(f(docId).name()));
+                final VectorDBClient.GetResult result = this.sjvm().get(collId, List.of(documentId(aligned)));
                 LOG.debug("retrieving: %s => %s", collId, result);
                 return IteratorUtil.asIterator(result.entities().stream().map(e -> IdObj.of(pattern, e.obj())));
             } catch (final Exception e) {
@@ -308,24 +330,34 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             LOG.debug("writing to %s: %s", pattern, obj);
+            // a pattern writes every document it matches (as dcmntSpace writes), and a noobj deletes each. A stored address
+            // that is itself a pattern (a document the old naming called + or #) is not written through: it matches the
+            // pattern, and writing it would write the pattern again, without end
+            if (pattern.qLessExceptDomRng().hasPattern()) {
+                IteratorUtil.stream(this.directReader().apply(pattern)).filter(kv -> !kv.obj().isNoObj() && !kv.furi().hasPattern()).toList()
+                        .forEach(kv -> this.write(kv.furi(), obj));
+                return noobj();
+            }
             try {
                 final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
                 final DataPath dp = DataPath.withoutDB(aligned);
                 LOG.debug("furi aligned: %s", aligned);
                 if (!dp.hasCollection())
                     throw MTronException.of("vecspace write requires a collection: %s", aligned);
+                final String id = documentId(aligned);
 
                 // ── DELETE ──
                 if (obj.isNoObj()) {
-                    if (dp.hasEntry() && !dp.entryIsWildcard()) {
+                    if (dp.hasEntry()) {
                         LOG.debug("deleting %s", dp);
-                        final fURI collId = resolveCollectionId(dp.collection(), false);
-                        this.sjvm().delete(collId, List.of(dp.entry()));
+                        this.sjvm().delete(resolveCollectionId(dp.collection(), false), List.of(id));
                     }
                     return noobj();
                 }
 
-                // ── WRITE: docId = routed path (e.g. "test/a") ──
+                // ── WRITE ──
+                if (!dp.hasEntry())
+                    throw MTronException.of("vecspace write requires a document below the collection: %s", aligned);
                 final fURI collId = resolveCollectionId(dp.collection(), true);
                 boolean isAlreadyEmbedded = obj.test(VEC_EMBEDDING_TYPE);
                 final Obj rawObj = isAlreadyEmbedded ? obj.asRec().at(OBJ) : obj;
@@ -333,8 +365,8 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 final Rec metadata = isAlreadyEmbedded ? obj.asRec().at(META).orElse(rec0()) : rec0();
                 if (embedding.isFail())
                     throw embedding.asFail().asException();
-                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(aligned.name()), rawObj, metadata, embedding);
-                this.sjvm().upsert(collId, f(dp.entry()), entity);
+                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(id), rawObj, metadata, embedding);
+                this.sjvm().upsert(collId, f(dp.collection()), entity);
                 LOG.debug("wrote: %s => %s", collId, entity);
                 return obj;
                 //return pattern.hasPattern() ? obj : obj.selfVID(pattern);

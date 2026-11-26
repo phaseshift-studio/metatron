@@ -73,7 +73,7 @@ public class vecEmbedQ extends BaseQ {
                             if (!dp.hasCollection() || !dp.hasEntry())
                                 return noobj();
                             final String collectionName = dp.collection();
-                            final String docId = dp.entry();
+                            final String docId = vecSpace.documentId(routed);
                             try {
                                 final VectorDBClient.CollectionData coll = space.sjvm().getCollection(collectionName);
                                 final VectorDBClient.GetResult result = space.sjvm().get(coll.id(), List.of(docId));

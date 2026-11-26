@@ -26,7 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -67,9 +66,6 @@ import static studio.phaseshift.metatron.isa.m.db.vec.vecInstSet.VEC_ISA_TID;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@SkipRegexTest(value = {
-        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39"})
-})
 public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
 
     protected static final fURI SPACE_VID = f("/memory/space/vctr/test");
@@ -205,6 +201,49 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
             "*<vctr:test/made?embedq>.>-.>-.count() % 2",
     }, delimiter = '%')
     public void testVecEmbedding(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData({"<vctr:test/m/0/0> -> \"ohm\"", "<vctr:test/m/1/0> -> \"volt\"",
+            "<vctr:test/s> -> \"watt\"", "<vctr:test/s/a> -> \"amp\"", "<vctr:test/s/a> -> noobj",
+            "<vctr:test/t> -> \"watt\"", "<vctr:test/t/a> -> \"amp\"", "<vctr:test/t> -> noobj",
+            "<vctr:test/s/e> -> [obj=>\"joule\",embed=>[0.5,0.25]]"})
+    @CsvSource(value = {
+            // a collection names a document by its path below the collection: keys that end alike are documents apart
+            "*<vctr:test/m/0/0>           % \"ohm\"",
+            "*<vctr:test/m/1/0>           % \"volt\"",
+            "*<vctr:test/m/+/0>.count()   % 2",
+            // a delete removes the document its address names, never the one at its entry: s/a went and s stays
+            "*<vctr:test/s>               % \"watt\"",
+            "*<vctr:test/s/a>             % noobj",
+            // ... t went and t/a stays, and t reads as its subtree
+            "*<vctr:test/t/a>             % \"amp\"",
+            "*<vctr:test/t>               % [a=>\"amp\"]",
+            // ?embedq reads a document below an entry by its own name
+            "*<vctr:test/s/e?embedq>      % [0.5,0.25]",
+    }, delimiter = '%')
+    public void testVecDocumentsNamedByPath(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData({"<vctr:test/m/0/0> -> \"ohm\"", "<vctr:test/m/1/0> -> \"volt\"", "<vctr:test/m/+/0> -> \"amp\"",
+            "<vctr:test/s> -> \"watt\"", "<vctr:test/s/a> -> \"joule\"", "<vctr:test/s/b/c> -> \"farad\"",
+            "<vctr:test/k> -> \"kelvin\"", "<vctr:test/s/#> -> noobj"})
+    @CsvSource(value = {
+            // a pattern write writes every document it matches
+            "*<vctr:test/m/0/0>       % \"amp\"",
+            "*<vctr:test/m/1/0>       % \"amp\"",
+            // a noobj written to s/# deletes every document it matches: s itself (# matches no segment too) and all below
+            "*<vctr:test/s/a>         % noobj",
+            "*<vctr:test/s/b/c>       % noobj",
+            "*<vctr:test/s>           % noobj",
+            "*<vctr:test/k>           % \"kelvin\"",
+            // a document needs a name below its collection: a write at the collection itself is refused
+            "<vctr:test> -> \"arc\"    % <ERROR>",
+    }, delimiter = '%')
+    public void testVecPatternWrites(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
