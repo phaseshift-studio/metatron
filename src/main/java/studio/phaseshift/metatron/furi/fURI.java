@@ -1081,10 +1081,10 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     default boolean isZero() {
         // ZERO IS NO TERM SURVIVING (Marko, 2026-11-26): a branched uri is zero when its like terms cancel, not when its
         // terms' points add to zero, as c() adds them: {a/b,c{-1}} is two terms. A zero count is necessary, so only a
-        // branched uri with a zero count pays for the canonical sum, which keeps the terms that survive
+        // branched uri with a zero count asks its normal form (resolve(), the canonical sum, memoized) which terms survive
         if (!this.c().isZero() || !this.hasBranches())
             return this.c().isZero();
-        final fURI sum = Helper.sum(Stream.of(this));
+        final fURI sum = this.resolve();
         return !sum.hasBranches() && sum.c().isZero();
     }
 
@@ -1444,14 +1444,23 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
          * other's converse, as are {@code file:///a/b/c} and {@code file:///c/b/a}, whose authority is empty), while a
          * path with no authority moves its root to the far end ({@code /a/b/c} is {@code c/b/a/}). A
          * parent step the fold keeps ({@code ../a}) has no converse, as it does not name the step it undoes. The
-         * converse is no inverse: {@code <a/b>} followed by {@code <a/b>{-1}} is {@code a/b/b/a}.
+         * converse is no inverse: {@code <a/b>} followed by {@code <a/b>{-1}} is {@code a/b/b/a}. The copies are joined
+         * by the product of paths ({@link fURI#mult(fURI)}), as written. The first power is the path as written, as a
+         * bracketed uri is its own first power ({@code mParser.m_uri}). The uri ring's zero ({@link Uri#ZERO}) is every
+         * other power of itself but the zeroth, and a hole a sum holds as a term adds nothing to the path raised
+         * ({@link Uri.Helper#withoutHoles}).
          */
         public static fURI power(final fURI path, final long n) {
             if (0 == n)
                 return Singleton.f("");
+            if (1 == n)
+                return path;
             if (Long.MIN_VALUE == n)
                 throw MTronException.of("%s has no power at %s: the span has no positive counterpart", path, n);
-            final fURI base = n > 0 ? path : sum(path.resolve().branches().map(fURI::resolve).map(term -> {
+            final fURI operand = Uri.Helper.withoutHoles(path);
+            if (Uri.Helper.isHole(operand))
+                return operand;
+            final fURI base = n > 0 ? operand : sum(operand.resolve().branches().map(fURI::resolve).map(term -> {
                 if (term.path().contains(".."))
                     throw MTronException.of("%s has no converse: its parent step (..) does not name the step it undoes", term);
                 if (null == term.host())

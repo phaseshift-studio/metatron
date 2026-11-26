@@ -248,7 +248,7 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "5.plus(3).zero()                 % start(5).zero()                   % 0",
             "{1,2,3}.is(gt(1)).zero()         % start({1,2,3}).is(gt(1)).zero()   % {2}0",
             "{1,2,3}.sum().sum()              % start({1,2,3}).sum()              % 6",
-            // a uri chain the pool rewrites evaluates as the chain it was
+            // a uri chain the pool rewrites evaluates to what the chain means
             "<a/b>.plus(<noobj>).mult(<c>)    % start(<a/b>).mult(<c>)            % <a/b/c>",
             "<a/b>.minus(<c>).plus(<c>)       % start(<a/b>)                      % <a/b>",
             "<a/b>.neg().neg().plus(<c>)      % start(<a/b>).plus(<c>)            % <{a/b,c}>",

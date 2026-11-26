@@ -609,7 +609,7 @@ public final class mInsts {
                         .rng(URI_TID, "a single merged uri")
                         .argLst(T(URI_TID), "the uri placed between each merge")
                         // merging no uris answers the ring's zero (Marko, 2026-11-26). An empty stream does not reach this
-                        // body in a chain today (the reducer answers noobj first; a seed made it answer the separator)
+                        // body in a chain today: {<a>,<b>}.is(eq(<x>)).merge(<sep>) answers the separator (open)
                         .body((lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(Uri.ZERO.uriValue())))
                         .law(Law.pure, Law.monoidic, Law.commutative)
                         .create(),
@@ -675,10 +675,11 @@ public final class mInsts {
                 InstBuilder.build().tid(SUM_INST_TID, "add a uri stream into a single uri")
                         .dom(URI_TID.maybeSome(), "zero or more uris").rng(URI_TID, "a single plus reduced uri")
                         .argLst()
-                        .seed(Uri.ZERO)
-                        // one uri whose value counts every member by its own coefficient, summed at once: a fold from the
-                        // seed floats the seed's coefficient over the whole sum. The sum knows the ring's zero, as plus's
-                        // does (Uri.Helper.sum): a hole adds nothing, and members that cancel answer it
+                        // one uri whose value counts every member by its own coefficient, summed at once: a fold from a
+                        // seed would float the seed's coefficient over the whole sum, so there is none. The sum knows the
+                        // ring's zero, as plus's does (Uri.Helper.sum): a hole adds nothing, and members that cancel, or no
+                        // members, answer it. An empty stream does not reach this body in a chain today (the reducer
+                        // answers noobj first), as merge's does not
                         .body((lhs, inst) -> uri(Uri.Helper.sum(lhs.stream().map(o -> o.uriValue().d(o.uriValue().d().mult(o.c()))))))
                         .law(Law.monoidic, Law.pure)
                         .create(),

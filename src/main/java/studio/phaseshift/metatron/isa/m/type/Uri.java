@@ -57,9 +57,11 @@ public interface Uri extends Mono, Comparable<Uri> {
     Uri ONE = uri();
     // THE ZERO OF THE URI RING, {1}noobj, the uri of a hole (Marko, 2026-11-25: "<noobj> might have to be a sentinel",
     // "{1}noobj"), as lst::T's is [noobj]: it adds nothing to a sum and is what a sum answers when its terms cancel
-    // (plus, and the sum instruction), and it absorbs an extension on either side (mult, prod). Only this one-segment
-    // uri is the hole (Helper.isHole): a path through a segment named noobj is an address like any other. At point 1
-    // it is no noobj ({0} is, and stays the stream's zero), so a rec names it and it flows as an operand
+    // (plus, and the sum instruction), and it absorbs a product on either side (mult, prod, pow). It is no uri, so
+    // never a component of one (Marko, 2026-11-26: "noobj + a/b/c is a/b/c not {noobj, a/b/c}"): only the uri spelled
+    // noobj alone is the hole (Helper.isHole), a sum that holds it as a term reads without it (Helper.withoutHoles), and
+    // a path through a segment named noobj is an address like any other. At point 1 it is no noobj ({0} is, and stays
+    // the stream's zero), so a rec names it and it flows as an operand
     Uri ZERO = uri(f("noobj"));
 
     // Uri with coefficient {0}: noobj typed as a Uri, for a method that answers a Uri or nothing.
@@ -134,22 +136,32 @@ public interface Uri extends Mono, Comparable<Uri> {
     /**
      * THE ADDITIVE INVERSE: the value's point negated ({@link fURI#neg}, {@code /a/b} at -1), because the sum
      * ({@link #plus}) counts the argument's terms by their points while this uri's own coefficient floats, so a term
-     * and its negation cancel on either side. The spelling is kept, so a negation of a negation is the uri as it was
-     * written, as the rewriter's involution leaves it. The uri of a hole is its own negation, as zero is.
+     * and its negation cancel on either side. The spelling is kept, a hole a sum holds as a term too, so a negation of
+     * a negation is the uri as it was written, as the rewriter's involution leaves it, and the hole adds nothing to the
+     * sum it is negated into ({@link Helper#sum}). The uri of a hole is its own negation, as zero is.
      */
     default Uri neg() {
-        return Helper.isHole(this.uriValue()) ? this : this.jvm(this.uriValue().neg()).asUri();
+        return Helper.isHole(this.uriValue()) ? this : this.jvm(this.uriValue().neg());
     }
 
     /**
-     * The product of two uris is the extension of this uri's path by the argument's, their points multiplied
-     * ({@link fURI#mult}, as pow and prod take it): {@code <a>.mult(<b{2}>)} is {@code <a/b{2}>}, so a product
-     * distributes over a sum whose terms collapsed into one point. The uri of a hole absorbs it on either side.
+     * The product of two uris is the product of their paths ({@link fURI#mult}, as pow and prod take it): this uri's
+     * path extended by the argument's as written, their points multiplied, so {@code <a>.mult(<b{2}>)} is
+     * {@code <a/b{2}>} and a product distributes over a sum whose terms collapsed into one point. The algebra is on
+     * the path (Marko, 2026-11-26): this uri's scheme, authority and root stay, and the argument's are not read. The
+     * unit {@code <>}, read by its value whatever its vid, answers the other operand as written, its authority too, as
+     * the rewriter's unit removal leaves it. The uri of a hole absorbs a product on either side, and a hole a sum holds
+     * as a term adds nothing to it ({@link Helper#withoutHoles}): {@code <a>.mult(<{b,noobj}>)} is {@code <a/b>}. This
+     * uri's vid is kept, and the coefficients multiply.
      */
     default Uri mult(final Uri rhs) {
-        if (Helper.isHole(this.uriValue()) || Helper.isHole(rhs.uriValue()))
+        if (ONE.uriValue().equals(rhs.uriValue()) || ONE.uriValue().equals(this.uriValue()))
+            return this.jvm(ONE.uriValue().equals(rhs.uriValue()) ? this.uriValue() : rhs.uriValue()).c(c -> c.mult(rhs.c())).asUri();
+        final fURI lhs = Helper.withoutHoles(this.uriValue());
+        final fURI arg = Helper.withoutHoles(rhs.uriValue());
+        if (Helper.isHole(lhs) || Helper.isHole(arg))
             return this.jvm(ZERO.uriValue());
-        return this.equals(ONE) ? rhs : rhs.equals(ONE) ? this : this.jvm(this.uriValue().mult(rhs.uriValue())).c(c -> c.mult(rhs.c())).asUri();
+        return this.jvm(lhs.mult(arg)).c(c -> c.mult(rhs.c())).asUri();
     }
 
     /**
@@ -160,7 +172,7 @@ public interface Uri extends Mono, Comparable<Uri> {
      * {@code {2}</a/{b,c}>}, two of the sum (Marko 2026-11-08, option A). The sum knows the ring's zero
      * ({@link Helper#sum}): the uri of a hole adds nothing, inside a branch too, and terms that cancel answer it:
      * {@code /a/b + {-1}/a/b} is the sentinel {@code {1}noobj}, where the canonical sum's zero address would be noobj,
-     * nothing on the stream. This uri's vid and type are kept, as every operand's are.
+     * nothing on the stream. This uri's vid is kept, as every operand's is.
      */
     default Uri plus(final Uri rhs) {
         final fURI counted = rhs.uriValue().d(rhs.uriValue().d().mult(rhs.c()));
@@ -423,11 +435,23 @@ public interface Uri extends Mono, Comparable<Uri> {
 
         /**
          * Whether a uri is the hole, the ring's zero ({@link #ZERO}), at any point but zero: a zero address is noobj,
-         * not the hole. Only the one-segment uri is: a path through a segment named noobj (the wire's absent-answer
-         * mark is one) is an address like any other, as a branch holding the hole is a sum, which {@link #sum} reads.
+         * not the hole. Only the uri spelled noobj alone is, as written, not as its dot segments fold: a path through a
+         * segment named noobj ({@code noobj/x/..}, the wire's absent-answer mark, {@code http://h/noobj}) is an address
+         * like any other, so no product of two addresses is the hole. A sum holding the hole as a term is a sum, which
+         * {@link #sum} and {@link #withoutHoles} read.
          */
         public static boolean isHole(final fURI uri) {
-            return !uri.d().isZero() && ZERO.uriValue().equals(uri.d(cInt.ONE()));
+            return !uri.d().isZero() && ZERO.uriValue().toString().equals(uri.d(cInt.ONE()).toString());
+        }
+
+        /**
+         * A URI AS A PRODUCT'S OPERAND READS IT, WITHOUT ITS HOLES: a sum that holds the hole as a term
+         * ({@code {a,noobj}}) is the sum of its other terms ({@link #sum}), as {@code noobj + a/b/c} is {@code a/b/c},
+         * and the hole when none is left. A uri with no hole term is kept as it is written. mult and a power past the
+         * first read their operands so; the unit, a first power and a negation keep the spelling, as the rewriter does.
+         */
+        public static fURI withoutHoles(final fURI uri) {
+            return uri.hasBranches() && uri.branches().anyMatch(Helper::isHole) ? sum(Stream.of(uri)) : uri;
         }
 
         /**

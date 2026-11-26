@@ -722,20 +722,23 @@ public abstract class AbstractfURI implements fURI {
         return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.d().neg(), this.poly(), this.qMap(), this.templates());
     }
 
+    /**
+     * THE PRODUCT OF PATHS (Marko, 2026-11-26: "the algebra is on the path component of a URI (with equals being
+     * respective of scheme://authority)"): this uri's path extended by the other's as they are written
+     * ({@link #extend(fURI)}), their points multiplied. This uri's scheme, authority and root stay, and the other's are
+     * not read, so {@code http://h} times {@code a} is {@code http://h/a} and {@code /} times {@code a} is {@code /a}.
+     * That holds term by term of a sum, so a sum whose terms carry a root or an authority of their own is multiplied
+     * term by term and summed again: {@code z} times {@code {/x,y}} is {@code z/{x,y}}, where its text extended would
+     * hold the term {@code z//x}. An other with no path is the unit, whatever its authority, and adds its query.
+     */
     @Override
     public fURI mult(final fURI other) {
         if (other.isZero())
             return Singleton.NOOBJ;
-        final List<String> newPath = new ArrayList<>(this.folded().path());
-        final fURI otherResolved = ((AbstractfURI) other).folded();
-        if (!otherResolved.path().isEmpty()) {
-            if (!newPath.isEmpty() && newPath.getLast().isEmpty())
-                newPath.removeLast();
-            newPath.addAll(otherResolved.path().getFirst().isEmpty() ? otherResolved.path().subList(1, otherResolved.path().size()) : otherResolved.path());
-        }
-        final SortedMap<String, String> newQ = mutableQ(this.qMap());
-        newQ.putAll(otherResolved.qMap());
-        return ((AbstractfURI) fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.d().mult(otherResolved.d()), this.poly(), newQ, this.templates())).folded();
+        if (other.hasBranches() && other.branches().anyMatch(term -> term.isAbsolute() || null != term.host()))
+            return fURI.Helper.sum(other.branches().map(this::mult));
+        final fURI product = other.path().isEmpty() ? this.addQ(other.qMap()) : this.extend(other);
+        return product.d(this.d().mult(other.d()));
     }
 
     @Override

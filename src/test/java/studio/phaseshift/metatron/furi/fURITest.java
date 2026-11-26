@@ -103,21 +103,21 @@ public class fURITest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{a/b,{-1}c}           | 0  | false",   // the review's <a/b>.minus(<c>): two terms
-            "{a/b,c{-1}}           | 0  | false",   // the point written after the element
-            "{a,{-1}a}             | 0  | true",    // like terms that cancel
-            "{a,a{-1}}             | 0  | true",
-            "{a,{-1}a,b}           | 1  | false",
-            "{a,{-1}a,b,{-1}b}     | 0  | true",
-            "{a,{-1}b,c,{-1}d}     | 0  | false",
-            "x/{a,{-1}a}/y         | 0  | true",    // cancelling between a prefix and a suffix
-            "x/{a,{-1}b}/y         | 0  | false",
-            "{a/x/..,{-1}a}        | 0  | true",    // like once folded, as equality reads them
-            "{{2}a,{-1}b,{-1}b}    | 0  | false",   // the points add to zero over unlike terms
-            "{a,b}{0}              | 0  | true",    // a zero point on the whole sum
-            "a{0}                  | 0  | true",
-            "a                     | 1  | false",
-    }, delimiter = '|')
+            "{a/b,{-1}c}           % 0  % false",   // the review's <a/b>.minus(<c>): two terms
+            "{a/b,c{-1}}           % 0  % false",   // the point written after the element
+            "{a,{-1}a}             % 0  % true",    // like terms that cancel
+            "{a,a{-1}}             % 0  % true",
+            "{a,{-1}a,b}           % 1  % false",
+            "{a,{-1}a,b,{-1}b}     % 0  % true",
+            "{a,{-1}b,c,{-1}d}     % 0  % false",
+            "x/{a,{-1}a}/y         % 0  % true",    // cancelling between a prefix and a suffix
+            "x/{a,{-1}b}/y         % 0  % false",
+            "{a/x/..,{-1}a}        % 0  % true",    // like once folded, as equality reads them
+            "{{2}a,{-1}b,{-1}b}    % 0  % false",   // the points add to zero over unlike terms
+            "{a,b}{0}              % 0  % true",    // a zero point on the whole sum
+            "a{0}                  % 0  % true",
+            "a                     % 1  % false",
+    }, delimiter = '%')
     public void testZeroIsNoTermSurviving(final String furi, final long count, final boolean zero) {
         assertEquals(cInt.of(count), f(furi).c(), () -> furi + "'s count");
         assertEquals(zero, f(furi).isZero(), () -> furi + " is zero: " + zero);
@@ -1170,7 +1170,13 @@ public class fURITest extends AbstractMetatronTest {
             "a                  |                   | a",
             "a?a=1&b=2          | b?a=3&c=6         | a/b?a=3&b=2&c=6",
             "/a/?a=1&b=2          | /b/?a=3&c=6         | /a/b/?a=3&b=2&c=6"
-            , "x/y/z/a/b/c          | /a/b/../../../../../..   | x/y/z"
+            // a product keeps both paths as written, the other's root unread (Marko, 2026-11-26)
+            , "x/y/z/a/b/c          | /a/b/../../../../../..   | x/y/z/a/b/c/a/b/../../../../../.."
+            // a sum whose terms carry a root or an authority is multiplied term by term; an other with no path adds
+            // its query
+            , "z                    | {/x,y}                   | z/{x,y}"
+            , "z                    | {http://g/x,y}           | z/{x,y}"
+            , "a                    | ?x=1                     | a?x=1"
     }, delimiter = '|')
     public void testMult(final String f1, final String f2, final String expected) {
         final fURI furi1 = f(f1);
@@ -1432,8 +1438,9 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(segments, fURI.Helper.split(path).toString());
     }
 
-    // pretract and retract by text count a branch prefix as one segment: the naive split counted {a/b,c} as two, so the
-    // first row read the empty path and the second threw on subList(0, -1)
+    // pretract and retract by text count a branch as one segment. The naive split counted {a/b,c} as the two segments
+    // "{a" and "b,c}", so pretract dropped a segment too many (both rows read the empty path) and retract asked for
+    // subList(0, -1) and threw
     @ParameterizedTest
     @CsvSource(value = {
             "{a/b,c}/x   % {a/b,c}   % x",
@@ -1443,9 +1450,15 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(f(expected), f(furi).pretract(prefix));
     }
 
-    @Test
-    public void testRetractingByTextTakesABranchAsOneSegment() {
-        assertEquals(f(""), f("{a/b,c}").retract("{a/b,c}"));
+    // retract by text drops as many trailing segments as the text has once the text is a prefix (hasPrefix), so each
+    // row holds the branch at both ends: the naive split dropped two segments from the second row, not one
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{a/b,c}           % {a/b,c}   % ''",
+            "{a/b,c}/{a/b,c}   % {a/b,c}   % {a/b,c}",
+    }, delimiter = '%')
+    public void testRetractingByTextTakesABranchAsOneSegment(final String furi, final String segment, final String expected) {
+        assertEquals(f(expected), f(furi).retract(segment));
     }
 
     @ParameterizedTest
