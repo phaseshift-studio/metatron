@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.db.vec;
 
+import com.github.dockerjava.api.model.Ulimit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
@@ -29,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.db.vec.space.VectorDBClient;
 import studio.phaseshift.metatron.isa.m.db.vec.space.vecSpace;
 
 import java.time.Duration;
+import java.util.List;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -72,6 +74,11 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         chromaContainer = new GenericContainer<>(
                 DockerImageName.parse("chromadb/chroma:1.5.3"))
                 .withExposedPorts(CHROMADB_PORT)
+                // the server keeps four files open for every collection it has indexed (an HNSW index's header, data,
+                // length and link lists), and a deleted collection keeps its four: clearDatabase drops the collection a
+                // case wrote, so every case costs the server four descriptors. Docker's default soft limit of 1024 runs
+                // out at about 250 cases, and then the server's SQLite answers "(code: 14) unable to open database file"
+                .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withUlimits(List.of(new Ulimit("nofile", 65536L, 65536L))))
                 .waitingFor(Wait.forHttp("/api/v2/heartbeat")
                         .forPort(CHROMADB_PORT))
                 .withStartupTimeout(Duration.ofMinutes(3));
