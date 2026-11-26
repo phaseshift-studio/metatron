@@ -26,9 +26,14 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,5 +72,59 @@ public class BootHelperTest extends AbstractMetatronTest {
         assertEquals(List.of(), errors, helper + " should parse");
         assertEquals(1, results.size(), helper + " should evaluate to exactly one instruction: " + results);
         assertTrue(results.getFirst().isObjInst(), helper + " should be an instruction: " + results.getFirst());
+    }
+
+    /**
+     * a boot calls a helper by the names of the parameters the helper declares: arguments bind by name, so an argument
+     * named for a parameter the helper lacks binds nothing. spaces.boot.mtron passed host, port and image to helpers
+     * declaring saddr, sport and simg, and its chromadb helper read noobj for all three, so the space never mounted
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "boot/spaces.boot.mtron",
+            "boot/docker.boot.mtron",
+            "boot/agent-ide.boot.mtron",
+    })
+    void testABootCallsItsHelpersByTheirParametersNames(final String boot) throws IOException {
+        final String text = Files.readString(Path.of(boot));
+        final Matcher call = Pattern.compile("<fs:(boot/space/[^>]+\\.mtron)>\\(").matcher(text);
+        int calls = 0;
+        while (call.find()) {
+            final Matcher declared = Pattern.compile("\\|inst\\?[^(]*\\(([^)]*)\\)").matcher(Files.readString(Path.of(call.group(1))));
+            assertTrue(declared.find(), call.group(1) + " declares its parameters");
+            // the call's arguments, to the parenthesis that closes them
+            int depth = 1;
+            int end = call.end();
+            for (; depth > 0; end++)
+                depth += text.charAt(end) == '(' ? 1 : text.charAt(end) == ')' ? -1 : 0;
+            final Set<String> passed = names(text.substring(call.end(), end - 1));
+            final Set<String> parameters = names(declared.group(1));
+            assertTrue(parameters.containsAll(passed), boot + " calls " + call.group(1) + " with " + passed + ", but it declares " + parameters);
+            calls++;
+        }
+        assertTrue(calls > 0, boot + " calls a helper");
+    }
+
+    /**
+     * the names an argument list gives, each before its => at the top level of the list
+     */
+    private static Set<String> names(final String arguments) {
+        final Set<String> names = new LinkedHashSet<>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i <= arguments.length(); i++) {
+            final char c = i < arguments.length() ? arguments.charAt(i) : ',';
+            if (c == '(' || c == '[' || c == '{')
+                depth++;
+            else if (c == ')' || c == ']' || c == '}')
+                depth--;
+            else if (c == ',' && 0 == depth) {
+                final String argument = arguments.substring(start, i);
+                if (argument.contains("=>"))
+                    names.add(argument.substring(0, argument.indexOf("=>")).trim());
+                start = i + 1;
+            }
+        }
+        return names;
     }
 }

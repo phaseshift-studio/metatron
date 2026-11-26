@@ -75,22 +75,22 @@ print("{{y}}dckrspace via the docker socket\n{{X}}");
 <unix:///var/run/docker.sock>.<fs:boot/space/dckr/socket.mtron>();
 [== space backends — container via dckr, then the space ==]
 print("{{y}}mariadb : tble space\n{{X}}");
-<fs:boot/space/tble/mariadb.mtron>(host    => !*boot/args/mariadb/host,
-                                   port    => !*boot/args/mariadb/port,
-                                   image   => !*boot/args/mariadb/image,
+<fs:boot/space/tble/mariadb.mtron>(saddr   => !*boot/args/mariadb/host,
+                                   sport   => !*boot/args/mariadb/port,
+                                   simg    => !*boot/args/mariadb/image,
                                    database=> !*boot/args/mariadb/database,
-                                   user    => !*boot/args/mariadb/user,
+                                   dbuser  => !*boot/args/mariadb/user,
                                    password=> !*boot/args/mariadb/password);
 print("{{y}}gremlin : grph space\n{{X}}");
-<fs:boot/space/grph/gremlin.mtron>(host => !*boot/args/gremlin/host,
-                                   port => !*boot/args/gremlin/port,
-                                   image=> !*boot/args/gremlin/image);
+<fs:boot/space/grph/gremlin.mtron>(saddr => !*boot/args/gremlin/host,
+                                   sport => !*boot/args/gremlin/port,
+                                   simg  => !*boot/args/gremlin/image);
 print("{{y}}chromadb: vec space\n{{X}}");
 [== the model spec the embed: space builds its embedding model from, at an address every machine reads ==]
 </sys/model/embed> -> *boot/args/ollama;
-<fs:boot/space/vec/chromadb.mtron>(host => !*boot/args/chroma/host,
-                                   port => !*boot/args/chroma/port,
-                                   image=> !*boot/args/chroma/image);
+<fs:boot/space/vec/chromadb.mtron>(saddr => !*boot/args/chroma/host,
+                                   sport => !*boot/args/chroma/port,
+                                   simg  => !*boot/args/chroma/image);
 [== home ==]
 !*boot/args/user.<fs:boot/space/mem/home.mtron>();
 [== sample probes — prove each backend is actually answering ==]
