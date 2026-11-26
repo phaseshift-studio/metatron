@@ -202,7 +202,8 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable,
     }
 
     /**
-     * @return the vid of the thread that spawned this thread, or empty uri if unset
+     * @return the vid of the obj that spawned this thread, or empty if unset: the thread it was started on, unless its
+     * rec named another (an analyzer's publication names its analyzer)
      */
     public Optional<fURI> sourceVid() {
         return Obj.Helper.getAutoPointer(this.source());

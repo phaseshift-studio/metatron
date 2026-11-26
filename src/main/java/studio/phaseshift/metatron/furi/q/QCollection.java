@@ -1229,7 +1229,8 @@ public final class QCollection {
     /**
      * Resolve the identity of the writing thread by walking the thread's {@code source}
      * spine to its root and reading {@code owner}.  Threads do not carry an {@code owner}
-     * field yet — once they do, resolve via {@code Memory.ARG_STACK}'s thread rec.
+     * field yet — once they do, resolve via {@code Memory.ARG_STACK}'s thread rec.  A spine
+     * can end at an obj that is not a thread: an analyzer's publication names its analyzer.
      */
     private static Obj currentOwner() {
         return noobj(); // TODO: walk thread source spine → owner when threads carry it

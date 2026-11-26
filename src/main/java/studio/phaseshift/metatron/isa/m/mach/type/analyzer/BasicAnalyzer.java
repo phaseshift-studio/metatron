@@ -291,11 +291,11 @@ public class BasicAnalyzer extends MRec implements Analyzer {
      * landing during the publication schedules the next one: the last change of a burst is never left unpublished.
      * <p>
      * The thread is a metatron one, listed under {@code /sys/thread/executor} while it waits out its step, and it is the
-     * ANALYZER'S: its source is the analyzer's address, never the thread that recorded the change. That thread is an
-     * evaluation most often (the processor counts each run where it runs), and naming it would list the publication among
-     * the threads the evaluation started (a timeout's alarms are told by their source). Making one writes it at its vid,
-     * here, on the thread that recorded the change: if that fails, the change goes unpublished and the recording goes
-     * on, and the next change schedules again.
+     * ANALYZER'S: its source is the analyzer's address, never the thread that recorded the change. That thread may be an
+     * evaluation (the processor counts each run on the thread that runs it), and naming it would make the publication
+     * read as a thread the evaluation started to anything that finds a thread's children by their source. Making one
+     * writes it at its vid, here, on the thread that recorded the change: if that fails, the change goes unpublished and
+     * the recording goes on, and the next change schedules again.
      */
     private Analyzer changed() {
         // an observer's work is counted above and announced never (OBSERVING): the loop it would close is the

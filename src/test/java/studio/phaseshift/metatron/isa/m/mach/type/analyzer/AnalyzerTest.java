@@ -430,38 +430,71 @@ public class AnalyzerTest extends AbstractMetatronTest {
     }
 
     /**
-     * A PUBLICATION IS ITS ANALYZER'S THREAD, never the thread that recorded the change. The change here is recorded on a
-     * metatron thread, which is where an evaluation runs (the processor counts each run there): the publication names
-     * the analyzer's address as its source, an address that reads back as the analyzer, and the recording thread is the
-     * source of no thread, so the threads a thread is the source of are the ones it started itself.
+     * Record a change on a metatron thread of its own, which is where an evaluation records (the processor counts each
+     * run on the thread that runs it), and hear {@code component}'s publication: its source is the analyzer's address,
+     * and the recording thread is the source of no thread. Answers the analyzer's address.
+     */
+    private static fURI publishedFromItsAnalyzer(final Machine machine, final String component, final Runnable record)
+            throws Exception {
+        final AtomicReference<AbstractThread> heardOn = new AtomicReference<>();
+        Machine.write(f("~").extend(component).extend(ANALYZER).extend(ANALYSIS).addQ(SUBQ), instLambda((pub, inst) -> {
+            heardOn.compareAndSet(null, BootLoader.CURRENT_THREAD.get());
+            return noobj();
+        }));
+        final VirtualThread recorder = VirtualThread.virtual(instLambda(_ -> {
+            record.run();
+            return noobj();
+        }));
+        recorder.applyAsync().get(5, TimeUnit.SECONDS);
+        await(() -> null != heardOn.get(), "the subscriber to hear the change");
+        final AbstractThread publication = assertInstanceOf(AbstractThread.class,
+                Machine.read(heardOn.get().sourceVid().orElseThrow()), "the delivery's source is the publication");
+        final fURI analyzer = machine.vid().extend(f(component)).extend(ANALYZER).resolve();
+        assertEquals(Optional.of(analyzer), publication.sourceVid(), "the publication is its analyzer's thread");
+        // run before stop: the executor takes an ended thread off run before it lists it under stop
+        final List<fURI> running = listedThreads(RUN);
+        assertEquals(List.of(), Stream.concat(running.stream(), listedThreads(STOP).stream())
+                        .filter(vid -> Machine.read(vid) instanceof AbstractThread thread
+                                && thread.sourceVid().filter(recorder.vid()::equals).isPresent())
+                        .toList(),
+                "and the thread that recorded the change is the source of none");
+        return analyzer;
+    }
+
+    /**
+     * A PUBLICATION IS ITS ANALYZER'S THREAD, never the thread that recorded the change, and its source reads back as the
+     * analyzer that counted the change.
      */
     @Test
     void shouldSourceAPublicationAtItsAnalyzerNotAtTheThreadThatRecorded() throws Exception {
         final Machine machine = Machine.current().push(f("analyzer_source"));
         try {
-            final AtomicReference<AbstractThread> heardOn = new AtomicReference<>();
-            Machine.write(f("~/network/analyzer/analysis").addQ(SUBQ), instLambda((pub, inst) -> {
-                heardOn.compareAndSet(null, BootLoader.CURRENT_THREAD.get());
-                return noobj();
-            }));
-            final int ended = listedThreads(STOP).size();
-            final VirtualThread recorder = VirtualThread.virtual(instLambda(_ -> {
-                machine.network().analyzer().incr(f(WIRE).extend(f(SENT)), 1L);
-                return noobj();
-            }));
-            recorder.applyAsync().get(5, TimeUnit.SECONDS);
-            await(() -> null != heardOn.get(), "the subscriber to hear the change");
-            final AbstractThread publication = assertInstanceOf(AbstractThread.class,
-                    Machine.read(heardOn.get().sourceVid().orElseThrow()), "the delivery's source is the publication");
-            final fURI analyzer = machine.vid().extend(f("network/analyzer")).resolve();
-            assertEquals(Optional.of(analyzer), publication.sourceVid(), "the publication is its analyzer's thread");
-            assertInstanceOf(Analyzer.class, Machine.read(analyzer), "whose address reads back as the analyzer");
-            final List<fURI> stopped = listedThreads(STOP);
-            assertEquals(List.of(), Stream.concat(listedThreads(RUN).stream(), stopped.subList(ended, stopped.size()).stream())
-                            .filter(vid -> Machine.read(vid) instanceof AbstractThread thread
-                                    && thread.sourceVid().filter(recorder.vid()::equals).isPresent())
-                            .toList(),
-                    "and the thread that recorded the change is the source of none");
+            final fURI analyzer = publishedFromItsAnalyzer(machine, "network",
+                    () -> machine.network().analyzer().incr(f(FLOW).extend(f(MONADS)), 1L));
+            assertEquals(1L, Machine.read(analyzer.extend(ANALYSIS).extend(FLOW).extend(MONADS)).intValue(),
+                    "the source reads back as the analyzer that counted the change");
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * AN EVALUATION IS THE SOURCE OF NO THREAD FOR BEING COUNTED. The processor counts each run on the thread that runs
+     * it, and the publication that count schedules is the processor analyzer's: code evaluated on a metatron thread is
+     * the source only of the threads it starts itself. The machine is let go quiet first, so the run's count is the one
+     * that schedules the publication.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {"1.plus(1)", "{1,2,3}.plus(1)", "[1,2,3].sum()"}, delimiter = '%')
+    void shouldSourceAnEvaluationsPublicationAtTheProcessor(final String code) throws Exception {
+        final Machine machine = Machine.current().push(f("analyzer_eval"));
+        try {
+            final Analyzer processor = machine.processor().analyzer();
+            final long before = quiet(() -> read(processor.analysis(), "eval"), "the processor's eval");
+            final fURI analyzer = publishedFromItsAnalyzer(machine, PROCESSOR,
+                    () -> Machine.parse(code).apply(noobj()).stream().toList());
+            assertTrue(Machine.read(analyzer.extend(ANALYSIS).extend(Processor.EVAL_PROBE)).intValue() > before,
+                    "the source reads back as the processor's analyzer, which counted the run");
         } finally {
             machine.pop();
         }
