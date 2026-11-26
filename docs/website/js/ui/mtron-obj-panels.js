@@ -789,10 +789,14 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             const here = base();
             fail("");
             try {
-                const [compilerR, peerR, rosterR, computerR, tracerR, instsetR] = await Promise.all([
+                const [compilerR, peerR, rosterR, listenerR, computerR, tracerR, instsetR] = await Promise.all([
                     effective("/compiler", (value) => !value || !value.typer),
                     effective("/network/peer", (value) => !value || !Object.keys(value).length),
                     effective("/network/roster", (value) => !value || !value.machine),
+                    /* the LISTENERS are the machine's own server sockets, not the roster's
+                       discovery entries: the listener table (/network/listener) has one row
+                       per bound socket, so its size is the count */
+                    effective("/network/listener", (value) => !value || !Object.keys(value).length),
                     effective("/processor/computer", (value) => !value || !Object.keys(value).length),
                     effective("/processor/tracer", (value) => !value || !value.stack),
                     effective("/instset", (value) => !value || !Array.isArray(value.reference) || !value.reference.length)
@@ -801,6 +805,7 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 const compiler = compilerR.value;
                 const peer = peerR.value;
                 const roster = rosterR.value;
+                const listener = listenerR.value;
                 const computer = computerR.value;
                 const tracer = tracerR.value;
                 const instset = instsetR.value;
@@ -810,10 +815,7 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                     ? ["parser", "rewriter", "resolver", "typer"].filter((key) => compiler[key]).length
                     : 0;
                 const peers = peer && typeof peer === "object" ? Object.keys(peer).length : 0;
-                const listeners = roster && roster.machine && typeof roster.machine === "object"
-                    ? Object.values(roster.machine)
-                        .reduce((count, ports) => count + (Array.isArray(ports) ? ports.length : 0), 0)
-                    : 0;
+                const listeners = listener && typeof listener === "object" ? Object.keys(listener).length : 0;
                 const computers = computer && typeof computer === "object" ? Object.keys(computer).length : 0;
                 const traceStacks = tracer && tracer.stack
                     ? Object.keys(tracer.stack).filter((key) => tracer.stack[key] === true).length
@@ -825,7 +827,7 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 setTiles([
                     { label: "instset", metric: sets + " sets", sub: aliases + " aliases", inherited: instsetR.inherited, tid: "/m/instset", vid: here + "/instset" },
                     { label: "compiler", metric: stages + " stages", sub: checksOn + "/" + (Object.keys(checks).length || 5) + " checks on", inherited: compilerR.inherited, tid: "/m/mach/component/compiler", vid: here + "/compiler" },
-                    { label: "network", metric: peers + " peers", sub: listeners + " listeners", inherited: peerR.inherited || rosterR.inherited, tid: "/m/mach/component/network", vid: here + "/network" },
+                    { label: "network", metric: peers + " peers", sub: listeners + " listeners", inherited: peerR.inherited || rosterR.inherited || listenerR.inherited, tid: "/m/mach/component/network", vid: here + "/network" },
                     { label: "processor", metric: computers + " computers", sub: traceStacks + " trace stacks", inherited: computerR.inherited || tracerR.inherited, tid: "/m/mach/component/processor", vid: here + "/processor" }
                 ]);
             } catch (problem) {
@@ -940,15 +942,25 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         head.appendChild(summary);
         box.appendChild(head);
 
-        const knownHead = node("div", "network-section");
-        box.appendChild(knownHead);
-        const knownRows = node("div", "network-rows");
-        box.appendChild(knownRows);
+        /* THE PREFIX TABLE COMES FIRST: it is the frame's own address book — the
+           `authority => endpoint` rows a uri is resolved through (the table the
+           network's prefixes() door answers), so it explains every row below it */
+        const prefixHead = node("div", "network-section");
+        box.appendChild(prefixHead);
+        const prefixRows = node("div", "network-rows");
+        box.appendChild(prefixRows);
 
+        /* peers before the roster: what this machine is CONNECTED to is more immediate
+           than what it merely knows, and the prefix table above both explains them */
         const peerHead = node("div", "network-section");
         box.appendChild(peerHead);
         const peerRows = node("div", "network-peers");
         box.appendChild(peerRows);
+
+        const knownHead = node("div", "network-section");
+        box.appendChild(knownHead);
+        const knownRows = node("div", "network-rows");
+        box.appendChild(knownRows);
 
         function sectionHead(el, title, sub, count) {
             el.textContent = "";
@@ -1009,17 +1021,27 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 const network = await readFresh(declared);
                 if (my !== token) return;
                 if (network && typeof network === "object" && network.pattern) pattern.textContent = String(network.pattern);
+                const prefixes = await readFresh(base + "/prefix");
+                if (my !== token) return;
+                const prefixRowsOf = prefixes && typeof prefixes === "object" ? Object.entries(prefixes) : [];
+                sectionHead(prefixHead, "prefix", "resolved", prefixRowsOf.length);
+                prefixRows.textContent = "";
+                prefixRowsOf
+                    .sort(([a], [b]) => String(a).localeCompare(String(b)))
+                    .forEach(([key, value]) => prefixRows.appendChild(row(String(key), endpoints(value))));
+                if (!prefixRowsOf.length) prefixRows.appendChild(node("div", "mpanel-empty", "no prefixes"));
                 const roster = await readFresh(base + "/roster");
                 if (my !== token) return;
                 const machines = roster && roster.machine && typeof roster.machine === "object" ? roster.machine : {};
                 const authorities = Object.keys(machines).sort();
                 knownRows.textContent = "";
                 const discover = roster && roster.discover && typeof roster.discover === "object" ? roster.discover : null;
+                authorities.forEach((authority) => knownRows.appendChild(row(authority, endpoints(machines[authority]))));
+                /* discover is how the names got here, so it closes the section it explains */
                 if (discover) {
                     const sources = Object.keys(discover).sort();
                     if (sources.length) knownRows.appendChild(row("discover", sources.join(" · ")));
                 }
-                authorities.forEach((authority) => knownRows.appendChild(row(authority, endpoints(machines[authority]))));
                 if (!discover && !authorities.length) knownRows.appendChild(node("div", "mpanel-empty", "no roster"));
                 sectionHead(knownHead, "known", "roster", authorities.length);
 
@@ -1028,7 +1050,9 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 const members = peers && typeof peers === "object" ? Object.entries(peers) : [];
                 const connected = members.filter(([key]) => !String(key).includes("#"));
                 const templates = members.filter(([key]) => String(key).includes("#"));
-                summary.textContent = authorities.length + " known · " + connected.length + " connected";
+                /* the summary follows the section order below it: what is connected, then
+                   what is known — each number stays with its own word */
+                summary.textContent = connected.length + " connected · " + authorities.length + " known";
                 sectionHead(peerHead, "connected", "peer", connected.length);
                 peerRows.textContent = "";
                 connected.forEach(([key, value]) => peerRows.appendChild(peerRow(key, value)));
@@ -1043,6 +1067,7 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             }
         }
 
+        sectionHead(prefixHead, "prefix", "resolved", null);
         sectionHead(knownHead, "known", "roster", null);
         sectionHead(peerHead, "connected", "peer", null);
         if (dynamic) {
@@ -1194,13 +1219,44 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             if (api && api.open) api.open({vid: vid, raw: vid, shortTid: uri.name() || vid.split("/").pop() || vid});
         };
 
+        /* AN MCP HANDLER OPENS A CLIENT, NOT THE HANDLER'S OWN ADDRESS: the value of a
+           route like `/mcp => mcp_mtron` is an mcp server; the way a person drives it is
+           an mcp_client of the same endpoint, so that is what the row opens (on the
+           machine that serves this card, at this route's path). */
+        const mcpHandler = (path, target) => {
+            const text = target == null ? "" : String(target);
+            if (!/^mcp/i.test(text) && !/^\/mcp/.test(path)) return null;
+            const authority = String((api && api.instance) || "").replace(/^[a-z]+:\/\//i, "").split("/")[0];
+            const hostName = authority.split(":")[0];
+            const port = hostUri && hostUri.port && hostUri.port > 0
+                ? hostUri.port
+                : (httpResolve ? 8777 : 8555);
+            const scheme = httpResolve ? "http" : "ws";
+            if (!hostName) return null;
+            return "mcp_client::[host=><" + scheme + "://" + hostName + ":" + port + path + ">]";
+        };
+
         paths.forEach((path) => {
             const row = node("div", "mpanel-row");
             row.appendChild(node("span", "mpanel-k", path));
             const v = node("span", "mpanel-v");
             const target = routes[path];
             const text = target == null ? "" : String(target);
-            if (text) {
+            const client = mcpHandler(path, target);
+            if (client) {
+                const button = toElement(f(text), () => {
+                    if (api && api.open) api.open({
+                        tid: "/m/web/mcp/mcp_client",
+                        vid: null,
+                        raw: "",
+                        shortTid: "mcp client",
+                        expr: client
+                    });
+                }, "route-target mcp-route");
+                button.textContent = brief(target);
+                button.title = "open an mcp client of " + path + " to drive this server";
+                v.appendChild(button);
+            } else if (text) {
                 const button = toElement(f(text), openTarget, "route-target");
                 button.textContent = brief(target);
                 v.appendChild(button);
@@ -1294,6 +1350,155 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         return Array.from(names);
     }
 
+    /* ── an mcp client: drive an mcp server by hand ──────────────────────────
+       the client's rec carries its TOOLS (name => tool::T, each holding the parameter
+       rec the server announced), and a tool is called by applying the instruction it
+       holds. The client does NOT carry resources or prompts — the mcp SERVER does
+       (mcp_server::[tool, resource, prompt]) and nothing connects them through to the
+       client yet — so those two menus are placeholders that say exactly that. */
+    register("/m/web/mcp/mcp_client", async function (env, api) {
+        const box = node("div", "mpanel mcp-panel");
+        const note = node("div", "mpanel-empty", "reading the client …");
+        box.appendChild(note);
+        /* the client is read by ADDRESS when the card has one, else the expression the
+           card was opened with constructs it (how a server's handler opens this card) */
+        const source = env.vid ? "*<" + env.vid + ">" : String(env.expr || env.raw || "").trim();
+        if (!source) {
+            note.textContent = "no client to read";
+            return box;
+        }
+        const field = (rec, name) => {
+            if (!rec || !rec.isRec || !rec.isRec()) return null;
+            for (const [key, value] of rec.js) if (key.toString() === name) return value;
+            return null;
+        };
+        let client = null;
+        try {
+            const text = String((await api.mtron(source)) || "").trim();
+            const value = parse(text);
+            client = value && value.isRec && value.isRec() ? value
+                : (value && value.isObjs && value.isObjs() ? [...value.js].find((m) => m && m.isRec && m.isRec()) : null);
+        } catch (problem) {
+            note.textContent = "cannot read the client: " + (problem && problem.message ? problem.message : problem);
+            return box;
+        }
+        if (!client) {
+            note.textContent = "no client at " + source;
+            return box;
+        }
+        note.remove();
+
+        const head = node("div", "mcp-head");
+        const dot = node("span", "mcp-dot");
+        const state = field(client, "status");
+        const up = state && state.isBool && state.isBool() ? !!state.js : true;
+        dot.classList.add(up ? "up" : "bad");
+        dot.title = up ? "the client's health check answers" : "the client's health check does not answer";
+        head.appendChild(dot);
+        const host = field(client, "host");
+        let address = env.vid ? String(env.vid) : "";
+        head.appendChild(node("span", "mcp-title", address || "mcp client"));
+        if (host) head.appendChild(node("span", "mcp-host", String(host)));
+        box.appendChild(head);
+        /* A TOOL IS CALLED THROUGH THE CLIENT'S ADDRESS (docs/skills: mcp_client tool
+           invocation is `/usr/ai/mcp/a/tool/<name>/inst(args)`), so a client that only
+           exists as an expression is written to one address, once, on the first call —
+           the same write the docs create it with (`mcp_client::[…]@/usr/ai/mcp/<name>`). */
+        const connect = async () => {
+            if (address) return address;
+            const name = String(host || "client").replace(/^[a-z]+:\/\//i, "").replace(/[^A-Za-z0-9.]+/g, "-");
+            address = "/usr/ai/mcp/" + name;
+            await api.mtron(source + "@" + address);
+            head.querySelector(".mcp-title").textContent = address;
+            return address;
+        };
+
+        /* tools: one collapsible row each, with an input per parameter the tool announced */
+        const tools = field(client, "tool");
+        const toolsBox = node("div", "mcp-tools");
+        const entries = tools && tools.isRec && tools.isRec() ? [...tools.js] : [];
+        toolsBox.appendChild(node("div", "mcp-sec", "tools · " + entries.length));
+        if (!entries.length) toolsBox.appendChild(node("div", "mpanel-empty", "this client announced no tools"));
+        entries.forEach(([key, spec]) => {
+            const name = key.toString();
+            const desc = field(spec, "desc");
+            const row = document.createElement("details");
+            row.className = "mcp-tool";
+            const summary = document.createElement("summary");
+            summary.className = "mcp-tool-row";
+            summary.appendChild(node("span", "mcp-tool-name", name));
+            if (desc) summary.appendChild(node("span", "mcp-tool-desc", String(desc)));
+            row.appendChild(summary);
+            const body = node("div", "mcp-tool-body");
+            row.appendChild(body);
+            /* the parameter rec: name => description (the server's own words) */
+            const params = field(spec, "arg");
+            const names = params && params.isRec && params.isRec() ? [...params.js.keys()].map((k) => k.toString()) : [];
+            const inputs = new Map();
+            const form = node("form", "mcp-call");
+            names.forEach((param) => {
+                const wrap = node("label", "mcp-arg");
+                wrap.appendChild(node("span", "mcp-arg-name", param));
+                const input = document.createElement("input");
+                input.type = "text";
+                input.className = "mcp-arg-input";
+                input.spellcheck = false;
+                input.placeholder = String(field(params, param) || "mtron value");
+                wrap.appendChild(input);
+                inputs.set(param, input);
+                form.appendChild(wrap);
+            });
+            const call = node("button", "primary mcp-call-btn", "call");
+            call.type = "submit";
+            form.appendChild(call);
+            const answer = node("pre", "mcp-answer", "");
+            answer.hidden = true;
+            body.appendChild(form);
+            body.appendChild(answer);
+            form.addEventListener("submit", async (ev) => {
+                ev.preventDefault();
+                /* a tool's instruction declares NAMED arguments (the parameter rec the
+                   server announced), so the call passes them by name: p => value */
+                const named = names
+                    .map((param) => [param, String(inputs.get(param).value).trim()])
+                    .filter(([, value]) => value !== "")
+                    .map(([param, value]) => param + "=>" + value);
+                /* the tool is applied ON the client's path — the client is only a transport */
+                answer.hidden = false;
+                answer.textContent = "calling " + name + " …";
+                try {
+                    const where = await connect();
+                    const expr = where + "/tool/" + name + "/inst(" + named.join(",") + ")";
+                    const text = String((await api.mtron(expr)) || "").trim();
+                    answer.textContent = text || "(no answer)";
+                } catch (problem) {
+                    answer.textContent = "fail: " + (problem && problem.message ? problem.message : problem);
+                }
+            });
+            toolsBox.appendChild(row);
+        });
+        box.appendChild(toolsBox);
+
+        /* resources and prompts: the SERVER has them, the client does not — placeholders
+           that say so, so the shape of the panel is already right when it connects */
+        [["resources", "mcp_server::[resource] · not connected to the client yet"],
+         ["prompts", "mcp_server::[prompt] · not connected to the client yet"]].forEach(([label, reason]) => {
+            const section = node("div", "mcp-sec", label);
+            const pick = document.createElement("select");
+            pick.className = "mcp-pick";
+            pick.disabled = true;
+            pick.title = reason;
+            const option = document.createElement("option");
+            option.textContent = "— " + reason + " —";
+            pick.appendChild(option);
+            const line = node("div", "mcp-placeholder");
+            line.appendChild(pick);
+            box.appendChild(section);
+            box.appendChild(line);
+        });
+        return box;
+    });
+
     register("/m/db/tble/space/tblespace", async function (env, api) {
         const box = node("div", "mpanel tblespace");
         /* the space is read in the machine's own form (application/x-mtron) and taken
@@ -1335,7 +1540,44 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             grid.textContent = "";
             grid.appendChild(node("div", "tble-empty", "cannot read schema: " + (problem && problem.message ? problem.message : problem)));
         }
+        /* PAGING: a table read is a stream, and `.range(offset, count)` takes a window of
+           it — offset is the index of the first row, count how many to take. the pager
+           stays hidden until a table is picked, and hides again for a hand-written
+           expression (it no longer describes what the grid shows). */
+        const page = {name: null, offset: 0, size: 10, count: 0, last: true};
+        const pager = node("div", "tble-pager");
+        const prevPage = node("button", "ghost tble-page", "\u2039");
+        prevPage.type = "button";
+        prevPage.title = "previous rows";
+        const pageLabel = node("span", "tble-page-label", "");
+        const nextPage = node("button", "ghost tble-page", "\u203a");
+        nextPage.type = "button";
+        nextPage.title = "next rows";
+        const pageSize = document.createElement("select");
+        pageSize.className = "tble-page-size";
+        pageSize.title = "rows per page";
+        [10, 25, 50, 100].forEach((count) => pageSize.appendChild(new Option(String(count), String(count))));
+        pageSize.value = String(page.size);
+        pager.appendChild(prevPage);
+        pager.appendChild(pageLabel);
+        pager.appendChild(nextPage);
+        pager.appendChild(pageSize);
+        pager.hidden = true;
+
+        function paintPager() {
+            if (!page.name) {
+                pageLabel.textContent = "";
+            } else if (page.count) {
+                pageLabel.textContent = "rows " + (page.offset + 1) + "\u2013" + (page.offset + page.count);
+            } else {
+                pageLabel.textContent = "no rows at " + page.offset;
+            }
+            prevPage.disabled = !page.name || page.offset <= 0;
+            nextPage.disabled = !page.name || page.last;
+        }
+
         box.appendChild(pick);
+        box.appendChild(pager);
         box.appendChild(grid);
 
         /* the mtron expression bar — pre-filled with the read that populated the
@@ -1497,23 +1739,48 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 grid.appendChild(node("div", "tble-empty", String(problem && problem.message ? problem.message : problem) + " — raw: " + detail));
                 return;
             }
+            /* the pager's idea of the end: a page shorter than the page size is the last */
+            page.count = result && result.isLst && result.isLst() ? result.js.length
+                : (result && result.isRec && result.isRec() ? 1 : 0);
+            page.last = page.count < page.size;
+            paintPager();
             renderGrid(result);
         }
 
-        function loadTable(name) {
-            const source = "*<" + data + "/" + name + "/+>";
+        /* one table, one window of it: the range is the read's own suffix */
+        function loadTable(name, offset) {
+            page.name = name;
+            page.offset = Math.max(0, Number(offset) || 0);
+            const source = "*<" + data + "/" + name + "/+>.range(" + page.offset + "," + page.size + ")";
             expr.value = source;
+            pager.hidden = false;
+            paintPager();
             runExpr(source);
         }
+
+        prevPage.addEventListener("click", () => {
+            if (page.name) loadTable(page.name, Math.max(0, page.offset - page.size));
+        });
+        nextPage.addEventListener("click", () => {
+            if (page.name) loadTable(page.name, page.offset + page.size);
+        });
+        pageSize.addEventListener("change", () => {
+            page.size = Number(pageSize.value) || 10;
+            if (page.name) loadTable(page.name, 0);
+        });
 
         expr.addEventListener("keydown", (ev) => {
             if (ev.key === "Enter") {
                 ev.preventDefault();
+                /* a hand-written read is its own view: the pager would be lying */
+                page.name = null;
+                pager.hidden = true;
+                paintPager();
                 runExpr(expr.value);
             }
         });
 
-        pick.addEventListener("change", () => { if (pick.value) loadTable(pick.value); });
+        pick.addEventListener("change", () => { if (pick.value) loadTable(pick.value, 0); });
         return box;
     });
 

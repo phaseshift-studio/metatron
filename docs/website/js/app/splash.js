@@ -186,6 +186,20 @@ function nearestObjCard(grid, root, x, y) {
 function makeDraggable(root) {
     const grip = root.querySelector(".obj-card-grip");
     if (!grip) return;
+    /* a double-click on the grip returns the dialog to its own size (and forgets the
+       stored one), so a drag is never a trap */
+    grip.addEventListener("dblclick", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        dialog.style.width = "";
+        dialog.style.height = "";
+        dialog.classList.remove("sized");
+        try {
+            localStorage.removeItem(KEY);
+        } catch (ignored) {
+        }
+    });
+
     grip.addEventListener("pointerdown", (ev) => {
         if (ev.button !== 0) return;
         ev.preventDefault();
@@ -1206,6 +1220,7 @@ function mountPinnedObjCard(env, options) {
         '<button type="button" class="popup-tab" data-tab="mtron">mtron</button>' +
         '<button type="button" class="popup-tab" data-tab="json" disabled>json</button></div>' +
         '<span class="obj-card-vid"></span>' +
+        '<button type="button" class="obj-card-expand" title="open in the obj modal" aria-label="expand">⛶</button>' +
         '<button type="button" class="obj-card-unpin" title="unpin">×</button></header>' +
         '<div class="popup-out"></div>' +
         '<button type="button" class="obj-card-resize" title="drag to resize" aria-label="resize">◢</button>';
@@ -1228,6 +1243,19 @@ function mountPinnedObjCard(env, options) {
         })
     };
     const objCard = emptyObjCard();
+    /* EXPAND: the same object, in the modal — the card stays pinned underneath, and the
+       modal is the resizeable form (its corner grip). the modal reads from the ACTIVE
+       machine, so a card of another instance is activated first. */
+    root.querySelector(".obj-card-expand").addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (owner && owner !== active) activate(owner);
+        inspectReference({
+            tid: env.tid || null,
+            vid: env.vid || null,
+            raw: env.vid ? String(env.vid) : String(env.tid || ""),
+            shortTid: opts.label || env.shortTid || "value"
+        });
+    });
     root.querySelector(".obj-card-unpin").addEventListener("click", () => {
         const parent = root.parentElement;
         root.remove();
@@ -2033,12 +2061,17 @@ modalHost.tabs.querySelectorAll(".popup-tab").forEach((button) => {
 $("#popup-back").addEventListener("click", popupBack);
 $("#popup-pin").addEventListener("click", pinObjCard);
 $("#popup-close").addEventListener("click", () => $("#popup").close());
-/* clicking the backdrop — outside the dialog's box — also closes it */
+/* clicking the backdrop — outside the dialog's box — also closes it. NOT while the
+   corner is being dragged, and not for the click that ENDS a drag: a release outside
+   the box is a release, not a click-off (the two ends of a drag are one gesture) */
 $("#popup").addEventListener("click", (ev) => {
-    const rect = ev.currentTarget.getBoundingClientRect();
+    const el = ev.currentTarget;
+    if (el.dataset.resizing) return;
+    if (Date.now() - Number(el.dataset.resizedAt || 0) < 400) return;
+    const rect = el.getBoundingClientRect();
     if (ev.clientX < rect.left || ev.clientX > rect.right ||
         ev.clientY < rect.top || ev.clientY > rect.bottom) {
-        ev.currentTarget.close();
+        el.close();
     }
 });
 $("#popup").addEventListener("close", () => {
@@ -3144,5 +3177,68 @@ $$(".page-tabs .popup-tab").forEach((button) => button.addEventListener("click",
     /* a page may reload on its own (activate, save): keep the tree current */
     document.addEventListener("metatron:frame", () => {
         if (panel.classList.contains("open")) render();
+    });
+})();
+
+/* ── the obj modal's corner: drag it to make the dialog bigger ────────────
+   the dialog is an overlay, so a resize only needs its width and height; the size is
+   remembered per browser, because a person who enlarges an obj's card wants it that
+   size next time too. the grip is created here, so a shell older than this script
+   still gets one. */
+(function wirePopupResize() {
+    const dialog = $("#popup");
+    if (!dialog) return;
+    const KEY = "metatron.popup.size";
+    const MIN_W = 360;
+    const MIN_H = 220;
+    const grip = document.createElement("div");
+    grip.className = "popup-resize";
+    grip.id = "popup-resize";
+    grip.title = "drag to resize";
+    grip.setAttribute("aria-hidden", "true");
+    dialog.appendChild(grip);
+
+    const clamp = (size) => ({
+        w: Math.round(Math.max(MIN_W, Math.min(window.innerWidth - 16, size.w))),
+        h: Math.round(Math.max(MIN_H, Math.min(window.innerHeight - 16, size.h)))
+    });
+    const apply = (size) => {
+        if (!size || !size.w || !size.h) return;
+        const fit = clamp(size);
+        dialog.style.width = fit.w + "px";
+        dialog.style.height = fit.h + "px";
+        dialog.classList.add("sized");
+    };
+    try {
+        apply(JSON.parse(localStorage.getItem(KEY) || "null"));
+    } catch (ignored) {
+    }
+
+    grip.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const start = {x: ev.clientX, y: ev.clientY, w: dialog.offsetWidth, h: dialog.offsetHeight};
+        grip.setPointerCapture(ev.pointerId);
+        dialog.classList.add("resizing");
+        dialog.dataset.resizing = "1";
+        const move = (e) => {
+            apply({w: start.w + (e.clientX - start.x), h: start.h + (e.clientY - start.y)});
+        };
+        const up = () => {
+            dialog.classList.remove("resizing");
+            delete dialog.dataset.resizing;
+            dialog.dataset.resizedAt = String(Date.now());
+            grip.removeEventListener("pointermove", move);
+            grip.removeEventListener("pointerup", up);
+            grip.removeEventListener("pointercancel", up);
+            try {
+                localStorage.setItem(KEY, JSON.stringify({w: dialog.offsetWidth, h: dialog.offsetHeight}));
+            } catch (ignored) {
+            }
+        };
+        grip.addEventListener("pointermove", move);
+        grip.addEventListener("pointerup", up);
+        grip.addEventListener("pointercancel", up);
     });
 })();
