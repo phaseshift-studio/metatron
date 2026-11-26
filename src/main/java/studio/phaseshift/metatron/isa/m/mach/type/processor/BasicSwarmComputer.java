@@ -95,13 +95,24 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
      * carries it to whichever thread runs it, so an async lane of a profiled run is measured with the run.
      */
     private final Analyzer profile = Analyzer.PROFILE.get();
+    /**
+     * THE RUNS IN PROGRESS: a computer runs on whichever thread applies it, so its state says nothing of a synchronous
+     * run, and its processor's bounded history (FIFORec) keeps a computer while any of its runs is in progress. Shared by
+     * every instance at this computer's address: the re-coded copy resolve() files there as a run starts, and a clone
+     */
+    private final AtomicInteger runs;
 
     // ======================== Constructors & factories ========================
 
     public BasicSwarmComputer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        this(jvm, tid, vid, new AtomicInteger(0));
+    }
+
+    private BasicSwarmComputer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid, final AtomicInteger runs) {
         // ~/processor/computer/<n>: the computer is written into the processor of the machine it is minted in, which
         // indexes it by <n> (~ resolves to that machine's vid on write) -- its evaluation's fails are filed beneath it
         super(jvm, tid, null == vid ? f("~/processor/computer").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
+        this.runs = runs;
         // A PROFILED EVALUATION'S STATISTICS ARE ITS COMPUTER'S: the first computer minted under a profile claims it and
         // holds it at ~/processor/computer/<n>/analyzer, past the run (the computers nested in the run record into it)
         Analyzer.Helper.claim(this, this.profile);
@@ -156,7 +167,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
     }
 
     public BasicSwarmComputer code(final Code code) {
-        return new BasicSwarmComputer(mutableMap(uri(CODE), code), this.tid(), this.vid());
+        return new BasicSwarmComputer(mutableMap(uri(CODE), code), this.tid(), this.vid(), this.runs);
     }
 
     public Obj halted() {
@@ -330,13 +341,33 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
         final Analyzer outer = Analyzer.PROFILE.get();
         if (this.profile != outer)
             Analyzer.PROFILE.set(this.profile);
+        this.runs.incrementAndGet();
         try {
             return this.runMonads(statistics);
         } finally {
+            this.runs.decrementAndGet();
             if (this.profile != outer)
                 Analyzer.PROFILE.set(outer);
             Analyzer.Helper.stop(statistics, Processor.TIME_PROBE, t0);
         }
+    }
+
+    /**
+     * whether a run of this computer is in progress, on any thread. Never while it is being made: its filing at
+     * ~/processor/computer/<n> is a write its processor's history trims, made inside the super constructor, before this
+     * class's fields are set
+     */
+    boolean isRunning() {
+        return null != this.runs && this.runs.get() > 0;
+    }
+
+    /**
+     * A COMPUTER IS NEVER NAMED: its vid is its number in its processor (~/processor/computer/<n>), and the processor's
+     * history keeps or drops it, so the executor lists it under stop like any thread whose vid was minted.
+     */
+    @Override
+    public boolean named() {
+        return false;
     }
 
     private Obj runMonads(final Analyzer statistics) {
@@ -523,7 +554,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
         // Return a fresh instance via the no-arg constructor and self(),
         // bypassing the full MObj(obj,tid,vid) constructor to avoid
         // objCheckAndSave → type-resolution StackOverflow.
-        final BasicSwarmComputer clone = new BasicSwarmComputer();
+        final BasicSwarmComputer clone = new BasicSwarmComputer(this.runs);
         final Map<Obj, Obj> map = new LinkedHashMap<>((Map<Obj, Obj>) jvm);
         map.putIfAbsent(uri(RUN), this.running());
         map.putIfAbsent(uri(BARRIER), this.barriers());
@@ -541,7 +572,12 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
      * No-arg constructor that skips objCheckAndSave (used by clone).
      */
     protected BasicSwarmComputer() {
+        this(new AtomicInteger(0));
+    }
+
+    private BasicSwarmComputer(final AtomicInteger runs) {
         // MObj no-arg constructor — sets parent=noobj, does NOT call objCheckAndSave
+        this.runs = runs;
         Analyzer.Helper.incr(this.profile, FLOW_PROCESSORS_PROBE, 1L);
     }
 

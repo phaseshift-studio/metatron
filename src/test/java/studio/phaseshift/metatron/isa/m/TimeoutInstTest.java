@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -119,7 +120,7 @@ public class TimeoutInstTest extends AbstractInstSetTest {
     })
     public void testEachAlarmIsAThreadThatHasEndedByTheAnswer(final String code, final String expected, final int alarms)
             throws Exception {
-        final int listed = listedThreads(STOP).size();
+        final Set<fURI> listed = Set.copyOf(listedThreads(STOP));
         final VirtualThread evaluator = VirtualThread.virtual(instLambda(_ ->
                 objs(Machine.parse(code).apply(noobj()).stream().toList())));
         final Obj answer = evaluator.applyAsync().get(20, TimeUnit.SECONDS);
@@ -193,12 +194,11 @@ public class TimeoutInstTest extends AbstractInstSetTest {
     }
 
     /**
-     * the threads listed as ended since the list held {@code listed}: the list is read once, as a thread that ends
-     * between two reads would leave the bound of the second past the end of the first
+     * the threads listed as ended that {@code listed} did not hold: the executor keeps a bounded history, dropping its
+     * eldest as threads end, so a position in its list bounds nothing and only the vids tell what is new
      */
-    private static List<fURI> endedSince(final int listed) {
-        final List<fURI> ended = listedThreads(STOP);
-        return ended.subList(listed, ended.size());
+    private static List<fURI> endedSince(final Set<fURI> listed) {
+        return listedThreads(STOP).stream().filter(vid -> !listed.contains(vid)).toList();
     }
 
     /**

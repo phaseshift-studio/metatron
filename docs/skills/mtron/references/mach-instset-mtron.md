@@ -263,7 +263,9 @@ separate axes of a machine.
 | `tracer::T`                        | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's                                                                                     |
 | `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`; `noobj` written at it switches it off, at `analysis/<probe>` mutes that probe; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
 
-Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
+Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`; the processor keeps every running
+computer and the newest 100 that have ended, so an older computer (its fails and profile with it) reads `noobj`. The
+processor holds the fail
 stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
 evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught, so it is used as a value through
 `catch(_)`. A read with `@` keeps each fail's address, so catching it removes it; `*` returns a detached copy.

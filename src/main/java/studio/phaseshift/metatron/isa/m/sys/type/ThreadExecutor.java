@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.analyzer.Analyzer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.type.impl.FIFOLst;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -50,17 +51,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
- * ThreadExecutor — single funnel for all metatron threading.
+ * ThreadExecutor — single funnel for all metatron threading, one for the whole server.
  *
  * Exposes threads as mtron-queryable Rec fields rather than hidden Java maps:
  *
- *   /sys/thread           ThreadExecutor rec
- *   /sys/thread/active    Lst of currently running threads
- *   /sys/thread/inactive  Lst of completed threads
- *
- * Standard mtron URI queries work naturally:
- *   * /sys/thread/active/+               all active threads
- *   * /sys/thread/inactive/+=?[source=x] completed threads spawned by x
+ *   /sys/thread/executor        ThreadExecutor rec
+ *   /sys/thread/executor/run    Lst of the running threads
+ *   /sys/thread/executor/stop   Lst of the ended threads: the newest HISTORY, and every named one
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -68,14 +65,24 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
 
     private volatile static ThreadExecutor EXECUTOR;
 
+    /**
+     * how many ended threads, of those not named, {@code stop} keeps listed (Marko, 2026-11-25)
+     */
+    public static final int HISTORY = 100;
+    /**
+     * where a minted thread is filed below its machine (mThread.CURRENT_SYS_THREAD, ~/sys/thread/<id>)
+     */
+    private static final fURI THREAD_REGISTRY = f("/sys/thread");
+
     private fURI vid;
     private final ExecutorService service;
     private boolean running = true;
+    private final FIFOLst stopped = new FIFOLst(HISTORY);
 
     /**
      * The jvm map — every entry is mtron-accessible via the Rec interface.
      * {@code run} and {@code stop} are thread-safe Lsts of currently-executing
-     * and completed threads, respectively.
+     * and ended threads, respectively; {@code stop} is a bounded history.
      */
     public final Map<Obj, Obj> map;
 
@@ -88,7 +95,7 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
         this.vid = vid;
         this.map = new ConcurrentHashMap<>();
         this.map.put(uri(RUN), lst(new CopyOnWriteArrayList<>()));
-        this.map.put(uri(STOP), lst(new CopyOnWriteArrayList<>()));
+        this.map.put(uri(STOP), this.stopped);
     }
 
     // ======================== Rec interface ========================
@@ -216,7 +223,19 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
             } finally {
                 BootLoader.CURRENT_THREAD.set(previous);
                 run.lstValue().remove(pointer);
-                this.at(uri(STOP)).lstValue().add(pointer);
+                // THE HISTORY IS BOUNDED (Marko, 2026-11-25): stop keeps the newest HISTORY ended threads and every named
+                // one. A dropped thread filed at the thread registry (~/sys/thread/<id>) is deleted there, so its record
+                // goes with it; a computer's record is its processor's, which keeps a history of its own
+                for (final Obj dropped : this.stopped.offer(pointer, thread.named()))
+                    Obj.Helper.getAutoPointer(dropped)
+                            .filter(address -> address.retract(1).tail(2).asAbsolute().equals(THREAD_REGISTRY))
+                            .ifPresent(address -> {
+                                try {
+                                    Machine.write(address, noobj());
+                                } catch (final Exception e) {
+                                    // gone already, or its machine popped since: the history is bounded either way
+                                }
+                            });
             }
         };
 

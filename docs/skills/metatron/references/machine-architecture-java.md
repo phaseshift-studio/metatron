@@ -372,7 +372,8 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
 - **Fails are filed in the processor** (Marko, 2026-11-04), through the machine's space's `incrq`: a fail raised outside any
   evaluation at `~/processor/fail/_?incrq`, and an evaluation's at `~/processor/computer/<n>/fail/_?incrq`, under the
   computer that ran it. The processor indexes its computers by number (`computer => [<n> => computer::[…]]`): a
-  computer is written at `~/processor/computer/<n>` when it is minted, and that write is the indexing. So the
+  computer is written at `~/processor/computer/<n>` when it is minted, and that write is the indexing. The index is a
+  bounded history (`FIFORec`, Marko 2026-11-25): every running computer and the newest 100 ended ones. So the
   processor is per machine: `push()` mints the child's own, of its parent's architecture, beside its memory, ISA and
   network levels.
 

@@ -73,6 +73,11 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable,
      * which takes up other work, so a stop that comes later must interrupt nothing. Guarded by this thread's monitor.
      */
     private boolean ended = false;
+    /**
+     * A NAMED THREAD was given its vid by its creator (main, console_statusline, a virtual::T written at an address),
+     * where any other took a fresh ~/sys/thread/<id>: the executor's bounded history never drops a named thread.
+     */
+    private final boolean named;
     protected final FutureObj<Obj> future = new FutureObj<>();
 
     private Machine landedPerspective;
@@ -138,6 +143,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable,
 
     public AbstractThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(CURRENT_SYS_THREAD, true) : vid);
+        this.named = null != vid;
         this.thread = null;
         if (!jvm.containsKey(uri(SOURCE))) {
             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
@@ -159,6 +165,14 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable,
 
     protected AbstractThread() {
         // no-arg for clone (bypasses objCheckAndSave)
+        this.named = false;
+    }
+
+    /**
+     * whether this thread was given its vid by its creator, rather than minted one
+     */
+    public boolean named() {
+        return this.named;
     }
 
     // ======================== Cloning ========================

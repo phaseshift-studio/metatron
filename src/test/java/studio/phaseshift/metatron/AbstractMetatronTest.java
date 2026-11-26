@@ -248,7 +248,7 @@ public abstract class AbstractMetatronTest {
 
     /**
      * The vids of the threads the system executor lists under {@code list}: {@code run} while a metatron thread runs,
-     * {@code stop} once it has ended.
+     * {@code stop} once it has ended, for as long as the executor's bounded history keeps it.
      */
     public static List<fURI> listedThreads(final String list) {
         return ThreadExecutor.instance().at(uri(list)).asLst().lstValue().stream()
@@ -258,13 +258,16 @@ public abstract class AbstractMetatronTest {
     }
 
     /**
-     * Wait up to {@code millis} for the system executor to list a thread as ended: under {@code stop}, and no longer
-     * under {@code run}.
+     * Wait up to {@code millis} for the system executor to list a thread as ended: no longer under {@code run}, and
+     * under {@code stop}, or dropped from it since. Only an ended thread is dropped, and a dropped thread is deleted at
+     * its vid, so a thread whose record reads nothing was ended. Run is read first: an ending thread leaves it before it
+     * is listed under stop.
      */
     public static boolean awaitsStopped(final fURI thread, final long millis) {
         final long deadline = System.currentTimeMillis() + millis;
         while (System.currentTimeMillis() < deadline) {
-            if (listedThreads(Tokens.STOP).contains(thread) && !listedThreads(Tokens.RUN).contains(thread))
+            if (!listedThreads(Tokens.RUN).contains(thread)
+                    && (listedThreads(Tokens.STOP).contains(thread) || Machine.read(thread).isNoObj()))
                 return true;
             CommonUtil.sleepThread(10);
         }
