@@ -364,10 +364,11 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 final Obj embedded = isAlreadyEmbedded ? obj.asRec().at(EMBED) : this.sjvm().embeddingFunction(f(dp.collection())).apply(obj);
                 final Rec metadata = isAlreadyEmbedded ? obj.asRec().at(META).orElse(rec0()) : rec0();
                 // a failed embedding is its own failure (a model that could not be built, say), and an answer that is no
-                // lst is no embedding: neither is cast first, where it would surface as a class cast naming neither
+                // lst of reals is no embedding: neither is cast first (the client casts each element to a real), where it
+                // would surface as a class cast naming neither
                 if (embedded.isFail())
                     throw embedded.asFail().asException();
-                if (!embedded.isLst())
+                if (!embedded.isLst() || !embedded.lstValue().stream().allMatch(Obj::isReal))
                     throw MTronException.of("the embedding function of collection %s answered %s, not an embedding", dp.collection(), embedded);
                 final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(id), rawObj, metadata, embedded.asLst());
                 this.sjvm().upsert(collId, f(dp.collection()), entity);

@@ -24,6 +24,8 @@ import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
@@ -53,6 +55,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,7 +63,9 @@ import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.HTTP;
+import static studio.phaseshift.metatron.Tokens.LLM;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.LLM_MODEL_TID;
@@ -157,30 +162,37 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
                 "@</memory/space/vec/fnembed>.as(vecspace::T)";
         try {
             AbstractMetatronTest.checkEquality(LOG, uri("fnembed:#"), ObjmtronSerializer.parse(space).apply().asRec().at(uri(PATTERN)), true);
-            ObjmtronSerializer.parse("<fnembed:pile/volta> -> [n=>[3.0,0.25]]").apply();
-            ObjmtronSerializer.parse("<fnembed:pile/faraday> -> [n=>[5.0,0.25]]").apply();
+            AbstractMetatronTest.checkCodeParseApply(LOG, "<fnembed:pile/volta> -> [n=>[3.0,0.25]]", "[n=>[3.0,0.25]]");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "<fnembed:pile/faraday> -> [n=>[5.0,0.25]]", "[n=>[5.0,0.25]]");
             AbstractMetatronTest.checkCodeParseApply(LOG, "*<fnembed:pile/volta?embedq>", "[3.0,0.25]");
             AbstractMetatronTest.checkCodeParseApply(LOG, "*<fnembed:pile/faraday?embedq>", "[5.0,0.25]");
         } finally {
-            unmount("/memory/space/vec/fnembed");
+            unmount(f("/memory/space/vec/fnembed"));
         }
     }
 
     /**
-     * an embedding function whose range admits any answer: a write it answers with no lst for fails, naming the answer
-     * as no embedding, where a cast of the answer would fail it with a class cast that names neither
+     * an embedding function whose range admits any answer: a write it answers with no lst of reals for fails, naming the
+     * answer as no embedding, where a cast of the answer (or of an element, in the client) would fail it with a class
+     * cast that names neither
      */
-    @Test
-    public void testAnEmbeddingFunctionThatAnswersNoEmbeddingFailsTheWrite() {
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "\"flat\"",
+            "3",
+            "[\"flat\"]",
+            "[1,2]",
+    })
+    void testAnEmbeddingFunctionThatAnswersNoEmbeddingFailsTheWrite(final String answer) {
         try {
             ObjmtronSerializer.parse("<" + endpoint + ">.-<[pattern => flatembed:#, host => <" + endpoint + ">, " +
                     "driver => <studio.phaseshift.metatron.isa.m.db.vec.space.ChromaV2Client>, q => [embedq::[=>]], " +
-                    "route => -< [flatembed: => <>], config => [embed => [# => inst?#{?}<=#{?}(doc=>#::T){ 'flat' }]]]" +
+                    "route => -< [flatembed: => <>], config => [embed => [# => inst?#{?}<=#{?}(doc=>#::T){ " + answer + " }]]]" +
                     "@</memory/space/vec/flatembed>.as(vecspace::T)").apply();
             final Obj flat = ObjmtronSerializer.parse("<flatembed:pile/volta> -> [n=>3]").apply();
-            assertTrue(flat.isFail() && flat.toString().contains("not an embedding"), "an answer that is no lst is no embedding: " + flat);
+            assertTrue(flat.isFail() && flat.toString().contains("not an embedding"), answer + " is no embedding: " + flat);
         } finally {
-            unmount("/memory/space/vec/flatembed");
+            unmount(f("/memory/space/vec/flatembed"));
         }
     }
 
@@ -203,22 +215,19 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         assertTrue(mParser.stripComments(Files.readString(Path.of("boot/space/vec/chromadb.mtron"))).contains("*<" + address.group(1) + ">"),
                 "the module reads the address the boot writes its spec to: " + address.group(1));
         final fURI model = f(address.group(1));
-        final String llm = ObjmtronSerializer.parse(spec.group(1)).apply().asRec().at(uri("llm")).uriValue().toString();
+        final String llm = ObjmtronSerializer.parse(spec.group(1)).apply().asRec().at(uri(LLM)).uriValue().toString();
         // a build asks for the model list once (/api/tags) and for each listed model's card twice (/api/show)
         final AtomicInteger builds = new AtomicInteger();
         final List<String> embedded = new CopyOnWriteArrayList<>();
         final HttpServer ollama = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-        ollama.createContext("/api/tags", exchange -> {
-            builds.incrementAndGet();
-            answer(exchange, OLLAMA_TAGS);
-        });
-        ollama.createContext("/api/show", exchange -> answer(exchange, OLLAMA_SHOW));
-        ollama.createContext("/api/embed", exchange -> embedded.add(answer(exchange, OLLAMA_EMBED)));
+        ollama.createContext("/api/tags", exchange -> answer(exchange, OLLAMA_TAGS, request -> builds.incrementAndGet()));
+        ollama.createContext("/api/show", exchange -> answer(exchange, OLLAMA_SHOW, request -> {}));
+        ollama.createContext("/api/embed", exchange -> answer(exchange, OLLAMA_EMBED, embedded::add));
         ollama.start();
         final fURI stand = f().scheme(HTTP).host(ollama.getAddress().getAddress().getHostAddress()).port(ollama.getAddress().getPort());
         try {
             ObjmtronSerializer.parse("<" + model + "> -> " + spec.group(1)).apply();
-            Machine.write(model.extend("host"), uri(stand));
+            Machine.write(model.extend(HOST), uri(stand));
             memSpace.of(f("docker:#"), f("/memory/space/docker"));
             ObjmtronSerializer.parse("<docker:container/metatron_chroma> -> [state=>'running']").apply();
             ObjmtronSerializer.parse("fsspace::[pattern => fs:#, q => [mimeq::[=>]], route => [fs: => <.>]]@/memory/space/fs/boot").apply();
@@ -252,43 +261,45 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
             // a spec on a closed port: the build fails its write with its own error, and the spec stays for the next write
             final fURI closed = f().scheme(HTTP).host(stand.host()).port(1);
             ObjmtronSerializer.parse("<" + model + "> -> " + spec.group(1)).apply();
-            Machine.write(model.extend("host"), uri(closed));
+            Machine.write(model.extend(HOST), uri(closed));
             final Obj unreachable = ObjmtronSerializer.parse("<embed:notes/ohm> -> [note=>\"resistance\"]").apply();
-            assertTrue(unreachable.isFail() && unreachable.toString().contains("ConnectException"), "the build's own error: " + unreachable);
-            AbstractMetatronTest.checkEquality(LOG, uri(closed), Machine.read(model.extend("host")), true);
+            assertTrue(unreachable.isFail() && unreachable.toString().contains("ConnectException") && !unreachable.toString().contains("not an embedding"),
+                    "the build's own error, as itself: " + unreachable);
+            AbstractMetatronTest.checkEquality(LOG, uri(closed), Machine.read(model.extend(HOST)), true);
             // with no spec there is no model, so the function answers nothing, which its lst[real] range refuses
             Machine.write(model, noobj());
             final Obj unspecified = ObjmtronSerializer.parse("<embed:notes/blank> -> [note=>\"no model\"]").apply();
-            assertTrue(unspecified.isFail() && unspecified.toString().contains("does not match inst range"), "no model, no embedding: " + unspecified);
+            assertTrue(unspecified.isFail() && unspecified.toString().contains("does not match inst range") && !unspecified.toString().contains("not an embedding"),
+                    "no model, no embedding, and the range's own error: " + unspecified);
         } finally {
             Machine.write(model, noobj());
             ollama.stop(0);
-            unmount("/memory/space/vec/chroma", "/memory/space/fs/boot", "/memory/space/docker");
+            unmount(f("/memory/space/vec/chroma"), f("/memory/space/fs/boot"), f("/memory/space/docker"));
         }
     }
 
     /**
      * an ollama answer, the same whatever the request asked: a model list, a model card, or one embedding (an embed
-     * sends one document, so one is what it asks for). Answers the request's body
+     * sends one document, so one is what it asks for). The request's body is handed over before the answer is sent, so
+     * the write that waits on the answer sees it recorded
      */
-    private static String answer(final HttpExchange exchange, final String json) throws IOException {
-        final String request = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+    private static void answer(final HttpExchange exchange, final String json, final Consumer<String> request) throws IOException {
+        request.accept(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
         final byte[] body = json.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json");
         exchange.sendResponseHeaders(200, body.length);
         try (final OutputStream out = exchange.getResponseBody()) {
             out.write(body);
         }
-        return request;
     }
 
     /**
      * unmount the spaces a test mounted, so the class's other tests run without them
      */
-    private static void unmount(final String... vids) {
-        for (final String vid : vids) {
-            final Obj space = mounted(vid);
-            Machine.current().memory().removeSpace(f(vid));
+    private static void unmount(final fURI... vids) {
+        for (final fURI vid : vids) {
+            final Obj space = mounted(vid.toString());
+            Machine.current().memory().removeSpace(vid);
             CommonUtil.close(space);
         }
     }
