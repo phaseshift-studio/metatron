@@ -1373,11 +1373,14 @@ public enum Law {
          */
         public static Code rewrite(final Code code, final List<Rec> rules, final TriFunction<Code, Integer, Integer, Boolean> admits) {
             Code out = code;
-            for (final Rel equation : rules.stream().flatMap(rule -> rule.<Rel>elements()).toList()) {
+            // THE EQUATIONS ARE READ OFF EACH RULE'S RAW MAP (Marko, 2026-11-25): elements() minted, and type-checked, a rel
+            // per entry on every pass, a third of the rewrite stage. A law's rule rec holds code keys at coefficient one, so
+            // its entries are what its rels would answer
+            for (final Map.Entry<Obj, Obj> equation : rules.stream().flatMap(rule -> rule.recValue().entrySet().stream()).toList()) {
                 final Code scanned = out;
                 // the chain's instructions, read once: insts() answers a copy per call
                 final List<Inst> chain = scanned.insts();
-                final List<Inst> pattern = equation.first().asCall().insts();
+                final List<Inst> pattern = equation.getKey().asCall().insts();
                 // a rule naming an op the chain does not hold cannot match it, so it is not scanned at all: every element a
                 // run must take ({+}# takes one at least, {*}# may take none) tests an instruction of the chain
                 if (pattern.isEmpty() || !pattern.stream().allMatch(element -> element.tid().b().isZeroable()
@@ -1429,7 +1432,7 @@ public enum Law {
                 // map(plus(2).mult(3)).sum() for map(1).sum(), and {1,2,3} answered 3, not 36. In an unspanned rule, a
                 // number, a str, a bool or bytes holds only an equal argument in its place; a type is a hole and a code a
                 // pattern, and the matcher binds both as before
-                final List<Inst> next = Call.Helper.update(chain, rec(equation.first(), equation.second()), (start, length) ->
+                final List<Inst> next = Call.Helper.update(chain, equation.getKey(), equation.getValue(), (start, length) ->
                         chain.subList(start, start + length).stream().allMatch(inst -> inst.tid().b().isOne() && inst.tid().d().isOne())
                                 && (!unspanned || IntStream.range(0, length).allMatch(k -> !pattern.get(k).args().isLst()
                                 || IntStream.range(0, (int) pattern.get(k).args().count()).allMatch(slot -> {

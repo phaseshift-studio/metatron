@@ -983,7 +983,8 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("theory_unit_removal"), code -> {
                             Code out = code;
                             for (final Rec unit : Law.Helper.rules(MONOID_THEORY_TID)) {
-                                final Inst term = unit.<Rel>elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
+                                // the unit's equation read off its raw map: a rel minted per unit per pass type-checked itself
+                                final Inst term = unit.recValue().keySet().iterator().next().asCall().insts().getFirst();
                                 out = Law.Helper.rewrite(out, List.of(unit), (scanned, start, length) -> term.args().equals(scanned.insts().get(start).args())
                                         && (!term.args().isEmpty() || 1 < scanned.insts().size()));
                             }
@@ -1001,9 +1002,9 @@ public class mInstSet extends AbstractInstSet {
                         // instruction or the op symbol a chain carries before resolution (map(neg)), declares the mapper form
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("form_map_unwrap"), FORM_MAP_UNWRAP, (code, rules) -> {
                                     Code out = code;
-                                    for (final Rel rule : rules.<Rel>elements().toList()) {
-                                        final List<Inst> pattern = rule.first().asCall().insts();
-                                        out = Law.Helper.rewrite(out, List.of(rec(rule.first(), rule.second())), (scanned, start, length) -> {
+                                    for (final Map.Entry<Obj, Obj> rule : rules.recValue().entrySet()) {
+                                        final List<Inst> pattern = rule.getKey().asCall().insts();
+                                        out = Law.Helper.rewrite(out, List.of(rec(rule.getKey(), rule.getValue())), (scanned, start, length) -> {
                                             final Map<fURI, Obj> holes = Code.Helper.bind(scanned.insts().subList(start, start + length), pattern);
                                             return null != holes && !holes.isEmpty() && holes.values().stream().allMatch(hole -> Inst.Form.mapper == InstBuilder.declaredForm(
                                                     hole.isInst() ? hole.asInst().tid() : hole.isUri() ? Machine.current().memory().alignPrefix(hole.uriValue()) : null));
@@ -1046,7 +1047,7 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("law_poset"), LAW_POSET, (code, rules) -> {
                                     Code out = code;
                                     for (final Rec rule : Law.Helper.claimed(rules, Law.poset)) {
-                                        final List<Inst> pattern = rule.<Rel>elements().findFirst().orElseThrow().first().asCall().insts();
+                                        final List<Inst> pattern = rule.recValue().keySet().iterator().next().asCall().insts();
                                         out = Law.Helper.rewrite(out, List.of(rule), (scanned, start, length) -> {
                                             final Map<fURI, Obj> names = Code.Helper.bind(scanned.insts().subList(start, start + length), pattern);
                                             final Obj a = null == names ? null : names.get(f("a"));

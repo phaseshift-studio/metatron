@@ -261,58 +261,65 @@ public interface Call extends Obj {
             List<Inst> current = insts;
             // the rules walked as the rec's own rels (elements()), never through at(): a rule's key and value are code
             // held in a poly, and at() would fire an initial or an auto among them
-            for (final Rel rule : rules.asRec().elements().toList()) {
-                // A URI KEY NAMES A COMPONENT of every instruction in the run, in the word Inst already reads: its args.
-                // They are updated as >>= updates a lst (Poly.Helper.updateRecursion): a call transforms, a literal or a
-                // blocked |x replaces, _ keeps a value (#::T keeps an instruction, which _ would apply id() to), and
-                // the rhs gives the new arity. A dom or rng is a type, which that rule does not update: refused.
-                if (rule.first().isUri()) {
-                    if (!Tokens.ARGS.equals(rule.first().uriValue().toString()))
-                        throw MTronException.of("an instruction updates its %s, not %s", Tokens.ARGS, rule.first());
-                    current = current.stream()
-                            .map(inst -> inst.args((Poly<?, ?>) Poly.Helper.updateRecursion(inst.args(), rule.second(), Poly.IMMUTABLE)))
-                            .toList();
-                    continue;
-                }
-                if (!rule.first().isCall())
-                    throw MTronException.of("a code update matches a code pattern, not %s", rule.first());
-                final List<Inst> pattern = rule.first().asCall().insts();
-                // a SPANNED pattern ({+}#(...)) takes a run of any length its spans allow, so each start tries the lengths
-                // its entries can reach, the longest first; an unspanned pattern's run is its own length
-                final boolean spanned = pattern.stream().anyMatch(element -> !element.tid().b().isOne());
-                final List<Inst> scanned = current;
-                final List<Inst> next = new ArrayList<>(scanned.size());
-                int i = 0;
-                while (i < scanned.size()) {
-                    final List<Integer> lengths = pattern.isEmpty() ? List.of() : spanned
-                            ? Type.Helper.runs(scanned.subList(i, scanned.size()), pattern).stream().filter(length -> 0 < length).sorted(Comparator.reverseOrder()).toList()
-                            : i + pattern.size() <= scanned.size() ? List.of(pattern.size()) : List.of();
-                    int taken = 0;
-                    for (final int length : lengths) {
-                        final List<Inst> run = scanned.subList(i, i + length);
-                        // the run binds the pattern as a code binds a code pattern (Code.Helper#bind): it tests the pattern as
-                        // a value tests a type (1.test(int::T)), never the reverse, and the binding is the change's names
-                        final Map<fURI, Obj> bound = Code.Helper.bind(run, pattern);
-                        if (null != bound && runs.test(i, length)) {
-                            // the frame is for a ${...} template, an expression over the names; a named hole reads bound itself
-                            Memory.argStack().push(bound.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
-                            try {
-                                next.addAll(update(run, rule.second(), (start, span) -> true, bound));
-                            } finally {
-                                Memory.argStack().pop();
-                            }
-                            taken = length;
-                            break;
-                        }
-                    }
-                    if (0 < taken)
-                        i += taken;
-                    else
-                        next.add(scanned.get(i++));
-                }
-                current = next;
-            }
+            for (final Rel rule : rules.asRec().elements().toList())
+                current = update(current, rule.first(), rule.second(), runs);
             return current;
+        }
+
+        /**
+         * ONE RULE, {@code pattern => change}, over {@code insts}: what {@link #update(List, Obj, BiPredicate)} does for
+         * each rule of its rec, in order. A caller that already holds the rule's two sides hands them in directly: a law
+         * rewrite reads them off its rule's raw map every pass, and a rec built to carry them, and a rel minted to read
+         * them back, each ran a type check (Marko, 2026-11-25: read a rec with map.get(), not through rels).
+         */
+        public static List<Inst> update(final List<Inst> insts, final Obj pattern, final Obj change, final BiPredicate<Integer, Integer> runs) {
+            // A URI KEY NAMES A COMPONENT of every instruction in the run, in the word Inst already reads: its args.
+            // They are updated as >>= updates a lst (Poly.Helper.updateRecursion): a call transforms, a literal or a
+            // blocked |x replaces, _ keeps a value (#::T keeps an instruction, which _ would apply id() to), and
+            // the rhs gives the new arity. A dom or rng is a type, which that rule does not update: refused.
+            if (pattern.isUri()) {
+                if (!Tokens.ARGS.equals(pattern.uriValue().toString()))
+                    throw MTronException.of("an instruction updates its %s, not %s", Tokens.ARGS, pattern);
+                return insts.stream()
+                        .map(inst -> inst.args((Poly<?, ?>) Poly.Helper.updateRecursion(inst.args(), change, Poly.IMMUTABLE)))
+                        .toList();
+            }
+            if (!pattern.isCall())
+                throw MTronException.of("a code update matches a code pattern, not %s", pattern);
+            final List<Inst> elements = pattern.asCall().insts();
+            // a SPANNED pattern ({+}#(...)) takes a run of any length its spans allow, so each start tries the lengths
+            // its entries can reach, the longest first; an unspanned pattern's run is its own length
+            final boolean spanned = elements.stream().anyMatch(element -> !element.tid().b().isOne());
+            final List<Inst> next = new ArrayList<>(insts.size());
+            int i = 0;
+            while (i < insts.size()) {
+                final List<Integer> lengths = elements.isEmpty() ? List.of() : spanned
+                        ? Type.Helper.runs(insts.subList(i, insts.size()), elements).stream().filter(length -> 0 < length).sorted(Comparator.reverseOrder()).toList()
+                        : i + elements.size() <= insts.size() ? List.of(elements.size()) : List.of();
+                int taken = 0;
+                for (final int length : lengths) {
+                    final List<Inst> run = insts.subList(i, i + length);
+                    // the run binds the pattern as a code binds a code pattern (Code.Helper#bind): it tests the pattern as
+                    // a value tests a type (1.test(int::T)), never the reverse, and the binding is the change's names
+                    final Map<fURI, Obj> bound = Code.Helper.bind(run, elements);
+                    if (null != bound && runs.test(i, length)) {
+                        // the frame is for a ${...} template, an expression over the names; a named hole reads bound itself
+                        Memory.argStack().push(bound.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
+                        try {
+                            next.addAll(update(run, change, (start, span) -> true, bound));
+                        } finally {
+                            Memory.argStack().pop();
+                        }
+                        taken = length;
+                        break;
+                    }
+                }
+                if (0 < taken)
+                    i += taken;
+                else
+                    next.add(insts.get(i++));
+            }
+            return next;
         }
 
         /**

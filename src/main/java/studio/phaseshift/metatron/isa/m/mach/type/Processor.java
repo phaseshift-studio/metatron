@@ -118,8 +118,10 @@ public interface Processor extends Component {
                                     return arg;
                                 else {
                                     final Obj r = Objs.trySingleton(arg.apply(lhs));
-                                    if (null == r)
-                                        return null;
+                                    // an argument that computes to itself is itself: either answer below is this very obj,
+                                    // and testing it against itself walked every entry of a rec (a rewrite's rules, each pass)
+                                    if (null == r || r == arg)
+                                        return r;
                                     // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
                                     final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
                                             (arg.isStr() && arg.asStr().hasTemplates());
