@@ -39,11 +39,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -109,8 +109,9 @@ public class BootHelperTest extends AbstractMetatronTest {
     })
     void testABootCallsItsHelpersByTheirParametersNames(final String boot) throws IOException {
         // the statements as Machine.Helper.evaluate splits a file, and of them only those naming a boot/space helper: a
-        // boot's other statements construct their literals as they parse, its console among them. each one holds its
-        // call at the top, where the walk below reads, so a call nested in another instruction's argument fails here
+        // boot's other statements construct their literals as they parse, its console among them. the walk below reads
+        // the calls at a statement's top, so a statement whose only helper call is nested in another instruction's
+        // argument fails here, while a nested call beside a top-level one goes unread
         final List<String> statements = CommonUtil.splitOnNonQuotedSequence(mParser.stripComments(Files.readString(Path.of(boot))), ';', false).stream()
                 .filter(statement -> statement.contains("boot/space/"))
                 .toList();
@@ -126,10 +127,12 @@ public class BootHelperTest extends AbstractMetatronTest {
                 assertTrue(call.args().isEmpty() || call.args().isRec(), boot + " passes " + helper + " its arguments by name: " + call);
                 final List<String> errors = new ArrayList<>();
                 final List<Obj> evaluated = Machine.Helper.evaluate(Path.of(helper.toString()).toFile(), error -> errors.add(String.valueOf(error.parseException().getMessage()))).toList();
-                if (evaluated.isEmpty() && helper.equals(f("boot/space/dckr/socket.mtron")) && errors.stream().anyMatch(error -> error.contains("unable to construct style::T")))
+                if (evaluated.isEmpty() && helper.equals(f("boot/space/dckr/socket.mtron"))
+                        && errors.stream().anyMatch(error -> error.contains("unable to construct style::T") && error.contains("does not match inst range")))
                     continue;
                 assertFalse(evaluated.isEmpty(), helper + " evaluates to its instruction: " + errors);
                 final Inst declaration = evaluated.getFirst().asInst();
+                assertTrue(declaration.args().isEmpty() || declaration.args().isRec(), helper + " declares its parameters by name: " + declaration);
                 assertEquals(List.of(), undeclared(call, declaration), boot + " passes " + helper + " arguments it does not declare: " + call);
                 assertEquals(List.of(), leftOut(call, declaration), boot + " leaves out parameters " + helper + " requires: " + call);
             }
@@ -139,8 +142,10 @@ public class BootHelperTest extends AbstractMetatronTest {
     /**
      * what a helper requires is what its binder leaves unbound: a call that passes nothing binds each named parameter
      * to noobj or a fail, unless a default fills it, and a zeroable key or spec opts into absence. a filter with no
-     * default binds noobj and a conversion fails, so both are required. a name is declared whatever its coefficient
-     * ({?}port declares port), and a helper that declares nothing declares no name
+     * default binds noobj and a conversion fails, so both are required, as is a literal spec (a value, not a default:
+     * it binds what the call passes). a name is declared whatever its coefficient ({?}port declares port), and a helper
+     * that declares nothing declares no name. a helper file cannot declare an open list (a key that is a type, as
+     * Inst.Helper.isOpenArgs reads one): the parser refuses one, "(<T>=>int::T) [pair] is not a uri::T"
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -156,30 +161,33 @@ public class BootHelperTest extends AbstractMetatronTest {
             "(host=>uri::T,port=>as(int::T))         % ()                             % host,port % ",
             "()                                      % ()                             %      % ",
             "()                                      % (port=>8025)                   %      % port",
+            "(port=>8025)                            % ()                             % port % ",
+            "(flag=>isa(bool::T).else(false))        % ()                             %      % ",
     })
     void testAHelperRequiresWhatItsBinderLeavesUnbound(final String parameters, final String arguments, final String leftOut, final String undeclared) {
         final Inst helper = ObjmtronSerializer.parse("|inst?#{?}<=#{?}" + parameters + "{ _ }").apply().asInst();
         final Inst call = mParser.parse("<fs:boot/space/fixture.mtron>" + arguments).<Call>as().insts().getFirst();
         final Function<String, List<fURI>> names = cell -> null == cell ? List.of() : Arrays.stream(cell.split(",")).map(name -> f(name.trim())).toList();
-        assertEquals(names.apply(leftOut), leftOut(call, helper), "a call of " + parameters + " with " + arguments + " leaves out");
-        assertEquals(names.apply(undeclared), undeclared(call, helper), "a call of " + parameters + " with " + arguments + " passes undeclared");
+        assertAll(() -> assertEquals(names.apply(leftOut), leftOut(call, helper), "a call of " + parameters + " with " + arguments + " leaves out"),
+                () -> assertEquals(names.apply(undeclared), undeclared(call, helper), "a call of " + parameters + " with " + arguments + " passes undeclared"));
     }
 
     /**
      * the parameters a call leaves out that its helper requires: each declared parameter its binder
      * (Inst.Helper.resolveArgs) leaves at noobj or a fail in a call that passes nothing, less a zeroable key or spec, and
-     * less what the call passes. the bound values are read raw, never through at(), which would run an argument's code
+     * less what the call passes. the binder files a parameter under its key's uri, and a rec drops a noobj entry, so a
+     * parameter bound to noobj reads as noobj there
      */
     private static List<fURI> leftOut(final Inst call, final Inst helper) {
-        if (!helper.args().isRec() || Inst.Helper.isOpenArgs(helper.args()))
+        if (!helper.args().isRec())
             return List.of();
         final Set<fURI> passed = names(call.args());
-        final Map<Obj, Obj> bound = Inst.Helper.resolveArgs(helper.args(rec0()), helper, noobj()).asRec().recValue();
+        final Obj bound = Inst.Helper.resolveArgs(helper.args(rec0()), helper, noobj());
         return helper.args().asRec().elements()
                 .filter(parameter -> !parameter.first().uriValue().c().isZeroable() && !parameter.second().c().isZeroable())
                 .filter(parameter -> {
-                    final Obj value = bound.get(uri(parameter.first().uriValue()));
-                    return null == value || value.isNoObj() || value.isFail();
+                    final Obj value = bound.asRec().at(uri(parameter.first().uriValue()));
+                    return value.isNoObj() || value.isFail();
                 })
                 .map(parameter -> parameter.first().uriValue().cLess())
                 .filter(name -> !passed.contains(name))
@@ -187,21 +195,20 @@ public class BootHelperTest extends AbstractMetatronTest {
     }
 
     /**
-     * the names a call passes that its helper does not declare. an open declaration (a key that is a type,
-     * Inst.Helper.isOpenArgs) names the shape of the caller's keys, so it declares every name
+     * the names a call passes that its helper does not declare
      */
     private static List<fURI> undeclared(final Inst call, final Inst helper) {
-        if (Inst.Helper.isOpenArgs(helper.args()))
-            return List.of();
         final Set<fURI> declared = names(helper.args());
         return names(call.args()).stream().filter(name -> !declared.contains(name)).toList();
     }
 
     /**
      * the names an argument list gives, in order and coefficients aside: the parser keeps a key's coefficient in its
-     * uri ({?}port is port{?})
+     * uri ({?}port is port{?}). an ordered list gives none (the boot test refuses one by name)
      */
     private static Set<fURI> names(final Poly<?, ?> arguments) {
-        return arguments.keys().map(key -> key.uriValue().cLess()).collect(Collectors.toCollection(LinkedHashSet::new));
+        return arguments.isRec()
+                ? arguments.keys().map(key -> key.uriValue().cLess()).collect(Collectors.toCollection(LinkedHashSet::new))
+                : Set.of();
     }
 }
