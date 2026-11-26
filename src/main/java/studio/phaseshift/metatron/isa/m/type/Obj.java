@@ -396,7 +396,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default <O extends Obj> O orThrow(final String format, final Object... params) {
-        return orThrow(MTronException.of(format, params));
+        // THE EXCEPTION IS BUILT ONLY WHEN IT IS THROWN: built first, it formatted its params (a whole compiler rec for
+        // compiler().rewriter()) and recorded its trace on every call that answered, and about a twelfth of a rewrite's
+        // samples went to exceptions no one threw (2026-11-25)
+        if (this.isNoObj())
+            throw MTronException.of(format, params);
+        return (O) this;
     }
 
     default <O extends Obj> O as() {

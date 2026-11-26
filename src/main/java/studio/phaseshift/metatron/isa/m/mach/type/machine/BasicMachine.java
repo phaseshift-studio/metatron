@@ -136,7 +136,10 @@ public class BasicMachine extends AbstractMachine {
 
     @Override
     public Processor processor() {
-        final Obj proto = this.at(PROCESSOR).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
+        // every evaluation asks: the refusal, and the type its message names, are built only when there is none
+        final Obj proto = this.at(PROCESSOR);
+        if (proto.isNoObj())
+            throw MTronException.of("machine has no processor: %s", this.type().vid());
         return proto.isCall() ? proto.apply().as() : proto.as();
     }
 
@@ -146,7 +149,9 @@ public class BasicMachine extends AbstractMachine {
     public Compiler compiler() {
         if (null != this.cachedCompiler)
             return this.cachedCompiler;
-        final Obj proto = this.at(COMPILER).orThrow(MTronException.of("machine has no compiler: %s", this.type().vid()));
+        final Obj proto = this.at(COMPILER);
+        if (proto.isNoObj())
+            throw MTronException.of("machine has no compiler: %s", this.type().vid());
         return this.cachedCompiler = proto.isCall() ? proto.apply().as() : proto.as();
     }
 

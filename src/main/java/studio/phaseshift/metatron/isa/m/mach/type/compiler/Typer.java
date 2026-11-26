@@ -235,7 +235,9 @@ public interface Typer extends Component {
             if (null == dom)                              // nothing to deduce from: fail closed
                 return null;
             final Type rng = op.hasRng() ? T(op.rng()) : null;
-            return admitted(instSet.insts().stream(), op, dom, rng).findFirst().orElse(null);
+            // the family alone: a union answers it from its memoized merge, where streaming insts() scanned every
+            // instruction of every level per deduction
+            return admitted(instSet.insts(op).stream(), op, dom, rng).findFirst().orElse(null);
         }
 
         /**

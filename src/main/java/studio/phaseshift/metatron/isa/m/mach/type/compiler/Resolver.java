@@ -97,11 +97,11 @@ public interface Resolver extends Component {
     }
 
     default Selector selector() {
-        return this.at(uri(SELECTOR)).orThrow(MTronException.of("resolver has no selector: %s", this));
+        return this.at(uri(SELECTOR)).orThrow("resolver has no selector: %s", this);
     }
 
     default Binder binder() {
-        return this.at(uri(BINDER)).orThrow(MTronException.of("resolver has no binder: %s", this));
+        return this.at(uri(BINDER)).orThrow("resolver has no binder: %s", this);
     }
 
     public static class Helper {

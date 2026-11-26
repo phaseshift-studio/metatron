@@ -45,14 +45,11 @@ public final class Env {
     private final Rec peers;
     private final Rec machines;
     private final Set<fURI> authorities;
-    private final String fingerprint;
 
     private Env(final Rec peers, final Rec machines, final Set<fURI> authorities) {
         this.peers = peers;
         this.machines = machines;
         this.authorities = authorities;
-        this.fingerprint = Integer.toHexString(this.peers.jvm().hashCode()
-                ^ this.machines.jvm().hashCode() ^ this.authorities.hashCode());
     }
 
     /**
@@ -105,9 +102,10 @@ public final class Env {
     }
 
     /**
-     * A stable hash of the snapshot, so two snapshots of the same network compare equal.
+     * A stable hash of the snapshot, so two snapshots of the same network compare equal. Taken when asked: hashing the
+     * peer map hashes every peer's client rec, and a snapshot is taken on every law_shard pass that plans.
      */
     public String fingerprint() {
-        return this.fingerprint;
+        return Integer.toHexString(this.peers.jvm().hashCode() ^ this.machines.jvm().hashCode() ^ this.authorities.hashCode());
     }
 }

@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.ComponentUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -144,8 +145,8 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
 
     public BasicInstSet previous(final InstSet previous) {
         this.previous = previous;
-        // the enclosing level IS part of what this level's view answers, so reparenting changes its vocabulary
-        this.vocabularyChanged();
+        // the enclosing level IS part of what this level's view answers, so reparenting changes its instruction set
+        this.isaChanged();
         return this;
     }
 
@@ -191,7 +192,7 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         // MEMBERSHIP IS THIS LEVEL'S CONTRIBUTION: a refer or a re-refer changes what the union answers, and the
         // version says so — otherwise a parent's memoized view of this level would miss it (the same reason the
         // libraries below are recomputed on this path).
-        this.vocabularyChanged();
+        this.isaChanged();
         final fURI vid = isa.vid();
         if (this.referVids().stream().anyMatch(reference -> reference.isUri() && reference.uriValue().equals(vid))) {
             // ALREADY A MEMBER — REFRESH THE OBJECT. A re-mount (a new instance of the same ISA, which is what a test
@@ -201,6 +202,8 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
             this.imports.put(vid.toString(), isa);
             this.unrouted.remove(vid.toString());
             this.ownLibraries = null;
+            // once more, the member now in hand: a view taken while it was swapped in is retaken
+            this.isaChanged();
             return this;
         }
         final List<Obj> referred = new ArrayList<>();
@@ -218,6 +221,8 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         this.ownLibraries = null;
         // the jurisdiction follows the membership: the deepest path every referred ISA lies beneath
         this.jvm().put(uri(PATTERN), uri(commonPattern(this.references())));
+        // once more, the member now recorded: a view taken while it was added is retaken
+        this.isaChanged();
         return this;
     }
 
@@ -257,7 +262,7 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
             this.unrouted.add(vid.toString());
             this.ownLibraries = null;
             // the member stops being routed, which changes the level's view exactly as a refer does
-            this.vocabularyChanged();
+            this.isaChanged();
         }
     }
 
@@ -477,38 +482,44 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         final java.util.function.Predicate<Obj> replaced = obj.isNoObj()
                 ? entry -> null != identity(entry) && name.equals(identity(entry).name())
                 : entry -> identity(obj).equals(identity(entry));
-        this.vocabularyChanged();
-        switch (table) {
-            case REWRITE -> REWRITE_TABLE.values().removeIf(replaced::test);
-            case INST -> INST_TABLE.values().forEach(insts -> insts.removeIf(replaced::test));
-            case TYPE -> TYPE_TABLE.values().removeIf(replaced::test);
-            default -> CONST_TABLE.values().removeIf(replaced::test);
-        }
-        if (obj.isNoObj())
-            return obj;
-        // what this level inherits under that identity, its imports' entry else the enclosing machine's: restated, it adds nothing
-        final java.util.function.Function<InstSet, Set<? extends Obj>> entries = switch (table) {
-            case REWRITE -> InstSet::rewrites;
-            case INST -> InstSet::insts;
-            case TYPE -> InstSet::types;
-            default -> InstSet::consts;
-        };
-        final Obj inherited = Stream.concat(this.ownReferences().stream(), Stream.ofNullable(this.previous))
-                .flatMap(isa -> entries.apply(isa).stream().map(Obj.class::cast))
-                .filter(entry -> identity(obj).equals(identity(entry)))
-                .findFirst().orElse(noobj());
-        if (obj.equals(inherited))
-            return obj;
-        switch (table) {
-            case REWRITE -> REWRITE_TABLE.put(obj.tid(), obj.asInst());
-            case INST -> {
-                INST_TABLE.computeIfAbsent(obj.tid().basePath(), base -> new LinkedHashSet<>()).add(obj.asInst());
-                Machine.current().memory().registerRedirect(f(name), obj.tid().basePath());
+        this.isaChanged();
+        try {
+            switch (table) {
+                case REWRITE -> REWRITE_TABLE.values().removeIf(replaced::test);
+                case INST -> INST_TABLE.values().forEach(insts -> insts.removeIf(replaced::test));
+                case TYPE -> TYPE_TABLE.values().removeIf(replaced::test);
+                default -> CONST_TABLE.values().removeIf(replaced::test);
             }
-            case TYPE -> TYPE_TABLE.put(obj.vid(), obj.asType());
-            default -> CONST_TABLE.put(obj.vid(), obj);
+            if (obj.isNoObj())
+                return obj;
+            // what this level inherits under that identity, its imports' entry else the enclosing machine's: restated, it adds nothing
+            final java.util.function.Function<InstSet, Set<? extends Obj>> entries = switch (table) {
+                case REWRITE -> InstSet::rewrites;
+                case INST -> InstSet::insts;
+                case TYPE -> InstSet::types;
+                default -> InstSet::consts;
+            };
+            final Obj inherited = Stream.concat(this.ownReferences().stream(), Stream.ofNullable(this.previous))
+                    .flatMap(isa -> entries.apply(isa).stream().map(Obj.class::cast))
+                    .filter(entry -> identity(obj).equals(identity(entry)))
+                    .findFirst().orElse(noobj());
+            if (obj.equals(inherited))
+                return obj;
+            switch (table) {
+                case REWRITE -> REWRITE_TABLE.put(obj.tid(), obj.asInst());
+                case INST -> {
+                    INST_TABLE.computeIfAbsent(obj.tid().basePath(), base -> new LinkedHashSet<>()).add(obj.asInst());
+                    Machine.current().memory().registerRedirect(f(name), obj.tid().basePath());
+                }
+                case TYPE -> TYPE_TABLE.put(obj.vid(), obj.asType());
+                default -> CONST_TABLE.put(obj.vid(), obj);
+            }
+            return obj;
+        } finally {
+            // ... and once more where the tables are done: a view a reader memoized while they changed was stamped with
+            // the first bump, so this one retakes it
+            this.isaChanged();
         }
-        return obj;
     }
 
     /**
@@ -553,14 +564,52 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         return this.merge(super.types(), InstSet::types, Type::vid);
     }
 
+    /**
+     * A MERGE AND THE ISA VERSION IT WAS TAKEN AT. The insts and rewrites a union answers are asked on every rewrite
+     * pass and every law gate, so each is merged once per {@link AbstractInstSet#isaVersion()}. The version is read
+     * before the merge, so a change that lands during it leaves the merge stale at once.
+     */
+    private record View<T>(long version, T value) {
+    }
+
+    private volatile View<Set<Inst>> instsView = null;
+    private volatile View<Set<Inst>> rewritesView = null;
+    private volatile View<Map<fURI, List<Inst>>> familiesView = null;
+
     @Override
     public Set<Inst> insts() {
-        return this.merge(super.insts(), InstSet::insts, Inst::tid);
+        final long version = isaVersion();
+        final View<Set<Inst>> view = this.instsView;
+        if (null != view && version == view.version())
+            return view.value();
+        final Set<Inst> insts = Collections.unmodifiableSet(this.merge(super.insts(), InstSet::insts, Inst::tid));
+        this.instsView = new View<>(version, insts);
+        return insts;
+    }
+
+    /**
+     * One family of the merged insts, scanned once per family and ISA version — the deduction a law gate makes per
+     * matched instruction scanned the whole union each time.
+     */
+    @Override
+    public List<Inst> insts(final fURI op) {
+        final long version = isaVersion();
+        final Set<Inst> insts = this.insts();
+        View<Map<fURI, List<Inst>>> families = this.familiesView;
+        if (null == families || version != families.version())
+            this.familiesView = families = new View<>(version, new java.util.concurrent.ConcurrentHashMap<>());
+        return families.value().computeIfAbsent(op.basePath().asNode(), family -> Typer.Helper.family(insts.stream(), family).toList());
     }
 
     @Override
     public Set<Inst> rewrites() {
-        return this.merge(super.rewrites(), InstSet::rewrites, Inst::tid);
+        final long version = isaVersion();
+        final View<Set<Inst>> view = this.rewritesView;
+        if (null != view && version == view.version())
+            return view.value();
+        final Set<Inst> rewrites = Collections.unmodifiableSet(this.merge(super.rewrites(), InstSet::rewrites, Inst::tid));
+        this.rewritesView = new View<>(version, rewrites);
+        return rewrites;
     }
 
     /**

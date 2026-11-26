@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
@@ -156,12 +157,22 @@ public interface InstSet extends Space, Component.Prefix {
 
     Set<Inst> insts();
 
+    /**
+     * ONE FAMILY OF {@link #insts()}: the contracts whose base path bimatches {@code op}'s
+     * ({@link Typer.Helper#family}), in the order {@link #insts()} answers them — what a deduction scans for. A union
+     * answers it from its memoized view, so the scan runs once per family and ISA version.
+     */
+    default List<Inst> insts(final fURI op) {
+        return Typer.Helper.family(this.insts().stream(), op).toList();
+    }
+
     Set<Inst> rewrites();
 
     /**
-     * THE VERSION OF THIS LEVEL'S VOCABULARY — a value that advances whenever what this level contributes to a
-     * union changes (its {@link #insts()}, {@link #rewrites()}, {@link #types()}, {@link #consts()}), and that never
-     * decreases.
+     * THE VERSION OF THIS LEVEL — a value that advances whenever what this level contributes to a union changes (its
+     * {@link #insts()}, {@link #rewrites()}, {@link #types()}, {@link #consts()}), and that never decreases. Every
+     * level's bump also advances the ISA version ({@code AbstractInstSet.isaVersion()}), the one number a union's
+     * memoized views are read against.
      * <p>
      * It is the freshness signal a DERIVED VIEW carries: a consumer that memoizes an answer built from this level's
      * tables stores the version it read, and re-reads the tables only when the number it sees is not the one it
@@ -169,7 +180,7 @@ public interface InstSet extends Space, Component.Prefix {
      * cannot observe that a member's tables were written. {@code setup()} populates a member AFTER it was mounted
      * ({@code importInstSetStream} is {@code mount} then {@code setup}), and a later {@code write} migrates a rule
      * across levels by pattern. Without this signal a union has only two options and both are wrong: re-derive the
-     * whole fold on every call, or cache on membership alone and keep serving a vocabulary that has since changed.
+     * whole fold on every call, or cache on membership alone and keep serving an instruction set that has since changed.
      * <p>
      * A store whose contribution is CONSTANT answers {@code 0} forever. That is not "unknown" — it is "nothing here
      * ever changes", which is a claim a memo can rely on (see {@code noobjSpace}). Consumers compare versions for

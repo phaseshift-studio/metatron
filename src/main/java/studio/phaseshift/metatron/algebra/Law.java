@@ -425,7 +425,7 @@ public enum Law {
          * the machine was not yet up; a retake re-reads only the claims a change can have reached ({@link #claims}).
          */
         private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Inst>> claimants, Map<fURI, List<Rec>> rules,
-                              Map<fURI, Claim> read) {
+                              Map<fURI, Claim> read, Map<Law, Map.Entry<Rec, List<Rec>>> claimed) {
         }
 
         /**
@@ -436,7 +436,7 @@ public enum Law {
         private record Claim(Inst inst, boolean own, Rec derivation, Map<Law, Inst> claimed) {
         }
 
-        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), Map.of(), Map.of());
+        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), Map.of(), Map.of(), new ConcurrentHashMap<>());
         private static volatile List<PendingWrites.Write> CLAIMS_AT = null;
         private static volatile long CLAIMS_SEEN = -1;
         private static volatile boolean CLAIMS_LOADED = false;
@@ -457,7 +457,7 @@ public enum Law {
          */
         public static void reset() {
             synchronized (CLAIMED) {
-                CLAIMS = new Claims(Map.of(), Map.of(), Map.of(), Map.of());
+                CLAIMS = new Claims(Map.of(), Map.of(), Map.of(), Map.of(), new ConcurrentHashMap<>());
                 CLAIMS_AT = null;
                 CLAIMS_SEEN = -1;
                 CLAIMS_LOADED = false;
@@ -600,7 +600,7 @@ public enum Law {
                     }
                 final Map<fURI, List<Rec>> theories = new LinkedHashMap<>();
                 bound.forEach((theory, rule) -> theories.put(theory, List.copyOf(rule)));
-                final Claims snapshot = new Claims(derivations, terms, theories, read);
+                final Claims snapshot = new Claims(derivations, terms, theories, read, new ConcurrentHashMap<>());
                 CLAIMS = snapshot;
                 CLAIMS_AT = revision;
                 CLAIMS_SEEN = written;
@@ -1332,12 +1332,21 @@ public enum Law {
          * where the law holds at the carrier.
          */
         public static List<Rec> claimed(final Rec rule, final Law law) {
+            // BOUND ONCE PER SNAPSHOT: the binding is a function of the rule and the claims alone, and a law's rewrite asks
+            // it on every pass with the same rule (its declared argument), so the snapshot keeps the last binding per law
+            // for the rule it was made from; a retaken snapshot starts with none
+            final Claims claims = claims();
+            final Map.Entry<Rec, List<Rec>> kept = claims.claimed().get(law);
+            if (null != kept && kept.getKey() == rule)
+                return kept.getValue();
             final List<Rec> bound = new ArrayList<>();
             for (final Rel equation : rule.<Rel>elements().toList())
                 if (equation.first().isCall() && equation.second().isCall())
-                    for (final Inst term : claimants(law))
+                    for (final Inst term : claims.claimants().getOrDefault(law, List.of()))
                         bound.add(rec(fill(equation.first(), term), fill(equation.second(), term)));
-            return bound;
+            final List<Rec> claimed = List.copyOf(bound);
+            claims.claimed().put(law, Map.entry(rule, claimed));
+            return claimed;
         }
 
         /**
@@ -1366,28 +1375,70 @@ public enum Law {
             Code out = code;
             for (final Rel equation : rules.stream().flatMap(rule -> rule.<Rel>elements()).toList()) {
                 final Code scanned = out;
+                // the chain's instructions, read once: insts() answers a copy per call
+                final List<Inst> chain = scanned.insts();
                 final List<Inst> pattern = equation.first().asCall().insts();
                 // a rule naming an op the chain does not hold cannot match it, so it is not scanned at all: every element a
                 // run must take ({+}# takes one at least, {*}# may take none) tests an instruction of the chain
                 if (pattern.isEmpty() || !pattern.stream().allMatch(element -> element.tid().b().isZeroable()
-                        || scanned.insts().stream().anyMatch(inst -> inst.tid().basePath().test(element.tid().basePath()))))
+                        || chain.stream().anyMatch(inst -> inst.tid().basePath().test(element.tid().basePath()))))
                     continue;
+                final boolean unspanned = pattern.stream().allMatch(element -> element.tid().b().isOne());
+                // A NAME INSIDE A CODE ARGUMENT BINDS ONLY FROM A CALL ({@link Code.Helper#bind}: a name declared inside a
+                // code has nothing to bind in a value). So an unspanned rule whose code argument declares a name no other
+                // place of the rule declares matches only where the chain holds a call in that argument's place, and a
+                // chain with no such run is not bound against the rule at all: binding type-tests each value against the
+                // code, and that test resolves the code. derivation_contraction's plus(map(#::T@b).neg()) against every
+                // plus(2) was a quarter of a rewrite's samples (2026-11-25)
+                if (unspanned) {
+                    final Map<fURI, Integer> places = new HashMap<>();
+                    final List<int[]> codes = new ArrayList<>();
+                    final List<Set<fURI>> inside = new ArrayList<>();
+                    for (int k = 0; k < pattern.size(); k++) {
+                        final fURI own = Inst.Helper.name(pattern.get(k));
+                        if (null != own)
+                            places.merge(own, 1, Integer::sum);
+                        if (!pattern.get(k).args().isLst())
+                            continue;
+                        for (int slot = 0; slot < pattern.get(k).args().count(); slot++) {
+                            final Obj arg = pattern.get(k).arg(slot);
+                            final Set<fURI> declared = new HashSet<>();
+                            if (arg.isCall()) {
+                                Inst.Helper.declarations(arg.asCall().insts(), declared);
+                                codes.add(new int[]{k, slot});
+                                inside.add(declared);
+                            } else if (null != Inst.Helper.name(arg))
+                                declared.add(Inst.Helper.name(arg));
+                            declared.forEach(name -> places.merge(name, 1, Integer::sum));
+                        }
+                    }
+                    final List<int[]> calls = IntStream.range(0, codes.size())
+                            .filter(c -> inside.get(c).stream().anyMatch(name -> 1 == places.get(name)))
+                            .mapToObj(codes::get)
+                            .toList();
+                    if (!calls.isEmpty() && IntStream.rangeClosed(0, chain.size() - pattern.size()).noneMatch(start ->
+                            IntStream.range(0, pattern.size()).allMatch(k -> chain.get(start + k).tid().basePath().test(pattern.get(k).tid().basePath()))
+                                    && calls.stream().allMatch(place -> {
+                                final Inst inst = chain.get(start + place[0]);
+                                return inst.args().isLst() && place[1] < inst.args().count() && inst.arg(place[1]).isCall();
+                            })))
+                        continue;
+                }
                 // A LITERAL IN A RULE IS THAT VALUE (2026-11-25): the matcher type-tests an argument, and a call tests as any
                 // value of its coefficient, since it computes later. So count = map(1).sum(), run backward, took
                 // map(plus(2).mult(3)).sum() for map(1).sum(), and {1,2,3} answered 3, not 36. In an unspanned rule, a
                 // number, a str, a bool or bytes holds only an equal argument in its place; a type is a hole and a code a
                 // pattern, and the matcher binds both as before
-                final boolean unspanned = pattern.stream().allMatch(element -> element.tid().b().isOne());
-                final List<Inst> next = Call.Helper.update(scanned.insts(), rec(equation.first(), equation.second()), (start, length) ->
-                        scanned.insts().subList(start, start + length).stream().allMatch(inst -> inst.tid().b().isOne() && inst.tid().d().isOne())
+                final List<Inst> next = Call.Helper.update(chain, rec(equation.first(), equation.second()), (start, length) ->
+                        chain.subList(start, start + length).stream().allMatch(inst -> inst.tid().b().isOne() && inst.tid().d().isOne())
                                 && (!unspanned || IntStream.range(0, length).allMatch(k -> !pattern.get(k).args().isLst()
                                 || IntStream.range(0, (int) pattern.get(k).args().count()).allMatch(slot -> {
                                     final Obj literal = pattern.get(k).arg(slot);
                                     return literal.isType() || !literal.isMono() || literal.isUri()
-                                            || literal.equals(scanned.insts().get(start + k).arg(slot));
+                                            || literal.equals(chain.get(start + k).arg(slot));
                                 })))
                                 && admits.apply(scanned, start, length));
-                out = next.equals(scanned.insts()) ? scanned : code(next);
+                out = next.equals(chain) ? scanned : code(next);
             }
             return out;
         }

@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -57,8 +58,8 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     protected final Map<fURI, Inst> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
 
     /**
-     * THIS LEVEL'S VOCABULARY VERSION — see {@link InstSet#runtimeVersion()}. One counter per level, and it only
-     * advances through {@link #vocabularyChanged()}, so the doors that can change the vocabulary are exactly the
+     * THIS LEVEL'S VERSION — see {@link InstSet#runtimeVersion()}. One counter per level, and it only advances through
+     * {@link #isaChanged()}, so the doors that can change what the instruction set answers are exactly the
      * call sites of that method: a write into the tables above ({@link #write}), the mount-time population in
      * {@link #setup()} together with the algebra it drains, and — on a level that is a UNION — a change of
      * membership, which {@code BasicInstSet} reports from {@code refer}, {@code unroute} and {@code previous}.
@@ -69,13 +70,26 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
      */
     private volatile int runtimeVersion = 0;
 
+    /**
+     * THE ISA VERSION — every level's {@link #isaChanged()} in this JVM, counted together. A union's view (the merge
+     * {@code BasicInstSet} answers its kind accessors with) is a function of every level it walks, and a parent cannot
+     * observe that a member's tables were written, so the union memoizes against this one number: a change at any level
+     * retakes every view, and an unchanged instruction set answers from the memo. Changes are configuration events,
+     * never per evaluation, so one coarse number costs one merge per change and a read per lookup.
+     */
+    private static final AtomicLong ISA_VERSION = new AtomicLong();
+
+    public static long isaVersion() {
+        return ISA_VERSION.get();
+    }
+
     @Override
     public int runtimeVersion() {
         return this.runtimeVersion;
     }
 
     /**
-     * SAY THAT THIS LEVEL'S VOCABULARY CHANGED — the single bump, so the counter cannot advance without a caller
+     * SAY THAT THIS LEVEL'S INSTRUCTION SET CHANGED — the single bump, so the counter cannot advance without a caller
      * saying why, and a new mutating door has one call to add rather than a field to find.
      * <p>
      * {@code int}, {@code volatile}, and NOT atomic, on purpose: two racing bumps can collapse into one (the loser
@@ -84,8 +98,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
      * one greater — so a bump a memo has not seen still leaves it a number it did not store. A lost increment can
      * therefore only make the counter coarser (one memo miss), never a stale hit.
      */
-    protected void vocabularyChanged() {
+    protected void isaChanged() {
         this.runtimeVersion++;
+        ISA_VERSION.incrementAndGet();
     }
 
     // ======================== the names ========================
@@ -314,7 +329,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         // sees it), migrates a pattern-less rule into the level that owns it, and drains the builders' algebra — all
         // of it landing in this level AFTER the level became a union member. The bump is last so one number covers
         // every one of those doors, including the ones setup cannot know it triggered.
-        this.vocabularyChanged();
+        this.isaChanged();
         // THE SET'S .mtron FILE, ONE TO ONE WITH ITS JAVA CLASS: ..isa.m.mach.machInstSet has ..isa/m/mach/mach.mtron,
         // written in src/main/mtron and packaged beside the class. It is evaluated at the end of this setup, once the
         // set's own tables are in place (a subclass's lines after super.setup() run later); a file that fails is
@@ -544,7 +559,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         () -> {
                             // EVERY BRANCH BELOW LANDS IN A TABLE, so the version advances once, here, where the
                             // mutation begins — a version bumped per branch is a version a new branch can forget.
-                            this.vocabularyChanged();
+                            this.isaChanged();
                             // noobj is the zero inst, so an actual instruction is told by isObjInst: an isInst() here took
                             // every noobj write for an instruction, filed noobj in INST_TABLE, and never reached the delete
                             if (obj.isObjInst()) {
@@ -577,6 +592,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 CONST_TABLE.put(vid, obj);
                                 // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
                             }
+                            // ... and once more where it ends: a view a reader memoized while the table changed was
+                            // stamped with the first bump, so this one retakes it
+                            this.isaChanged();
                             return QProc.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
                         }));
     }

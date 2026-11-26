@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.algebra.rewrite.*;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -93,9 +94,19 @@ public final class Shard {
      * EXPLICIT (Marko, 2026-11-23): the roster is knowledge, not reach, so a machine nothing dialed is never a
      * candidate on its own; a program that wants peers dials them. One rule, read by {@link #apply} off its snapshot
      * and by the pool off the peer map before any snapshot is taken (mInstSet's law_shard).
+     * <p>
+     * A PEER NO LANE CAN BE DEALT TO LEAVES THE MACHINE LONE: one that carries no host (an accepted session, with no
+     * address to dial back) or whose client serves none of what a shipped route needs (the web's gateways,
+     * {@code http_client}, serve {@code to} but no {@code eval}) is no place {@link PlaceResolver} resolves, so planning
+     * over it declines at every cut. Only the declared half of {@link PlaceResolver#serves} is read here, a map read:
+     * whether a dial is online is asked when the plan resolves its places. Every boot dials both gateways, so a
+     * machine with them and nothing else planned every chain on every pass, and declined (2026-11-25: a third of a
+     * rewrite's samples).
      */
     public static boolean lone(final Rec peers, final Code code) {
-        return peers.isEmpty() && code.insts().stream().noneMatch(inst -> inst.tid().hasQ(PLACE));
+        return code.insts().stream().noneMatch(inst -> inst.tid().hasQ(PLACE))
+                && peers.values().noneMatch(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri()
+                && Placement.Shape.TREE.inst().stream().allMatch(inst -> Network.Helper.overrideIn(peer.asRec().at(uri(CLIENT)), inst).isObjInst()));
     }
 
     /**

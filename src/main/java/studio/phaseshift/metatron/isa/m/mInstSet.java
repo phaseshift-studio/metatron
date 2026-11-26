@@ -1163,15 +1163,18 @@ public class mInstSet extends AbstractInstSet {
                         // would count 2 where each member counts 1
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_factor"), code -> {
                             final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
-                            if (null == op)
+                            // a chain that holds no occurrence of the op has nothing to factor, so it is never typed for one
+                            // (the typing is a resolver probe of the whole chain, and almost no chain branches)
+                            final List<Inst> insts = code.insts();
+                            if (null == op || insts.stream().noneMatch(inst -> op.basePath().equals(inst.tid().basePath())))
                                 return code;
                             final Predicate<Obj> factorable = m -> m.isCode() && m.c().isOne() && 1 < m.asCode().insts().size();
                             // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch
                             final List<Type> carriers = Rewriter.Helper.carriers(code);
                             boolean changed = false;
-                            final List<Inst> out = new ArrayList<>(code.insts().size() + 1);
-                            for (int i = 0; i < code.insts().size(); i++) {
-                                final Inst inst = code.insts().get(i);
+                            final List<Inst> out = new ArrayList<>(insts.size() + 1);
+                            for (int i = 0; i < insts.size(); i++) {
+                                final Inst inst = insts.get(i);
                                 // A LAYOUT FACTORS NOTHING: a head run ahead of a deal changes what each lane is dealt
                                 // (a filter moves the members between lanes), and a lane's head is its move
                                 final List<Obj> members = op.basePath().equals(inst.tid().basePath()) && !inst.args().isRec() && !BranchInst.isLayout(inst)
@@ -2182,14 +2185,21 @@ public class mInstSet extends AbstractInstSet {
                 final Code rewritten = MCode.of(new ArrayList<>(originalInsts)).rewrite();
                 final long rw1 = System.nanoTime();
                 final Code resolved = Machine.current().compiler().resolver().apply(noobj(), rewritten);
+                // EACH ROW TIMES ITS OWN STAGE (2026-11-25). The typer is the compile's last stage, so it is timed with the
+                // resolver, and the run is the processor's alone: resolved.apply(noobj()) handed the code to
+                // Machine.evaluate, which compiled it again, so the apply row held a second rewrite and resolve, and the
+                // resolve row was timed from the start of the rewrite
+                final Code typed = Machine.current().compiler().typer().apply(resolved);
                 final long r1 = System.nanoTime();
                 final long a0 = System.nanoTime();
-                answer.set(Machine.Helper.evalAt(home, () -> resolved.apply(noobj())));
+                answer.set(Machine.Helper.evalAt(home, () -> typed.insts().isEmpty()
+                        ? typed.apply(noobj())
+                        : Machine.current().processor().apply(typed).apply(noobj())));
                 final long a1 = System.nanoTime();
                 rewriteMin = Math.min(rewriteMin, rw1 - rw0);
                 rewriteMax = Math.max(rewriteMax, rw1 - rw0);
-                resolveMin = Math.min(resolveMin, r1 - rw0);
-                resolveMax = Math.max(resolveMax, r1 - rw0);
+                resolveMin = Math.min(resolveMin, r1 - rw1);
+                resolveMax = Math.max(resolveMax, r1 - rw1);
                 applyMin = Math.min(applyMin, a1 - a0);
                 applyMax = Math.max(applyMax, a1 - a0);
                 lastRewritten.set(rewritten);
