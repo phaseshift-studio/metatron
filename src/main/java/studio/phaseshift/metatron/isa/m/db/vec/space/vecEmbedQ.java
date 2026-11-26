@@ -23,17 +23,23 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Parser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.EMBED;
+import static studio.phaseshift.metatron.Tokens.MODEL;
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -52,13 +58,19 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class vecEmbedQ extends BaseQ {
 
-    public vecEmbedQ(final vecSpace space) {
-        super(buildJvm(space), EMBEDQ_PATTERN, EMBEDQ_TID);
+    /**
+     * @param space the space whose embeddings this reads
+     * @param model the model the space embeds with, or the spec it is built from, as its embedq definition names it
+     *              (embedq::[model=>...]); noobj when it names none, and then the space's config function embeds
+     */
+    public vecEmbedQ(final vecSpace space, final Obj model) {
+        super(buildJvm(space, model), EMBEDQ_PATTERN, EMBEDQ_TID);
     }
 
-    private static Map<Obj, Obj> buildJvm(final vecSpace space) {
+    private static Map<Obj, Obj> buildJvm(final vecSpace space, final Obj model) {
         return mutableMap(
                 uri(PATTERN), uri(EMBEDQ_PATTERN),
+                uri(MODEL), model,
                 uri(PRE_READ), instC(
                         M_ISA_INST_TID
                                 .dom(ALL.maybe())
@@ -88,5 +100,20 @@ public class vecEmbedQ extends BaseQ {
                 uri(POST_WRITE), noobj(),
                 uri(QLESS_WRITE), noobj()
         );
+    }
+
+    /**
+     * the embedding of doc by the model this embedq names. The first embedding builds the model from its spec (a cast
+     * to model::T, which builds nothing for an obj already typed model::T) and keeps it here in place of the spec, so
+     * a space mounts with no model server running and builds its model once. A build that fails answers its fail, and
+     * the spec stays for the next write. Both calls go through the machine (the instruction set defining model::T and
+     * embed already depends on this one), so the cast and embed are resolved as mtron resolves them
+     */
+    public Obj embed(final Obj doc) {
+        final Obj model = Machine.evaluate(this.at(uri(MODEL)), Parser.Helper.toCode(Machine.parse("as(model::T)")));
+        if (model.isFail())
+            return model;
+        this.at(uri(MODEL), model, MUTABLE);
+        return Machine.evaluate(model, instB(f(EMBED), lst(doc)).asCode());
     }
 }

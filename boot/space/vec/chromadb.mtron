@@ -4,11 +4,13 @@
      up --wait) before the space is built.
      args (the caller supplies the defaults from boot/args):
        saddr, sport, simg
-     each document is embedded by the model whose spec the caller writes to
-     /sys/model/embed (provider, protocol, host, llm): the first write builds it and
-     keeps it there in place of the spec, and a build that fails writes nothing, so
-     the next write builds again.  the space mounts with no model, and a write
-     that brings no embedding fails without one ==]
+     each document that brings no embedding is embedded by the model the space
+     names in its embedq definition: whatever the caller wrote to
+     /sys/model/embed before this file is read, a model or the spec it is built
+     from (provider, protocol, host, llm).  the first such write builds it and
+     keeps it in the embedq in place of the spec, and a build that fails fails
+     its write and leaves the spec, so the next write builds again.  the space
+     mounts with no model server running ==]
 |inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T){
   print("chromadb: pulling container from ${!*simg}").
   from(docker:container/metatron_chroma).
@@ -30,7 +32,5 @@
   -<[pattern  => embed:#,
      host     => <http://${!*saddr}:${!*sport}/api/v2>,
      driver   => <studio.phaseshift.metatron.isa.m.db.vec.space.ChromaV2Client>,
-     q        => [incrq::[=>],embedq::[=>]],
-     route    => -< [embed: => <>],
-     config   => [embed => [# => inst?lst[real]<=#{?}(doc=>#::T){
-                   *</sys/model/embed>.as(model::T).to(/sys/model/embed).embed(*doc) }]]]@</memory/space/vec/chroma>.as(vecspace::T) }
+     q        => [incrq::[=>],embedq::[model=>!*</sys/model/embed>]],
+     route    => -< [embed: => <>]]@</memory/space/vec/chroma>.as(vecspace::T) }

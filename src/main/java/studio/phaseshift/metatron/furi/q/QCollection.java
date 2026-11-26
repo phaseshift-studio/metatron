@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
@@ -149,7 +150,15 @@ public final class QCollection {
     public static final Type EMBEDQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(EMBEDQ_TID)
-            .constructor(QCollection::embedQ)
+            // the rec an embedq is built from may name the model a space embeds with, embedq::[model=>...], and the
+            // embedq keeps it (Marko, 2026-11-26: "it should be in the embedq definition")
+            .constructor(MInst.instC(INST_CTOR_TID.dom(ALL.maybe()).rng(EMBEDQ_TID), lst(), (lhs, inst) -> {
+                final QProc embedq = embedQ();
+                final Obj model = lhs.orElse(MRec.rec0()).asRec().at(uri(MODEL));
+                if (!model.isNoObj())
+                    embedq.at(uri(MODEL), model, Poly.MUTABLE);
+                return embedq;
+            }))
             .create();
     //
     public static final String ANALQ = "analq";

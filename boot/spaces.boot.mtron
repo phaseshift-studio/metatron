@@ -86,7 +86,7 @@ print("{{y}}gremlin : grph space\n{{X}}");
                                    sport => !*boot/args/gremlin/port,
                                    simg  => !*boot/args/gremlin/image);
 print("{{y}}chromadb: vec space\n{{X}}");
-[== the model spec the embed: space builds its embedding model from, at an address every machine reads ==]
+[== the model spec the embed: space's embedq names, at the known address the module reads ==]
 </sys/model/embed> -> *boot/args/ollama;
 <fs:boot/space/vec/chromadb.mtron>(saddr => !*boot/args/chroma/host,
                                    sport => !*boot/args/chroma/port,

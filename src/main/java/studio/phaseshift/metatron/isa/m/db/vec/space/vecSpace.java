@@ -93,7 +93,8 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
             .isaPredicate(rec(
                     uri(HOST), URI_TYPE,
                     uri(DRIVER), URI_TYPE,
-                    uri(CONFIG), rec(uri(EMBED), rec(URI_TYPE, ALL_TYPE))))
+                    // a space whose embedq names its model needs no embedding function
+                    uri(CONFIG).maybe(), rec(uri(EMBED), rec(URI_TYPE, ALL_TYPE)).maybe()))
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(VEC_SPACE_TID),
                     lst(REC_TYPE),
                     (lhs, inst) -> {
@@ -251,7 +252,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
             toAdd = new vecIncrQ(this);
         else if (qProc.pattern().equals(
                 studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_PATTERN))
-            toAdd = new vecEmbedQ(this);
+            toAdd = new vecEmbedQ(this, qProc.at(uri(MODEL)));
         else
             toAdd = qProc;
         final Obj key = uri(QPROC);
@@ -361,7 +362,15 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 final fURI collId = resolveCollectionId(dp.collection(), true);
                 final boolean isAlreadyEmbedded = obj.test(VEC_EMBEDDING_TYPE);
                 final Obj rawObj = isAlreadyEmbedded ? obj.asRec().at(OBJ) : obj;
-                final Obj embedded = isAlreadyEmbedded ? obj.asRec().at(EMBED) : this.sjvm().embeddingFunction(f(dp.collection())).apply(obj);
+                // a document that carries no embedding is embedded by the model the space's embedq names, and by the
+                // config's embedding function when the embedq names none
+                final Obj embedded = isAlreadyEmbedded
+                        ? obj.asRec().at(EMBED)
+                        : this.at(uri(QPROC)).orElse(lst()).asLst().<QProc>elements()
+                                .filter(q -> q instanceof vecEmbedQ && !q.at(uri(MODEL)).isNoObj())
+                                .findFirst()
+                                .map(q -> ((vecEmbedQ) q).embed(obj))
+                                .orElseGet(() -> this.sjvm().embeddingFunction(f(dp.collection())).apply(obj));
                 final Rec metadata = isAlreadyEmbedded ? obj.asRec().at(META).orElse(rec0()) : rec0();
                 // a failed embedding is its own failure (a model that could not be built, say), and an embedding that is no
                 // lst of reals, an empty one included, is no embedding: neither is cast first (the client casts each element
