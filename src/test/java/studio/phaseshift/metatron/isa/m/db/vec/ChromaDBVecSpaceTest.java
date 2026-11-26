@@ -172,10 +172,11 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
     }
 
     /**
-     * an embedding that is no lst of reals, an empty one included, fails its write and names its source: the function
-     * that answered it (here one whose range admits any answer), or the address a carried lst was written to, pinned
-     * with the embedding in the whole message. A cast of it, or of an element in the client, would fail the write with a
-     * class cast that names neither
+     * an embedding that is no lst of reals, an empty one or one real among others included, fails its write and names
+     * its source: the function that answered it (here one whose range admits any answer), or the address a carried lst
+     * was written to, pinned with the embedding in the whole message. A carried embedding that is no lst is no carried
+     * embedding at all: the document goes to the function. A cast of it, or of an element in the client, would fail the
+     * write with a class cast that names neither
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -184,6 +185,9 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
             "[\"flat\"] % [n=>3]                             % the embedding function of collection pile answered",
             "[1,2]      % [n=>3]                             % the embedding function of collection pile answered",
             "[,]        % [n=>3]                             % the embedding function of collection pile answered",
+            "[0.5,true] % [n=>3]                             % the embedding function of collection pile answered",
+            "\"flat\"   % [obj=>\"spark\",embed=>3]            % the embedding function of collection pile answered",
+            "[0.5,0.25] % [obj=>\"spark\",embed=>[,]]          % the embedding written to flatembed:pile/volta is [,], not an embedding",
             "[0.5,0.25] % [obj=>\"spark\",embed=>[1,2]]       % the embedding written to flatembed:pile/volta is [1,2], not an embedding",
             "[0.5,0.25] % [obj=>\"spark\",embed=>[true,false]] % the embedding written to flatembed:pile/volta is [true,false], not an embedding",
     })
