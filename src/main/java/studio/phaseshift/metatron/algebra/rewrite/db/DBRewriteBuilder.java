@@ -336,7 +336,10 @@ public class DBRewriteBuilder<S extends Space> {
      * Create the optimized instruction that executes the native database operation.
      */
     protected Inst createOptimizedInst(final S typedSpace, final fURI expandedfURI, final C<?, ?> coeff) {
-        final DataPath dp = DataPath.withoutDB(expandedfURI);
+        // A SOURCE NO ROUTE STRIPPED IS STILL ABSOLUTE (2026-11-25), its first segment the space's prefix, so it is read
+        // as db/collection, as countRewrite's match reads it. withoutDB took /grt/item/+'s prefix for the collection, and
+        // gremlin_count counted label grt
+        final DataPath dp = expandedfURI.isAbsolute() ? DataPath.of(expandedfURI) : DataPath.withoutDB(expandedfURI);
         return instC(
                 this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                 lst(uri(expandedfURI)),

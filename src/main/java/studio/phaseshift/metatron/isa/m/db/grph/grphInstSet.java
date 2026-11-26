@@ -915,10 +915,17 @@ public class grphInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.countRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_count"),
-                                (space, dp) -> "V".equals(dp.collection())
-                                        ? space.sjvm().V().count().next()
-                                        : space.sjvm().E().count().next()
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's count()-reducer for vrtx/edge collections"),
+                                // A LABEL COUNTS AS THE SPACE READS IT (2026-11-25): its vertices, else its edges. Every
+                                // collection but V counted every edge, so */g/lair/+.count() answered the graph's 6 for 1
+                                (space, dp) -> switch (dp.collection()) {
+                                    case "V" -> space.sjvm().V().count().next();
+                                    case "E" -> space.sjvm().E().count().next();
+                                    default -> {
+                                        final long vertices = space.sjvm().V().hasLabel(dp.collection()).count().next();
+                                        yield 0 < vertices ? vertices : space.sjvm().E().hasLabel(dp.collection()).count().next();
+                                    }
+                                }
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's count()-reducer for vrtx, edge and label collections"),
                         docWrap(CommonRewrites.sumColumnRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_sum"),

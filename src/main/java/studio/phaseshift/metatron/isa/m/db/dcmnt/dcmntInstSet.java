@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.MQLRewriteUtils;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -276,7 +277,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     // unfiltered take(0): the filtered one returned every match
                                     if (limit == 0)
                                         return noobj();
-                                    final Type collectionType = collectionType(space, collectionName);
+                                    final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
                                     return objs(IteratorUtil.stream(collection.find(filter).limit((int) limit).iterator()).map(doc -> {
                                         final Object docId = doc.get(ID_FIELD_STRING);
                                         final String idStr = docId instanceof org.bson.types.ObjectId oid
@@ -325,18 +326,16 @@ public class dcmntInstSet extends AbstractInstSet {
     // ==================== Helper Methods for Rewrites ====================
 
     /**
-     * Stamp a document with its collection's declared Type.  A bare
+     * Stamp a document with its collection's Type.  A bare
      * {@code rec::T} is not a refinement of the collection's type, so a
      * document read by a native rewrite must be typed to its collection to
-     * remain a valid instance of the collection schema.  No-op when the
-     * collection has no declared type.
+     * remain a valid instance of the collection schema.  The type is read with
+     * {@link SchemaSpace.Helper#type}, as the SQL plans read theirs: the declared
+     * type, else the schema instset's own read, which infers it.  A scan of
+     * {@code space.schema().types()} found only what a read had inferred before,
+     * so a first query's documents went untyped (2026-11-25).  No-op when the
+     * collection has no type.
      */
-    private static Type collectionType(final dcmntSpace space, final String collectionName) {
-        return space.schema().types().stream()
-                .filter(t -> t.vid().name().equalsIgnoreCase(collectionName))
-                .findFirst().orElse(null);
-    }
-
     private static Obj typeDocument(final Obj document, final Type collectionType) {
         // Only type a document the collection type actually accepts: Mongo's own
         // `_id` is part of the document body (unlike a SQL primary key), so a
@@ -357,7 +356,7 @@ public class dcmntInstSet extends AbstractInstSet {
         if (limit == 0)
             return noobj();
         final String collectionName = collection.getNamespace().getCollectionName();
-        final Type collectionType = collectionType(space, collectionName);
+        final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
         return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
             final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid
@@ -375,7 +374,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                                    final dcmntSpace space,
                                                    final Bson filter) {
         final String collectionName = collection.getNamespace().getCollectionName();
-        final Type collectionType = collectionType(space, collectionName);
+        final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
         return objs(IteratorUtil.stream(collection.find(filter).iterator()).map(doc -> {
             final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid

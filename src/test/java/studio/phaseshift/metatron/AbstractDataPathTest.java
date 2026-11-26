@@ -23,10 +23,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,37 +61,46 @@ public abstract class AbstractDataPathTest extends AbstractSpaceTest {
             "*<$$/+/+>.take(2)  % entry",         // second entry also an instance (not just first)
     }, delimiter = '%')
     public void testDataPathSegmentTypes(final String code, final String segmentType) {
-        final Obj result = ObjmtronSerializer.parse(make(code)).apply();
-        assertFalse(result.isNoObj(), "test data for " + segmentType + " should not be noobj: " + code);
-        if (segmentType.equals("collection")) {
-            result.stream().forEach(o ->
-                    assertTrue(o.isType(), "collection objs should be the type schema of the collection elements: " + o));
-        } else if (segmentType.equals("entry")) {
-            result.stream().forEach(entry -> {
-                assertFalse(entry.isType(), "entry objs should not be types but instances of their collection schema: " + entry);
-                // Read the collection Type(s) for this entry via its VID.
-                // Spaces that don't set VIDs on entries (e.g. tbleSpace SQL rows)
-                // skip the collection-type assertions — the !isType() check above is sufficient.
-                if (entry.vid() == null)
-                    return;
-                final Obj collectionTypes = Machine.read(entry.vid().retract(1));
-                assertFalse(collectionTypes.isNoObj(),
-                        "collection type(s) should exist for entry: " + entry.vid() + " → " + entry.vid().retract(1));
-                // Stream in case the collection prefix resolves to multiple Types
-                // (e.g., /g/E returns both knows::T and created::T)
-                final boolean isValidInstance = collectionTypes.stream()
-                        .anyMatch(ct -> entry.test(ct));
-                assertTrue(isValidInstance,
-                        "entry should be a valid instance of at least one collection type: "
-                                + entry + " ∉ " + collectionTypes);
-                final boolean isMatchingType = collectionTypes.stream()
-                        .anyMatch(ct -> entry.type().test(ct));
-                assertTrue(isMatchingType,
-                        "entry type must be equal to or a refinement of at least one collection type: "
-                                + entry.type() + " ≮: " + collectionTypes);
-            });
-        } else {
-            fail("bad test definition as segment type is unknown: " + segmentType);
+        // THE PLAN AS WELL AS THE ANSWER (CommonRewritesTestContract.runRewriteTest): the evaluation can run the walk a
+        // pushdown replaced, so the rewriter's plan is applied on its own too, as a fresh code over its instructions, and
+        // FIRST: a walk's read infers its collection's type, which then types the entries of a plan applied after it
+        final Code plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(make(code))).asCode();
+        for (final Map.Entry<String, Obj> answer : List.of(
+                Map.entry(code + " (the plan on its own: " + plan + ")", MCode.of(plan.insts()).apply()),
+                Map.entry(code, ObjmtronSerializer.parse(make(code)).apply()))) {
+            final String source = answer.getKey();
+            final Obj result = answer.getValue();
+            assertFalse(result.isNoObj(), "test data for " + segmentType + " should not be noobj: " + source);
+            if (segmentType.equals("collection")) {
+                result.stream().forEach(o ->
+                        assertTrue(o.isType(), "collection objs should be the type schema of the collection elements: " + o + " from " + source));
+            } else if (segmentType.equals("entry")) {
+                result.stream().forEach(entry -> {
+                    assertFalse(entry.isType(), "entry objs should not be types but instances of their collection schema: " + entry + " from " + source);
+                    // Read the collection Type(s) for this entry via its VID.
+                    // Spaces that don't set VIDs on entries (e.g. tbleSpace SQL rows)
+                    // skip the collection-type assertions — the !isType() check above is sufficient.
+                    if (entry.vid() == null)
+                        return;
+                    final Obj collectionTypes = Machine.read(entry.vid().retract(1));
+                    assertFalse(collectionTypes.isNoObj(),
+                            "collection type(s) should exist for entry: " + entry.vid() + " → " + entry.vid().retract(1) + " from " + source);
+                    // Stream in case the collection prefix resolves to multiple Types
+                    // (e.g., /g/E returns both knows::T and created::T)
+                    final boolean isValidInstance = collectionTypes.stream()
+                            .anyMatch(ct -> entry.test(ct));
+                    assertTrue(isValidInstance,
+                            "entry should be a valid instance of at least one collection type: "
+                                    + entry + " ∉ " + collectionTypes + " from " + source);
+                    final boolean isMatchingType = collectionTypes.stream()
+                            .anyMatch(ct -> entry.type().test(ct));
+                    assertTrue(isMatchingType,
+                            "entry type must be equal to or a refinement of at least one collection type: "
+                                    + entry.type() + " ≮: " + collectionTypes + " from " + source);
+                });
+            } else {
+                fail("bad test definition as segment type is unknown: " + segmentType);
+            }
         }
     }
 }

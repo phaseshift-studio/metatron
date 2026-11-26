@@ -157,6 +157,17 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         return f("/m/db/grph");
     }
 
+    /**
+     * A LABEL IS A COLLECTION TOO (2026-11-25). The contract's prefix is the V collection, and gremlin_count counted every
+     * edge for any other one, so the rewrite space's item vertices and the modern dataset's knows edges are counted too.
+     */
+    @Override
+    public Stream<Arguments> generateCountTestCases() {
+        return Stream.concat(CommonRewritesTestContract.super.generateCountTestCases(), Stream.of(
+                Arguments.of("count: a vertex label", "*" + REWRITE_TEST_SPACE_URI.extend("item") + "/+.count()", jnt(10)),
+                Arguments.of("count: an edge label", "*" + this.baseURI.extend("knows") + "/+.count()", jnt(2))));
+    }
+
     // ========================================================================
     //  AbstractDataPathSpaceTest — flat namespace wiring
     // ========================================================================

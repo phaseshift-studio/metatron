@@ -1170,8 +1170,8 @@ public class mInstSet extends AbstractInstSet {
                             // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch.
                             // EVERY CHAIN IS PROBED, ONE WITHOUT THE OP TOO (2026-11-25): the probe memoizes a chain that resolves whole by
                             // its identity (Resolver.Helper.RESOLVE_CACHE), and the compile runs that walk after a later rule rewrites the
-                            // code in place (DBRewriteBuilder's selfJVM, split_merge_*, pred_extract). Skipping the probe ran those rules'
-                            // outputs instead, and the gremlin_count and mql_limit plans answer differently from the walk
+                            // code in place (DBRewriteBuilder's selfJVM, split_merge_*, pred_extract). Skipping the probe runs those rules'
+                            // outputs instead: whether they may run is the question e70959af9 left open, and not every DB plan is checked yet
                             final List<Type> carriers = Rewriter.Helper.carriers(code);
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(insts.size() + 1);
