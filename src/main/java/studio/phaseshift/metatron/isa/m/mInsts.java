@@ -624,20 +624,20 @@ public final class mInsts {
                         .dom(URI_TID, "the uri to name").rng(URI_TID, "the name of the lhs uri")
                         .argLst()
                         .body((lhs, inst) -> uri(lhs.uriValue().name()))
-                        .law(Law.pure)
+                        .law(Law.pure, Law.idempotent)
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "remove the argument uri text from the lhs uri")
                         .dom(URI_TID, "the lhs uri").rng(URI_TID, "the uri with the argument text removed")
                         .argLst(T(URI_TID), "the uri text to remove")
                         .body((lhs, inst) -> uri(lhs.uriValue().toString().replace(inst.arg(0).uriValue().toString(), "")))
-                        .law(Law.pure)
+                        .law(Law.pure, Law.monoidic, Law.commutative)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "union the path of the lhs uri with the path of the argument uri")
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the branch union")
                         .argLst(T(URI_TID.maybe()), "the rhs uri")
                         .body((lhs, inst) -> lhs.asUri().plus(inst.arg(0).asUri()))
                         .desc("a branch function \\(f(x, y) \\mapsto x \\sqcup y\\): the union of the lhs and rhs uri paths")
-                        .law(Law.commutative, Law.pure)
+                        .law(Law.monoidic, Law.commutative, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MULT_INST_TID, "concatenate the path of the argument uri onto the path of the lhs uri")
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the path extension")
@@ -651,7 +651,12 @@ public final class mInsts {
                         .argLst()
                         .body((lhs, inst) -> lhs.asUri().one())
                         .desc("a one function: the uri one (<>)")
-                        .law(Law.pure)
+                        .law(Law.pure, Law.idempotent, Law.unit)
+                        .create(),
+                InstBuilder.build().tid(ZERO_INST_TID, "the zero of the uri ring")
+                        .dom(URI_TID, "the lhs rec").rng(URI_TID, "the zero uri").argLst()
+                        .body((lhs, inst) -> lhs.asUri().zero())
+                        .law(Law.unit, Law.idempotent, Law.pure)
                         .create(),
                 InstBuilder.build().tid(SUM_INST_TID, "add a uri stream into a single uri")
                         .dom(URI_TID.maybeSome(), "zero or more uris").rng(URI_TID, "a single plus reduced uri")
@@ -1260,9 +1265,9 @@ public final class mInsts {
                                 // splicing its members into another branch would drop its keys or its deal, so it
                                 // joins whole, as one member, as any other code does
                                 return branch_(Stream.of(lhs, inst.arg(0)).flatMap(side -> 1 == side.asCode().insts().size()
-                                        && BRANCH_INST_TID.equals(side.asCode().insts().getFirst().tid().basePath())
-                                        && !BranchInst.isLayout(side.asCode().insts().getFirst())
-                                        ? side.asCode().insts().getFirst().args().<Obj>elements() : Stream.of(side))
+                                                && BRANCH_INST_TID.equals(side.asCode().insts().getFirst().tid().basePath())
+                                                && !BranchInst.isLayout(side.asCode().insts().getFirst())
+                                                ? side.asCode().insts().getFirst().args().<Obj>elements() : Stream.of(side))
                                         .toArray(Obj[]::new)).as();
                             }
                         })

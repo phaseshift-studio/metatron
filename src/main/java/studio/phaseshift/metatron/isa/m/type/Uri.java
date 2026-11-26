@@ -27,7 +27,10 @@ import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.util.*;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.ProjectionFailureException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +54,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Uri extends Mono, Comparable<Uri> {
 
-    Uri ONE = uri("");
+    Uri ONE = uri();
+    Uri ZERO = uri().c(0L).asUri();
 
     // Uri with coefficient {0}: noobj typed as a Uri, for a method that answers a Uri or nothing.
     // its payload is the zero address itself (the MUri constructor reads its payload)
@@ -116,6 +120,10 @@ public interface Uri extends Mono, Comparable<Uri> {
 
     default Uri one() {
         return ONE;
+    }
+
+    default Uri zero() {
+        return ZERO;
     }
 
     default Uri mult(final Uri rhs) {

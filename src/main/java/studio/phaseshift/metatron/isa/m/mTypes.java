@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.uri0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -222,9 +223,24 @@ public final class mTypes {
         // uri: a monoid under extension (mult), identity the empty uri <>; branch (plus) is a commutative
         // semigroup with no identity — a/b + <> = {a/b,<>}, never a/b, so there is no zero object, only a one.
         declare(URI_TYPE, rec(mutableMap(
+                uri("ring"), rec(mutableMap(
+                                uri(ADD), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                uri(MUL), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                uri(Tokens.ZERO), uri0(),
+                                uri(Tokens.ONE), uri()),
+                        RING_THEORY_TID, null),
+                uri("add_group"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                uri(ID), uri0(),
+                                uri(INV), auto_from_(NEG_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst()),
+                        GROUP_THEORY_TID, null),
+                uri("add_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                uri(ID), uri0()),
+                        MONOID_THEORY_TID, null),
                 uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                uri(ID), uri("")),
+                                uri(ID), uri()),
                         MONOID_THEORY_TID, null))));
         // bytes: a monoid under concatenation (PLUS), identity the empty buffer
         declare(BYTES_TYPE, rec(mutableMap(
