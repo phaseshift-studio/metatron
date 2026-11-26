@@ -47,9 +47,8 @@ The install produces the first mode; a developer checkout uses the second.
 
 ## Docker boot profile
 
-`boot/spaces.boot.mtron` is the install's docker-only profile: it needs only
-docker on the system — every space backend runs as a container aggregated
-through dckrspace:
+`boot/spaces.boot.mtron` is the install's docker profile: every space backend runs as a container aggregated
+through dckrspace, so it needs docker on the system, and an ollama for the `embed:#` space's writes (below):
 
 ```bash
 bin/metatron -b boot/spaces.boot.mtron "[log=>info]"
@@ -62,6 +61,10 @@ bin/metatron -b boot/spaces.boot.mtron "[log=>info]"
 | `embed:#` (vec) | `chromadb/chroma:1.5.3` | `http://127.0.0.1:8025/api/v2`       |
 
 Ports, images, credentials and more are boot args — see the file's header.
+
+The `embed:#` space embeds each document it stores with an ollama model, named by the boot args `ollama/host`
+(default `http://127.0.0.1:11434`) and `ollama/llm` (default `qwen3-embedding:4b`). The space mounts without an ollama,
+and a write that brings no embedding fails until one answers with that model pulled (`ollama pull qwen3-embedding:4b`).
 
 ## Alternatives
 

@@ -359,13 +359,17 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 if (!dp.hasEntry())
                     throw MTronException.of("vecspace write requires a document below the collection: %s", aligned);
                 final fURI collId = resolveCollectionId(dp.collection(), true);
-                boolean isAlreadyEmbedded = obj.test(VEC_EMBEDDING_TYPE);
+                final boolean isAlreadyEmbedded = obj.test(VEC_EMBEDDING_TYPE);
                 final Obj rawObj = isAlreadyEmbedded ? obj.asRec().at(OBJ) : obj;
-                final Lst embedding = isAlreadyEmbedded ? obj.asRec().at(EMBED) : this.sjvm().embeddingFunction(f(dp.collection())).apply(obj).as();
+                final Obj embedded = isAlreadyEmbedded ? obj.asRec().at(EMBED) : this.sjvm().embeddingFunction(f(dp.collection())).apply(obj);
                 final Rec metadata = isAlreadyEmbedded ? obj.asRec().at(META).orElse(rec0()) : rec0();
-                if (embedding.isFail())
-                    throw embedding.asFail().asException();
-                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(id), rawObj, metadata, embedding);
+                // a failed embedding is its own failure (a model that could not be built, say), and an answer that is no
+                // lst is no embedding: neither is cast first, where it would surface as a class cast naming neither
+                if (embedded.isFail())
+                    throw embedded.asFail().asException();
+                if (!embedded.isLst())
+                    throw MTronException.of("the embedding function of collection %s answered %s, not an embedding", dp.collection(), embedded);
+                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(id), rawObj, metadata, embedded.asLst());
                 this.sjvm().upsert(collId, f(dp.collection()), entity);
                 LOG.debug("wrote: %s => %s", collId, entity);
                 return obj;

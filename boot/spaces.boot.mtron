@@ -1,8 +1,9 @@
-[== spaces.boot.mtron — the docker-only boot profile.
-     metatron is installed on the host (the curl installer); the only thing
-     this boot needs from the system is DOCKER.  every space backend runs as
-     a container aggregated through dckrspace, and each backend gets its
-     space registered on top:
+[== spaces.boot.mtron — the docker boot profile.
+     metatron is installed on the host (the curl installer); this boot needs
+     DOCKER from the system, and for embed: writes an ollama serving the model
+     boot/args/ollama names, pulled (the space mounts without one, and a write
+     that brings no embedding fails).  every space backend runs as a container aggregated through
+     dckrspace, and each backend gets its space registered on top:
 
        metatron:#   tble space   mariadb  container (127.0.0.1:3308 -> 3306)
        g:#          grph space   gremlin  container (ws://127.0.0.1:8182/gremlin)
@@ -15,7 +16,8 @@
        bin/metatron -b boot/spaces.boot.mtron "[log=>info,
                                                 user=>><name>,
                                                 mariadb/port=>3310,
-                                                chroma/port=>8026]"
+                                                chroma/port=>8026,
+                                                ollama/host=><http://127.0.0.1:11434>]"
  ==]
 [== every value has a default; override freely ==]
 [== boot args ==]
@@ -35,6 +37,11 @@
   [host => <127.0.0.1>,
    port => 8025,
    image=> 'chromadb/chroma:1.5.3'],
+ ollama   =>
+  [provider => ollama,
+   protocol => ollama,
+   host     => <http://127.0.0.1:11434>,
+   llm      => <qwen3-embedding:4b>],
  header   => """
 {{y}} ______   ______   ______   ______  ______                         
 / |      | |  | \ | |  | | | |     | |                             
@@ -57,6 +64,7 @@ import(/m/sys/ui,ui);
 import(/m/db/tble);
 import(/m/db/grph);
 import(/m/db/vec);
+import(/m/ai/llm);
 import(/m/dev/dckr);
 [== module files — pull the boot modules out of the repo (cwd under bin/metatron) ==]
 fsspace::[pattern => fs:#,
@@ -78,6 +86,8 @@ print("{{y}}gremlin : grph space\n{{X}}");
                                    port => !*boot/args/gremlin/port,
                                    image=> !*boot/args/gremlin/image);
 print("{{y}}chromadb: vec space\n{{X}}");
+[== the model spec the embed: space builds its embedding model from, at an address every machine reads ==]
+</sys/model/embed> -> *boot/args/ollama;
 <fs:boot/space/vec/chromadb.mtron>(host => !*boot/args/chroma/host,
                                    port => !*boot/args/chroma/port,
                                    image=> !*boot/args/chroma/image);
