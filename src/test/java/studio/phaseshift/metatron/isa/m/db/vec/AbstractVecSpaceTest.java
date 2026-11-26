@@ -188,6 +188,26 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @ParameterizedTest
+    @TestData({"<vctr:test/given> -> [obj=>\"spark\",embed=>[0.25,0.75]]",
+            "<vctr:test/noted> -> [obj=>\"coil\",embed=>[0.5,0.25],meta=>[inventor=>\"nikola\"]]",
+            "<vctr:test/made> -> \"arc\""})
+    @CsvSource(value = {
+            // a write that carries its embedding stores its obj with that embedding, not the collection's
+            "*<vctr:test/given>                     % \"spark\"",
+            "*<vctr:test/given?embedq>              % [0.25,0.75]",
+            // ... and a write that carries metadata is stored too (a vecSpace read answers no metadata:
+            // testUpsertKeepsMetadata reads it back through the client)
+            "*<vctr:test/noted>                     % \"coil\"",
+            "*<vctr:test/noted?embedq>              % [0.5,0.25]",
+            // a plain write is embedded by the collection's embedding function
+            "*<vctr:test/made>                      % \"arc\"",
+            "*<vctr:test/made?embedq>.>-.>-.count() % 2",
+    }, delimiter = '%')
+    public void testVecEmbedding(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     // =========================================================================
     //  Inherited tests — DISABLED (ChromaDB blob-store semantics)
     // =========================================================================
@@ -309,6 +329,48 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
         // Ask for more than exist — should return all available
         assertEquals(10, staticClient.query(coll.id(), List.of(queryVec), 20).get(0).entities().size(),
                 "nResults > count should return all available documents");
+    }
+
+    @Test
+    public void testUpsertKeepsEachEntitysEmbedding() throws Exception {
+        final String collName = "keeps";
+        staticClient.createCollection(collName);
+        final VectorDBClient.CollectionData coll = staticClient.getCollection(collName);
+
+        // one batch: an entity that carries an embedding, and one that carries none
+        staticClient.upsert(coll.id(), f(collName),
+                new VectorDBClient.EntityData(f("given"), str("spark"), rec0(), lst(real(0.25), real(0.75))),
+                new VectorDBClient.EntityData(f("made"), str("arc"), rec0(), null));
+
+        final List<VectorDBClient.EntityData> read = staticClient.get(coll.id(), List.of("given", "made")).entities();
+        final VectorDBClient.EntityData given = read.stream().filter(e -> e.id().equals(f("given"))).findFirst().orElseThrow();
+        final VectorDBClient.EntityData made = read.stream().filter(e -> e.id().equals(f("made"))).findFirst().orElseThrow();
+
+        // an entity's own embedding is the one stored
+        AbstractMetatronTest.checkEquality(LOG, lst(real(0.25), real(0.75)), given.embedding(), true);
+        // the embedding function ([0.1,0.2], stored as 32-bit floats) embeds the entity that carries none
+        assertEquals(0.1, made.embedding().lstValue().get(0).asReal().realValue(), 1e-6);
+        assertEquals(0.2, made.embedding().lstValue().get(1).asReal().realValue(), 1e-6);
+    }
+
+    @Test
+    public void testUpsertKeepsMetadata() throws Exception {
+        final String collName = "notes";
+        staticClient.createCollection(collName);
+        final VectorDBClient.CollectionData coll = staticClient.getCollection(collName);
+
+        staticClient.upsert(coll.id(), f(collName),
+                new VectorDBClient.EntityData(f("noted"), str("coil"), rec(uri("inventor"), str("nikola"), uri("year"), str("1891")), null),
+                new VectorDBClient.EntityData(f("plain"), str("arc"), rec0(), null));
+
+        final List<VectorDBClient.EntityData> read = staticClient.get(coll.id(), List.of("noted", "plain")).entities();
+        final VectorDBClient.EntityData noted = read.stream().filter(e -> e.id().equals(f("noted"))).findFirst().orElseThrow();
+        final VectorDBClient.EntityData plain = read.stream().filter(e -> e.id().equals(f("plain"))).findFirst().orElseThrow();
+
+        AbstractMetatronTest.checkEquality(LOG, str("nikola"), noted.metadata().at(uri("inventor")), true);
+        AbstractMetatronTest.checkEquality(LOG, str("1891"), noted.metadata().at(uri("year")), true);
+        // an entity written without metadata reads none back
+        AbstractMetatronTest.checkEquality(LOG, rec0(), plain.metadata(), true);
     }
 
     @Test

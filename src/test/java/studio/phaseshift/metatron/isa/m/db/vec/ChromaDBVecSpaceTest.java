@@ -21,20 +21,29 @@ package studio.phaseshift.metatron.isa.m.db.vec;
 import com.github.dockerjava.api.model.Ulimit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.SkipRegexTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.db.vec.space.ChromaV2Client;
 import studio.phaseshift.metatron.isa.m.db.vec.space.VectorDBClient;
 import studio.phaseshift.metatron.isa.m.db.vec.space.vecSpace;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static studio.phaseshift.metatron.Tokens.HTTP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -74,6 +83,7 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
 
     private static final int CHROMADB_PORT = 8000;
     private static GenericContainer<?> chromaContainer;
+    private static fURI endpoint;
 
     @BeforeAll
     public static void startContainer() {
@@ -92,9 +102,8 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
 
         chromaContainer.start();
 
-        final String endpoint = "http://" + chromaContainer.getHost()
-                + ":" + chromaContainer.getMappedPort(CHROMADB_PORT) + "/api/v2";
-        staticClient = new ChromaV2Client(f(endpoint), mutableMap(uri("#"), lst(real(0.1), real(0.2))));
+        endpoint = f().scheme(HTTP).host(chromaContainer.getHost()).port(chromaContainer.getMappedPort(CHROMADB_PORT)).extend("/api/v2");
+        staticClient = new ChromaV2Client(endpoint, mutableMap(uri("#"), lst(real(0.1), real(0.2))));
 
         // Reset any leftover data from previous test runs
         try {
@@ -106,6 +115,19 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         }
 
         System.out.println("chromaDB 1.5.3 container started at: " + endpoint);
+    }
+
+    @Test
+    public void testAnEntityThatCarriesItsEmbeddingNeedsNoEmbeddingFunction() throws Exception {
+        // a client set up with no embedding function, as the docker boot's vecspace is (boot/space/vec/chromadb.mtron)
+        final VectorDBClient bare = new ChromaV2Client(endpoint, new LinkedHashMap<>());
+        final VectorDBClient.CollectionData coll = bare.createCollection("bare");
+        bare.upsert(coll.id(), f("bare"), new VectorDBClient.EntityData(f("given"), str("spark"), rec0(), lst(real(0.25), real(0.75))));
+        AbstractMetatronTest.checkEquality(LOG, lst(real(0.25), real(0.75)),
+                bare.get(coll.id(), List.of("given")).entities().getFirst().embedding(), true);
+        // an entity that carries none has nothing to embed it
+        assertThrows(MTronException.class, () -> bare.upsert(coll.id(), f("bare"),
+                new VectorDBClient.EntityData(f("made"), str("arc"), rec0(), null)));
     }
 
     @AfterAll

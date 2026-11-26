@@ -28,7 +28,10 @@ import java.util.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Minimal abstraction over a vector-database backend.
@@ -72,10 +75,14 @@ public interface VectorDBClient {
             for (int i = 0; i < ids.size(); i++) {
                 final String doc = documents != null && i < documents.size() ? documents.get(i) : "";
                 final List<Float> emb = embeddings != null && i < embeddings.size() ? embeddings.get(i) : List.of();
+                // the metadata comes back as it was written: string values under their keys
+                final Map<Obj, Obj> metadata = new LinkedHashMap<>();
+                if (metadatas != null && i < metadatas.size() && metadatas.get(i) != null)
+                    metadatas.get(i).forEach((key, value) -> metadata.put(uri(key), str(String.valueOf(value))));
                 result.add(new EntityData(
                         f(ids.get(i)),
                         ObjmtronSerializer.single().read(doc),
-                        rec0(),
+                        metadata.isEmpty() ? rec0() : rec(metadata),
                         lst(emb.stream().map(r -> (Obj) real(r)).toList())));
             }
             return result;

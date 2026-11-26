@@ -141,18 +141,20 @@ public class ChromaV2Client implements VectorDBClient {
         return collectionsPath.extend(collectionId);
     }
 
-    private Map<String, Object> createBody(final EntityData[] entities, final Obj embeddingFunction) {
+    private Map<String, Object> createBody(final EntityData[] entities, final fURI collectionVID) {
         final List<List<Object>> aggregate = new ArrayList<>();
         aggregate.add(new ArrayList<>()); // ids
         aggregate.add(new ArrayList<>()); // docs
         aggregate.add(new ArrayList<>()); // metadata
         aggregate.add(new ArrayList<>()); // embeddings
         Arrays.stream(entities).forEach(entity -> {
-            final List<Double> embedding = embeddingFunction.apply(entity.obj()).lstValue().stream().map(r -> r.asReal().realValue()).toList();
+            // an entity's own embedding is the one stored: the collection's embedding function embeds only an entity
+            // that carries none
+            final Obj embedding = null != entity.embedding() ? entity.embedding() : this.embeddingFunction(collectionVID).apply(entity.obj());
             aggregate.get(0).add(entity.id().toString());
             aggregate.get(1).add(ObjmtronSerializer.single().write(entity.obj()));
-            aggregate.get(2).add(entity.metadata().elements().map(r -> new AbstractMap.SimpleEntry<>(Str.Helper.cleanString(r.first()), Str.Helper.cleanString(r.second()))).collect(Collectors.toMap(a -> a, b -> b)));
-            aggregate.get(3).add(embedding);
+            aggregate.get(2).add(entity.metadata().elements().collect(Collectors.toMap(r -> Str.Helper.cleanString(r.first()), r -> Str.Helper.cleanString(r.second()))));
+            aggregate.get(3).add(embedding.lstValue().stream().map(r -> r.asReal().realValue()).toList());
         });
         final Map<String, Object> body = Map.of(
                 "ids", aggregate.get(0),
@@ -164,12 +166,12 @@ public class ChromaV2Client implements VectorDBClient {
 
     @Override
     public void add(final fURI collectionId, final fURI collectionVID, final EntityData[] entities) throws Exception {
-        post(collPath(collectionId).extend("add").toString(), createBody(entities, this.embeddingFunction(collectionVID)));
+        post(collPath(collectionId).extend("add").toString(), createBody(entities, collectionVID));
     }
 
     @Override
     public void upsert(final fURI collectionId, final fURI collectionVID, final EntityData... entities) throws Exception {
-        post(collPath(collectionId).extend("upsert").toString(), createBody(entities, this.embeddingFunction(collectionVID)));
+        post(collPath(collectionId).extend("upsert").toString(), createBody(entities, collectionVID));
     }
 
     @Override
