@@ -608,7 +608,9 @@ public final class mInsts {
                         .dom(URI_TID.maybeSome(), "zero or more uris")
                         .rng(URI_TID, "a single merged uri")
                         .argLst(T(URI_TID), "the uri placed between each merge")
-                        .body((lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj"))))
+                        // merging no uris answers the ring's zero (Marko, 2026-11-26). An empty stream does not reach this
+                        // body in a chain today (the reducer answers noobj first; a seed made it answer the separator)
+                        .body((lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(Uri.ZERO.uriValue())))
                         .law(Law.pure, Law.monoidic, Law.commutative)
                         .create(),
                 InstBuilder.build().tid(SPLIT_INST_TID, "split a uri into its component branches")
@@ -646,6 +648,7 @@ public final class mInsts {
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the branch union")
                         .argLst(T(URI_TID.maybe()), "the rhs uri")
                         .body((lhs, inst) -> lhs.asUri().plus(inst.arg(0).asUri()))
+                        .converse(MINUS_INST_TID.dom(URI_TID).rng(URI_TID).args(URI_TID))
                         .desc("a branch function \\(f(x, y) \\mapsto x \\sqcup y\\): the union of the lhs and rhs uri paths")
                         .law(Law.monoidic, Law.commutative, Law.pure)
                         .create(),
@@ -672,17 +675,20 @@ public final class mInsts {
                 InstBuilder.build().tid(SUM_INST_TID, "add a uri stream into a single uri")
                         .dom(URI_TID.maybeSome(), "zero or more uris").rng(URI_TID, "a single plus reduced uri")
                         .argLst()
-                        .seed(uri(NOOBJ))
+                        .seed(Uri.ZERO)
                         // one uri whose value counts every member by its own coefficient, summed at once: a fold from the
-                        // seed floats the seed's zero over the whole sum (and re-typed the seed, so main's answered noobj)
-                        .body((lhs, inst) -> uri(fURI.Helper.sum(lhs.stream().map(o -> o.uriValue().d(o.uriValue().d().mult(o.c()))))))
+                        // seed floats the seed's coefficient over the whole sum. The sum knows the ring's zero, as plus's
+                        // does (Uri.Helper.sum): a hole adds nothing, and members that cancel answer it
+                        .body((lhs, inst) -> uri(Uri.Helper.sum(lhs.stream().map(o -> o.uriValue().d(o.uriValue().d().mult(o.c()))))))
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PROD_INST_TID, "multiply a uri stream into a single uri")
                         .dom(URI_TID.maybeSome(), "zero or more uris").rng(URI_TID, "a single mult reduced uri")
                         .argLst()
                         .seed(uri(""))
-                        .body((lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))))
+                        // each member's value multiplied in, its coefficient left out as before, through mult, so the
+                        // ring's zero absorbs the product
+                        .body((lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue()).mult(uri(b.uriValue()))))
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PATH_TID, "the path of the lhs uri")

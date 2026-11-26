@@ -1131,7 +1131,8 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         /**
          * A PATH'S TEXT CUT INTO ITS SEGMENTS, as {@code String.split("/")} cuts it, but only at a {@code /} outside braces:
          * the {@code /} inside a branch ({@code {a/b,c/d}}, a sum of sub-paths) is the branch's, so the branch stays one
-         * segment, as the parser keeps it. A naive split made {@code {a/b,c/d}} the segments {@code {a}, {b,c}, {d}}.
+         * segment, as the parser cuts it. A naive split made {@code {a/b,c/d}} the three segments
+         * <code>&#123;a</code>, {@code b,c} and <code>d&#125;</code>.
          * Otherwise it is {@code split}'s exactly: no {@code /} answers the text itself, and trailing empty segments drop.
          */
         public static List<String> split(final String path) {

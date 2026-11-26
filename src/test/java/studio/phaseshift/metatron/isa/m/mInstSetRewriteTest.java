@@ -214,6 +214,14 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "law_absorbing           % 5.plus(1).side(plus(1)).plus(2).zero()  % start(5).plus(1).side(plus(1)).zero()",
             // law_shard: a lone machine does not fan out
             "law_shard               % {1,2,3,4}.plus(1).sum()             % start({1,2,3,4}).plus(1).sum()",
+            // uri's ring binds the same rules: the hole is its add_monoid's unit and <> its mul_monoid's, neg is an
+            // involution, minus is plus's inverse, and plus of a negation contracts to minus
+            "theory_unit_removal     % <a/b>.plus(<noobj>)                 % start(<a/b>)",
+            "theory_unit_removal     % <a/b>.mult(<>)                      % start(<a/b>)",
+            "law_involution          % <a/b>.neg().neg()                   % start(<a/b>)",
+            "inverse_cancellation    % <a/b>.plus(<c>).minus(<c>)          % start(<a/b>)",
+            "inverse_cancellation    % <a/b>.minus(<c>).plus(<c>)          % start(<a/b>)",
+            "derivation_contraction  % <a/b>.plus(<c>.neg())               % start(<a/b>).minus(<c>)",
     }, delimiter = '%')
     void testEachRuleRewritesItsChain(final String rule, final String chain, final String rewritten) {
         final Obj answered = rewrite(rule, ObjmtronSerializer.parse(chain));
@@ -240,6 +248,10 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "5.plus(3).zero()                 % start(5).zero()                   % 0",
             "{1,2,3}.is(gt(1)).zero()         % start({1,2,3}).is(gt(1)).zero()   % {2}0",
             "{1,2,3}.sum().sum()              % start({1,2,3}).sum()              % 6",
+            // a uri chain the pool rewrites evaluates as the chain it was
+            "<a/b>.plus(<noobj>).mult(<c>)    % start(<a/b>).mult(<c>)            % <a/b/c>",
+            "<a/b>.minus(<c>).plus(<c>)       % start(<a/b>)                      % <a/b>",
+            "<a/b>.neg().neg().plus(<c>)      % start(<a/b>).plus(<c>)            % <{a/b,c}>",
             "{1,2,3,4,5}.is(gt(1)).is(gt(3))  % start({1,2,3,4,5}).is(gt(3))     % {4,5}",
             "5.plus(3).minus(3)               % start(5)                          % 5",
             "5.div(2).mult(2)                 % start(5).div(2).mult(2)           % 4",

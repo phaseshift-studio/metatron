@@ -1385,9 +1385,9 @@ public class fURITest extends AbstractMetatronTest {
     /**
      * A BRANCH IS ONE SEGMENT OF A PATH'S TEXT: fURI.Helper.split cuts only at the slashes outside braces, as the parser
      * does, so the operations that take a path as text (extend, prepend, path, pretract, retract) keep a branch of
-     * sub-paths whole, and on a path with no braces it is {@code String.split("/")} itself. String.split made
-     * {@code {c/d,e/f}} the segments {@code {c}, {d,e}, {f}}, so {@code /a/b} extended by a branch was unequal to the
-     * same uri parsed, and a product of uris unequal to the sum it distributes to (UriTest)
+     * sub-paths whole, and on a path with no braces it cuts as {@code String.split("/")} does (the brace-free rows).
+     * String.split made {@code {c/d,e/f}} the three segments <code>&#123;c</code>, {@code d,e} and <code>f&#125;</code>,
+     * so {@code /a/b} extended by a branch was unequal to the same uri parsed
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -1403,8 +1403,22 @@ public class fURITest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testABranchIsOneSegmentOfAPathsText(final String path, final String segments) {
         assertEquals(segments, fURI.Helper.split(path).toString());
-        if (path.indexOf('{') < 0)
-            assertEquals(List.of(path.split("/")), fURI.Helper.split(path));
+    }
+
+    // pretract and retract by text count a branch prefix as one segment: the naive split counted {a/b,c} as two, so the
+    // first row read the empty path and the second threw on subList(0, -1)
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{a/b,c}/x   % {a/b,c}   % x",
+            "p/{a/b,c}/x % p/{a/b,c} % x",
+    }, delimiter = '%')
+    public void testPretractingByTextTakesABranchAsOneSegment(final String furi, final String prefix, final String expected) {
+        assertEquals(f(expected), f(furi).pretract(prefix));
+    }
+
+    @Test
+    public void testRetractingByTextTakesABranchAsOneSegment() {
+        assertEquals(f(""), f("{a/b,c}").retract("{a/b,c}"));
     }
 
     @ParameterizedTest

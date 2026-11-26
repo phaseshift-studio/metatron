@@ -169,7 +169,7 @@ public class UriTest extends AbstractAlgebraTest {
             "<a/b>.plus(<a/b>.neg())                     % <noobj>",
             "<a/b>.neg().plus(<a/b>)                     % <noobj>",
             "<a/b>.minus(<a/b>)                          % <noobj>",
-            "<noobj>.minus(<a/b>)                        % <a/b>.neg()",
+            "<noobj>.minus(<a/b>)                        % <a/b{-1}>",
             "<a/b>.plus(<c/d>).minus(<c/d>)              % <a/b>",
             "<a/b>.neg().neg()                           % <a/b>",
             "<noobj>.neg()                               % <noobj>",
@@ -186,11 +186,46 @@ public class UriTest extends AbstractAlgebraTest {
             "<a/b/c>.plus(<{-1}a/b/c>)                   % <noobj>",
             "<a/b/c>.neg().plus(<{-1}a/b/c>)             % <a/b/c{-2}>",
             "{-1}<a/b/c>.plus(<a/b/c>)                   % {-1}<a/b/c{2}>",
+            // a product carries the argument's point (fURI's product), so it distributes over a sum whose terms
+            // collapsed into one point, and x(-y) is -(xy)
+            "<a>.mult(<b>.neg())                         % <a/b{-1}>",
+            "<a>.neg().mult(<b>)                         % <a/b{-1}>",
+            "<a>.mult(<b>.plus(<b>))                     % <a/b{2}>",
+            "<a>.mult(<b>).plus(<a>.mult(<b>))           % <a/b{2}>",
+            "<a/b{2}>.mult(<a/b{2}>)                     % <a/b/a/b{4}>",
+            // only the one-segment uri is the hole: a path through a segment named noobj is an address, kept by the
+            // unity and the negation as the rewriter keeps it; a hole inside a branch drops when the branch is summed
+            "<a/noobj>.mult(<>)                          % <a/noobj>",
+            "<a/noobj>.neg().neg()                       % <a/noobj>",
+            "<a/noobj>.plus(<b>)                         % <{a/noobj,b}>",
+            "<{a,noobj}>.plus(<b>)                       % <{a,b}>",
+            "<a>.minus(<{a,noobj}>)                      % <noobj>",
+            // the sum and the product of a stream know the zero, as plus and mult do
+            "{<a/b>,<a/b{-1}>}.sum()                     % <noobj>",
+            "{<a/b>,<noobj>}.sum()                       % <a/b>",
+            "{<a/b>,<noobj>}.prod()                      % <noobj>",
+            // plus and minus are each other's converse
+            "<a/b>.plus(<c>).{-1}plus(<c>)               % <a/b>",
+            "<a/b>.{-1}minus(<c>)                        % <{a/b,c}>",
             "<a/b>.mult(<c/d>.plus(<a/b>))               % <a/b/{a/b,c/d}>",
             "<a/b>.mult(<c/d>).plus(<a/b>.mult(<a/b>))   % <a/b/{a/b,c/d}>",
     }, delimiter = '%')
     public void testTheZeroIsTheUriOfAHole(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * AT THE ZERO AN OPERAND KEEPS ITS VID AND TYPE, as every other answer of the ring's operations does, and as a
+     * lst's do: the identity answers the argument's value under this uri's vid, and a cancelled sum and an absorbed
+     * product the hole under it
+     */
+    @Test
+    public void testTheZeroKeepsTheOperandsVid() {
+        final fURI v = f("/v");
+        AbstractMetatronTest.checkEquality(LOG, uri(f("c")).vid(v), Uri.ZERO.vid(v).plus(uri(f("c"))), true);
+        AbstractMetatronTest.checkEquality(LOG, Uri.ZERO.vid(v), uri(f("a/b")).vid(v).plus(uri(f("a/b")).neg()), true);
+        AbstractMetatronTest.checkEquality(LOG, Uri.ZERO.vid(v), uri(f("a/b")).vid(v).mult(Uri.ZERO), true);
+        AbstractMetatronTest.checkEquality(LOG, Uri.ZERO.vid(v), Uri.ZERO.vid(v).neg(), true);
     }
 
     @ParameterizedTest

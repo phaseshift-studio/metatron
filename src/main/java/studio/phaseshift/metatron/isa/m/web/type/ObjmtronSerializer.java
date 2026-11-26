@@ -315,7 +315,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 uriString.contains("@") ||
                 uriString.contains(".") ||
                 // the bare word noobj is the stream's zero (noobj{0}), so the uri of a hole, {1}noobj, is <noobj>
-                "noobj".equals(uriString);
+                NOOBJ_STRING.equals(uriString);
     }
 
     private static String wrapUri(final fURI furi) {
