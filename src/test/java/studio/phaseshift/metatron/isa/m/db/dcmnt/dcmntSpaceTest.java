@@ -25,6 +25,8 @@ import com.mongodb.client.MongoDatabase;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.bson.BsonDecimal128;
+import org.bson.BsonRegularExpression;
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.Decimal128;
 import org.junit.jupiter.api.*;
@@ -1558,7 +1560,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
      * so {@code $sum} answers a double, and another client's decimals sum to a Decimal128, a real too
      * (CommonRewrites.sumOf). The sum plans answered its integer part, then their int range refused it; the generic
      * range answers the real the walk answers. The rows are {@code code % what the walk answers % the op the plan reads
-     * with}; the plan applied on its own answers the walk's real within a double's rounding.
+     * with}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -1580,8 +1582,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
             assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
             final Obj answer = MCode.of(plan.asCode().insts()).apply();
-            assertTrue(answer.isReal(), "a real sum is a real, not " + answer + ": " + plan);
-            assertEquals(Double.parseDouble(expected), answer.realValue(), 1e-9, "the plan's sum: " + plan);
+            checkEquality(LOG, real(Double.parseDouble(expected)), answer, true);
         } finally {
             try (final MongoClient client = MongoClients.create(connectionString)) {
                 client.getDatabase(DB_NAME).getCollection("reals").drop();
@@ -1591,12 +1592,13 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
-     * A SUM OR A MEAN OF WHAT IS NO NUMBER FAILS LOUDLY (2026-11-26, Marko). {@code $sum} and {@code $avg} skip it, and
-     * answered 0 and noobj, where the walk concatenates strs, merges sub-documents, folds lsts or fails. The same
-     * {@code $group} now counts the field's values at or past {@code ""} in BSON's order (dcmntInstSet.fieldAggregate),
-     * and a count above 0 fails the plan, one non-number among numbers too. A date is refused as well, which the walk
-     * reads as its milliseconds and adds. The rows are {@code code % the op the plan reads with}, and the plan applied on
-     * its own must fail so.
+     * A SUM OR A MEAN PLAN OF WHAT IS NO NUMBER FAILS LOUDLY (2026-11-26, Marko). {@code $sum} and {@code $avg} skip it,
+     * and answered 0 and noobj, where the walk concatenates strs, merges sub-documents, folds lsts or fails. The same
+     * {@code $group} now counts the field's values at or past {@code ""} in BSON's order and before a timestamp
+     * (dcmntInstSet.fieldAggregate), {@code ""} itself included, and a count above 0 fails the plan, one non-number among
+     * numbers too. A date is refused as well, which the walk reads as its milliseconds and adds. The rows are
+     * {@code code % the op the plan reads with}, and the plan applied on its own must fail so; an evaluation may answer
+     * the memoized walk instead (CommonRewritesTestContract.runRewriteTest), so it is not asserted here.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -1608,6 +1610,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             "*mongo:typed/+/lst.mean()    % mql_mean",
             "*mongo:typed/+/when.sum()    % mql_sum",
             "*mongo:typed/+/mixed.sum()   % mql_sum",
+            "*mongo:typed/+/blank.sum()   % mql_sum",
     })
     public void testAFieldOfNoNumbersFailsLoudly(final String code, final String reads) {
         try (final MongoClient client = MongoClients.create(connectionString)) {
@@ -1628,8 +1631,9 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
 
     /**
      * A FIELD OF NUMBERS IS SUMMED AND MEANT AS THE WALK DOES (2026-11-26): a null and a missing field are no value to
-     * either, so the count of what is no number stays 0 ({@link #testAFieldOfNoNumbersFailsLoudly}), and a dotted path
-     * into sub-documents' numbers is summed as the walk sums it. The rows are
+     * either, and neither are a timestamp and a regex, which the walk reads as noobj and drops as {@code $sum} skips them,
+     * so the count of what is no number stays 0 ({@link #testAFieldOfNoNumbersFailsLoudly}); a dotted path into
+     * sub-documents' numbers is summed as the walk sums it. The rows are
      * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
@@ -1638,6 +1642,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             "*mongo:typed/+>>num.sum()    % 3     % mql_sum_column",
             "*mongo:typed/+/num.mean()    % 1.5   % mql_mean",
             "*mongo:typed/+/doc/x.sum()   % 3     % mql_sum",
+            "*mongo:typed/+/stamped.sum() % 1     % mql_sum",
     })
     public void testAFieldOfNumbersIsTheWalks(final String code, final String expected, final String reads) {
         try (final MongoClient client = MongoClients.create(connectionString)) {
@@ -1657,18 +1662,19 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
-     * Another client's documents with one field per BSON type a sum meets: numbers (with a null and a missing one), strs,
-     * bools, sub-documents, arrays, dates, and a field mixing a number and a str.
+     * Another client's documents, a field per kind of value a sum meets: numbers (with a null and a missing one), strs,
+     * the empty str, bools, sub-documents, arrays, dates, a field mixing a number and a str, and a number beside a
+     * timestamp and a regex, which the walk reads as noobj.
      */
     private static List<Document> typedDocuments() {
         return List.of(
                 new Document("_id", "1").append("num", 1).append("str", "one").append("bool", true)
                         .append("doc", new Document("x", 1)).append("lst", List.of(1)).append("when", new java.util.Date(0))
-                        .append("mixed", 1),
+                        .append("mixed", 1).append("blank", "").append("stamped", 1),
                 new Document("_id", "2").append("num", 2).append("str", "two").append("bool", false)
                         .append("doc", new Document("x", 2)).append("lst", List.of(2)).append("when", new java.util.Date(1000))
-                        .append("mixed", "two"),
-                new Document("_id", "3").append("num", null),
+                        .append("mixed", "two").append("blank", "").append("stamped", new BsonTimestamp(1, 1)),
+                new Document("_id", "3").append("num", null).append("stamped", new BsonRegularExpression("x")),
                 new Document("_id", "4"));
     }
 
@@ -1678,10 +1684,15 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
      * 1 per document for a source with no field (a count, 10). Both now sum the field the path names, an extension as
      * Mongo's dotted path. A field no document holds sums to the seed, 0, and a source with no field is left to the walk,
      * whose sum of documents is their join. So is a path MongoDB cannot sum as the walk does: a shift key that is no uri,
-     * which the fold leaves out (the plan summed the path's own field, 55, or {@code "$null"}), an index in the
-     * extension, and a branch ({@code +/{value,id}} summed {@code "${value,id}"}, which reads neither field, where the
-     * walk reads both; a branched shift is no uri, so mql_select reads it). The rows are
-     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
+     * which the fold leaves out ({@code +/value>>'x'} summed value, 55, where the walk sums nothing to 0;
+     * {@code +>>'value'} folds to no field at all, declined before that check, and the branched shift
+     * {@code >>{value,id}} is read by mql_select), an index in the extension (a lst field's {@code tags/0}, which
+     * {@code $sum: "$tags.0"} reads as a field named 0 and sums to 0, where the walk takes the elements, and
+     * {@code tags/-1}, whose read fails in the walk, where {@code $sum: "$tags.-1"} answered 0; {@code value/0} holds an
+     * int, so both answer 0 there and only the op tells), and a branched path ({@code +/{value,id}} summed
+     * {@code "${value,id}"}, which reads neither field, where the walk reads both). The rows are
+     * {@code code % what the walk answers % the op the plan reads with}; every row but an {@code <ERROR>} one is
+     * applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -1696,13 +1707,28 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             "*mongo:rewrite_test/+/value/0.sum()    % 0        % from",
             "*mongo:rewrite_test/+>>{value,id}.sum() % 110     % mql_select",
             "*mongo:rewrite_test/+/{value,id}.sum() % 110      % from",
+            "*mongo:tagged/+/tags/0.sum()           % 4        % from",
+            "*mongo:tagged/+/tags/-1.sum()          % <ERROR>  % from",
     })
     public void testASumIsItsField(final String code, final String expected, final String reads) {
-        checkCodeParseApply(LOG, code, expected);
-        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
-        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
-        final Obj want = Machine.parse(expected);
-        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection("tagged").insertMany(List.of(
+                    new Document("_id", "1").append("tags", List.of(1, 2)),
+                    new Document("_id", "2").append("tags", List.of(3, 4))));
+        }
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            if (!"<ERROR>".equals(expected.trim())) {
+                final Obj want = Machine.parse(expected);
+                checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+            }
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("tagged").drop();
+            }
+        }
     }
 
     /**

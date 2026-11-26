@@ -36,9 +36,11 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.db.grph.space.EdgeRec;
+import studio.phaseshift.metatron.isa.m.db.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -54,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -195,6 +198,39 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
         final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
         final Obj want = Machine.parse(expected);
         checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
+     * AN INTEGRAL SUM PAST A LONG IS REFUSED, NEVER CUT (2026-11-26): TinkerPop adds BigInteger properties to a
+     * BigInteger, and CommonRewrites.sumOf answered its longValue(), its low 64 bits, a wrong int. A sum a long holds is
+     * the int it is, at either end of the range. The walk reads no BigInteger property (MObjFactory has no case for one),
+     * so the rows pin the plan applied on its own. Each row is {@code the two values % the sum, or <ERROR> for a
+     * refusal}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "1                      % 2    % 3",
+            "9223372036854775806    % 1    % 9223372036854775807",
+            "9223372036854775807    % 1    % <ERROR>",
+            "-9223372036854775808   % 0    % -9223372036854775808",
+            "-9223372036854775808   % -1   % <ERROR>",
+    })
+    public void testABigIntegerSumIsAnIntOrRefused(final String first, final String second, final String expected) {
+        final grphSpace graph = (grphSpace) Machine.current().memory().getSpaceFor(f("/g"));
+        graph.sjvm().addV("big").property("n", new BigInteger(first.trim())).iterate();
+        graph.sjvm().addV("big").property("n", new BigInteger(second.trim())).iterate();
+        try {
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse("*/g/big/+>>n.sum()"));
+            assertEquals("gremlin_sum", plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            final Obj answer = MCode.of(plan.asCode().insts()).apply();
+            if ("<ERROR>".equals(expected.trim()))
+                assertTrue(answer.isFail() && answer.toString().contains("past an int's range"),
+                        "a sum past a long must be refused, not answer " + answer + ": " + plan);
+            else
+                checkEquality(LOG, jnt(Long.parseLong(expected.trim())), answer, true);
+        } finally {
+            graph.sjvm().V().hasLabel("big").drop().iterate();
+        }
     }
 
     /**

@@ -2869,12 +2869,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     /**
      * A REAL SUM IS A REAL (2026-11-26). The sum plans declared an int range: they answered a sum's {@code longValue()}
      * ({@code sql_sum_column} answered the products' prices with their integer part), and from 2026-11-25 the range
-     * refused the real. They declare the generic range {@code A} now (Marko's {@code sum?A<=A{*}}), so a real sum is
-     * answered as the real it is, whole or not ({@code 0.5 + 1.5} is the walk's {@code 2.0}), and so is a DECIMAL
-     * column's, which the drivers answer as a scaled BigDecimal (sqlite as a double) and the walk reads as a real. The
-     * table is made by SQL, so a space mounted after it finds it, and no other test's drop of a shared table reaches it.
-     * The rows are {@code code % what the walk answers % the op the plan reads with}; the plan applied on its own answers
-     * the walk's real within a double's rounding, since the database and the walk add in their own orders.
+     * refused the real. They declare the generic range {@code A} over their nullary domain {@code #{0}} now (Marko: a
+     * generic sum, no numeric supertype), so a real sum is answered as the real it is, whole or not ({@code 0.5 + 1.5} is
+     * the walk's {@code 2.0}), and so is a DECIMAL column's, which the drivers answer as a scaled BigDecimal (sqlite as a
+     * double) and the walk reads as a real. An op after the plan resolves against the real it answers. The table is made
+     * by SQL, so a space mounted after it finds it, and no other test's drop of a shared table reaches it. The rows are
+     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -2882,6 +2882,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             "*rs:real_sums/+/w.sum()         % 2.0    % sql_sum",
             "*rs:real_sums/+>>amount.sum()   % 3.75   % sql_sum_column",
             "*rs:real_sums/+/amount.sum()    % 3.75   % sql_sum",
+            "*rs:real_sums/+>>w.sum().plus(0.5) % 2.5 % sql_sum_column",
     })
     public void testARealSumIsAReal(final String code, final String expected, final String reads) throws Exception {
         try (final Connection conn = staticDbConfig.getConnection();
@@ -2903,9 +2904,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             checkCodeParseApply(LOG, code, expected);
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
             assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
-            final Obj answer = MCode.of(plan.asCode().insts()).apply();
-            assertTrue(answer.isReal(), "a real sum is a real, not " + answer + ": " + plan);
-            assertEquals(Double.parseDouble(expected), answer.realValue(), 1e-9, "the plan's sum: " + plan);
+            checkEquality(LOG, real(Double.parseDouble(expected)), MCode.of(plan.asCode().insts()).apply(), true);
         } finally {
             mounted.sql("DROP TABLE IF EXISTS real_sums");
             Machine.current().memory().removeSpace(mounted.vid());
@@ -2963,6 +2962,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     @CsvSource(delimiter = '%', value = {
             "*db:rewrite_test/+/value.sum()      % 55                       % sql_sum",
             "*db:rewrite_test/+>>value.sum()     % 55                       % sql_sum_column",
+            "*db:rewrite_test/+>>value.sum().plus(1) % 56                   % sql_sum_column",
             "*db:rewrite_test/+>>value/x.sum()   % 0                        % from",
             "*db:rewrite_test/+/value>>x.sum()   % 0                        % from",
             "*db:rewrite_test/+/value>>'x'.sum() % 0                        % from",

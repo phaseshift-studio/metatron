@@ -247,7 +247,8 @@ public class DBRewriteBuilder<S extends Space> {
      * no column answered 0 and 0.0. A wildcard field ({@code +/+}) and a wildcard below the field ({@code +/points/+},
      * whose walk sums the sub-document's values, where {@code $sum: "$points.+"} answered 0) name no single field
      * either, nor do a shift whose key is no uri, which the fold leaves out ({@code +/value>>'x'} summed value, where
-     * the walk sums nothing to 0), and a branch ({@code >>{value,id}}, two fields). A space declines what else it cannot
+     * the walk sums nothing to 0), and a branched path ({@code +/{value,id}}, two fields; a branched shift,
+     * {@code >>{value,id}}, is no uri and is declined as one). A space declines what else it cannot
      * aggregate, such as a path below a field that holds none.
      */
     public static DataPath fieldPath(final Space space, final List<Inst> matches) {

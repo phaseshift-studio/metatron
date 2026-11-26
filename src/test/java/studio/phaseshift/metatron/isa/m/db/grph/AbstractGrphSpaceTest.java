@@ -210,9 +210,10 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     /**
      * A SUM OF A PROPERTY THAT HOLDS NO NUMBER FAILS LOUDLY (2026-11-26, Marko: a plan over values it cannot add fails
-     * rather than answering a wrong number). TinkerPop's sum casts each value to a Number, so gremlin_sum over the
-     * persons' names or the software's langs fails, where the walk adds strs. The plan must read with gremlin_sum, or
-     * the row would pin the walk.
+     * rather than answering a wrong number). TinkerPop's sum takes each value as a number, so gremlin_sum over the
+     * persons' names or the software's langs fails ("unable to convert str::T to number", on Tinker and on Janus alike),
+     * where the walk adds strs. The plan must read with gremlin_sum, or the row would pin the walk, and the failure must
+     * be that conversion, not any failure the native frame wraps.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -223,8 +224,8 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
         assertEquals("gremlin_sum", plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
         final Obj answer = MCode.of(plan.asCode().insts()).apply();
-        assertTrue(answer.isFail() && answer.toString().contains("from_rshift_sum"),
-                "a sum of what is no number must fail the plan, not answer " + answer + ": " + plan);
+        assertTrue(answer.isFail() && answer.toString().contains("to number"),
+                "a sum of what is no number must fail the plan's conversion to a number, not answer " + answer + ": " + plan);
     }
 
     /**

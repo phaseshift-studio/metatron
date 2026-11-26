@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.db.dcmnt;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
@@ -37,6 +38,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -385,17 +387,21 @@ public class dcmntInstSet extends AbstractInstSet {
      * A SUM OR A MEAN OF A FIELD THAT HOLDS WHAT IS NO NUMBER FAILS LOUDLY (2026-11-26, Marko): {@code $sum} and
      * {@code $avg} skip it, where the walk concatenates strs, merges sub-documents, folds lsts or fails, so the plan
      * answered a number the walk does not. The same {@code $group} counts those values: a value at or past {@code ""} in
-     * BSON's order (a str, a sub-document, an array, a bool, a date), since every number, null and a missing field sort
-     * before it. mongo-java-server orders values so too, and has no {@code $type} or {@code $isNumber}. A count above 0
-     * fails the plan. A date is refused as well, which the walk reads as its milliseconds and adds. Null when no document
-     * is grouped.
+     * BSON's order and before a timestamp (a str, a sub-document, an array, a binary, an ObjectId, a bool, a date), since
+     * every number, null and a missing field sort before {@code ""}. A timestamp, a regex, a DBPointer, JavaScript and
+     * MaxKey sort from the timestamp on, and the walk reads them as noobj and drops them as {@code $sum} skips them, so
+     * they are not counted. A symbol sorts with the strs and a binary without mtron's magic byte with the binaries, so
+     * those two are refused though the walk drops them. mongo-java-server orders values so too, and has no {@code $type}
+     * or {@code $isNumber}. A count above 0 fails the plan. A date is refused as well, which the walk reads as its
+     * milliseconds and adds. Null when no document is grouped.
      */
     private static Number fieldAggregate(final dcmntSpace space, final DataPath dp, final String accumulator) {
         final String field = "$" + dp.fieldPathStr();
         final Document result = space.getDatabase().getCollection(dp.collection()).aggregate(List.of(
                 new Document("$group", new Document(ID_FIELD_STRING, null)
                         .append("value", new Document(accumulator, field))
-                        .append("others", new Document("$sum", new Document("$cond", List.of(new Document("$gte", List.of(field, "")), 1, 0))))))).first();
+                        .append("others", new Document("$sum", new Document("$cond", List.of(new Document("$and", List.of(
+                                new Document("$gte", List.of(field, "")), new Document("$lt", List.of(field, new BsonTimestamp(0, 0))))), 1, 0))))))).first();
         if (null == result)
             return null;
         final long others = result.get("others", Number.class).longValue();
@@ -411,15 +417,15 @@ public class dcmntInstSet extends AbstractInstSet {
      * their join, and their mean fails): {@code $sum: 1} counted them, and {@code $avg: 1} answered 1.0 for any
      * collection with a document. A wildcard field, a wildcard shift or a wildcard below the field (a walk over a
      * sub-document's values) is not representable either: {@code $sum: "$+"} and {@code $sum: "$points.+"} silently
-     * aggregated to 0. Nor is an index below the field ({@code tags/0}): an aggregation path reads it as a field named
-     * 0, where the walk takes a lst's element. Declining lets the walk answer those paths.
+     * aggregated to 0. Nor is an index below the field ({@code tags/0}, {@code tags/-1}, the walk's own index test,
+     * CommonUtil.isInt): an aggregation path reads it as a field named 0, where the walk takes a lst's element.
+     * Declining lets the walk answer those paths.
      */
     private static boolean summablePath(final dcmntSpace space, final List<Inst> matches) {
         if (!readsDocuments(space, matches))
             return false;
         final DataPath dp = DBRewriteBuilder.fieldPath(space, matches);
-        return null != dp && (!dp.hasExtension() || dp.extension().segments().stream()
-                .noneMatch(segment -> !segment.isEmpty() && segment.chars().allMatch(Character::isDigit)));
+        return null != dp && (!dp.hasExtension() || dp.extension().segments().stream().noneMatch(CommonUtil::isInt));
     }
 
     /**

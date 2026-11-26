@@ -140,6 +140,8 @@ public final class CommonRewrites {
      * @param spaceType   The database space type
      * @param rewriteTID  The type ID for this specific rewrite
      * @param sumFunction Function that executes the native sum operation
+     * @param matchSpacePredicate the space's guard on the matched source (a table it holds, a field it can aggregate):
+     *                            the plan stands in only where it answers true
      * @param <S>         The space type
      * @return The rewrite instruction
      */
@@ -160,18 +162,23 @@ public final class CommonRewrites {
     }
 
     /**
-     * A SUM IS AN INT OR A REAL, AS THE WALK'S IS (2026-11-26): the sum plans declare the generic range {@code A}, Marko's
-     * {@code sum?A<=A{*}}, where they declared an int, which refused a real sum ("rhs does not match inst range"). The
-     * plan op is a nullary source ({@code #{0}}), so {@code A} binds nothing and the range takes the int or the real this
-     * answers: never cut, as longValue() answered the products' prices (2817.9) as 2817. The number's own type tells: a
+     * A SUM IS AN INT OR A REAL, AS THE WALK'S IS (2026-11-26): the sum plans declare the generic range {@code A} (Marko:
+     * a generic sum, no numeric supertype), where they declared an int, which refused a real sum ("rhs does not match
+     * inst range"). The plan op is a nullary source ({@code #{0}}), so {@code A} binds nothing and the range takes the int
+     * or the real this answers: never cut, as longValue() answered the products' prices (2817.9) as 2817. The number's own type tells: a
      * Long, Integer, Short, Byte or BigInteger, or an unscaled BigDecimal, is an int, and any other a real, whole or not
      * (0.5 + 1.5 is the walk's 2.0): a Double, a Float, a scaled BigDecimal, and MongoDB's Decimal128, a Number of none
      * of those types. It cannot tell a whole DECIMAL column's sum, which comes back unscaled as MySQL's sum of an INT
-     * column does, so that one still answers an int where the walk reads DECIMAL as a real.
+     * column does, so that one still answers an int where the walk reads DECIMAL as a real. An integral sum past a
+     * long's 64 bits (a BigInteger, or an unscaled BigDecimal, such as MySQL's SUM of a BIGINT) is refused, loudly:
+     * longValue() kept its low 64 bits, a wrong int, and a double would round the integer it is.
      */
     private static Obj sumOf(final Number sum) {
-        return sum instanceof Long || sum instanceof Integer || sum instanceof Short || sum instanceof Byte
-                || sum instanceof BigInteger || (sum instanceof BigDecimal decimal && decimal.scale() <= 0)
+        final BigInteger integral = sum instanceof BigInteger big ? big
+                : sum instanceof BigDecimal decimal && decimal.scale() <= 0 ? decimal.toBigInteger() : null;
+        if (null != integral && integral.bitLength() >= 64)
+            throw MTronException.of("the sum %s is past an int's range", sum);
+        return sum instanceof Long || sum instanceof Integer || sum instanceof Short || sum instanceof Byte || null != integral
                 ? jnt(sum.longValue())
                 : real(sum.doubleValue());
     }
@@ -201,6 +208,8 @@ public final class CommonRewrites {
      * @param spaceType    The database space type
      * @param rewriteTID   The type ID for this specific rewrite
      * @param meanFunction Function that executes the native mean/average operation
+     * @param matchSpacePredicate the space's guard on the matched source (a table it holds, a field it can aggregate):
+     *                            the plan stands in only where it answers true
      * @param <S>          The space type
      * @return The rewrite instruction
      */
@@ -254,7 +263,7 @@ public final class CommonRewrites {
      * <pre>{@code
      * CommonRewrites.limitRewrite(
      *     tbleSpace.class,
-     *     TBLE_ISA_REWRITE_TID.extend("native_limit"),
+     *     TBLE_ISA_REWRITE_TID.extend("sql_limit"),
      *     (space, dp, limit) -> {
      *         String query = "SELECT * FROM " + dp.collection() + " LIMIT " + limit;
      *         try (Statement stmt = space.sjvm().createStatement();
@@ -268,7 +277,9 @@ public final class CommonRewrites {
      *
      * @param spaceType     The database space type
      * @param rewriteTID    The type ID for this specific rewrite
-     * @param limitFunction Function that executes the native limit operation (receives space, furi, and limit value)
+     * @param limitFunction Function that executes the native limit operation (receives the space, the source's DataPath and the limit)
+     * @param matchSpacePredicate the space's guard on the matched source (a table it holds, a field it can aggregate):
+     *                            the plan stands in only where it answers true
      * @param <S>           The space type
      * @return The rewrite instruction
      */
@@ -292,10 +303,6 @@ public final class CommonRewrites {
      */
     private static class LimitDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final LimitOperation<S> limitOperation;
-
-        LimitDBRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation) {
-            this(spaceType, limitOperation, null);
-        }
 
         LimitDBRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation,
                               final BiPredicate<S, List<Inst>> matchSpacePredicate) {
@@ -369,36 +376,6 @@ public final class CommonRewrites {
     }
 
     /**
-     * Create a product optimization rewrite.
-     *
-     * <p>Optimizes {@code from(furi).prod()} to use native database operations
-     * where supported.
-     *
-     * @param spaceType    The database space type
-     * @param rewriteTID   The type ID for this specific rewrite
-     * @param prodFunction Function that executes the native product operation
-     * @param <S>          The space type
-     * @return The rewrite instruction
-     */
-    public static <S extends Space> Inst prodRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final BiFunction<S, DataPath, Number> prodFunction) {
-
-        return DBRewriteBuilder.forDatabase(spaceType)
-                .tid(rewriteTID)
-                .rng(Tokens.INT_TID.maybe().some())
-                .match(FROM_INST_TID, PROD_INST_TID)
-                .optimize("from_prod", (space, dp, coeff) -> {
-                    final Number prod = prodFunction.apply(space, dp);
-                    return (prod instanceof Double || prod instanceof Float)
-                            ? real(prod.doubleValue())
-                            : jnt(prod.longValue());
-                })
-                .build();
-    }
-
-    /**
      * Functional interface for select/projection operations.
      *
      * @param <S> The space type
@@ -432,6 +409,8 @@ public final class CommonRewrites {
      * @param spaceType      The database space type
      * @param rewriteTID     The type ID for this specific rewrite
      * @param selectFunction Function that executes the native select operation
+     * @param matchSpacePredicate the space's guard on the matched source (a table it holds, a field it can aggregate):
+     *                            the plan stands in only where it answers true
      * @param <S>            The space type
      * @return The rewrite instruction
      */
@@ -455,10 +434,6 @@ public final class CommonRewrites {
      */
     private static class SelectDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final SelectOperation<S> selectOperation;
-
-        SelectDBRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation) {
-            this(spaceType, selectOperation, null);
-        }
 
         SelectDBRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation,
                                final BiPredicate<S, List<Inst>> matchSpacePredicate) {
@@ -662,6 +637,8 @@ public final class CommonRewrites {
      * @param spaceType     The database space type
      * @param rewriteTID    The type ID for this specific rewrite
      * @param whereFunction Function that executes the native where operation
+     * @param matchSpacePredicate the space's guard on the matched source (a table it holds, a field it can aggregate):
+     *                            the plan stands in only where it answers true
      * @param <S>           The space type
      * @return The rewrite instruction
      */
@@ -689,12 +666,6 @@ public final class CommonRewrites {
         private final WhereOperation<S> whereOperation;
         private final PredicateJoiner predicateJoiner;
         private final ConditionFormatter conditionFormatter;
-
-        WhereDBRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
-                              final PredicateJoiner predicateJoiner,
-                              final ConditionFormatter conditionFormatter) {
-            this(spaceType, whereOperation, predicateJoiner, conditionFormatter, null);
-        }
 
         WhereDBRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
                               final PredicateJoiner predicateJoiner,
@@ -979,11 +950,6 @@ public final class CommonRewrites {
         private final WhereCountOperation<S> whereCountOperation;
 
         WhereCountDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                   final WhereCountOperation<S> whereCountOperation) {
-            this(spaceType, whereRewriteTID, whereCountOperation, null);
-        }
-
-        WhereCountDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
                                    final WhereCountOperation<S> whereCountOperation,
                                    final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
@@ -1123,11 +1089,6 @@ public final class CommonRewrites {
         private final WhereLimitOperation<S> whereLimitOperation;
 
         WhereLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                   final WhereLimitOperation<S> whereLimitOperation) {
-            this(spaceType, whereRewriteTID, whereLimitOperation, null);
-        }
-
-        WhereLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
                                    final WhereLimitOperation<S> whereLimitOperation,
                                    final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
@@ -1225,6 +1186,8 @@ public final class CommonRewrites {
      * @param spaceType    The database space type
      * @param rewriteTID   The type ID for this specific rewrite
      * @param skipFunction Function that executes the native skip operation (receives space, dp, and skip value)
+     * @param matchSpacePredicate the space's guard on the matched source (a table it holds, a field it can aggregate):
+     *                            the plan stands in only where it answers true
      * @param <S>          The space type
      * @return The rewrite instruction
      */
@@ -1248,10 +1211,6 @@ public final class CommonRewrites {
      */
     private static class SkipDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final SkipOperation<S> skipOperation;
-
-        SkipDBRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation) {
-            this(spaceType, skipOperation, null);
-        }
 
         SkipDBRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation,
                              final BiPredicate<S, List<Inst>> matchSpacePredicate) {
@@ -1379,11 +1338,6 @@ public final class CommonRewrites {
         private final OffsetLimitOperation<S> offsetLimitOperation;
 
         OffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
-                                    final OffsetLimitOperation<S> offsetLimitOperation) {
-            this(spaceType, offsetRewriteTID, offsetLimitOperation, null);
-        }
-
-        OffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
                                     final OffsetLimitOperation<S> offsetLimitOperation,
                                     final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
@@ -1508,11 +1462,6 @@ public final class CommonRewrites {
         private final WhereOffsetOperation<S> whereOffsetOperation;
 
         WhereOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                    final WhereOffsetOperation<S> whereOffsetOperation) {
-            this(spaceType, whereRewriteTID, whereOffsetOperation, null);
-        }
-
-        WhereOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
                                     final WhereOffsetOperation<S> whereOffsetOperation,
                                     final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
@@ -1599,11 +1548,6 @@ public final class CommonRewrites {
     private static class WhereOrderDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI whereRewriteTID;
         private final WhereOrderOperation<S> whereOrderOperation;
-
-        WhereOrderDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                   final WhereOrderOperation<S> whereOrderOperation) {
-            this(spaceType, whereRewriteTID, whereOrderOperation, null);
-        }
 
         WhereOrderDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
                                    final WhereOrderOperation<S> whereOrderOperation,
@@ -1703,11 +1647,6 @@ public final class CommonRewrites {
         private final WhereOrderOffsetOperation<S> whereOrderOffsetOperation;
 
         WhereOrderOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
-                                         final WhereOrderOffsetOperation<S> whereOrderOffsetOperation) {
-            this(spaceType, whereOrderRewriteTID, whereOrderOffsetOperation, null);
-        }
-
-        WhereOrderOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
                                          final WhereOrderOffsetOperation<S> whereOrderOffsetOperation,
                                          final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
@@ -1797,11 +1736,6 @@ public final class CommonRewrites {
         private final WhereOffsetLimitOperation<S> whereOffsetLimitOperation;
 
         WhereOffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
-                                         final WhereOffsetLimitOperation<S> whereOffsetLimitOperation) {
-            this(spaceType, whereOffsetRewriteTID, whereOffsetLimitOperation, null);
-        }
-
-        WhereOffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
                                          final WhereOffsetLimitOperation<S> whereOffsetLimitOperation,
                                          final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
@@ -1887,10 +1821,6 @@ public final class CommonRewrites {
 
     private static class OrderDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final OrderOperation<S> orderOperation;
-
-        OrderDBRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation) {
-            this(spaceType, orderOperation, null);
-        }
 
         OrderDBRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation,
                               final BiPredicate<S, List<Inst>> matchSpacePredicate) {
@@ -1988,10 +1918,6 @@ public final class CommonRewrites {
 
     private static class DedupDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final DedupOperation<S> dedupOperation;
-
-        DedupDBRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation) {
-            this(spaceType, dedupOperation, null);
-        }
 
         DedupDBRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation,
                               final BiPredicate<S, List<Inst>> matchSpacePredicate) {
