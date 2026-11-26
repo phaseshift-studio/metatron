@@ -65,7 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -1609,6 +1608,9 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                 uri(NAME), str("main_stage"),
                 uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
         try (final MongoClient client = MongoClients.create(connectionString)) {
+            // the migration stored wrapped/x's 5 wrapped, so the query below reads a stored value
+            assertEquals(1, client.getDatabase(DB_NAME).getCollection("wrapped")
+                    .countDocuments(new Document(dcmntSpace.MTRON_VALUE_FIELD, 5)));
             client.getDatabase(DB_NAME).getCollection("nulls").insertMany(List.of(
                     new Document("_id", null).append("n", 1),
                     new Document("_id", "a").append("n", 2)));
@@ -1632,14 +1634,49 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
+     * THE MQL INSTRUCTION ANSWERS AS ITS SPACE'S QUERY DOES (2026-11-26, Marko: as a read does, the {@code _id} the
+     * name of the vid): a dcmnt space's {@code mql(collection, query)} answers the documents dcmntSpace.mql answers. The
+     * rows are {@code code % what the query answers}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', quoteCharacter = '^', value = {
+            "*/memory/space/doc/test.mql(<arenas>,[name=>'main_stage'])>>name                  % 'main_stage'",
+            "*/memory/space/doc/test.mql(<arenas>,[name=>'main_stage'])>>{<_id>,name}.count()  % 1",
+            "*/memory/space/doc/test.mql(<arenas>,[name=>'main_stage'])>>venue>>name           % 'downtown'",
+    })
+    public void testTheMqlInstructionAnswersAsTheQuery(final String code, final String expected) {
+        Machine.write(f("mongo:locations/1"), rec(uri(NAME), str("downtown")));
+        Machine.write(f("mongo:arenas/1"), rec(
+                uri(NAME), str("main_stage"),
+                uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
+        try {
+            checkCodeParseApply(LOG, code, expected);
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("arenas").drop();
+                client.getDatabase(DB_NAME).getCollection("locations").drop();
+            }
+        }
+    }
+
+    /**
      * A SUBSCRIBER HEARS A DOCUMENT AS A READ OF ITS ADDRESS ANSWERS IT (2026-11-26). No subscriber of a collection heard
      * anything: dcmntSpaceSubQ took the subscribed path apart with DataPath.of, which reads feed:arenas/+ as database
      * arenas and collection +, so the watcher watched a collection named +. It takes the routed path apart as the
      * space's reads do now. And it published readRec of the change stream's raw document, which a subscriber with the
      * watcher fixed alone did not hear either: the driver decodes a reference as a DBRef, which toBsonDocument has no
-     * codec for, and the failure ended the watcher. It publishes through dcmntSpace.processDocument now. A change stream
-     * needs an oplog, which the shared in-memory server does not keep, so the subscription runs against a server of its
-     * own.
+     * codec for, and the failure ended the watcher. It publishes through dcmntSpace.processDocument now, at the vid a
+     * read gives the document: another client's {@code _id} 7 was published at its BSON value's toString(),
+     * feed:arenas/BsonInt32{value=7}, and a document whose {@code _id} is null, which the walk skips, at
+     * feed:arenas/BsonNull. A subscription answers its own write, as the generic subq's does: the write went on to the
+     * store, so a subscription to one document wrote its subscriber into the document ("unsupported Inst type in BSON
+     * serializer"), and an unsubscribe deleted the document. A subscription to one document hears its insert and its
+     * delete (noobj). Not its update: mongo-java-server 1.47.0 keys an update's change with the update itself
+     * ({@code documentKey} is the oplog's {@code o}, {@code {$set: ...}}, where MongoDB gives the {@code _id}), so
+     * no change of an update carries the {@code _id} the subscription and the published vid read. Each
+     * subscription's watcher publishes to every subscription its document matches, so the two subscriptions watch two
+     * collections. A change stream needs an oplog, which the shared in-memory server does not keep, so the
+     * subscriptions run against a server of their own.
      */
     @Test
     public void testASubscriberHearsADocumentAsItsRead() throws Exception {
@@ -1647,34 +1684,59 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         backend.enableOplog();
         final MongoServer server = new MongoServer(backend);
         final InetSocketAddress address = server.bind();
+        final fURI store = f().scheme("mongodb").host(address.getHostString()).port(address.getPort());
         final dcmntSpace feed = dcmntSpace.of(
                 rec(
                         uri(PATTERN), uri("feed:#"),
                         uri(QPROC), lst(QCollection.subQ()),
-                        uri(HOST), uri("mongodb://" + address.getHostString() + ":" + address.getPort() + "/" + DB_NAME),
+                        uri(HOST), uri(store.extend(f(DB_NAME).asAbsolute())),
                         uri(ROUTE), rec(uri("feed:"), uri("")),
                         uri(COLLECTION), lst()
                 ).jvm(),
                 f("/memory/space/doc/feed_test"));
-        final AtomicReference<Obj> heard = new AtomicReference<>();
-        try {
+        final List<Obj> toCollection = new java.util.concurrent.CopyOnWriteArrayList<>();
+        final List<Obj> toDocument = new java.util.concurrent.CopyOnWriteArrayList<>();
+        try (final MongoClient client = MongoClients.create(store.toString())) {
+            // a subscription answers its write, so an unsubscribe is no delete of the document it names
+            Machine.write(f("feed:stages/2"), rec(uri(NAME), str("kept")));
+            Machine.write(f("feed:stages/2").addQ(SUBQ), noobj());
+            checkEquality(LOG, str("kept"), Machine.read(f("feed:stages/2/name")), true);
             Machine.write(f("feed:locations/1"), rec(uri(NAME), str("downtown")));
             Machine.write(f("feed:arenas/+").addQ(SUBQ), instLambda((pub, inst) -> {
-                heard.compareAndSet(null, pub.asLst().lstValue().get(1));
+                toCollection.add(pub);
+                return noobj();
+            }));
+            Machine.write(f("feed:stages/1").addQ(SUBQ), instLambda((pub, inst) -> {
+                toDocument.add(pub);
                 return noobj();
             }));
             Machine.write(f("feed:arenas/1"), rec(
                     uri(NAME), str("main_stage"),
                     uri("venue"), auto_from_(f("feed:locations/1")).tryToInst()));
-            final long deadline = System.currentTimeMillis() + 5000;
-            while (null == heard.get() && System.currentTimeMillis() < deadline)
+            // another client's documents: an _id of no str, and a null _id, which the walk skips
+            client.getDatabase(DB_NAME).getCollection("arenas").insertMany(List.of(
+                    new Document("_id", null).append(NAME, "nobody"),
+                    new Document("_id", 7).append(NAME, "seven")));
+            Machine.write(f("feed:stages/1"), rec(uri(NAME), str("open_air")));
+            Machine.write(f("feed:stages/1"), noobj());
+            final long deadline = System.currentTimeMillis() + 10000;
+            while ((toCollection.size() < 2 || toDocument.size() < 2) && System.currentTimeMillis() < deadline)
                 Thread.sleep(20);
-            assertNotNull(heard.get(), "the subscriber hears the document");
-            assertEquals(f("feed:arenas/1"), heard.get().vid(), "the _id is the name of the document's vid");
-            checkEquality(LOG, noobj(), heard.get().asRec().at(uri(dcmntSpace.ID_FIELD)), true);
-            checkEquality(LOG, str("downtown"), heard.get().asRec().at(uri("venue")).asRec().at(uri(NAME)), true);
+            assertEquals(List.of(f("feed:arenas/1"), f("feed:arenas/7")),
+                    toCollection.stream().map(pub -> pub.asLst().lstValue().get(0).uriValue()).toList(),
+                    "the collection's subscriber hears each document at the vid a read gives it, and no null _id");
+            final Obj arena = toCollection.getFirst().asLst().lstValue().get(1);
+            checkEquality(LOG, noobj(), arena.asRec().at(uri(dcmntSpace.ID_FIELD)), true);
+            checkEquality(LOG, str("downtown"), arena.asRec().at(uri("venue")).asRec().at(uri(NAME)), true);
+            checkEquality(LOG, str("seven"), toCollection.get(1).asLst().lstValue().get(1).asRec().at(uri(NAME)), true);
+            assertEquals(List.of(f("feed:stages/1"), f("feed:stages/1")),
+                    toDocument.stream().map(pub -> pub.asLst().lstValue().get(0).uriValue()).toList(),
+                    "the document's subscriber hears its insert and its delete");
+            checkEquality(LOG, str("open_air"), toDocument.get(0).asLst().lstValue().get(1).asRec().at(uri(NAME)), true);
+            checkEquality(LOG, noobj(), toDocument.get(1).asLst().lstValue().get(1), true);
         } finally {
             Machine.write(f("feed:arenas/+").addQ(SUBQ), noobj());
+            Machine.write(f("feed:stages/1").addQ(SUBQ), noobj());
             Machine.current().memory().removeSpace(feed.vid());
             feed.close();
             server.shutdown();

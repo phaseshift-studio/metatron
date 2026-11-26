@@ -27,7 +27,10 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.model.changestream.OperationType;
 import org.bson.BsonDocument;
+import org.bson.BsonDocumentReader;
 import org.bson.Document;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import studio.phaseshift.metatron.furi.DataPath;
@@ -47,7 +50,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.SUBQ;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.db.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -73,7 +75,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * <p>The subscription callback receives:
  * <ul>
- *   <li>For insert/update/replace: the full document as a rec</li>
+ *   <li>For insert/update/replace: the document as a read of its address answers it (no {@code _id} field, the
+ *   vid's name its {@code _id}, a value stored at the entry unwrapped); a document whose {@code _id} is null is
+ *   not published</li>
  *   <li>For delete: noobj (triggers callback with noobj)</li>
  * </ul>
  *
@@ -131,55 +135,44 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
         public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
             LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
 
-            if (vid.hasQ(SUBQ)) {
-                final fURI basePath = vid.basePath();
-
-                if (obj.isNoObj()) {
-                    // Unsubscribe: stop the change stream watcher
-                    final WatcherHandle handle = activeWatchers.remove(basePath);
-                    if (handle != null) {
-                        handle.stop();
-                        LOG.info("unsubscribed from change stream: {{y}}%s{{X}}", basePath);
-                    }
-                    // Also remove from subq's subscription list
-                    subq.onWrite().ifPresent(w -> w.preWrite(vid, obj));
-                } else {
-                    // Subscribe: start a change stream watcher
-                    // First register with subq
-                    subq.onWrite().ifPresent(w -> w.preWrite(vid, obj));
-
-                    // Parse the path to determine collection and optional document ID
-                    // the routed path taken apart as the space's own reads take it (its first segment the
-                    // collection): DataPath.of read feed:arenas/+ as database arenas and collection +, so
-                    // the watcher watched a collection named + and no subscriber heard a change
-                    final DataPath dp = space.dataPath(space.redirect(basePath, true));
-                    // final List<String> segments = reladtivePath.segments();
-
-                    if (!dp.hasCollection()) {
-                        LOG.warn("must subscribe to a collection: %s", basePath);
-                        return Optional.empty();
-                    }
-
-                    final String collectionName = dp.collection();
-                    final String documentId = dp.entry();
-
-                    // Don't create duplicate watchers for the same pattern
-                    if (activeWatchers.containsKey(basePath)) {
-                        LOG.debug("watcher already exists for: %s", basePath);
-                        return Optional.empty();
-                    }
-
-                    try {
-                        startChangeStreamWatcher(basePath, collectionName, documentId);
-                        LOG.info("subscribed to change stream: {{y}}%s{{X}} (collection: %s, docId: %s)",
-                                basePath, collectionName, documentId);
-                    } catch (final Exception e) {
-                        LOG.error("failed to start change stream for %s: %s", basePath, e.getMessage());
-                        return Optional.empty();
-                    }
+            if (!vid.hasQ(SUBQ))
+                return Optional.empty();
+            // THE SUBSCRIPTION ANSWERS THE WRITE (2026-11-26), as the generic subq's preWrite answers it for every other
+            // space: its answer was dropped, so the write went on to the store, which wrote a subscriber into a
+            // document it named ("unsupported Inst type in BSON serializer") and read an unsubscribe's noobj as the
+            // document's delete
+            final fURI basePath = vid.basePath();
+            final Optional<Obj> answer = subq.onWrite().flatMap(w -> w.preWrite(vid, obj));
+            if (obj.isNoObj()) {
+                // Unsubscribe: stop the change stream watcher
+                final WatcherHandle handle = activeWatchers.remove(basePath);
+                if (handle != null) {
+                    handle.stop();
+                    LOG.info("unsubscribed from change stream: {{y}}%s{{X}}", basePath);
                 }
+                return answer;
             }
-            return Optional.empty();
+            // Subscribe: start a change stream watcher. The routed path is taken apart as the space's own reads take it
+            // (its first segment the collection): DataPath.of read feed:arenas/+ as database arenas and collection +,
+            // so the watcher watched a collection named + and no subscriber heard a change
+            final DataPath dp = space.dataPath(space.redirect(basePath, true));
+            if (!dp.hasCollection()) {
+                LOG.warn("must subscribe to a collection: %s", basePath);
+                return answer;
+            }
+            // Don't create duplicate watchers for the same pattern
+            if (activeWatchers.containsKey(basePath)) {
+                LOG.debug("watcher already exists for: %s", basePath);
+                return answer;
+            }
+            try {
+                startChangeStreamWatcher(basePath, dp.collection(), dp.entry());
+                LOG.info("subscribed to change stream: {{y}}%s{{X}} (collection: %s, docId: %s)",
+                        basePath, dp.collection(), dp.entry());
+            } catch (final Exception e) {
+                LOG.error("failed to start change stream for %s: %s", basePath, e.getMessage());
+            }
+            return answer;
         }
     }
 
@@ -260,23 +253,15 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
             return;
         }
 
-        final String docIdStr;
-        if (docKey.containsKey("_id")) {
-            final var idValue = docKey.get("_id");
-            if (idValue.isObjectId()) {
-                docIdStr = idValue.asObjectId().getValue().toHexString();
-            } else if (idValue.isString()) {
-                docIdStr = idValue.asString().getValue();
-            } else {
-                docIdStr = idValue.toString();
-            }
-        } else {
+        // the vid a read gives the document, its name the _id as dcmntSpace.idToString writes it: the BSON value's own
+        // toString() published another client's _id 7 at feed:arenas/BsonInt32{value=7}, which a read lists at
+        // feed:arenas/7. A document whose _id is null is no entry the walk lists, so its change is not published
+        final Document key = new DocumentCodec().decode(new BsonDocumentReader(docKey), DecoderContext.builder().build());
+        if (null == key.get(dcmntSpace.ID_FIELD)) {
             LOG.debug("change event without _id in document key, skipping");
             return;
         }
-
-        // Build the document fURI
-        final fURI docVID = f(space.pattern().retractPattern().extend(collectionName).extend(docIdStr).toString());
+        final fURI docVID = this.space.pattern().retractPattern().extend(collectionName).extend(dcmntSpace.idToString(key));
 
         // Determine the obj to send to subscribers
         final Obj obj;
@@ -289,7 +274,7 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
                 // published as a read of docVID answers it (dcmntSpace.processDocument): readRec of the raw
                 // document kept its _id as a field, read a stored value as its wrapper rec, and failed on a
                 // document holding a reference, which the driver decodes as a DBRef
-                obj = space.processDocument(fullDoc).selfVID(docVID);
+                obj = this.space.processDocument(fullDoc).selfVID(docVID);
             } else {
                 // Fallback if full document not available
                 LOG.debug("full document not available for change event on %s", docVID);

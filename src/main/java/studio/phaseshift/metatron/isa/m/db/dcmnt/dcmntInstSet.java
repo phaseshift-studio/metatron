@@ -144,8 +144,10 @@ public class dcmntInstSet extends AbstractInstSet {
                                         """)
                                 .create().asType()),
                 uri(INST), lst(
-                        instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
-                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Machine.current().memory().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
+                        // the documents a query matches, each as a read of its address answers it: a value stored
+                        // at an entry is no rec, so the range is the generic A{*}, not rec{*}
+                        instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(InstSet.A.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
+                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(InstSet.A.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Machine.current().memory().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
                                 "a document collection",
                                 "the result of the mql query",
                                 Map.of(jnt(0), "an mql query represented as a rec"),

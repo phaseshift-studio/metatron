@@ -659,8 +659,9 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
     // =======================================================================
 
     /**
-     * The documents a MongoDB query matches, each read as a read of its address answers it ({@link #documents}): its
-     * {@code _id} is the name of its vid, never a field (Marko, 2026-11-26). The query read the raw document, so it
+     * The documents a MongoDB query matches, each read as the plans read it ({@link #documents}): through
+     * processDocument, its {@code _id} the name of its vid, never a field (Marko, 2026-11-26), and typed to its
+     * collection when it fits, which a read of its address does not do. The query read the raw document, so it
      * answered the {@code _id} as a field, a stored value as the rec that wraps it, and failed on a document holding a
      * reference ("Can't find a codec ... DBRef").
      */

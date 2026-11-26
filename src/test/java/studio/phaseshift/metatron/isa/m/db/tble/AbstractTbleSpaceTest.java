@@ -1812,6 +1812,29 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
+     * A NEGATIVE COUNT IS THE WALK'S ON THE KV STORE TOO (2026-11-26, DBRewriteBuilder.build), as testANegativeCountIsTheWalks
+     * explains: sql_kv_limit took keys while it held fewer than the count, so a take(-1) took none and answered 0 where
+     * the walk answers the last key. The rows are {@code code % what the walk answers % the op the plan reads with}, and
+     * the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:kvtest/+.take(-1).count()      % 1  % from",
+            "*db:kvtest/sub/+.take(-1).count()  % 1  % from",
+    })
+    public void testAKVNegativeCountIsTheWalks(final String code, final String expected, final String reads) {
+        seedKVData();
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            checkEquality(LOG, Machine.parse(expected), MCode.of(plan.asCode().insts()).apply(), true);
+        } finally {
+            cleanKVData();
+        }
+    }
+
+    /**
      * A write whose value computes to a fail stores nothing: the failed argument fails the write itself. The KV seed
      * above was once {@code str('alpha')}, which names no instruction ({@code str} reads back the str::T type, which
      * has no inst function) and so always computed to a fail. The write took that fail as its value and kv_store kept
