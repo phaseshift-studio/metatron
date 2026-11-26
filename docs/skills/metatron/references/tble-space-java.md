@@ -162,9 +162,10 @@ A table plan stands in only for a source that reads every row of one table, rout
 (`table/+/col` for `sql_sum` and `sql_mean`, `table/+>>col` for `sql_sum_column`, where `col` is one numeric column of
 the table). A single row (`table/1`), the table itself, `table/#`, a source no route made relative, a column below a
 row for any other plan (`table/+/col.take(2)` answers values, not rows), and a sum or a mean of no column, of a path
-below a column, or of a column that holds no number or that the table lacks are read by the walk. A sum the plans' int
-range cannot hold (a REAL, DOUBLE or scaled DECIMAL column) fails that range rather than answering its integer part,
-and an empty table's mean is noobj.
+below a column, or of a column that holds no number or that the table lacks are read by the walk. The sum plans
+declare the generic range `A` (`sum?A<=A{*}`), so a REAL, DOUBLE or scaled DECIMAL column sums to the real the walk
+answers, and an INT column to an int; a whole DECIMAL column's sum comes back unscaled, as an int, where the walk reads
+DECIMAL as a real. An empty table's mean is noobj.
 
 **Composition:** Multiple rewrites can chain via the `Code.rewrite()` fixed-point loop. Simple example —
 `from(uri).skip(100).take(10)` fires two rewrites in sequence:

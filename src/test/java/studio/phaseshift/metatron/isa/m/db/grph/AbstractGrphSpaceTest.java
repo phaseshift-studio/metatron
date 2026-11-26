@@ -189,21 +189,42 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
-     * A REAL SUM IS NOT CUT TO ITS INTEGER PART, as on tble ({@code AbstractTbleSpaceTest}, which explains it): an edge
-     * label's weights are reals, and the label-aware gremlin_sum answered the knows weights' 1.5 as 1. This asserts the
-     * int range's refusal, not the ideal (the walk answers 1.5): main's gremlin_sum failed too, on the empty traversal
-     * of every vertex's weight, which is no refusal.
+     * A REAL SUM IS A REAL, as on tble ({@code AbstractTbleSpaceTest}, which explains it): an edge label's weights are
+     * reals, and the label-aware gremlin_sum answered the knows weights' 1.5 as 1, then its int range refused it. The
+     * generic range answers the real the walk answers. The rows are {@code code % what the walk answers}; the plan
+     * applied on its own answers the walk's real within a double's rounding.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "*/g/knows/+>>weight.sum()",
-            "*/g/E/+>>weight.sum()",
+            "*/g/knows/+>>weight.sum()   % 1.5",
+            "*/g/E/+>>weight.sum()       % 3.5",
     })
-    public void testARealSumIsRefusedNotCut(final String code) {
+    public void testARealSumIsAReal(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
         final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals("gremlin_sum", plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
         final Obj answer = MCode.of(plan.asCode().insts()).apply();
-        assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
-                "a real sum must fail the plan's int range, not answer " + answer + ": " + plan);
+        assertTrue(answer.isReal(), "a real sum is a real, not " + answer + ": " + plan);
+        assertEquals(Double.parseDouble(expected), answer.realValue(), 1e-9, "the plan's sum: " + plan);
+    }
+
+    /**
+     * A SUM OF A PROPERTY THAT HOLDS NO NUMBER FAILS LOUDLY (2026-11-26, Marko: a plan over values it cannot add fails
+     * rather than answering a wrong number). TinkerPop's sum casts each value to a Number, so gremlin_sum over the
+     * persons' names or the software's langs fails, where the walk adds strs. The plan must read with gremlin_sum, or
+     * the row would pin the walk.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*/g/person/+>>name.sum()",
+            "*/g/software/+>>lang.sum()",
+    })
+    public void testANonNumericSumFailsLoudly(final String code) {
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals("gremlin_sum", plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        final Obj answer = MCode.of(plan.asCode().insts()).apply();
+        assertTrue(answer.isFail() && answer.toString().contains("from_rshift_sum"),
+                "a sum of what is no number must fail the plan, not answer " + answer + ": " + plan);
     }
 
     /**

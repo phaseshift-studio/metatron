@@ -2867,58 +2867,47 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
-     * A REAL SUM IS NOT CUT TO ITS INTEGER PART (2026-11-25). The sum plans declare an int range, and answered a sum's
-     * {@code longValue()}: {@code sql_sum_column} answered the products' prices with their integer part. A real sum is
-     * now answered as a real, whole or not (the users' salaries may sum to a whole number), which the int range refuses. This asserts the refusal, not the ideal: the walk
-     * answers the real, and when a plan can answer one these rows are expected to fail, the signal to move them to
-     * {@link #testAnEntrySourceAnswersAsTheWalk}'s form. The plan is applied on its own, as the evaluation can run the
-     * memoized walk (see {@code CommonRewritesTestContract.runRewriteTest}).
+     * A REAL SUM IS A REAL (2026-11-26). The sum plans declared an int range: they answered a sum's {@code longValue()}
+     * ({@code sql_sum_column} answered the products' prices with their integer part), and from 2026-11-25 the range
+     * refused the real. They declare the generic range {@code A} now (Marko's {@code sum?A<=A{*}}), so a real sum is
+     * answered as the real it is, whole or not ({@code 0.5 + 1.5} is the walk's {@code 2.0}), and so is a DECIMAL
+     * column's, which the drivers answer as a scaled BigDecimal (sqlite as a double) and the walk reads as a real. The
+     * table is made by SQL, so a space mounted after it finds it, and no other test's drop of a shared table reaches it.
+     * The rows are {@code code % what the walk answers % the op the plan reads with}; the plan applied on its own answers
+     * the walk's real within a double's rounding, since the database and the walk add in their own orders.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "*db:products/+>>price.sum()",
-            "*db:products/+/price.sum()",
-            "*db:users/+>>salary.sum()",
+            "*rs:real_sums/+>>w.sum()        % 2.0    % sql_sum_column",
+            "*rs:real_sums/+/w.sum()         % 2.0    % sql_sum",
+            "*rs:real_sums/+>>amount.sum()   % 3.75   % sql_sum_column",
+            "*rs:real_sums/+/amount.sum()    % 3.75   % sql_sum",
     })
-    public void testARealSumIsRefusedNotCut(final String code) {
-        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
-        final Obj answer = MCode.of(plan.asCode().insts()).apply();
-        assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
-                "a real sum must fail the plan's int range, not answer " + answer + ": " + plan);
-    }
-
-    /**
-     * A DECIMAL COLUMN'S SUM IS A REAL (2026-11-25): the walk reads a DECIMAL value as a real, and the drivers answer its
-     * sum as a scaled BigDecimal (sqlite as a double), which the plans' int range refuses as it does a DOUBLE's. The
-     * plans answered its integer part. The table is made by SQL, so a space mounted after it finds it. This asserts the
-     * refusal, not the ideal (see {@link #testARealSumIsRefusedNotCut}).
-     */
-    @Test
-    public void testADecimalSumIsRefusedNotCut() throws Exception {
+    public void testARealSumIsAReal(final String code, final String expected, final String reads) throws Exception {
         try (final Connection conn = staticDbConfig.getConnection();
              final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS dec_test");
-            stmt.executeUpdate("CREATE TABLE dec_test (id INTEGER PRIMARY KEY, amount DECIMAL(10,2))");
-            stmt.executeUpdate("INSERT INTO dec_test (id, amount) VALUES (1, 1.25), (2, 2.50)");
+            stmt.executeUpdate("DROP TABLE IF EXISTS real_sums");
+            stmt.executeUpdate("CREATE TABLE real_sums (id INTEGER PRIMARY KEY, w REAL, amount DECIMAL(10,2))");
+            stmt.executeUpdate("INSERT INTO real_sums (id, w, amount) VALUES (1, 0.5, 1.25), (2, 1.5, 2.50)");
         }
         final tbleSpace mounted = tbleSpace.of(
                 rec(
-                        uri(PATTERN), uri("dec:#"),
+                        uri(PATTERN), uri("rs:#"),
                         uri(HOST), uri(staticDbConfig.getJdbcHost()),
                         uri(DRIVER), uri(staticDbConfig.getDriverClass()),
-                        uri(ROUTE), rec(uri("dec:"), uri("")),
+                        uri(ROUTE), rec(uri("rs:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/memory/space/tble/decimal_test"));
+                f("/memory/space/tble/real_sum_test"));
         try {
-            for (final String code : List.of("*dec:dec_test/+>>amount.sum()", "*dec:dec_test/+/amount.sum()")) {
-                final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
-                final Obj answer = MCode.of(plan.asCode().insts()).apply();
-                assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
-                        "a DECIMAL sum must fail the plan's int range, not answer " + answer + ": " + plan);
-            }
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            final Obj answer = MCode.of(plan.asCode().insts()).apply();
+            assertTrue(answer.isReal(), "a real sum is a real, not " + answer + ": " + plan);
+            assertEquals(Double.parseDouble(expected), answer.realValue(), 1e-9, "the plan's sum: " + plan);
         } finally {
-            mounted.sql("DROP TABLE IF EXISTS dec_test");
+            mounted.sql("DROP TABLE IF EXISTS real_sums");
             Machine.current().memory().removeSpace(mounted.vid());
             mounted.close();
         }

@@ -38,11 +38,12 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -97,6 +98,13 @@ public class dcmntInstSet extends AbstractInstSet {
 
     @Override
     public void setup() {
+        // THE SUM OF THE FIELD THE PATH NAMES, for mql_sum and mql_sum_column alike, its extension as Mongo's dotted path
+        // (summablePath declines a path with no field): "$" + field alone summed value for */+/value/x. A $group over no
+        // document is the sum's seed, 0
+        final BiFunction<dcmntSpace, DataPath, Number> fieldSum = (space, dp) -> {
+            final Number sum = fieldAggregate(space, dp, "$sum");
+            return null == sum ? 0 : sum;
+        };
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL)),
                 uri(CONSTQ), lst(ObjJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
@@ -163,20 +171,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.sumRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_sum"),
-                                (space, dp) -> {
-                                    final String collectionName = dp.collection();
-                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    // the field the path names, its extension as Mongo's dotted path (summablePath declines a path
-                                    // with no field): "$" + field alone summed value for */+/value/x
-                                    final Document result = collection.aggregate(Arrays.asList(
-                                            new Document("$group", new Document(ID_FIELD_STRING, null)
-                                                    .append("total", new Document("$sum", "$" + dp.fieldPathStr())))
-                                    )).first();
-                                    if (result != null && result.containsKey("total")) {
-                                        return result.get("total", Number.class);
-                                    }
-                                    return 0;
-                                },
+                                fieldSum,
                                 dcmntInstSet::summablePath
                         ),
 
@@ -184,18 +179,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.sumColumnRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_sum_column"),
-                                (space, dp) -> {
-                                    final String collectionName = dp.collection();
-                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    final Document result = collection.aggregate(Arrays.asList(
-                                            new Document("$group", new Document(ID_FIELD_STRING, null)
-                                                    .append("total", new Document("$sum", "$" + dp.fieldPathStr())))
-                                    )).first();
-                                    if (result != null && result.containsKey("total")) {
-                                        return result.get("total", Number.class);
-                                    }
-                                    return 0;
-                                },
+                                fieldSum,
                                 dcmntInstSet::summablePath
                         ),
 
@@ -204,19 +188,12 @@ public class dcmntInstSet extends AbstractInstSet {
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_mean"),
                                 (space, dp) -> {
-                                    final String collectionName = dp.collection();
-                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // THE MEAN OF THE FIELD THE PATH NAMES (2026-11-25): {$avg: 1} averaged the literal 1, so
                                     // *mongo:rewrite_test/+/value.mean() answered 1.0 for 5.5. A field no document holds, and a
-                                    // collection with no document, give $avg null: the mean of nothing, noobj, as the walk answers
-                                    // (a field of strings or bools is not covered: $avg skips them, where the walk fails).
+                                    // collection with no document, give $avg null: the mean of nothing, noobj, as the walk answers.
                                     // MongoDB averages decimals to a Decimal128, which getDouble refused; mongo-java-server
                                     // averages them to a double, so no row of the tests can pin it
-                                    final Document result = collection.aggregate(Arrays.asList(
-                                            new Document("$group", new Document(ID_FIELD_STRING, null)
-                                                    .append("average", new Document("$avg", "$" + dp.fieldPathStr())))
-                                    )).first();
-                                    final Number average = null == result ? null : result.get("average", Number.class);
+                                    final Number average = fieldAggregate(space, dp, "$avg");
                                     return null == average ? null : average.doubleValue();
                                 },
                                 dcmntInstSet::summablePath
@@ -402,6 +379,29 @@ public class dcmntInstSet extends AbstractInstSet {
      */
     private static fURI documentVID(final dcmntSpace space, final String collectionName, final String id) {
         return space.pattern().retractPattern().extend(collectionName).extend(id);
+    }
+
+    /**
+     * A SUM OR A MEAN OF A FIELD THAT HOLDS WHAT IS NO NUMBER FAILS LOUDLY (2026-11-26, Marko): {@code $sum} and
+     * {@code $avg} skip it, where the walk concatenates strs, merges sub-documents, folds lsts or fails, so the plan
+     * answered a number the walk does not. The same {@code $group} counts those values: a value at or past {@code ""} in
+     * BSON's order (a str, a sub-document, an array, a bool, a date), since every number, null and a missing field sort
+     * before it. mongo-java-server orders values so too, and has no {@code $type} or {@code $isNumber}. A count above 0
+     * fails the plan. A date is refused as well, which the walk reads as its milliseconds and adds. Null when no document
+     * is grouped.
+     */
+    private static Number fieldAggregate(final dcmntSpace space, final DataPath dp, final String accumulator) {
+        final String field = "$" + dp.fieldPathStr();
+        final Document result = space.getDatabase().getCollection(dp.collection()).aggregate(List.of(
+                new Document("$group", new Document(ID_FIELD_STRING, null)
+                        .append("value", new Document(accumulator, field))
+                        .append("others", new Document("$sum", new Document("$cond", List.of(new Document("$gte", List.of(field, "")), 1, 0))))))).first();
+        if (null == result)
+            return null;
+        final long others = result.get("others", Number.class).longValue();
+        if (others > 0)
+            throw MTronException.of("%s holds %d values that are no number, which %s skips where the walk does not", dp.fieldPathStr(), others, accumulator);
+        return result.get("value", Number.class);
     }
 
     /**

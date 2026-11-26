@@ -151,7 +151,7 @@ public final class CommonRewrites {
 
         return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
-                .rng(Tokens.INT_TID)
+                .rng(InstSet.A)
                 .match(FROM_INST_TID, SUM_INST_TID)
                 .matchFromOrAt(DBRewriteBuilder::readsEveryEntry)
                 .matchSpacePredicate(matchSpacePredicate)
@@ -160,12 +160,14 @@ public final class CommonRewrites {
     }
 
     /**
-     * A SUM THE PLANS' INT RANGE CANNOT HOLD IS A REAL, WHICH THE RANGE REFUSES, NEVER CUT (2026-11-25): longValue()
-     * answered the products' prices (2817.9) as 2817. The number's own type tells: a Long, Integer, Short, Byte or
-     * BigInteger, or an unscaled BigDecimal, is an int, and any other a real, whole or not (0.5 + 1.5 is the walk's
-     * 2.0): a Double, a Float, a scaled BigDecimal, and MongoDB's Decimal128, a Number of none of those types. It cannot
-     * tell a whole DECIMAL column's sum, which comes back unscaled as MySQL's sum of an INT column does, so that one still
-     * answers an int where the walk reads DECIMAL as a real.
+     * A SUM IS AN INT OR A REAL, AS THE WALK'S IS (2026-11-26): the sum plans declare the generic range {@code A}, Marko's
+     * {@code sum?A<=A{*}}, where they declared an int, which refused a real sum ("rhs does not match inst range"). The
+     * plan op is a nullary source ({@code #{0}}), so {@code A} binds nothing and the range takes the int or the real this
+     * answers: never cut, as longValue() answered the products' prices (2817.9) as 2817. The number's own type tells: a
+     * Long, Integer, Short, Byte or BigInteger, or an unscaled BigDecimal, is an int, and any other a real, whole or not
+     * (0.5 + 1.5 is the walk's 2.0): a Double, a Float, a scaled BigDecimal, and MongoDB's Decimal128, a Number of none
+     * of those types. It cannot tell a whole DECIMAL column's sum, which comes back unscaled as MySQL's sum of an INT
+     * column does, so that one still answers an int where the walk reads DECIMAL as a real.
      */
     private static Obj sumOf(final Number sum) {
         return sum instanceof Long || sum instanceof Integer || sum instanceof Short || sum instanceof Byte
@@ -182,7 +184,7 @@ public final class CommonRewrites {
 
         return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
-                .rng(Tokens.INT_TID)
+                .rng(InstSet.A)
                 .match(FROM_INST_TID, RSHIFT_INST_TID, SUM_INST_TID)
                 .matchFromOrAt(DBRewriteBuilder::readsEveryEntry)
                 .matchSpacePredicate(matchSpacePredicate)

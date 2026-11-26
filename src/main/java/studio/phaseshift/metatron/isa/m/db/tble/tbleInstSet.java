@@ -201,13 +201,13 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.sum() → SELECT SUM(*)
                         docWrap(CommonRewrites.sumRewrite(
                                 tbleSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_sum").rng(INT_TID),
+                                TBLE_ISA_REWRITE_TID.extend("sql_sum"),
                                 columnSum,
                                 columnGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
                         docWrap(CommonRewrites.sumColumnRewrite(
                                 tbleSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_sum_column").rng(INT_TID),
+                                TBLE_ISA_REWRITE_TID.extend("sql_sum_column"),
                                 columnSum,
                                 columnGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),

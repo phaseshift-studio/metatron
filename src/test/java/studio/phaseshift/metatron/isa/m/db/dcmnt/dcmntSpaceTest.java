@@ -1554,19 +1554,20 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
-     * A REAL SUM IS NOT CUT TO ITS INTEGER PART, as on tble ({@code AbstractTbleSpaceTest}, which explains it): a real
-     * is stored as a double, so {@code $sum} answers a double, which the sum plans' int range refuses. They answered its
-     * integer part. Another client's decimals sum to a Decimal128, a real too (CommonRewrites.sumOf). This asserts the
-     * refusal, not the ideal (the walk answers 1.5, and the decimals' 3.75).
+     * A REAL SUM IS A REAL, as on tble ({@code AbstractTbleSpaceTest}, which explains it): a real is stored as a double,
+     * so {@code $sum} answers a double, and another client's decimals sum to a Decimal128, a real too
+     * (CommonRewrites.sumOf). The sum plans answered its integer part, then their int range refused it; the generic
+     * range answers the real the walk answers. The rows are {@code code % what the walk answers % the op the plan reads
+     * with}; the plan applied on its own answers the walk's real within a double's rounding.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "*mongo:reals/+>>w.sum()",
-            "*mongo:reals/+/w.sum()",
-            "*mongo:decimals/+>>amount.sum()",
-            "*mongo:decimals/+/amount.sum()",
+            "*mongo:reals/+>>w.sum()            % 1.5    % mql_sum_column",
+            "*mongo:reals/+/w.sum()             % 1.5    % mql_sum",
+            "*mongo:decimals/+>>amount.sum()    % 3.75   % mql_sum_column",
+            "*mongo:decimals/+/amount.sum()     % 3.75   % mql_sum",
     })
-    public void testARealSumIsRefusedNotCut(final String code) {
+    public void testARealSumIsAReal(final String code, final String expected, final String reads) {
         ObjmtronSerializer.parse("mongo:reals/1 -> [w=>0.5]").apply();
         ObjmtronSerializer.parse("mongo:reals/2 -> [w=>1.0]").apply();
         try (final MongoClient client = MongoClients.create(connectionString)) {
@@ -1575,16 +1576,100 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                     new Document("_id", "2").append("amount", Decimal128.parse("2.50"))));
         }
         try {
+            checkCodeParseApply(LOG, code, expected);
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
             final Obj answer = MCode.of(plan.asCode().insts()).apply();
-            assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
-                    "a real sum must fail the plan's int range, not answer " + answer + ": " + plan);
+            assertTrue(answer.isReal(), "a real sum is a real, not " + answer + ": " + plan);
+            assertEquals(Double.parseDouble(expected), answer.realValue(), 1e-9, "the plan's sum: " + plan);
         } finally {
             try (final MongoClient client = MongoClients.create(connectionString)) {
                 client.getDatabase(DB_NAME).getCollection("reals").drop();
                 client.getDatabase(DB_NAME).getCollection("decimals").drop();
             }
         }
+    }
+
+    /**
+     * A SUM OR A MEAN OF WHAT IS NO NUMBER FAILS LOUDLY (2026-11-26, Marko). {@code $sum} and {@code $avg} skip it, and
+     * answered 0 and noobj, where the walk concatenates strs, merges sub-documents, folds lsts or fails. The same
+     * {@code $group} now counts the field's values at or past {@code ""} in BSON's order (dcmntInstSet.fieldAggregate),
+     * and a count above 0 fails the plan, one non-number among numbers too. A date is refused as well, which the walk
+     * reads as its milliseconds and adds. The rows are {@code code % the op the plan reads with}, and the plan applied on
+     * its own must fail so.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:typed/+/str.sum()     % mql_sum",
+            "*mongo:typed/+>>str.sum()    % mql_sum_column",
+            "*mongo:typed/+/str.mean()    % mql_mean",
+            "*mongo:typed/+/bool.sum()    % mql_sum",
+            "*mongo:typed/+/doc.sum()     % mql_sum",
+            "*mongo:typed/+/lst.mean()    % mql_mean",
+            "*mongo:typed/+/when.sum()    % mql_sum",
+            "*mongo:typed/+/mixed.sum()   % mql_sum",
+    })
+    public void testAFieldOfNoNumbersFailsLoudly(final String code, final String reads) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection("typed").insertMany(typedDocuments());
+        }
+        try {
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            final Obj answer = MCode.of(plan.asCode().insts()).apply();
+            assertTrue(answer.isFail() && answer.toString().contains("no number"),
+                    "a sum or a mean of what is no number must fail the plan, not answer " + answer + ": " + plan);
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("typed").drop();
+            }
+        }
+    }
+
+    /**
+     * A FIELD OF NUMBERS IS SUMMED AND MEANT AS THE WALK DOES (2026-11-26): a null and a missing field are no value to
+     * either, so the count of what is no number stays 0 ({@link #testAFieldOfNoNumbersFailsLoudly}), and a dotted path
+     * into sub-documents' numbers is summed as the walk sums it. The rows are
+     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:typed/+/num.sum()     % 3     % mql_sum",
+            "*mongo:typed/+>>num.sum()    % 3     % mql_sum_column",
+            "*mongo:typed/+/num.mean()    % 1.5   % mql_mean",
+            "*mongo:typed/+/doc/x.sum()   % 3     % mql_sum",
+    })
+    public void testAFieldOfNumbersIsTheWalks(final String code, final String expected, final String reads) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection("typed").insertMany(typedDocuments());
+        }
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("typed").drop();
+            }
+        }
+    }
+
+    /**
+     * Another client's documents with one field per BSON type a sum meets: numbers (with a null and a missing one), strs,
+     * bools, sub-documents, arrays, dates, and a field mixing a number and a str.
+     */
+    private static List<Document> typedDocuments() {
+        return List.of(
+                new Document("_id", "1").append("num", 1).append("str", "one").append("bool", true)
+                        .append("doc", new Document("x", 1)).append("lst", List.of(1)).append("when", new java.util.Date(0))
+                        .append("mixed", 1),
+                new Document("_id", "2").append("num", 2).append("str", "two").append("bool", false)
+                        .append("doc", new Document("x", 2)).append("lst", List.of(2)).append("when", new java.util.Date(1000))
+                        .append("mixed", "two"),
+                new Document("_id", "3").append("num", null),
+                new Document("_id", "4"));
     }
 
     /**
@@ -1714,8 +1799,8 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
 
     /**
      * A DECIMAL FIELD IS ITS REALS (2026-11-26), to the walk and to the plans alike. The walk read noobj for each
-     * Decimal128, so it meant the field to noobj, where mql_mean averaged it. Their sum is a real, which the sum plans'
-     * int range refuses ({@link #testARealSumIsRefusedNotCut}). The documents are another client's, inserted through the
+     * Decimal128, so it meant the field to noobj, where mql_mean averaged it. Their sum is a real, which the sum plans
+     * answer as one ({@link #testARealSumIsAReal}). The documents are another client's, inserted through the
      * driver. The rows are {@code code % what the walk answers}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
