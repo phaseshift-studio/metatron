@@ -174,22 +174,23 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
     /**
      * an embedding that is no lst of reals, an empty one or one real among others included, fails its write and names
      * its source: the function that answered it (here one whose range admits any answer), or the address a carried lst
-     * was written to, pinned with the embedding in the whole message. A carried embedding that is no lst is no carried
-     * embedding at all: the document goes to the function. A cast of it, or of an element in the client, would fail the
-     * write with a class cast that names neither
+     * was written to. Each row pins the whole message, the embedding with it. A carried embedding that is no lst is no
+     * carried embedding at all: the document goes to the function, whose body answers one more than its embed, an
+     * answer only the function gives. A cast of it, or of an element in the client, would fail the write with a class
+     * cast that names neither
      */
     @ParameterizedTest
-    @CsvSource(delimiter = '%', value = {
-            "\"flat\"   % [n=>3]                             % the embedding function of collection pile answered",
-            "3          % [n=>3]                             % the embedding function of collection pile answered",
-            "[\"flat\"] % [n=>3]                             % the embedding function of collection pile answered",
-            "[1,2]      % [n=>3]                             % the embedding function of collection pile answered",
-            "[,]        % [n=>3]                             % the embedding function of collection pile answered",
-            "[0.5,true] % [n=>3]                             % the embedding function of collection pile answered",
-            "\"flat\"   % [obj=>\"spark\",embed=>3]            % the embedding function of collection pile answered",
-            "[0.5,0.25] % [obj=>\"spark\",embed=>[,]]          % the embedding written to flatembed:pile/volta is [,], not an embedding",
-            "[0.5,0.25] % [obj=>\"spark\",embed=>[1,2]]       % the embedding written to flatembed:pile/volta is [1,2], not an embedding",
-            "[0.5,0.25] % [obj=>\"spark\",embed=>[true,false]] % the embedding written to flatembed:pile/volta is [true,false], not an embedding",
+    @CsvSource(delimiter = '%', quoteCharacter = '~', value = {
+            "\"flat\"            % [n=>3]                               % the embedding function of collection pile answered 'flat', not an embedding",
+            "3                   % [n=>3]                               % the embedding function of collection pile answered 3, not an embedding",
+            "[\"flat\"]          % [n=>3]                               % the embedding function of collection pile answered ['flat'], not an embedding",
+            "[1,2]               % [n=>3]                               % the embedding function of collection pile answered [1,2], not an embedding",
+            "[,]                 % [n=>3]                               % the embedding function of collection pile answered [,], not an embedding",
+            "[0.5,true]          % [n=>3]                               % the embedding function of collection pile answered [0.5,true], not an embedding",
+            "*doc>>embed.plus(1) % [obj=>\"spark\",embed=>3]            % the embedding function of collection pile answered 4, not an embedding",
+            "[0.5,0.25]          % [obj=>\"spark\",embed=>[,]]          % the embedding written to flatembed:pile/volta is [,], not an embedding",
+            "[0.5,0.25]          % [obj=>\"spark\",embed=>[1,2]]        % the embedding written to flatembed:pile/volta is [1,2], not an embedding",
+            "[0.5,0.25]          % [obj=>\"spark\",embed=>[true,false]] % the embedding written to flatembed:pile/volta is [true,false], not an embedding",
     })
     void testAnEmbeddingThatIsNoLstOfRealsFailsItsWriteNamingItsSource(final String answer, final String document, final String refusal) {
         try {
@@ -198,7 +199,7 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
                     "route => -< [flatembed: => <>], config => [embed => [# => inst?#{?}<=#{?}(doc=>#::T){ " + answer + " }]]]" +
                     "@</memory/space/vec/flatembed>.as(vecspace::T)").apply();
             final Obj written = ObjmtronSerializer.parse("<flatembed:pile/volta> -> " + document).apply();
-            assertTrue(written.isFail() && written.toString().contains(refusal) && written.toString().contains("not an embedding"),
+            assertTrue(written.isFail() && written.toString().contains(refusal),
                     document + " under a function answering " + answer + " fails naming its source: " + written);
         } finally {
             unmount(f("/memory/space/vec/flatembed"));
